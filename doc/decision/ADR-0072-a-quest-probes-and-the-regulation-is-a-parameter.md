@@ -13,10 +13,10 @@
 ## In brief
 
 - Theme: Operating Xmip
-- Subject: What a Quest is, and how the Regulation Quest presents a regulation's evidence and gaps
+- Subject: What a Quest is, and how the Regulation Report presents what the Regulation Quest finds: a regulation's evidence and gaps
 - Name: A Quest probes, and the regulation is a parameter
 - Order: 22
-- Concepts: Quest; the Regulation Quest; regulation; requirement; evidence; gap; GDPR; erasure, of the identity
+- Concepts: Quest; the Regulation Quest; regulation; requirement; evidence; gap; GDPR; erasure, of the identity; every Report in one list
 
 **A Quest probes an installation handed to it and returns what it found,
 the data a Report presents; it changes nothing it probes. The first is the
@@ -159,7 +159,9 @@ actual data will be deleted when retention occurs.*
   one place the key store a node names, or the platform's, is read.
 - Not in this record's build, and following it: the surfaces, in their
   order — the C ABI, the command line, PowerShell and the GUI (ADR-0014) —
-  and the composer that implements `Installation` from a running node; the
+  and the composer that implements `Installation` from a running node
+  (built by the amendment of 2026-11-10, from a configuration file; a
+  running node follows); the
   other regulations — the patient data law, the Cyber Resilience Act,
   NIS2, the AI Act — each a `Regulation` of its own.
 - `estate-map.md`, `regulation-quest`, says what is built.
@@ -178,3 +180,204 @@ and per-subject keys deleted to erase it ("Go with 1"). The trait shapes, the `I
 `Outside` action for a database server IT runs, the requirement names and
 the article each cites were drafted by the assistant and are the owner's
 to change.
+
+## Amendment, 2026-11-10: every Report in one list, saying whether it is quick or a Quest probes first
+
+The owner asked, 2026-11-10: *And where were the Reports? They should have
+been there, with a little icon saying if they were presenting existing data
+or probing for data.* And: *I want a list of reports, Firewall and what
+not, Quest. I just want the user to know that a report may go quicker than
+a report based on quests*; *A firewall report might be a quest. A report on
+actual critical, error, warnings and what not might be actual Audit data
+and quicker*; and, the list below put to him, *Agreed, go ahead.*
+
+1. **One list of every Report.** `xmip-core-report` keeps it, `Reports` in
+   `catalog.rs`: Xmip's own in `Reports::standard()`, and a module adds a
+   Report or a Quest with `Reports::with`, as it adds a regulation. Every
+   surface shows the same list through `xmip_operate.h` section 25,
+   `xmip_report_v1`, and keeps no list of its own: the C ABI, the command
+   line, PowerShell and the GUI, in that order (ADR-0014).
+2. **Its kind follows from what an entry holds.** A `Report` holds `Data`:
+   `Data::Existing`, data that already exists, makes it `Kind::ExistingData`,
+   shown as *Quick*, *Presents data that already exists*; `Data::Quest`, what
+   a Quest probes first, makes it `Kind::Quest`, shown as *Takes longer*,
+   *Presents what a Quest probes first*. No entry declares a kind of its own
+   and nothing reads one from a name. The kinds are Xmip's own fixed
+   answer, a closed enum, numbered as `XmipReportKind`. Each surface shows a
+   plain icon beside the words, never the icon alone: a bolt for quick, an
+   hourglass for takes longer.
+3. **Not yet available.** An entry not built yet holds `Data::Existing(None)`
+   or `Data::Quest(None)`. It is listed, says *not yet available*, and has
+   nothing to open.
+4. **The time to expect.** A Quest's entry shows how long its last probe
+   took. The runtime times each probe and records it through the one audit
+   writer as `quest.probe` (Finished, Information; properties `report`,
+   `parameter`, `node`, `took_ms`), and the list reads the newest such record
+   of each Report back through the audit's one query. No second store keeps
+   it. An entry never probed says *not probed yet*. Where the audit cannot
+   be read, every Report is listed all the same, each Quest's entry says
+   *last probe could not be read*, and the list says why.
+5. **Opening.** A quick entry is opened at the reader that already presents
+   it, named by its entrypoint (`read_by`), never by a second reader; each
+   surface opens it at its own command for that reader. A Quest's entry
+   names its parameter and its choices, what a row of its second level is
+   called, and its levels; opening it probes and answers them. The
+   Regulation Report's are this record's three, its parameter the
+   regulation and its row a requirement. A Quest a module adds is held as a
+   `Probe` and opened through the same answer, which says what a row is
+   called and holds a title, a tally of each state's count, rows and one
+   row in full only where the Quest answers them. A Report that cannot be
+   opened — none of that name, not yet available, quick, or given a
+   parameter it does not take — is refused before anything is read, and the
+   runtime finds the one Report a surface names, for the list as for an
+   open, in one sentence.
+6. **Probing is a read.** A Quest reads what it probes and changes nothing
+   (clause 1), so every role may list and probe, an Observer included.
+   Applying an action stays the Operator's.
+7. **A node's build only.** `xmip-core-report` reads a configuration
+   through `xmip-core-configure`, which only a node's build of the runtime
+   links; a remote build, the phone's, has no section 25, and a surface says
+   so in words.
+
+| Report | Kind | Available today |
+| --- | --- | --- |
+| Audit | Quick | Yes: `xmip_audit_read_v1` |
+| Dead Messages | Quick | Yes: `xmip_dead_messages_v1` |
+| Locations | Quick | Yes: `xmip_publication_read_v1`, the scope tree |
+| Subscriptions | Quick | Yes: `xmip_subscriptions_v1` |
+| Parties | Quick | Not yet: no reader presents them; the Topology draws them |
+| Expiring certificates and secrets | Quick | Not yet |
+| Regulation | Takes longer | Yes: this record's Quest |
+| Firewall | Takes longer | Not yet |
+| Identity and isolation | Takes longer | Not yet: ADR-0022 clause 5's Report |
+| Security, Sanity, Performance, Redundancy, Fail Over, Size, Compile Time | Takes longer | Not yet: named 2026-11-05, not designed |
+
+The Identity and isolation Report is ADR-0022 clause 5's, which names it
+mandatory: every identity context, its class and where it runs, and every
+isolation rule evaluated on it with its result. It was *Identity and
+Isolation Compliance*; the word that judges is dropped, as clause 8 above
+keeps every verdict out of a Report (ADR-0022, amendment 2026-11-10). Its
+data is computed from the identity contexts and ADR-0022's isolation rules,
+so a Quest probes for it, and it is listed as not yet available. It and the
+Firewall Report are mandatory in the sense that record gives the word:
+both are in the list on every installation, never one to be asked for
+before it exists.
+
+### What a probe reads
+
+A Quest probes a configuration file given by path: a node's own, or a
+cluster's `cluster.xmip` sliced for one node by `configure::slice`, the two
+told apart by `configure::document_kind`, never by the file's name; a
+cluster's file without a node is refused naming its nodes. The runtime
+composes the `Installation`: every Location's wire `Undeclared`, since no
+transport declares its wire yet (Open 1 above), and each data domain kept
+where `storage::keeping` says — the node's own Storage node, a database
+server its table names, or the Storage nodes it lists — the one decision
+`storage::plan` starts a node by. A configuration that says neither the
+Storage role nor Storage nodes, or whose table names a storage its
+database is not kept on (`postgres` for `postgresql`, `sqlite` for the
+runtime database), is refused in the words a node starting by it is: the
+word is read by `xmip-core-persist`'s `database::technology`, which
+`database::problems` holds a starting node to, so no Quest reports evidence
+of a store that is not there.
+
+### Who decided what
+
+The owner's, 2026-11-10: one list of every Report on every surface; each
+saying with a small icon whether it presents existing data or probes for
+it; that a quick Report may go quicker than one based on Quests; the
+Firewall Report a Quest; the Audit Report quick; the list itself (*Agreed,
+go ahead*).
+
+Drafted and decided by the assistant while designing, the owner's to
+change: the kind following from what an entry holds, never declared;
+*not yet available* as an entry holding none; the last probe's time,
+recorded and read back through the audit, as the time to expect; a quick
+entry opened at its existing reader, named by its entrypoint;
+Configuration split into Locations, Subscriptions and Parties, each with
+its own reader; the parameter and the row named by the Quest, so a surface
+takes `-Parameter` and `-Row` and no `-Regulation`; probing a read every
+role may make; a node's build only; what a probe reads; the composer in
+the runtime, over `storage::keeping`. The words *Quick*, *Takes longer*,
+*not yet available*, *not probed yet*, *last probe could not be read*, each
+entry's covers sentence, the icons and `quest.probe` are the assistant's
+too. `AtRest::Server` keeps its `&'static str`: the word reaches it through
+`persist`'s own name for the server, never from the file as written. The
+assistant's as well, settled while the build was reviewed the same day:
+the Identity and isolation Report kept in the list as ADR-0022 clause 5
+requires, a Quest's and not yet available; the runtime finding the one
+Report a surface names (`list` takes `report`), so no surface finds or
+refuses a name of its own; the tally answered as each state's words and
+count, and what a row is called answered with every probe, so no surface
+types a state or a row's name; a Quest's answer shown only where it holds
+a title, a tally or rows; a Report that cannot be opened refused before
+its configuration is read; an open too long for the caller's room answered
+for its length and not audited, so one probe asked again leaves one
+record; a list the audit cannot be read for naming every Report and saying
+why; the probe's record worded as the Report's Quest probing the node; and
+the desktop hosting the Reports view through `ReportHosting.Add`, which its
+test hosts the view by. On the
+surfaces, the assistant's too: each list shows the kind's name, the
+Report's, what to expect and, last, where a long sentence is cut least,
+what it covers; the command a quick entry is presented by is each
+surface's own map from the reader's entrypoint (`Presented by: xmip audit`
+on the command line, `PresentedBy` in PowerShell); a probe is audited under the surface's own program,
+where its records go, which is where its list reads the last probe back;
+the command line's `--node` is `certificate`'s option too, and its `--json`
+the runtime's document whole. In the GUI, the assistant's as well: the bolt
+and the hourglass are drawn in the text's own color, never the brand or a
+mood; each level is in the address (`/reports?report=<name>`, then
+`&parameter=<choice>`, then `&row=<requirement>`); the desktop's Quests
+probe the `cluster.xmip` it edits, on the node `gui.toml` configures there
+or the one the address names, each node of the file offered as a link; a
+Quest that takes no parameter is probed as it opens; the web host, which
+edits no `cluster.xmip`, lists every Report and says where a Quest is
+probed; and the view asks the runtime again only when the address moves.
+
+### Left open
+
+1. **The audit's category.** The owner's *critical, error, warnings and what
+   not* reads as more severities and categories than the audit keeps: three
+   severities, information, warning and error, and no category. The Audit
+   Report presents severity, action and phase over a time range. A category,
+   or another severity, changes the audit record and Xmip Storage, and is
+   his decision.
+2. **Expiring certificates and secrets** is listed as not yet available;
+   the record that builds it sets who may open it.
+3. **One noun for every Report.** `Get-XmipAudit`, `xmip audit` and the
+   Audit view stay where they are, and the Audit Report opens at them.
+   Whether they fold into `Get-XmipReport`, fewer cmdlets, is his call.
+4. **Probing a running node.** A Quest probes a configuration file today.
+   Probing a running node's own configuration through its operate listener
+   follows.
+
+### What was built
+
+- Built 2026-11-10 in `xmip-core-report`: `catalog.rs` (`Kind`, `Report`,
+  `Data`, `Probe`, `LastProbes`, `Reports`), `answer.rs` (the list, or one
+  entry of it, and one Report opened, as section 25's JSON, with
+  `answer::probe_of`, every refusal of an open that needs no installation)
+  and `RegulationReport` in `regulation.rs`, which shapes the Regulation
+  Report's own answer beside its Quest. `xmip-core-report` depends on
+  `xmip-core-abi` for the readers' entrypoints and the kinds' numbers.
+- Built the same day in the runtime's library: `xmip_report_v1`
+  (`ffi/report.rs`) over `report.rs`, which composes the installation and
+  records each probe the caller receives, and `storage::keeping`, which
+  `storage::plan` now starts a node by, each table's storage read by
+  `database::technology` in `xmip-core-persist`. `xmip_operate.h` section 25
+  and its Rust mirror, `operate::report`.
+- Built the same day on the .NET surfaces, in order: `RuntimeReports` and
+  `ReportKind` in `Xmip.Abi`, `RuntimeRules.Reports` refused in words by a
+  remote build; `ReportCatalog` (`List`, `Named`, `Open`), `ReportListing`,
+  `ReportEntry`, `ReportProbe`, `ReportProbed`, `ReportCount`, `ReportRow`
+  and `ReportRequirement` in `Xmip.Surface`; the command line's `xmip
+  report`, an MCP tool too; and PowerShell's `Get-XmipReport`, with a view
+  for each object.
+- Built the same day in the GUI, the web's and the desktop's alike: the
+  Reports view (`/reports`), on the bar after the Audit for every role, with
+  each kind's icon and name (`ReportKindLabel`), the list and its legend
+  (`ReportTable`), one Report (`ReportDetail`), the nodes of the file it
+  probes (`ReportNodes`) and its levels (`ReportLevels`); `ScopeLink.Reports`
+  and `ScopeLink.Presented`; and `ReportHosting`, through which the desktop
+  hosts the view over its `SliceDelivery`. The list is built on every
+  surface: the C ABI, the command line, PowerShell and the GUI.

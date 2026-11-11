@@ -87,22 +87,8 @@ function ConvertTo-XmipEstateRun {
         [string] $Area
     )
 
-    [int] $id = [int](Get-TomlValue -Node $Record -Name 'pid' -Default 0)
-    [datetime] $started = [datetime]::Parse(
-        [string](Get-TomlValue -Node $Record -Name 'started' -Default '0001-01-01'),
-        [cultureinfo]::InvariantCulture,
-        [System.Globalization.DateTimeStyles]::RoundtripKind)
-    [string] $state = [string](Get-TomlValue -Node $Record -Name 'state' -Default '')
-    [string] $fault = [string](Get-TomlValue -Node $Record -Name 'fault' -Default '')
-
-    if ($state -eq '' -and (Test-XmipDetachedAlive -Id $id -Started $started)) {
-        $state = 'running'
-    }
-    elseif ($state -eq '') {
-        $state = 'FAILED'
-        $fault = 'The run ended without a verdict: it was stopped, or its pwsh died.'
-    }
-
+    $run = Resolve-XmipDetachedRun -Record $Record
+    [string] $state = $run.State
     [int] $passed = [int](Get-TomlValue -Node $Record -Name 'passed' -Default 0)
     [int] $failed = [int](Get-TomlValue -Node $Record -Name 'failed' -Default 0)
     [int] $skipped = [int](Get-TomlValue -Node $Record -Name 'skipped' -Default 0)
@@ -119,15 +105,15 @@ function ConvertTo-XmipEstateRun {
         Suite    = [string](Get-TomlValue -Node $Record -Name 'suite' -Default '')
         Kind     = 'pester'
         State    = $state
-        Id       = $id
+        Id       = $run.Id
         Property = @{
-            StartTime = $started.ToLocalTime()
+            StartTime = $run.Started.ToLocalTime()
             Tests     = @(Get-TomlValue -Node $Record -Name 'tests' -Default @())
             Tally     = $tally
             Passed    = $passed
             Failed    = $failed
             Skipped   = $skipped
-            Fault     = $fault
+            Fault     = $run.Fault
             Path      = $Area
             Record    = $File
             Log       = [string](Get-TomlValue -Node $Record -Name 'log' -Default '')
@@ -138,18 +124,80 @@ function ConvertTo-XmipEstateRun {
 }
 
 
+function Resolve-XmipDetachedRun {
+    <#
+        .SYNOPSIS
+            How a detached run stands, from its record: Id and Started, as
+            it wrote them; State, the verdict it wrote, else -Running while
+            its pwsh lives, else FAILED; and Fault, the record's, or -Ended
+            where the run wrote no verdict and its pwsh is gone.
+
+        .DESCRIPTION
+            The one reading for every run that is a pwsh of its own: an
+            estate run, a demo run and a roll's build. Each spelled it out
+            until 2026-11-10, two of them word for word. A run whose pwsh is
+            gone and which wrote nothing was stopped or died: never running,
+            and never OK.
+
+        .PARAMETER Record
+            The record, as Read-XmipToml read it.
+
+        .PARAMETER Running
+            The state of a run whose pwsh lives and has no verdict yet.
+
+        .PARAMETER Ended
+            The fault of a run whose pwsh is gone without a verdict.
+    #>
+    [CmdletBinding()]
+    [OutputType([pscustomobject])]
+    param(
+        [Parameter(Mandatory)]
+        [AllowNull()]
+        [object] $Record,
+
+        [Parameter()]
+        [string] $Running = 'running',
+
+        [Parameter()]
+        [string] $Ended = 'The run ended without a verdict: it was stopped, or its pwsh died.'
+    )
+
+    [int] $id = [int](Get-TomlValue -Node $Record -Name 'pid' -Default 0)
+    [datetime] $started = [datetime]::Parse(
+        [string](Get-TomlValue -Node $Record -Name 'started' -Default '0001-01-01'),
+        [cultureinfo]::InvariantCulture,
+        [System.Globalization.DateTimeStyles]::RoundtripKind)
+    [string] $state = [string](Get-TomlValue -Node $Record -Name 'state' -Default '')
+    [string] $fault = [string](Get-TomlValue -Node $Record -Name 'fault' -Default '')
+
+    if ($state -eq '' -and (Test-XmipDetachedAlive -Id $id -Started $started)) {
+        $state = $Running
+    }
+    elseif ($state -eq '') {
+        $state = 'FAILED'
+        $fault = $Ended
+    }
+
+    return [pscustomobject]@{ Id = $id; Started = $started; State = $state; Fault = $fault }
+}
+
+
 function Test-XmipDetachedAlive {
     <#
         .SYNOPSIS
-            Whether the process a record names is still that run's pwsh, and
-            not another process that was later given the same id: an estate
-            run's, or a roll's detached build's (Get-XmipEssentialsBuild).
+            Whether the process a record names is still the one it started,
+            and not another process later given the same id: a run's pwsh —
+            an estate run's, a demo run's, a roll's detached build's — or,
+            with -Program, the program a demo run started.
 
         .PARAMETER Id
             The process id the record names.
 
         .PARAMETER Started
-            When the record says the run started.
+            When the record says the process started.
+
+        .PARAMETER Program
+            The executable the process must be; a pwsh where it is not given.
     #>
     [CmdletBinding()]
     [OutputType([bool])]
@@ -158,7 +206,11 @@ function Test-XmipDetachedAlive {
         [int] $Id,
 
         [Parameter(Mandatory)]
-        [datetime] $Started
+        [datetime] $Started,
+
+        [Parameter()]
+        [AllowEmptyString()]
+        [string] $Program = ''
     )
 
     if ($Id -le 0) {
@@ -166,8 +218,16 @@ function Test-XmipDetachedAlive {
     }
 
     $process = Get-Process -Id $Id -ErrorAction SilentlyContinue
+    [bool] $same = $null -ne $process -and $(
+        if ($Program -eq '') {
+            $process.ProcessName -like 'pwsh*'
+        }
+        else {
+            Test-XmipSamePath -Left "$($process.Path)" -Right $Program
+        }
+    )
 
-    if ($null -eq $process -or $process.ProcessName -notlike 'pwsh*') {
+    if (-not $same) {
         return $false
     }
 

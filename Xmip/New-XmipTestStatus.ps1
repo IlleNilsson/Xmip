@@ -25,7 +25,8 @@ function New-XmipTestStatus {
 
         .PARAMETER Kind
             roll, pester, or build: a roll still building, before it rolls
-            (Get-XmipEssentialsBuild).
+            (Get-XmipEssentialsBuild); or demo, a run of the demo readiness
+            check (Get-XmipDemoRun).
 
         .PARAMETER State
             running, building, OK or FAILED, in words.
@@ -47,7 +48,7 @@ function New-XmipTestStatus {
         [string] $Suite,
 
         [Parameter(Mandatory = $true)]
-        [ValidateSet('roll', 'pester', 'build')]
+        [ValidateSet('roll', 'pester', 'build', 'demo')]
         [string] $Kind,
 
         [Parameter(Mandatory = $true)]

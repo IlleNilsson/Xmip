@@ -38,6 +38,13 @@ function Stop-XmipTest {
             and the compilers beneath it — and picked by its cluster, suite
             and tests as the roll it would have become; one whose build
             FAILED has ended, and is REFUSED by -Id as an ended estate run is.
+            A run of Core.Demo, the demo readiness check, is one pwsh too:
+            what it started — its roll, its web host and its desktop app — is
+            stopped first and said in words, the desktop app's gui.toml given
+            back as the build deploys it, and then its pwsh and what that
+            pwsh still runs. One that ended without a verdict, its pwsh
+            killed before its stop part ran, is not refused by -Id: what its
+            record says it started is stopped, and its record taken.
 
             A run is one process, so a test is stopped by stopping the run
             that drives it. A run that also drives a test not named is
@@ -169,6 +176,8 @@ function Stop-XmipTest {
     begin {
         $ErrorActionPreference = 'Stop'
         [System.Collections.Generic.List[int]] $targets = @()
+        # The clusters whose roll a demo run stopped in this call, with it.
+        [System.Collections.Generic.List[string]] $cleared = @()
     }
 
     process {
@@ -227,19 +236,44 @@ function Stop-XmipTest {
             }
 
             # The estate's Pester run is one pwsh and what it started, and so
-            # is a roll still building — cargo beneath it; neither has nodes
-            # or a cluster process yet (Stop-XmipDetachedRun).
-            [bool] $detached = $roll.Kind -in 'pester', 'build'
+            # is a roll still building — cargo beneath it — and a demo run;
+            # none has nodes or a cluster process (Stop-XmipDetachedRun).
+            [bool] $detached = $roll.Kind -in 'pester', 'build', 'demo'
 
-            if ($detached -and $roll.State -notin 'running', 'building') {
+            # A demo run that ended without a verdict never ran its stop part:
+            # what it started may still run, and is stopped as if it ran.
+            [bool] $left = $roll.Kind -eq 'demo' -and "$($roll.Fault)" -ne ''
+
+            if ($detached -and -not $left -and $roll.State -notin 'running', 'building') {
                 Write-Error ("REFUSED: the $($roll.Suite) run $number has ended " +
                     "($($roll.State)); there is nothing to stop.")
                 continue
             }
 
+            # A roll a demo run stopped in this call, with it, has ended by its
+            # turn here; any other run that has ended is refused below.
+            [bool] $gone = $null -eq (Get-Process -Id $number -ErrorAction SilentlyContinue)
+
+            if ($gone -and $roll.Kind -in 'roll', 'build' -and "$($roll.Cluster)" -in $cleared) {
+                Write-Verbose "run $number of $($roll.Cluster) was stopped with its demo run"
+                continue
+            }
+
             if ($detached) {
                 if ($PSCmdlet.ShouldProcess("the $($roll.Suite) run $number", 'Stop')) {
-                    Stop-XmipDetachedRun -Run $roll
+                    # What a demo run started first — its roll, web host and
+                    # desktop app — then its pwsh, which can start no more;
+                    # of one whose pwsh is gone, its record.
+                    if ($roll.Kind -eq 'demo') {
+                        $cleared.Add((Stop-XmipDemoRun -Run $roll))
+                    }
+
+                    if ($left) {
+                        Remove-Item -LiteralPath $roll.Record -Force -ErrorAction SilentlyContinue
+                    }
+                    else {
+                        Stop-XmipDetachedRun -Run $roll
+                    }
                     Write-XmipAudit -Action 'Stop-XmipTest' -Phase Finished -Property @{
                         Id    = $number
                         Suite = $roll.Suite

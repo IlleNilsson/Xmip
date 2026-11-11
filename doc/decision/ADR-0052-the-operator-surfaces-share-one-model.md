@@ -1220,7 +1220,9 @@ changed, and each was a fault of its own layer.
   `observed` for a hop no configuration declares. The rate is the rise in a
   link's volume over the seconds between two publications, and it is a model
   rule, so it is written once in `observe`, `Topology::rate_since`, and the
-  roll states it; no surface computes one. The view draws what was stated:
+  roll states it; no surface computes one (superseded by the amendment of
+  2026-11-10: over a window of thirty seconds, `topology::window::Window`,
+  which every publisher states). The view draws what was stated:
   each line carries `English.Traffic` — `598 · 8.7/s`, or
   `configured · no traffic observed` on a dashed line — and the per-second
   wording is `English.Rate`, which the board's `English.Flow` now calls
@@ -1242,7 +1244,8 @@ Proved by `Xmip.Gui.Test` (`ClusterTopologyTest`: one cluster row, the kinds
 the publisher says, every node a link, the drill by address, configured and
 observed traffic both drawn and said), `Xmip.Surface.Test` (the fixture's
 three links with their origins and rates, `English.Traffic`), `observe`'s
-`topology.rs` (`rate_since`), the Essentials' `topology.rs` (a configured
+`topology.rs` (`rate_since`; superseded by the amendment of 2026-11-10:
+`topology/window.rs`), the Essentials' `topology.rs` (a configured
 path drawn before its first handoff) and `cluster.rs` (a starting node is not
 restarted), and `test/XmipTest.Test.ps1` (a stopped roll ends every process
 declared in its cluster and nothing declared in another).
@@ -1949,3 +1952,145 @@ of the secrets (ADR-0014, amendments 2026-10-29 and 2026-10-30), stands
 on the bar between the Event subscriptions and the Audit. It is a thin face
 as the others are: what it lists and sets is `Xmip.Surface`'s, behind the
 one gate, and it stands at one node, since a secret is a node's.
+
+## Amendment, 2026-11-10: motion follows traffic
+
+The owner wants the Essentials board to read as an ERP integration, from
+and to, with pulses traveling between the nodes (the demo of 2026-12-18).
+Over a run of real nodes every live node pulsed at the fastest rate and
+nothing traveled: a node's activity was one while its System Process said
+it was alive, whatever it carried (`observe::topology::draw`); a link's
+rate was its rise since the one publication before, about a second, so a
+link carrying a Message every few seconds read zero in most rounds; only
+the Essentials' roll stated a rate at all, so a node read directly said zero
+on every link; and a line ran a particle every 3.2 seconds whether anything
+had passed over it or not, on a straight path beside the curve it was drawn
+as. Which links exist is not changed here: where the Essentials' traffic
+flows is being redesigned beside this. **So on a run of real nodes — C1,
+the demo's board — no line is drawn yet, and only the nodes move**: no
+node publishes what it hands another, and the roll matches its Parties to
+endpoints by transport while a real node names each endpoint by its
+Location. The links between real nodes are open problem 62, to land by
+2026-12-08.
+
+- **What moved is measured over a window, once, in observe.**
+  `observe::topology::window::Window` keeps a publisher's readings of what
+  it drew, about one a second however often it publishes (`STEP`), and
+  states on each new drawing, per second, each link's rate and each drawn
+  thing's activity, measured from the newest reading at least `SPAN` —
+  thirty seconds — old, or from the oldest while the publisher has
+  published for less. A drawn thing's activity is the most of the Streams,
+  Journeys or Messages counted on a stage of the message path
+  (`Scope::stage`) at and beneath its scope that rose — its busiest stage,
+  so a Stream received and routed on one node is not counted twice; the
+  cluster's beneath its nodes, where its mood is read too
+  (`draw::node_rollup`); never what the Essentials' scenarios count at the
+  cluster in the roll's own process, nor a test's gauge beneath a node (the
+  daily backlog's depth, counted as Messages, which falls as it drains) —
+  or what its links carried into it or out of it, the more of the two,
+  where that is more, which is how a Party moves; what passes through a stage is not counted once coming in and
+  again going out. A figure that fell is a publisher that started over,
+  measured from the reading it fell in; a clock that steps back — a time
+  sync, a restored virtual machine — finds every reading later than the new
+  one, and the window starts over; a figure no longer drawn is forgotten.
+  Drawn, everything is still: nothing moved is zero, never a share of the
+  nodes alive. `Topology::rate_since` is deleted.
+- **A round costs one pass.** A reading holds every figure in the drawing's
+  own order, and where each of the snapshot's counts adds is worked out
+  once and kept while the drawing and the counts keep their shape, so a
+  round searches for no figure. Observe's timing program holds a drawing
+  of 1,201 things, 3,000 counts and 1,000 links under a millisecond
+  (`tests/measured`; about 0.2 ms). As first built, each drawn thing
+  measured the whole snapshot three times and walked every link: 101 ms for
+  as many, a round growing with the square of the cluster (the review of
+  2026-11-11).
+- **Every publisher states it.** The Essentials' roll keeps one window over
+  its rounds; a running node's drawing is stated by the window its
+  publisher keeps (`Running::publication(source, window)`, held by
+  `xmip-service` from one publication to the next; ADR-0018, amendment of
+  this date), so a surface over a node moves too. A stopped node is drawn
+  without one, and still.
+- **`activity` is per second.** A topology node's `activity` crosses as it
+  did, a double (`XmipTopologyNode`, section 8 of `xmip_operate.h`), and now
+  says what moved through it per second over its publisher's window rather
+  than a share from zero to one; `load` still runs from zero to one.
+- **On the canvas, motion follows traffic.** `Motion` in `Xmip.Gui` is the
+  one rule from what was stated to how the canvas moves. A rate is read in
+  bands, one more for every doubling, the tenth above 511 a second, and the
+  band drawn holds while the rate stays within it widened by a fifth at
+  each end: `TopologyGraph` keeps each line's and each node's band by id
+  from one round to the next, so a rate that wanders within its band, or a
+  steady one read a little each side of a band's edge — one a second
+  measured as 0.99 and 1.02 — changes nothing drawn, and no pulse starts
+  over when the next round is read; band zero is still, at once. A line
+  carries pulses only where its rate is above zero, riding the drawn curve
+  (`mpath`) from its sender to its receiver, leaving as often as its band
+  says: a pulse takes 3.2 seconds along a line at the first band and 0.8 at
+  the tenth, and each leaves a quarter of that after the one before however
+  many ride, so a retry's next attempt adds a pulse and moves none already
+  riding. The pattern keeps its pulses — four on a stream, two on a request
+  and its response or a session with the second running back, one per
+  attempt on a retry, one otherwise — and the sheet's three channels,
+  pattern, origin and health, are as they were; a pulse is drawn at a
+  radius of six, five on a stream's wider line, outlined in the paper at
+  2.5 so it stands off its line. A line keeps its element by its link's id
+  from one round to the next. A node pulses at its band's speed and is
+  still where nothing moved through it, and the inspector's Activity says
+  what moved in words — `6/s through it`, `0.03/s through it` for one
+  Message in the half minute, `idle: nothing moved` — never a percent.
+  `English.Moving`, which every surface writes a rate by, writes a trickle
+  below a twentieth with two decimals and below a two-hundredth `<0.01`,
+  never `0`; until 2026-11-11 one Message in the window was written `0/s`
+  beside a line its pulse rode.
+- **The board still computes a rate of its own.** The Monitor board and the
+  prompt read `FigureFlow.Between` in `Xmip.Surface`, the rise between the
+  two publications a reader saw, one round; the Topology reads the window's.
+  *No surface computes one* holds for the Topology alone until the
+  publication carries the window's figures per scope and every reader takes
+  them (open problem 63).
+- **Paused, or reduced, where traffic is still shows.** The same pulses
+  stand along the line at their places, drawn always and shown by the
+  stylesheet where the canvas is paused (*Pause movement*) or the reader's
+  system asks for reduced motion (`prefers-reduced-motion: reduce`), and a
+  node that carried traffic keeps its ring at the strength of what moved.
+  Each of those rules comes after, and is at least as specific as, the rule
+  it overrides.
+- **The Desktop and the Web alike.** Both host the one component and load
+  the one stylesheet, `_content/Xmip.Gui/xmip.css`, which a test now holds.
+
+Proved by `observe`'s `topology/window.rs` (a burst keeps moving through the
+rounds after it and stops once it left the window; a thing is as active as
+its busiest stage and idle when nothing moved; the cluster moves with its
+nodes and never with a test run at the cluster; a gauge a test keeps
+beneath a node never moves it, and its stages do; what passes through a stage
+moves it once; a publisher that started over is measured from its new
+start, past the oldest reading too; a clock that steps back starts the
+window over; a drawing of another shape carries what was read; a reading
+kept about once a second) and `topology/draw.rs` (drawn still), observe's
+timing program `tests/measured` (1,201 things in one pass, under a
+millisecond), the runtime's `running/publication.rs` (what the node counted
+moves its drawing over its publisher's window) and `tests/running` (what a
+running node received moves the drawing `Running::publication` states), the
+root crate's `.src/test/measured/publication.rs` (the service's Party link
+moves as it receives), the Essentials' `roll.rs` (each round drawn with what
+moved over the roll's window) and `topology.rs` (two rounds through the
+roll's window), `Xmip.Surface.Test` (`EnglishTest`: a trickle is never `0`;
+`ClusterSnapshotTest`: every drawn thing of the fixture as active as its
+links carried), and `Xmip.Gui.Test` (`MotionTest`: the bands and the band
+drawn holding, pulses a quarter apart, the radius, a trickle in words;
+`TopologyMotionTest`: pulses where traffic moved and none where it did not,
+on the drawn line from the sender, the answer running back, paused pulses
+standing, a node idle at zero, the inspector's words, a steady rate read
+each side of a band's edge keeping its pulses and its ring, a retry's next
+attempt moving no pulse already riding; `StillMotionStylesheetTest`: pause,
+reduced motion, the pulse's outline and both hosts on the one sheet).
+
+Provenance: the owner's request of 2026-11-10, with the review of the first
+plan for it taken as requirements, and the review of 2026-11-11 of what was
+built — the cost of a round, a clock that steps back, a restart past the
+oldest reading, the readings kept, the cluster's scope, a trickle written
+`0`, bands at round rates, pulses spaced by their count, the pulse's size,
+the fixture's old meaning, and tests that passed without the change. The
+thirty seconds, the step of a second, the bands and their fifth, the
+durations and the inspector's words are the assistant's drafting, for the
+owner to overrule.

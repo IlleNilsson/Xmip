@@ -14,6 +14,8 @@
 - Amended: 2026-10-22 — every node at level 1 a process of the assembled
   service, driven; a real node driven through the Parties' far end
 - Amended: 2026-11-04 — the Playground is named Essentials, everywhere
+- Amended: 2026-11-10 — Core.Demo, the demo readiness check, a third suite
+  of Xmip's own
 - Related: ADR-0018 (the Service and the Host Services), ADR-0027 (the operator
   boundary), ADR-0010 (contract and transport boundaries), ADR-0025 (when a
   Module loads), ADR-0052 (the views' "show test clusters" box, its
@@ -26,7 +28,7 @@
 - Subject: The Essentials exercises everything, all the time
 - Name: The Xmip Essentials
 - Order: 5
-- Concepts: Essentials, exercise, verdict; Development node; simulated node, real node, test level; Parties' far end, placing Locations on nodes
+- Concepts: Essentials, exercise, verdict; Development node; simulated node, real node, test level; Parties' far end, placing Locations on nodes; demo readiness check, Core.Demo
 
 **`xmip-test-essentials` exercises Xmip continuously.** It spawns Development
 nodes as System Processes on one machine — no virtualization — and drives every
@@ -951,3 +953,134 @@ the crate is `test/core/essentials` in the repository
 variables are `XMIP_ESSENTIALS_*`; a run's output is under
 `.local-work/essentials`; and a node's process is named `xmip-essentials-C1`
 and so on (ADR-0053). What the Essentials is and does is unchanged.
+
+## Amendment, 2026-11-10: Core.Demo, the demo readiness check
+
+The coordinator, preparing the owner's demo of 2026-12-18, 2026-11-10: a
+demo branch is cut on the owner's word, *demo time* (2026-12-15), and must
+be workable by 2026-12-16, so a check proves a tree demo-ready: it builds
+what the demo runs, runs it, says each part passed or failed in words with
+the reason, and stops everything it started. It is a third suite of Xmip's
+own beside `Core.Essentials` and `Core.Estate`, not a cmdlet of its own (the
+owner: as few cmdlets as possible; a new act on a known noun is a
+parameter).
+
+- **`Start-XmipTest -Suite Core.Demo -Cluster C1 -Stress Realistic -Tester
+  <person>`** starts it, detached in a pwsh of its own as the estate's suite
+  runs (`Start-XmipDetachedShell`, now the one launch of all three), its
+  record `demo-<start time>.toml` and its log under `.local-work/demo`. It
+  takes `-Cluster`, `-Stress`, `-Hidden` and `-Tester`, its own; an omitted
+  `-Stress` is `Realistic`, the stress the demo runs at, and never the
+  Essentials' hardest, which is the rule for a roll asked for by itself
+  (ADR-0059). Refused before anything starts: no `-Cluster`, since a test
+  never invents a cluster's name; a switch it does not take; a run of the
+  check still running, since two would share one web address and one
+  desktop app's folder and `gui.toml`; and a cluster that rolls or builds
+  already (`Get-XmipClusterRunning`, the one answer the Essentials' own
+  refusal of a second roll gives too), since a roll the check did not start
+  was built from some other tree, at some other stress, and proves nothing
+  of this one. Each of Xmip's suites refuses a switch another of them owns —
+  *-Tester belong to Core.Demo, not Core.Estate* (`Get-XmipSuiteSwitchRefusal`).
+- **Started by its name alone.** A pattern never selects it — `-Suite *`,
+  `-Suite Core.*` and `Get-XmipTestResult -Suite *` mean what they meant
+  before it came — because it builds and opens the desktop app, holds the web
+  host's address and rolls a cluster of its own; the suite carries that as
+  a capability, `ByName`, never read from its name (`Get-XmipNamedTestSuite`).
+- **The parts**, in order, each OK, FAILED or SKIPPED with the reason:
+  1. *roll* — the cluster rolled as `Start-XmipTest -Suite Core.Essentials`
+     rolls it, from this tree, at the run's stress; the pids of its build and
+     its roll are recorded as they appear. The build is load and is waited
+     for until it ends. From the roll's spawn its snapshot must be published
+     within the bound a fresh roll has for its first round, ten minutes
+     (`Wait-XmipSnapshot -Since`), and every node its run record declares
+     must then run; the seconds from the spawn to the snapshot are said.
+  2. *web* — `Start-XmipOperationWeb` over that snapshot with `-Tester`; its
+     address answers https, its certificate reaching the anchor the host
+     was given, which must be the Essentials' authority's. The probe stands
+     where a browser stands and reaches the host through .NET's TLS client:
+     the runtime's TLS is the host's side (`xmip_operate.h` section 21), no
+     TLS client of Xmip's reaches the tooling, and a browser's TLS is never
+     Xmip's. It trusts the Essentials' anchor alone, no operating system's
+     store (ADR-0063), and presents no certificate.
+  3. *desktop* — `dotnet build` of `Xmip.Operations` for
+     `net11.0-windows10.0.19041.0`, the program taken from the one line
+     `-getProperty:TargetPath` says that is a rooted path to a `.dll` that
+     is there, whatever warning or notice comes with it; the deployed
+     `gui.toml` beside its executable, never the source, rewritten through
+     the TOML reader's own pair (`ConvertTo-XmipTomlTable`) to
+     `Surface = "snapshot"` and `Snapshot =` the roll's; the app started and
+     up for a minute. **Only that it stays up is proved:** the app records
+     no surface or snapshot it opened — its process declaration names the
+     runtime library and its audit its start — and with a path it cannot
+     read it says so on its page and stays up, so its reason says it stayed
+     up and that the read is not proved. Proving the read needs the app to
+     declare what it opened, a change to `module/core/operation/gui` left
+     open.
+  4. *extension* — `Build-XmipService -Extension VsCode` writes the VSIX;
+     `xmip-lsp` is built by cargo in the extension's crate through the one
+     patched build the Essentials' binaries are built by
+     (`Invoke-XmipPatchedBuild`: every estate crate patched to its working
+     tree, a shared build directory's unhashed libraries cleared first),
+     found where cargo says it wrote it, started over stdio, asked
+     `initialize`, answering with its capabilities, then shut down and told
+     to exit.
+  5. *stop* — what the run started and nothing else, each only where it is
+     still what the run started: its roll by `Stop-XmipTest`, where a pid
+     recorded for it still rolls or builds as that cluster, never another
+     roll of the name; the web host by `Stop-XmipOperationWeb`, where
+     `Get-XmipOperationWeb` lists it; the desktop app where its pid is still
+     that program started at that moment (`Test-XmipDetachedAlive`), and not
+     at all once it ended by itself; the deployed `gui.toml` given back as
+     the build deploys it. One that will not stop is FAILED and the rest are
+     still stopped (`Stop-XmipDemoStarted`).
+
+  *web* and *desktop* are SKIPPED where the roll did not pass, with the
+  roll's own reason; *extension* is tried whatever the roll did. The run is
+  OK only where every part is, and a run that breaks off is FAILED.
+- **Observed and stopped as every run is.** `Get-XmipTestStatus` lists it,
+  running, OK or FAILED, its tally the part it is on or how many were OK,
+  read as every detached run is read (`Resolve-XmipDetachedRun`, the one
+  reading of an estate run, a demo run and a roll's build);
+  `Get-XmipTestResult -Suite Core.Demo` returns each part in the words the
+  run said it; `Stop-XmipTest` stops what it started first, as its record
+  names it, then its pwsh. A run whose pwsh died or was killed outside
+  `Stop-XmipTest` never ran its stop part: `Stop-XmipTest -Id` stops what
+  its record says it started and takes the record, and the next start of
+  the check does the same before it clears it. `Wait-XmipSnapshot` asks the
+  run records whether a roll is still coming, never `Get-XmipTestStatus`,
+  whose rows outlive their runs. A landing never runs it; nothing starts it
+  but a person.
+- **Audited (ADR-0062):** the run's start, each part's verdict and its end,
+  as `Test-XmipDemoReady`; the desktop app's start and the language
+  server's, each with its pid (`Start-XmipDemoDesktop`,
+  `Start-XmipLanguageServer`, the module's doors for them); and the commands
+  that audit themselves: `Start-XmipTest` and `Stop-XmipTest`,
+  `Start-XmipOperationWeb` and `Stop-XmipOperationWeb`, and
+  `Build-XmipService`, its extension build now begun and finished as a
+  site's is. The `dotnet` and `cargo` builds the check runs through
+  `Invoke-XmipTool` are not audited each; what they said is in the part's
+  verdict and the run's log.
+- **Not covered:** the runtime's native library (`xmip_core_runtime`) the
+  web host and the desktop app load through `RuntimeLibrary.Find` is not
+  built by the check: they load the one their configuration,
+  `XMIP_RUNTIME_LIBRARY` or their own folder names, built from this tree or
+  not.
+
+Proved by `test/Demo.Test.ps1` over fixtures: the refusals (a second run, a
+cluster taken), the start at `Realistic`, the words, the stop when a part
+fails or the run breaks off, what a run that died left, that only the run's
+own roll and desktop app are stopped, the roll timed from its spawn, the
+deployed `gui.toml` from either shape PSToml returns, the program dotnet
+names, the language server's framing, and the https probe where nothing
+answers, where a certificate reaches the anchor and where it does not; and
+by `test/XmipTest.Test.ps1`: a pattern never selects `Core.Demo`, a roll
+that stopped is not waited for whatever rows outlive it, and no module file
+outside a `Start-*` door starts a process by `Start-Process` or .NET's own
+start. The check itself was not run on 2026-11-10, the machine being busy.
+
+Provenance: the coordinator's brief above, and a reviewer's findings on the
+first draft, the same day. Making it a suite with `-Tester`, refusing a
+cluster already taken rather than following it, keeping it out of patterns,
+SKIPPED for the parts that read the roll, the bounds, and building
+`xmip-lsp` in the check are the assistant's drafting, for the owner to
+overrule.

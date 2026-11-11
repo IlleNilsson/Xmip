@@ -10,18 +10,67 @@
     against the 400 the estate allows a file and the owner asked for the estate to
     be consolidated. Start-XmipTest chooses and refuses; what each kind of suite
     then does is here, except the estate's own Pester suite, which is
-    Start-XmipEstateSuite.ps1 since 2026-09-25.
+    Start-XmipEstateSuite.ps1 since 2026-09-25, and the demo readiness check,
+    Start-XmipDemoSuite.ps1 since 2026-11-10. Which switches each suite takes
+    is Get-XmipSuiteSwitchRefusal.ps1.
 
     Style: doc/governance/powershell-style.md
 #>
 
 
-# The parameters that mean something only to the Essentials suite.
-[string[]] $script:XmipEssentialsOnly = @(
-    'Cluster',
-    'Stress', 'Rounds', 'Duration', 'TimeFactor'
-    'Nodes', 'OnlineNodes', 'NodeRole', 'LoadBytes', 'PassThru', 'Hidden'
-)
+function Start-XmipChosenSuite {
+    <#
+        .SYNOPSIS
+            Starts the one suite Start-XmipTest chose when it is not the
+            Essentials: the estate's Pester suite, the demo readiness check,
+            or a provider's.
+
+        .PARAMETER Chosen
+            The suite, from Get-XmipTestSuite.
+
+        .PARAMETER Caller
+            Start-XmipTest itself, for ShouldProcess.
+
+        .PARAMETER Bound
+            What Start-XmipTest was called with.
+
+        .PARAMETER Path
+            As Start-XmipTest takes it.
+
+        .PARAMETER Test
+            As Start-XmipTest takes it.
+    #>
+    [CmdletBinding()]
+    [OutputType([object])]
+    param(
+        [Parameter(Mandatory)]
+        [PSTypeName('Xmip.TestSuite')]
+        [PSObject] $Chosen,
+
+        [Parameter(Mandatory)]
+        [System.Management.Automation.PSCmdlet] $Caller,
+
+        [Parameter(Mandatory)]
+        [System.Collections.IDictionary] $Bound,
+
+        [Parameter()]
+        [string] $Path,
+
+        [Parameter()]
+        [string[]] $Test = @()
+    )
+
+    if ($Chosen.Kind -eq 'pester') {
+        [hashtable] $pester = @{ Caller = $Caller; Bound = $Bound; Suite = $Chosen.Name }
+        return Start-XmipPesterSuite @pester -Path $Path -Test $Test
+    }
+
+    if ($Chosen.Kind -eq 'demo') {
+        return Start-XmipDemoSuite -Caller $Caller -Bound $Bound
+    }
+
+    return Start-XmipProviderSuite -Suite $Chosen -Bound $Bound
+}
 
 function Resolve-XmipTestSuite {
     <#
@@ -105,11 +154,10 @@ function Start-XmipPesterSuite {
         [string[]] $Test = @()
     )
 
-    [string[]] $foreign = @($Bound.Keys | Where-Object { $_ -in $script:XmipEssentialsOnly })
+    [string] $refused = Get-XmipSuiteSwitchRefusal -Kind pester -Bound $Bound
 
-    if ($foreign.Count -gt 0) {
-        Write-Error ("-$($foreign -join ', -') belong to " +
-            "$script:XmipEssentialsSuite, not $Suite.")
+    if ($refused -ne '') {
+        Write-Error $refused
         return
     }
 
@@ -132,10 +180,12 @@ function Start-XmipTestSuiteGroup {
             records, the same -WhatIf. Two things differ, and only because a
             pattern chose the group rather than an operator naming one suite.
 
-            A switch that belongs to the Essentials alone is dropped for the
-            estate's Pester suite rather than refused — -Suite * -Cluster
-            <cluster> is not a mistake about -Cluster; it is a roll on that
-            cluster with the estate's files beside it. A provider's command keeps everything,
+            A switch a suite of Xmip's own does not take is dropped for it
+            rather than refused — -Suite * -Cluster <cluster> is not a mistake
+            about -Cluster; it is a roll on that cluster with the estate's
+            files beside it (Get-XmipSuiteSwitchForeign). The demo readiness
+            check is never in a group: a pattern does not select it
+            (Get-XmipNamedTestSuite). A provider's command keeps everything,
             since only the provider knows what its command takes.
 
             One suite that will not start does not stop the others, which is
@@ -174,8 +224,8 @@ function Start-XmipTestSuiteGroup {
         $forward['Suite'] = $one.Name
         $forward['ErrorAction'] = 'Stop'
 
-        if ($one.Kind -eq 'pester') {
-            foreach ($only in $script:XmipEssentialsOnly) {
+        if ($one.Kind -ne 'command') {
+            foreach ($only in @(Get-XmipSuiteSwitchForeign -Kind $one.Kind -Bound $forward)) {
                 $forward.Remove($only)
             }
         }

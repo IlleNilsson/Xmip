@@ -16,9 +16,9 @@ function Start-XmipTest {
             until you stop it, Get-XmipTestStatus says what runs and
             Stop-XmipTest ends it; Core.Estate is the Pester suite under
             test/, the estate's memory of every past defect, which runs in a
-            pwsh of its own, detached, and says OK or FAILED when it ends.
-            A third party's suite is <Provider>.<Name> and joins by a
-            declaration rather than by an edit to Xmip.
+            pwsh of its own, detached, and says OK or FAILED when it ends, as
+            Core.Demo, the demo readiness check, does part by part. A third
+            party's suite is <Provider>.<Name> and joins by a declaration.
 
             The Essentials (ADR-0028) is the estate's integration test over
             time: a roll drives every scenario round after round and publishes
@@ -46,22 +46,22 @@ function Start-XmipTest {
             `roll-<start time>.log` and `.err`, and `roll-<pid>.toml`.
 
         .PARAMETER Suite
-            Which test suite to run: Core.Essentials (the default) or
-            Core.Estate, which are Xmip's own. Every suite is
+            Which test suite to run: Core.Essentials (the default),
+            Core.Estate or Core.Demo, which are Xmip's own. Every suite is
             <Provider>.<Name> and core is the reserved provider that means
             Xmip itself (ADR-0011), so Core.Essentials is how the Essentials
             is spelled — in the run record, in every refusal and on every
             surface. A bare Essentials is still accepted and resolves to it,
             so nothing typed before this means anything else now. A third
             party's suite carries its own provider: <Provider>.<Name>. Case
-            does not matter. The Essentials parameters below belong to the
-            Essentials alone.
+            does not matter. The parameters below are the Essentials', and
+            Core.Demo takes -Cluster, -Stress, -Hidden and its own -Tester.
 
             Wildcards select a group, exactly as -Test does (the owner,
             2026-09-19): -Suite * is every suite this estate knows, -Suite
-            *Ess* is the Essentials, and a literal name is one suite as
-            before. A pattern matching nothing is REFUSED, naming it and the
-            suites there are, before anything starts.
+            *Ess* is the Essentials, a literal name is one suite as before,
+            and Core.Demo is started by its name alone. A pattern matching
+            nothing is REFUSED, naming it and the suites there are, before anything starts.
 
             Several suites matched run one after another in the order they
             are listed, each returning what it returns — the Essentials a
@@ -213,6 +213,10 @@ function Start-XmipTest {
             -Cluster C2 -Test RoundTrip -Nodes R1, P1, S1 -NodeRole
             @{ R1 = 'receiving'; P1 = 'processing'; S1 = 'sending' } -Hidden
 
+        .PARAMETER Tester
+            Core.Demo's alone: the person who demonstrates, as New-XmipCertificate
+            -Operator named them, handed to Start-XmipOperationWeb -Tester.
+
         .EXAMPLE
             # Omitted -Nodes: the Essentials' own cluster file's nodes
             # ([nodes.R1] roles = "receiving", and so on).
@@ -251,20 +255,16 @@ function Start-XmipTest {
             Start-XmipTest -Suite * -Cluster C1
 
         .EXAMPLE
-            Start-XmipTest -Suite *Ess* -Cluster C1
+            Start-XmipTest -Suite Core.Demo -Cluster C1 -Stress Realistic -Tester alice@example.org
     #>
     [CmdletBinding(SupportsShouldProcess, PositionalBinding = $false)]
     [OutputType('Xmip.TestStatus')]
     param(
         # The sentence is "start the Essentials' HeavyLoad": suite first, then
         # the tests, and nothing else by position (the owner, 2026-09-12).
-        #
-        # Neither the set nor the shape is declared here (ADR-0055 clauses 1
-        # and 2; ADR-0059, amendment 2026-09-19): a provider's suite is
-        # declared, not compiled in, so no ValidateSet can know it, and a
-        # ValidatePattern's refusal reaches the operator wrapped in
-        # PowerShell's own words. The completer offers the ones there are;
-        # the body refuses the rest, in the estate's words.
+        # Neither the set nor the shape is declared here: the completer offers
+        # the suites there are and the body refuses the rest, in the estate's
+        # words (Get-XmipTestSuiteRefusal says why; ADR-0055, ADR-0059).
         [Parameter(Position = 0)]
         [SupportsWildcards()]
         [ArgumentCompleter({
@@ -342,7 +342,11 @@ function Start-XmipTest {
         [switch] $PassThru,
 
         [Parameter()]
-        [switch] $Hidden
+        [switch] $Hidden,
+
+        [Parameter()]
+        [ValidateNotNullOrWhiteSpace()]
+        [string] $Tester
     )
 
     # The first failure ends the call (a cascade of twenty errors, 2026-09-12).
@@ -370,13 +374,9 @@ function Start-XmipTest {
     $chosen = $matched[0]
     $Suite = $chosen.Name
 
-    if ($chosen.Kind -eq 'pester') {
-        $pester = @{ Caller = $PSCmdlet; Bound = $PSBoundParameters; Suite = $Suite }
-        return Start-XmipPesterSuite @pester -Path $Path -Test $Test
-    }
-
-    if ($chosen.Kind -eq 'command') {
-        return Start-XmipProviderSuite -Suite $chosen -Bound $PSBoundParameters
+    if ($chosen.Kind -ne 'roll') {
+        [hashtable] $other = @{ Chosen = $chosen; Caller = $PSCmdlet; Bound = $PSBoundParameters }
+        return Start-XmipChosenSuite @other -Path $Path -Test $Test
     }
 
     # The Essentials' own work: checking the choice, then building, spawning

@@ -238,16 +238,26 @@ addressing model Xmip had written down anywhere.
 
 ## 8. Reports
 
-`xmip-core-report` answers *what happened over a period*: four reports, two
-of them mandatory because a security review board and an auditor need them
-before they know to ask, and every one derived from configuration and
-records, never authored by hand. Which four, and how each is derived, is
-`module/core/operation/report/doc/reports.md`. A Report presents existing
-data; a Quest probes for data to present in a Report (the owner,
-2026-11-07; `doc/terminology.md`, *Report and Quest*). Every Quest probes an
-installation handed to it and changes nothing; the first is the Regulation
-Quest, its regulation a parameter and GDPR the first, presenting evidence
-and gaps per requirement and never a verdict (ADR-0072;
+`xmip-core-report` answers *what happened over a period* and *what an
+installation shows*: every Report in one list, on every surface, each
+derived from configuration and records, never authored by hand (ADR-0072,
+amendment 2026-11-10). A Report presents existing data; a Quest probes for
+data to present in a Report (the owner, 2026-11-07; `doc/terminology.md`,
+*Report and Quest*). Each entry says with a small icon and its words which
+it is: **quick**, presenting data that already exists — the Audit, the Dead
+Messages, the Locations, the Subscriptions — or **takes longer**,
+presenting what a Quest probes first, with how long its last probe took.
+An entry not built yet is listed and says *not yet available*: the Parties,
+the expiring certificates and secrets, and every Quest but the Regulation
+Quest's. Two are mandatory, because a security review board and an auditor
+need them before they know to ask: the Firewall Report and the Identity and
+isolation Report (ADR-0022 clause 5), both in the list on every
+installation and both not yet available. Which Reports there are, and how
+each is derived, is `module/core/operation/report/doc/reports.md`. Every
+Quest probes an installation handed to it and changes nothing; the first is
+the Regulation Quest, its regulation a parameter and GDPR the first, and
+the Regulation Report presents what it probes: evidence and gaps per
+requirement, never a verdict (ADR-0072;
 [built, not in the assembled service](estate-map.md#regulation-quest)).
 
 ## 9. Ownership

@@ -22,15 +22,27 @@ Set-StrictMode -Version Latest
     round that takes longer than [`SNAPSHOT_WAIT`] is a round the operator
     should hear about rather than a console that hangs (ADR-0055).
 
+    Whether the run is still there is asked of the run records
+    (Get-XmipClusterRunning): a roll of the cluster, or its build. A row
+    Get-XmipTestStatus keeps after its run ended — a demo run's verdict, a
+    build that FAILED — is no roll to wait for (2026-11-10).
+
     .PARAMETER Path
     The snapshot to wait for, full path.
+
+    .PARAMETER Since
+    When the bound starts: now, or the roll's spawn where a caller knows it,
+    so the bound is the one a fresh roll has for its first round.
 #>
 function Wait-XmipSnapshot {
     [CmdletBinding()]
     [OutputType([void])]
     param(
         [Parameter(Mandatory = $true)]
-        [string] $Path
+        [string] $Path,
+
+        [Parameter()]
+        [datetime] $Since = (Get-Date)
     )
 
     if (Test-Path -LiteralPath $Path -PathType Leaf) {
@@ -48,7 +60,8 @@ function Wait-XmipSnapshot {
     [string] $cluster = [string] $rolling.Cluster
     Write-Host "   waiting for $cluster to publish its first round..." -ForegroundColor DarkGray
 
-    [datetime] $until = (Get-Date).Add($script:SnapshotWait)
+    [datetime] $until = $Since.Add($script:SnapshotWait)
+    [string] $area = (Get-XmipEssentialsLayout).Area
 
     while ((Get-Date) -lt $until) {
         if (Test-Path -LiteralPath $Path -PathType Leaf) {
@@ -58,10 +71,9 @@ function Wait-XmipSnapshot {
         # The run may end before it ever publishes — a roll refused at its
         # first round, a cluster stopped by hand. Then there is nothing to
         # wait for and saying so beats waiting out the bound.
-        [object[]] $alive = @(Get-XmipTestStatus -IncludeHidden -Cluster $cluster)
-        [bool] $still = $alive.Count -gt 0
+        [int[]] $alive = @(Get-XmipClusterRunning -Path $area -Cluster $cluster)
 
-        if (-not $still) {
+        if ($alive.Count -eq 0) {
             throw "REFUSED. $cluster stopped without publishing '$Path'."
         }
 

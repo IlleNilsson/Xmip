@@ -147,10 +147,20 @@ fn the_node_publishes_its_snapshot_and_a_pause_left_where_it_says_shows_in_the_n
     for message in 0..MESSAGES {
         deliver(&receive, format!("order {message}").as_bytes());
     }
-    published_until(&snapshot, Duration::from_secs(5), |publication| {
+    let (received, _) = published_until(&snapshot, Duration::from_secs(5), |publication| {
         count(publication, &format!("{node}/receive"), Counted::Streams) == MESSAGES
             && count(publication, &node, Counted::Failed) == MESSAGES
     });
+    // And they move its drawing, over the window the service keeps
+    // (ADR-0018, amendment 2026-11-10): the Party sending in, at a rate, and
+    // the node, at what moved through it.
+    let into = format!("party/sending/any-party/{}", node_name());
+    let drawn = received.topology.expect("the node is drawn");
+    let link = drawn.links.iter().find(|link| link.id == into);
+    assert!(link.is_some_and(|link| link.rate > 0.0), "{link:?}");
+    let at = format!("node/{}", node_name());
+    let moved = drawn.nodes.iter().find(|drawn| drawn.id == at);
+    assert!(moved.is_some_and(|node| node.activity > 0.0), "{moved:?}");
 
     // A pause left where the publication says, as a surface leaves it.
     Order {
@@ -199,6 +209,19 @@ fn the_node_publishes_its_snapshot_and_a_pause_left_where_it_says_shows_in_the_n
     assert!(
         stopped.is_some_and(|record| record.evidence.starts_with("stopped by the console")),
         "{stopped:?}"
+    );
+    // A stopped node is drawn still.
+    let still = left.topology.expect("drawn again");
+    assert!(
+        still
+            .links
+            .iter()
+            .all(|link| link.rate.abs() < f64::EPSILON)
+            && still
+                .nodes
+                .iter()
+                .all(|node| node.activity.abs() < f64::EPSILON),
+        "{still:?}"
     );
     let _ = std::fs::remove_dir_all(&directory);
 }

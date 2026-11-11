@@ -45,8 +45,8 @@ use xmip_runtime::registration::{REFUSED, ServiceDefinition, node_service_name};
 
 use crate::account::{self, Given};
 use crate::arguments::Arguments;
+use crate::audit;
 use crate::definition::{self, text};
-use crate::run;
 use crate::starter::starter;
 
 /// The node's configuration, sliced beside its cluster's `cluster.xmip`.
@@ -71,11 +71,11 @@ fn ended(audit: &ProgramAudit, action: &str, outcome: Result<String, String>) ->
     match outcome {
         Ok(said) => {
             println!("OK: {said}");
-            run::record(audit, action, ExecutionPhase::Finished, &[("said", &said)]);
+            audit::record(audit, action, ExecutionPhase::Finished, &[("said", &said)]);
             ExitCode::SUCCESS
         }
         Err(problem) => {
-            run::fail(audit, action, &format!("xmip-service: {problem}"));
+            audit::fail(audit, action, &format!("xmip-service: {problem}"));
             ExitCode::from(REFUSED)
         }
     }
@@ -91,7 +91,7 @@ fn installed(audit: &ProgramAudit, arguments: &Arguments) -> Result<String, Stri
         .parent()
         .unwrap_or_else(|| Path::new("."))
         .to_path_buf();
-    run::record(audit, "install", ExecutionPhase::Begin, &[("node", node)]);
+    audit::record(audit, "install", ExecutionPhase::Begin, &[("node", node)]);
     std::fs::create_dir_all(&directory).map_err(|error| said(&directory, &error))?;
 
     let node_file = directory.join(NODE_FILE);
@@ -146,7 +146,7 @@ fn uninstalled(audit: &ProgramAudit, arguments: &Arguments) -> Result<String, St
         xmip_runtime::start::read(&arguments.configuration).map_err(|unread| unread.reason)?;
     let node = document.service.node_name;
     let name = node_service_name(&node);
-    run::record(
+    audit::record(
         audit,
         "uninstall",
         ExecutionPhase::Begin,

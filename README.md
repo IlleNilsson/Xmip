@@ -488,7 +488,7 @@ node behind it — validating, editing and slicing configuration, the
 language server's design exports, module probing, the audit file and
 Modules — is called across the C ABI directly.
 
-Both GUIs show six views: Monitor, the default, the board that follows
+Both GUIs show nine views: Monitor, the default, the board that follows
 receive, process and send as the cluster moves; Configuration, the classic
 tree of the whole cluster, held still; Topology, the cluster's own
 communication, with the Parties that send into it on the left and those it
@@ -508,7 +508,21 @@ the subscriber, a Party; the cluster and the node that holds it; the action it
 subscribes to; its state and what its queue did — drilled cluster → node →
 Event subscription, where an Operator pauses, resumes and removes one
 ([ADR-0065](doc/decision/ADR-0065-events-are-subscribed-from-any-language.md),
-amendments 2026-09-29 and 2026-09-30). From any row the drill-down goes through the configuration
+amendments 2026-09-29 and 2026-09-30); Dead Message Queue, the accepted
+Messages no Subscription matched, each with every Subscription's decline,
+where an Operator replays one
+([ADR-0052](doc/decision/ADR-0052-the-operator-surfaces-share-one-model.md),
+amendment 2026-10-01); Secrets, what each Location presents to the party it
+connects to, named and never shown
+([ADR-0014](doc/decision/ADR-0014-operator-surfaces.md), amendment
+2026-10-30); and Reports, every Report in one list, each with a plain icon
+beside its words — a bolt for *Quick*, a Report that presents data that
+already exists, such as the Audit, and an hourglass for *Takes longer*, a
+Report that presents what a Quest probes first, such as the Regulation
+Report, with how long its last probe took — and those not yet available
+listed and said so
+([ADR-0072](doc/decision/ADR-0072-a-quest-probes-and-the-regulation-is-a-parameter.md),
+amendment 2026-11-10). From any row the drill-down goes through the configuration
 that declared the scope and ends at that configuration
 ([ADR-0052](doc/decision/ADR-0052-the-operator-surfaces-share-one-model.md),
 amendment 2026-09-14).
@@ -711,10 +725,13 @@ subscriptions the nodes hold, with `--pause`, `--resume` or `--remove` on
 one, and `xmip dead-messages`, what each node's Dead Message Queue keeps,
 with `--message` to open one and `--replay` on it, and `xmip message`,
 the Messages that failed at each Send Port, a page at a time, with
-`--retry` or `--dismiss` on one; the PowerShell module answers the same as
-objects, the audit, the Subscriptions, the Event subscriptions, the Dead
-Message Queues and the failed Messages included, and takes listing, Retry
-and Dismiss of failed Messages as parameters of its scope cmdlet. A person's
+`--retry` or `--dismiss` on one, and `xmip report`, every Report in one
+list, each quick or taking longer, with `--configuration` opening one whose
+Quest probes a node's configuration; the PowerShell module answers the same
+as objects, the audit, the Subscriptions, the Event subscriptions, the Dead
+Message Queues, the failed Messages and the Reports included, every Report
+through its one report cmdlet, and takes listing, Retry and Dismiss of
+failed Messages as parameters of its scope cmdlet. A person's
 certificate for reaching a node's operate listener, the phone first —
 client authentication alone, its subject the person — is made and signed by
 `xmip certificate --operator <person>` and `xmip certificate
@@ -881,11 +898,12 @@ Start-XmipTest -Suite Core.Estate -Test Rust.Style    # test/Rust.Style.Test.ps1
 Get-XmipTestStatus                                    # building, running, OK or FAILED
 Get-XmipTestResult -Suite Core.Estate                 # one object per failed test
 Start-XmipTest -Suite Core.Essentials -Cluster C1 -Test RoundTrip  # omit -Nodes: dealt
-Start-XmipTest -Suite * -Cluster C1                   # every suite this estate knows
+Start-XmipTest -Suite * -Cluster C1                   # every suite but Core.Demo, run by name
+Start-XmipTest -Suite Core.Demo -Cluster C1 -Stress Realistic -Tester alice@example.org
 ```
 
-Four kinds of test. `Publish-XmipChange` runs the first three where a
-change touched them, and never the Essentials:
+Five kinds of test. `Publish-XmipChange` runs the first three where a
+change touched them, and never the Essentials or the demo readiness check:
 
 | Suite | Runs | Command |
 | --- | --- | --- |
@@ -893,6 +911,7 @@ change touched them, and never the Essentials:
 | The Essentials' own | `test/core/essentials` | `cargo test` in `test/core/essentials` |
 | The estate's | the style rules, the manifest, the record, the estate module, one Pester file each under `test/` | `Start-XmipTest -Suite Core.Estate`, then `Get-XmipTestStatus`, `Get-XmipTestResult -Suite Core.Estate`, `Stop-XmipTest -Suite Core.Estate` |
 | The Essentials | Xmip end to end, every transport by every contract, as a cluster you name | `Start-XmipTest -Suite Core.Essentials -Cluster <name>`, then `Get-XmipTestStatus`, `Get-XmipTestResult -Worst`, `Stop-XmipTest` |
+| The demo readiness check | what the owner's demo runs: a roll of the cluster you name, the web operations tool over it, the Desktop operations app over the same snapshot, the VS Code extension and its language server | `Start-XmipTest -Suite Core.Demo -Cluster <name> -Stress Realistic -Tester <person>`, then `Get-XmipTestStatus`, `Get-XmipTestResult -Suite Core.Demo`, `Stop-XmipTest -Suite Core.Demo` |
 
 What it runs before anything is pushed, every estate crate patched to its
 working tree and built in the one shared directory, the first failure
@@ -954,8 +973,8 @@ first Linear release, work commits directly to `main`
 
 A suite is named `<Provider>.<Name>`, like every other name in the estate
 (ADR-0011, ADR-0059), and `core` is the reserved provider that means Xmip
-itself — so Xmip's own two are `Core.Essentials` and `Core.Estate`, and that
-is what every record, refusal and surface spells. A bare `Essentials` is
+itself — so Xmip's own are `Core.Essentials`, `Core.Estate` and `Core.Demo`,
+and that is what every record, refusal and surface spells. A bare `Essentials` is
 accepted and resolves to `Core.Essentials`, so nothing you have typed stops
 working. A provider's suite carries its own name: `<Provider>.<Name>`.
 A provider adds a suite by dropping a declaration in `test/suite` —
@@ -963,13 +982,30 @@ A provider adds a suite by dropping a declaration in `test/suite` —
 own source.
 Omit `-Test` and the whole suite runs, for every suite and every provider.
 
-Both of Xmip's suites start detached and give the prompt back at once. The
+Xmip's suites start detached and give the prompt back at once. The
 estate's runs Pester in a `pwsh` of its own, with no window, and writes its
 record and log under `.local-work/estate`: `Get-XmipTestStatus` lists it beside
 the rolls as running, OK or FAILED with its counts, `Get-XmipTestResult -Suite
 Core.Estate` returns what failed, path and message, and `Stop-XmipTest -Suite
 Core.Estate` ends it (ADR-0059, amendment 2026-09-25). Nothing starts itself:
 Start starts, Status observes, Stop stops.
+
+`Core.Demo` proves a tree ready for the owner's demo (ADR-0028, amendment
+2026-11-10), in a `pwsh` of its own the same way, its record and log under
+`.local-work/demo`. It rolls the cluster `-Cluster` names from this tree at
+`-Stress` (`Realistic` where it is not given), and refuses a cluster that
+already rolls or builds rather than follow it; starts the web operations
+tool over its snapshot with `-Tester` and checks the address answers https
+under the Essentials' authority; builds the Desktop operations app and
+checks it stays up for a minute over the same snapshot, through the
+`gui.toml` deployed beside it; builds the VS Code extension and `xmip-lsp`
+and asks the server to initialize; then stops everything it started. Each
+part is said OK, FAILED or SKIPPED in words with the reason:
+`Get-XmipTestStatus` says the part it is on, `Get-XmipTestResult -Suite
+Core.Demo` each part, and `Stop-XmipTest` stops what it started and then the
+run. It takes `-Cluster`, `-Stress`, `-Hidden` and `-Tester` and refuses
+every other switch, and a second run while one runs; `-Tester` is refused on
+the other suites. It is started by its name alone: no pattern selects it.
 
 `-Test` takes wildcards, as every filter parameter in the module does:
 `-Test Round*` is RoundTrip, `-Test *` is every test and says the same as
@@ -1064,10 +1100,10 @@ Every command that changes state accepts `-WhatIf`. Reporting is the default.
 | `Get-XmipStatus` | The whole estate at once: dirty, ahead, behind, and new modules. |
 | `Publish-XmipChange` | Test and land a change, dependency order, modules first. Aliased `xgit` and `xmip-git`. |
 | `Publish-XmipPin` | Move the superproject's gitlinks to where the modules now are: how a land ends, and how one that stopped halfway is finished. |
-| `Start-XmipTest`, `Get-XmipTestStatus`, `Stop-XmipTest` | A suite of Xmip's tests: `Core.Essentials`, `Core.Estate` — a bare name is accepted and resolves to those — or a provider's `<Provider>.<Name>`. `-Suite` takes wildcards. Xmip's own two start detached and are observed and stopped from outside. |
+| `Start-XmipTest`, `Get-XmipTestStatus`, `Stop-XmipTest` | A suite of Xmip's tests: `Core.Essentials`, `Core.Estate`, `Core.Demo` — a bare name is accepted and resolves to those — or a provider's `<Provider>.<Name>`. `-Suite` takes wildcards. Xmip's own start detached and are observed and stopped from outside; `-Tester` is the demo readiness check's alone. |
 | `Start-XmipTestNode`, `Get-XmipTestNode`, `Stop-XmipTestNode` | Simulated node processes, by name. |
 | `Deploy-XmipEnvironment` | Make an environment's machines with Microsoft DSC v3 from one TOML file: the network, then each machine installed from its ISO, on Hyper-V or libvirt (`deploy/dsc/msdsc/<hypervisor>`); `-WhatIf` tests. |
-| `Get-XmipTestResult`, `Get-XmipHistory` | What a run reports, now and over time. `Get-XmipTestResult -Suite Core.Estate` reads the estate run's record and returns its failures. `Get-XmipTestResult` reads the snapshot through the operator module's `Xmip.Surface` and ranks by the runtime's order, as every surface does, and `Get-XmipHistory` reads the history through the runtime's reader (`observe::Curve`) the same way; the module is built once per change of its sources into `.local-work/operator` and loaded from there on first use, and the runtime (`cargo build` in `module/platform/runtime`) must be built. |
+| `Get-XmipTestResult`, `Get-XmipHistory` | What a run reports, now and over time. `Get-XmipTestResult -Suite Core.Estate` reads the estate run's record and returns its failures, and `-Suite Core.Demo` every part of the latest demo readiness check, OK, FAILED or SKIPPED with its reason. `Get-XmipTestResult` reads the snapshot through the operator module's `Xmip.Surface` and ranks by the runtime's order, as every surface does, and `Get-XmipHistory` reads the history through the runtime's reader (`observe::Curve`) the same way; the module is built once per change of its sources into `.local-work/operator` and loaded from there on first use, and the runtime (`cargo build` in `module/platform/runtime`) must be built. |
 | `Start-XmipOperationWeb`, `Get-XmipOperationWeb`, `Stop-XmipOperationWeb` | The web GUI, detached; it opens no browser. One host holds one cluster per `-Snapshot`. |
 | `Get-XmipDecisionRecord`, `New-XmipDecisionIndex` | The decision record and its index. |
 | `Get-XmipRepositoryRoot`, `Expand-XmipEstate` | The module's own footing: find the estate from any working directory, and flatten `architecture.toml`'s nesting into repositories. |

@@ -77,6 +77,42 @@ function Get-TomlValue {
 }
 
 
+function ConvertTo-XmipTomlTable {
+    <#
+        A TOML node, dictionary-shaped or object-shaped, as an ordered
+        dictionary Write-XmipToml writes back: read key by key through
+        Get-TomlKey and Get-TomlValue, a table inside it copied the same way,
+        so a document can be changed and written whichever shape PSToml
+        returned (2026-11-10). Nothing gives an empty one.
+    #>
+    [CmdletBinding()]
+    [OutputType([System.Collections.Specialized.OrderedDictionary])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [AllowNull()]
+        $Node
+    )
+
+    [System.Collections.Specialized.OrderedDictionary] $table = [ordered]@{}
+
+    foreach ($key in @(Get-TomlKey -Node $Node)) {
+        $value = Get-TomlValue -Node $Node -Name $key
+        [bool] $nested = $value -is [System.Collections.IDictionary] -or
+            $value -is [System.Management.Automation.PSCustomObject]
+
+        # Assigned in each branch: an if's output would unroll a list of one.
+        if ($nested) {
+            $table[$key] = ConvertTo-XmipTomlTable -Node $value
+        }
+        else {
+            $table[$key] = $value
+        }
+    }
+
+    return $table
+}
+
+
 function Import-XmipToml {
     <#
         Loads PSToml, or says how to get it. The module imports without it

@@ -23,7 +23,7 @@ use xmip_configure::XmipConfigurationDocument;
 use xmip_runtime::registration::REFUSED;
 
 use crate::arguments::Arguments;
-use crate::run;
+use crate::audit;
 
 /// Print the ports, or refuse in words.
 pub fn print(audit: &ProgramAudit, arguments: &Arguments) -> ExitCode {
@@ -35,7 +35,7 @@ pub fn print(audit: &ProgramAudit, arguments: &Arguments) -> ExitCode {
             ExitCode::SUCCESS
         }
         Err(unread) => {
-            run::fail(
+            audit::fail(
                 audit,
                 "listening",
                 &format!("xmip-service: {}", unread.reason),

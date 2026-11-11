@@ -16,7 +16,7 @@
   design lives
 - Name: Developers design in VS Code
 - Order: 20
-- Concepts: Xmip Application; designer; binding
+- Concepts: Xmip Application; designer; binding; Send Location target, destination::OWN
 
 **A developer designs graphically in VS Code, as in BizTalk: routes first,
 then transforms, then processes. What they draw belongs to an Xmip Application —
@@ -493,3 +493,65 @@ is asked of the owner before it is drawn. Provenance: the ruling is the
 owner's, 2026-11-07; recognition and fit as declarations, the two ways in,
 and the names Wizard, Guide, *Sort out* and *Put together* (his words) are
 the assistant's drafting, for the owner to overrule.
+
+## Amendment, 2026-11-10: a Send Location sends where its configuration says
+
+Found 2026-11-10, while the Essentials board was made to read as an ERP
+integration: a Send Location of Kafka, MQTT, NATS and the other brokers sent
+to a topic named after its broker. Since the amendment of 2026-10-28 the
+runtime named every send's target the Location's address in its
+technology's own terms (`Sending::target`) — `host:9092` for
+`kafka://host:9092` — and a technology whose address names the server and
+whose settings name the destination on it reads a target without a scheme
+as a destination alone.
+
+- **The technology says what its Location's sends name.**
+  `transport::Configured::own_target`, beside `own_terms`, is the target
+  every send from a Location at an address names; the runtime asks it once,
+  as it builds the Location's transport (`LinkedTransport::target`). By
+  default it is the address in the technology's own terms, for a technology
+  whose address is where a send goes: file, FTP, SFTP, HTTP, TCP, UDP and
+  the rest send where they did.
+- **The empty target is the configured destination.** A technology whose
+  address names a server and whose settings name the destination on it
+  names `transport::destination::OWN`, the empty target, and reads it as
+  that destination: Kafka and Redpanda (`topic`), MQTT (`topic`), NATS and
+  NATS JetStream (`subject`), RabbitMQ (`queue`), Redis Streams (`stream`),
+  IMAP (`mailbox`), ActiveMQ (`destination`), AMQP (`exchange` and
+  `routing_key`), IBM MQ (`queue_manager` and `queue`, which now applies to
+  a Send Location too), Amazon SNS (`topic_arn`), Amazon Kinesis (`stream`),
+  Azure Service Bus (`queue`), Azure Event Hubs (`hub` and `partition`),
+  Google Pub/Sub (`project` and `topic`), Peppol (`party`), and CANopen,
+  EtherCAT and IO-Link (the object or parameter their settings name). The
+  AWS, Azure and Google ones and the fieldbus ones read the empty target so
+  already, as AS2 and AS4 do; the brokers, IBM MQ and Peppol gained it.
+- **The empty target is read once**: `transport::destination::named`, which
+  every technology that takes it as what its Location configured asks in
+  place of its own comparison — the ones above, Amazon SQS, Azure Event
+  Grid, AS2 and AS4.
+- **A target naming another still wins**: a topic alone, or
+  `kafka://host:9092/invoices`, as before. The reading for a server and one
+  destination on it is written once, `transport::destination::on_server`,
+  which Kafka, MQTT, NATS, NATS JetStream, Redpanda, RabbitMQ, Redis Streams
+  and IMAP call in place of the copy each kept.
+- **Peppol keeps its address whole.** `peppol://ap.example/as4` is read under
+  AS4's schemes (`as4::SCHEMES`), where `peppol://` is `as4://` on the wire;
+  `own_terms` had cut it to `ap.example/as4`, which no AS4 transport reads,
+  and a Send Location then named that as a participant. A Peppol address
+  guarded by TLS has no scheme of its own yet; the directory and a target
+  URL still name an `https://` access point.
+
+A technology whose address names its destination itself keeps it: an
+Amazon SQS queue URL, an Event Grid topic endpoint. Open, and not decided
+here: the object stores (S3, Google Cloud Storage, Azure Blob), NFS and SMB
+take the name of each object a send writes from its target alone, so a
+Send Location writes every Message
+under one name; the SQL technologies take a send's table and column, and
+SMTP its recipient, from the target only, which no setting names; and the
+AWS, Azure and Google technologies are handed their endpoint without its
+scheme (`own_terms` of `aws-sns://…`), which their HTTP client does not
+read as a URL. Provenance: the defect is the 2026-11-10 finding; the names
+`own_target`, `destination::OWN`, `destination::named` and
+`destination::on_server`, the empty target rather than the address with
+its scheme, and `peppol://` as `as4://` on the wire, are the assistant's,
+for the owner to overrule.

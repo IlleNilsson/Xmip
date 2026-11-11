@@ -21,7 +21,7 @@ use xmip_audit::program_audit::ProgramAudit;
 use xmip_runtime::registration::REFUSED;
 
 use crate::arguments::Arguments;
-use crate::run;
+use crate::audit;
 
 /// Print the slice, or refuse in words.
 pub fn print(audit: &ProgramAudit, arguments: &Arguments) -> ExitCode {
@@ -31,7 +31,7 @@ pub fn print(audit: &ProgramAudit, arguments: &Arguments) -> ExitCode {
             ExitCode::SUCCESS
         }
         Err(problem) => {
-            run::fail(audit, "slice", &format!("xmip-service: {problem}"));
+            audit::fail(audit, "slice", &format!("xmip-service: {problem}"));
             ExitCode::from(REFUSED)
         }
     }

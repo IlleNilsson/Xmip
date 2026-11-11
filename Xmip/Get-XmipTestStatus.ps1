@@ -23,6 +23,11 @@ function Get-XmipTestStatus {
             FAILED, the reason in Fault and Tally — cargo's first error, or
             that its pwsh was stopped or died — until that cluster is started
             again.
+            A run of Core.Demo, the demo readiness check, is listed from its
+            record under .local-work/demo as an estate run is, with the
+            cluster it rolls: State running, OK or FAILED in
+            words, and Tally the part it is on or how many parts were OK;
+            Get-XmipTestResult -Suite Core.Demo says each part and why.
             Reads the run records Start-XmipTest wrote under -Path and
             keeps the ones whose process is alive and is the Essentials' own
             roll binary — never a process that merely shares the name. A roll
@@ -94,16 +99,21 @@ function Get-XmipTestStatus {
     [object[]] $builds = @(
         Get-XmipEssentialsBuild -Path $Path | Where-Object { "$($_.Cluster)" -like $Cluster }
     )
+    [object[]] $demos = @(
+        Get-XmipDemoRun -Path $layout.Demo | Where-Object { "$($_.Cluster)" -like $Cluster }
+    )
 
-    if ($rolls.Count -eq 0 -and $builds.Count -eq 0) {
+    if ($rolls.Count -eq 0 -and $builds.Count -eq 0 -and $demos.Count -eq 0) {
         return
     }
 
     Import-XmipOperatorModule
     $rules = [Xmip.Surface.RuntimeLibrary]::Rules
 
-    # A roll still building, or whose build FAILED, until its nodes start:
-    # shown and hidden by the one rule, as a roll is.
+    # A demo run, running or finished, and a roll still building, or whose
+    # build FAILED, until its nodes start: shown and hidden by the one rule,
+    # as a roll is.
+    $demos | Where-Object { $rules.Shown([bool] $_.Hidden, [bool] $IncludeHidden) }
     $builds | Where-Object { $rules.Shown([bool] $_.Hidden, [bool] $IncludeHidden) }
 
     if ($rolls.Count -eq 0) {

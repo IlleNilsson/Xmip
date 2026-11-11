@@ -15,7 +15,7 @@ use xmip_runtime::registration::{
 };
 
 use crate::arguments::Arguments;
-use crate::run;
+use crate::audit;
 
 /// The directory under the node's data directory its audit is written in,
 /// which the service is told through `XMIP_AUDIT_DIRECTORY` (ADR-0062).
@@ -31,7 +31,7 @@ pub fn print(audit: &ProgramAudit, arguments: &Arguments) -> ExitCode {
             ExitCode::SUCCESS
         }
         Err(problem) => {
-            run::fail(audit, "definition", &format!("xmip-service: {problem}"));
+            audit::fail(audit, "definition", &format!("xmip-service: {problem}"));
             ExitCode::from(REFUSED)
         }
     }

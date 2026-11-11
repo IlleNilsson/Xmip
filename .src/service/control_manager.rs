@@ -22,9 +22,9 @@ use windows_service::service_dispatcher;
 use xmip_audit::program_audit::ProgramAudit;
 use xmip_runtime::registration::REFUSED;
 
-use crate::PROGRAM;
 use crate::arguments::Arguments;
 use crate::run::{self, Ended, StoppedBy};
+use crate::{PROGRAM, audit};
 
 /// What the process was told, for the service's main, which the dispatcher
 /// calls with nothing of it.
@@ -53,7 +53,7 @@ pub fn run(program: String, audit: ProgramAudit, arguments: Arguments) -> ExitCo
         Ok(()) => ExitCode::from(ENDED.get().copied().unwrap_or(0)),
         Err(error) => {
             if let Some(told) = TOLD.get() {
-                run::fail(
+                audit::fail(
                     &told.audit,
                     "start",
                     &format!(
@@ -88,7 +88,7 @@ fn serve(told: &Told) {
                 "{}: cannot take the manager's controls: {error}",
                 told.program
             );
-            run::fail(&told.audit, "start", &problem);
+            audit::fail(&told.audit, "start", &problem);
             let _ = ENDED.set(REFUSED);
             return;
         }

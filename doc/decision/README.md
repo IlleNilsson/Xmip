@@ -990,7 +990,7 @@ is found.**
 
 → [An audit record holds what it audits, in full](ADR-0070-an-audit-record-holds-what-it-audits.md)
 
-### What a Quest is, and how the Regulation Quest presents a regulation's evidence and gaps
+### What a Quest is, and how the Regulation Report presents what the Regulation Quest finds: a regulation's evidence and gaps
 
 **A Quest probes an installation handed to it and returns what it found,
 the data a Report presents; it changes nothing it probes. The first is the
@@ -1104,6 +1104,7 @@ You have a word. This gives you the decision that governs it.
 | Deduplication, duplicates | [The Journey model](ADR-0013-journey-model.md) |
 | Delay-load, eager and delayed Modules | [When a Module loads](ADR-0025-when-a-module-loads.md) |
 | Delegation, constrained and unconstrained | [Identity classes and runtime isolation](ADR-0022-identity-classes-and-runtime-isolation.md) |
+| demo readiness check, Core.Demo | [The Xmip Essentials](ADR-0028-the-xmip-essentials.md) |
 | dependency injection | [Every dependency is a trait, handed in](ADR-0068-every-dependency-is-a-trait-handed-in.md) |
 | designer | [Developers design in VS Code](ADR-0064-developers-design-in-vs-code.md) |
 | Development node | [The Xmip Essentials](ADR-0028-the-xmip-essentials.md) |
@@ -1121,6 +1122,7 @@ You have a word. This gives you the decision that governs it.
 | estate map | [The estate map is generated](ADR-0060-the-estate-map-is-generated.md) |
 | Event | [Events are subscribed from any language](ADR-0065-events-are-subscribed-from-any-language.md) |
 | Event subscription | [Events are subscribed from any language](ADR-0065-events-are-subscribed-from-any-language.md) |
+| every Report in one list | [A Quest probes, and the regulation is a parameter](ADR-0072-a-quest-probes-and-the-regulation-is-a-parameter.md) |
 | evidence | [A Quest probes, and the regulation is a parameter](ADR-0072-a-quest-probes-and-the-regulation-is-a-parameter.md) |
 | expression | [Routes are configured; transforms and processes are compiled](ADR-0066-routes-are-configured-transforms-and-processes-are-compiled.md) |
 | fallback | [A resilience technology is a guard on the attempt](ADR-0048-a-resilience-technology-is-a-guard-on-the-attempt.md) |
@@ -1227,6 +1229,7 @@ You have a word. This gives you the decision that governs it.
 | SDK | [A provider builds against the capabilities; the SDK simulates](ADR-0061-a-provider-builds-against-the-sdk.md) |
 | second link | [A node has one address](ADR-0067-a-node-has-one-address.md) |
 | Security roles | [Security roles versus Actor capabilities](ADR-0009-security-roles-vs-actor-capabilities.md) |
+| Send Location target, destination::OWN | [Developers design in VS Code](ADR-0064-developers-design-in-vs-code.md) |
 | Send Location, Send Port | [Send-side identity inheritance](ADR-0006-send-side-identity-inheritance.md) |
 | service principal name, SPN | [A principal name is read one way](ADR-0054-a-principal-name-is-read-one-way.md) |
 | Shape | [A message technology is the shape of content](ADR-0047-a-message-technology-is-the-shape-of-content.md) |
@@ -1267,6 +1270,7 @@ You have a word. This gives you the decision that governs it.
 | the vendor crate | [A technology shares through its capability](ADR-0044-a-technology-shares-through-its-capability.md) |
 | the whole suite | [A test suite carries its provider](ADR-0059-a-test-suite-carries-its-provider.md) |
 | Throughput, measurement, window | [The operator boundary](ADR-0027-the-operator-boundary.md) |
+| TLS session resumption | [Certificates on Receive and Send](ADR-0033-certificates-on-receive-and-send.md) |
 | Trait | [Every dependency is a trait, handed in](ADR-0068-every-dependency-is-a-trait-handed-in.md) |
 | trait table | [A vtable is a promise; only a loader is a saving](ADR-0057-a-vtable-is-a-promise-only-a-loader-is-a-saving.md) |
 | Transport, direction-neutral | [Contract and transport boundaries](ADR-0010-contract-transport-repository-boundaries.md) |

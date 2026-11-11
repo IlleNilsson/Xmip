@@ -46,63 +46,8 @@ function Get-XmipEssentialsChoice {
 }
 
 
-function Get-XmipEssentialsRolling {
-    <#
-        .SYNOPSIS
-            The pids rolling as a cluster, from the run records in a directory.
-            Stale records are removed before this is asked, so a record here is
-            a roll that runs.
-    #>
-    [CmdletBinding()]
-    [OutputType([int])]
-    param(
-        [Parameter(Mandatory)]
-        [string] $Path,
-
-        [Parameter(Mandatory)]
-        [string] $Cluster
-    )
-
-    foreach ($recorded in @(Get-XmipRollRecord -Path $Path)) {
-        [string] $rolledAs = [string](
-            Get-TomlValue -Node $recorded.Record -Name 'cluster' -Default ''
-        )
-
-        if ($rolledAs -eq $Cluster) {
-            $recorded.Id
-        }
-    }
-}
-
-
-function Remove-XmipEssentialsStaleRecord {
-    <#
-        .SYNOPSIS
-            Deletes run records whose roll is no longer running — a roll that
-            reached its rounds or its ceiling leaves one behind.
-    #>
-    [CmdletBinding()]
-    [OutputType([void])]
-    param(
-        [Parameter(Mandatory)]
-        [string] $Path
-    )
-
-    $layout = Get-XmipEssentialsLayout
-
-    foreach ($recorded in @(Get-XmipRollRecord -Path $Path)) {
-        $process = Get-Process -Id $recorded.Id -ErrorAction SilentlyContinue
-        [bool] $alive = $null -ne $process -and
-            (Get-XmipEssentialsImageKind -Name $process.ProcessName) -eq 'Roll' -and
-            (Test-XmipEssentialsBinary -Process $process -Path $layout.Roll)
-
-        if (-not $alive) {
-            Remove-Item -LiteralPath $recorded.File -Force
-        }
-    }
-}
-
-
+# What already rolls or builds as a cluster is Get-XmipClusterRunning.ps1, the
+# one answer this refusal and the demo readiness check's share (2026-11-10).
 # Which live processes are the Essentials' is Get-XmipEssentialsProcess.ps1:
 # Test-XmipEssentialsBinary moved there on 2026-09-19, with the finding that a
 # rebuilt binary must not make a running roll disappear.
@@ -250,7 +195,6 @@ function Start-XmipEssentialsRoll {
     }
 
     New-Item -ItemType Directory -Path $Path -Force | Out-Null
-    Remove-XmipEssentialsStaleRecord -Path $Path
     Remove-XmipEssentialsBuildEnded -Path $Path -Cluster $Cluster
 
     # A roll is a cluster, and two rolls are two clusters (ADR-0028; ADR-0052,
@@ -258,12 +202,7 @@ function Start-XmipEssentialsRoll {
     # overwrites the other: on 2026-09-18 three rolled as CC1, the surfaces
     # saw 803, 2,259 and 11,499 leaves in turn, and the prompt went blank. A
     # cluster still building is about to roll, and is refused the same way.
-    [int[]] $rolling = @(
-        Get-XmipEssentialsRolling -Path $Path -Cluster $Cluster
-        Get-XmipEssentialsBuild -Path $Path |
-            Where-Object { $_.State -eq 'building' -and $_.Cluster -eq $Cluster } |
-            ForEach-Object { $_.Id }
-    )
+    [int[]] $rolling = @(Get-XmipClusterRunning -Path $Path -Cluster $Cluster)
 
     if ($rolling.Count -gt 0) {
         Write-Error ("REFUSED: cluster $Cluster is already rolling or building as pid " +

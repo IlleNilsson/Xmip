@@ -409,7 +409,9 @@ publishes its node through the one publication there is (ADR-0052;
   node drawn as a topology. The drawing is `observe::topology::draw` and
   `party`, the one every publisher calls, moved there from the Essentials
   (ADR-0052, amendment of this date). A node's configuration names no Party
-  yet, so the Party on each side is drawn as `any-party`.
+  yet, so the Party on each side is drawn as `any-party`. What moved over
+  the drawing is stated since the amendment of 2026-11-10, over the window
+  the service keeps.
 - **Where.** `<data>/snapshot.xmip`, beside `<data>/orders`, in the node's
   data directory, and the publication's `orders` names that directory, so
   a surface leaves a pause where the node takes it. The service declares the
@@ -1391,3 +1393,31 @@ the sent file's, the directory's it is renamed in (synced since
   (`Engine::apply`, which no Message's path makes) is a write and its sync
   in one call: both stay the payload's I/O, out of the share and out of
   this figure.
+
+## Amendment, 2026-11-10: a node's drawing says what moved over it
+
+The node drawn in its publication (the amendment of 2026-09-30, **What**)
+said a rate of zero on every link and an activity of one on the node
+while its System Process was alive, whatever it carried: only the
+Essentials' roll stated what moved, and a surface over a node read nothing
+moving at all. `Running::publication` now takes the window its publisher
+keeps — `observe::topology::window::Window`, the one every publisher states
+its drawing over (ADR-0052, amendment of this date) — and states on the
+node's drawing what moved over the last thirty seconds of its
+publications: each Party link's rate, from what its stage counted, and each
+drawn thing's activity, the most of the Streams, Journeys or Messages
+counted beneath it, or what its links carried in or out, the more of the
+two, where that is more — how an `any-party` Party, with nothing counted
+beneath it, moves — per second. `xmip-service`'s publisher holds the window
+from one publication to the next; it keeps about one reading a second
+however often the service publishes, so the publications at once after
+every order or act add nothing to what it holds. What the node leaves once
+it has stopped (`running::publication::stopped`) is drawn without one:
+nothing on a stopped node moves.
+
+Proved by the runtime's `running/publication.rs` (what the node counted
+moves its drawing over the window) and `tests/running` (what a running node
+received moves the drawing `Running::publication` states through its
+publisher's window, a test that fails where the publication states nothing),
+and the root crate's `.src/test/measured/publication.rs` (the service's
+Party link moves as it receives).

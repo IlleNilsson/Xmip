@@ -49,9 +49,13 @@ Describe 'A run declares itself hidden and is listed only when asked' {
         $roll | Should -Match 'XMIP_ESSENTIALS_HIDDEN'
     }
 
-    It 'belongs to the Essentials alone, and records it in the run record' {
+    It 'belongs to the Essentials and the demo check that rolls one, and is recorded' {
+        # Core.Demo hands it to the roll it starts (ADR-0028, amendment
+        # 2026-11-10); the estate's Pester suite rolls nothing and refuses it.
         InModuleScope Xmip {
-            $script:XmipEssentialsOnly | Should -Contain 'Hidden'
+            $script:XmipSuiteSwitch['roll'] | Should -Contain 'Hidden'
+            $script:XmipSuiteSwitch['demo'] | Should -Contain 'Hidden'
+            $script:XmipSuiteSwitch['pester'] | Should -Not -Contain 'Hidden'
         }
 
         (Get-Command -Name Start-XmipTest).Parameters['Hidden'].ParameterType |

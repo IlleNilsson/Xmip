@@ -326,7 +326,8 @@ separate; the prefix does not. Write to `.ai-interaction/`, never to
 `.local-work/` is the third of the untracked family: device-local state for
 building or running Xmip on this machine — a target choice, a local node
 configuration, what a test run writes: `essentials/` for the rolls,
-`estate/` for the estate's Pester runs, `web/` for what a web monitor
+`estate/` for the estate's Pester runs, `demo/` for the demo readiness
+check's runs (ADR-0028, amendment 2026-11-10), `web/` for what a web monitor
 `Start-XmipOperationWeb` started wrote to its console, `operator/` for the
 operator module the estate's tooling builds once per change (ADR-0052), and
 `audit/` for the audit records of everything the estate's tooling starts

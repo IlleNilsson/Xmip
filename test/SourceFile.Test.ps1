@@ -20,6 +20,7 @@
 
 BeforeAll {
     . (Join-Path $PSScriptRoot 'Initialize-XmipTest.ps1')
+    . (Join-Path $PSScriptRoot 'Initialize-XmipStyleLimit.ps1')
 
 
     # `Get-XmipMapWeight` is the map generator's, not the module's: it is not
@@ -77,6 +78,21 @@ Describe 'Get-XmipSourceFile counts what a file holds' {
             'this', 'was', 'not', 'written', 'by', 'anyone'
         )
 
+        # A crate's further program, one line over the gate. Until 2026-11-11
+        # every directory called bin was skipped as .NET's output, and the
+        # Essentials' roll and node grew past the gate unread.
+        [string[]] $long = @(1..($script:MaximumFileLines + 1) | ForEach-Object { "// $_" })
+        New-FixtureFile -Path 'module/one/src/bin/program.rs' -Text $long
+
+        # The root crate's own source, one line over the gate. Until
+        # 2026-11-11 the root's .src was no tree the gate read, and
+        # xmip-service's run.rs had reached 407 lines unmeasured.
+        New-FixtureFile -Path '.src/service/run.rs' -Text $long
+
+        New-FixtureFile -Path 'module/two/Two.csproj' -Text @('<Project />')
+        New-FixtureFile -Path 'module/two/Two.cs' -Text @('class Two {}')
+        New-FixtureFile -Path 'module/two/bin/Debug/Built.cs' -Text @('class Built {}')
+
         New-FixtureFile -Path 'test/two/Thing.ps1' -Text @('one', 'two')
         New-FixtureFile -Path 'test/two/Thing.Test.ps1' -Text @('one', 'two', 'three')
 
@@ -111,6 +127,33 @@ Describe 'Get-XmipSourceFile counts what a file holds' {
 
     It 'reads nothing out of target, which nobody wrote' {
         @($script:Found | Where-Object Path -match 'target') | Should -BeNullOrEmpty
+    }
+
+    It 'reads a Rust crate''s src/bin, so a program over the gate is reported' {
+        [string[]] $over = @(
+            $script:Found |
+                Where-Object { $_.Code -gt $script:MaximumFileLines } |
+                ForEach-Object { $_.Path }
+        )
+
+        $over | Should -Contain 'module/one/src/bin/program.rs' -Because (
+            'test/Rust.Style.Test.ps1 gates what Get-XmipSourceFile counts')
+    }
+
+    It 'reads the root''s .src, so the root service over the gate is reported' {
+        [string[]] $over = @(
+            $script:Found |
+                Where-Object { $_.Code -gt $script:MaximumFileLines } |
+                ForEach-Object { $_.Path }
+        )
+
+        $over | Should -Contain '.src/service/run.rs' -Because (
+            'the root crate is Rust the estate ships, gated like every module (ADR-0049)')
+    }
+
+    It 'reads nothing out of the bin beside a .NET project, which its build wrote' {
+        @($script:Found | Where-Object Path -match '^module/two/bin/') | Should -BeNullOrEmpty
+        ($script:Found | Where-Object Path -eq 'module/two/Two.cs').Code | Should -Be 1
     }
 
     It 'names a file with forward slashes, relative to the root' {

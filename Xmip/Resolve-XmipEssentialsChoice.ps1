@@ -32,6 +32,14 @@ function Resolve-XmipEssentialsChoice {
         [hashtable] $Choice
     )
 
+    # A switch of another of Xmip's suites, -Tester, is refused by name.
+    [string] $foreign = Get-XmipSuiteSwitchRefusal -Kind roll -Bound $Choice.Bound
+
+    if ($foreign -ne '') {
+        Write-Error $foreign
+        return $null
+    }
+
     foreach ($name in 'Test', 'Nodes', 'OnlineNodes', 'NodeRole', 'Cluster') {
         if (-not $Choice.ContainsKey($name)) {
             $Choice[$name] = $null

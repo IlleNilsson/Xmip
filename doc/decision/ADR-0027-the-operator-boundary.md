@@ -78,7 +78,7 @@ of the cluster and its nodes — with throughput reported for every kind of
 thing, Cluster, Node, Receive, Process and Send.
 
 Almost all of that is already architecture. observability-model.md section 6
-defines health and its propagation; section 8 defines the four reports;
+defines health and its propagation; section 8 governs the Reports;
 deployment-model.md section 8 says desired-state tooling places the TOML and the
 TOML stays the source. What none of it has is a boundary.
 

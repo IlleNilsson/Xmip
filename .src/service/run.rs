@@ -10,7 +10,6 @@
 //! an act was taken there. Each wakes it the moment it arrives; only the
 //! publication's round, [`publication::EVERY`], wakes it otherwise.
 
-use std::collections::BTreeMap;
 use std::path::Path;
 use std::process::ExitCode;
 use std::sync::Arc;
@@ -18,7 +17,7 @@ use std::sync::mpsc::{Receiver, RecvTimeoutError, Sender};
 use std::time::{Duration, Instant};
 
 use xmip_audit::program_audit::ProgramAudit;
-use xmip_core::{ExecutionPhase, Severity};
+use xmip_core::ExecutionPhase;
 use xmip_node::Declaration;
 use xmip_runtime::outcome::Outcomes;
 use xmip_runtime::plane::{Listener, Published, deadline};
@@ -26,6 +25,7 @@ use xmip_runtime::registration::REFUSED;
 use xmip_runtime::running::Running;
 
 use crate::arguments::Arguments;
+use crate::audit::{fail, record};
 use crate::publication::{self, Publisher};
 use crate::{authority, built, orders};
 
@@ -101,7 +101,7 @@ pub fn serve(
         let _ = running.stop();
         return Ended::Refused;
     };
-    let Ok(_authority) = authorized(program, audit, configuration) else {
+    let Ok(_authority) = authority::authorized(program, audit, configuration) else {
         let _ = running.stop();
         return Ended::Refused;
     };
@@ -322,49 +322,6 @@ fn operated(
     }
 }
 
-/// The cluster's authority the configuration at `configuration` serves,
-/// said on the console and audited where it serves one, held until the
-/// node drains; refused where it cannot serve, which is audited.
-fn authorized(
-    program: &str,
-    audit: &ProgramAudit,
-    configuration: &str,
-) -> Result<Option<authority::Served>, ()> {
-    let served = xmip_runtime::start::read(configuration)
-        .map_err(|unread| unread.reason)
-        .and_then(|(document, _, _)| authority::serve(&document, Path::new(configuration)));
-    match served {
-        Ok(Some(served)) => {
-            println!(
-                "{program}: the cluster's authority answers ACME at {}",
-                served.directory
-            );
-            if let Some(published) = &served.published {
-                println!("{program}: the cluster's authority publishes its list at {published}");
-            }
-            record(
-                audit,
-                "authority",
-                ExecutionPhase::Begin,
-                &[
-                    ("directory", served.directory.as_str()),
-                    ("published", served.published.as_deref().unwrap_or("")),
-                ],
-            );
-            Ok(Some(served))
-        }
-        Ok(None) => Ok(None),
-        Err(refusal) => {
-            fail(
-                audit,
-                "authority",
-                &format!("{program}: {configuration} {refusal}"),
-            );
-            Err(())
-        }
-    }
-}
-
 /// Say on the console where the node `who` names keeps what it keeps.
 fn say_where(who: &str, running: &Running, orders: &str, snapshot: &str, operate: Option<&str>) {
     println!(
@@ -375,33 +332,5 @@ fn say_where(who: &str, running: &Running, orders: &str, snapshot: &str, operate
     println!("{who} publishes its snapshot at {snapshot}");
     if let Some(operate) = operate {
         println!("{who} is operated at {operate}");
-    }
-}
-
-/// Say `problem` on stderr and record it as the failure of `action`: a
-/// failure is never only on a screen (ADR-0062 clause 4).
-pub fn fail(audit: &ProgramAudit, action: &str, problem: &str) {
-    eprintln!("{problem}");
-    kept(audit.failed(action, problem));
-}
-
-pub fn record(
-    audit: &ProgramAudit,
-    action: &str,
-    phase: ExecutionPhase,
-    properties: &[(&str, &str)],
-) {
-    let properties: BTreeMap<String, String> = properties
-        .iter()
-        .map(|(key, value)| ((*key).to_string(), (*value).to_string()))
-        .collect();
-    kept(audit.record(action, phase, Severity::Information, None, properties));
-}
-
-/// A record neither the sink nor the operating system's log kept is said on
-/// stderr, the last place left.
-fn kept<T>(outcome: Result<T, xmip_audit::AuditError>) {
-    if let Err(error) = outcome {
-        eprintln!("audit: {error}");
     }
 }

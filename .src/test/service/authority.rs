@@ -86,7 +86,9 @@ fn the_service_answers_acme_for_the_premises_and_publishes_its_list() {
     assert!(client.renewal_window(&chain).expect("asked").is_some());
     client.revoke(&chain, 1).expect("revoked");
 
-    let tcp = std::net::TcpStream::connect(publish).expect("the publication");
+    let tcp =
+        xmip_transport::socket::connect_tcp(&publish.to_string(), Some(Duration::from_secs(5)))
+            .expect("the publication");
     let mut writer = tcp.try_clone().expect("clone");
     let request = xmip_net::http::Request::new("GET", "/crl").header("Host", "localhost");
     xmip_net::http::write_request(&mut writer, &request).expect("asked");
