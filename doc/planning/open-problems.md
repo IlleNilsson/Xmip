@@ -1463,54 +1463,52 @@ Three things are left:
   unmeasured. Proposed: a kill test that says how many writes a killed
   primary had not handed on, under load.
 
-## 46. A delivery across nodes is 4 to 8 ms behind one on one node in the Essentials, and a Journey behind another's sequence waits for the scan
+## 46. A delivery across nodes waits for its claim's sync, 3.4 to 5.8 ms in the Essentials
 
-Two defects by the millisecond rule, both open. What is built (2026-11-12;
-ADR-0018, ADR-0066, ADR-0027 and ADR-0028, amendments of that date): a node
-waits on its queues in Xmip Storage (`XmipStorage::wait_queues`), and its
-send step, and its Work Process step, read a queue the moment another
-node's Publication, hand-on, turn or Replay puts a Journey in it; `[tuning]
-send_scan` and `work_scan` are only the bound on one wait. Like for like in
-the Essentials, three rounds each: a delivery across nodes, 748 to 777 ms
-the median where it waited for the scan, is 27.2 to 40.0 ms after, against
-15.6 ms and 20.6 ms on one node. Over twelve rounds, the steady state, with
-no twelve-round run before it: 15.0 to 18.7 ms across nodes against 10.9 ms
-on one (ADR-0028, amendment 2026-11-12, the rolls of 07:19 and 07:22).
+One defect by the millisecond rule, open. What is built (2026-11-12;
+ADR-0018, ADR-0066, ADR-0027, ADR-0028 and ADR-0067, amendments of that
+date): a node waits on its queues in Xmip Storage (`XmipStorage::
+wait_queues`), and its send step, and its Work Process step, read a queue
+the moment another node's Publication, hand-on, turn or Replay puts a
+Journey in it, from what is due in it as the wait's answer carried it, with
+no read of their own first; a Journey behind another Stream of its
+sequence, and a turn its Instance did not take, wait through the same wait
+on the sequence's head, the Instance as read and each key no Instance holds,
+and are taken up the moment any node moves one; a Message's place, Journey
+and Message are read under its claim as one request
+(`XmipStorage::read_claimed`); and each sending node times every send step
+by step, each Send Port's record saying the median of each step
+(`send_step::Steps`). `[tuning] send_scan` and `work_scan` are only the
+bound on one wait. The node-to-node sync plane (ADR-0067) is not built for
+any of it.
 
-- **The 4 to 8 ms across nodes in the Essentials.** Not the watch path's
-  round trips: over the wire on its own, through one Storage node on
-  `RocksDB`, a Message another node published is sent 0.36 ms after one the
-  sending node published itself, under the millisecond, the runtime's
-  timing program holding it (`woken.rs`; ADR-0018, amendment 2026-11-12,
-  the timing run of 08:11). The sending node's Storage calls for it there —
-  what is due 0.14 ms, the claim with its sync 1.93 ms, the Message's place
-  0.12 ms, its Journey 0.09 ms and its Message 0.09 ms — mostly overlap the
-  publishing node's sync, the wait being answered once the Publication is
-  readable, 0.26 ms after it was asked. Two round trips a wake made are
-  cut: the failed
-  Messages' read, and the read a node's own Publication made of its own
-  queue. What the Essentials' gap is, is not taken apart: its deliveries
-  compared are different documents through different Ports, Locations and
-  transforms on nine processes and two Storage nodes sharing one machine.
-  Proposed, in order: a like-for-like flow in the Essentials, one Receive
-  Location's documents sent by its own node and by another; each Storage
-  call of the sending node timed there, as the timing program times them;
-  then the claim's sync off the path before the send, as a Publication's
-  is — the send begun once the claim is readable and its far end let out
-  once it is durable — which changes what a claim answers and is the
-  owner's to decide; and the wait answering with what is due, so no read
-  follows a wake (0.14 ms over loopback).
-- **A Journey behind another Stream of its sequence, or a turn waiting for
-  an Instance, that another node moves on waits for the scan.** The write
-  that ends the Stream ahead, or moves the Instance, puts nothing in the
-  waiting Journey's queue, so no wait is answered, and it is taken up at
-  the next `send_scan` or `work_scan`, a second by default; on one node the
-  step reads its queues again as its own turn or send ends. Proposed: a
-  wait that also answers where a queue's count falls — a sequence's queue,
-  whose head moving is an entry taken out — the waiting node naming the
-  sequences its passed Journeys wait on, and the Instance Key table's
-  entry for a turn that lost its Instance; the node-to-node sync plane
-  (ADR-0067) is the other way, and decided, not built.
+**Where it stands.** In the Essentials, twelve rounds on C1, the median
+from drop to arrival: 10.9 ms on one node, 14.8 to 19.8 ms across nodes;
+like for like, one Send Port sent by L1, 14.8 ms from R1 against 10.9 ms
+from L1 itself, 3.9 ms apart where it was 6.1 ms that morning (ADR-0028,
+second amendment 2026-11-12, the rolls of 09:01 and 10:31). Over the wire on
+its own, the runtime's timing program sends a Message another node
+published 0.17 ms after one the sending node published itself (`woken.rs`;
+ADR-0018, second amendment 2026-11-12).
+
+**What is left, on the sending node, per Send Port** (the roll of 10:31):
+
+- **The claim, 3.4 to 5.8 ms**, against none on the path one node takes,
+  its claim taken in its Publication: its batch is synced after the
+  publishing node's Publication, in series, on two Storage nodes copying on
+  one machine. Proposed: the claim's sync off the path before the send, as
+  a Publication's is — the send begun once the claim is readable and its
+  far end let out once it is durable — which changes what a claim answers
+  and is the owner's to decide.
+- **Its place, Journey and Message, 0.28 to 0.40 ms**, one round trip,
+  needed under the claim: the page that found it may be older than the
+  claim (0.77 to 0.96 ms as three reads until that day).
+- **Its Stream's chunks over the wire**, about 0.64 ms on the one Port sent
+  both ways: the send taken from its queue 10.10 ms against 9.46 ms handed
+  in memory, which reads what its receive held. Not timed apart from the
+  send yet.
+- **The wake 0.02 to 0.05 ms and a send thread 0.03 to 0.05 ms**, under
+  the rule; its sequences, 0.18 to 0.28 ms, are the same on one node.
 
 ## 47. Debatching on receive is decided, not built
 

@@ -182,3 +182,16 @@ nothing of this amendment builds them.
 
 Provenance: the assistant's, 2026-11-12, bringing the record to what is
 built.
+
+## Amendment, 2026-11-12: what holds a Journey back is waited on over the Storage listener too
+
+Open problem 46 named the sync plane again as the other way for a node to
+learn at once that another node moved a sequence's head or a Work Process
+Instance a Journey of its own waits on. It was answered over the same wait
+on the Storage listener (ADR-0018 and ADR-0027, second amendments
+2026-11-12): the Storage node's one writer tells every waiter on a head, an
+Instance or a key a write moves, as it tells those on a queue. The sync and
+alive listeners stay decided, not built.
+
+Provenance: the assistant's, 2026-11-12, bringing the record to what is
+built.

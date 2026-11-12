@@ -720,3 +720,41 @@ published there before any second scan, its `work_scan` an hour).
 
 Provenance: open problem 46's proposal; `work_scan` and the turn read
 again are the assistant's, 2026-11-12.
+
+## Amendment, 2026-11-12: a turn waits on what holds it back
+
+Superseding the last bullet of the amendment above, **Not yet: a turn
+waiting for an Instance another node moves on**: built the same day, through
+the one wait (ADR-0018, second amendment 2026-11-12; open problem 46), never
+a second mechanism beside it, the sync plane (ADR-0067) not built for it.
+
+- **A turn its Instance does not take waits on that Instance as it read
+  it** (`work_step::Turned::Waits`): no step of it waits for the Message —
+  it waits for a time, or for work — or the turn's write found it moved on
+  since it was read. The Work Process step waits on the Instance by the
+  turns it took, and is answered the moment a turn is written over it on
+  any node, at once where one was already; its queue is then read again.
+- **One that started its own Instance waits on its keys too**: where no key
+  of the Message named an Instance in the Instance Key table, it waits on
+  each key, held by none as it read it, and is answered as a turn on any
+  node gives one to an Instance — the turn that lost a key it starts by to
+  another first arrival is taken again at once, and joins that Instance.
+- **A turn whose Stream waits behind another of its sequence**, end to end
+  at its Receive Location or at the Work Process's own point, waits on each
+  head it does not hold, and is taken up the moment another node lets the
+  place ahead of it go (`sequence::behind`).
+- **What is due in its queue comes with the wake**: the Work Process step
+  reads its queue from the page the wait's answer carried, as the send step
+  does (ADR-0018, second amendment 2026-11-12).
+
+Tested in the runtime (`tests/ledger/woken_behind.rs`: a Message bound for a
+Work Process, behind a Stream of its Receive Location another node sends, is
+taken its turn by the node running the Work Process before any second scan,
+its `work_scan` an hour, once that node waits on the sequence's head — which
+it never does without this; and a turn its Instance does not take, waiting an
+hour for a timer, names the Instance at the turn it read as what it waits
+on).
+
+Provenance: open problem 46's proposal of 2026-11-12; waiting on the
+Instance by its turns and on a key by whether an Instance holds it are the
+assistant's, the same day, for the owner to overrule.

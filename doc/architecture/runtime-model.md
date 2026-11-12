@@ -1727,9 +1727,23 @@ queue that moved at once — what is due in it, not its failed Messages,
 which no such write fails; the scan of every queue stays, as recovery — a
 claim that lapsed on a node that died is written by no one — and its
 interval, `send_scan` and `work_scan`, is now only the bound on one wait.
-**Still open** (problem 46): a Journey behind another Stream of its
-sequence, or a turn waiting for an Instance, that another node moves on is
-taken up at the next scan, since that write puts nothing in its queue.
+
+**Corrected again 2026-11-12** (problem 46; ADR-0018, second amendment
+2026-11-12): **the wait answers with what is due, and waits on what holds
+a Journey back.** Each queue that moved comes back with the first page of
+what is due in it, read by the Storage node as it answers, so the woken
+node claims without a read of its own first (a round trip of 0.14 ms over
+loopback after every wake until then). And a wait names more than queues
+(`persist::storage::Watched`): a sequence's head — how many places were
+ever let go of there, which only a place let go of moves — an Instance by
+the turns it took, and a key of the Instance Key table, held or not. A
+Journey the send step passes over behind another Stream of its sequence
+waits on each head it does not hold, and a turn its Instance does not take
+waits on that Instance as it read it, or, where no key named one, on each
+key it correlates by; each is taken up the moment any node moves what it
+waits on, never at the next scan. Each send is timed step by step on the
+sending node, each Storage call apart, and each Send Port's snapshot says
+the median of each step over its latest sends (`send_step::Steps`).
 
 **Where it is configured.** The Send Port's policy — the order of its Send
 Locations, retry and failover — is configured as section 20, *Where the
@@ -2575,7 +2589,12 @@ day it is a compiled piece executed when called upon.*
 **Built 2026-11-12:** a Journey published on one node for a Work Process
 another runs is taken up there at once, the step waiting on its queues in
 Xmip Storage, `[tuning] work_scan` only the bound on one wait (section 10,
-corrected 2026-11-12; ADR-0066, amendment 2026-11-12).
+corrected 2026-11-12; ADR-0066, amendment 2026-11-12). The same day, a
+turn its Instance did not take — waiting for a time, or for work — waits on
+that Instance as it read it, and one whose Stream waits behind another of
+its sequence on that sequence's head, each taken up the moment another node
+moves it (section 10, corrected again 2026-11-12; ADR-0066, second
+amendment 2026-11-12).
 
 **Decided, not built:** the `settings` a Work Process gives its unit; unit
 calls through the standard units' registry (a node calls none yet, and a call

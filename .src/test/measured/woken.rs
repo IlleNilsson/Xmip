@@ -4,10 +4,12 @@
 //! nodes over Xmip's mutual TLS on loopback, its standby copying behind it —
 //! one publishing a Journey into a queue, then handing each on into another,
 //! the other waiting on that queue (`XmipStorage::wait_queues`), as a send
-//! step and a Work Process step wait on theirs. What it holds: how long after
-//! the write was answered the waiting node is told, the median under a
-//! millisecond. Until 2026-11-12 the waiting node found it at its next scan,
-//! a second by default.
+//! step and a Work Process step wait on theirs, the answer carrying what is
+//! due in it; then publishing more and handing each on again, the other
+//! waiting on the first queue's head, as a Journey behind another of its
+//! sequence waits. What it holds: how long after the write was answered the
+//! waiting node is told, the median under a millisecond. Until 2026-11-12
+//! the waiting node found it at its next scan, a second by default.
 
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -16,7 +18,7 @@ use xmip_core::{AuditId, MessageId};
 use xmip_persist::storage::client::PASS_OVER;
 use xmip_persist::storage::{
     AuditEntry, AuditFacts, HandOn, Hold, JourneyFacts, JourneyRecord, MessageFacts, MessageRecord,
-    Position, Publication, StorageClient, Waiter, XmipStorage,
+    Position, Publication, StorageClient, Waiter, Watched, XmipStorage,
 };
 
 use super::authority::{authority, issue};
@@ -95,21 +97,31 @@ fn handed_on(writing: &StorageClient, holder: &str, number: u64) {
     assert!(writing.hand_on(&hand_on).expect("handed on"));
 }
 
-/// For each of [`ROUNDS`] writes `write` makes, each putting one Journey in
-/// `queue`: how long after it was asked `waiting`, waiting on `queue` where
-/// it stood before it, was told, how long the write took to be answered,
-/// and how long the telling took beyond that answer; each sorted.
-fn told(waiting: &Arc<StorageClient>, queue: u128, write: impl Fn(u64)) -> [Vec<Duration>; 3] {
+/// The most of what is due a wait's answer carries, as a node's steps ask.
+const DUE: u32 = 64;
+
+/// For each of [`ROUNDS`] writes `write` makes, each moving `watched` by
+/// one from `from` on: how long after it was asked `waiting`, waiting on it
+/// where it stood before, was told, how long the write took to be
+/// answered, and how long the telling took beyond that answer; each sorted.
+/// A queue's tail is told with what is due in it, every Journey it holds.
+fn told(
+    waiting: &Arc<StorageClient>,
+    (watched, from): (Watched, u64),
+    write: impl Fn(u64),
+) -> [Vec<Duration>; 3] {
     let waiter = Arc::new(Waiter::new());
     let mut taken = [Vec::new(), Vec::new(), Vec::new()];
     for number in 0..ROUNDS {
         let seen = [Position {
-            queue,
-            next: number,
+            watched,
+            at: from + number,
         }];
         let (asking, held) = (Arc::clone(waiting), Arc::clone(&waiter));
         let woken = std::thread::spawn(move || {
-            let moved = asking.wait_queues(&seen, BOUND, &held).expect("answered");
+            let moved = asking
+                .wait_queues(&seen, (BOUND, DUE), &held)
+                .expect("answered");
             (moved, Instant::now())
         });
         let asked = Instant::now();
@@ -117,10 +129,22 @@ fn told(waiting: &Arc<StorageClient>, queue: u128, write: impl Fn(u64)) -> [Vec<
         let answered = Instant::now();
         let (moved, at) = woken.join().expect("woken");
         let now = Position {
-            queue,
-            next: number + 1,
+            watched,
+            at: from + number + 1,
         };
-        assert_eq!(moved, [now], "told where the queue stands");
+        assert_eq!(moved.len(), 1, "{moved:?}");
+        assert_eq!(moved[0].position, now, "told where it stands");
+        if let Watched::Queue(_) = watched {
+            let due = moved[0].due.as_ref().expect("what is due, with the answer");
+            let held = usize::try_from(number + 1)
+                .expect("a count")
+                .min(DUE as usize);
+            assert_eq!(
+                due.held.len(),
+                held,
+                "every Journey it holds, at most as asked"
+            );
+        }
         taken[0].push(at.saturating_duration_since(asked));
         taken[1].push(answered - asked);
         taken[2].push(at.saturating_duration_since(answered));
@@ -153,20 +177,31 @@ fn a_journey_another_node_puts_in_a_queue_is_told_within_a_millisecond_of_its_wr
     let (writer, watching) = (client(), Arc::new(client()));
     let holder = super::test_cluster().node_scope(0);
 
-    let published = told(&watching, PUBLISHED, |number| {
+    let published = told(&watching, (Watched::Queue(PUBLISHED), 0), |number| {
         writer.publish(publication(number)).expect("published");
     });
-    let onward = told(&watching, ONWARD, |number| {
+    let onward = told(&watching, (Watched::Queue(ONWARD), 0), |number| {
         handed_on(&writer, &holder, number);
+    });
+    // As many again published, and each handed on: the first queue's head
+    // moves with each, as a sequence's does once the Journey heading it
+    // ends.
+    for number in ROUNDS..ROUNDS * 2 {
+        writer.publish(publication(number)).expect("published");
+    }
+    let headed = told(&watching, (Watched::Head(PUBLISHED), ROUNDS), |number| {
+        handed_on(&writer, &holder, ROUNDS + number);
     });
     let published = said("a Publication", &published);
     let onward = said("a hand-on", &onward);
+    let headed = said("a hand-on moving its head", &headed);
     let millisecond = Duration::from_millis(1);
     assert!(
         published < millisecond,
         "a Publication told after {published:?}"
     );
     assert!(onward < millisecond, "a hand-on told after {onward:?}");
+    assert!(headed < millisecond, "a head told after {headed:?}");
     for (node, server) in nodes {
         node.stop();
         server.stop();

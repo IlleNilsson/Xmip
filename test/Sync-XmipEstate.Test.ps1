@@ -306,6 +306,26 @@ Describe 'ADR-0021: current platforms only, enforced' {
         $judged['dsc 3.3.0'] | Should -BeFalse
     }
 
+    It 'holds a release floor above every preview of that release' {
+        # .NET's floor became 11.0.100 on 2026-11-12, and its release
+        # candidate reads 11.0.100 in numbers alone.
+        [hashtable] $judged = InModuleScope Xmip {
+            [hashtable] $said = @{}
+            foreach ($found in '11.0.100-rc.3.26522.148', '11.0.100', '11.0.101', '11.0.99') {
+                $said[$found] = Test-XmipFloor -Name 'dotnet' -Found $found -Minimum '11.0.100'
+            }
+            [string] $git = 'git version 2.56.0.windows.1'
+            $said[$git] = Test-XmipFloor -Name 'git' -Found $git -Minimum '2.56.0'
+            $said
+        }
+
+        $judged['11.0.100-rc.3.26522.148'] | Should -BeFalse
+        $judged['11.0.100'] | Should -BeTrue
+        $judged['11.0.101'] | Should -BeTrue
+        $judged['11.0.99'] | Should -BeFalse
+        $judged['git version 2.56.0.windows.1'] | Should -BeTrue
+    }
+
     It 'fails rather than reports when a floor is not met' {
         $script = Get-Content (Join-Path $script:ModuleRoot 'Install-XmipPrerequisite.ps1') -Raw
         $script | Should -Match 'Write-Error' -Because 'an unmet floor must be an error, not a warning'

@@ -738,3 +738,24 @@ about a cluster asks each node, is not reopened.
 
 Provenance: the assistant's, 2026-11-12, bringing the record to what is
 built.
+
+## Amendment, 2026-11-12: the wait over the Storage listener answers with what is due
+
+The same exchange carries more, and nothing else new passes between nodes
+(open problem 46; ADR-0018, second amendment 2026-11-12): a wait (operation
+37) names, beside the queues a node takes from, the heads of the sequences
+and the Instances and keys of the Instance Key table that what it passed
+over waits on, each with where it last saw it stand, and how many of what
+is due in each queue that moved the answer is to carry; the answer (26)
+carries, for each that moved, where it stands, and for a queue, the first
+of what is due in it as the Storage node read it answering. Both are
+`read` as before. A node that names more while its wait is held ends that
+wait by its token over another connection (operation 38), and asks again
+naming it. One request is added, a read (operation 39, `read`
+`read_claimed`, answered 27): what a node acts on under the claim it took
+on a Journey — its place in its queue, the Journey, the Message it holds
+last and that Message's Stream's record — which it asked as four reads one
+after another until then.
+
+Provenance: the assistant's, 2026-11-12, bringing the record to what is
+built.

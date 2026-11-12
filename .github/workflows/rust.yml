@@ -86,7 +86,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          $tag = 'v7.7.0-rc.1'
+          $tag = 'v7.7.0'
           $to = Join-Path $env:RUNNER_TEMP 'pwsh'
           gh release download $tag --repo PowerShell/PowerShell --pattern "PowerShell-$($tag.TrimStart('v'))-win-x64.zip" --dir $env:RUNNER_TEMP
           Expand-Archive -Path (Join-Path $env:RUNNER_TEMP "PowerShell-$($tag.TrimStart('v'))-win-x64.zip") -DestinationPath $to

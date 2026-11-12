@@ -55,9 +55,9 @@ license = "AGPL-3.0-or-later"
 automaticVerification = false
 
 # The .NET counterpart of [crate]. ADR-0021: current platforms only, which for
-# a build target means the latest — and .NET 11 is a release candidate (rc.3,
-# go-live, 2026-10-25) on the preview channel until it goes stable on
-# 2026-11-10, which prerequisite.toml already records.
+# a build target means the latest — .NET 11, generally available since
+# 2026-11-10, on the stable channel: SDK 11.0.100 in every global.json, which
+# takes no prerelease (ADR-0014, amendment 2026-11-12).
 #
 # Declared here because it was previously written in three places and checked in
 # none: the template's Directory.Build.props, and a <TargetFramework> in each of
@@ -66,7 +66,7 @@ automaticVerification = false
 [project]
 primaryLanguage = "dotnet"
 targetFramework = "net11.0"
-sdk = "preview"
+sdk = "stable"
 # The youngest NuGet package a build takes, in hours: every .NET repository's
 # nuget.config says it as minPublishAgeHours (ADR-0021, amendment 2026-11-07).
 nugetMinimumAgeHours = 24

@@ -46,10 +46,10 @@ function Test-XmipCommand([string] $Probe) {
 function Get-XmipReportedVersion {
     <#
         Extracts a comparable version from whatever a tool prints for
-        --version. The shapes differ and none of them are a bare version:
+        --version. The shapes differ and few of them are a bare version:
 
             pwsh    PowerShell 7.7.0-rc.1
-            dotnet  11.0.100-rc.3.26522.148
+            dotnet  11.0.100
             git     git version 2.45.1
             rustup  rustup 1.27.1 (28d1352db 2026-03-05)
 
@@ -150,6 +150,13 @@ function Test-XmipFloor {
         return $true
     }
 
+    # A release floor is above every preview of that release, whose numbers
+    # alone are the floor's: .NET's floor became 11.0.100 on 2026-11-12, and
+    # its release candidate, 11.0.100-rc.3.26522.148, reads 11.0.100.
+    if ($actual -eq $required -and $floor -match '^\d+\.\d+\.\d+$') {
+        return Test-XmipPreviewFloor -Name $Name -Found $Found -Floor $floor
+    }
+
     if ($actual -ge $required) {
         return $true
     }
@@ -159,10 +166,11 @@ function Test-XmipFloor {
 
 function Test-XmipPreviewFloor {
     <#
-        Test-XmipFloor for a floor with a preview label, 3.4.0-preview.2:
-        the version a tool reports, its label included, compared as a
-        semantic version. Returns $true where none can be read, as
-        Test-XmipFloor does.
+        Test-XmipFloor for a floor with a preview label, 3.4.0-preview.2,
+        and for a release floor a version meets in numbers alone: the
+        version a tool reports, its label included, compared as a semantic
+        version. Returns $true where none can be read, as Test-XmipFloor
+        does.
     #>
     [CmdletBinding()]
     [OutputType([bool])]

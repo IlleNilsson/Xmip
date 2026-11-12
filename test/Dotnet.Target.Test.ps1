@@ -4,7 +4,8 @@
 <#
     ADR-0021 for .NET: every project the estate ships targets the framework
     architecture.toml declares, the PowerShell module and the binding pwsh
-    loads included.
+    loads included, and every repository builds with one SDK on the channel
+    it declares.
 #>
 
 Describe 'ADR-0021: the .NET surfaces are on the latest target' {
@@ -21,6 +22,14 @@ Describe 'ADR-0021: the .NET surfaces are on the latest target' {
             InModuleScope Xmip -Parameters @{ Root = $script:Root } {
                 param($Root)
                 Find-XmipFile -Path $Root -Filter '*.csproj'
+            }
+        )
+
+        # A .NET repository is a folder holding a global.json.
+        [System.IO.FileInfo[]] $script:Sdks = @(
+            InModuleScope Xmip -Parameters @{ Root = $script:Root } {
+                param($Root)
+                Find-XmipFile -Path $Root -Filter 'global.json'
             }
         )
 
@@ -115,24 +124,45 @@ Describe 'ADR-0021: the .NET surfaces are on the latest target' {
         $wrong.Count | Should -Be 0 -Because ($wrong -join "`n")
     }
 
+    It 'names one SDK in every .NET repository, on the channel the manifest declares' {
+        # Each repository keeps its own global.json, since a submodule reads
+        # no other's. On the stable channel none takes a prerelease, so a
+        # release candidate still installed never builds (ADR-0014,
+        # amendment 2026-11-12).
+        [bool] $preview = $script:Policy.sdk -eq 'preview'
+        [string[]] $versions = @()
+        [string[]] $named = @()
+        [string[]] $wrong = @()
+
+        $script:Sdks.Count | Should -BeGreaterThan 0
+
+        foreach ($sdk in $script:Sdks) {
+            [string] $where = $sdk.FullName.Replace($script:Root, '').TrimStart('\', '/')
+            $said = (Get-Content -LiteralPath $sdk.FullName -Raw | ConvertFrom-Json).sdk
+
+            $versions += [string] $said.version
+            $named += "$where names $($said.version)"
+
+            if ([bool] $said.allowPrerelease -ne $preview) {
+                [string] $channel = $script:Policy.sdk
+                $wrong += "$where allowPrerelease $($said.allowPrerelease), channel $channel"
+            }
+        }
+
+        @($versions | Sort-Object -Unique).Count | Should -Be 1 -Because ($named -join "`n")
+        $wrong.Count | Should -Be 0 -Because ($wrong -join "`n")
+    }
+
     It 'gives every .NET repository nuget.org alone, at the age the manifest declares' {
-        # A repository is a folder holding a global.json. Its nuget.config
-        # clears the inherited sources, so a machine's own feed is never
-        # asked, and names each source it keeps with the manifest's
-        # nugetMinimumAgeHours (ADR-0021, amendment 2026-11-07).
+        # Its nuget.config clears the inherited sources, so a machine's own
+        # feed is never asked, and names each source it keeps with the
+        # manifest's nugetMinimumAgeHours (ADR-0021, amendment 2026-11-07).
         [string] $age = [string] $script:Policy.nugetMinimumAgeHours
         [string[]] $wrong = @()
 
-        [System.IO.FileInfo[]] $sdks = @(
-            InModuleScope Xmip -Parameters @{ Root = $script:Root } {
-                param($Root)
-                Find-XmipFile -Path $Root -Filter 'global.json'
-            }
-        )
+        $script:Sdks.Count | Should -BeGreaterThan 0
 
-        $sdks.Count | Should -BeGreaterThan 0
-
-        foreach ($sdk in $sdks) {
+        foreach ($sdk in $script:Sdks) {
             [string] $where = $sdk.Directory.FullName.Replace($script:Root, '').TrimStart('\', '/')
             [string] $config = Join-Path $sdk.Directory.FullName 'nuget.config'
 

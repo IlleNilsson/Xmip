@@ -1452,3 +1452,46 @@ landing of 2026-11-12. ADR-0021's rule, applied to the 2026-10-27 amendment:
 
 Provenance: the advisory and the versions were read from GitHub's advisory
 database and nuget.org on 2026-11-12; ADR-0021's rule; the gate's refusal.
+
+## Amendment, 2026-11-12: the SDK is 11.0.100, generally available
+
+The owner installed .NET SDK 11.0.100 and its workloads on 2026-11-12, so
+what the amendment before this one left waiting is done. ADR-0021's rule,
+applied to it:
+
+- **Every `global.json` names 11.0.100, `allowPrerelease` false and
+  `rollForward` latestFeature:** the floor is the release, so a release
+  candidate still installed, or a feature band's preview a tool brings, is
+  never what builds, while a newer 11.0 patch or feature band is taken.
+  `architecture.toml` declares the stable channel (`[project] sdk`), and
+  `test/Dotnet.Target.Test.ps1` holds every `global.json` to one version
+  and to that channel.
+- **The packages the SDK brings are 11.0.0:** ILCompiler and ILLink for the
+  command line's ahead-of-time build and the ASP.NET Core assets of the Web
+  GUI, which runs on the 11.0.0 runtime. The ASP.NET Core shared framework
+  now carries `Microsoft.Extensions.Configuration` and
+  `System.Diagnostics.EventLog` at the version `Xmip.Surface` names, so
+  NuGet prunes them from the Web host's, the relay's and the surface tests'
+  lock files.
+- **MAUI comes from the workload set 11.0.100.1:** maui 11.0.0, which
+  `$(MauiVersion)` names for `Microsoft.Maui.Controls` and
+  `Microsoft.AspNetCore.Components.WebView.Maui`, and Android 37.2.31.
+  MAUI 11.0.10, published 2026-11-11 at 12:00 UTC, was younger than 24
+  hours when the lock files were restored, and is the next to take.
+- **The PowerShell module compiles against `Microsoft.PowerShell.SDK`
+  7.7.0**, of 2026-11-10, in place of 7.7.0-rc.1, so no release candidate
+  package is left in any lock file. The test projects take
+  `Microsoft.NET.Test.Sdk` 18.11.1 and xUnit v3 4.0.3, the newest old
+  enough; 18.12.0 was not. Every lock file is restored again.
+- **`prerequisite.toml`** says the stable channel, the floor 11.0.100 and
+  winget's `Microsoft.DotNet.SDK.11`; a release candidate of a release floor
+  is below it (`Test-XmipFloor`), since its numbers alone read as the
+  release.
+- **Not yet:** the Roslyn fix that lets a `<safety>` element keep an
+  `unsafe` modifier (dotnet/roslyn#85732) is not in SDK 11.0.100, whose
+  analyzer still flags `XmipStr.Read` with one, so `Xmip.Abi` keeps
+  IDE0380 off.
+
+Provenance: the SDK, the workload set and its packs were read from this
+computer's installation, the packages and their publication times from
+nuget.org, on 2026-11-12; ADR-0021's rule.
