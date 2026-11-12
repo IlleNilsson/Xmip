@@ -718,3 +718,23 @@ Provenance: the owner's words of 2026-11-10; the symbols are the
 assistant's, 2026-11-11 (ADR-0052, amendment 2026-11-11); the review the
 same day moved the send stage's word to Send Port, put the label rule in one
 place and added section 8's from and to.
+
+## Amendment, 2026-11-12: a node waits on its queues over the Storage listener
+
+The amendment of 2026-11-10 lists what passes between nodes. One exchange
+is added over the Storage listener, and nothing else: a node holds a
+bounded wait open on a Storage node, naming the queues it takes from and
+where it last saw each stand (wire operation 37, admitted as `read`
+`wait_queues`), answered with the queues that moved (answer 26) as soon as
+a write on any node puts a Journey in one, with none once its bound or the
+Storage node's `[tuning] storage_wait` passes, and refused as a standby's
+where that Storage node stops or is the primary no more, so the node asks
+the next; a node whose waiter stops ends its wait by its token over another
+connection (operation 38, `read` `end_wait`). Until then Xmip Storage told
+no node of a write another made (open problem 46; ADR-0018, amendment
+2026-11-12). The sync and alive listeners stay decided and not built
+(ADR-0067, amendment 2026-11-12); clause 8's rule, that a surface asking
+about a cluster asks each node, is not reopened.
+
+Provenance: the assistant's, 2026-11-12, bringing the record to what is
+built.

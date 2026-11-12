@@ -168,3 +168,17 @@ which `[operate]` and `[storage]` both read through; `[sync]` and `[alive]`
 stay decided, not built
 ([`node-listeners`](../architecture/estate-map.md#node-listeners)). The
 assistant's, 2026-10-22 (ADR-0056, amendment of this date).
+
+## Amendment, 2026-11-12: a node told of another's write over the Storage listener
+
+Open problem 46 named the sync plane as the other way for a node to learn
+at once of a Journey another node put in a queue it takes from. It was
+answered over the Storage listener instead: a node waits on its queues in
+Xmip Storage, and the Storage node answers as soon as a write puts a
+Journey in one (ADR-0018 and ADR-0027, amendments 2026-11-12). The sync
+and alive listeners stay decided, not built
+([`node-listeners`](../architecture/estate-map.md#node-listeners)), and
+nothing of this amendment builds them.
+
+Provenance: the assistant's, 2026-11-12, bringing the record to what is
+built.

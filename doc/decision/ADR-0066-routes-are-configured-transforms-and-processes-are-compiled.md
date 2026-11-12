@@ -685,3 +685,38 @@ document did not declare. The owner, 2026-11-08, decided the fix.
 - A route's `content:<language>:<expression>` property compiles through the
   same engine with the namespaces its source is built with (ADR-0046);
   where a filter configures that table is not yet decided.
+
+## Amendment, 2026-11-12: a Work Process's queue is waited on
+
+Clause 4 of the amendment of 2026-10-22 has the runtime's Work Process step
+claim a Journey bound for a Work Process from its queue in the Ledger; it
+read its queues every second, `WORK_SCAN`, so a Journey another node
+published for a Work Process this node runs was taken up at that scan, up
+to a second later (open problem 46). Built 2026-11-12 with the send step's
+own (ADR-0018, amendment 2026-11-12):
+
+- **The step waits on its queues in Xmip Storage** (`XmipStorage::wait_queues`,
+  `runtime::queue_watch`) and reads each one a Publication, a hand-on, a
+  turn or a Replay on any node put a Journey in, at once.
+- **Its scan is `[tuning] work_scan`**, a second by default
+  (`work_step::WORK_SCAN`; ADR-0031), now only the bound on one wait and
+  the recovery of what no write tells: a claim lapsed on a node that died,
+  a timer that came due.
+- **A turn that waited is read again where another was written while it
+  was held** (`WorkStep::disown`): two Messages of one Instance turned side
+  by side, the one that lost the Instance written over waits, and the read
+  the winner's turn asked had passed over it while it was still held. Until
+  now the next scan took it up, a second later; with the scan an hour in
+  the runtime's test it never came.
+- **Not yet: a turn waiting for an Instance another node moves on** is
+  taken up at the next `work_scan`, since the turn that moves the Instance
+  there puts nothing in the waiting Journey's queue and no wait is answered
+  (open problem 46).
+
+Tested in the runtime (`tests/ledger/woken.rs`: a client's Messages
+published on a node that runs no Work Process, once the node that runs it
+had made its first scan and found nothing, are turned and their batch
+published there before any second scan, its `work_scan` an hour).
+
+Provenance: open problem 46's proposal; `work_scan` and the turn read
+again are the assistant's, 2026-11-12.

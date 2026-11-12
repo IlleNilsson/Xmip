@@ -1706,6 +1706,31 @@ them. Until now every scan read every entry its queue held, waiting or
 not. Of 11,003 held, three due, a read of what is due reads four keys and
 two ranges where the whole queue read 11,176 keys.
 
+**Corrected 2026-11-12** (`open-problems.md` problem 46; ADR-0018,
+amendment 2026-11-12): **another node's Publication wakes the scan.** A node
+learned of a Message another node put in a queue it sends only at its next
+`[tuning] send_scan`, a second, since Xmip Storage told no node of
+another's write: about 630 ms across nodes, the median, against 7 ms on one
+node. Now Xmip Storage answers a wait on queues
+(`XmipStorage::wait_queues`): each queue named with where its waiter saw it
+stand last — the place its next entry takes — answered at once where one
+stands elsewhere, else as soon as a Publication, a hand-on, a turn or a
+Replay puts an entry in one, on whichever node it was written, and with
+none once its bound passes, or the Storage node's `[tuning] storage_wait`;
+every waiter on the queue is woken, but the node whose own claims in that
+write hold every Message it put there, told without being woken, since a
+read would find only what it holds. A Storage node that stops, or a
+primary that steps down, refuses the waits it holds as a standby's, so the
+node waiting asks the next at once. The send step, and the Work Process
+step for its queues, wait on theirs on a thread of their own and read each
+queue that moved at once — what is due in it, not its failed Messages,
+which no such write fails; the scan of every queue stays, as recovery — a
+claim that lapsed on a node that died is written by no one — and its
+interval, `send_scan` and `work_scan`, is now only the bound on one wait.
+**Still open** (problem 46): a Journey behind another Stream of its
+sequence, or a turn waiting for an Instance, that another node moves on is
+taken up at the next scan, since that write puts nothing in its queue.
+
 **Where it is configured.** The Send Port's policy — the order of its Send
 Locations, retry and failover — is configured as section 20, *Where the
 runtime's settings are configured*, says.
@@ -2547,10 +2572,14 @@ day it is a compiled piece executed when called upon.*
   not built: the owner, 2026-10-22, *Compensation can mostly be handled with
   try/catch*.
 
+**Built 2026-11-12:** a Journey published on one node for a Work Process
+another runs is taken up there at once, the step waiting on its queues in
+Xmip Storage, `[tuning] work_scan` only the bound on one wait (section 10,
+corrected 2026-11-12; ADR-0066, amendment 2026-11-12).
+
 **Decided, not built:** the `settings` a Work Process gives its unit; unit
 calls through the standard units' registry (a node calls none yet, and a call
-throws `no-unit`); a Journey published on one node woken on another at once
-(open problem 46); human tasks (open problem 54).
+throws `no-unit`); human tasks (open problem 54).
 
 ### Stages
 
