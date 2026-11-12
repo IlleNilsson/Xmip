@@ -800,12 +800,25 @@ admission bounds its own (`runtime::send_step`):
   (`work_step::Turned::Failed`): everything after its claim is caught at
   the turn's boundary, the flow, a unit's call or split, the runtime's own
   acts and the turn's write, and the Journey written Failed through the
-  write a flow's uncaught error takes, kept in its Work Process's queue
-  for an operator's Retry or Dismiss; where that cannot be written its
-  claim is given back. **However a turn ends, its place and its ownership
-  on the node are given back** (`admission::Owning`), so one that unwinds
-  before its claim is audited and taken up again by a later read, and the
-  dispatching thread outlives a panic in a turn it takes itself.
+  write a turn that could not be taken takes, kept in its Work Process's
+  queue for an operator's Retry or Dismiss; where that cannot be written
+  its claim is given back. **However a turn ends, its place and its
+  ownership on the node are given back** (`admission::Owning`), so one that
+  unwinds before its claim is audited and taken up again by a later read,
+  and the dispatching thread outlives a panic in a turn it takes itself.
+- **A turn that fails lets go of its place in its Work Process's sequence
+  where the Correlation says `on_failure = "skip"`**, however it failed:
+  its flow's error no scope caught, a turn refused, a turn that panicked.
+  It is the one rule the send step's hand-on and an operator's Dismiss
+  take too (`sequence::let_go`), the owner's choice of 2026-10-22 as
+  `runtime-model.md` section 3 records it: *block by default, skip as an
+  option — a Message that failed, waiting for an operator, keeps its
+  Stream at the head until Retry or Dismiss, and a set's `on_failure =
+  "skip"` lets the rest pass*. Under `block` the place is kept until an
+  operator acts. As this amendment was first built, only the flow's error
+  let it go: a refused or panicked turn under `skip` held its key's
+  sequence, every later Message of it waiting behind a Journey written
+  Failed.
 - **On the pool the pass is read before the head.** A head read first,
   whose page began with turns that only wait, took each place as it freed
   and kept the pass behind it from moving on for good, found as it was
@@ -821,14 +834,19 @@ panics written Failed with what it said and its claim ended; the other
 Work Processes, and its own, going on with nothing held; a turn on the
 dispatching thread whose flow panics keeping the dispatching going; and a
 turn that unwinds before its claim let go of and taken up again, on the
-pool and on the dispatching thread. `tests/ledger/work_bounded.rs`: no more
-turns than the Work pool runs, the rest unclaimed; a page of turns another
-node holds keeping no place from the one behind them; a backlog of sixteen
-times the pool in one Work Process holding back no turn of another; one
-page read before the first turn of a thousand; and a backlog of 4,096
+pool and on the dispatching thread. `tests/ledger/work_sequenced.rs`: under
+`skip`, a turn that fails by a thrown error, a refusal or a panic lets the
+next Message of its key complete, the failed one kept Failed in its queue's
+failed index; under `block`, the next waits. `tests/ledger/work_bounded.rs`:
+no more turns than the Work pool runs, the rest unclaimed; a page of turns
+another node holds keeping no place from the one behind them; a backlog of
+sixteen times the pool in one Work Process holding back no turn of another;
+one page read before the first turn of a thousand; and a backlog of 4,096
 dispatched in the memory one of 256 takes, run alone).
 
 Provenance: a review the owner brought, 2026-11-12 (*Here are some
 thoughts*), built in the order he gave; how it is built is the
 assistant's, the same day, the Work pool's own key among it, for the owner
-to overrule.
+to overrule. A failed turn letting go of its place under `skip` is the
+owner's rule of 2026-10-22 applied, found missing from the refused and the
+panicked turn once the amendment had landed.
