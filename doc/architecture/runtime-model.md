@@ -486,7 +486,12 @@ correlation = "<set>"           at a Receive Location, Receive Port,
   still open, and Xmip Storage counts the open ones in the writes that open
   and end them; the last to close lets the places go in that same write.
 - **A Work Process's and a Send Port's sequence holds the Message** while it is
-  at that point: until it is handed to its Instance, or sent.
+  at that point: until it is handed to its Instance, or sent. One that failed
+  keeps its place until Retry or Dismiss where its set blocks, and lets it go
+  at once where its set's `on_failure` is `skip`, however it failed — a send
+  that gave up, a flow's error no scope caught, a turn refused or one that
+  panicked — by one rule for every step (`sequence::let_go`; ADR-0066, third
+  amendment 2026-11-12).
 - **The default costs no write.** A Receive Location that names no set holds
   its own sequence, keyed by its name, its place taken in the Publication's
   own write. Whether a Stream heads its sequence is one Ledger read, once per
@@ -2670,7 +2675,9 @@ ends its Journey `Failed` with what the panic said, kept in its
 Work Process's queue for an operator as an uncaught error is (*Process outcome*),
 its claim given back where that cannot be written; one that unwinds before
 its claim is let go of and taken up again, and no panic ends the
-dispatching.
+dispatching. A turn that fails, however it failed, lets go of its place in
+its Work Process's sequence where the set's `on_failure` is `skip`, so the
+next Message of its key is taken its turn (section 3, *Sequences*).
 
 **Decided, not built:** the `settings` a Work Process gives its unit; unit
 calls through the standard units' registry (a node calls none yet, and a call
