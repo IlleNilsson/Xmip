@@ -5,39 +5,72 @@ Set-StrictMode -Version Latest
 function Deploy-XmipEnvironment {
     <#
         .SYNOPSIS
-            Makes an environment's machines with Microsoft DSC v3: its
-            network, then each machine, installed from its ISO, until every
-            one is in its desired state.
+            Makes an environment, its machines and the Xmip node each runs,
+            with the template set its environment file names: Microsoft DSC
+            v3 or Ansible, never a mix.
 
         .DESCRIPTION
-            The environment file, TOML, names the hypervisor whose template
-            makes the machines (deploy/dsc/msdsc/<hypervisor>: hyperv on a
-            Windows host, libvirt on a Linux one), the network and the
-            machines. Each of the template's documents is applied on its own,
-            in order — the network, then each machine — with the parameters it
-            declares, so every resource is set before the next one reads it.
-            A machine installs on its own; while one does, its document is
-            applied again every thirty seconds, which moves it on, until it
-            answers from its disk and its media are removed.
+            The environment file, TOML, is the one place that says what an
+            environment is (deploy/dsc/README.md): technology, msdsc or
+            ansible, whose template set makes it all; the hypervisor whose
+            machines it makes, hyperv on a Windows host, libvirt on a Linux
+            one; the network, the images and the machines, each with the
+            node it runs; and what a node is given: the cluster's file, this
+            machine's xmip-service that slices and signs each node's
+            configuration, the authority that signs it and issued each
+            node's certificate, the package and, for msdsc, the tools DSC is
+            brought to each AlmaLinux machine with. A file naming no
+            technology is refused.
 
-            One line is written per step: ETD, ATD and ETA, the time elapsed,
-            left and in all. Everything DSC
-            says goes to .local-work/deploy/<environment>/run.log. The
-            Hyper-V template's network asks for elevation and its machines
-            for a member of the Hyper-V Administrators group: run it in an
-            elevated Xmip PowerShell Console. A resource answers what is
-            not there yet as absent, so -WhatIf tests a fresh host too, and
-            changes nothing.
+            First the run takes the environment's private state, so a second
+            run of the environment is refused while one runs, -WhatIf too,
+            before it writes anything there. Then the state is made: the
+            technology that makes the environment, written by the first run
+            that applies, so the other one is refused until the environment
+            is removed; the SSH key the AlmaLinux machines are reached with,
+            readable by this account alone; a host key for each such
+            machine, which its kickstart gives it; and known_hosts holding
+            them, so every login is checked strictly.
+
+            msdsc applies each document on its own, with the parameters it
+            declares: the network; each machine, one installation at a time,
+            applied again every thirty seconds until it answers from its
+            disk; the names, where one of the machines is the network's DNS
+            server; then each node on its machine, in the order the file
+            lists them: its configuration sliced and signed here, DSC
+            brought to the machine and node.dsc.yaml applied there.
+
+            ansible writes inventory.yml from the file and runs
+            deploy/dsc/ansible/environment.yml: the machines, one
+            installation at a time, the names, then the nodes, one machine
+            at a time. Ansible's controller does not run on Windows, so
+            there it is refused, naming the command to run in WSL.
+
+            One line is written per step, or per play: ETD, ATD and ETA, the
+            time elapsed, left and in all. Everything DSC or Ansible says
+            goes to .local-work/deploy/<environment>/run.log, beside the
+            YAML written for them. The Hyper-V template's network asks for
+            elevation and its machines for a member of the Hyper-V
+            Administrators group: run it in an elevated Xmip PowerShell
+            Console. -WhatIf tests a fresh host too, and changes nothing: a
+            msdsc resource answers what is not there yet as absent, and
+            Ansible's --check answers a machine not made yet unreached and a
+            host that would change not in its desired state.
 
         .PARAMETER Path
-            The environment file, as deploy/dsc/msdsc/<hypervisor>/
-            environment.example.toml shows it.
+            The environment file, as deploy/dsc/libvirt.example.toml and
+            deploy/dsc/hyperv.example.toml show it.
 
         .EXAMPLE
-            Deploy-XmipEnvironment -Path 'D:\Repos\Xmip\.local-work\deploy\hyperv.toml'
+            Deploy-XmipEnvironment -Path '/mnt/d/Repos/Xmip/.local-work/deploy/libvirt.toml'
+
+            On a Linux host: the libvirt environment's machines and nodes,
+            with the technology its file names.
 
         .EXAMPLE
             Deploy-XmipEnvironment -Path 'D:\Repos\Xmip\.local-work\deploy\hyperv.toml' -WhatIf
+
+            Tests every step and changes nothing.
     #>
     [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'Medium')]
     [OutputType([pscustomobject])]
@@ -49,256 +82,125 @@ function Deploy-XmipEnvironment {
     $ErrorActionPreference = 'Stop'
     $environment = Read-XmipToml -Path $Path
     [string] $name = Get-TomlValue -Node $environment -Name 'name'
-    [string] $hypervisor = Get-TomlValue -Node $environment -Name 'hypervisor'
     [string] $estate = Split-Path -Path $PSScriptRoot -Parent
-    [string] $template = Join-Path $estate "deploy/dsc/msdsc/$hypervisor"
-    if (-not (Test-Path -LiteralPath (Join-Path $template 'machine.dsc.yaml'))) {
-        throw "REFUSED: no template for the hypervisor '$hypervisor': $template"
-    }
     [string] $log = Join-Path (Get-XmipEstateLayout -Root $estate).Deploy $name
     New-Item -Path $log -ItemType Directory -Force -WhatIf:$false | Out-Null
-    [bool] $apply = $PSCmdlet.ShouldProcess($name, 'Make its network and machines')
-    [string] $operation = if ($apply) { 'set' } else { 'test' }
-    # -WhatIf means test and change nothing; the log and parameters are still written.
+    [hashtable] $read = Get-XmipDeployEnvironment -Environment $environment -Estate $estate -Run (
+        $log)
+    if ($read.Technology -eq 'ansible' -and $IsWindows) {
+        [string] $wsl = ConvertTo-XmipWslPath -Path (Resolve-Path -LiteralPath $Path).Path
+        [string] $module = ConvertTo-XmipWslPath -Path (Join-Path $PSScriptRoot 'Xmip.psd1')
+        throw ('REFUSED: Ansible''s controller does not run on Windows ' +
+            '(https://docs.ansible.com/ansible/latest/os_guide/intro_windows.html). Run it ' +
+            "in WSL: wsl.exe -- pwsh -Command `"Import-Module $module; " +
+            "Deploy-XmipEnvironment -Path $wsl`"")
+    }
+    [string] $act = "Make its machines and nodes with $($read.Technology)"
+    [bool] $apply = $PSCmdlet.ShouldProcess($name, $act)
+    # -WhatIf means test and change nothing; the log, state and YAML are still written.
     $WhatIfPreference = $false
+    # One run of an environment at a time, -WhatIf too: its tests would read
+    # machines another run is changing. Held before anything is written to
+    # the state, so a run refused changes no key or known_hosts another reads.
+    [string] $folder = Get-XmipDeployStateFolder -Name $name -Run $log
+    [IO.FileStream] $held = Lock-XmipDeployState -Folder $folder
+    try {
+        [hashtable] $made = @{ Environment = $environment; Folder = $folder }
+        [hashtable] $state = Initialize-XmipDeployState @made -Technology $read.Technology -Record:(
+            $apply)
+        if ($read.Technology -eq 'ansible') {
+            [string] $inventory = Write-XmipDeployInventory -Read $read -State $state -Estate (
+                $estate) -Run $log
+            # A Windows host or machine is logged on to with a password no file holds.
+            [bool] $windows = $read.Hypervisor -eq 'hyperv' -or @($read.Machines |
+                    Where-Object { $_['image'].family -eq 'Windows' }).Count -gt 0
+            # The machines a play goes to: each that runs a node, and the DNS server.
+            [string[]] $named = @($read.Nodes | ForEach-Object { $_.machine.name }) + @(
+                $read.NameServer | Where-Object { $_ } | ForEach-Object { $_.name })
+            [hashtable] $played = @{ Inventory = $inventory; Estate = $estate; Log = $log
+                Named = $named }
+            return Invoke-XmipDeployPlaybook @played -Check:(-not $apply) -AskPass:$windows
+        }
+        Invoke-XmipDeployRun -Read $read -State $state -Estate $estate -Log $log -Apply:$apply
+    }
+    finally {
+        $held.Dispose()
+    }
+}
 
-    [hashtable[]] $step = @(Get-XmipDeployStep -Environment $environment -Template $template)
-    [datetime] $started = [datetime]::UtcNow
-    [System.Collections.Generic.List[hashtable]] $waiting = @()
-    [hashtable] $last = @{}
-    [hashtable] $line = @{ Count = $step.Count; Started = $started }
+function Invoke-XmipDeployRun {
+    <#
+        msdsc's run: each step tested or set, a machine set again every
+        thirty seconds until it answers, then each step not in its desired
+        state tested once more; each step's last result answered, and a run
+        that set them refused where one still differs.
+    #>
+    [CmdletBinding()]
+    [OutputType([pscustomobject])]
+    param(
+        [Parameter(Mandatory)]
+        [hashtable] $Read,
+
+        [Parameter(Mandatory)]
+        [hashtable] $State,
+
+        [Parameter(Mandatory)]
+        [string] $Estate,
+
+        [Parameter(Mandatory)]
+        [string] $Log,
+
+        [Parameter()]
+        [switch] $Apply
+    )
+
+    [string] $operation = if ($Apply) { 'set' } else { 'test' }
+    [hashtable[]] $step = @(Get-XmipDeployStep -Read $Read -State $State -Estate $Estate)
+    [hashtable] $line = @{ Count = $step.Count; Started = [datetime]::UtcNow }
+    [Collections.Generic.List[object]] $last = @()
     for ([int] $index = 0; $index -lt $step.Count; $index++) {
-        [hashtable] $asked = @{ Step = $step[$index]; Operation = $operation; Log = $log }
+        [hashtable] $asked = @{ Step = $step[$index]; Operation = $operation; Log = $Log }
         [hashtable] $result = Invoke-XmipDeployStep @asked
         Write-XmipDeployLine -Step $step[$index] -Result $result -Index $index @line
-        if ($apply -and -not $result.InDesiredState) {
-            $waiting.Add($step[$index])
+        # A machine installs on its own; it is moved on every thirty seconds
+        # until it answers, and only then is the next one made.
+        while ($Apply -and $step[$index].ContainsKey('Install') -and -not $result.InDesiredState) {
+            Start-Sleep -Seconds 30
+            $result = Invoke-XmipDeployStep -Step $step[$index] -Operation 'set' -Log $Log
+            Write-XmipDeployLine -Step $step[$index] -Result $result -Index -1 @line
         }
-        $last[$step[$index].Name] = $result
+        $last.Add([pscustomobject] $result)
     }
-    while ($waiting.Count -gt 0) {
-        Start-Sleep -Seconds 30
-        foreach ($next in @($waiting)) {
-            [hashtable] $result = Invoke-XmipDeployStep -Step $next -Operation 'set' -Log $log
-            Write-XmipDeployLine -Step $next -Result $result -Index -1 @line
-            $last[$next.Name] = $result
-            if ($result.InDesiredState) {
-                $waiting.Remove($next) | Out-Null
-            }
+    # A node's service runs only once every node is started together, the last
+    # step, so a step not in its desired state is tested once more after it.
+    for ([int] $index = 0; $Apply -and $index -lt $step.Count; $index++) {
+        if (-not $last[$index].InDesiredState) {
+            [hashtable] $again = @{ Step = $step[$index]; Operation = 'test'; Log = $Log }
+            $last[$index] = [pscustomobject] (Invoke-XmipDeployStep @again)
         }
     }
     # Each step's last result, once, after the lines, so a table never splits them.
-    foreach ($each in $step) {
-        [pscustomobject] $last[$each.Name]
+    $last
+    [string[]] $differ = @($last | Where-Object { -not $_.InDesiredState } |
+        ForEach-Object { $_.Step })
+    if ($Apply -and $differ.Count -gt 0) {
+        throw "FAILED: not in their desired state after set: $($differ -join ', ') ($Log)."
     }
 }
 
-function Get-XmipDeployStep {
+function ConvertTo-XmipWslPath {
     <#
-        The documents to apply, in order, each with the values of the
-        parameters it declares: the network, then one per machine.
+        A Windows path as WSL mounts it: D:\Repos\Xmip is /mnt/d/Repos/Xmip.
     #>
     [CmdletBinding()]
-    [OutputType([hashtable])]
+    [OutputType([string])]
     param(
         [Parameter(Mandatory)]
-        [AllowNull()]
-        $Environment,
-
-        [Parameter(Mandatory)]
-        [string] $Template
+        [string] $Path
     )
 
-    $network = Get-TomlValue -Node $Environment -Name 'network'
-    [string] $prefix = Get-TomlValue -Node $network -Name 'prefix'
-    [object[]] $machines = @(Get-TomlValue -Node $Environment -Name 'machines' -Default @())
-    [hashtable] $common = @{
-        environment = Get-TomlValue -Node $Environment -Name 'name'
-        root = Get-TomlValue -Node $Environment -Name 'root'
-        credentialPath = Get-TomlValue -Node $Environment -Name 'credential' -Default ''
-        sshPublicKeyPath = Get-TomlValue -Node $Environment -Name 'ssh_public_key' -Default ''
-        linuxAccount = Get-TomlValue -Node $Environment -Name 'linux_account' -Default ''
-        domainName = Get-TomlValue -Node $Environment -Name 'domain'
-        network = @{
-            name = Get-TomlValue -Node $network -Name 'name'
-            bridge = Get-TomlValue -Node $network -Name 'bridge' -Default ''
-            prefix = $prefix
-            gateway = Get-TomlValue -Node $network -Name 'gateway'
-            prefixLength = [int] ($prefix -replace '^.*/', '')
-            dnsServer = Get-TomlValue -Node $network -Name 'dns_server'
-            enableNat = [bool] (Get-TomlValue -Node $network -Name 'nat' -Default $false)
-        }
-        machines = @($machines | ForEach-Object {
-            @{
-                name = Get-TomlValue -Node $_ -Name 'name'
-                address = Get-TomlValue -Node $_ -Name 'address'
-            }
-        })
-        names = @(Get-XmipDeployName -Environment $Environment)
+    if ($Path -notmatch '^([A-Za-z]):[\\/](.*)$') {
+        return $Path -replace '\\', '/'
     }
-    @{ Name = 'network'; Document = Join-Path $Template 'network.dsc.yaml'; Value = $common }
-    $images = Get-TomlValue -Node $Environment -Name 'images'
-    foreach ($machine in $machines) {
-        [hashtable] $value = $common.Clone()
-        $value['image'] = Get-TomlValue -Node $images -Name (
-            Get-TomlValue -Node $machine -Name 'image')
-        $value['name'] = Get-TomlValue -Node $machine -Name 'name'
-        $value['address'] = Get-TomlValue -Node $machine -Name 'address'
-        $value['memoryGB'] = [int] (Get-TomlValue -Node $machine -Name 'memory_gb')
-        $value['cpu'] = [int] (Get-TomlValue -Node $machine -Name 'cpu')
-        $value['diskGB'] = [int] (Get-TomlValue -Node $machine -Name 'disk_gb')
-        [string] $document = Join-Path $Template 'machine.dsc.yaml'
-        @{ Name = $value['name']; Document = $document; Value = $value }
-    }
-}
-
-function Get-XmipDeployName {
-    <#
-        The names the environment adds to its machines' own: each node a
-        machine runs, at that machine's address, and the cluster at every
-        address that runs one of its nodes.
-    #>
-    [CmdletBinding()]
-    [OutputType([hashtable])]
-    param(
-        [Parameter(Mandatory)]
-        [AllowNull()]
-        $Environment
-    )
-
-    [string[]] $running = @()
-    foreach ($machine in @(Get-TomlValue -Node $Environment -Name 'machines' -Default @())) {
-        [string[]] $nodes = @(Get-TomlValue -Node $machine -Name 'nodes' -Default @())
-        if ($nodes.Count -eq 0) {
-            continue
-        }
-        [string] $address = Get-TomlValue -Node $machine -Name 'address'
-        foreach ($node in $nodes) {
-            @{ name = $node; addresses = @($address) }
-        }
-        $running += $address
-    }
-    [string] $cluster = Get-TomlValue -Node $Environment -Name 'cluster' -Default ''
-    if ($cluster -ne '' -and $running.Count -gt 0) {
-        @{ name = $cluster; addresses = $running }
-    }
-}
-
-function Invoke-XmipDeployStep {
-    <#
-        One document applied or tested by dsc, with the values of the
-        parameters it declares; answers whether every resource is in its
-        desired state. What dsc says goes to the log; a failure is refused
-        with dsc's own last errors.
-    #>
-    [CmdletBinding()]
-    [OutputType([hashtable])]
-    param(
-        [Parameter(Mandatory)]
-        [hashtable] $Step,
-
-        [Parameter(Mandatory)]
-        [ValidateSet('set', 'test')]
-        [string] $Operation,
-
-        [Parameter(Mandatory)]
-        [string] $Log
-    )
-
-    [System.Collections.IDictionary] $wanted = (Read-XmipYaml -Path $Step.Document)['parameters']
-    [hashtable] $value = @{}
-    foreach ($name in $wanted.Keys) {
-        $value[$name] = $Step.Value[$name]
-    }
-    [string] $parameters = Join-Path $Log "$($Step.Name).parameters.yaml"
-    Write-XmipYaml -Path $parameters -Value @{ parameters = $value }
-    [string] $trace = Join-Path $Log 'run.log'
-    [datetime] $begun = [datetime]::UtcNow
-    "== $($begun.ToString('o')) $Operation $($Step.Name)" | Add-Content -LiteralPath $trace
-    # The template's own resources are found on PATH, beside its documents.
-    [string] $path = $env:PATH
-    $env:PATH = (Split-Path -Path $Step.Document -Parent) + [IO.Path]::PathSeparator + $path
-    try {
-        [string[]] $arguments = @('config', '--parameters-file', $parameters, $Operation,
-            '--file', $Step.Document)
-        [string] $json = (& dsc @arguments 2>> $trace) -join "`n"
-        [int] $exit = $LASTEXITCODE
-        if ($exit -eq 0 -and $Operation -eq 'set') {
-            $arguments[3] = 'test'
-            $json = (& dsc @arguments 2>> $trace) -join "`n"
-            $exit = $LASTEXITCODE
-        }
-    }
-    finally {
-        $env:PATH = $path
-    }
-    $json | Add-Content -LiteralPath $trace
-    [int] $seconds = ([datetime]::UtcNow - $begun).TotalSeconds
-    [string[]] $errors = @(Get-Content -LiteralPath $trace -Tail 200 |
-        Where-Object { $_ -match 'ERROR' } | Select-Object -Last 3)
-    # Every template's resources answer what is not there yet as absent, so a
-    # dsc that fails is refused, tested or set.
-    if ($exit -ne 0) {
-        throw "REFUSED: $($Step.Name): dsc $Operation exit $exit. $($errors -join ' ') ($trace)"
-    }
-    [object[]] $results = @(($json | ConvertFrom-Json -AsHashtable)['results'])
-    [object[]] $differ = @($results | Where-Object { -not $_['result']['inDesiredState'] })
-    return @{
-        Step = $Step.Name
-        InDesiredState = $differ.Count -eq 0
-        Seconds = $seconds
-    }
-}
-
-function Write-XmipDeployLine {
-    <#
-        One line per step: the departure, expected and actual, and the
-        estimated arrival, clock times; the time elapsed, left and in all;
-        then which step and how it stands. -Index -1 is a round of waiting
-        for an installation, whose end is not known.
-    #>
-    [CmdletBinding()]
-    [OutputType([void])]
-    param(
-        [Parameter(Mandatory)]
-        [hashtable] $Step,
-
-        [Parameter(Mandatory)]
-        [hashtable] $Result,
-
-        [Parameter(Mandatory)]
-        [int] $Index,
-
-        [Parameter(Mandatory)]
-        [int] $Count,
-
-        [Parameter(Mandatory)]
-        [datetime] $Started
-    )
-
-    [datetime] $now = [datetime]::UtcNow
-    [timespan] $elapsed = $now - $Started
-    [string] $state = if ($Result.InDesiredState) { 'in its desired state' }
-    else { 'not yet in its desired state' }
-    # The departure, expected and actual, is the command's start; the arrival
-    # is estimated at the pace so far. A round of waiting has no estimate.
-    [string] $departure = $Started.ToLocalTime().ToString('HH:mm')
-    [string] $left = 'unknown'
-    [string] $total = 'unknown'
-    [string] $eta = 'unknown'
-    if ($Index -ge 0) {
-        [timespan] $remaining = [timespan]::FromSeconds(
-            $elapsed.TotalSeconds / ($Index + 1) * ($Count - $Index - 1))
-        $left = $remaining.ToString('h\:mm\:ss')
-        $total = ($elapsed + $remaining).ToString('h\:mm\:ss')
-        $eta = $now.Add($remaining).ToLocalTime().ToString('HH:mm')
-    }
-    [string] $place = if ($Index -ge 0) { "step $($Index + 1) of $Count" } else { 'waiting' }
-    # A middle dot between the fields, written by its code point.
-    [string] $dot = " $([char] 0x00B7) "
-    [string] $times = @(
-        "ETD: $departure", "ATD: $departure", "ETA: $eta"
-        "Elapsed: $($elapsed.ToString('h\:mm\:ss'))", "Left: $left", "Total: $total"
-    ) -join $dot
-    Write-Host -Object "$times$dot${place}: $($Step.Name) $state ($($Result.Seconds) s)"
+    return "/mnt/$($Matches[1].ToLowerInvariant())/$($Matches[2] -replace '\\', '/')"
 }

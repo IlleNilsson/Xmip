@@ -142,13 +142,15 @@ fn the_node_publishes_its_snapshot_and_a_pause_left_where_it_says_shows_in_the_n
     let (first, _) = published_until(&snapshot, Duration::from_secs(1), |_| true);
     as_it_starts(&first);
 
-    // What it received is counted at the stage that counts it, and what its
-    // gate refused as failed, in a publication within a round.
+    // What it received is counted at the Receive Location that took it,
+    // beneath the stage that counts it — the stage keeping only what no
+    // Location counted (ADR-0018, amendment 2026-11-11) — and what its gate
+    // refused as failed, in a publication within a round.
     for message in 0..MESSAGES {
         deliver(&receive, format!("order {message}").as_bytes());
     }
     let (received, _) = published_until(&snapshot, Duration::from_secs(5), |publication| {
-        count(publication, &format!("{node}/receive"), Counted::Streams) == MESSAGES
+        count(publication, &format!("{node}/receive/In"), Counted::Streams) == MESSAGES
             && count(publication, &node, Counted::Failed) == MESSAGES
     });
     // And they move its drawing, over the window the service keeps

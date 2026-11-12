@@ -279,13 +279,13 @@ optional = true
 probe = "ansible --version"
 minimum = "2.22"
 channel = "stable"
-note = "ansible-core (2.22.0 the current release on 2026-11-02, with four security fixes over 2.21), the controller of deploy/dsc/ansible; 2.21 is the first to run Windows modules in PowerShell 7. A distribution's own package may be older, so it is installed with Python's pip into a folder of its own, with pywinrm for the Windows machines; Python is Ansible's, never Xmip's."
+note = "ansible-core (2.22.0 the current release on 2026-11-02, with four security fixes over 2.21), the controller of deploy/dsc/ansible; 2.21 is the first to run Windows modules in PowerShell 7. 2.22 needs Python 3.13: where the system's python3 is older, as AlmaLinux 10.2's 3.12, the venv is made with python3.13, from EPEL there, and pip on 3.12 stops at 2.21. A distribution's own package may be older, so it is installed with Python's pip into a folder of its own, its bin on PATH, with pywinrm for the Windows machines. The collections: ansible.windows, ansible.posix, community.libvirt, which needs libvirt's Python binding and lxml in the libvirt host's system Python (python3-libvirt and python3-lxml), and microsoft.hyperv. Python is Ansible's, never Xmip's."
 
 [prerequisite.ansible.linux]
-command = "python3 -m venv ~/.local/share/xmip-ansible && ~/.local/share/xmip-ansible/bin/pip install ansible-core pywinrm && ~/.local/share/xmip-ansible/bin/ansible-galaxy collection install ansible.windows ansible.posix"
+command = "python3.13 -m venv ~/.local/share/xmip-ansible && ~/.local/share/xmip-ansible/bin/pip install ansible-core pywinrm && ~/.local/share/xmip-ansible/bin/ansible-galaxy collection install ansible.windows ansible.posix community.libvirt microsoft.hyperv"
 
 [prerequisite.ansible.macos]
-command = "python3 -m venv ~/.local/share/xmip-ansible && ~/.local/share/xmip-ansible/bin/pip install ansible-core pywinrm && ~/.local/share/xmip-ansible/bin/ansible-galaxy collection install ansible.windows ansible.posix"
+command = "python3 -m venv ~/.local/share/xmip-ansible && ~/.local/share/xmip-ansible/bin/pip install ansible-core pywinrm && ~/.local/share/xmip-ansible/bin/ansible-galaxy collection install ansible.windows ansible.posix community.libvirt microsoft.hyperv"
 
 # ---------------------------------------------------------------------------
 # Event binding languages. ADR-0065: a program at the perimeter subscribes to
@@ -424,9 +424,11 @@ role = "build"
 probe = "nfpm --version"
 note = """
 Linux only: builds the .deb and the .rpm from deploy/package/linux/nfpm.yaml
-(ADR-0015, amendment 2026-10-13), 2.48 the current release on 2026-10-13.
-Not used yet: builds are Windows-only for now, so no Linux package has been
-built. The Windows MSI needs nothing here beyond the .NET SDK above: dotnet
+(ADR-0015, amendment 2026-10-13), 2.48.0 the current release (checked
+2026-11-11), its release tarball unpacked into a folder of the account's own
+on PATH, no sudo: Build-XmipService -Package rpm on a Linux machine made the
+.rpm an environment's AlmaLinux machines are installed from (ADR-0015,
+amendment 2026-11-11). The Windows MSI needs nothing here beyond the .NET SDK above: dotnet
 build fetches WiX Toolset 7 from NuGet, and WiX 7 builds only once its Open
 Source Maintenance Fee EULA is accepted on the machine, the owner's decision.
 """

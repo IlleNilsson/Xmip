@@ -1428,3 +1428,27 @@ Decided then as recommended, and not recorded until now:
     both exist.
 
 Not built: the Rust command line. The C# one is still the only one.
+
+## Amendment, 2026-11-12: the packages are .NET 11.0.0, the SDK waits
+
+GitHub advisory GHSA-m28h-pj36-4364 (CVE-2026-118749, ASP.NET Core denial of
+service, published 2026-11-10) covers `Microsoft.Extensions.Validation`
+11.0.0-rc.1 through rc.3; 11.0.0 is the first patched version. The restore
+treats the advisory as an error (NU1902), so the gui module stopped the
+landing of 2026-11-12. ADR-0021's rule, applied to the 2026-10-27 amendment:
+
+- **The packages the projects name are 11.0.0:**
+  `Microsoft.AspNetCore.Components.Web`, `Microsoft.Extensions.Logging.Debug`,
+  `Microsoft.Extensions.Configuration` and `System.Diagnostics.EventLog`,
+  published 2026-11-10, more than 24 hours before. bUnit is 2.15.2, whose `net11.0` target references the final .NET 11
+  packages; 2.13.3 still brought the rc.2 packages into the desktop's tests.
+  Every lock file is restored again.
+- **Not yet:** the SDK. Every `global.json` still names
+  11.0.100-rc.3.26522.148, the only SDK installed, so the packages the SDK
+  brings (ILCompiler, ILLink, the ASP.NET Core assets) and MAUI from its
+  workload set (11.0.0-rc.2.26505.5) stay until the 11.0.100 SDK and its
+  workloads are installed, which needs an elevated install by the owner. The
+  runtime the Web GUI runs on is rc.3 until then.
+
+Provenance: the advisory and the versions were read from GitHub's advisory
+database and nuget.org on 2026-11-12; ADR-0021's rule; the gate's refusal.

@@ -5,7 +5,8 @@
 # restarts. Nothing under /opt/xmip but the package's two files goes:
 # configuration, data, audit and logs stay (ADR-0040).
 #
-# WRITTEN, NOT RUN: builds are Windows-only for now (nfpm.yaml).
+# Packaged in the .rpm built 2026-11-11 (nfpm.yaml); no package has been
+# removed yet, so it has not run.
 set -e
 
 case "$1" in

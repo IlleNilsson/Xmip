@@ -22,6 +22,10 @@ roles = ["executing", "monitoring", "storage"]
 # own reach its Parties' far end by it (ADR-0028, amendment 2026-10-22).
 # FTP and FTPS, HTTP and HTTPS beside it: a Location is entered by its
 # address alone, ftp:// to https:// (ADR-0064, amendment 2026-10-28).
+# Subscriptions route by what a document says, as trading Parties' documents
+# are routed: the `content` route technology, over the `edi` path language,
+# reads an EDIFACT or X12 interchange's message type and recipient
+# (ADR-0046, amendment 2026-11-11); the Essentials' flows route by them.
 technologies = [
   "xmip-core-transport-file",
   "xmip-core-transport-ftp",
@@ -30,4 +34,6 @@ technologies = [
   "xmip-core-transport-smtp",
   "xmip-core-transport-imap",
   "xmip-core-authorize-location",
+  "xmip-core-route-content",
+  "xmip-core-path-edi",
 ]

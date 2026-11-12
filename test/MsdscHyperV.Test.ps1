@@ -43,25 +43,19 @@ BeforeAll {
     [bool] $script:HasDsc = $null -ne (Get-Command -Name dsc -ErrorAction SilentlyContinue)
     [string] $script:NoDsc = 'dsc (Microsoft DSC v3) is not on PATH; README.md installs it'
     [string[]] $script:Document = @('network.dsc.yaml', 'machine.dsc.yaml')
-    [string] $script:ExamplePath = Join-Path $script:Template 'environment.example.toml'
+    [string] $script:ExamplePath = Join-Path $script:Root 'deploy/dsc/hyperv.example.toml'
 
     $script:Parsed = @{}
     foreach ($name in $script:Document) {
         $script:Parsed[$name] = Read-XmipTestYaml -Path (Join-Path $script:Template $name)
     }
-    $script:Example = InModuleScope Xmip -Parameters @{ Path = $script:ExamplePath } {
-        param($Path)
-        Read-XmipToml -Path $Path
-    }
-    # The example's steps as Deploy-XmipEnvironment applies them.
-    [hashtable[]] $script:Steps = @(InModuleScope Xmip -Parameters @{
-        Path = $script:ExamplePath; Template = $script:Template
-    } {
-        param($Path, $Template)
-        $environment = Read-XmipToml -Path $Path
-        $environment['linux_account'] = 'account'
-        Get-XmipDeployStep -Environment $environment -Template $Template
-    })
+    $script:Example = Read-XmipTestEnvironment -Path $script:ExamplePath -Folder (
+        Join-Path $TestDrive 'environment')
+    # The example's steps of this template as Deploy-XmipEnvironment applies them.
+    [hashtable[]] $script:Steps = @(Get-XmipTestDeployStep -Environment $script:Example -Run (
+            [string] $TestDrive) | Where-Object {
+            [IO.Path]::GetFullPath((Split-Path -Path $_.Document -Parent)) -eq
+                [IO.Path]::GetFullPath($script:Template) })
     $script:Machine = @($script:Steps | Select-Object -Skip 1 |
         ForEach-Object { [pscustomobject] $_.Value })
 
@@ -166,8 +160,8 @@ BeforeAll {
     }
 
     # A machine's instance as its document gives it: an AlmaLinux machine,
-    # or a Windows 11 one with its TPM and its Administrator's credential
-    # file, its image a file of the test's own.
+    # or a Windows 11 one with its TPM and its Administrator's secret file,
+    # its image a file of the test's own.
     function New-FakeInstance {
         param([string] $Family)
         [string] $iso = Join-Path $TestDrive 'image.iso'
@@ -183,16 +177,16 @@ BeforeAll {
             memoryGB = 4; cpu = 2; diskGB = 32; domainName = 'xmip.test'
             network = @{ name = 'Xmip'; gateway = '10.77.0.1'; prefixLength = 24
                 dnsServer = '10.77.0.10' }
-            linuxAccount = 'account'; sshPublicKeyPath = $key; credentialPath = ''
+            linuxAccount = 'account'; sshPublicKeyPath = $key; secretPath = ''
             image = $image }
         if ($Family -eq 'Windows') {
             $instance['name'] = 'XMIP-DEV01'
             $instance['address'] = '10.77.0.30'
-            [string] $credential = Join-Path $TestDrive 'credential.xml'
+            [string] $secret = Join-Path $TestDrive 'secret.xml'
             [securestring] $password = ConvertTo-SecureString -String 'Pa55word' -AsPlainText -Force
             [pscredential]::new('Administrator', $password) |
-                Export-Clixml -LiteralPath $credential
-            $instance['credentialPath'] = $credential
+                Export-Clixml -LiteralPath $secret
+            $instance['secretPath'] = $secret
             $image['edition'] = 'Windows 11 Pro'
             $image['secureBootTemplate'] = 'MicrosoftWindows'
             $image['tpm'] = $true
@@ -511,11 +505,11 @@ Describe 'The example environment' {
         [string[]] $addresses = @($script:Machine | ForEach-Object { $_.address })
         [string[]] $macs = @($addresses | ForEach-Object {
             Get-MachineMacAddress -Address $_ -Prefix $script:HyperVMacPrefix })
-        $script:Machine.Count | Should -Be 10
+        $script:Machine.Count | Should -Be 11
         @($script:Machine | ForEach-Object { $_.name } | Sort-Object -Unique).Count |
-            Should -Be 10
-        @($addresses | Sort-Object -Unique).Count | Should -Be 10
-        @($macs | Sort-Object -Unique).Count | Should -Be 10
+            Should -Be 11
+        @($addresses | Sort-Object -Unique).Count | Should -Be 11
+        @($macs | Sort-Object -Unique).Count | Should -Be 11
         [string] $prefix = $script:Example['network']['prefix']
         [string] $mask = Get-MachineNetmask -PrefixLength ([int] ($prefix -replace '^.*/', ''))
         [uint32] $want = ([ipaddress] ($prefix -replace '/.*$')).Address

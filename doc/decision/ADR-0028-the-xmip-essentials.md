@@ -16,6 +16,10 @@
 - Amended: 2026-11-04 — the Playground is named Essentials, everywhere
 - Amended: 2026-11-10 — Core.Demo, the demo readiness check, a third suite
   of Xmip's own
+- Amended: 2026-11-11 — the roll carries an operator's orders to the nodes it
+  reads, and keeps every table of their snapshots
+- Amended: 2026-11-11 — a run that reads every node carries the configured
+  flows with real documents, and nothing else
 - Related: ADR-0018 (the Service and the Host Services), ADR-0027 (the operator
   boundary), ADR-0010 (contract and transport boundaries), ADR-0025 (when a
   Module loads), ADR-0052 (the views' "show test clusters" box, its
@@ -1083,4 +1087,172 @@ first draft, the same day. Making it a suite with `-Tester`, refusing a
 cluster already taken rather than following it, keeping it out of patterns,
 SKIPPED for the parts that read the roll, the bounds, and building
 `xmip-lsp` in the check are the assistant's drafting, for the owner to
+overrule.
+
+## Amendment, 2026-11-11: the roll carries an operator's orders to the nodes it reads
+
+The demo shows Retry, Dismiss, Replay and Pause from the Web and the Desktop
+over the roll's snapshot (the amendment of 2026-11-10, Core.Demo part 3).
+Two things kept them from any node the run starts as `xmip-service` or
+reads on a machine of its own:
+
+- The roll's snapshot says the cluster takes orders at `<shared>/orders`,
+  and only the simulated nodes look there; `xmip-service` takes orders at
+  its own `<data>/orders`, and a real node at none a surface can write to.
+  So an order left for a served node lay there unread.
+- The roll copied four of a snapshot's tables into its own — health,
+  counts, Subscriptions, Event subscriptions — and dropped the rest, so
+  the Dead Message Queue and the failed Messages a node published never
+  reached the board, and nothing offered to act on them.
+
+Now the roll **carries each order to the node it is for**: it watches the
+place beneath `<shared>/orders` of every node it reads and, told by the
+operating system that an order was left, takes it and acts on the node over
+its operate listener (`plane::Remote::act`), as the identity the rig proves
+there — the run's tester, whom every node a run starts lists among its
+operators (`src/served/given.rs`), and an operator's certificate the run
+names for a real node. The node applies and audits the act as any act; one
+it refuses is audited by the roll as the failure to `order`
+(`src/roll/orders.rs`). Each place is watched first and what was left
+before taken once after, one carrying at a time, so an order left between
+the two is never left waiting for the next. **Not yet: who acted.** The
+order's `who` is the person who left it, and the node's audit records the
+tester, since the surface reached the node through the roll: the owner's
+Audit view names the rig as the operator of every Pause, Replay, Retry and
+Dismiss from the Web or Desktop on a served node. Carrying the person the
+act was relayed for beside the tester's proven identity is the operate
+plane's (`plane::Remote::act`, the trust path's), and waits in open problem
+62. And every table of a snapshot merges through **observe's one merge**,
+`Snapshot::merge`; the Essentials' own is deleted with its callers.
+
+Tested in observe (`snapshot::tests`: a merge carries the Dead Message
+Queue, the failed Messages, the unheard members and a pause with what it
+held) and in the Essentials (`roll::orders`: an order left before and one
+after the watch are both carried to the served node and taken from its
+place; one for a simulated node is left for it).
+
+Provenance: the judged design of 2026-11-11 found both; the build is the
+assistant's, 2026-11-11.
+
+## Amendment, 2026-11-11: a run that reads every node carries the configured flows with real documents
+
+The owner, 2026-11-10 22:40, of the Essentials: *As long as you do not get
+stuck in the 'More game', that is Subscriptions functionality in the real
+world. Do your Essentials test, promotion thing.* And of the demo, the same
+day: ERP names for Receive, Work Process and Send, never test or protocol
+names. A run of `xmip-service` nodes showed test and transport names
+because the roll ran the round trip in its own process beside them (the
+amendment of 2026-10-22, *What a run of real nodes leaves out*), and the
+nodes routed by the name a file arrived under, which said nothing of the
+document.
+
+So, superseding the paragraphs **The rig drives them: Carried** and **What a
+run of real nodes leaves out** of the amendment of 2026-10-22, and the
+contract families the amendment of 2026-10-13 routed by:
+
+- **The flows carry real documents.** `documents/<Location>/` holds each
+  Receive Location's own UN/EDIFACT interchanges of the latest published
+  directory, D.24A (D.25A is delayed: [ISO/TC 154 resolution
+  P-2026-01](https://www.isotc154.org/decisions/urn:iso:tc154:resolution:plenary-45:P-2026-01);
+  [GEFEG, D.24A](https://service.gefeg.com/jwg1/Current/cl/cl9.htm)),
+  written by hand: orders, order responses, dispatch advices, invoices,
+  remittance advices, receiving advices, inventory reports, price
+  catalogues for the item master, and multiple payment orders. The company
+  is `ESSENTIALS` in each interchange header, each Party its own name,
+  qualifier `ZZZ`. Routing reads only UNB and UNH, so the directory version
+  changes nothing of it; trading Parties still often use D.96A to D.01B.
+- **The company's ERP is in the flows**, as configuration only, played by
+  the rig: a Receive Location of its order-to-cash documents and one of its
+  procure-to-pay documents, and Send Ports for sales orders, remittance
+  advices, purchase order responses, goods receipts and inventory reports
+  to it. Each Subscription is named by the document it picks up — Sales
+  orders, Remittance advices, Order responses, Dispatch advices, Invoices,
+  Purchase order responses, Goods receipts, Inventory reports, Purchase
+  orders, Item master, Payments — and reads two properties promoted from the
+  document, `content:edi:UNH/2/1` and `content:edi:UNB/3/1` (ADR-0046,
+  amendment 2026-11-11). "Despatch" is "Dispatch", American English; the
+  message keeps its own name, DESADV.
+- **Carried is the Parties and the ERP** (`src/carried.rs`, its judge
+  `carried/judged.rs`). Each round it drops into each placed Receive
+  Location the next of that Location's documents, `<document>-<n>.edi`,
+  and knows the Send Port the document is routed to by the product's own
+  routing — the `content` source over the `edi` language, `route::publish`
+  over the cluster's Subscriptions (`src/documents.rs`). A file must arrive
+  whole, its bytes compared, where that Send Port is placed; at another, or
+  with other bytes, it is Done. Each Receive Location's verdict sits beneath
+  it on the node it is placed on, `…/node/<n>/receive/<Location>/delivery`,
+  with the fastest and median times and the Send Ports reached;
+  `<cluster>/carried` is deleted. The rig publishes no counts: the figures
+  are the nodes'. Each drop and arrival is a recent item with its from and
+  its to, the activity of such a run (ADR-0032). Nothing it keeps grows with
+  the run's age: an arrival is let go of once judged and its file taken off
+  the Send Port's folder, as the Party it was delivered to takes it, and a
+  document no Subscription takes is let go of once older than a minute.
+- **What a delivery's time says.** A Location whose Send Port another node
+  sends shows a median of about half a second in its verdict, against tens
+  of milliseconds where one node does both: the sending node finds the
+  Journey on its send scan, once a second. That is open problem 46, a defect
+  under the millisecond rule, known and scheduled ahead of the demo (a wait
+  on the queue the Storage node answers); it is no part of this amendment.
+- **The fault every fifty seconds strikes the real path.** At Realistic
+  stress, during the first ten seconds of each turn of fifty, one placed
+  Receive Location round them, by the turn alone, also receives a real
+  document no Subscription takes (`documents/unrouted/`, a status message,
+  IFTSTA). The node keeps it in its Dead Message Queue, where Replay acts on
+  it, and that Location's verdict is Stressed for the strike, saying so.
+  Clause 4a's addressing kind is struck; the transport and identity kinds
+  wait for SFTP Locations at level 1.
+- **Nothing else runs.** Where every node is read — started as
+  `xmip-service` or on a machine of its own, decided by the roster alone:
+  none simulated and some read (`roll::served_only`) — the roll builds no
+  in-process scenarios (`roll::round::scenarios`), its snapshot starts
+  empty, `[run] tests` says only `Carried`, and a test named for the run is
+  REFUSED in words before anything starts (ADR-0055). Such a run with no
+  Receive Location placed on its nodes is REFUSED too, never run as the
+  scenarios in the roll's own process instead. The 86-transport matrix of
+  the In brief and clause 3 keeps running where nodes are simulated, and in
+  the cargo tests. The board then shows beneath the cluster only `node`.
+- **One round, assembled in one place** (`roll::round::assembled`): the
+  scenarios, the cluster process's file, what the nodes the run reads
+  published and drew, Carried's verdicts — recorded before the drawing, so
+  a struck Location is drawn as the Monitor shows it (ADR-0052, amendment
+  2026-11-11) — and the drawing.
+- **A simulated relay publishes the round's document.** A relayed pair is
+  the round trip's payload over its transport; what its processing node
+  publishes and routes for it is the round's document itself, the Message's
+  own bytes promoted, and the pair's bytes ride beside it in what the node
+  holds, handed to the send stage unchanged (`src/subscribing.rs`).
+- **`Get-XmipTestResult`** reads a record beneath a Receive Location of a
+  node the run reads as the verdict of the run's one test, named as its
+  `[run] tests` says (Carried) and by the leaf the record carries, with the
+  Stage, Location and Node; a read node's own records are no result at all.
+  Neither the test's name nor its leaf is written in PowerShell, so a rename
+  on either side moves nothing. `Get-XmipTestStatus` says the tests from
+  the snapshot's `[run]`, never what the start record asked. The
+  Configuration view lists beneath an endpoint of a read node only what the
+  topology draws, so the verdict is no configuration (ADR-0052, amendment
+  2026-11-11).
+
+Tested in the Essentials (`documents`: every Receive Location has documents
+and each is routed to one Send Port, a document is routed by its message
+type and recipient, the unrouted one by none and a Location with none is
+refused; `carried::judged`: a file at another Send Port or with other bytes
+is Done, a struck turn Stressed and the next Fine, overdue and lost;
+`carried::tests`: over two folders of its own, a file delivered where its
+route sends it is Fine at the Location's `delivery` naming its Send Port,
+its arrival let go and its file taken, and the next at another Send Port is
+Done; `rotation`: the strike goes round the Locations by the turn alone;
+`run`: a served run lists only Carried; `roll`: a run reading every node
+refuses a scenario, and one with nothing placed on its nodes is refused;
+`roll::round`: a served round over a fixture holds only `node` beneath the
+root and draws a struck Location as it is; `subscribing`: a held pair's
+Message is the round's document, routed by its own bytes, and the pair's
+bytes go on unchanged), the root crate (`routed.rs`, ADR-0046) and
+`test/XmipTest.Test.ps1` (a served snapshot gives exactly one row, the
+run's test's verdict with its Stage, Location and Node, the same read under
+another test name and leaf; a served snapshot's `[run]` says Carried).
+
+Provenance: the owner's words of 2026-11-10; the build plan of 2026-11-11,
+with its skeptics' findings; the documents, their ids and the ERP's
+Locations and Ports are the assistant's drafting, for the owner to
 overrule.

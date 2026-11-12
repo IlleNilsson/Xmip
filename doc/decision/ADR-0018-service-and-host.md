@@ -1421,3 +1421,71 @@ received moves the drawing `Running::publication` states through its
 publisher's window, a test that fails where the publication states nothing),
 and the root crate's `.src/test/measured/publication.rs` (the service's
 Party link moves as it receives).
+
+## Amendment, 2026-11-11: a node processes where it routes, and counts at each Location
+
+Every slice carries every Subscription, so every node of the Essentials'
+cluster declared processing and drew a Work Process stage — the Storage
+nodes, the operational node and the sending nodes too — against ADR-0056's
+amendment of 2026-10-01 and the paragraph *What* above (*process where a
+Subscription routes*). Routing runs in a Receive Location's receive cycle
+(`message_path`), so:
+
+- **Processing is declared where routing runs:** where a Receive Location
+  starts, or a Work Process runs (`running::starting::routes`), decided once
+  as the node starts. **The rule is the pickup's, once:** a node that routes
+  by none takes its Subscriptions up as none (`Pickup::routing_none`), so
+  its publication, `xmip_operate.h` section 14 (`xmip_subscriptions_v1`)
+  and an operator's order agree: it lists none, and a pause or resume on
+  one is refused in words, *routes by no Subscription*.
+- **What it counts, where it is counted.** The tally resolves, as the node
+  starts, a counter per Receive Location and one per (Location,
+  Subscription), and adds to them atomically per Stream (`outcome::placed`,
+  built by `Tally::of`; the millisecond rule). A Subscription is found by
+  the id its evaluation names, never by where it stands in a list. The
+  publication counts Streams at `<node>/receive/<Location>` and the Streams
+  routed at `<node>/process/<Subscription>`; each stage keeps only what no
+  Location or Subscription counted, as the send stage already did for each
+  Send Port, so one Stream measures one, never two. A Stream a Send Port
+  Group's Subscription routes counts once on its link, which says *routed*.
+- **The node draws what feeds what.** The process stage's endpoints are the
+  Subscriptions the node published (its Subscription table), and nothing
+  else a scope beneath the stage holds (`observe::topology::draw`); the
+  node draws a link from each Receive Location to each Subscription it
+  routed by, publish → consume, carrying the Streams routed along it, and
+  each Party link says the transport its Locations' addresses chose — `file`,
+  or *N transports* — never a Location's name, which its evidence carries
+  (`running/publication/drawn.rs`, `topology::party::Party::over_locations`).
+  `ANY_PARTY` is observe's (`topology::party`), since a roll drawing the
+  nodes it reads calls it too (ADR-0028, amendment 2026-11-11).
+- **A Send Location of a Port named apart from it is published beneath that
+  Port**, `<node>/send/<Port>/<Location>`, started or not
+  (`ExecutionTree::beneath`): the send stage's children are its Send Ports,
+  what a Subscription routes to (ADR-0027, amendment 2026-11-11).
+
+Not yet: a Party per Location waits for the owner's answer on a designed
+Party key (open problem 33).
+
+The stage itself reads as the Work Process on every surface since the same
+day (ADR-0052 and ADR-0027, amendments 2026-11-11), the rename of 2026-10-06
+above reaching the labels at last.
+
+Tested in the runtime (`outcome::placed`: two Locations by three
+Subscriptions, a Stream routed at the second by the third counts there
+alone, and a Subscription is found by its id whatever order routing asked
+in; `running::publication::drawn`: one Stream at a Location measures one at
+the stage, never two, a routed Stream draws its Location to its
+Subscription, and the Party link says its Location's transport;
+`start`: a failover Location sits beneath its Send Port;
+`tests/running/drawing.rs`: a node that starts no Receive Location
+declares no processing, publishes no Subscription, section 14 lists none of
+its file and a pause is refused in words), observe (`topology::draw`: a
+Subscription the node published is drawn beneath its process stage, a
+transport's name is not; `topology::party`: one Location facing a Party
+gives its transport, never its name) and the Essentials (`topology`: a node
+the run reads is drawn with any-party on each side it faces).
+
+Provenance: the judged design of 2026-11-11 found the false Work Process
+stage; the build is the assistant's, the same day, and its review the same
+day corrected it: the pickup's rule, the order-free counters, the
+Subscriptions beneath the stage, the Party's transport and the Send Ports.

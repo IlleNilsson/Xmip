@@ -717,3 +717,33 @@ standby tests (the first listed alone is not promoted; a standby is not
 promoted while its primary is gone, and one is once every one answers),
 the runtime's storage test, and the root's `failover` test, every file
 dropped arriving once across the primary's stop and return.
+
+## Amendment, 2026-11-11: an environment runs every Storage node, started together
+
+On machines of their own, the amendment of 2026-11-08 has two
+consequences an environment template follows (ADR-0015, amendment of this
+date). Every Storage node the cluster's file lists runs on a machine of its
+own: the example environments map D2 beside D1, where until today D2 was
+passed over (the amendment of 2026-10-22), since D1 alone is never
+promoted and refuses to accept work, `xmip-service` exiting with status 2,
+which its unit does not restart. And no node of such a cluster starts
+alone, one machine after another: a Storage node waits `storage_silence`
+for the others and stops, so the environment starts its nodes together,
+and again every five seconds each one that stopped, until every one runs.
+Whether a lone Storage node should stop rather than wait is the owner's
+to say; nothing here changes it.
+
+## Amendment, 2026-11-11: a node declares processing where it routes
+
+The amendment of 2026-10-01 gives the process stage to routing: a node
+processes where a Subscription routes. Every slice carries every
+Subscription of the cluster, so until this day every node declared
+processing and drew a Work Process stage, the Storage nodes, the
+operational node and the sending nodes among them. Since the same day the
+code meets that amendment: a node declares processing where a Receive
+Location starts — routing runs in its receive cycle — or a Work Process
+runs, and only there are its Subscriptions taken up, published and
+acted on (`Pickup::routing_none`; ADR-0018, amendment 2026-11-11).
+
+Provenance: the judged design of 2026-11-11 found the deviation; the build
+is the assistant's, the same day.

@@ -774,9 +774,12 @@ of what was done; this one narrows it.
   `asset/brand/brand.toml`, `asset/brand/presentation/story.toml` and
   `audio/timing.toml`, `doc/planning/allocation.toml`; the deploy profiles,
   `deploy/profile/role/<role>.toml` and `deploy/profile/target/<target>.toml`;
-  the desired-state environments, `environment.example.toml` and the copy
-  `Deploy-XmipEnvironment` reads (`.local-work/deploy/hyperv.toml`,
-  `libvirt.toml`); the surfaces' `gui.toml` (the phone's
+  the desired-state environments, `deploy/dsc/hyperv.example.toml` and
+  `libvirt.example.toml` and the copy `Deploy-XmipEnvironment` reads
+  (`.local-work/deploy/hyperv.toml`, `libvirt.toml`), the one file that says
+  which technology makes an environment and which node runs on which
+  machine, from which the YAML DSC and Ansible read is written (ADR-0015,
+  amendment 2026-11-11); the surfaces' `gui.toml` (the phone's
   `android-gui.toml` too), `cli.toml` and `powershell.toml`; the landing's
   `.local-work/landing/patch.toml`; `audit.toml`; the Essentials' records,
   `<cluster>-history.toml`, `<cluster>-activity.toml`, `roll-<pid>.toml`,

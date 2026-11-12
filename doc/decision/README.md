@@ -778,9 +778,13 @@ turned into a build by `Build-XmipService` (amendments 2026-10-01 and
 2026-10-19), every built technology built and tested, archive targets
 among them: the site chooses them (amendment 2026-10-20). macOS gets a `.pkg` with a
 launchd daemon, and every package installs by running
-`xmip-service --install`; only the Windows packages are built for now
-(amendment 2026-10-13). Every database records its schema version, and a
-release's upgrade scripts only add (amendment 2026-10-20).
+`xmip-service --install`; the Windows packages are built on Windows and the
+`.rpm` on Linux, the macOS `.pkg` not yet (amendments 2026-10-13 and
+2026-11-11). Every database records its schema version, and a
+release's upgrade scripts only add (amendment 2026-10-20). One environment
+file names the technology, Microsoft DSC v3 or Ansible, that makes an
+environment's machines and its nodes, in one command, and the environment
+keeps it: the other one is refused there (amendment 2026-11-11).
 
 → [Packaging and distribution, in full](ADR-0015-packaging.md)
 
@@ -1127,7 +1131,7 @@ You have a word. This gives you the decision that governs it.
 | Durable, a Publication | [The Service and the Host Services](ADR-0018-service-and-host.md) |
 | encryption at rest | [Xmip encrypts its own traffic and its own storage](ADR-0063-xmip-encrypts-its-traffic-and-its-storage.md) |
 | encryption in transit | [Xmip encrypts its own traffic and its own storage](ADR-0063-xmip-encrypts-its-traffic-and-its-storage.md) |
-| environment template | [Packaging and distribution](ADR-0015-packaging.md) |
+| environment template, environment file | [Packaging and distribution](ADR-0015-packaging.md) |
 | erasure, of the identity | [A Quest probes, and the regulation is a parameter](ADR-0072-a-quest-probes-and-the-regulation-is-a-parameter.md) |
 | Error types | [One error declaration](ADR-0037-one-error-declaration.md) |
 | Essentials, exercise, verdict | [The Xmip Essentials](ADR-0028-the-xmip-essentials.md) |

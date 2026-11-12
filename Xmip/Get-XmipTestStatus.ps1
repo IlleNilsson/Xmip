@@ -166,6 +166,12 @@ function Get-XmipTestStatus {
             $named = $ran.Name
         }
 
+        # What the run says it runs and reads, its snapshot's [run]: what the
+        # start record asked for is said only until the snapshot is there,
+        # and an unnamed run asks for nothing (ADR-0028, amendment 2026-11-11).
+        $run = Get-XmipTestRun -Snapshot $snapshot
+        [string[]] $asked = @(Get-TomlValue -Node $record -Name 'tests' -Default @())
+
         [hashtable] $row = @{
             Suite    = if ($named -ne '') { $named } else { $script:XmipEssentialsSuite }
             Kind     = 'roll'
@@ -175,11 +181,15 @@ function Get-XmipTestStatus {
                 Cluster     = if ($rolledAs -ne '') { $rolledAs } else { $null }
                 StartTime   = $roll.StartTime
                 Stress      = Get-TomlValue -Node $record -Name 'stress'
-                Tests       = @(Get-TomlValue -Node $record -Name 'tests' -Default @())
+                Tests       = if ($null -ne $run -and $run.Tests.Count -gt 0) {
+                    @($run.Tests)
+                } else {
+                    $asked
+                }
                 Rounds      = [int](Get-TomlValue -Node $record -Name 'rounds' -Default 0)
                 Nodes       = @($mine | ForEach-Object { $_.Name } | Sort-Object)
                 OnlineNodes = @($online | ForEach-Object { $_.Name } | Sort-Object)
-                RealNodes   = @(Get-XmipTestRealNode -Snapshot $snapshot)
+                RealNodes   = if ($null -ne $run) { @($run.RealNodes) } else { @() }
                 Worst       = if ($null -ne $worst) { $worst.State } else { $null }
                 Tally       = 'running'
                 Snapshot    = $snapshot
@@ -194,21 +204,22 @@ function Get-XmipTestStatus {
     }
 }
 
-function Get-XmipTestRealNode {
+function Get-XmipTestRun {
     <#
         .SYNOPSIS
-            The nodes a roll found real — each on a machine of its own, whose
-            typed name resolved and which answered as that node, never
-            spawned — as its snapshot's [run] says them, through the
-            surfaces' one reading of a publication (ADR-0028, amendment
-            2026-10-21). None where the snapshot is not there yet or every
-            node is simulated.
+            What a roll's snapshot says of its run, its [run], through the
+            surfaces' one reading of a publication: the tests it runs —
+            Carried alone where it reads every node (ADR-0028, amendment
+            2026-11-11) — and the nodes it found real, each on a machine of
+            its own or started as xmip-service, never simulated (ADR-0028,
+            amendment 2026-10-21). Nothing where the snapshot is not there
+            yet.
 
         .PARAMETER Snapshot
             The roll's snapshot.
     #>
     [CmdletBinding()]
-    [OutputType([string])]
+    [OutputType('Xmip.Surface.RunHeader')]
     param(
         [Parameter()]
         [AllowEmptyString()]
@@ -216,8 +227,8 @@ function Get-XmipTestRealNode {
     )
 
     if ([string]::IsNullOrWhiteSpace($Snapshot) -or -not (Test-Path -LiteralPath $Snapshot)) {
-        return @()
+        return $null
     }
 
-    return @([Xmip.Surface.SnapshotOperator]::new($Snapshot).Run().RealNodes)
+    return [Xmip.Surface.SnapshotOperator]::new($Snapshot).Run()
 }

@@ -11,7 +11,7 @@
 # names none. XMIP_ACCOUNT names the account the node's service runs as,
 # root unless set (ADR-0015 and ADR-0028, amendments 2026-10-21).
 #
-# WRITTEN, NOT RUN: builds are Windows-only for now (nfpm.yaml).
+# Run on AlmaLinux 10.2 by the environment templates, 2026-11-11 (nfpm.yaml).
 set -e
 
 node="${XMIP_NODE:-$(hostname -s)}"

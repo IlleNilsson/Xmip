@@ -101,11 +101,17 @@
   notify: Restart the Xmip node
   become: true
 
+# Under --check nothing is changed and every step says what it would change:
+# what only reads runs (check_mode: false), and a command that changes names
+# the file it needs in `removes`, which is how the command module says, under
+# --check, that it would run. A package to be copied says so itself, so what
+# is read from the one there now is not asked then.
 - name: The package, copied to the machine
   ansible.builtin.copy:
     src: "{{ xmip_package }}"
     dest: "{{ xmip_staging }}/xmip.rpm"
     mode: '0644'
+  register: xmip_shipped
   become: true
 
 - name: The package installed, which runs xmip-service --install
@@ -117,6 +123,35 @@
     XMIP_NODE: "{{ xmip_node_name }}"
     XMIP_CLUSTER: "{{ xmip_cluster_name }}"
     XMIP_ACCOUNT: "{{ xmip_account }}"
+  when: not (ansible_check_mode and xmip_shipped is changed)
+  become: true
+
+# A build made again under the same version is the same package to dnf: the
+# installed .rpm and the shipped one are compared by their header's SHA-256.
+- name: The headers of the package installed and of the one shipped
+  ansible.builtin.command:
+    argv: "{{ ['rpm'] + item + ['--queryformat', '%{SHA256HEADER}'] }}"
+  loop:
+    - [-q, xmip]
+    - [-qp, "{{ xmip_staging }}/xmip.rpm"]
+  register: xmip_header
+  changed_when: false
+  failed_when: xmip_header.rc != 0 and not ansible_check_mode
+  check_mode: false
+  when: not (ansible_check_mode and xmip_shipped is changed)
+  become: true
+
+- name: The package shipped installed over another build, which runs xmip-service --install
+  ansible.builtin.command:
+    argv: [rpm, --upgrade, --replacepkgs, --replacefiles, "{{ xmip_staging }}/xmip.rpm"]
+    removes: "{{ xmip_staging }}/xmip.rpm"
+  environment:
+    XMIP_NODE: "{{ xmip_node_name }}"
+    XMIP_CLUSTER: "{{ xmip_cluster_name }}"
+    XMIP_ACCOUNT: "{{ xmip_account }}"
+  when: >-
+    xmip_header is not skipped
+    and xmip_header.results[0].stdout != xmip_header.results[1].stdout
   become: true
 
 # The file is the node's alone to write: its account's and root's, read by
@@ -139,51 +174,80 @@
       - --listening
   register: xmip_listening
   changed_when: false
+  failed_when: xmip_listening.rc != 0 and not ansible_check_mode
+  check_mode: false
   become: true
 
 # A firewalld service of the node's own holds exactly those ports, so an
-# opening the configuration no longer listens on is closed with it.
-- name: The node's firewalld service
-  ansible.builtin.command:
-    argv: [firewall-cmd, --permanent, "--new-service=xmip-{{ xmip_node_name }}"]
-  register: xmip_firewall_service
-  changed_when: xmip_firewall_service.rc == 0
-  failed_when: xmip_firewall_service.rc != 0 and 'ALREADY_ENABLED' not in xmip_firewall_service.stderr
-    and 'NAME_CONFLICT' not in xmip_firewall_service.stderr
-  become: true
-
+# opening the configuration no longer listens on is closed with it. Asked
+# first: a service not there yet holds none, and is made.
 - name: The ports the node's firewalld service holds
   ansible.builtin.command:
     argv: [firewall-cmd, --permanent, "--service=xmip-{{ xmip_node_name }}", --get-ports]
   register: xmip_opened
   changed_when: false
+  failed_when: false
+  check_mode: false
+  become: true
+
+- name: The node's firewalld service, where it has none
+  ansible.builtin.command:
+    argv: [firewall-cmd, --permanent, "--new-service=xmip-{{ xmip_node_name }}"]
+    removes: "{{ xmip_firewall_cmd }}"
+  when: xmip_opened.rc != 0
   become: true
 
 - name: Close what the configuration no longer listens on
   ansible.builtin.command:
     argv: [firewall-cmd, --permanent, "--service=xmip-{{ xmip_node_name }}", "--remove-port={{ item }}"]
-  loop: "{{ xmip_opened.stdout.split() | difference(xmip_listening.stdout_lines | map('split') | map('first') | list) }}"
+    removes: "{{ xmip_firewall_cmd }}"
+  loop: "{{ xmip_held_ports | difference(xmip_listened_ports) }}"
   notify: Reload the firewall
   become: true
 
 - name: Open what it listens on
   ansible.builtin.command:
     argv: [firewall-cmd, --permanent, "--service=xmip-{{ xmip_node_name }}", "--add-port={{ item }}"]
-  loop: "{{ xmip_listening.stdout_lines | map('split') | map('first') | list | difference(xmip_opened.stdout.split()) }}"
+    removes: "{{ xmip_firewall_cmd }}"
+  loop: "{{ xmip_listened_ports | difference(xmip_held_ports) }}"
   notify: Reload the firewall
   become: true
 
+# Permanent alone: firewalld refuses a service made permanent and enabled at
+# once (INVALID_SERVICE), and the running firewall knows one made permanent
+# only once it is reloaded, as the handler does. Under --check a service not
+# there yet is not in the zone either, which its making above already says.
 - name: The node's firewalld service in the zone
   ansible.posix.firewalld:
     service: "xmip-{{ xmip_node_name }}"
     permanent: true
-    immediate: true
     state: enabled
+  when: not (ansible_check_mode and xmip_opened.rc != 0)
+  notify: Reload the firewall
   become: true
 
-- name: The node's service running, started with the machine
+# A run that stopped before its handlers left the service kept and not
+# running: the running firewall is asked, and reloaded where it lacks it.
+- name: Whether the running firewall holds the node's service
+  ansible.builtin.command:
+    argv: [firewall-cmd, "--query-service=xmip-{{ xmip_node_name }}"]
+  register: xmip_firewall_running
+  changed_when: false
+  failed_when: false
+  check_mode: false
+  become: true
+
+- name: The firewall reloaded, so it runs as it is kept
+  ansible.builtin.command:
+    argv: [firewall-cmd, --reload]
+    removes: "{{ xmip_firewall_cmd }}"
+  when: xmip_firewall_running.rc != 0
+  become: true
+
+# Started with the machine; started now by started.yml, with every node of
+# the environment together, since none accepts work before its Xmip Storage.
+- name: The node's service started with the machine
   ansible.builtin.systemd_service:
     name: "xmip-{{ xmip_node_name }}"
-    state: started
     enabled: true
   become: true

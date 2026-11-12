@@ -3,10 +3,11 @@
 # environment's authority (Xmip.Environment/Slice), then node.dsc.yaml
 # applied there by Xmip.Environment/Machine, given that slice and the
 # authority's certificate, the node's certificate, key and anchors from the
-# cluster's own authority, and the estate's package for its family. A node
-# never slices and never holds the authority's key (ADR-0031, amendment
-# 2026-11-06). An environment document includes it once for each node;
-# README.md says how.
+# cluster's own authority, and the estate's package for its family; on an
+# AlmaLinux machine DSC is brought there first from the tools. A node never
+# slices and never holds the authority's key (ADR-0031, amendment
+# 2026-11-06). Deploy-XmipEnvironment applies it once for each node, with
+# the parameters it writes from the environment file (deploy/dsc/README.md).
 $schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
 directives:
   version: ^3.4.0-preview.2
@@ -19,18 +20,37 @@ parameters:
       authority (the folder the environment's authority is kept in here),
       slices (where each node's signed slice is written here, a folder per
       node), identity (a folder per node of what New-XmipCertificate -Node
-      wrote), credentialPath, keyPath, linuxAccount and farEnd.
+      wrote), secretPath, keyPath, knownHosts, linuxAccount and farEnd.
   packages:
     type: object
     description: Per family, the package's path and the file name it is given there.
+  tools:
+    type: object
+    description: >-
+      Per family, each tool DSC is brought to the machine with, its tarball's
+      path and SHA-256: pwsh and dsc for Linux.
   layout:
     type: object
     description: Per family, where the package puts the node.
+    defaultValue:
+      Windows:
+        program: C:\Program Files\Xmip\bin\xmip-service.exe
+        configuration: C:\ProgramData\Xmip\config
+      Linux:
+        program: /opt/xmip/bin/xmip-service
+        configuration: /opt/xmip/config
   accounts:
     type: object
     description: >-
       Per family, the account a node's service runs as: its name, and
       ofNode where the node's name follows it.
+    defaultValue:
+      Windows:
+        name: NT SERVICE\xmip-
+        ofNode: true
+      Linux:
+        name: xmip
+        ofNode: false
   placed:
     type: string
     description: >-
@@ -41,7 +61,7 @@ parameters:
     description: The node, as cluster.xmip declares it.
   machine:
     type: object
-    description: The machine the node runs on, from the mapping in the parameters.
+    description: The machine the node runs on, its name, address and family.
 resources:
   - name: Node slice
     type: Xmip.Environment/Slice
@@ -65,8 +85,10 @@ resources:
       address: "[parameters('machine').address]"
       family: "[parameters('machine').family]"
       login: "[parameters('common').linuxAccount]"
-      credentialPath: "[parameters('common').credentialPath]"
+      secretPath: "[parameters('common').secretPath]"
       keyPath: "[parameters('common').keyPath]"
+      knownHosts: "[parameters('common').knownHosts]"
+      tools: "[parameters('tools')[parameters('machine').family]]"
       document: node.dsc.yaml
       files: >-
         [createObject(

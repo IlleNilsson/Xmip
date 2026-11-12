@@ -62,9 +62,15 @@ schema: !embedded
       - pool
       - network
       - image
+      - technology
     properties:
       name:
         description: 'The machine''s name, its domain''s and its computer''s.'
+        type: string
+      technology:
+        description: >-
+          The technology making the environment, msdsc, which the domain's
+          record names; a machine another technology made is refused.
         type: string
       environment:
         description: 'The environment''s name, written in the domain''s description.'
@@ -91,7 +97,11 @@ schema: !embedded
         type: string
       sshPublicKeyPath:
         type: string
-      credentialPath:
+      hostKeyPath:
+        description: 'An AlmaLinux machine''s SSH host key, which its kickstart gives it.'
+        type: string
+      secretPath:
+        description: 'The Windows machines'' Administrator secret, Export-Clixml.'
         type: string
       installation:
         readOnly: true

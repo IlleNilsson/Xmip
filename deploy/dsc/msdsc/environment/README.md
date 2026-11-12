@@ -21,13 +21,18 @@ whether its nodes are simulated on one computer or on machines of their own
 (the owner, 2026-10-21: *one TOML file that can be run for tests regardless
 of node faking or actual nodes*; ADR-0028, amendment 2026-10-21). It says
 what the cluster is and nothing of where it runs. What the environment adds
-is here, in `environment.example.parameters.yaml`: the cluster's name, its
-DNS domain, which node runs on which machine, the package, the layout, the
-accounts, the folder of each node's certificate, and `farEnd`, where the
-machines reach the Parties' far end the Essentials serves.
+is the environment file's, `deploy/dsc/README.md`: the cluster's name, its
+DNS domain, which node runs on which machine, the package, the folder of
+each node's certificate, and `far_end`, where the machines reach the
+Parties' far end the Essentials serves. `Deploy-XmipEnvironment` gives the
+documents here their parameters from it; the layout and the accounts are
+`machine.dsc.yaml`'s own defaults.
 
-The example puts five of the file's nine nodes on the Hyper-V example's
-five node machines; the Essentials simulates the other four:
+The Hyper-V example, `deploy/dsc/hyperv.example.toml`, puts six of the
+file's nine nodes on six node machines, and the libvirt example D1, D2 and
+R1 on three; the Essentials simulates the others. Both Storage nodes the
+file lists, D1 and D2, run on machines of their own: neither serves until
+both answer (ADR-0056, amendment 2026-11-08).
 
 | Node | Roles | Machine | Operating system | Address |
 | --- | --- | --- | --- | --- |
@@ -36,9 +41,10 @@ five node machines; the Essentials simulates the other four:
 | P1 | processing | XMIP-APP01 | Windows Server 2025 | 10.77.0.51 |
 | L1 | executing | XMIP-APP02 | Windows Server 2025 | 10.77.0.52 |
 | D1 | storage | XMIP-APP03 | Windows Server 2025 | 10.77.0.53 |
+| D2 | storage | XMIP-APP04 | Windows Server 2025 | 10.77.0.54 |
 
-Which five, and on which machine, is the assistant's draft of 2026-10-21,
-for the owner to strike.
+Which six, and on which machine, is the assistant's draft of 2026-10-21 and
+2026-11-11, for the owner to strike.
 
 ## What each machine is given
 
@@ -55,17 +61,19 @@ prints it, signed by the environment's authority kept in `authority`, and
 that authority's certificate beside it, written into `slices/<node>`: every
 Receive Location and Send Port the cluster's file designs is placed over the
 environment's nodes, round robin by their roles, and bound over SFTP on the
-Parties' far end at `farEnd`, port 7422, each a user of its own there, so a
+Parties' far end at `far_end`, port 7422, each a user of its own there, so a
 node fetches what the Essentials drops and puts what it sends where the
 Essentials is told of it (ADR-0028, amendment 2026-10-22). The nodes are the
-parameters' `nodes`, never written again. A node never slices and never
+environment file's, never written again. A node never slices and never
 holds the authority's key, so a `node.xmip` edited on it is refused there
 and the node runs its last accepted slice; that slice, kept in the node's
 data folder, pins the authority, the node's name and the serial, so a
 swapped certificate, an older slice or another node's is refused too
 (ADR-0031, amendments 2026-11-06 and 2026-11-07). A signature and its
 serial differ each time it is made, so a slice is made again only where
-the text it signs differs.
+the text it signs differs — its set too, which DSC asks without a test
+first — and a run over an environment restarts no node for a new
+signature.
 
 **Each node machine** (`node.dsc.yaml`), in this order:
 
@@ -92,8 +100,12 @@ the text it signs differs.
 5. a firewall opening for exactly the ports `xmip-service --listening` says
    its configuration listens on, and none it no longer does — none for the
    far end, which a node reaches and never serves;
-6. its service running and started with the machine: on Windows the
-   built-in `Microsoft.Windows/Service`, on AlmaLinux `Xmip.Node/Service`.
+6. its service running and started with the machine, `Xmip.Node/Service`:
+   the Windows service automatic, the systemd unit enabled. DSC refuses a
+   document naming a resource its machine has none of, a condition
+   notwithstanding, so the built-in `Microsoft.Windows/Service`, which DSC
+   has on Windows alone, cannot be named in a document both families run
+   (checked 2026-11-11).
 
 Every rule about the node is `xmip-service`'s: nothing here reads the TOML,
 slices it or knows a port.
@@ -115,52 +127,72 @@ alike. The Windows PowerShell adapter is used nowhere here.
 | each node's slice, made and signed on this machine | `Xmip.Environment/Slice` |
 | the slice in place on the node | `Xmip.Node/Slice` |
 | the firewall | `Xmip.Node/Opening` |
-| the service | `Microsoft.Windows/Service` on Windows, `Xmip.Node/Service` on AlmaLinux |
+| the service | `Xmip.Node/Service` |
 | the names | `Xmip.Environment/Name` |
 | a document applied on another machine | `Xmip.Environment/Machine` |
+| every node started together | `Xmip.Environment/Started` |
 
 The firewall is an Xmip resource rather than the built-in
 `Microsoft.Windows/FirewallRuleList` because its ports are what the node's
 configuration listens on, which the built-in would take typed. DSC applies
 a document on the machine it runs on, so `Xmip.Environment/Machine` copies
 this folder, a node's files and its parameters to the machine's staging
-folder — WinRM to a Windows machine as its Administrator, SSH to an
-AlmaLinux one with its key — and runs `dsc` there, elevated. Every document
+folder and runs `dsc` there, elevated: over PowerShell Remoting, WinRM, to
+a Windows machine as its Administrator; over OpenSSH to an AlmaLinux one,
+with the environment's key and its `known_hosts`, checked strictly, so a
+machine whose host key is not the one its kickstart was given is refused
+(`EnvironmentSsh.ps1`). An AlmaLinux machine needs nothing but its sshd:
+DSC is brought to it, the `pwsh` and `dsc` tarballs the environment file's
+`[tools.Linux]` names, each checked against its SHA-256, copied once and
+unpacked under `/var/tmp/xmip-environment/tools`, never installed for the
+machine, and `dsc` runs from there with sudo. That staging folder is the
+login's alone, `0700`, and one another account owns is refused; a node's
+files, its key among them, are sent to its `files` for each run of the
+document, read by the login and root alone, and removed once `dsc` has
+run, whatever it answered; so a file is placed with the mode its resource
+names, never its staged source's: `Xmip.Node/File` makes the key `0600`,
+the certificate, the anchors and the authority's certificate `0644`.
+Ansible stages in a folder of its own. A
+machine that does not answer yet is answered absent, so a fresh host is
+tested too. The Windows machines' secret is read as every template reads
+it (`deploy/dsc/machine/MachineSecret.ps1`): encrypted, on Windows. Every document
 requires DSC `^3.4.0-preview.2`, the latest release, and each resource `^0.1`.
 No document asks for elevation as a whole: each resource's manifest states
 `requireSecurityContext: elevated` on exactly the methods that need
 administrator rights — every method of `Xmip.Environment/Name`,
 `Xmip.Node/File`, `Xmip.Node/Opening` and `Xmip.Node/Slice`, which read
 what only an administrator may, and the set of `Xmip.Node/Account`,
-`Xmip.Node/Package` and `Xmip.Node/Service`; `Xmip.Environment/Machine`
-and `Xmip.Environment/Slice` run unelevated on this machine, and
-`Microsoft.Windows/Service` states its own.
+`Xmip.Node/Package` and `Xmip.Node/Service`; `Xmip.Environment/Machine`,
+`Xmip.Environment/Slice` and `Xmip.Environment/Started` run unelevated on
+this machine. `Xmip.Node/Package` compares an installed `.rpm` with the
+shipped one by its header's SHA-256, so a build made again under the same
+version reaches the machine too, installed over the one there by rpm's own
+upgrade.
 
 | File | Is |
 | --- | --- |
-| `environment.example.dsc.yaml` | the example environment, run on the host: the names, then each node machine |
-| `environment.example.parameters.yaml` | what it is given, the mapping of nodes onto machines among it |
-| `machine.dsc.yaml` | one node machine, from the host |
+| `machine.dsc.yaml` | one node machine, from the host: its slice made, then `node.dsc.yaml` applied there |
+| `names.dsc.yaml` | the names, from the host: `name.dsc.yaml` applied on the DNS server |
 | `node.dsc.yaml` | one node, on its machine |
 | `name.dsc.yaml` | the names, on the DNS server |
-| `node.resource.ps1`, `NodeMachine.ps1`, `NodeFile.ps1`, `NodeOpening.ps1`, `NodeAccess.ps1` | the `Xmip.Node` resources |
-| `environment.resource.ps1`, `EnvironmentMachine.ps1`, `EnvironmentName.ps1` | the `Xmip.Environment` resources |
+| `started.dsc.yaml` | every node started together, from the host |
+| `node.resource.ps1`, `NodeMachine.ps1`, `NodeFile.ps1`, `NodeOpening.ps1`, `NodeAccess.ps1`, `NodePackage.ps1` | the `Xmip.Node` resources |
+| `environment.resource.ps1`, `EnvironmentMachine.ps1`, `EnvironmentSsh.ps1`, `EnvironmentSlice.ps1`, `EnvironmentName.ps1`, `EnvironmentStarted.ps1` | the `Xmip.Environment` resources |
 | `*.dsc.resource.yaml` | their manifests, YAML as every configuration here: JSON is what the resources speak, never what a person writes (the owner, 2026-11-02); the embedded schema tagged `!embedded`, the form DSC's YAML reader takes |
 
 ## Before the first run
 
-The machines are installed (`deploy/dsc/msdsc/hyperv`), and XMIP-DC01 runs
-the DNS Server role; the domain controller's own template is not written.
+`Deploy-XmipEnvironment` makes the machines first, with the hypervisor's
+template (`deploy/dsc/README.md`). On Hyper-V, XMIP-DC01 runs the DNS
+Server role; the domain controller's own template is not written. An
+AlmaLinux machine needs nothing more: DSC is brought to it.
 
-**On each machine**, once, as its Administrator or with sudo: PowerShell
-7.7 and Microsoft DSC 3.4.0-preview.2 or newer — `winget install --id
+**On each Windows machine**, once, as its Administrator: PowerShell 7.7
+and Microsoft DSC 3.4.0-preview.2 or newer — `winget install --id
 Microsoft.PowerShell --exact` and `Add-AppxPackage -Path
 https://github.com/PowerShell/DSC/releases/download/v3.4.0-preview.2/DSC-3.4.0-preview.2-Win.msixbundle`
-on Windows (winget carries no 3.4 preview), the `powershell` and
-`dsc-preview` packages from Microsoft's package repository on AlmaLinux —
-and on AlmaLinux PowerShell as an SSH subsystem,
-`Subsystem powershell /usr/bin/pwsh -sshs -NoLogo` in
-`/etc/ssh/sshd_config`.
+(winget carries no 3.4 preview). Bringing them as the AlmaLinux machines
+are brought theirs waits on the owner's Hyper-V run.
 
 **On the host**, in an elevated Xmip PowerShell Console, once: WinRM may
 reach the Windows machines by address, and the host asks XMIP-DC01 for the
@@ -186,9 +218,8 @@ The last lets the machines reach the far end the Essentials serves on this
 host, and nothing else reach it.
 
 Then, not elevated, in an Xmip PowerShell Console: the packages
-(`deploy/package/README.md`; the `.rpm` is written and not built while
-builds are Windows-only), the cluster's authority and each node's
-certificate from it, and the parameters copied to where they are yours.
+(`deploy/package/README.md`: the MSI on Windows, the `.rpm` on a Linux
+machine), and the cluster's authority and each node's certificate from it.
 
 ```powershell
 Import-Module -Name D:\Repos\Xmip\Xmip\Xmip.psd1
@@ -199,33 +230,30 @@ foreach ($node in 'R1', 'S1', 'P1', 'L1', 'D1') {
         Node      = $node
         Cluster   = 'C1'
         Authority = "$local\authority"
-        Name      = "$node.xmip.test", 'C1', 'C1.xmip.test'
+        Name      = "$node.xmip.test", $node, 'C1', 'C1.xmip.test'
         Path      = "$local\identity\$node"
     }
     New-XmipCertificate @issue
 }
-[string] $example = 'D:\Repos\Xmip\deploy\dsc\msdsc\environment\environment.example.parameters.yaml'
-Copy-Item -LiteralPath $example -Destination "$local\environment.parameters.yaml"
 ```
 
-In the copy, write in `linuxAccount` under `common`, the account the
-AlmaLinux machines were installed with, and the packages' version; the
-documents refuse to run without the account.
+The environment file names each, `deploy/dsc/README.md`.
 
 ## Running it
 
-In an Xmip PowerShell Console, not elevated — each document runs itself
-elevated on its machine, through WinRM as the Administrator or SSH with
-sudo — with this folder on `PATH` so DSC finds its resources. `test` says
-what differs and changes nothing, `set` makes it so:
-
-```powershell
-$env:PATH = "D:\Repos\Xmip\deploy\dsc\msdsc\environment;$env:PATH"
-[string] $environment = 'D:\Repos\Xmip\deploy\dsc\msdsc\environment\environment.example.dsc.yaml'
-[string] $parameters = 'D:\Repos\Xmip\.local-work\environment\environment.parameters.yaml'
-dsc config --parameters-file $parameters test --file $environment
-dsc config --parameters-file $parameters set --file $environment
-```
+`Deploy-XmipEnvironment -Path <environment file>`, with `technology =
+"msdsc"`: after the machines, it applies `names.dsc.yaml` where one of the
+machines is the DNS server, then `machine.dsc.yaml` once for each node in
+the order the file lists the machines, and last `started.dsc.yaml`, with
+this folder on `PATH` so DSC finds its resources. A node refuses to accept
+work until its cluster's Xmip Storage answers, and a Storage node until
+every Storage node the cluster lists does, so no node of them starts alone,
+one machine after another: each node's own document enables its service
+and starts it waiting for nothing, and `Xmip.Environment/Started` starts
+them together, and again every five seconds each one that stopped, until
+every one runs or its window, 180 seconds, is spent. Each document runs itself elevated on its machine,
+through WinRM as the Administrator or SSH with sudo; on the host it needs
+none. `-WhatIf` says what differs and changes nothing.
 
 Then the Essentials runs against the machines: the names typed resolve and
 answer, and the run says which nodes are real. The tester's operator
@@ -233,8 +261,8 @@ certificate is signed by the same authority — a file naming it,
 `D:\Repos\Xmip\.local-work\environment\authority\operator.xmip`, holds
 `[service]` with `name`, `cluster_name = "C1"` and `node_name`, and
 `[provision.operator] authority = "."`. Type exactly the nodes the
-parameters map, which the Essentials places the Locations over as the
-machines did:
+environment file maps, which the Essentials places the Locations over as
+the machines did:
 
 ```powershell
 [string] $local = 'D:\Repos\Xmip\.local-work\environment'
@@ -244,7 +272,7 @@ New-XmipCertificate -Operator 'tester@xmip.test' -Path $tester |
 Copy-Item -LiteralPath "$local\authority\authority.pem" -Destination "$tester\anchors.pem"
 Start-XmipTest -Suite Core.Essentials -Cluster C1 -Nodes R1, S1, P1, L1, D1 -Certificate $tester
 Get-XmipTestStatus
-Get-XmipHealth -Scope xmip:///C1/carried
+Get-XmipTestResult -Test Carried
 Start-XmipOperationWeb -Snapshot D:\Repos\Xmip\.local-work\essentials\C1-snapshot.xmip
 ```
 
@@ -263,27 +291,31 @@ it over, and D1 is the primary on its own (ADR-0056, amendment
 round it drops a file for every Receive Location, a real receiving node
 fetches it, writes it to the Ledger on D1, and a real sending node puts it
 back under its name, which the far end tells the Essentials of:
-`xmip:///C1/carried` says how many of the files dropped arrived and how
-long each took (ADR-0028, amendment 2026-10-22). The other four nodes of the
+each Receive Location's `delivery` says how many of the documents dropped
+there arrived whole where their route sends them and how long each took
+(ADR-0028, amendments 2026-10-22 and 2026-11-11). The other four nodes of the
 file are simulated, and no node is started on the host beside real ones.
 
 **What waits on the owner.** The Windows machines take the MSI, which WiX
 7 builds only once its license is accepted, the owner's decision
-(`deploy/package/README.md`); the AlmaLinux machines take the `.rpm`, which
-is not built while builds are Windows-only. Until both are there, the
-nodes on the machines lacking their package do not run, and the Locations
-placed on them are not fetched.
+(`deploy/package/README.md`). Until it is there, the nodes on the Windows
+machines do not run, and the Locations placed on them are not fetched.
+
 ## How it is held
 
 `test/MsdscEnvironment.Test.ps1` holds what can be held without the
 machines: the documents read as YAML by DSC, each declaring every parameter
-it uses; the example environment evaluated by DSC with every resource
-replaced by an echo, each node machine given its node's values and the
-mapping the same as Ansible's inventory, every mapped node declared by the
-cluster's file, and every node machine told the parameters' nodes and the
-far end it binds to; the resource manifests found by DSC; and the
-resources' own steps with the machine's commands stubbed, the slice asked
-with `--bind` and `--nodes`. The root's `cargo test --test deploy` holds
-that every mapped node's slice, its Locations placed and bound on the far
-end, reads as `xmip-service` reads it, and every Location the file designs
-is placed on one of them. Nothing here has been applied to a machine.
+it uses; the Hyper-V example evaluated by DSC as `Deploy-XmipEnvironment`
+applies it, with every resource replaced by an echo, each node machine
+given its node's values, the environment's `known_hosts` and, on AlmaLinux,
+the tools, every mapped node declared by the cluster's file, and every node
+machine told the environment's nodes and the far end it binds to; the
+resource manifests found by DSC; a tool whose SHA-256 differs refused
+before anything is sent; and the resources' own steps with the machine's
+commands stubbed, the slice asked with `--bind` and `--nodes`. The root's
+`cargo test --test deploy` holds that every node an example maps is one the
+cluster's file declares, that every mapped node's slice, its Locations
+placed and bound on the far end, reads as `xmip-service` reads it, and that
+every Location the file designs is placed on one of them. The machines
+themselves are proved by running `Deploy-XmipEnvironment`
+(`deploy/dsc/README.md`).

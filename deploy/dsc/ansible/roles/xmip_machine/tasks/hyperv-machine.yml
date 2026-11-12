@@ -1,0 +1,193 @@
+---
+# One machine on Hyper-V, xmip_machine: a generation 2 VM in its folder,
+# <root>\<name>, with its new dynamic disk, its memory, processors and
+# adapter with its static MAC, Secure Boot by its image's template, and its
+# ISO and answer medium in two DVD drives; started, waited for until it
+# answers from its disk, its drives then removed, its answer medium deleted
+# and its folder's installed file written, so it is never installed again.
+# Its plan (the folder's files, the MAC and the drives' places) is
+# deploy/dsc/machine's, as Microsoft DSC's Xmip.HyperV/Machine has it.
+
+- name: "{{ xmip_machine.name }}: its plan"
+  ansible.builtin.command:
+    argv: "{{ xmip_definition + ['Machine'] }}"
+    stdin: "{{ xmip_machine | to_json }}"
+  delegate_to: localhost
+  register: xmip_planned
+  changed_when: false
+  check_mode: false
+
+- name: "{{ xmip_machine.name }}: whether it is installed"
+  ansible.windows.win_stat:
+    path: "{{ (xmip_planned.stdout | from_json).installed }}"
+    get_checksum: false
+  register: xmip_record
+
+- name: "{{ xmip_machine.name }}: installed from its ISO"
+  when: not xmip_record.stat.exists
+  vars:
+    xmip_plan: "{{ xmip_planned.stdout | from_json }}"
+    xmip_answer: "{{ xmip_state }}/{{ xmip_machine.name }}-answer.iso"
+    xmip_gib: 1073741824
+  block:
+    - name: The ISO and its SHA-256
+      ansible.windows.win_stat:
+        path: "{{ xmip_machine.image.path }}"
+        checksum_algorithm: sha256
+      register: xmip_iso
+
+    - name: Refuse an ISO that is not the one named
+      ansible.builtin.assert:
+        that:
+          - xmip_iso.stat.exists
+          - xmip_iso.stat.checksum | lower == xmip_machine.image.sha256 | lower
+        fail_msg: >-
+          REFUSED: {{ xmip_machine.image.path }} is not there or its SHA-256 is
+          not {{ xmip_machine.image.sha256 }}.
+
+    - name: Its disk
+      microsoft.hyperv.hv_vhd:
+        path: "{{ xmip_plan.disk }}"
+        size_bytes: "{{ xmip_machine.diskGB * xmip_gib }}"
+        vhd_type: Dynamic
+        state: present
+
+    - name: Its VM, generation 2
+      microsoft.hyperv.hv_vm:
+        name: "{{ xmip_machine.name }}"
+        generation: 2
+        memory_startup_bytes: "{{ xmip_machine.memoryGB * xmip_gib }}"
+        notes: "{{ xmip_environment }}"
+        state: present
+
+    - name: Its memory, static
+      microsoft.hyperv.hv_memory:
+        name: "{{ xmip_machine.name }}"
+        startup_bytes: "{{ xmip_machine.memoryGB * xmip_gib }}"
+        dynamic_memory_enabled: false
+
+    - name: Its processors
+      microsoft.hyperv.hv_processor:
+        name: "{{ xmip_machine.name }}"
+        count: "{{ xmip_machine.cpu }}"
+
+    - name: Its disk at SCSI 0
+      microsoft.hyperv.hv_hard_disk:
+        vm_name: "{{ xmip_machine.name }}"
+        path: "{{ xmip_plan.disk }}"
+        controller_type: SCSI
+        controller_number: 0
+        controller_location: "{{ xmip_plan.location.disk }}"
+        state: present
+
+    - name: Its adapter on the switch, its MAC static
+      microsoft.hyperv.hv_network_adapter:
+        vm_name: "{{ xmip_machine.name }}"
+        switch_name: "{{ xmip_network.name }}"
+        mac_address: "{{ xmip_plan.mac }}"
+        dynamic_mac_address: false
+        state: present
+
+    - name: Secure Boot by its image's template
+      microsoft.hyperv.hv_vm_boot:
+        name: "{{ xmip_machine.name }}"
+        secure_boot: true
+        secure_boot_template: "{{ xmip_machine.image.secureBootTemplate }}"
+
+    - name: Its TPM, where its image asks for one
+      ansible.windows.win_powershell:
+        parameters:
+          Name: "{{ xmip_machine.name }}"
+        script: |
+          param($Name)
+          $Ansible.Changed = -not (Get-VMSecurity -VMName $Name).TpmEnabled
+          if ($Ansible.Changed) {
+              Set-VMKeyProtector -VMName $Name -NewLocalKeyProtector
+              Enable-VMTPM -VMName $Name
+          }
+      when: xmip_machine.image.tpm | default(false) | bool
+
+    # Under --check it says it would run: `removes` names a file that is there.
+    - name: The answer medium written on the controller
+      ansible.builtin.command:
+        argv: "{{ xmip_definition + ['Answer', '-Path', xmip_answer] }}"
+        stdin: "{{ xmip_machine | to_json }}"
+        removes: "{{ xmip_machine_definition }}"
+      delegate_to: localhost
+
+    - name: The answer medium in the machine's folder
+      ansible.windows.win_copy:
+        src: "{{ xmip_answer }}"
+        dest: "{{ xmip_plan.answer }}"
+
+    - name: The answer medium's file on the controller removed, as it holds a key or a password
+      ansible.builtin.file:
+        path: "{{ xmip_answer }}"
+        state: absent
+      delegate_to: localhost
+
+    - name: The ISO and the answer medium in its DVD drives
+      microsoft.hyperv.hv_dvd_drive:
+        vm_name: "{{ xmip_machine.name }}"
+        controller_number: 0
+        controller_location: "{{ item.location }}"
+        path: "{{ item.path }}"
+        state: present
+      loop:
+        - { location: "{{ xmip_plan.location.install }}", path: "{{ xmip_machine.image.path }}" }
+        - { location: "{{ xmip_plan.location.answer }}", path: "{{ xmip_plan.answer }}" }
+
+    - name: The VM started
+      microsoft.hyperv.hv_vm_state:
+        name: "{{ xmip_machine.name }}"
+        state: running
+
+    # A Windows ISO boots only after "Press any key to boot from CD or DVD".
+    - name: Space pressed for the first twenty seconds of a Windows ISO
+      ansible.windows.win_powershell:
+        parameters:
+          Name: "{{ xmip_machine.name }}"
+        script: |
+          param($Name)
+          $vm = Get-CimInstance -Namespace root\virtualization\v2 -ClassName Msvm_ComputerSystem |
+              Where-Object { $_.ElementName -eq $Name }
+          $keyboard = Get-CimAssociatedInstance -InputObject $vm -ResultClassName Msvm_Keyboard
+          $until = [datetime]::UtcNow.AddSeconds(20)
+          while ([datetime]::UtcNow -lt $until) {
+              Invoke-CimMethod -InputObject $keyboard -MethodName TypeKey -Arguments @{
+                  keyCode = 32 } | Out-Null
+              Start-Sleep -Milliseconds 500
+          }
+      when: xmip_machine.image.family == 'Windows'
+
+    - name: Its installation, until it answers from its disk
+      ansible.builtin.wait_for:
+        host: "{{ xmip_machine.address }}"
+        port: "{{ xmip_plan.port }}"
+        delay: 30
+        sleep: 15
+        timeout: "{{ xmip_install_timeout }}"
+      delegate_to: localhost
+
+    - name: Its DVD drives removed
+      microsoft.hyperv.hv_dvd_drive:
+        vm_name: "{{ xmip_machine.name }}"
+        controller_number: 0
+        controller_location: "{{ item }}"
+        state: absent
+      loop:
+        - "{{ xmip_plan.location.install }}"
+        - "{{ xmip_plan.location.answer }}"
+
+    - name: Its answer medium deleted, and its record that it is installed
+      ansible.windows.win_file:
+        path: "{{ item.path }}"
+        state: "{{ item.state }}"
+      loop:
+        - { path: "{{ xmip_plan.answer }}", state: absent }
+        - { path: "{{ xmip_plan.installed }}", state: touch }
+
+- name: "{{ xmip_machine.name }}: running"
+  microsoft.hyperv.hv_vm_state:
+    name: "{{ xmip_machine.name }}"
+    state: running

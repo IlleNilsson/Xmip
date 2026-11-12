@@ -7,7 +7,7 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-. (Join-Path -Path $PSScriptRoot -ChildPath '../answer/MachineAnswer.ps1')
+. (Join-Path -Path $PSScriptRoot -ChildPath '../../machine/HyperVDefinition.ps1')
 foreach ($part in 'HyperVNetwork.ps1', 'HyperVMachine.ps1', 'HyperVHardware.ps1',
     'HyperVInstallation.ps1') {
     . (Join-Path -Path $PSScriptRoot -ChildPath $part)

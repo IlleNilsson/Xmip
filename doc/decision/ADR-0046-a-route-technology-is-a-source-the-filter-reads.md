@@ -8,6 +8,8 @@
   (ADR-0066), a missing value is unknown, and `expression` is retired
 - Amended: 2026-09-27 — a technology compiles a name once and reads the
   compiled form per Message; only the names the filters use are gathered
+- Amended: 2026-11-11 — xmip-service links the `content` source and the `edi`
+  path language, so a node routes by what a document says
 - Related: ADR-0013 (the journey model, publication and subscription),
   ADR-0043 (Logic is the method — the same shape of decision for another
   capability), ADR-0044 (a technology shares through its capability),
@@ -303,3 +305,51 @@ linked, and refuses to start while a name does not compile
 (`Gathering::refusals`, `xmip-core-runtime`'s `startup.rs`). A gathering
 used without asking still refuses each Message at arrival with the same
 reason.
+
+## Amendment, 2026-11-11: xmip-service links `content` and `edi`
+
+The owner, 2026-11-10, of the Essentials: *As long as you do not get stuck
+in the 'More game', that is Subscriptions functionality in the real world.
+Do your Essentials test, promotion thing.* The `content` technology and the
+`edi` path language were built and tested on their own, and the assembled
+service linked no route technology at all (`.src/service/built.rs`: *No
+route technology is linked yet*), so a node's filter could read only the
+Message Context, and a filter naming `content:` refused the node at its
+start (the amendment of 2026-09-28). That is why the Essentials routed by
+the name a file arrived under (ADR-0028, amendment 2026-10-13, *which
+nothing in the assembled service promotes*), which is now no longer so.
+
+Now the root crate has two features, `route-content` and `path-edi`, and
+`built::sources` hands the node `ContentSource::linked`: the source over a
+`PathEngine` with every path language the build links, `edi` the one today,
+and no namespaces (an EDI path names none). The source and its list of
+languages are made in one place, the route technology itself, each language
+by a feature of its own (`xmip-core-route-content`'s `edi`), which the root's
+`path-edi` turns on; the Essentials, which predicts where a node routes a
+document it drops, calls the same constructor with the same feature, so
+neither keeps a copy that drifts as a site adds a language. A site links
+them by repository name like any technology;
+`deploy/site/personal-computer.xmip`, which the Essentials and the
+environment templates build `xmip-service` from, names both. So a
+Subscription reads an EDIFACT interchange's message type and recipient:
+
+```toml
+filter = "\"content:edi:UNH/2/1\" = 'ORDERS' and \"content:edi:UNB/3/1\" = 'ESSENTIALS'"
+```
+
+A path with `/` and digits is no bare name in the expression language, so
+it is written in double quotes, which TOML escapes. The document is parsed
+once per Message however many properties read it (`path::Content`): work on
+the payload, in proportion to it. Tested in the root crate: `built::tests`
+(the build carries `content`, compiles an `edi` path and refuses a language
+it left out) and the service test `routed.rs` (an order and an invoice
+dropped into a started node each reach the Send Port their message type and
+recipient name, whole, and a status message no Subscription takes reaches
+neither), in `xmip-core-route-content` (the linked source carries the
+languages the build links and no other; an interchange is promoted by its
+message type and recipient) and in the root's timing program
+(`measured/carried.rs`: Xmip's own share per sent Message stays under its
+bound with an EDIFACT document routed by content on the path).
+
+Provenance: the owner's words of 2026-11-10; the build is the assistant's,
+2026-11-11, and its review the same day made the source in one place.

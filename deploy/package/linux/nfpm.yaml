@@ -4,10 +4,12 @@
 #   nfpm package --config deploy/package/linux/nfpm.yaml --packager deb
 #   nfpm package --config deploy/package/linux/nfpm.yaml --packager rpm
 #
-# WRITTEN, NOT BUILT. Builds are Windows-only by the owner's choice of the
-# moment, so no package has been made from this file and none has been
-# installed; Build-XmipService -Package deb and -Package rpm refuse on this
-# machine, saying what a Linux build needs. Nothing here is claimed to work.
+# Build-XmipService -Package rpm on a Linux machine makes the .rpm from this
+# file (New-XmipLinuxPackage), and refuses off Linux, saying what a Linux
+# build needs. The .rpm was built in the WSL AlmaLinux guest and installed on
+# AlmaLinux 10.2 machines by both environment templates on 2026-11-11
+# (ADR-0015, amendment 2026-11-11); the .deb is built by the same definition
+# and installed nowhere yet.
 #
 # nfpm, not cargo-deb or cargo-generate-rpm: those build from the crate's
 # own manifest and features, and a package is built from what

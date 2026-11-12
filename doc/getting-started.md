@@ -656,15 +656,18 @@ process of `xmip-service`, the build `Start-XmipTest` makes beside the
 Essentials: D1 and D2 keep Xmip Storage, the primary and its standby, and
 every other node reaches them over Xmip's mutual TLS on loopback, with a
 certificate from the Essentials' authority, the one the web GUI is served
-under, kept in .local-work/essentials/authority across runs. The rig drops files into their Receive
-Locations and reads what their Send Ports write, and `xmip:///C1/carried`
-says whether every file dropped arrived (ADR-0028, amendment 2026-10-22).
+under, kept in .local-work/essentials/authority across runs. The rig is the Parties and the company's ERP: it drops real EDIFACT
+documents into their Receive Locations, the nodes route each by its message
+type and recipient to a Send Port, and the rig reads what the Send Ports
+write; beneath each Receive Location, `delivery` says whether every
+document dropped there arrived whole where its route sends it (ADR-0028,
+amendments 2026-10-22 and 2026-11-11).
 Where none declares the Storage role, as with `-Nodes R1, P1, S1` above,
 every node is simulated.
 
 ```powershell
 Start-XmipTest -Suite Core.Essentials -Cluster C1
-Get-XmipHealth -Scope xmip:///C1/carried
+Get-XmipTestResult -Test Carried
 Get-XmipHealth -Scope xmip:///C1/node/R1/storage
 ```
 
@@ -675,10 +678,11 @@ At test level 2 the same cluster file runs with
 real nodes — `xmip-service` on machines of their own — and the same
 scenarios (ADR-0028, amendment 2026-10-21). The templates under `deploy/dsc`
 make the machines and put the file's nodes on them, Windows and AlmaLinux
-alike: `deploy/dsc/msdsc/hyperv/README.md` for the virtual machines on
-Hyper-V, then `deploy/dsc/msdsc/environment/README.md`, or
-`deploy/dsc/ansible/README.md` for the same in Ansible, for what runs inside
-them. Each node's slice binds every Receive Location and Send Port of the
+alike, from one environment file and one command, `Deploy-XmipEnvironment`,
+in either technology (`deploy/dsc/README.md`): `deploy/dsc/msdsc/hyperv` or
+`libvirt` for the virtual machines, then `deploy/dsc/msdsc/environment` for
+what runs inside them, or `deploy/dsc/ansible` for the same in Ansible.
+Each node's slice binds every Receive Location and Send Port of the
 file, placed over the environment's nodes by their roles, on the Parties'
 far end: SFTP the Essentials serves on your computer, port 7422, each
 Location a user of its own there (ADR-0028, amendment 2026-10-22). A
@@ -699,36 +703,35 @@ one. Each README says each step in full.
 1. **E** Hyper-V, DSC and your account in the Hyper-V Administrators group,
    then restart the computer (`deploy/dsc/msdsc/hyperv/README.md`, *Before
    the first run*).
-2. The Windows machines' Administrator credential, the AlmaLinux machines'
-   SSH key and the environment file (the same section).
-3. **E** The machines, made and installed in one command:
-   `Deploy-XmipEnvironment -Path
-   D:\Repos\Xmip\.local-work\deploy\hyperv.toml` (*Running it*). On a Linux
-   host, the libvirt template does the same (`deploy/dsc/msdsc/libvirt/README.md`).
-4. **E** On each machine once, as its Administrator or with sudo:
-   PowerShell 7.7 and DSC 3.4.0-preview.2 (`deploy/dsc/msdsc/environment/README.md`,
-   *Before the first run*).
-5. **E** On your computer once: WinRM's trusted hosts, the names, and the
+2. The Windows machines' Administrator secret, `Export-Clixml` on Windows,
+   and the environment file, `technology = "msdsc"` (the same section).
+   The AlmaLinux machines' SSH key and host keys are the command's own: it
+   makes them in the environment's private state (`deploy/dsc/README.md`).
+3. **E** On your computer once: WinRM's trusted hosts, the names, and the
    firewall opening that lets the machines reach the far end,
    `New-NetFirewallRule -DisplayName 'Xmip Essentials, the Parties'' far
    end' -Direction Inbound -Protocol TCP -LocalPort 7422 -RemoteAddress
-   10.77.0.0/24 -Action Allow` (the same section).
-6. The packages, the cluster's authority and each node's certificate, and
-   the environment's parameters, `linuxAccount` and the version written in
-   (the same section).
-7. The nodes: `dsc config --parameters-file
-   D:\Repos\Xmip\.local-work\environment\environment.parameters.yaml test
-   --file D:\Repos\Xmip\deploy\dsc\msdsc\environment\environment.example.dsc.yaml`,
-   then the same with `set` (*Running it*). Each document runs itself
-   elevated on its machine; on yours it needs none.
-8. The tester's operator certificate (*Running it*), and the run against
-   the machines:
+   10.77.0.0/24 -Action Allow` (`deploy/dsc/msdsc/environment/README.md`,
+   *Before the first run*).
+4. The packages, the cluster's authority and each node's certificate,
+   written into the environment file (the same section).
+5. **E** On each Windows machine once, as its Administrator: PowerShell 7.7
+   and DSC 3.4.0-preview.2 (the same section). An AlmaLinux machine needs
+   nothing: DSC is brought to it.
+6. **E** The machines and the nodes, in one command: `Deploy-XmipEnvironment
+   -Path D:\Repos\Xmip\.local-work\deploy\hyperv.toml`, one machine
+   installed at a time, then each node on its machine
+   (`deploy/dsc/README.md`). On a Linux host the libvirt template does the
+   same from `deploy/dsc/libvirt.example.toml`, with no step elevated.
+7. The tester's operator certificate
+   (`deploy/dsc/msdsc/environment/README.md`, *Running it*), and the run
+   against the machines:
 
 ```powershell
 Start-XmipTest -Suite Core.Essentials -Cluster C1 -Nodes R1, S1, P1, L1, D1 `
     -Certificate D:\Repos\Xmip\.local-work\environment\tester
 Get-XmipTestStatus
-Get-XmipHealth -Scope xmip:///C1/carried
+Get-XmipTestResult -Test Carried
 Get-XmipTestStatus | Start-XmipOperationWeb
 ```
 
@@ -736,18 +739,27 @@ Type exactly the nodes the environment maps: the Essentials places the
 Locations over them as the machines did. It drops a file into every
 Receive Location's directory on the far end each round; a real receiving
 node fetches it, D1 keeps it, a real sending node puts it back under its
-name, and `xmip:///C1/carried` counts what arrived and how long it took.
+name, and each Receive Location's `delivery` says what arrived and how
+long it took.
 The Web Browser tab at <https://127.0.0.1:5087> follows them on the
 Monitor.
 
-With Ansible, step 7 is `ansible-playbook` from the WSL guest
+With Ansible, the environment file says `technology = "ansible"` and step
+6 is the same command run from a Linux controller, the WSL guest, whose
+playbook makes the machines and the nodes alike
 (`deploy/dsc/ansible/README.md`); the rest are the same.
 
-Two things wait on the owner of the estate: the Windows machines take the
-MSI, which WiX 7 builds only once its license is accepted, and the
-AlmaLinux machines the `.rpm`, which is not built while builds are
-Windows-only (`deploy/package/README.md`). A machine without its package
-runs no node.
+What waits on the owner of the estate. The Hyper-V way above has not run
+yet, in either technology: its machines need an account in the Hyper-V
+Administrators group, which the owner's has not joined yet, and with
+Ansible the Windows host's address and account and how the Linux
+controller is given the Windows machines' Administrator password, which a
+secret file cannot carry off Windows. The Windows machines take the MSI,
+which WiX 7 builds only once its license is accepted
+(`deploy/package/README.md`). The AlmaLinux machines take the `.rpm`, built
+on a Linux machine. A machine without its package runs no node. What has
+run, from nothing, is the libvirt way on a Linux host, in both
+technologies (ADR-0015, amendment 2026-11-11).
 
 ### The operator app on a phone
 

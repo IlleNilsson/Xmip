@@ -58,10 +58,15 @@ const CLAIM: Duration = Duration::from_millis(10);
 /// bound on the test, never on Xmip; what Xmip does is measured apart.
 const CARRY: Duration = Duration::from_secs(10);
 
+/// What the Loopback Application's Subscription onward reads: the context
+/// alone.
+const BY_CONTEXT: &str = "filter = \"xmip.transport.mechanism = 'circumstance'\"";
+
 /// The getting-started node in `directory`: a file Receive Location over
 /// `in`, accepting the circumstance; the Loopback Application's
-/// Subscription onward; a file Send Port writing in `out`.
-fn file_node(directory: &Path) -> std::path::PathBuf {
+/// Subscription onward, reading what `filter` says; a file Send Port
+/// writing in `out`.
+fn file_node(directory: &Path, filter: &str) -> std::path::PathBuf {
     let cluster = &test_cluster().name;
     let node = node_name();
     let path = |name: &str| {
@@ -101,7 +106,8 @@ local = "{local}"
         drop = path("in"),
         out = path("out"),
         local = endpoint(directory),
-    );
+    )
+    .replace(BY_CONTEXT, filter);
     // In its configuration folder, as `started::written` puts one.
     let configuration = xmip_runtime::fixture::configuration_folder(directory).join("node.xmip");
     xmip_runtime::fixture::write_signed(&configuration, &text);
@@ -116,10 +122,39 @@ fn lies(directory: &Path, name: &str) -> bool {
 
 #[test]
 fn a_file_dropped_in_arrives_whole_in_the_send_directory_under_its_name() {
+    carried("carried", BY_CONTEXT, |round| {
+        format!("ISA*00*{round}*").repeat(64 + round).into_bytes()
+    });
+}
+
+/// The same node routing by what the document says (ADR-0046, amendment
+/// 2026-11-11): its Subscription promotes an EDIFACT order's message type
+/// from the content, parsed once per Message, on every Message's path — and
+/// Xmip's own share stays under its millisecond, the parse being work on the
+/// payload in proportion to it.
+#[cfg(all(feature = "route-content", feature = "path-edi"))]
+#[test]
+fn an_edifact_order_routed_by_its_content_keeps_xmip_s_own_share_under_its_bound() {
+    let filter = "filter = \"\\\"content:edi:UNH/2/1\\\" = 'ORDERS'\"";
+    carried("carried-edifact", filter, |round| {
+        format!(
+            "UNB+UNOC:3+PARTY-A:ZZZ+ESSENTIALS:ZZZ+261111:0905+A{round}'\n\
+             UNH+1+ORDERS:D:24A:UN'\nBGM+220+PO-{round}+9'\n\
+             LIN+1++4006381333931:SRS'\nQTY+21:{round}:PCE'\nUNS+S'\n\
+             UNT+6+1'\nUNZ+1+A{round}'\n"
+        )
+        .into_bytes()
+    });
+}
+
+/// `ROUNDS` files `made` dropped into a node named `name` whose
+/// Subscription reads `filter`, each arriving whole under its name, Xmip's
+/// own share held under its millisecond and the claim under its bound.
+fn carried(name: &str, filter: &str, made: impl Fn(usize) -> Vec<u8>) {
     let directory =
-        std::env::temp_dir().join(format!("xmip-service-carried-{}", std::process::id()));
+        std::env::temp_dir().join(format!("xmip-service-{name}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&directory);
-    let configuration = file_node(&directory);
+    let configuration = file_node(&directory, filter);
     let (drop, out) = (directory.join("in"), directory.join("out"));
     std::fs::create_dir_all(&drop).expect("the drop directory");
 
@@ -140,7 +175,7 @@ fn a_file_dropped_in_arrives_whole_in_the_send_directory_under_its_name() {
     let (mut worked, mut waited) = (Vec::new(), Vec::new());
     for round in 0..ROUNDS {
         let name = format!("order-{round}.edi");
-        let content = format!("ISA*00*{round}*").repeat(64 + round).into_bytes();
+        let content = made(round);
         // Written beside and renamed in, as a producer that means it to be
         // whole drops a file.
         let beside = directory.join(format!("{name}.part"));
@@ -153,7 +188,7 @@ fn a_file_dropped_in_arrives_whole_in_the_send_directory_under_its_name() {
         let claimed = told(&in_changed, deadline, || !lies(&drop, &name))
             .unwrap_or_else(|| panic!("{name} was never claimed"));
         let arrived = told(&out_changed, deadline, || target.exists())
-            .unwrap_or_else(|| panic!("{name} never arrived in {out:?}"));
+            .unwrap_or_else(|| panic!("{name} never arrived in {}", out.display()));
         assert_eq!(
             std::fs::read(&target).expect("arrived"),
             content,

@@ -8,29 +8,6 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-function Get-HyperVMachineFile {
-    <#
-    .SYNOPSIS
-    A file of the machine's folder: answer.iso, its answer medium while it
-    installs, or installed, which says it was installed and its media
-    removed, so a VM found off later is started from its disk. Delete
-    installed, and the disk, to install the machine anew.
-    #>
-    [CmdletBinding()]
-    [OutputType([string])]
-    param(
-        [Parameter(Mandatory = $true)]
-        [hashtable] $Instance,
-
-        [Parameter(Mandatory = $true)]
-        [ValidateSet('answer.iso', 'installed')]
-        [string] $Name
-    )
-
-    [string] $directory = Split-Path -Path (Get-HyperVMachineDisk -Instance $Instance) -Parent
-    return Join-Path -Path $directory -ChildPath $Name
-}
-
 function Test-HyperVGuestInstalled {
     <#
     .SYNOPSIS
@@ -48,7 +25,7 @@ function Test-HyperVGuestInstalled {
     if ($Instance['image'].family -eq 'Windows') {
         [hashtable] $direct = @{
             VMName = $Instance['name']
-            Credential = Import-Clixml -LiteralPath $Instance['credentialPath']
+            Credential = Import-Clixml -LiteralPath $Instance['secretPath']
             ScriptBlock = { $true }
             ErrorAction = 'SilentlyContinue'
         }
@@ -107,14 +84,7 @@ function Start-HyperVInstallation {
         throw "REFUSED: $iso has SHA-256 $hash, not $($Instance['image'].sha256)."
     }
     [string] $answer = Get-HyperVMachineFile -Instance $Instance -Name 'answer.iso'
-    [hashtable] $asked = @{
-        Machine = [pscustomobject] $Instance
-        MacAddress = Get-MachineMacAddress -Address $Instance['address'] -Prefix (
-            $script:HyperVMacPrefix)
-        GuestPackage = 'hyperv-daemons'
-    }
-    [hashtable] $medium = Get-MachineAnswerMedium @asked
-    New-MachineAnswerMedium -Path $answer -Medium $medium -Confirm:$false
+    New-HyperVAnswerMedium -Instance $Instance -Path $answer -Confirm:$false
     [string] $name = $Instance['name']
     [hashtable] $drive = @{ VMName = $name; ControllerNumber = 0 }
     Set-VMDvdDrive @drive -ControllerLocation $script:HyperVInstallLocation -Path $iso

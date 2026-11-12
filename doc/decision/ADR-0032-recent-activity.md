@@ -4,6 +4,8 @@
 - Date: 2026-09-05
 - Related: ADR-0027 (the operator boundary), ADR-0029 (observation has history),
   ADR-0013 (the Journey model), observability-model.md section 6
+- Amended: 2026-11-11 — a run of served nodes publishes Carried's items, each
+  with where it came from and went
 
 ## In brief
 
@@ -88,3 +90,17 @@ this, when an item must be opened and replayed.
 The requirement is the owner's, 2026-09-05: *drill down and a view of individual
 Streams, Messages and Journeys.* Clauses 1 to 4 are the assistant's drafting of
 it, on the instruction to proceed and to write the decision down.
+
+## Amendment, 2026-11-11: a run that reads every node publishes Carried's items
+
+The Essentials' roll published the recent activity of the round trip it
+ran in its own process. A run that reads every node runs no scenario of
+its own (ADR-0028, amendment 2026-11-11), so its activity is what the rig
+did as the Parties and the ERP: each document it dropped, a Stream item at
+the Receive Location it was dropped into, and each it found arrived, a
+Message item at the Send Port that put it, each item's detail saying where
+it came from and where it went — `from Sales orders from Party-A [L1] → to
+Sales orders to ERP [L1]` (the owner, 2026-11-10: *from and to in every
+observation*). The file, its reader and its shape are unchanged.
+
+Provenance: the build plan of 2026-11-11; built the same day.

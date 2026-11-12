@@ -5,7 +5,8 @@
 .SYNOPSIS
     The packages a site's xmip-service goes out in (ADR-0015, amendment
     2026-10-13): the MSI and the portable archive, built on Windows; the
-    .deb, .rpm and macOS .pkg, written under deploy/package and refused here.
+    .deb and .rpm, built on Linux by nfpm; the macOS .pkg, written under
+    deploy/package and refused here.
 
 .DESCRIPTION
     Build-XmipService -Package calls these after it has built xmip-service.
@@ -31,21 +32,25 @@ function Assert-XmipPackageBuildable {
         [string[]] $Package
     )
 
-    [string] $choice = 'Builds are Windows-only for now, the owner''s choice ' +
-        '(ADR-0015, amendment 2026-10-13).'
-
     foreach ($kind in $Package) {
         [string] $needed = switch ($kind) {
             { $_ -in 'deb', 'rpm' } {
-                "A .$kind is built on Linux, x86-64 or arm64, from " +
-                'deploy/package/linux/nfpm.yaml by nfpm 2.48, with cargo, libclang and a ' +
-                "C++ compiler ($script:XmipPrerequisiteName) to build xmip-service there."
+                if (-not $IsLinux) {
+                    "A .$kind is built on Linux, x86-64 or arm64, from " +
+                    'deploy/package/linux/nfpm.yaml by nfpm 2.48, with cargo, libclang and a ' +
+                    "C++ compiler ($script:XmipPrerequisiteName) to build xmip-service there."
+                }
+                elseif ($null -eq (Get-Command -Name nfpm -ErrorAction SilentlyContinue)) {
+                    "A .$kind is made by nfpm 2.48, which is not on PATH " +
+                    "($script:XmipPrerequisiteName, [prerequisite.nfpm])."
+                }
             }
             'pkg' {
                 'A .pkg is built on macOS from deploy/package/macos by pkgbuild and ' +
                 'productbuild (the Xcode command line tools), signed with a Developer ID ' +
                 'Installer certificate and notarized, both under an Apple Developer ' +
-                'Program membership, the owner''s.'
+                'Program membership, the owner''s. Builds for macOS wait on the owner''s ' +
+                'choice (ADR-0015, amendment 2026-10-13).'
             }
             default {
                 if ($IsWindows) { '' }
@@ -54,7 +59,7 @@ function Assert-XmipPackageBuildable {
         }
 
         if ($needed) {
-            throw "REFUSED: -Package $kind is not built on this machine. $needed $choice"
+            throw "REFUSED: -Package $kind is not built on this machine. $needed"
         }
     }
 }
@@ -99,7 +104,8 @@ function New-XmipPackage {
     $crate = Get-TomlValue -Node $cargo -Name 'package'
     [string] $version = Get-TomlValue -Node $crate -Name 'version'
     [string] $output = Join-Path (Get-XmipEstateLayout -Root $Root).Package $version
-    [string] $stage = Join-Path $output "$Site-windows-$($built.Architecture)"
+    [string] $system = if ($IsWindows) { 'windows' } else { 'linux' }
+    [string] $stage = Join-Path $output "$Site-$system-$($built.Architecture)"
     [string] $bin = Join-Path $stage 'xmip/bin'
 
     if (Test-Path -LiteralPath $stage) {
@@ -107,8 +113,11 @@ function New-XmipPackage {
     }
     $null = New-Item -ItemType Directory -Path $bin -Force
 
-    [string] $service = Join-Path $built.Target "$($built.Folder)/xmip-service.exe"
-    [string] $runtime = Join-Path $libraryTarget "$($built.Folder)/xmip_core_runtime.dll"
+    # The two files each system names its own way.
+    [string[]] $file = if ($IsWindows) { 'xmip-service.exe', 'xmip_core_runtime.dll' }
+    else { 'xmip-service', 'libxmip_core_runtime.so' }
+    [string] $service = Join-Path $built.Target "$($built.Folder)/$($file[0])"
+    [string] $runtime = Join-Path $libraryTarget "$($built.Folder)/$($file[1])"
     Copy-Item -LiteralPath $service, $runtime -Destination $bin
 
     [hashtable] $made = @{
@@ -124,6 +133,7 @@ function New-XmipPackage {
         [string] $path = switch ($kind) {
             'msi' { New-XmipMsi @made }
             'archive' { New-XmipArchive @made }
+            { $_ -in 'deb', 'rpm' } { New-XmipLinuxPackage @made -Kind $kind }
         }
         Write-XmipStep -Message "OK: $kind $path"
         [pscustomobject] @{ Kind = $kind; Path = $path }
@@ -320,4 +330,60 @@ function New-XmipArchive {
     Compress-Archive -Path (Join-Path $Stage 'xmip') -DestinationPath $zip -Force
 
     return $zip
+}
+
+
+function New-XmipLinuxPackage {
+    <#
+        .SYNOPSIS
+            The .deb or the .rpm: deploy/package/linux/nfpm.yaml made by nfpm
+            from the staged xmip/bin, the root crate's version, for amd64 or
+            arm64, nfpm's names for x86-64 and arm64. Its scripts are named
+            relative to that folder, so nfpm runs there.
+    #>
+    [CmdletBinding()]
+    [OutputType([string])]
+    param(
+        [string] $Root,
+        [string] $Site,
+        [string] $Version,
+        [string] $Architecture,
+        [string] $Stage,
+        [string] $Output,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateSet('deb', 'rpm')]
+        [string] $Kind
+    )
+
+    [string] $arch = if ($Architecture -eq 'arm64') { 'arm64' } else { 'amd64' }
+    [string] $package = Join-Path $Output "xmip-$Version-$Site-linux-$Architecture.$Kind"
+    [hashtable] $given = @{
+        XMIP_BINARY_DIRECTORY = Join-Path $Stage 'xmip/bin'
+        XMIP_VERSION          = $Version
+        XMIP_ARCH             = $arch
+    }
+    [hashtable] $was = @{}
+    foreach ($name in $given.Keys) {
+        $was[$name] = [Environment]::GetEnvironmentVariable($name)
+        [Environment]::SetEnvironmentVariable($name, $given[$name])
+    }
+    Push-Location -LiteralPath (Join-Path $Root 'deploy/package/linux')
+    try {
+        [string[]] $nfpm = @('package', '--config', 'nfpm.yaml', '--packager', $Kind, '--target',
+            $package)
+        [string[]] $said = @(& nfpm @nfpm 2>&1)
+        $said | ForEach-Object { Write-Host "      nfpm| $_" }
+        if ($LASTEXITCODE -ne 0) {
+            throw "FAILED: nfpm package --packager $Kind exited $LASTEXITCODE."
+        }
+    }
+    finally {
+        Pop-Location
+        foreach ($name in $given.Keys) {
+            [Environment]::SetEnvironmentVariable($name, $was[$name])
+        }
+    }
+
+    return $package
 }

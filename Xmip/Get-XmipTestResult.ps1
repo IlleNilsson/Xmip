@@ -159,10 +159,18 @@ function Get-XmipTestResult {
     # A full path: .NET does not share this session's location.
     $surface = [Xmip.Surface.SnapshotOperator]::new((Resolve-Path -LiteralPath $Path).ProviderPath)
     [string] $root = $surface.Root()
+    $run = $surface.Run()
+    [string[]] $real = @($run.RealNodes)
+    [string[]] $tests = @($run.Tests)
 
     [object[]] $kept = @(
         foreach ($record in @($surface.Health([Xmip.Surface.ScopeTree]::Root))) {
-            $result = ConvertTo-XmipTestResult -Record $record -Root $root
+            $result = ConvertTo-XmipTestResult -Record $record -Root $root -Real $real -Tests $tests
+
+            # A record a read node published of itself is no test's result.
+            if ($null -eq $result) {
+                continue
+            }
 
             if (-not (Test-XmipTestResultWanted -Result $result -Test $Test -Node $Node)) {
                 continue
@@ -223,6 +231,16 @@ function ConvertTo-XmipTestResult {
 
         .PARAMETER Root
             The scope the publisher publishes at; what is beneath it is split.
+
+        .PARAMETER Real
+            The nodes the run reads rather than simulates, `[run] real`: what
+            one publishes is the product's own record, no test's, and comes
+            back as nothing, but for the verdict of the run's test beneath
+            each of its Receive Locations.
+
+        .PARAMETER Tests
+            The tests the run runs, `[run] tests`: a run that reads its nodes
+            runs one, Carried, whose name its verdicts are given.
     #>
     [CmdletBinding()]
     [OutputType('Xmip.TestResult')]
@@ -231,7 +249,15 @@ function ConvertTo-XmipTestResult {
         [PSObject] $Record,
 
         [Parameter(Mandatory)]
-        [string] $Root
+        [string] $Root,
+
+        [Parameter()]
+        [AllowEmptyCollection()]
+        [string[]] $Real = @(),
+
+        [Parameter()]
+        [AllowEmptyCollection()]
+        [string[]] $Tests = @()
     )
 
     [string[]] $segments = @([Xmip.Surface.ScopeTree]::Parts($Record.Scope))
@@ -248,26 +274,52 @@ function ConvertTo-XmipTestResult {
         $segments = @($segments | Select-Object -Skip 2)
     }
 
-    # A node that declared a stage publishes it straight under its own name,
-    # whatever that name is: node/<node>/receive/tcp/json is RoundTrip's, as
-    # round-trip/receive/tcp/json is when the roll runs the test whole. The
-    # stage is read from the path, by the node crate's own words, never from
-    # the node's name.
-    if ($node -ne '' -and $segments.Count -ge 1 -and
-        [Xmip.Surface.ScopeTree]::Stages.Contains($segments[0])) {
+    [bool] $staged = $node -ne '' -and $segments.Count -ge 1 -and
+        [Xmip.Surface.ScopeTree]::Stages.Contains($segments[0])
+    [string] $stage = if ($staged) { $segments[0] } else { '' }
+    [string] $location = if ($staged -and $segments.Count -ge 2) { $segments[1] } else { '' }
+    [string] $test = ''
+
+    if ($node -ne '' -and $Real -contains $node) {
+        # A node the run reads publishes the product's own records, no
+        # test's, and is no result: only a verdict the run's one test, as
+        # its [run] tests says it, published beneath one of the node's
+        # Receive Locations is, named by the leaf the record carries
+        # (ADR-0028, amendment 2026-11-11). Neither the test's name nor its
+        # leaf is written here, so a rename on either side moves nothing.
+        [bool] $verdict = $staged -and $segments.Count -ge 3 -and $Tests.Count -eq 1 -and
+            $stage -eq [Xmip.Surface.ScopeTree]::Stages[0]
+
+        if (-not $verdict) {
+            return
+        }
+
+        $test = $Tests[0]
+        $segments = @($segments | Select-Object -Skip 2)
+    }
+    elseif ($staged) {
+        # A simulated node that declared a stage publishes it straight under
+        # its own name, whatever that name is: node/<node>/receive/tcp/json
+        # is RoundTrip's, as round-trip/receive/tcp/json is when the roll
+        # runs the test whole. The stage is read from the path, by the node
+        # crate's own words, never from the node's name.
         $segments = @('round-trip') + $segments
+        $location = ''
     }
 
     [string] $scenario = if ($segments.Count -ge 1) { $segments[0] } else { '' }
+    [bool] $paired = $test -eq '' -and $scenario -ne ''
 
     return [PSCustomObject]@{
         PSTypeName = 'Xmip.TestResult'
         Suite      = $script:XmipEssentialsSuite
-        Test       = ConvertTo-XmipTestName -Scenario $scenario
+        Test       = if ($test -ne '') { $test } else { ConvertTo-XmipTestName -Scenario $scenario }
         Scenario   = $scenario
         Node       = $node
-        Transport  = if ($segments.Count -ge 2) { $segments[1] } else { '' }
-        Contract   = @($segments | Select-Object -Skip 2) -join '/'
+        Stage      = $stage
+        Location   = $location
+        Transport  = if ($paired -and $segments.Count -ge 2) { $segments[1] } else { '' }
+        Contract   = if ($paired) { @($segments | Select-Object -Skip 2) -join '/' } else { '' }
         State      = [Xmip.Surface.English]::Mood($Record.State)
         Severity   = [int] $Record.Severity
         Evidence   = $Record.Evidence

@@ -1,0 +1,33 @@
+# Every node of the environment running, from the machine DSC runs on, after
+# each node was given its own on its machine (machine.dsc.yaml): a node
+# refuses to accept work until its cluster's Xmip Storage answers, and a
+# Storage node until every Storage node the cluster lists answers (ADR-0056,
+# amendment 2026-11-08), so the nodes start together, and again until each
+# runs or the window is spent (Xmip.Environment/Started).
+# Deploy-XmipEnvironment applies it last, with the nodes it writes from the
+# environment file (deploy/dsc/README.md).
+$schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
+directives:
+  version: ^3.4.0-preview.2
+parameters:
+  common:
+    type: object
+    description: How each machine is reached, linuxAccount, secretPath, keyPath and knownHosts.
+  nodes:
+    type: array
+    description: Each node and the machine it runs on, its name, address and family.
+  window:
+    type: int
+    description: How long, in seconds, the nodes are started again until each runs.
+    defaultValue: 180
+resources:
+  - name: Nodes started
+    type: Xmip.Environment/Started
+    requireVersion: ^0.1
+    properties:
+      nodes: "[parameters('nodes')]"
+      window: "[parameters('window')]"
+      login: "[parameters('common').linuxAccount]"
+      secretPath: "[parameters('common').secretPath]"
+      keyPath: "[parameters('common').keyPath]"
+      knownHosts: "[parameters('common').knownHosts]"

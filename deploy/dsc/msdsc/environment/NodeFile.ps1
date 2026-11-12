@@ -34,8 +34,14 @@ function Get-NodeFileState {
     $state._exist = $have -eq $want
     $state.private = Test-NodeFilePrivate -Path $Instance.path
 
-    if ($Instance.Contains('private')) {
-        $state._exist = $state._exist -and ($state.private -eq [bool] $Instance.private)
+    if ($Instance.Contains('private') -and [bool] $Instance.private) {
+        $state._exist = $state._exist -and $state.private
+    }
+    elseif ($Instance.Contains('private') -and -not $IsWindows) {
+        # A file named not private is readable by every account on Linux,
+        # 0644, whatever the mode of the file it was copied from.
+        $state._exist = $state._exist -and (Get-Item -LiteralPath $Instance.path).UnixMode -eq (
+            '-rw-r--r--')
     }
 
     return $state
@@ -93,7 +99,15 @@ function Set-NodeFile {
 
     Copy-Item -LiteralPath $Instance.source -Destination $Instance.path -Force
 
-    if (-not $private -or $IsWindows) {
+    if ($IsWindows) {
+        return
+    }
+    # The copy keeps its source's mode, which is the staging folder's, never
+    # the node's: a file is made 0644, or 0600 where it is private.
+    if (-not $private) {
+        if ($Instance.Contains('private')) {
+            Invoke-DscProgram -Program 'chmod' -Argument @('0644', $Instance.path) | Out-Null
+        }
         return
     }
 

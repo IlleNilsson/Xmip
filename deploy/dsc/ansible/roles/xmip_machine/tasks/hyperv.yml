@@ -1,0 +1,44 @@
+---
+# The machines on a Windows host's Hyper-V, the host reached from the
+# controller over WinRM: an internal switch, the host's address on it and
+# NAT, then each machine (hyperv-machine.yml), one installation at a time.
+# Microsoft's microsoft.hyperv modules wherever one fits; the address and
+# the NAT, which no module covers, through ansible.windows.win_powershell.
+# What each machine is, is deploy/dsc/machine's, asked on the controller.
+# Written, not yet run: it waits on the owner's Hyper-V host (README.md).
+
+- name: The switch
+  microsoft.hyperv.hv_vswitch:
+    name: "{{ xmip_network.name }}"
+    switch_type: Internal
+    state: present
+
+- name: The host's address on the switch, and the network's NAT
+  ansible.windows.win_powershell:
+    parameters:
+      Switch: "{{ xmip_network.name }}"
+      Gateway: "{{ xmip_network.gateway }}"
+      PrefixLength: "{{ xmip_network.prefixLength }}"
+      Prefix: "{{ xmip_network.prefix }}"
+      Name: "{{ xmip_environment }}"
+      Nat: "{{ xmip_network.enableNat }}"
+    script: |
+      param($Switch, $Gateway, [int] $PrefixLength, $Prefix, $Name, [bool] $Nat)
+      $Ansible.Changed = $false
+      [string] $alias = "vEthernet ($Switch)"
+      [hashtable] $address = @{ InterfaceAlias = $alias; IPAddress = $Gateway }
+      if (-not (Get-NetIPAddress @address -ErrorAction SilentlyContinue)) {
+          New-NetIPAddress @address -PrefixLength $PrefixLength | Out-Null
+          $Ansible.Changed = $true
+      }
+      if ($Nat -and -not (Get-NetNat -Name $Name -ErrorAction SilentlyContinue)) {
+          New-NetNat -Name $Name -InternalIPInterfaceAddressPrefix $Prefix | Out-Null
+          $Ansible.Changed = $true
+      }
+
+- name: Each machine, one installation at a time
+  ansible.builtin.include_tasks: hyperv-machine.yml
+  loop: "{{ xmip_machines }}"
+  loop_control:
+    loop_var: xmip_machine
+    label: "{{ xmip_machine.name }}"

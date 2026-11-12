@@ -1,7 +1,7 @@
 $schema: https://aka.ms/dsc/schemas/v3/bundled/resource/manifest.json
 type: Xmip.Node/Service
 version: '0.1.0'
-description: 'The node''s systemd unit running and started with the machine.'
+description: 'The node''s service running and started with the machine: its Windows service or its systemd unit.'
 tags:
   - Xmip
 get:

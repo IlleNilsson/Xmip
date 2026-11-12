@@ -4,8 +4,8 @@
 <#
     What node.resource.ps1 does for each kind: read the state, judge it and
     make it so, on Windows and on Linux. Dot-sourced by node.resource.ps1
-    and by test/MsdscEnvironment.Test.ps1. The files and the openings are
-    NodeFile.ps1's and NodeOpening.ps1's.
+    and by test/MsdscEnvironment.Test.ps1. The files, the openings and the
+    package are NodeFile.ps1's, NodeOpening.ps1's and NodePackage.ps1's.
 
     Style: doc/governance/powershell-style.md
 #>
@@ -38,7 +38,7 @@ function Get-NodeMachineState {
             $state = Get-NodeFileState -Instance $Instance
         }
         'Package' {
-            $state._exist = Test-NodePackage -Node $Instance.node
+            $state._exist = Test-NodePackage -Instance $Instance
         }
         'Slice' {
             [string] $placed = Join-Path -Path $Instance.configuration -ChildPath 'node.xmip'
@@ -46,6 +46,13 @@ function Get-NodeMachineState {
             $state._exist = Test-NodeSlice -Instance $Instance
         }
         'Opening' {
+            # Before its package is installed the node has no program to ask:
+            # absent, never refused, so a fresh machine is tested too.
+            if (-not (Test-Path -LiteralPath $Instance.program -PathType Leaf)) {
+                $state.ports = @()
+                $state._exist = $false
+                break
+            }
             $state.ports = @(Get-NodeListening -Instance $Instance)
             [string] $opened = @(Get-NodeOpened -Node $Instance.node) -join ','
             $state._exist = $opened -eq ($state.ports -join ',')
@@ -150,73 +157,6 @@ function New-NodeAccount {
     }
 }
 
-function Test-NodePackage {
-    <#
-    .SYNOPSIS
-    Whether the package has installed the node: its service, xmip-<node>,
-    is registered with the machine's service manager.
-    #>
-    [CmdletBinding()]
-    [OutputType([bool])]
-    param(
-        [Parameter(Mandatory = $true)]
-        [string] $Node
-    )
-
-    if ($IsWindows) {
-        return $null -ne (Get-Service -Name "xmip-$Node" -ErrorAction SilentlyContinue)
-    }
-
-    return Test-Path -LiteralPath "/etc/systemd/system/xmip-$Node.service"
-}
-
-function Install-NodePackage {
-    <#
-    .SYNOPSIS
-    Install the estate's package, telling it the node, the cluster and the
-    account: the MSI's XMIP_NODE, XMIP_CLUSTER and XMIP_ACCOUNT, the .rpm's
-    variables of the same names. Either runs xmip-service --install, which
-    slices cluster.xmip already in place, and registers and
-    starts the node's service as that account.
-    #>
-    [CmdletBinding(SupportsShouldProcess = $true)]
-    param(
-        [Parameter(Mandatory = $true)]
-        [hashtable] $Instance
-    )
-
-    if (-not $PSCmdlet.ShouldProcess($Instance.path, "Install node $($Instance.node)")) {
-        return
-    }
-
-    if ($IsWindows) {
-        [string[]] $argument = @(
-            '/i', "`"$($Instance.path)`"", '/qn', '/norestart',
-            "XMIP_NODE=$($Instance.node)", "XMIP_CLUSTER=$($Instance.cluster)",
-            "XMIP_ACCOUNT=`"$($Instance.account)`""
-        )
-        [hashtable] $msiexec = @{
-            FilePath     = 'msiexec.exe'
-            ArgumentList = $argument
-            Wait         = $true
-            PassThru     = $true
-        }
-        $installed = Start-Process @msiexec
-
-        # 3010: installed, a restart pending.
-        if ($installed.ExitCode -notin 0, 3010) {
-            throw "msiexec installing $($Instance.path) exited $($installed.ExitCode)"
-        }
-
-        return
-    }
-
-    $env:XMIP_NODE = $Instance.node
-    $env:XMIP_CLUSTER = $Instance.cluster
-    $env:XMIP_ACCOUNT = $Instance.account
-    Invoke-DscProgram -Program 'dnf' -Argument @('install', '--assumeyes', $Instance.path) |
-        Out-Null
-}
 
 function Get-NodeSlicePlace {
     <#
@@ -240,8 +180,9 @@ function Get-NodeSlicePlace {
             source = $Instance.source
         },
         @{
-            path   = Join-Path -Path $Instance.configuration -ChildPath 'authority/authority.pem'
-            source = $Instance.certificate
+            path    = Join-Path -Path $Instance.configuration -ChildPath 'authority/authority.pem'
+            source  = $Instance.certificate
+            private = $false
         }
     )
 }
@@ -305,23 +246,29 @@ function Set-NodeSlice {
 
     Set-NodeSliceAccess -Path $files[0].path -Account $Instance.account -Confirm:$false
 
-    if (-not $changed -or -not (Test-NodePackage -Node $Instance.node)) {
+    if (-not $changed -or -not (Test-NodeRegistered -Node $Instance.node)) {
         return
     }
 
+    # Only a node that runs is restarted: one that does not, as before its
+    # package is installed again, is started by the package and the service
+    # after it, by the program the package brings.
+    [string] $name = "xmip-$($Instance.node)"
     if ($IsWindows) {
-        Restart-Service -Name "xmip-$($Instance.node)"
+        if ((Get-Service -Name $name).Status -eq 'Running') {
+            Restart-Service -Name $name
+        }
         return
     }
 
-    Invoke-DscProgram -Program 'systemctl' -Argument @('restart', "xmip-$($Instance.node)") |
-        Out-Null
+    Invoke-DscProgram -Program 'systemctl' -Argument @('try-restart', $name) | Out-Null
 }
 function Test-NodeServiceRunning {
     <#
     .SYNOPSIS
-    Whether the node's systemd unit is active and enabled, so it starts
-    with the machine. On Windows Microsoft.Windows/Service asks instead.
+    Whether the node's service runs and starts with the machine: its
+    Windows service running and automatic, its systemd unit active and
+    enabled.
     #>
     [CmdletBinding()]
     [OutputType([bool])]
@@ -329,6 +276,12 @@ function Test-NodeServiceRunning {
         [Parameter(Mandatory = $true)]
         [string] $Name
     )
+
+    if ($IsWindows) {
+        $service = Get-Service -Name $Name -ErrorAction SilentlyContinue
+        return $null -ne $service -and $service.Status -eq 'Running' -and
+            $service.StartType -eq 'Automatic'
+    }
 
     & systemctl is-active --quiet $Name
     [bool] $active = $LASTEXITCODE -eq 0
@@ -339,7 +292,10 @@ function Test-NodeServiceRunning {
 function Start-NodeService {
     <#
     .SYNOPSIS
-    Enable the node's systemd unit and start it.
+    Make the node's service start with the machine and start it, waiting
+    for nothing: a node of a cluster whose Storage nodes are not all up yet
+    refuses to accept work, so the environment's nodes are started together
+    after (Xmip.Environment/Started), and test says whether this one runs.
     #>
     [CmdletBinding(SupportsShouldProcess = $true)]
     param(
@@ -347,7 +303,16 @@ function Start-NodeService {
         [string] $Name
     )
 
-    if ($PSCmdlet.ShouldProcess($Name, 'Enable and start')) {
-        Invoke-DscProgram -Program 'systemctl' -Argument @('enable', '--now', $Name) | Out-Null
+    if (-not $PSCmdlet.ShouldProcess($Name, 'Enable and start')) {
+        return
     }
+
+    if ($IsWindows) {
+        Set-Service -Name $Name -StartupType Automatic
+        Start-Service -Name $Name -ErrorAction SilentlyContinue
+        return
+    }
+
+    Invoke-DscProgram -Program 'systemctl' -Argument @('enable', $Name) | Out-Null
+    Invoke-DscProgram -Program 'systemctl' -Argument @('start', '--no-block', $Name) | Out-Null
 }

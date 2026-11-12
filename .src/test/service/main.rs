@@ -25,6 +25,10 @@
 //!   authority answers ACME for the premises and publishes its revocation
 //!   list, `--listening` names both ports, and a client obtains, is told
 //!   when to renew and revokes into the list while the node runs.
+//! - `routed.rs`: where the build links the `content` route technology and
+//!   the `edi` path language, an EDIFACT document dropped in goes to the
+//!   Send Port its message type and recipient name, whole, and one no
+//!   Subscription takes goes nowhere.
 //!
 //! A test that measures how long Xmip takes is not here: it is in the
 //! root's timing program, `measured` (`.src/test/measured`), which the
@@ -54,4 +58,6 @@ mod accepted;
 mod authority;
 mod failover;
 mod operate;
+#[cfg(all(feature = "route-content", feature = "path-edi"))]
+mod routed;
 mod stop;

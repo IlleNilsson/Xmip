@@ -1238,7 +1238,7 @@ dependency = []
   dependency = ["xmip-core-context", "xmip-core-message", "xmip-core-path", "xmip-core"]
     [xmip.core.route.content]
     maturity = "scaffolded"
-    dependency = ["xmip-core-message", "xmip-core-path"]
+    dependency = ["xmip-core-message", "xmip-core-path", "xmip-core-path-edi"]
     [xmip.core.route.context]
     maturity = "scaffolded"
     dependency = ["xmip-core-message", "xmip-core-path"]
@@ -1878,6 +1878,7 @@ dependency = []
       "xmip-core-provision-self-signed",
       "xmip-core-retain",
       "xmip-core-route",
+      "xmip-core-route-content",
       "xmip-core-runtime",
       "xmip-core-secret",
       "xmip-core-secret-dpapi",

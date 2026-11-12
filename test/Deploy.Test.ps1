@@ -324,14 +324,67 @@ Describe 'The packages under deploy/package' {
     }
 
     It 'says, in <_>, that it is written and not built' -ForEach @(
-        'linux/nfpm.yaml'
-        'linux/postinstall.sh'
-        'linux/preremove.sh'
         'macos/distribution.xml'
         'macos/scripts/postinstall'
     ) {
         Get-Content -LiteralPath (Join-Path $script:Package $_) -Raw |
             Should -Match 'WRITTEN, NOT (BUILT|RUN)'
+    }
+
+    It 'refuses a .deb or .rpm off Linux, naming what its build needs' -Skip:$IsLinux {
+        foreach ($kind in 'deb', 'rpm') {
+            {
+                InModuleScope Xmip -Parameters @{ Kind = $kind } {
+                    param($Kind)
+                    Assert-XmipPackageBuildable -Package $Kind
+                }
+            } | Should -Throw ("REFUSED: -Package $kind is not built on this machine. " +
+                "A .$kind is built on Linux*")
+        }
+    }
+
+    It 'builds a .deb or .rpm on Linux where nfpm is, and refuses it where not' -Skip:(
+        -not $IsLinux) {
+        InModuleScope Xmip {
+            Mock Get-Command { [pscustomobject] @{ Name = 'nfpm' } } -ParameterFilter {
+                $Name -eq 'nfpm' }
+            { Assert-XmipPackageBuildable -Package 'deb', 'rpm' } | Should -Not -Throw
+            Mock Get-Command { $null } -ParameterFilter { $Name -eq 'nfpm' }
+            { Assert-XmipPackageBuildable -Package 'rpm' } |
+                Should -Throw '*made by nfpm 2.48, which is not on PATH*'
+        }
+    }
+
+    It 'makes the <_> by nfpm.yaml from the staged binaries, version and amd64' -ForEach @(
+        'deb', 'rpm') {
+        [string] $stage = Join-Path $TestDrive 'stage'
+        $global:XmipTestNfpm = @()
+        function global:nfpm {
+            $global:XmipTestNfpm = @($args) + @("dir=$($env:XMIP_BINARY_DIRECTORY)",
+                "version=$($env:XMIP_VERSION)", "arch=$($env:XMIP_ARCH)", "at=$(Get-Location)")
+            $global:LASTEXITCODE = 0
+        }
+        try {
+            [string] $made = InModuleScope Xmip -Parameters @{ Kind = $_; Stage = $stage
+                Root = $script:Root; Output = [string] $TestDrive } {
+                param($Kind, $Stage, $Root, $Output)
+                [hashtable] $made = @{ Root = $Root; Site = 'personal-computer'; Version = '0.1.1'
+                    Architecture = 'x64'; Stage = $Stage; Output = $Output; Kind = $Kind }
+                New-XmipLinuxPackage @made 6> $null
+            }
+        }
+        finally {
+            # The global function itself: a scope in a provider path names none.
+            Remove-Item -Path 'Function:\nfpm'
+        }
+        $made | Should -Be (Join-Path $TestDrive "xmip-0.1.1-personal-computer-linux-x64.$_")
+        $global:XmipTestNfpm[0..6] | Should -Be @('package', '--config', 'nfpm.yaml', '--packager',
+            $_, '--target', $made)
+        $global:XmipTestNfpm | Should -Contain "dir=$(Join-Path $stage 'xmip/bin')"
+        $global:XmipTestNfpm | Should -Contain 'version=0.1.1'
+        $global:XmipTestNfpm | Should -Contain 'arch=amd64'
+        $global:XmipTestNfpm | Should -Contain "at=$(Join-Path $script:Package 'linux')"
+        $env:XMIP_ARCH | Should -BeNullOrEmpty -Because 'the variables are put back'
     }
 
     It 'names, in nfpm.yaml, scripts that exist' {

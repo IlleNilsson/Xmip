@@ -876,3 +876,31 @@ gathered, and a terminal Journey resumes from its checkpoint (amendments
 back along it (`runtime-model.md` section 14). The draft of what the
 Dependency Quest counts as a gap, which the owner has not confirmed, counts
 a Dead Message Queue entry as one (ADR-0072, amendment 2026-11-11).
+
+## Amendment, 2026-11-11: a Subscription says where its work goes
+
+The owner, 2026-11-10: *from and to in every observation*. A Subscription
+as a node publishes it (the amendment of 2026-09-30) named where it leads
+in words, its destination, and never the Send Ports that destination
+reaches, so no surface could say where a Subscription's work went. Since
+the same day it publishes `send_ports`: its Send Port, every Port of its
+Send Port Group in the Group's order, none for a Work Process — each a
+Journey of its own, as clause 5 has it (`ConfiguredSubscription::ports`).
+They cross `xmip_operate.h` section 14 with the rest of it (ADR-0027,
+amendment 2026-11-11), and every Subscriptions view, command and cmdlet
+shows them; observe's one from and to reads them to say where the work at a
+Receive Location or a Subscription went (ADR-0052, amendment 2026-11-11).
+
+A node that routes by no Subscription — one that starts no Receive Location
+and runs no Work Process, though its slice carries the cluster's
+Subscriptions — lists none and refuses a pause or resume on one in words
+(`Pickup::routing_none`; ADR-0018, amendment 2026-11-11): only where routing
+runs is a Subscription a node's to pause.
+
+Tested in observe (`subscription`: `send_ports` reads back as written), the
+runtime (`ffi::subscription`: listed; `tests/running/drawing.rs`: a node
+that routes by none lists none of its own and refuses an act in words) and
+`Xmip.Abi.Test` (`RuntimeSubscriptionsTest`: it crosses).
+
+Provenance: the owner's words of 2026-11-10; the judged design's piece 7,
+built by the assistant on 2026-11-11.

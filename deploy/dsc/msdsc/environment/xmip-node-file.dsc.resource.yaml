@@ -68,7 +68,9 @@ schema: !embedded
         description: 'The file it holds the bytes of.'
         type: string
       private:
-        description: 'Readable by the node alone.'
+        description: >-
+          true: readable by the node alone, on Linux 0600. false: on Linux
+          readable by every account, 0644, whatever its source's mode.
         type: boolean
       owner:
         description: 'On Linux, the account that owns a private file.'

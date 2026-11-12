@@ -1,9 +1,18 @@
 ---
-# An Xmip environment on machines that are installed (README.md): the names
-# of the cluster and its nodes on the DNS server first, then each node on
-# its machine, Windows and AlmaLinux alike. Which node runs on which machine
-# is the inventory's, never cluster.xmip (ADR-0028 and ADR-0015,
-# amendments 2026-10-21).
+# An Xmip environment, its machines and the node each runs (README.md):
+# the machines made on the host their hypervisor runs on, one installation
+# at a time; the names of the cluster and its nodes on the DNS server, where
+# the environment has one; then each node on its machine, Windows and
+# AlmaLinux alike, one machine at a time in the order the environment file
+# lists them. Deploy-XmipEnvironment writes the inventory from that file:
+# which node runs on which machine is the environment's, never
+# cluster.xmip's (ADR-0028 and ADR-0015, amendments 2026-10-21).
+
+- name: The environment's machines
+  hosts: xmip_hypervisor_host
+  gather_facts: false
+  roles:
+    - xmip_machine
 
 - name: The cluster's and the nodes' names
   hosts: xmip_name_server
@@ -13,5 +22,16 @@
 
 - name: The Xmip nodes
   hosts: xmip_nodes
+  serial: 1
   roles:
     - xmip_node
+
+# Every node at once, no host waiting for another: none accepts work before
+# its cluster's Xmip Storage does, and a Storage node waits for every other.
+- name: The Xmip nodes, started together
+  hosts: xmip_nodes
+  tasks:
+    - name: The node started with the others
+      ansible.builtin.include_role:
+        name: xmip_node
+        tasks_from: started

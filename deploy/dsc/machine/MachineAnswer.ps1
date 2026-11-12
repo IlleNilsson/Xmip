@@ -3,10 +3,12 @@
 # What an unattended installation reads, written for one machine: Windows
 # Setup's autounattend.xml and Anaconda's kickstart, and the small ISO image
 # that carries them. Each answer is text and nothing else. One home for every
-# virtualization template (hyperv, libvirt), which dot-sources it; $Machine
-# is the machine as the template's document gives it.
+# hypervisor (hyperv, libvirt) and both technologies: Microsoft DSC's machine
+# resources dot-source it, and Ansible's xmip_machine role asks machine.ps1;
+# $Machine is the machine as a machine resource is given it.
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+. (Join-Path -Path $PSScriptRoot -ChildPath 'MachineSecret.ps1')
 
 # The attributes every component of an amd64 answer file carries.
 $script:UnattendComponent = 'processorArchitecture="amd64" ' +
@@ -132,7 +134,14 @@ function Get-MachineKickstart {
         # The package of the hypervisor's guest services: hyperv-daemons on
         # Hyper-V, qemu-guest-agent on KVM.
         [Parameter(Mandatory = $true)]
-        [string] $GuestPackage
+        [string] $GuestPackage,
+
+        # The machine's SSH host key, OpenSSH's private key text, made where
+        # the environment is deployed from, which known_hosts there holds;
+        # none, and sshd makes its own at the first boot.
+        [Parameter()]
+        [AllowEmptyString()]
+        [string] $HostKey = ''
     )
 
     [string] $hostName = "$($Machine.name.ToLowerInvariant()).$($Machine.domainName)"
@@ -177,9 +186,39 @@ function Get-MachineKickstart {
         "echo '$user ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/$user"
         "chmod 0440 /etc/sudoers.d/$user"
         "echo 'PasswordAuthentication no' > /etc/ssh/sshd_config.d/40-xmip.conf"
+        @(Get-MachineHostKeyLine -HostKey $HostKey)
         '%end'
     )
     return ($kickstart -join "`n") + "`n"
+}
+
+function Get-MachineHostKeyLine {
+    <#
+    .SYNOPSIS
+    The kickstart's %post lines that give the machine its SSH host key: the
+    private key, 0600, its public half beside it, and their SELinux labels,
+    so sshd answers with the key known_hosts already holds and no login
+    trusts on first use. Nothing where no key is given.
+    #>
+    [CmdletBinding()]
+    [OutputType([string])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [AllowEmptyString()]
+        [string] $HostKey
+    )
+
+    if (-not $HostKey.Trim()) {
+        return
+    }
+    [string] $key = '/etc/ssh/ssh_host_ed25519_key'
+    "cat > $key <<'XMIP-HOST-KEY'"
+    ($HostKey.Trim() -split '\r?\n')
+    'XMIP-HOST-KEY'
+    "chmod 0600 $key"
+    "ssh-keygen -y -f $key > $key.pub"
+    "chmod 0644 $key.pub"
+    "restorecon $key $key.pub"
 }
 
 function Get-MachinePublicKey {
@@ -210,7 +249,8 @@ function Get-MachineAnswerMedium {
     Windows Setup reads autounattend.xml from the root of any removable
     medium; Anaconda reads ks.cfg from a volume labeled OEMDRV without being
     told to. The Windows answer takes the Administrator password from the
-    machine's credential file, the Linux answer its SSH public key.
+    machine's secret file, the Linux answer its SSH public key and, where
+    its hostKeyPath names one, its SSH host key.
     #>
     [CmdletBinding()]
     [OutputType([hashtable])]
@@ -226,7 +266,7 @@ function Get-MachineAnswerMedium {
     )
 
     if ($Machine.image.family -eq 'Windows') {
-        [pscredential] $administrator = Import-Clixml -LiteralPath $Machine.credentialPath
+        [pscredential] $administrator = Read-MachineSecret -Path $Machine.secretPath
         [hashtable] $windows = @{
             Machine = $Machine
             AdministratorPassword = $administrator.Password
@@ -237,12 +277,21 @@ function Get-MachineAnswerMedium {
         }
     }
     [string] $key = Get-MachinePublicKey -Path $Machine.sshPublicKeyPath
+    [object] $named = $Machine.PSObject.Properties['hostKeyPath']
+    [string] $hostKey = if ($null -ne $named -and $named.Value) {
+        Get-Content -LiteralPath $named.Value -Raw
+    }
+    else { '' }
+    [hashtable] $asked = @{
+        Machine = $Machine
+        PublicKey = $key
+        MacAddress = $MacAddress
+        GuestPackage = $GuestPackage
+        HostKey = $hostKey
+    }
     return @{
         Label = 'OEMDRV'
-        File = [ordered] @{
-            'ks.cfg' = Get-MachineKickstart -Machine $Machine -PublicKey $key -MacAddress (
-                $MacAddress) -GuestPackage $GuestPackage
-        }
+        File = [ordered] @{ 'ks.cfg' = Get-MachineKickstart @asked }
     }
 }
 

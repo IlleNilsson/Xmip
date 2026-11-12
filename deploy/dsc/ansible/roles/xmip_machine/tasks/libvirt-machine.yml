@@ -1,0 +1,61 @@
+---
+# One machine on libvirt, xmip_machine: its ISO, checked against its SHA-256,
+# a new disk and its answer medium put in the pool whole, its domain defined
+# and started; waited for until it answers from its disk, its media then
+# taken out and its domain's metadata recording it installed, and by which
+# technology, so it is never installed again and never by the other. Each
+# step is deploy/dsc/machine's (LibvirtInstallation.ps1), asked through
+# machine.ps1, the code Microsoft DSC's Xmip.Libvirt/Machine runs.
+#
+# Under --check nothing is changed and each step that would run says it
+# would: the command module answers check mode so where `removes` names a
+# file that is there, here machine.ps1 itself.
+
+- name: "{{ xmip_machine.name }}: its plan"
+  ansible.builtin.command:
+    argv: "{{ xmip_definition + ['Machine'] }}"
+    stdin: "{{ xmip_machine | to_json }}"
+  register: xmip_planned
+  changed_when: false
+  check_mode: false
+
+- name: "{{ xmip_machine.name }}: whether it is defined and installed, and by this technology"
+  ansible.builtin.command:
+    argv: "{{ xmip_definition + ['State'] }}"
+    stdin: "{{ xmip_machine | to_json }}"
+  register: xmip_record
+  changed_when: false
+  check_mode: false
+
+- name: "{{ xmip_machine.name }}: installed from its ISO"
+  when: not (xmip_record.stdout | from_json).installed
+  block:
+    - name: Its media in the pool, whole, and its domain defined and started
+      ansible.builtin.command:
+        argv: "{{ xmip_definition + ['Install'] }}"
+        stdin: "{{ xmip_machine | to_json }}"
+        removes: "{{ xmip_machine_definition }}"
+
+    # wait_for has no check mode, so --check skips it.
+    - name: Its installation, until it answers from its disk
+      ansible.builtin.wait_for:
+        host: "{{ xmip_machine.address }}"
+        port: "{{ (xmip_planned.stdout | from_json).port }}"
+        delay: 30
+        sleep: 15
+        timeout: "{{ xmip_install_timeout }}"
+
+    - name: Its media taken out, its answer medium deleted and its record written
+      ansible.builtin.command:
+        argv: "{{ xmip_definition + ['Complete'] }}"
+        stdin: "{{ xmip_machine | to_json }}"
+        removes: "{{ xmip_machine_definition }}"
+
+# Under --check a domain not defined yet has nothing to start: the
+# installation above already says it would change.
+- name: "{{ xmip_machine.name }}: running"
+  community.libvirt.virt:
+    uri: "{{ xmip_libvirt_uri }}"
+    name: "{{ xmip_machine.name }}"
+    state: running
+  when: not ansible_check_mode or (xmip_record.stdout | from_json).defined

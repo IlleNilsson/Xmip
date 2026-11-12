@@ -1971,7 +1971,8 @@ the demo's board — no line is drawn yet, and only the nodes move**: no
 node publishes what it hands another, and the roll matches its Parties to
 endpoints by transport while a real node names each endpoint by its
 Location. The links between real nodes are open problem 62, to land by
-2026-12-08.
+2026-12-08; drawn since 2026-11-11 (the amendment *traffic between nodes,
+measured where it passes*, below).
 
 - **What moved is measured over a window, once, in observe.**
   `observe::topology::window::Window` keeps a publisher's readings of what
@@ -2094,3 +2095,178 @@ the fixture's old meaning, and tests that passed without the change. The
 thirty seconds, the step of a second, the bands and their fifth, the
 durations and the inspector's words are the assistant's drafting, for the
 owner to overrule.
+
+## Amendment, 2026-11-11: Work Process wherever a stage is read, each name once
+
+The owner, 2026-11-10: *it is "Work Process", never "Process"*. ADR-0018's
+rename of 2026-10-06 (*"Xmip Process" names nothing any more … every type,
+symbol, command word and label follows*) had not reached the Monitor: its
+middle card took its title from the stage word capitalized, and called each
+Subscription beneath it a work process.
+
+- **The title is the runtime's.** `node::Stage::title` says Receive,
+  Work Process and Send, and crosses section 7 (`xmip_stage_title_v1`;
+  ADR-0027, amendment 2026-11-11). `English.Stage` reads it.
+- **One rule reads a stage segment by its title**, `ScopeIndex.Label` in
+  `Xmip.Surface`: a scope where a stage begins reads as its title, any other
+  as its segment. The Monitor's crumbs (`ScopeTree.Trail` over the index),
+  its drill rows and the Configuration view's rows call it, and the
+  Topology's stage label is observe's (`topology::draw`). The CLI and
+  PowerShell print the scope itself, which still says `process` until
+  ADR-0027's kind-and-name layout of 2026-10-06 is built: they print no
+  label of a stage.
+- **What a card counts** is `node::Stage::location`'s: Receive Location,
+  Subscription, Send Port — a Send Location of a Port named apart from it
+  sits beneath that Port (ADR-0027 and ADR-0018, amendments 2026-11-11). The
+  Work Process card says *Subscription ×N · no Work Process placed* while the
+  process stage holds Subscriptions alone
+  (`IOperatorSurface.NoWorkProcessPlaced`, a Subscription known by its node
+  and name in the publication's Subscriptions, never by its words), so it
+  never teaches that a Subscription is a Work Process. The words
+  Subscription and Send Port are the owner's to confirm (ADR-0027,
+  amendment 2026-11-11).
+- **Each name once.** `IOperatorSurface.Locations` gave one scope per node,
+  so a Subscription every node holds was counted once per node; it now gives
+  each name once, its first scope in ordinal order.
+- **The prompt keeps R, P, S, T, F.** Its stage letter is the stage word's
+  first, upper-cased (`SegmentRender`), never the title's, which would draw
+  W: the letters are the owner's, above.
+
+Tested in `node` (`stage::tests`), the runtime (`ffi::rule::node`),
+`Xmip.Abi.Test` (`OperateAbiTest`, `RuntimeRulesTest`: the three words),
+`Xmip.Surface.Test` (`EnglishTest`, `ScopeTreeTest`, `DrillTest`: three
+Subscriptions on two nodes count three; `FromToTest`: a stage segment reads
+as the Work Process in the label and the trail, and the card's rule),
+observe (`topology::draw`: the stage labels), `Xmip.Gui.Test`
+(`MonitorDrillTest`: the card titles and words; `ServedWordsTest`: the crumb
+and the Configuration row read Work Process, the card says no Work Process
+is placed) and `Xmip.PowerShell.Test.ps1` (the letters stay R, P, S).
+
+Provenance: the owner's words of 2026-11-10; the build is the assistant's,
+2026-11-11, and its review the same day put the label rule in one place and
+gave the card its words.
+
+## Amendment, 2026-11-11: one merge of snapshots, every table
+
+A reader that shows several publishers as one view merges their snapshots,
+and the Essentials' roll and cluster process each did it with their own
+copy, which carried health, counts, Subscriptions and Event subscriptions
+and dropped the unheard members, the Dead Message Queue and the failed
+Messages. So the board the Web and Desktop read never offered Replay,
+Retry or Dismiss on what a node really held. The merge is observe's now,
+once: `Snapshot::merge` copies every table, a pause with what it held, and
+the Essentials' copy is deleted with its callers (ADR-0028, amendment
+2026-11-11, which also carries the orders to the nodes).
+
+Provenance: the judged design of 2026-11-11; built the same day.
+
+## Amendment, 2026-11-11: traffic between nodes, measured where it passes
+
+The amendment of 2026-11-10 left the links between real nodes to open
+problem 62: a real node hands work on only through Xmip Storage
+(`terminology.md`, Xmip Storage), publishes nothing of it, and the roll
+drew only its own simulated hops. So, the traffic between nodes is
+measured where it passes, at the Storage nodes, and drawn there:
+
+- **A Storage node counts what each node's requests came to, from their
+  answers** (`persist`, `storage/server/counted.rs`): the Publications a node
+  wrote — a Publish answered with its claims, a Work Process's Turn answered
+  yes — and the Journeys it took and handed on — a HandOn answered yes, and
+  a Turn. A claim is not traffic: one another holder won, and the claim a
+  send scan takes and gives back on each pass over a Journey not yet due,
+  count nothing, nor does a request refused, failed or answered by a
+  standby. Counted against the node its certificate was issued for, its
+  common name read once per connection by `tls::Name::common_name`, the one
+  reading of it, and added atomically; a person's connection is never
+  counted. `StorageServer::peers` hands the counts out.
+- **A Storage node draws it** (`runtime`, `running/publication/drawn.rs`):
+  a link from each node that wrote into it, `node/<peer> → node/<self>`,
+  and to each that took work on from it, `node/<self> → node/<peer>`,
+  publish → consume over `observe::topology::XMIP_STORAGE`, observed,
+  carrying the count; a direction nothing crossed is not drawn, and only a
+  node the cluster's bindings place a Location on is drawn — a certificate
+  of node standing naming any other, from an authority another cluster
+  shares or a host name an outside authority issued, draws nothing
+  (`running::starting::bound_nodes`). A receiving node draws a link from
+  each Receive Location to each Subscription it routed by (ADR-0018,
+  amendment 2026-11-11).
+- **The roll merges each node's drawing by its name**
+  (`observe::Topology::merge`): the node owns itself and what is beneath it,
+  `node/<name>` and `node/<name>/…`, and nothing else; for an owned thing
+  both drawings hold, the node's wins but for its mood where the roll's is
+  worse, which comes with its evidence, so a Receive Location the
+  fifty-second fault strikes is drawn as the Monitor shows it; a link is the
+  node's where either end is, so its Party links, saying their Locations'
+  transport, join as it drew them. A node the roll reads, not simulates, is
+  drawn with the one Party a running node draws (`party::ANY_PARTY`); the
+  simulated keep their Parties over their transports. The roll records
+  Carried's verdicts before it draws (`roll::round::assembled`), and its
+  window then states each merged link's rate, so the pulses travel R → D1
+  → S at the rate measured.
+
+Left in open problem 62: what a primary ships to its standby, drawn D1 →
+D2. Tested in tls (`name`: a common name read in any case, order and
+escape), persist (`server::counted`: a node's traffic counted against its
+node across its connections, a person's never; a lost claim, a claim given
+back and a Publication a standby, a refusal or a failure answered count
+nothing), the runtime (`drawn`: a Storage node draws the traffic from and
+to each node the cluster binds, never itself, never a node it does not
+bind), observe (`topology`: a node's own drawing wins for what it owns, a
+worse mood stays with its evidence, and its links join) and the Essentials
+(`roll`: a read node's drawing joins the cluster's and its traffic moves
+between the nodes over two rounds; `roll::round`: a served round holds only
+the nodes beneath its root and draws a struck Location as it is).
+
+Provenance: the judged design of 2026-11-11 and its skeptics' finding
+that only persist knows which Storage node a request reached; built by the
+assistant the same day, and its review the same day moved the counting to
+the answers, the reading of a node's name to `tls`, kept the drawing to the
+cluster's nodes and the merge to what a node owns.
+
+## Amendment, 2026-11-11: from and to on every observation
+
+The owner, 2026-11-10: *from and to in every observation*. Until this day
+the only from and to a person saw were in the Essentials' delivery
+evidence and the Topology's link evidence. Said once now, in observe, and
+read by every surface:
+
+- **One rule** (`observe::topology::from_to`): for a Receive Location's, a
+  Subscription's or a Send Port's scope, and what is beneath one, the hops
+  of the integration's forward path as the drawing and the Subscriptions say
+  it — the sending Party and its transport, the Receive Location and its
+  node, each Subscription that routed what it took, the Storage node it was
+  written into, each Send Port those Subscriptions reach and the node that
+  sends it, and the Party it delivers to; for a node's, the Parties and
+  nodes that hand it work and those it hands work to. What the drawing has
+  not seen is left out, never guessed. Its words — `from`, `to`, the one
+  `line`, the `path` and what a Dead Message Queue entry's to says,
+  *no Subscription* — are observe's, and cross section 8
+  (`xmip_publication_from_to_v1`; ADR-0027, amendment 2026-11-11).
+- **A Subscription publishes the Send Ports its destination reaches**,
+  `send_ports` (`ConfiguredSubscription::ports`), through section 14
+  (ADR-0013, amendment 2026-11-11).
+- **Read once in `Xmip.Surface`:** `Xmip.Abi` asks for every thing a
+  publication's topology draws as it reads it (`TopologySnapshot.Paths`),
+  and `IOperatorSurface.FromTo` answers any scope with the nearest drawn
+  thing's at or above it; `ScopeItem` carries it on every row.
+- **Every surface, in order:** the CLI's `health`, `list` and `show` print
+  and write `from` and `to`, and `subscriptions` the Send Ports;
+  PowerShell's `Get-XmipHealth` and `Get-XmipScope` carry From and To, and
+  the Subscription view the Send Ports; the GUI's drill rows and Needs
+  attention rows say the line (`FromToLine`), the Topology inspector the
+  From and To of the thing it is open at, the Dead Message Queue's rows from
+  their Location to *no Subscription*, and the Subscriptions view the Send
+  Ports each reaches.
+
+A Party is `any-party` until the owner answers on a designed Party key
+(open problem 33), so from and to start and end there. Tested in observe
+(`topology::from_to`: a Receive Location's, a Send Port's and a node's path
+over a three-node fixture with the Storage hop, and nothing on no node),
+the runtime (`ffi::from_to`: the export over a read publication;
+`ffi::subscription`: `send_ports` listed), `Xmip.Abi.Test`
+(`RuntimeSubscriptionsTest`: both cross), `Xmip.Surface.Test` (`FromToTest`:
+a row and what is beneath it) and `Xmip.Gui.Test` (`ServedWordsTest`: every
+row needing attention says from and to).
+
+Provenance: the owner's words of 2026-11-10 and the judged design's piece
+7; built by the assistant on 2026-11-11 after the review found it missing.
