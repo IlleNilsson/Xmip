@@ -758,3 +758,77 @@ on).
 Provenance: open problem 46's proposal of 2026-11-12; waiting on the
 Instance by its turns and on a key by whether an Instance holds it are the
 assistant's, the same day, for the owner to overrule.
+
+## Amendment, 2026-11-12: a Work Process's turns are admitted by their share of the Work pool, read a page a round, and a turn that panics ends Failed
+
+Clause 4 of the amendment of 2026-10-22 runs a Work Process's turns on the
+node's Work pool, a dynamic, bounded pool whose most is the bulkhead of
+ADR-0018 clause 11 (`runtime-model.md` section 3). The step's dispatching
+read every page of a queue into memory before its first turn and handed
+every entry to the pool, whose queue refuses nothing, the Work Processes
+each read to its end in their configured order; and a turn that panicked
+stayed owned on its node, passed over by every read until the node
+restarted, or, on the dispatching thread, ended the dispatching of every
+Work Process on the node. Built the same day, as the send step's
+admission bounds its own (`runtime::send_step`):
+
+- **A turn is admitted only under a place in the Work pool**
+  (`work_step::admission`). The turns the step holds, queued in the pool or
+  running, are never more than the pool's most threads. Each Work Process
+  with work holds no more than its share of them, the most divided among
+  the Work Processes that hold a turn or have something to read, rounded
+  up: one alone has the whole pool. What has no place stays durable and
+  unclaimed in the Ledger, read on from where it stands the moment a turn
+  ends. No place is kept free for a Work Process with nothing to do.
+- **The Work pool has a key of its own**,
+  `[tuning] work_threads_per_hardware_thread`, two by default as the Send
+  pool's (`work_step::WORK_THREADS_PER_HARDWARE_THREAD`; ADR-0031), its
+  idle time a send thread's. Until now it was sized by
+  `send_threads_per_hardware_thread`.
+- **A queue is read a page a round** (`work_step::reading`): each
+  Work Process keeps where its pass of its queue stands, the page a wake
+  brought, whether its head is to be read and whether to go again from the
+  start. Each round, every Work Process with something to read, in
+  rotation, reads one page of its pass and, with the places left, the head
+  of its queue where it was asked while its pass was under way; an entry
+  already in a turn here, or failed, is moved past without a turn. A
+  backlog in one Work Process holds back another's first turn by one turn
+  at most, never by the backlog. The place a pass stands at is the node's
+  convenience, never the truth (`runtime-model.md` section 22): lost on a
+  restart, it costs a read again.
+- **A turn that panics ends Failed with what the panic said**
+  (`work_step::Turned::Failed`): everything after its claim is caught at
+  the turn's boundary, the flow, a unit's call or split, the runtime's own
+  acts and the turn's write, and the Journey written Failed through the
+  write a flow's uncaught error takes, kept in its Work Process's queue
+  for an operator's Retry or Dismiss; where that cannot be written its
+  claim is given back. **However a turn ends, its place and its ownership
+  on the node are given back** (`admission::Owning`), so one that unwinds
+  before its claim is audited and taken up again by a later read, and the
+  dispatching thread outlives a panic in a turn it takes itself.
+- **On the pool the pass is read before the head.** A head read first,
+  whose page began with turns that only wait, took each place as it freed
+  and kept the pass behind it from moving on for good, found as it was
+  built by the test of turns another node holds. A head that finds no
+  place is left to the pass from the start its ask began. A Work Process
+  whose turns are taken on the dispatching thread, naming a Correlation,
+  reads its head first, in its queue's order: each of its turns gives its
+  place back before the next is offered, so its head never starves its
+  pass.
+
+Tested in the runtime (`tests/ledger/work_panicked.rs`: a turn whose unit
+panics written Failed with what it said and its claim ended; the other
+Work Processes, and its own, going on with nothing held; a turn on the
+dispatching thread whose flow panics keeping the dispatching going; and a
+turn that unwinds before its claim let go of and taken up again, on the
+pool and on the dispatching thread. `tests/ledger/work_bounded.rs`: no more
+turns than the Work pool runs, the rest unclaimed; a page of turns another
+node holds keeping no place from the one behind them; a backlog of sixteen
+times the pool in one Work Process holding back no turn of another; one
+page read before the first turn of a thousand; and a backlog of 4,096
+dispatched in the memory one of 256 takes, run alone).
+
+Provenance: a review the owner brought, 2026-11-12 (*Here are some
+thoughts*), built in the order he gave; how it is built is the
+assistant's, the same day, the Work pool's own key among it, for the owner
+to overrule.

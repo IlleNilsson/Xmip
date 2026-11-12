@@ -10,6 +10,7 @@ pub const USAGE: &str = "usage: xmip-service --configuration <path> [--console] 
      xmip-service --configuration <cluster cluster.xmip> --node <name> --cluster <name> \
      [--account <account>] --install\n       \
      xmip-service --configuration <path> --listening\n       \
+     xmip-service --configuration <path> --activation\n       \
      xmip-service --configuration <path> --uninstall\n\
      example: xmip-service --configuration /opt/xmip/config/node.xmip --console\n\
      example: xmip-service --configuration /opt/xmip/config/cluster.xmip --node R1 \
@@ -33,6 +34,9 @@ pub const USAGE: &str = "usage: xmip-service --configuration <path> [--console] 
      nothing. Both need elevation.\n\
      --listening prints each port the node's configuration listens on, \
      <port>/<protocol> and what listens.\n\
+     --activation says, in the node's words, whether the node runs the slice at <path> \
+     as its active configuration, and exits 0 only where it does: a correctly signed \
+     slice the node cannot start is refused, and the node runs the last one that ran.\n\
      --console runs in a terminal and stops on Ctrl+C, and with --purpose test also at \
      the end of its input, as the test that started it ends it; without it the \
      operating system's service manager runs it and stops it.";
@@ -55,6 +59,9 @@ pub enum Mode {
     /// Print the ports the node's configuration listens on, which an
     /// environment opens its firewall for (ADR-0015, amendment 2026-10-21).
     Listening,
+    /// Say whether the node runs the slice at its configuration's path as
+    /// its active configuration (ADR-0031, amendment 2026-11-12).
+    Activation,
     /// Stop and remove the node's service; nothing else.
     Uninstall,
 }
@@ -134,6 +141,7 @@ impl Arguments {
                 "--slice" => switches.push(Mode::Slice),
                 "--install" => switches.push(Mode::Install),
                 "--listening" => switches.push(Mode::Listening),
+                "--activation" => switches.push(Mode::Activation),
                 "--uninstall" => switches.push(Mode::Uninstall),
                 _ => return Err(format!("{flag} is not a parameter of xmip-service")),
             }
@@ -144,8 +152,8 @@ impl Arguments {
             [mode] => *mode,
             _ => {
                 return Err(
-                    "--console, --definition, --slice, --install, --listening and --uninstall \
-                            exclude each other"
+                    "--console, --definition, --slice, --install, --listening, --activation \
+                     and --uninstall exclude each other"
                         .into(),
                 );
             }
@@ -270,6 +278,9 @@ mod tests {
         let listening = parsed("--listening --configuration node.xmip").expect("reads");
         assert_eq!(listening.mode, Mode::Listening);
 
+        let activation = parsed("--activation --configuration node.xmip").expect("reads");
+        assert_eq!(activation.mode, Mode::Activation);
+
         let uninstall = parsed("--uninstall --configuration node.xmip").expect("reads");
         assert_eq!(uninstall.mode, Mode::Uninstall);
     }
@@ -308,6 +319,14 @@ mod tests {
             (
                 "--configuration a --listening --slice",
                 "exclude each other",
+            ),
+            (
+                "--configuration a --activation --console",
+                "exclude each other",
+            ),
+            (
+                "--configuration a --activation --node n",
+                "--node is the node",
             ),
             ("--configuration a --node", "--node needs a value"),
             (

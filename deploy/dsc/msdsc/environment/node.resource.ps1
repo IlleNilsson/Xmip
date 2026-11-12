@@ -17,8 +17,10 @@
       --install with the node, the cluster and the account.
     - Slice: the node's configuration, node.xmip, as the machine deploying
       the environment sliced and signed it, writable by the node's account
-      and the administrators alone (NodeAccess.ps1); the service is
-      restarted when it changed.
+      and the administrators alone (NodeAccess.ps1), and, where the node is
+      installed, the configuration it runs, as xmip-service --activation
+      says; the service is restarted when it changed or the node does not
+      run it.
     - Opening: a firewall opening for each port xmip-service --listening
       says the node's configuration listens on, and no other.
     - Service: the node's service running and started with the machine.

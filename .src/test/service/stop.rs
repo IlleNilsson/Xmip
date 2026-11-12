@@ -90,6 +90,12 @@ fn a_node_it_cannot_start_is_refused_with_exit_code_two() {
 
     let said = refused(&configuration, &directory);
     assert!(said.contains("no transport for smb://"), "{said}");
+    // No slice ever ran here, so nothing else does (ADR-0031, amendment
+    // 2026-11-12).
+    assert!(
+        said.contains("and the node has no active configuration to run"),
+        "{said}"
+    );
     assert_eq!(declarations(&directory), Vec::<String>::new());
     let _ = std::fs::remove_dir_all(&directory);
 }
@@ -162,57 +168,6 @@ fn a_paused_subscription_is_paused_still_after_the_service_restarts() {
         assert!(audit.contains(said), "{said} in {audit}");
     }
     let _ = std::fs::remove_dir_all(&directory);
-}
-
-/// The scheme of a transport technology that is no feature of the root
-/// crate, `xmip-core-transport-smb`'s.
-const UNLINKED: &str = "smb://";
-
-/// How long a refusal may take: a node refused never accepts work, so one
-/// still running after this was not refused, and is killed.
-const REFUSING: Duration = Duration::from_secs(30);
-
-/// What the service says on stderr refusing the node at `configuration`,
-/// which must exit 2 within [`REFUSING`]; one that does not is killed and
-/// the test fails saying so, never waits on it.
-fn refused(configuration: &Path, directory: &Path) -> String {
-    let mut child = Command::new(env!("CARGO_BIN_EXE_xmip-service"))
-        .args([
-            "--configuration",
-            configuration.to_str().expect("UTF-8"),
-            "--console",
-        ])
-        .env("XMIP_AUDIT_DIRECTORY", directory.join("audit"))
-        .env("XMIP_PROCESS_DIRECTORY", directory.join("process"))
-        .stdin(Stdio::null())
-        .stdout(Stdio::null())
-        .stderr(Stdio::piped())
-        .spawn()
-        .expect("runs");
-    let mut stderr = child.stderr.take().expect("its error output");
-    let reading = std::thread::spawn(move || {
-        let mut said = String::new();
-        let _ = std::io::Read::read_to_string(&mut stderr, &mut said);
-        said
-    });
-    let deadline = Instant::now() + REFUSING;
-    let status = loop {
-        if let Some(status) = child.try_wait().expect("asks") {
-            break status;
-        }
-        if Instant::now() >= deadline {
-            let _ = child.kill();
-            let _ = child.wait();
-            panic!(
-                "the node at {} was not refused: still running after {REFUSING:?}",
-                configuration.display()
-            );
-        }
-        std::thread::sleep(Duration::from_millis(20));
-    };
-    let said = reading.join().expect("read");
-    assert_eq!(status.code(), Some(2), "{said}");
-    said
 }
 
 #[test]

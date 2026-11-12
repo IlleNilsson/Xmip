@@ -7,21 +7,28 @@
 //! revocation list and certificate over plain HTTP, both until the node
 //! drains. Provisioning beside the node's path, never on it (ADR-0045
 //! clause 1): nothing here reaches beyond the cluster. The node serves it
-//! as it starts (`authorized`), said on the console and audited.
+//! as it starts, by the `[provision.node]` of the slice it runs and never
+//! of the file beside it, which may be a candidate it refused (`serve`;
+//! ADR-0031, amendment 2026-11-12), said on the console and audited once it
+//! accepts work (`said`).
 //!
 //! The authority is kept beside the configuration, in the folder
 //! `authority` names, `authority` unless said: the folder every surface
 //! inspects, revokes from and backs up (`xmip certificate`,
 //! `Get-XmipCertificate`).
 
+use std::collections::BTreeMap;
 use std::path::Path;
 
 use xmip_audit::program_audit::ProgramAudit;
-use xmip_configure::XmipConfigurationDocument;
+use xmip_configure::LocationSettings;
 use xmip_core::ExecutionPhase;
 use xmip_core::settings::Given;
 
 use crate::audit;
+
+/// A node's `[provision]`, each purpose's table by its name.
+type Provision = BTreeMap<String, LocationSettings>;
 
 /// The technology whose table this serves.
 const TECHNOLOGY: &str = "xmip-core-provision-internal-ca";
@@ -42,10 +49,11 @@ pub struct Served {
     ),
 }
 
-/// The listeners `[provision.node]` names for the authority, each its
-/// address and what it is: what `--listening` opens a firewall for.
-pub fn listens(document: &XmipConfigurationDocument) -> Vec<(String, &'static str)> {
-    let Some(table) = document.provision.get(NODE) else {
+/// The listeners `[provision.node]` of `provision` names for the
+/// authority, each its address and what it is: what `--listening` opens a
+/// firewall for.
+pub fn listens(provision: &Provision) -> Vec<(String, &'static str)> {
+    let Some(table) = provision.get(NODE) else {
         return Vec::new();
     };
     let given = table.given();
@@ -67,79 +75,49 @@ pub fn listens(document: &XmipConfigurationDocument) -> Vec<(String, &'static st
     .collect()
 }
 
-/// Serve the authority `document`, the configuration at `configuration`,
-/// names; `None` where it names none to serve.
+/// Serve the authority `provision`, the `[provision]` of the slice the node
+/// configured at `configuration` runs, names; `None` where it names none to
+/// serve. Held until the node drains.
 ///
 /// # Errors
 ///
 /// The table is refused, the authority cannot be kept, or an address
 /// cannot be bound; or this build does not link the cluster's authority.
-pub fn serve(
-    document: &XmipConfigurationDocument,
-    configuration: &Path,
-) -> Result<Option<Served>, String> {
-    if listens(document).is_empty() {
+pub fn serve(provision: &Provision, configuration: &Path) -> Result<Option<Served>, String> {
+    if listens(provision).is_empty() {
         return Ok(None);
     }
-    served(document, configuration).map(Some)
+    served(provision, configuration).map(Some)
 }
 
-/// The cluster's authority the configuration at `configuration` serves,
-/// said on the console and audited where it serves one, held until the
-/// node drains; refused where it cannot serve, which is audited.
-pub fn authorized(
-    program: &str,
-    audit: &ProgramAudit,
-    configuration: &str,
-) -> Result<Option<Served>, ()> {
-    let served = xmip_runtime::start::read(configuration)
-        .map_err(|unread| unread.reason)
-        .and_then(|(document, _, _)| serve(&document, Path::new(configuration)));
-    match served {
-        Ok(Some(served)) => {
-            println!(
-                "{program}: the cluster's authority answers ACME at {}",
-                served.directory
-            );
-            if let Some(published) = &served.published {
-                println!("{program}: the cluster's authority publishes its list at {published}");
-            }
-            audit::record(
-                audit,
-                "authority",
-                ExecutionPhase::Begin,
-                &[
-                    ("directory", served.directory.as_str()),
-                    ("published", served.published.as_deref().unwrap_or("")),
-                ],
-            );
-            Ok(Some(served))
-        }
-        Ok(None) => Ok(None),
-        Err(refusal) => {
-            audit::fail(
-                audit,
-                "authority",
-                &format!("{program}: {configuration} {refusal}"),
-            );
-            Err(())
-        }
+/// Say where the cluster's authority `served` answers, on the console, and
+/// audit it.
+pub fn said(program: &str, audit: &ProgramAudit, served: &Served) {
+    println!(
+        "{program}: the cluster's authority answers ACME at {}",
+        served.directory
+    );
+    if let Some(published) = &served.published {
+        println!("{program}: the cluster's authority publishes its list at {published}");
     }
+    audit::record(
+        audit,
+        "authority",
+        ExecutionPhase::Begin,
+        &[
+            ("directory", served.directory.as_str()),
+            ("published", served.published.as_deref().unwrap_or("")),
+        ],
+    );
 }
 
 cfg_select! {
     feature = "provision-internal-ca" => {
-        fn served(
-            document: &XmipConfigurationDocument,
-            configuration: &Path,
-        ) -> Result<Served, String> {
+        fn served(provision: &Provision, configuration: &Path) -> Result<Served, String> {
             use xmip_provision_internal_ca::{InternalCa, SETTINGS};
 
             let said = |why: String| format!("[provision.{NODE}]: {why}");
-            let table = document
-                .provision
-                .get(NODE)
-                .map(xmip_configure::LocationSettings::given);
+            let table = provision.get(NODE).map(LocationSettings::given);
             let read = xmip_provision::read(NODE, &table.unwrap_or_default(), &[SETTINGS])
                 .map_err(|refused| said(refused.to_string()))?;
             let ca = InternalCa::configured(&read.settings);
@@ -166,7 +144,7 @@ cfg_select! {
         }
     }
     _ => {
-        fn served(_: &XmipConfigurationDocument, _: &Path) -> Result<Served, String> {
+        fn served(_: &Provision, _: &Path) -> Result<Served, String> {
             Err(format!(
                 "[provision.{NODE}] serves the cluster's authority ({TECHNOLOGY}), which this \
                  build does not link"

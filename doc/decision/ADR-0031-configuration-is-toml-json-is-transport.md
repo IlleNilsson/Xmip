@@ -266,7 +266,10 @@ When deployed the sections regarding a node will be sliced to that node.*
   `send_lease`, `send_scan`, built 2026-10-03 with the send step,
   `runtime-model.md` section 10), the Work Process step's scan of its
   queues (`work_scan`, built 2026-11-12; ADR-0066, amendment 2026-11-12;
-  until then a constant), a polled Receive Location's rest after a
+  until then a constant), the Work pool's threads per hardware thread, the
+  most turns that step holds at once (`work_threads_per_hardware_thread`,
+  built 2026-11-12; ADR-0066, third amendment 2026-11-12; until then the
+  Send pool's figure), a polled Receive Location's rest after a
   receive that found nothing and after a failure that may mend
   (`receive_poll`, `receive_backoff`, built 2026-10-12, `runtime-model.md`
   section 5), the recovery sweep of a Location whose far end tells it of a
@@ -286,7 +289,9 @@ When deployed the sections regarding a node will be sliced to that node.*
   the Storage client's timeouts and
   pass-over, and the longest a Storage node holds one node's wait on its
   queues (`storage_wait`, built 2026-11-12; ADR-0018, amendment
-  2026-11-12) — under `[tuning]` for the cluster and `[nodes.<name>.tuning]`
+  2026-11-12), and how many of what no node waits on a Storage node keeps
+  (`storage_unwaited`, built 2026-11-12; ADR-0018, amendment 2026-11-12)
+  — under `[tuning]` for the cluster and `[nodes.<name>.tuning]`
   for a node (the key names are the assistant's drafting). The built-in
   values are the defaults where neither says; a new assumption of this kind
   gets its key in the change that brings it.
@@ -797,3 +802,90 @@ of what was done; this one narrows it.
 - **Editors**: the VS Code extension maps and validates `.xmip` alone; a
   `.toml` file is TOML to every editor, and `.gitattributes` keeps showing
   `.xmip` as TOML on GitHub.
+
+## Amendment, 2026-11-12: a node trusts a slice before it runs it, and keeps the last that ran
+
+**Provenance.** The owner, 2026-11-12, brought a review of the estate,
+*Here are some thoughts*; one finding was this defect, and the order he
+gave for it is what follows: separate accepting a slice as trusted from
+activating it; keep the pin and the anti-replay state apart from the last
+configuration that activated; validate a candidate before it replaces the
+recovery configuration; say what happens when activation fails; runtime
+startup owns all of it. The policy for a failed activation (point 5) is
+the assistant's, decided while designing, for the owner to change.
+
+Until this day the running node kept a slice that verified as its accepted
+slice before anything read it (amendment 2026-11-07, point 2), and only
+then ran ADR-0018's phases over it. A correctly signed slice naming a
+technology the build lacks replaced the accepted slice and was then
+refused at phase 3, and the slice that ran before could not be placed back,
+its serial now below the pin's. The fallback protected against a bad
+signature, not against a configuration the node cannot run. The
+amendments of 2026-11-06 and 2026-11-07 stand as the record of what was
+done; this one narrows 2026-11-06 point 2 and 2026-11-07 points 2 to 5.
+
+1. **Three states, two files the node writes.** The *candidate* is
+   `node.xmip`, which the deployer writes and the node never does. The
+   *pin*, `<stem>.pin.toml`, holds the authority's fingerprint (`by`), the
+   node (`node`), the highest serial seen in a slice that verified
+   (`serial`) and that slice's file's SHA-256 (`slice`); a record, so
+   `.toml` (amendment 2026-11-10). The *active configuration*,
+   `<stem>.active.xmip`, is the signed file of the last slice that ran; it
+   replaces `<stem>.accepted.xmip`, which no reader takes. Both are private
+   files the node alone writes (`secret::private_file::replace`), in the
+   default data directory, found from the configuration's place alone.
+   Their names and the pin's form are `configure::signed`'s
+   (`pin_at`, `active_at`, `Pin`); the trust rules `runtime::signed`'s.
+2. **Trust first, pinned as seen.** The anchor beside the configuration
+   must be the pinned one, or the node does not start. `node.xmip` byte for
+   byte the active configuration is no candidate. Otherwise it is admitted
+   where it verifies, names the pinned node, and carries a serial above the
+   pinned one, or the pinned serial and the pinned slice's digest: the same
+   candidate, seen and not yet run. Anything else is refused in words and
+   never runs. A candidate above the pin is pinned as seen before anything
+   reads it; a node with no pin pins the first slice it admits, the
+   candidate, or else the active configuration. Removing the pin re-pins on
+   purpose, as removing the accepted slice did.
+3. **An attempt, serving nothing.** Every startup phase runs over the
+   candidate, and then the program's own steps that can refuse: the
+   operate listeners, the cluster authority's serving and the orders watch.
+   `Running::start` builds and serves nothing; `Running::activate` first
+   replaces the active configuration with the candidate's file, then
+   serves, and the program then says it accepts work. The order is
+   `runtime::running::activation::started`.
+4. **The fallback.** A candidate refused at any step is let go, its Storage
+   node stopped as it is dropped, and the same attempt is made over the
+   active configuration, verified again against the pinned anchor and node,
+   in the same process. With none, or where it refuses too, the start is
+   refused with exit code 2 and both refusals in words.
+5. **The policy, decided while designing.** A refusal before the node
+   accepts work refuses the attempt, not the node, whether the
+   configuration or the machine caused it. A refused candidate is never
+   made active, stays in `node.xmip`, and is tried again at the next start,
+   so one a passing cause refused takes once the cause is gone. Once a node
+   accepts work under a configuration nothing later demotes it. Rolling
+   back means signing the earlier `cluster.xmip` again, under a fresh
+   serial; an older slice placed back is refused as replayed, even above
+   the active configuration's serial. The alternative, refusing the whole
+   start on a refusal the machine caused, was rejected: it leaves the node
+   down with its recovery configuration on disk.
+6. **Every node says what it runs.** `<node>/configuration` is Fine saying
+   *active: serial M of save sha256:…*, or *activated: serial N of save …,
+   replacing serial M of save …*; Stressed saying *candidate refused: …;
+   the node runs its active configuration, serial M of save …*, or that
+   the candidate runs and could not be kept. A stopped node keeps it. Every
+   surface reads the snapshot, so none keeps words of its own. The
+   activation is audited as `configuration`, a refused candidate as its
+   failure. Point 3 of 2026-11-06 is built in part: a node says which save
+   it runs; the Monitor's comparison of peers needs a structured value and
+   is not built.
+7. **The deployer can tell.** `xmip-service --configuration <path>
+   --activation` says the node's standing in its words, from its
+   publication, and exits 0 only where the slice at `<path>` is the active
+   configuration. Microsoft DSC's `Xmip.Node/Slice` and Ansible's role
+   `xmip_node` ask it after the restart: the node is out of its desired
+   state until the shipped slice is active, and a run again restarts it.
+
+A node that holds `<stem>.accepted.xmip` has no pin and pins the first
+slice it is given; the environments deployed before this day are deployed
+again. Not built: the deployment seeding the pin itself (as 2026-11-07).

@@ -62,9 +62,9 @@ pub(crate) fn operator() -> String {
 /// on `receive` and a tcp Send Port to `far`. Its Location waits a tenth
 /// of a second per receive, which is what bounds the drain. It declares the
 /// storage role, so it keeps Xmip Storage itself; its data — its own
-/// Storage node, its keys, its orders, its accepted slice — is in the
-/// default data directory, the `data` beside its configuration folder
-/// ([`written`]).
+/// Storage node, its keys, its orders, its pin and its active
+/// configuration — is in the default data directory, the `data` beside its
+/// configuration folder ([`written`]).
 pub(crate) fn node(receive: &str, far: &str) -> String {
     let cluster = &test_cluster().name;
     let node = node_name();
@@ -215,11 +215,11 @@ impl Drop for Ending {
 }
 
 /// The node's configuration in `directory`'s configuration folder
-/// (`fixture::configuration_folder`), so its data, the accepted slice it
-/// keeps included, is `directory`'s own `data`; its local operate endpoint —
-/// which always starts — named for the directory, so tests running at once
-/// never meet on `xmip-<node>`. `[operate]` is its last table: a test adds
-/// a key to it by adding a line.
+/// (`fixture::configuration_folder`), so its data, the pin and the active
+/// configuration it keeps included, is `directory`'s own `data`; its local
+/// operate endpoint — which always starts — named for the directory, so
+/// tests running at once never meet on `xmip-<node>`. `[operate]` is its
+/// last table: a test adds a key to it by adding a line.
 pub(crate) fn written(directory: &Path, receive: &str) -> PathBuf {
     let path = xmip_runtime::fixture::configuration_folder(directory).join("node.xmip");
     let text = format!(

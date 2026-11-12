@@ -43,7 +43,9 @@ function Get-NodeMachineState {
         'Slice' {
             [string] $placed = Join-Path -Path $Instance.configuration -ChildPath 'node.xmip'
             $state.access = @(Get-NodeSliceAccess -Path $placed)
-            $state._exist = Test-NodeSlice -Instance $Instance
+            [hashtable] $activation = Get-NodeActivation -Instance $Instance
+            $state.activation = $activation.said
+            $state._exist = (Test-NodeSlice -Instance $Instance) -and $activation.active
         }
         'Opening' {
             # Before its package is installed the node has no program to ask:
@@ -164,8 +166,8 @@ function Get-NodeSlicePlace {
     Each file of the node's slice where the node reads it, beside what it
     was shipped as: node.xmip in the configuration folder, and the
     certificate of the authority that signed it in authority/authority.pem
-    there, which the node checks it by, the one its accepted slice pinned
-    (ADR-0031, amendments 2026-11-06 and 2026-11-07).
+    there, which the node checks it by, the one its pin holds (ADR-0031,
+    amendments 2026-11-06, 2026-11-07 and 2026-11-12).
     #>
     [CmdletBinding()]
     [OutputType([hashtable[]])]
@@ -213,15 +215,51 @@ function Test-NodeSlice {
     return $found -eq (@(Get-NodeSliceWanted -Account $Instance.account) -join ',')
 }
 
+function Get-NodeActivation {
+    <#
+    .SYNOPSIS
+    Whether the node runs the slice placed for it as its active
+    configuration, and the node's words for it, as xmip-service --activation
+    says (ADR-0031, amendment 2026-11-12): a correctly signed slice the node
+    cannot start is refused and the node runs the last one that ran, so a
+    service that started does not say the slice took. Before its package is
+    installed the node has no program to ask and has run nothing: nothing is
+    asked, and the package starts it by the slice.
+    #>
+    [CmdletBinding()]
+    [OutputType([hashtable])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [hashtable] $Instance
+    )
+
+    if (-not (Test-Path -LiteralPath $Instance.program -PathType Leaf)) {
+        return @{ active = $true; said = '' }
+    }
+
+    [string] $placed = Join-Path -Path $Instance.configuration -ChildPath 'node.xmip'
+    [string[]] $argument = @('--configuration', $placed, '--activation')
+
+    try {
+        [string[]] $said = @(Invoke-DscProgram -Program $Instance.program -Argument $argument)
+        return @{ active = $true; said = $said -join ' ' }
+    }
+    catch {
+        return @{ active = $false; said = $_.Exception.Message }
+    }
+}
+
 function Set-NodeSlice {
     <#
     .SYNOPSIS
     Put the shipped slice and its authority's certificate where the node
     reads them, make node.xmip writable by the node's account and the
     administrators alone, and restart its service where it is installed and
-    a file changed, so it runs by it: a changed slice takes effect when the
-    node starts again. Placed before the package, the slice is what
-    xmip-service --install reads.
+    a file changed, or where it does not run the slice it holds, so it runs
+    by it: a changed slice takes effect when the node starts again, and one
+    the node refused as it started is tried again (ADR-0031, amendment
+    2026-11-12). Placed before the package, the slice is what xmip-service
+    --install reads.
     #>
     [CmdletBinding(SupportsShouldProcess = $true)]
     param(
@@ -246,7 +284,11 @@ function Set-NodeSlice {
 
     Set-NodeSliceAccess -Path $files[0].path -Account $Instance.account -Confirm:$false
 
-    if (-not $changed -or -not (Test-NodeRegistered -Node $Instance.node)) {
+    if (-not (Test-NodeRegistered -Node $Instance.node)) {
+        return
+    }
+
+    if (-not $changed -and (Get-NodeActivation -Instance $Instance).active) {
         return
     }
 

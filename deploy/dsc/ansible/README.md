@@ -59,11 +59,15 @@ system account `xmip` on AlmaLinux; on Windows the virtual account
 the environment's authority kept on the controller in `xmip_authority`, with
 that authority's certificate in `config/authority/authority.pem`, replaced
 only where the text it signs differs and restarting the node when it
-changed — the node never slices and never holds the authority's key, so a
-`node.xmip` edited on it is refused there, and the first slice it accepts
-pins that authority, its name and its serial in its data folder, so a
-swapped certificate, an older slice or another node's is refused too
-(ADR-0031, amendments 2026-11-06 and 2026-11-07) —
+changed, or where the node does not run the slice it holds — the node
+never slices and never holds the authority's key, so a `node.xmip` edited
+on it is refused there, and the first slice it admits pins that authority,
+its name and the highest serial it has seen in its data folder, apart from
+its active configuration, the last slice that ran, so a swapped
+certificate, an older slice or another node's is refused too, and a
+correctly signed slice the node cannot start is refused as it starts while
+the active configuration runs, and is tried again at the next start
+(ADR-0031, amendments 2026-11-06, 2026-11-07 and 2026-11-12) —
 every Receive Location and
 Send Port the cluster's file designs placed over the inventory's
 `xmip_nodes`, round robin by their roles, and bound over SFTP on the
@@ -84,7 +88,10 @@ with the machine. The playbook's last play starts every node together
 `xmip_started_window`, 180 seconds, is spent: a node refuses to accept work
 until its cluster's Xmip Storage answers, and a Storage node until every
 Storage node the cluster lists does (ADR-0056, amendment 2026-11-08), so
-none of them starts alone, one machine after another. The role writes no
+none of them starts alone, one machine after another. Then each node is
+asked `xmip-service --activation`, and fails the run, in the node's words,
+until it runs the slice it was shipped: a service that started does not
+say its slice took (ADR-0031, amendment 2026-11-12). The role writes no
 starter of its own: a node given no cluster file gets the package's,
 written once in `xmip-service --install`.
 
