@@ -124,9 +124,9 @@ not.
 - CI tracks stable rather than a pinned toolchain, so a Rust release can break
   the build. That is the cost, and it is paid in small, immediate increments
   rather than in one large migration later.
-- A .NET preview dependency means a dated obligation: `prerequisite.toml`
-  records that .NET 11 is preview until 10 November 2026 and what to change on
-  that date.
+- A preview dependency means a dated obligation: `prerequisite.toml` records
+  the date it becomes stable and what to change on that date. .NET 11's was
+  met on 2026-11-12 (amendment 2026-11-12).
 - Where a deployment genuinely cannot move — an air-gapped site, a regulated
   estate on a frozen image — the answer is a purpose-compiled runtime pinned at
   build time per `deployment-model.md`, not a compatibility branch in the
@@ -280,6 +280,21 @@ either technology (ADR-0015, amendment 2026-11-11):
 
 The tarballs a machine is brought are named in the environment file with
 their SHA-256, each the release's own digest, and refused where they differ.
+
+## Amendment, 2026-11-12: .NET 11 is generally available
+
+.NET 11 left the preview channel on 2026-11-10, and SDK 11.0.100 was
+installed on this computer on 2026-11-12 (ADR-0014, amendment 2026-11-12).
+The rule above, applied that day:
+
+| | Xmip requires | Source |
+| --- | --- | --- |
+| .NET SDK | 11.0.100, stable channel, in every `global.json`, no prerelease taken; its release candidates are below it | the installed SDK; .NET 11.0.0 on nuget.org, 2026-11-10 |
+| .NET MAUI | 11.0.0, from the workload set 11.0.100.1 | `dotnet workload list` |
+| `Microsoft.PowerShell.SDK` | 7.7.0 | nuget.org, 2026-11-10 |
+
+`prerequisite.toml` says the stable channel and winget's
+`Microsoft.DotNet.SDK.11`, the change it recorded for that date.
 
 ## Alternatives considered
 

@@ -22,6 +22,8 @@
   flows with real documents, and nothing else
 - Amended: 2026-11-12 — a delivery across nodes no longer waits for the
   sending node's scan, measured before and after
+- Amended: 2026-11-12 — what a delivery's time is on the sending node, step
+  by step, read from the Essentials itself
 - Related: ADR-0018 (the Service and the Host Services), ADR-0027 (the operator
   boundary), ADR-0010 (contract and transport boundaries), ADR-0025 (when a
   Module loads), ADR-0052 (the views' "show test clusters" box, its
@@ -1324,3 +1326,79 @@ after; the runs, the like-for-like reading and what is left are the
 assistant's, the same day, corrected by that day's review: the first draft
 of this amendment set a three-round before beside a twelve-round after and
 quoted figures of several runs as one.
+
+## Amendment, 2026-11-12: what a delivery's time is on the sending node, step by step
+
+The amendment above left the 4 to 8 ms across nodes not taken apart in the
+Essentials. Each sending node now times every send step by step, each
+Storage call apart, and each Send Port's record says the median of each
+step over its latest sends, handed in memory and taken from its queue apart
+(ADR-0018, second amendment 2026-11-12, `send_step::Steps`): a roll
+publishes them with the node's other records in its snapshot, so the
+Essentials says what the gap is on every surface that shows a Send Port.
+Three things were built with it (open problem 46): the wait answers with
+what is due, so no read follows a wake; a Journey behind another of its
+sequence, and a turn its Instance did not take, wait on what holds them
+back; and a Message's place, Journey and Message are read under its claim
+as one request.
+
+Measured with `Start-XmipTest -Suite Core.Essentials -Cluster C1 -Stress
+Realistic -Rounds 12 -Hidden`, the audit to `.local-work/audit-agent`, each
+Receive Location's median read with `Get-XmipTestResult`, the steps from the
+snapshot. *Before* is the roll of 09:01 on the code of the amendment above;
+*wake* the roll of 09:45 with the wait answering with what is due and the
+waits on heads and Instances; *after* the roll of 10:31 with the read
+under the claim one request too, the final code. A roll at 10:02 between
+them, with a quarter to three quarters of the machine busy with other work
+by its own headroom, said 13.0 ms on one node and 15.6 to 22.5 ms across,
+and is left out of the comparison:
+
+| Receive Location | Node | Before | Wake | After |
+| --- | --- | --- | --- | --- |
+| Sales orders from Party-A, one node | L1 | 11.1 ms | 11.6 ms | 10.9 ms |
+| Inventory reports from Party-D | L1 | 18.0 ms | 18.2 ms | 19.8 ms |
+| Order to cash documents from ERP, partly one node | L1 | 22.9 ms | 16.5 ms | 16.3 ms |
+| Procure to pay documents from ERP | R1 | 19.5 ms | 19.0 ms | 17.3 ms |
+| Purchase order responses from Party-B | R1 | 16.0 ms | 19.4 ms | 17.9 ms |
+| Sales orders from Party-C | R1 | 17.2 ms | 16.8 ms | 14.8 ms |
+| Goods receipts from Party-C | R2 | 16.8 ms | 18.2 ms | 17.6 ms |
+| Remittance advices from Party-E | R2 | 17.2 ms | 17.6 ms | 15.7 ms |
+
+**Like for like.** Sales orders from Party-C on R1 and from Party-A on L1
+go to one Send Port, Sales orders to ERP, which L1 sends: across nodes
+6.1 ms behind one node before, 3.9 ms after. Across the other Locations the
+rolls differ from one another by as much as the change, documents and
+Ports differing, so they say no more than that.
+
+**What it is, on the sending node** (the roll of 10:31, the median of each
+step per Send Port over its latest sends; a Message taken from its queue
+is one another node published, one handed in memory the node's own):
+
+- **The claim: 3.4 to 5.8 ms** on every Port (16.7 ms on one of four
+  sends' Port, Payments to Party-E), against nothing on the path handed in
+  memory, its claim taken in its Publication. Its batch is synced after the
+  Publication's, in series, two Storage nodes copying on one machine: the
+  bulk of the gap, and the claim's sync off the path before the send is the
+  owner's to decide (open problem 46).
+- **Its place, Journey and Message: 0.28 to 0.40 ms**, one request; at
+  09:45, read one by one, 0.24 to 0.31, 0.16 to 0.23 and 0.37 to 0.42 ms,
+  0.77 to 0.96 ms together.
+- **The send, the same Port each way: 10.10 ms taken from its queue
+  against 9.46 ms handed in memory**, 0.64 ms apart: the Stream's chunks
+  read over the wire where the receiving node held them, and the work that
+  differs between documents. The send counts the far end's file made
+  durable after the far end can see it, so it is 9.1 to 13.4 ms on every
+  Port either way and no measure of the gap.
+- **The wake 0.02 to 0.05 ms, a send thread 0.03 to 0.05 ms**, its
+  sequences 0.18 to 0.28 ms, the same handed in memory (0.21 ms); what is
+  due 0.25 to 0.30 ms only where a scan rather than a wake found the
+  Message, none after a wake. The hand-on, 2.1 to 6.3 ms, comes after the
+  far end has it.
+
+The millisecond rule still fails across nodes, by the claim's sync above
+all; what is left is open problem 46's.
+
+Provenance: the task of 2026-11-12 to break the Essentials' gap down per
+step inside the Essentials and to cut any round trip needing no decision of
+the owner's; the runs, the reading and the steps' timing are the
+assistant's, the same day.

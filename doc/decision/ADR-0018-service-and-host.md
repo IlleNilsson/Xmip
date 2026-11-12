@@ -1659,3 +1659,124 @@ tell of a holder's own claims, the kept places, `storage_wait`, the watch
 threads, `work_scan` and the three corrections are the assistant's,
 2026-11-12, the second half after that day's review, for the owner to
 overrule.
+
+## Amendment, 2026-11-12: the wait answers with what is due, and waits on what holds a Journey back
+
+What open problem 46 named as left after the amendment above, built the
+same day through the one wait — no second mechanism beside the watch, the
+node-to-node sync plane (ADR-0067) not built — except the claim's sync on
+the path before the send, which changes what a claim answers and is the
+owner's to decide.
+
+- **The wait answers with what is due.** A wait says how many of what is
+  due in a queue its answer is to carry, and each queue that moved comes
+  back with the first of what is due in it, read by the Storage node as it
+  answers (`persist::storage::Moved`): the woken step reads its queue from
+  that page and asks for no page of its own first — a round trip of
+  0.14 ms over loopback after every wake until now. The embedded node
+  answers so in process, a Storage node in front over the wire, alike. The
+  page may be older than the claim taken on it, as any page may; every
+  claim reads its Message's place again under it.
+- **A wait names more than queues** (`persist::storage::Watched`): a
+  queue's tail, as before; a queue's head, counted by how many entries were
+  ever taken out of it (`queue::Places::taken`), which only a take-out
+  moves — a sequence's head moving on; a Work Process Instance, by the turns
+  it took; and a key of the Instance Key table, one where an Instance holds
+  it and none where none does. The one writer tells every waiter on what a
+  batch moved once it is readable, as it tells a queue's; it tells in the
+  order it writes, so the watch keeps what it was told last, never the
+  highest, a key going back to none where it is let go.
+- **What holds a Journey back is waited on** (`runtime::queue_watch::
+  QueueWatch`): a Message the send step passes over behind another Stream
+  of its sequence names each head it does not hold, as read
+  (`sequence::behind`), and its queue is read again the moment any node
+  lets the place ahead go; a turn its Instance does not take names that
+  Instance as it read it, and where no key named one, each key it
+  correlates by (ADR-0066, amendment of this date). Each is let go of once
+  it moved. A step's watch is renewed when it names one (`Waiter::renew`),
+  its wait under way ended at once — at its Storage node too, by its token
+  — and asked again naming it; a renewal before the watch asks again is
+  held by the wait it asks (`Waiter::asking`), so none ends a wait that
+  names what it was renewed for, and a rest after a wait answered with
+  nothing ends at a renewal. Until now a Journey another node let go on
+  waited for the next scan, a second by default.
+- **What a Message is acted on under its claim is one request**
+  (`XmipStorage::read_claimed`, `Claimed`; wire operation 39, answer 27):
+  its place in its queue, its Journey, the Message the Journey holds last
+  and the record of the Stream that Message's first Section is over, each
+  found by what Xmip Storage keeps of it in columns, never by reading a
+  body. Asked one by one until now, four round trips after the claim — in
+  the Essentials 0.77 to 0.96 ms together, one request 0.28 to 0.47 ms
+  (ADR-0028, amendment of this date). Where nothing answers it whole the
+  four reads are its default; a Message or Stream not among what it read
+  is read as before.
+- **Each send is timed step by step on the sending node**
+  (`send_step::Steps`): the wake reaching the read of its queue, what is
+  due where it was read, a send thread taking it up, the claim, its place,
+  Journey and Message, its sequences, its Publication made durable, the
+  send itself and the hand-on; and each Send Port's record says the median
+  of each over its latest hundred sends (`STEPS_KEPT`), handed in memory
+  and taken from its queue apart — on every surface, which shows a Port's
+  evidence. The send itself counts its far end's file made durable after
+  that far end can see it, so it is no part of a delivery's time alone.
+
+Decided by the assistant within the records, each in a line: the wait
+says how many of what is due it wants, a page as the steps read one (64),
+and a queue that moved by a write its node claimed whole carries its page
+too; a head is counted by take-outs, which the writer derives from places
+it already writes, so no record changes form; an Instance by its turns,
+read without its state; a key by whether an Instance holds it, waited on
+only where none did; the names a step adds are one-shot, let go of once
+they moved, unbounded beyond what its queues hold; the steps' window is
+a hundred sends each way, a constant beside `OWN_SHARE_FIVES`, since it
+bounds memory, not time; the read under a claim is a new operation with
+a default, so every implementation that does not answer it whole stays
+correct.
+
+Tested in persist (`storage::watch`: a wait answered with what is due in
+each queue that moved, none where none is asked; a queue's head moved by an
+entry taken out and never by one put in; an Instance moved by a turn over
+it and a key by its giving and its letting go, not by a turn that keeps it;
+a renewed waiter ending the wait under way at once, and every wait until
+its caller asks anew; `storage::claimed`: a Journey, its last Message and
+that Message's Stream read with its place, across a frame as they were;
+`storage::wire`: the wait with what it watches and its answer with what is
+due, and the read under a claim, across a frame; `storage::client`: a wait
+over the wire answered with what is due, and a renewed one ended where its
+Storage node holds it; `storage::server`: a wait answered with what is due)
+and in the runtime (`queue_watch`: each queue another node writes to asked
+with what is due in it, and a head named while waiting waited on at once,
+its queue asked as it moves and let go of; `tests/ledger/woken.rs`: a
+Message another node published sent with no read of what is due after the
+wake; `tests/ledger/woken_behind.rs`: a Message behind a Stream another
+node ends sent, and one bound for a Work Process turned, each before any
+second scan, both failing without the head waited on; and a turn its
+Instance does not take naming the Instance at the turn it read;
+`send_step::steps`: each way's median of each step, and the latest
+kept).
+
+**Measured**, each timing program alone on 2026-11-12 after the change:
+persist's wakes a wait in process, its answer carrying what is due —
+up to 64 entries in a queue that only grows — 282 µs after the Publication
+was asked, the median of two hundred (99th percentile 341 µs), and a wait
+on a head 185 µs after the claim and hand-on taking its first out were
+asked (252 µs); the root's tells a node waiting over the wire on the
+primary of two Storage nodes of a Publication 0.57 ms after it was asked,
+its answer carrying what is due, before the Publication's own answer at
+1.56 ms, and of a head moved by a hand-on before the hand-on's own answer
+(0.26 ms that morning, carrying nothing); the runtime's sends a Message another node
+published through one Storage node on `RocksDB` over the wire 3.07 ms after
+its carry began against 2.90 ms where the sending node published it
+itself, 0.17 ms apart (0.36 ms that morning), reading nothing of what is
+due after the wake, its claim 1.86 ms and its place, Journey and Message
+one request of 0.19 ms where the three reads were 0.13, 0.09 and 0.10 ms.
+The Essentials' rolls before and after, and each step on its sending
+nodes, are ADR-0028's amendment of this date; what is left is open problem
+46's.
+
+Provenance: open problem 46's proposals of 2026-11-12 — the wait answering
+with what is due, and a wait that answers where a sequence's head moves and
+for a turn that lost its Instance — and the owner's task of that day to
+break the Essentials' gap down per step and cut any round trip needing no
+decision of his; how each is built, the read under a claim and the steps'
+timing are the assistant's, the same day, for the owner to overrule.
