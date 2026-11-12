@@ -1,6 +1,6 @@
 # What Xmip has decided
 
-Seventy-two decisions, read as one document.
+Seventy-three decisions, read as one document.
 
 **Generated from the records by `New-XmipDecisionIndex`.** Every summary
 below is the `## In brief` section of the record it links to, so the two
@@ -1020,6 +1020,16 @@ decided, not built).**
 
 → [A Quest probes, and the regulation is a parameter, in full](ADR-0072-a-quest-probes-and-the-regulation-is-a-parameter.md)
 
+### Whether Xmip speaks languages other than American English, and what it would take
+
+**Xmip speaks American English on every surface, and nothing else is
+planned for now. Supporting other languages — Chinese, the European
+languages and the rest — is recorded as an opportunity, with what it would
+take, so it can be taken up when a customer asks for it. Nothing is decided
+or built.**
+
+→ [Languages beyond American English are an opportunity, in full](ADR-0073-languages-beyond-american-english-are-an-opportunity.md) — **still Proposed**
+
 ---
 
 ## 6. How the work is done
@@ -1083,6 +1093,7 @@ You have a word. This gives you the decision that governs it.
 | Actor | [The Communication Domain model](ADR-0007-communication-domain-model.md), [Entities as Actors](ADR-0008-xmip-entities-as-actors.md) |
 | Alignment, misalignment | [Identity, Parties and direction](ADR-0019-identity-parties-and-direction.md) |
 | alive | [A node has one address](ADR-0067-a-node-has-one-address.md) |
+| American English | [Languages beyond American English are an opportunity](ADR-0073-languages-beyond-american-english-are-an-opportunity.md) |
 | Anonymous, federated, highAssurance, sharedSecret | [Identity classes and runtime isolation](ADR-0022-identity-classes-and-runtime-isolation.md) |
 | archive target | [Packaging and distribution](ADR-0015-packaging.md) |
 | archiving | [Xmip retains and archives, it does not delete](ADR-0040-xmip-retains-and-archives-it-does-not-delete.md) |
@@ -1147,6 +1158,7 @@ You have a word. This gives you the decision that governs it.
 | Fine, Paused, Working, Stressed, Exhausted, Done | [Health is a mood and does not propagate](ADR-0041-health-is-a-mood-and-does-not-propagate.md) |
 | gap | [A Quest probes, and the regulation is a parameter](ADR-0072-a-quest-probes-and-the-regulation-is-a-parameter.md) |
 | GDPR | [A Quest probes, and the regulation is a parameter](ADR-0072-a-quest-probes-and-the-regulation-is-a-parameter.md) |
+| globalization | [Languages beyond American English are an opportunity](ADR-0073-languages-beyond-american-english-are-an-opportunity.md) |
 | Globalization, scope | [Locale-neutral internally](ADR-0038-locale-neutral-internally.md) |
 | Guard | [A resilience technology is a guard on the attempt](ADR-0048-a-resilience-technology-is-a-guard-on-the-attempt.md) |
 | Handler, a runtime role and not a name | [Contract and transport boundaries](ADR-0010-contract-transport-repository-boundaries.md), [Module and repository naming](ADR-0011-module-naming.md) |
@@ -1164,6 +1176,7 @@ You have a word. This gives you the decision that governs it.
 | invocation | [Logic is the method](ADR-0043-logic-is-the-method.md) |
 | Journey, Journey states | [The Journey model](ADR-0013-journey-model.md) |
 | Kerberos | [Identity, Parties and direction](ADR-0019-identity-parties-and-direction.md), [Identity classes and runtime isolation](ADR-0022-identity-classes-and-runtime-isolation.md) |
+| language | [Languages beyond American English are an opportunity](ADR-0073-languages-beyond-american-english-are-an-opportunity.md) |
 | language binding | [Events are subscribed from any language](ADR-0065-events-are-subscribed-from-any-language.md) |
 | Language runtime | [A Module may bring a versioned runtime](ADR-0039-a-module-may-bring-a-versioned-runtime.md) |
 | late failure | [Bad input is refused at the door](ADR-0055-bad-input-is-refused-at-the-door.md) |
@@ -1171,12 +1184,14 @@ You have a word. This gives you the decision that governs it.
 | License, AGPL, dual licensing, CLA | [AGPL-3.0-or-later](ADR-0023-licensing-model.md) |
 | listener | [A node has one address](ADR-0067-a-node-has-one-address.md) |
 | locale-neutral | [Locale-neutral internally](ADR-0038-locale-neutral-internally.md) |
+| localization | [Languages beyond American English are an opportunity](ADR-0073-languages-beyond-american-english-are-an-opportunity.md) |
 | Logic | [Logic is the method](ADR-0043-logic-is-the-method.md) |
 | Loop, cycle, runaway publication | [Bounding a publication chain](ADR-0026-bounding-a-publication-chain.md) |
 | Loopback | [A transport brings its own far end](ADR-0051-a-transport-brings-its-own-far-end.md) |
 | managed Module | [A Module may bring a versioned runtime](ADR-0039-a-module-may-bring-a-versioned-runtime.md) |
 | MariaDB | [An audit record holds what it audits](ADR-0070-an-audit-record-holds-what-it-audits.md) |
 | MCP, the Model Context Protocol | [Xmip is reached over MCP through the command line](ADR-0071-xmip-is-reached-over-mcp-through-the-command-line.md) |
+| message catalog | [Languages beyond American English are an opportunity](ADR-0073-languages-beyond-american-english-are-an-opportunity.md) |
 | message technology | [A message technology is the shape of content](ADR-0047-a-message-technology-is-the-shape-of-content.md) |
 | message type | [A message technology is the shape of content](ADR-0047-a-message-technology-is-the-shape-of-content.md) |
 | Mount, declared versus computed | [The Essentials is optional scaffolding](ADR-0036-essentials-is-optional-scaffolding.md) |
@@ -1291,6 +1306,7 @@ You have a word. This gives you the decision that governs it.
 | TLS session resumption | [Certificates on Receive and Send](ADR-0033-certificates-on-receive-and-send.md) |
 | Trait | [Every dependency is a trait, handed in](ADR-0068-every-dependency-is-a-trait-handed-in.md) |
 | trait table | [A vtable is a promise; only a loader is a saving](ADR-0057-a-vtable-is-a-promise-only-a-loader-is-a-saving.md) |
+| translation | [Languages beyond American English are an opportunity](ADR-0073-languages-beyond-american-english-are-an-opportunity.md) |
 | Transport, direction-neutral | [Contract and transport boundaries](ADR-0010-contract-transport-repository-boundaries.md) |
 | Transport, JSON | [Configuration is TOML; JSON is transport](ADR-0031-configuration-is-toml-json-is-transport.md) |
 | User principal name, UPN | [A principal name is read one way](ADR-0054-a-principal-name-is-read-one-way.md) |
@@ -1399,3 +1415,4 @@ is nowhere else.
 | [0070](ADR-0070-an-audit-record-holds-what-it-audits.md) | An audit record holds what it audits | |
 | [0071](ADR-0071-xmip-is-reached-over-mcp-through-the-command-line.md) | Xmip is reached over MCP through the command line | |
 | [0072](ADR-0072-a-quest-probes-and-the-regulation-is-a-parameter.md) | A Quest probes, and the regulation is a parameter | |
+| [0073](ADR-0073-languages-beyond-american-english-are-an-opportunity.md) | Languages beyond American English are an opportunity | **Proposed** |

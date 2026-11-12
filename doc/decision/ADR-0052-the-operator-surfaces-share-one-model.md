@@ -2270,3 +2270,20 @@ row needing attention says from and to).
 
 Provenance: the owner's words of 2026-11-10 and the judged design's piece
 7; built by the assistant on 2026-11-11 after the review found it missing.
+
+## Amendment, 2026-11-12: the bar, most wanted first
+
+The owner, 2026-11-12: *Monitor is the most desired view in my opinion, then
+comes Topology, then Dead Message Queue, then Configuration, Subscriptions,
+Event subscriptions, Audit and last secrets. Please argue with me.* The
+assistant argued for the Dead Message Queue before the Topology, as the one
+view where something waits on a person, the Subscriptions beside it, where
+a Message no Subscription took is usually fixed, and the Reports, which his
+list left out, between the Audit and the Secrets; the owner: *So lets go
+ahead.*
+
+`TopNav`, the one bar both hosts show, links the nine views in this order:
+Monitor, Dead Message Queue, Subscriptions, Topology, Configuration, Event
+subscriptions, Audit, Reports, Secrets. The desktop's own links follow
+them, as before. Every earlier amendment's order on the bar is replaced by
+this one; where a view sits is said here alone.
