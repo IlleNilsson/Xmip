@@ -1489,3 +1489,173 @@ Provenance: the judged design of 2026-11-11 found the false Work Process
 stage; the build is the assistant's, the same day, and its review the same
 day corrected it: the pickup's rule, the order-free counters, the
 Subscriptions beneath the stage, the Party's transport and the Send Ports.
+
+## Amendment, 2026-11-12: a node waits on its queues in Xmip Storage
+
+Open problem 46: a Journey published on one node and sent by another
+waited for the sending node's send scan, since Xmip Storage told no node of
+a write another made — about 630 ms across nodes against 7 ms on one node,
+the median, measured 2026-10-22, and half a second to three quarters on the
+demo's board of 2026-11-11 (ADR-0028, amendments of both dates). The queue
+of a Work Process waited on the same kind of scan (ADR-0066, amendment
+2026-10-22). Beyond a millisecond and apart from load, so a defect. Built
+as the record proposed: a wait on a queue asked of the Storage node,
+answered as soon as a write puts a Journey in that queue, which the scans
+wait on; the interval stays only as the bound on one wait. The node-to-node
+sync plane (ADR-0067) is not built for it.
+
+- **The wait is an operation of Xmip Storage**,
+  `XmipStorage::wait_queues` (wire operation 37, its answer 26): queues,
+  each with where its waiter last saw it stand — `Position`, the place the
+  queue's next entry takes, which only a write that puts an entry in it
+  moves — and a bound. It is answered with every queue that stands
+  elsewhere now: at once where one already does, so a Journey that lands
+  between a scan and the wait after it is never waited past; else the
+  moment a Publication, a hand-on, a turn or a Replay puts an entry in
+  one; and with none once the bound passes — empty, never an error.
+- **The one writer tells** (`persist::storage::watch`). The embedded
+  Storage node's writer reads, as it decides a batch, every queue whose
+  next place it moves, and once the batch is in the engine and readable
+  tells every waiter on each of them, each by a wake of its own: many
+  waiters on one queue are all woken, a waiter on another is not, and a
+  batch that takes an entry out moves no place and tells no one. A waiter
+  is listed before the store is read, so a write between the two is read
+  or told, never lost. Readable is soon enough: what a woken node finds it
+  sends only under a claim, and a claim is answered once its own batch is
+  durable, after the batches before it. The watch keeps where its writer
+  left each queue a node has waited on, so a wait reads the store only for
+  a queue none waited on before, never once per queue per wake.
+- **A node is not woken by what it claimed itself.** A waiter is a node's
+  (`Waiter::of`, the holder its claims name). A batch whose every Journey in
+  a queue that one holder claimed in the same write — a Publication into a
+  Send Port the publishing node sends, its claims taken in it — tells that
+  holder's waiter where the queue stands without waking it, and wakes every
+  other; what is told quietly is said with the waiter's next answer. Until
+  this was corrected the same day each such Publication woke the node's
+  own watch, and its send step read the queue over the wire only to find
+  its own claims.
+- **Every Storage arrangement the runtime has answers it.** An embedded
+  Storage node answers in process; one serving others answers over the
+  wire, each wait held as a `Waiter` of its own by a token its node chose,
+  at most the Storage node's `[tuning] storage_wait` (a minute by default,
+  `storage::HOLD`), after which it answers none and the node asks again;
+  Storage nodes in front of one database are told by its one writer
+  whichever node a write came through; a Storage node of several answers
+  it as its primary, a standby refusing it as it refuses every operation,
+  and the wait holds no loan of the primary's databases, so a primary's
+  stop waits for no waiter. **A Storage node that stops, or a primary that
+  steps down, refuses every wait it holds as a standby's**
+  (`PersistError::Standby`), so the node waiting asks the next Storage
+  node at once, and rests its bound only where every one refused; a node
+  that is itself the Storage node that stepped down asks the new primary
+  over the wire at once (`Delegated::wait_queues`). A node's client asks
+  round robin as every request and reads the answer for at most the bound
+  and its `storage_timeout`; **no node looks whether its waiter stopped**:
+  a waiter stopped ends its wait at the Storage node holding it, by its
+  token asked over another connection (wire operation 38), on a thread of
+  its own, and the answer the wait owes comes at once; a connection whose
+  read failed or timed out is never kept. Until the same day's correction
+  the client read the answer in looks of 50 ms, a receive timing out on
+  each and the connection kept after it — a timing assumption no `[tuning]`
+  set, and a connection Microsoft's documentation calls indeterminate once
+  a blocking receive has timed out (`SO_RCVTIMEO`).
+- **The steps wait on a thread of their own** (`runtime::queue_watch`):
+  the send step on every queue it sends, the Work Process step on every
+  queue of a Work Process it runs, each a wait at a time, each queue that
+  moved read at once — what is due in it, and, on the send step, not its
+  failed Messages, which no write that puts a Journey in it fails (an
+  operator's Retry on another node, which clears one, is read at the next
+  scan, as before). Their scans of every queue stay, at `[tuning]
+  send_scan` and `work_scan` (the latter new, a second by default,
+  ADR-0031): recovery, a claim lapsed on a node that died being a write no
+  one makes, and the bound on one wait. A step's close stops its waiter,
+  ending its wait at once.
+- **Never asked without pause.** A wait no Storage node answers rests its
+  bound before it is asked again; one answered with nothing before its
+  bound rests the rest of it — so a node whose scan is longer than its
+  Storage nodes' `storage_wait` is woken at once only within that much of
+  each scan, and at the scan for the rest; and a bound of nothing is no
+  watch at all, as `[tuning]`
+  refuses every duration of nothing in any case (`Tuning::read`).
+- **Three races a scan every second had hidden**, found once it no longer
+  came: a turn that waited for another of its Instance, the other written
+  and its queue read again while the first was still held, was read again
+  only at the next scan — a turn that waits is now read again where
+  another of the node's turns was written while it was held
+  (`WorkStep::disown`); a Storage node that was stopping answered every
+  wait at once and the node waiting asked again at once, so that node
+  never stopped — it now refuses the wait, and a refused wait rests; and
+  a read of a Send Port's queue begun as the wake asked it set how many
+  wait for a retry to its own count, so a hand-on that noted one during
+  the read was lost, or counted twice where the read had already found
+  it. Its first correction kept the count no lower than the hand-ons
+  noted since the read began, which said three where three were found and
+  a fourth was noted; now how many wait is what the latest begun of two
+  reads said — a read of the whole queue, and the read of the queue's
+  retries a hand-on that set a Message waiting makes once Xmip Storage
+  took it, past every Message due since it was held, which begins after
+  that hand-on and so counts it once (`send_step::due`,
+  `send_step::reading::waiting`).
+
+Tested in persist (`storage::watch`: a queue standing elsewhere than seen
+answered at once, a Message landing between a read and the wait not waited
+past, a queue waited on before read no more from the store, one
+Publication waking three waiters on its queue and none on another, one its
+holder claims whole waking every waiter but that holder's, a hand-on that
+queues a Message waking its queue and one that sends moving none, a wait
+ending at its bound with none, a stopped waiter ending at once and waiting
+no more, what ends a wait over the wire called once, a refused watch ending
+the wait under way; `storage::server`: an end that came before or after its
+wait ending it, a stop ending every wait held, a wait capped at the
+server's most, a stopping server's wait refused as a standby's;
+`storage::client`: a wait through one Storage node woken by a Publication
+through the other in front of one database and ended where it is held as
+its waiter stops, a wait a stopping Storage node refuses moving to the next
+at once, and refused where every one refuses; `storage::standby`: a wait on
+a primary that steps down, and on one that stops, refused at once;
+`storage::wire`: the request, its end and its answer cross a frame) and in
+the runtime (`queue_watch`: each queue another writes to asked at once,
+never one nothing moved, the watch ended at once by its stop, a wait
+Storage does not answer rested twice and asked again, and a bound of
+nothing asking nothing; `tests/ledger/woken.rs`: a Message published on a
+node that sends nothing sent by the node that sends its Send Port, and a
+client's Messages turned and their batch published where the Work Process
+runs, each published only once the taking node's first scan found nothing
+and taken up before any second scan, both failing without the watch, the
+wake reading no failed Messages; and a node's own Publications into a
+queue it sends reading nothing of it; `tests/ledger/send.rs`: a retry
+counted waiting as soon as its pass ends; `send_step::due`: a read that
+found two waiting and a third hand-on
+after it counting three, a read begun before that count saying nothing of
+it however late it ends, and how many wait being every retry held but
+those due and the failed; `tuning`: a scan of nothing and a
+`storage_wait` of nothing refused; `storage`: a node's Storage node holding
+no wait longer than its `storage_wait`).
+
+**Measured**, the timing run of 08:11 on 2026-11-12, each program alone:
+persist's (`tests/measured`) wakes a wait in process 86 µs after the
+Publication into its queue was asked, the median of two hundred, the 99th
+percentile 191 µs; the root's (`.src/test/measured/woken.rs`) tells a node
+waiting over the wire on the primary of two Storage nodes 0.26 ms after the
+Publication was asked, before the writing node has its answer, which comes
+1.49 ms after it was asked with its sync, and 1.70 ms after a claim and a
+hand-on were asked, answered in 2.93 ms; and the runtime's
+(`tests/measured/woken.rs`, new) sends a Message another node published
+through one Storage node on `RocksDB` over the wire 3.21 ms after its carry
+began, against 2.85 ms where the sending node published it itself, the two
+carried in turn, 0.36 ms apart and held under a millisecond, the sending
+node's Storage calls for it timed one by one — what is due 0.14 ms, the
+claim with its sync 1.93 ms, the Message's place 0.12 ms, its Journey
+0.09 ms and its Message 0.09 ms — most of them overlapping the publishing
+node's sync. The Essentials'
+delivery medians across nodes, still 4 to 8 ms beyond one node's, are
+ADR-0028's amendment of this date, and what is left of open problem 46 is
+that problem's.
+
+Provenance: the proposal is open problem 46's, scheduled ahead of the demo;
+the operation, its position, the writer's telling at readable, the waiters
+a server holds by token and ends, the refusal as a standby's, the quiet
+tell of a holder's own claims, the kept places, `storage_wait`, the watch
+threads, `work_scan` and the three corrections are the assistant's,
+2026-11-12, the second half after that day's review, for the owner to
+overrule.

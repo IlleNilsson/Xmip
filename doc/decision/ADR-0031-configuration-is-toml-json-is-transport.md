@@ -264,7 +264,9 @@ When deployed the sections regarding a node will be sliced to that node.*
   thread and its idle time, the Send pool's likewise and a send's claim
   lease and scan (`send_threads_per_hardware_thread`, `send_idle`,
   `send_lease`, `send_scan`, built 2026-10-03 with the send step,
-  `runtime-model.md` section 10), a polled Receive Location's rest after a
+  `runtime-model.md` section 10), the Work Process step's scan of its
+  queues (`work_scan`, built 2026-11-12; ADR-0066, amendment 2026-11-12;
+  until then a constant), a polled Receive Location's rest after a
   receive that found nothing and after a failure that may mend
   (`receive_poll`, `receive_backoff`, built 2026-10-12, `runtime-model.md`
   section 5), the recovery sweep of a Location whose far end tells it of a
@@ -282,7 +284,9 @@ When deployed the sections regarding a node will be sliced to that node.*
   `receive_chunks_per_thread`, `send_chunks_per_thread`, built 2026-10-19,
   `runtime-model.md` section 3; ADR-0018, amendment 2026-10-19),
   the Storage client's timeouts and
-  pass-over — under `[tuning]` for the cluster and `[nodes.<name>.tuning]`
+  pass-over, and the longest a Storage node holds one node's wait on its
+  queues (`storage_wait`, built 2026-11-12; ADR-0018, amendment
+  2026-11-12) — under `[tuning]` for the cluster and `[nodes.<name>.tuning]`
   for a node (the key names are the assistant's drafting). The built-in
   values are the defaults where neither says; a new assumption of this kind
   gets its key in the change that brings it.

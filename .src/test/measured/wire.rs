@@ -24,15 +24,15 @@ use super::authority::{authority, issue};
 use super::node::{directory, journey, keys, percentiles, test_node, timed};
 
 /// Each connect and each read a node makes of a Storage node.
-const TIMEOUT: Duration = Duration::from_secs(10);
+pub(super) const TIMEOUT: Duration = Duration::from_secs(10);
 
 /// How many of each call are timed.
 const CALLS: u64 = 500;
 
 /// One Storage node of `listed`, at `listener`, on `RocksDB` and `SQLite`
 /// in memory in `place`, served; it settles once started, every one listed
-/// answering.
-fn storage_node(
+/// answering (`woken.rs` too).
+pub(super) fn storage_node(
     place: &Path,
     (listener, listed): (TcpListener, &[String]),
     identity: &xmip_tls::Identity,
@@ -65,6 +65,33 @@ fn storage_node(
     (node, server)
 }
 
+/// Two Storage nodes in `test`, each served, settled with the first the
+/// primary and the other its standby, and their addresses: what a node
+/// lists in `[storage] nodes`.
+pub(super) fn primary_and_standby(
+    test: &Path,
+) -> (Vec<(Arc<StorageNode>, StorageServer)>, Vec<String>) {
+    let listeners: Vec<TcpListener> = (0..2)
+        .map(|_| TcpListener::bind("127.0.0.1:0").expect("bound"))
+        .collect();
+    let listed: Vec<String> = listeners
+        .iter()
+        .map(|listener| listener.local_addr().expect("an address").to_string())
+        .collect();
+    let mut nodes = Vec::new();
+    for (place, listener) in listeners.into_iter().enumerate() {
+        let at = test.join(format!("storage-{place}"));
+        nodes.push(storage_node(&at, (listener, &listed), &issue(test)));
+    }
+    // Both served before either starts: a Storage node is promoted only
+    // where every one listed answers (ADR-0056, amendment 2026-11-08).
+    for (node, _) in &nodes {
+        node.start(Duration::from_secs(10)).expect("settled");
+    }
+    assert!(nodes[0].0.is_primary(), "{}", nodes[0].0.said());
+    (nodes, listed)
+}
+
 /// How long each of `CALLS` reads of what [`timed`] wrote takes, sorted.
 fn reads(node: &dyn XmipStorage) -> Vec<Duration> {
     let mut taken: Vec<Duration> = (0..CALLS)
@@ -90,24 +117,7 @@ fn a_storage_call_over_the_wire_costs_less_than_a_millisecond_beyond_its_load() 
     let (local_write, _) = percentiles(&timed(&local, CALLS, &body));
     let (local_read, _) = percentiles(&reads(&local));
 
-    let listeners: Vec<TcpListener> = (0..2)
-        .map(|_| TcpListener::bind("127.0.0.1:0").expect("bound"))
-        .collect();
-    let listed: Vec<String> = listeners
-        .iter()
-        .map(|listener| listener.local_addr().expect("an address").to_string())
-        .collect();
-    let mut nodes = Vec::new();
-    for (place, listener) in listeners.into_iter().enumerate() {
-        let at = test.join(format!("storage-{place}"));
-        nodes.push(storage_node(&at, (listener, &listed), &issue(&test)));
-    }
-    // Both served before either starts: a Storage node is promoted only
-    // where every one listed answers (ADR-0056, amendment 2026-11-08).
-    for (node, _) in &nodes {
-        node.start(Duration::from_secs(10)).expect("settled");
-    }
-    assert!(nodes[0].0.is_primary(), "{}", nodes[0].0.said());
+    let (nodes, listed) = primary_and_standby(&test);
     let client = StorageClient::new(&listed, &issue(&test), TIMEOUT, PASS_OVER).expect("a client");
     let (wire_write, slowest_write) = percentiles(&timed(&client, CALLS, &body));
     let (wire_read, slowest_read) = percentiles(&reads(&client));

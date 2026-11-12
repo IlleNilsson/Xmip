@@ -20,6 +20,8 @@
   reads, and keeps every table of their snapshots
 - Amended: 2026-11-11 — a run that reads every node carries the configured
   flows with real documents, and nothing else
+- Amended: 2026-11-12 — a delivery across nodes no longer waits for the
+  sending node's scan, measured before and after
 - Related: ADR-0018 (the Service and the Host Services), ADR-0027 (the operator
   boundary), ADR-0010 (contract and transport boundaries), ADR-0025 (when a
   Module loads), ADR-0052 (the views' "show test clusters" box, its
@@ -1256,3 +1258,69 @@ Provenance: the owner's words of 2026-11-10; the build plan of 2026-11-11,
 with its skeptics' findings; the documents, their ids and the ERP's
 Locations and Ports are the assistant's drafting, for the owner to
 overrule.
+
+## Amendment, 2026-11-12: a delivery across nodes no longer waits for the sending node's scan
+
+Superseding the bullet **What a delivery's time says** of the second
+amendment of 2026-11-11: the sending node now waits on its Send Ports'
+queues in Xmip Storage and reads one the moment another node's Publication
+puts a Journey in it (open problem 46; ADR-0018, amendment 2026-11-12).
+Measured with `Start-XmipTest -Suite Core.Essentials -Cluster C1 -Stress
+Realistic -Rounds 3 -Hidden`, and the same with `-Rounds 12`, the audit to
+`.local-work/audit-agent`, each Receive Location's delivery verdict read
+with `Get-XmipTestResult`, the median from drop to arrival, every node a
+process of `xmip-service`. Only L1 both receives and sends; its Sales orders
+from Party-A go out through a Send Port it sends itself, every other
+delivery but part of its Order to cash documents crosses to S1, S2 or L1.
+*Before* is the three-round run of 2026-11-12 made before the watch was
+built; *after* are the two runs of the code this amendment and ADR-0018's
+of this date describe, the roll of 07:19 (three rounds) and the roll of
+07:22 (twelve). No twelve-round run was made before the watch, so the
+twelve-round column has nothing beside it to compare with:
+
+| Receive Location | Node | Before, three rounds | After, three rounds | After, twelve rounds |
+| --- | --- | --- | --- | --- |
+| Sales orders from Party-A, one node | L1 | 15.6 ms | 20.6 ms | 10.9 ms |
+| Inventory reports from Party-D | L1 | 755 ms | 40.0 ms | 17.7 ms |
+| Order to cash documents from ERP, partly one node | L1 | 755 ms | 39.6 ms | 15.0 ms |
+| Procure to pay documents from ERP | R1 | 748 ms | 34.2 ms | 18.2 ms |
+| Purchase order responses from Party-B | R1 | 777 ms | 35.8 ms | 16.5 ms |
+| Sales orders from Party-C | R1 | 32.9 ms | 33.8 ms | 17.1 ms |
+| Goods receipts from Party-C | R2 | 26.4 ms | 36.7 ms | 18.7 ms |
+| Remittance advices from Party-E | R2 | 748 ms | 27.2 ms | 17.2 ms |
+
+Before, a delivery to a Send Port L1 sends was fast only where L1's own
+send of the same round read the queue again behind it; after, none waits
+for a scan. Like for like, three rounds before and after: across nodes 748
+to 777 ms where the scan was waited for, 27.2 to 40.0 ms after, against
+15.6 ms and 20.6 ms on one node; the roll of 07:19 had a fifth of the
+machine busy with other work, by its own headroom. Three rounds give each
+Location two or three deliveries, the first of them opening the sending
+node's connections, so the twelve rounds are the steady state: across
+nodes 15.0 to 18.7 ms against 10.9 ms on one node, **4 to 8 ms apart — the
+millisecond rule still fails here, and open problem 46 stays open.**
+
+**What is taken apart, and what is not.** Over the wire on its own, the
+watch path meets the rule: the runtime's timing program (`woken.rs`; the
+timing run of 08:11, ADR-0018, amendment 2026-11-12) sends a Message
+another node published through one Storage node on `RocksDB` 3.21 ms after
+its carry began, against 2.85 ms where the sending node published it, the
+two carried in turn, 0.36 ms apart. The sending node's Storage calls for it
+— what is due in its queue 0.14 ms, the claim with its sync 1.93 ms, the
+Message's place 0.12 ms, its Journey 0.09 ms and its Message 0.09 ms —
+mostly overlap the publishing node's sync, since the wait is answered once
+the Publication is readable, before it is durable: 0.26 ms after the
+Publication was asked, which was answered in 1.49 ms (the root's timing
+program, `woken.rs`). What the 4 to
+8 ms of the Essentials are is not taken apart: the deliveries compared are
+different documents through different Ports, Locations and transforms on
+nine processes sharing one machine and two Storage nodes, so they are not
+like for like either; the claim's sync, in series after the publishing
+node's where one node needs neither, is the likeliest share under that
+load and is not measured there.
+
+Provenance: the task of 2026-11-12 measuring open problem 46 before and
+after; the runs, the like-for-like reading and what is left are the
+assistant's, the same day, corrected by that day's review: the first draft
+of this amendment set a three-round before beside a twelve-round after and
+quoted figures of several runs as one.
