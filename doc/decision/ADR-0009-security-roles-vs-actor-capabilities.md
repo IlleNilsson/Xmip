@@ -791,3 +791,25 @@ again, a handshake dribbled a byte each 20 ms is cut at its deadline),
 
 Provenance: the review's findings; the keys, the defaults and closing by
 default are the assistant's, for the owner to overrule.
+
+## Amendment, 2026-11-12: one browser is one user across its connections
+
+ASP.NET Core 11.0.0, which the estate took on 2026-11-12 (ADR-0014, amendment
+of that date), refuses a request of a long-lived connection — a Blazor
+circuit's — whose authenticated user differs from the user that opened it:
+by the `NameIdentifier` claim where the user has one, and by every claim
+where none does. Each connection holds a handle of its own for one caller
+(amendment 2026-11-01), so the circuit's second request carried a user whose
+handle differed, was refused with *the name of the user changed*, and the
+Operation Web's pages rendered once and never updated.
+
+`ProvenCaller.Prove` gives a proven caller's user a `NameIdentifier` claim:
+the name the runtime's gate proved, by which a directory already grants the
+role. The gate still takes the handle, never this claim, and a circuit acts
+as the caller of the request that opened it, as before; a browser nothing
+proved carries no claim. Tested in `ProvenUserTest`: one certificate's
+requests over two connections hold two handles and one `NameIdentifier`,
+another certificate's differs, no certificate carries none.
+
+Provenance: the assistant's, 2026-11-12, found when the owner saw the
+Operation Web over the Essentials stand still.

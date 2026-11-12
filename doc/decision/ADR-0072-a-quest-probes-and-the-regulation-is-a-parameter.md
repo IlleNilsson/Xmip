@@ -204,13 +204,15 @@ and quicker*; and, the list below put to him, *Agreed, go ahead.*
    line, PowerShell and the GUI, in that order (ADR-0014).
 2. **Its kind follows from what an entry holds.** A `Report` holds `Data`:
    `Data::Existing`, data that already exists, makes it `Kind::ExistingData`,
-   shown as *Quick*, *Presents data that already exists*; `Data::Quest`, what
-   a Quest probes first, makes it `Kind::Quest`, shown as *Takes longer*,
+   named *Report*, *Presents data that already exists*; `Data::Quest`, what
+   a Quest probes first, makes it `Kind::Quest`, named *Probing report*,
    *Presents what a Quest probes first*. No entry declares a kind of its own
    and nothing reads one from a name. The kinds are Xmip's own fixed
-   answer, a closed enum, numbered as `XmipReportKind`. Each surface shows a
-   plain icon beside the words, never the icon alone: a bolt for quick, an
-   hourglass for takes longer.
+   answer, a closed enum, numbered as `XmipReportKind`. A surface that draws
+   shows each entry's kind as a plain icon alone, its name the icon's
+   accessible name and hover text, and its legend the icon beside the name:
+   a page for a Report, the page under a magnifying glass for a Probing
+   report. A text surface shows the name (amendment 2026-11-12).
 3. **Not yet available.** An entry not built yet holds `Data::Existing(None)`
    or `Data::Quest(None)`. It is listed, says *not yet available*, and has
    nothing to open.
@@ -246,16 +248,16 @@ and quicker*; and, the list below put to him, *Agreed, go ahead.*
 
 | Report | Kind | Available today |
 | --- | --- | --- |
-| Audit | Quick | Yes: `xmip_audit_read_v1` |
-| Dead Messages | Quick | Yes: `xmip_dead_messages_v1` |
-| Locations | Quick | Yes: `xmip_publication_read_v1`, the scope tree |
-| Subscriptions | Quick | Yes: `xmip_subscriptions_v1` |
-| Parties | Quick | Not yet: no reader presents them; the Topology draws them |
-| Expiring certificates and secrets | Quick | Not yet |
-| Regulation | Takes longer | Yes: this record's Quest |
-| Firewall | Takes longer | Not yet |
-| Identity and isolation | Takes longer | Not yet: ADR-0022 clause 5's Report |
-| Security, Sanity, Performance, Redundancy, Fail Over, Size, Compile Time | Takes longer | Not yet: named 2026-11-05, not designed |
+| Audit | Report | Yes: `xmip_audit_read_v1` |
+| Dead Messages | Report | Yes: `xmip_dead_messages_v1` |
+| Locations | Report | Yes: `xmip_publication_read_v1`, the scope tree |
+| Subscriptions | Report | Yes: `xmip_subscriptions_v1` |
+| Parties | Report | Not yet: no reader presents them; the Topology draws them |
+| Expiring certificates and secrets | Report | Not yet |
+| Regulation | Probing report | Yes: this record's Quest |
+| Firewall | Probing report | Not yet |
+| Identity and isolation | Probing report | Not yet: ADR-0022 clause 5's Report |
+| Security, Sanity, Performance, Redundancy, Fail Over, Size, Compile Time | Probing report | Not yet: named 2026-11-05, not designed |
 
 The Identity and isolation Report is ADR-0022 clause 5's, which names it
 mandatory: every identity context, its class and where it runs, and every
@@ -303,7 +305,7 @@ Configuration split into Locations, Subscriptions and Parties, each with
 its own reader; the parameter and the row named by the Quest, so a surface
 takes `-Parameter` and `-Row` and no `-Regulation`; probing a read every
 role may make; a node's build only; what a probe reads; the composer in
-the runtime, over `storage::keeping`. The words *Quick*, *Takes longer*,
+the runtime, over `storage::keeping`. The words
 *not yet available*, *not probed yet*, *last probe could not be read*, each
 entry's covers sentence, the icons and `quest.probe` are the assistant's
 too. `AtRest::Server` keeps its `&'static str`: the word reaches it through
@@ -448,3 +450,26 @@ only working integrations; a gap is a gap, reported. The assistant's, for
 the owner to change: the name *Dependency Quest*, from his words; the three
 levels, after the Regulation Quest's, and what each shows; and the draft
 of what counts as a gap.
+
+## Amendment, 2026-11-12: a Report icon and a Probing report icon
+
+The owner, 2026-11-12, looking at the Reports view: *The reports states
+Quick or Takes longer, not what I asked for. Report icon and a Probing
+report icon, not the text*; and *a flash and time glass is not really good
+icons*. Clause 2 of the amendment of 2026-11-10 is rewritten to what stands:
+
+- **The kinds' names are *Report* and *Probing report***, the runtime's
+  (`Kind::name` in `xmip-core-report`, through `xmip_report_v1`), so every
+  surface says the owner's words: the command line and PowerShell show the
+  name, as a text surface has no icon.
+- **A drawing surface shows the icon alone** in each entry, its name the
+  icon's accessible name and, with its meaning, the hover text; the legend
+  alone shows the icon beside the name and meaning, since a legend is where
+  an icon is read (`ReportKindLabel`, Web and Desktop alike).
+- **A page for a Report; the page under a magnifying glass for a Probing
+  report**, in place of the bolt and the hourglass: plain inline icons in
+  the text's own color, as before.
+
+Who decided what. The owner's: the two names, and icons in place of the
+text. The assistant's, for the owner to change: the two glyphs, and the
+legend keeping the names beside its icons.
