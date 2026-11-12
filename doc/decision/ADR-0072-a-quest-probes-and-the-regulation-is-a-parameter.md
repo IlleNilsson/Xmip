@@ -250,17 +250,21 @@ and quicker*; and, the list below put to him, *Agreed, go ahead.*
 | --- | --- | --- |
 | Audit | Report | Yes: `xmip_audit_read_v1` |
 | Dead Messages | Report | Yes: `xmip_dead_messages_v1` |
-| Locations | Report | Yes: `xmip_publication_read_v1`, the scope tree |
-| Subscriptions | Report | Yes: `xmip_subscriptions_v1` |
-| Parties | Report | Not yet: no reader presents them; the Topology draws them |
+| Throughput and latency | Report | Not yet: the nodes measure it |
+| Capacity | Report | Not yet |
 | Expiring certificates and secrets | Report | Not yet |
+| Parties | Report | Not yet: no reader presents them; the Topology draws them |
 | Regulation | Probing report | Yes: this record's Quest |
 | Firewall | Probing report | Not yet |
-| Identity and isolation | Probing report | Not yet: ADR-0022 clause 5's Report |
-| Security, Sanity, Performance, Redundancy, Fail Over, Size, Compile Time | Probing report | Not yet: named 2026-11-05, not designed |
+| Security | Probing report | Not yet: takes in ADR-0022 clause 5's identity and isolation |
+| Resilience | Probing report | Not yet |
+| Dependency | Probing report | Not yet: decided, amendment 2026-11-11 |
 
-The Identity and isolation Report is ADR-0022 clause 5's, which names it
-mandatory: every identity context, its class and where it runs, and every
+The list as it stands since the amendment of 2026-11-12, below.
+
+The Security Report takes in ADR-0022 clause 5's Report, which that
+record names mandatory (amendment 2026-11-12 below; until then the Identity
+and isolation Report): every identity context, its class and where it runs, and every
 isolation rule evaluated on it with its result. It was *Identity and
 Isolation Compliance*; the word that judges is dropped, as clause 8 above
 keeps every verdict out of a Report (ADR-0022, amendment 2026-11-10). Its
@@ -473,3 +477,37 @@ icons*. Clause 2 of the amendment of 2026-11-10 is rewritten to what stands:
 Who decided what. The owner's: the two names, and icons in place of the
 text. The assistant's, for the owner to change: the two glyphs, and the
 legend keeping the names beside its icons.
+
+## Amendment, 2026-11-12: the list cut to what is needed
+
+The owner, 2026-11-12, of the Reports view: *The reports view looks nice,
+lets reflect over what is actually needed. Compile Time we can drop. What
+else?*; to the list put to him, *Go ahead.* A Report answers what an
+operator or an auditor asks, never a second copy of a view. Eleven, where
+there were sixteen and the Dependency Quest decided beside them:
+
+- **Reports of data that already exists:** Audit; Dead Messages;
+  *Throughput and latency*, each integration's deliveries and the time from
+  a document's drop to its arrival, and each send's steps, as the nodes
+  measured them — what *Performance* was named for, a Report since the data
+  exists; *Capacity*, each Storage node's size, each queue's depth and how
+  fast each grows — what *Size* was named for; Expiring certificates and
+  secrets; Parties.
+- **Reports a Quest probes for:** Regulation; Firewall; *Security*, which
+  takes in ADR-0022 clause 5's identity and isolation and stays mandatory
+  with the Firewall Report (ADR-0022, amendment 2026-11-12); *Resilience*,
+  every single point of failure, each standby's lag behind its primary and
+  what a failover would lose — what *Redundancy* and *Fail Over* were named
+  for; *Dependency*, the Quest of the amendment of 2026-11-11, which takes in
+  what *Sanity* was named for.
+- **Out of the list:** *Locations* and *Subscriptions*, their own views
+  already; *Compile Time*, the owner's.
+
+The Reports, their order and their kinds are `Reports::standard()` in
+`xmip-core-report`, which every surface lists; none of the new or renamed
+ones is built yet, and each is listed and says *not yet available*.
+
+Who decided what. The owner's: *Compile Time* dropped, and the list as put
+to him. The assistant's, for the owner to change: the names *Throughput and
+latency*, *Capacity* and *Resilience*, each one's covers sentence, and the
+order.

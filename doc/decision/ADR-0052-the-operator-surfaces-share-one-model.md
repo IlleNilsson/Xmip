@@ -2306,17 +2306,18 @@ operator view is Monitor, unless sorted other.*
   and *Reset* goes back to the default. Arranging is a view of one's own and
   no act on Xmip, so every role may, and nothing is audited. The desktop's
   own links follow the nine, as before.
-- **Kept where the host keeps a person's view** (`IBarOrderStore`). The Web
-  host keeps it in the browser's cookie `xmip-bar`, read as a page is asked
-  for and handed to the circuit, so the bar is drawn in it from the first
-  paint; a circuit cannot write a cookie, so keeping an order asks the
-  host's `/bar` address, which writes the cookie — deleting it where the
-  order is the default — and sends the browser back to a path on itself
-  only (`BarOrder.Asked`). The cookie is `HttpOnly` and `SameSite=Strict`.
-  The Desktop keeps it in `preferences.toml` in the app's data folder, its
-  `[bar]` table's `order`, edited in place so whatever else the file holds
-  stays (`BarOrderFile`). Both hold the same text: the views' words,
-  separated by commas.
+- **Kept where the host keeps a person's view** (`IPreferenceStore`, the
+  theme's store too, amendment below). The Web host keeps it in the
+  browser's cookie `xmip-bar`, read as a page is asked for and handed to the
+  circuit, so the bar is drawn in it from the first paint; a circuit cannot
+  write a cookie, so keeping an order asks the host's `/preferences`
+  address, which writes the cookie — deleting it where the order is the
+  default — and sends the browser back to a path on itself only
+  (`PreferenceCookie.Back`). The cookie is `HttpOnly` and
+  `SameSite=Strict`. The Desktop keeps it in `preferences.toml` in the app's
+  data folder, its `[bar]` table's `order`, edited in place so whatever else
+  the file holds stays (`PreferenceFile`). Both hold the same text: the
+  views' words, separated by commas.
 - **The bare address opens the first view.** The Monitor has its own
   address, `/monitor`, and every link to it is built there (`ScopeLink`);
   `/` opens the first view on the operator's bar, the Monitor unless they
@@ -2330,3 +2331,36 @@ Who decided what. The owner's: arranging, the cookie, the Desktop's TOML
 file and the first view as the start. The assistant's, for the owner to
 change: dragging with Arrange and Reset beside it, the cookie's and the
 file's names, and every role arranging.
+
+## Amendment, 2026-11-12: the theme is the operator's choice
+
+The owner, 2026-11-12: *Themes are missing, I like Dark Mode. Make it a
+choice.*
+
+- **Three choices: the system's, light and dark.** The system's follows the
+  operating system and is where every operator starts; *Theme* on the bar,
+  beside *Arrange*, turns it to light, to dark and round again, and says
+  which is in force. `ThemeChoice` in `Xmip.Gui` is the one rule: its word,
+  what a word kept is read as — one the rule does not know is the
+  system's — and what the button turns it to next. A view of one's own, no
+  act on Xmip, so every role may.
+- **Kept where the bar's order is** (`IPreferenceStore`): the browser's
+  cookie `xmip-theme`, handed to the circuit with the bar's, written at the
+  host's `/preferences` address and deleted where the choice is the
+  system's; the Desktop's `preferences.toml`, its `[theme]` table's
+  `choice`. The two stores, for the bar and the theme, are one per host.
+- **Painted by the stylesheet alone.** Every host draws inside one frame
+  (`Themed`), whose `data-theme` sets the color scheme; every color token in
+  `xmip.css` holds a light value and a dark one (`light-dark()`), so no rule
+  is written twice. The page's text and paper follow the theme (`--text`,
+  `--paper`, `--ground`); the bar stays ink in both, with lime as the
+  chosen view, and text on lime stays ink; each mood takes a lighter cut on
+  dark paper, so a word in it stays legible. The frame fills the window.
+
+Tested in `BarOrderTest` (the rule, the cookie's value, the file's
+`[theme]` beside what else it holds) and `TopNavTest` (the button turns the
+frame's theme at once and the file keeps it).
+
+Who decided what. The owner's: themes as a choice, dark among them. The
+assistant's, for the owner to change: the system's as the start, the
+button's order, the cookie's and the table's names.
