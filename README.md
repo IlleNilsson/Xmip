@@ -221,8 +221,10 @@ register the service yourself, or run the node in a terminal.
 Builds are Windows-only for now: the zip is built and run; the MSI is
 written and not yet built, because WiX Toolset 7, which builds it, needs
 its Open Source Maintenance Fee EULA accepted on the building machine first,
-and that decision is the owner's; the Linux and macOS packages are written
-and have not been built. A one-machine node needs the `storage` role in its
+and that decision is the owner's; the Linux `.rpm` is built on Linux and
+installed on AlmaLinux by both environment templates (ADR-0015, amendment
+2026-11-11); the `.deb` and the macOS `.pkg` are written and not yet built.
+A one-machine node needs the `storage` role in its
 site to start on its own, as the example site `personal-computer` has; the
 starter configuration `--install` writes declares it for its one node.
 
@@ -406,7 +408,9 @@ service. Xmip is developed in Sweden and is source-available, which is
 relevant where data sovereignty is regulated. Its AS4 and Peppol transports
 are protocol software for the operator of a certified access point, which is
 what European e-invoicing runs on; certification itself belongs to the
-operator, and no node runs a transport yet (market-position.md, section 8).
+operator, and neither is linked into the node yet: the assembled service
+runs six transports — file, FTP, HTTP, SFTP, TCP and UDP — of the 88
+declared (market-position.md, section 8).
 
 ### Licensing
 
