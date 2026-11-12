@@ -1463,7 +1463,7 @@ Three things are left:
   unmeasured. Proposed: a kill test that says how many writes a killed
   primary had not handed on, under load.
 
-## 46. A delivery across nodes waits for its claim's sync, 3.4 to 5.8 ms in the Essentials
+## 46. A delivery across nodes is 1.2 ms behind one node's in the Essentials
 
 One defect by the millisecond rule, open. What is built (2026-11-12;
 ADR-0018, ADR-0066, ADR-0027, ADR-0028 and ADR-0067, amendments of that
@@ -1480,7 +1480,13 @@ and Message are read under its claim as one request
 by step, each Send Port's record saying the median of each step
 (`send_step::Steps`). `[tuning] send_scan` and `work_scan` are only the
 bound on one wait. The node-to-node sync plane (ADR-0067) is not built for
-any of it.
+any of it. **And the claim a send scan takes is answered once readable**
+(`XmipStorage::claim_ahead`; over the wire one request and two frames, wire
+operation 40, answers 4 and 28), the send prepared while it syncs and its
+far end letting it out only once it is durable — a technology that holds
+its last step at that step, every other before its first byte — and a send
+whose claim never is abandoned unseen (the owner, 2026-11-12: *Do as you
+recommend*, *Go ahead*; ADR-0018, third amendment of that date).
 
 **Where it stands.** In the Essentials, twelve rounds on C1, the median
 from drop to arrival: 10.9 ms on one node, 14.8 to 19.8 ms across nodes;
@@ -1493,16 +1499,23 @@ ADR-0018, second amendment 2026-11-12).
 
 **What is left, on the sending node, per Send Port** (the roll of 10:31):
 
-- **The claim, 3.4 to 5.8 ms**, against none on the path one node takes,
-  its claim taken in its Publication: its batch is synced after the
-  publishing node's Publication, in series, on two Storage nodes copying on
-  one machine. Proposed: the claim's sync off the path before the send, as
-  a Publication's is — the send begun once the claim is readable and its
-  far end let out once it is durable — which changes what a claim answers
-  and is the owner's to decide.
+- **The claim, 0.37 to 0.58 ms**, the readable round trip, where it was
+  3.4 to 5.8 ms with its sync on the path; like for like, one Send Port sent
+  by the executing node, a delivery from another node is 1.2 ms behind one
+  the node received itself, where it was 3.9 ms (ADR-0028, third amendment
+  2026-11-12, the record roll of 18:54). What is left of the 1.2 ms is the
+  send of a Stream another node received, 1.36 ms longer than one handed in
+  memory, its chunks read over the wire, below. **A technology that cannot hold its last
+  step waits for the claim's sync before its first byte**, the read and the
+  sequences overlapping it only: on machines of their own the Essentials'
+  Send Ports are SFTP, which holds next, then FTP and FTPS, then the SQL
+  family through one helper, each in a piece of its own; SFTP and FTP write
+  their target in place until then, so a reader listing the far end can
+  take a file half written.
 - **Its place, Journey and Message, 0.28 to 0.40 ms**, one round trip,
   needed under the claim: the page that found it may be older than the
-  claim (0.77 to 0.96 ms as three reads until that day).
+  claim (0.77 to 0.96 ms as three reads until that day); under a claim
+  answered once readable it overlaps the claim's sync.
 - **Its Stream's chunks over the wire**, about 0.64 ms on the one Port sent
   both ways: the send taken from its queue 10.10 ms against 9.46 ms handed
   in memory, which reads what its receive held. Not timed apart from the
