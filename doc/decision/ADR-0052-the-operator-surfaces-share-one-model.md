@@ -2287,3 +2287,46 @@ Monitor, Dead Message Queue, Subscriptions, Topology, Configuration, Event
 subscriptions, Audit, Reports, Secrets. The desktop's own links follow
 them, as before. Every earlier amendment's order on the bar is replaced by
 this one; where a view sits is said here alone.
+
+## Amendment, 2026-11-12: an operator arranges the bar
+
+The owner, 2026-11-12: *An operator has to be able to rearrange the major
+tabs, stored in Cookies*; *The Desktop version can have a local TOML file,
+like for cookies*; and of where the bare address opens: *First page in the
+operator view is Monitor, unless sorted other.*
+
+- **The order is the operator's own.** `BarOrder` in `Xmip.Gui` holds the
+  nine views, their default order — the amendment above — and the one rule
+  for an order kept anywhere: a word it does not know is dropped, a view
+  named twice counts once, and a view it does not name follows in the
+  default order, so a view added later is never lost. The amendment above
+  says the default; this one says it is a default.
+- **Arranged on the bar itself.** A view dragged onto another takes its
+  place; *Arrange* shows a ‹ and a › beside each view, the keyboard's way,
+  and *Reset* goes back to the default. Arranging is a view of one's own and
+  no act on Xmip, so every role may, and nothing is audited. The desktop's
+  own links follow the nine, as before.
+- **Kept where the host keeps a person's view** (`IBarOrderStore`). The Web
+  host keeps it in the browser's cookie `xmip-bar`, read as a page is asked
+  for and handed to the circuit, so the bar is drawn in it from the first
+  paint; a circuit cannot write a cookie, so keeping an order asks the
+  host's `/bar` address, which writes the cookie — deleting it where the
+  order is the default — and sends the browser back to a path on itself
+  only (`BarOrder.Asked`). The cookie is `HttpOnly` and `SameSite=Strict`.
+  The Desktop keeps it in `preferences.toml` in the app's data folder, its
+  `[bar]` table's `order`, edited in place so whatever else the file holds
+  stays (`BarOrderFile`). Both hold the same text: the views' words,
+  separated by commas.
+- **The bare address opens the first view.** The Monitor has its own
+  address, `/monitor`, and every link to it is built there (`ScopeLink`);
+  `/` opens the first view on the operator's bar, the Monitor unless they
+  arranged another first, and `/` with a query is the Monitor's still, so a
+  link built before is not broken.
+
+No script of Xmip's own is involved: dragging is Blazor's own events.
+Tested in `BarOrderTest` and `TopNavTest`.
+
+Who decided what. The owner's: arranging, the cookie, the Desktop's TOML
+file and the first view as the start. The assistant's, for the owner to
+change: dragging with Arrange and Reset beside it, the cookie's and the
+file's names, and every role arranging.
