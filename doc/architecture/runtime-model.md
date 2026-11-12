@@ -213,10 +213,21 @@ primary that is gone is waited for, never replaced, and the cluster settles
 once it is back (the owner, 2026-11-08: *automatic standby promotion is off
 until there is a witness*; ADR-0056, amendment 2026-11-08). A primary
 stopped in order hands on everything it wrote; one killed loses what it had
-not handed on, which the owner accepted on 2026-10-01. A standby is handed a write only once its primary has synced
+not handed on, which the owner accepted on 2026-10-01. A Storage node's
+stop ends each connection at its next question, the one in hand answered,
+so a node that keeps asking it never holds the stop (ADR-0056, amendment
+2026-11-12, *a Storage node's stop ends a connection its node keeps asking
+on*). A standby is handed a write only once its primary has synced
 it, and each epoch is written, durable, before a role is taken in it; what
 a failover loses and duplicates is `xmip-core-persist`'s README, *What a
-failover loses*. A Storage node whose sync fails stops: it reads and writes
+failover loses*. A standby copied whole is **copying**, then **catching
+up** — replaying the writes its primary took while it read each database
+page by page, which the pages reflect in part, as far as the primary said
+its read reached — then **ready**, and only a ready one is promoted: the
+state is kept durable, so one started again part way is still not
+promoted, and it is said in the Storage node's record at `<node>/storage`,
+which every surface shows (ADR-0056, amendment 2026-11-12; the owner's
+order, 2026-11-12). A Storage node whose sync fails stops: it reads and writes
 nothing more until it is opened again over its log.
 
 **What is behind the Storage nodes is decided per site** (the owner, later on

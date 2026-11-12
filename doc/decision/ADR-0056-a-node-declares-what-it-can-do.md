@@ -617,8 +617,8 @@ names no `listen` is refused at phase 3, in words. `xmip-service
   answers as, never by a name. A primary that answers is followed. One is
   promoted only where every one listed answered and none of them is a
   primary: the one holding most of the latest epoch, the first listed of
-  equals, none whose whole copy is under way. A primary that is gone is
-  waited for, never replaced (amendment 2026-11-08).
+  equals, none copying or catching up (amendment 2026-11-12). A primary
+  that is gone is waited for, never replaced (amendment 2026-11-08).
 - **A standby copies the primary's engine writes, in order,
   asynchronously** (wire operation 30): each write as the primary's engine
   took it, numbered in that order under the write's own lock, so claims are
@@ -627,10 +627,11 @@ names no `listen` is refused at phase 3, in words. `xmip-service
   first; it keeps its primary's data keys, handed inside the mutual TLS and
   wrapped under its own key-encryption key (ADR-0063, amendment of this
   date). A whole copy is marked under way in the standby's runtime
-  database before anything is wiped and unmarked only once every database
-  is in; a standby so marked, its copy cut short even across a restart,
-  says so in its standing and is never promoted, so part of a Ledger never
-  becomes the Ledger (amendment 2026-11-04). The primary keeps `[tuning]
+  database before anything is wiped, and the standby is ready only once
+  it has replayed the writes its primary took while the copy was read
+  (amendment 2026-11-12); until then, its copy cut short even across a
+  restart, it says so in its standing and is never promoted, so part of a
+  Ledger never becomes the Ledger (amendment 2026-11-04). The primary keeps `[tuning]
   storage_kept` bytes of each database's writes (64 MiB) for a standby
   behind it, and beats every `[tuning] storage_beat` (100 ms) while it has
   nothing to hand on.
@@ -698,7 +699,7 @@ others serves on, so either made two primaries.
 - **A Storage node is promoted only where every one listed answered and
   none of them is a primary.** Among them the one holding most of the
   latest epoch is promoted, the first listed of equals, and never one
-  whose whole copy is under way or was cut short.
+  that is not ready: copying, or catching up (amendment 2026-11-12).
 - **A primary that is gone is not replaced.** Stopped, killed or cut off,
   it is waited for: the cluster settles once it is back and every one
   listed answers again. Until then the nodes that cannot reach it store
@@ -747,3 +748,127 @@ acted on (`Pickup::routing_none`; ADR-0018, amendment 2026-11-11).
 
 Provenance: the judged design of 2026-11-11 found the deviation; the build
 is the assistant's, the same day.
+
+## Amendment, 2026-11-12: a standby copied whole is copying, catching up, then ready
+
+**Provenance.** The owner, 2026-11-12, opened a review of the estate with
+*Here are some thoughts*; one finding, verified the same day, was this
+defect, and the order he gave for it is what follows: a standby's
+bootstrap is copying, then catching up, then ready, and it is ineligible
+until its replay has reached a completion position, recorded and kept,
+that covers the copy. Until this day a standby copied whole was unmarked
+the moment the copy's last page was in (amendment 2026-10-22). The
+primary reads each database page by page while it goes on writing,
+recording where the standby's copies follow from before it reads and
+handing on the writes after it; the sync before each database's end makes
+what the primary wrote durable, and does not make pages read one after
+another one state. A write landing between two pages — a batch whose keys
+fall on both — was held on the standby in part, the older value on the
+page read before it and the newer on the page read after, until it was
+replayed. Where the connection ended between the copy's end and that
+replay, the standby was unmarked and held more than a primary that had
+given up its positions, so started again it could be promoted, and the
+write in part became the Ledger.
+
+What it relies on, as the records said it: the runtime model's *a standby
+is handed a write only once its primary has synced it, and each epoch is
+written, durable, before a role is taken in it*, and `xmip-core-persist`'s
+README, *What a failover loses*: *a standby whose whole copy was cut short
+is never promoted: it says so in its standing until a whole copy is in* —
+true of a copy cut short between its pages, and not of one cut short
+after its last.
+
+- **A standby's bootstrap is copying, then catching up, then ready**
+  (`persist::storage::standby::Bootstrap`). Copying from the copy's start
+  to its last page; catching up until it has replayed, and synced, every
+  write numbered before where the primary's read of each database ended,
+  which the primary sends with each database's end (`Shipped::Copied`:
+  the write its copies follow from, and the write the copy is whole
+  through) — every write a page can reflect is numbered before it, since a
+  write is numbered under the lock it is written under; ready from then. A
+  copy during which the primary took no write is ready at its end.
+- **Only a ready Storage node is promoted.** One copying or catching up is
+  passed over in choosing who is promoted, refuses a promotion in words
+  (*what it holds is not yet one state of its primary's*), and says its
+  state in its standing.
+- **The state is kept, durable, in the standby's runtime database**,
+  written before what it stands for: copying before the wipe; catching up
+  in one write with the runtime database's position once every page is in;
+  ready only once every database is synced as far as its copies go. A
+  standby started again is in the state it stopped in. Started again
+  catching up, it goes on from where its copies follow, but only from a
+  primary of the epoch it was copied in: a primary promoted since numbers
+  its writes from there on its own, which need not be those the pages
+  reflect, so it is copied whole again. A record it cannot read is taken
+  for copying, never for ready.
+- **A whole copy's wipe keeps the node's own standing**: its bootstrap and
+  the latest epoch it met. Until this day the wipe removed the epoch too,
+  so a standby copied whole and started again held epoch 0, against the
+  rule that each epoch is kept before a role is taken in it.
+- **Every surface shows the state where it shows the Storage record.** The
+  Storage node's own words, which a node publishes at `<node>/storage`
+  (`StorageNode::said`, `Reached::published`), say `copying`,
+  `catching up, N writes to go` or `ready` while it is not the primary —
+  each not ready followed by `not promoted until ready` — and a node
+  reaching a standby over the wire says the same of it
+  (`StorageClient::reached`). The ABI, the command line, PowerShell and
+  both GUIs read the snapshot, so none keeps words of its own to change.
+
+Built 2026-11-12, the assistant's. Held by persist's standby tests:
+`tests/interrupted.rs`, the acceptance test — a write let in between the
+whole copy's first two pages (`fixture::Hooks::between_pages`), the
+standby's disk refusing that write's replay (`Hooks::refuse_deferred`), so
+replication is cut after the last page and before the catch-up, and both
+Storage nodes started again: the standby, holding the write in part and
+more than the former primary, is not promoted, the former primary is, and
+the standby, copied whole again and ready, holds the primary's one state;
+with catching up taken for ready, as before this day, the standby is
+promoted instead and the test fails. `tests/bootstrap.rs` holds each
+transition frame by frame, a restart in each state, and the catch-up going
+on only under its copy's epoch; `tests/refused.rs`, a node started again
+copying or catching up refusing a promotion in words.
+
+## Amendment, 2026-11-12: a Storage node's stop ends a connection its node keeps asking on
+
+**Provenance.** The root's `failover` test failed in two landings on
+2026-11-12, at 15:32 and 20:58, and passed alone: the primary Storage
+node, stopped mid-run, never said it stopped within the test's ten
+seconds. Found and built the same day, the assistant's.
+
+What it relies on, as the records say it: the runtime model's *a primary
+stopped in order hands on everything it wrote*, which needs the stop to
+end; `StorageServer::stop`'s own words, *no connection accepted after,
+every one served ended, every thread it started finished*; and the
+millisecond rule, under which a stop that lasts as long as another node
+asks is a defect, never a bound to raise.
+
+- **The cause.** A connection's thread looked whether its server was
+  stopping only once a read had waited 50 ms with nothing come
+  (`WATCH`: *this bounds only how long a stop waits for an idle
+  connection*). A node never idle that long on its kept connection kept it
+  served, and the stop's join of that thread waited for as long as the
+  node asked. A primary stopping refuses every operation, and a node
+  refused by every Storage node listed asks again on its next scan, wait
+  and renewal, on the one connection it keeps. The landings' folders say
+  so: nine seconds after the stop the receiving node was refused a
+  connection to the primary's port, whose listener the stop closes just
+  before it joins its connections, while the sending node was still
+  answered there, refused as by a primary stopping; the primary wrote no
+  stop record and was killed at the test's bound. The `taskkill` that
+  found no process was the sending node's: the failed test, letting go of
+  it, ended its input, and its audit says *stopped by its input ending*,
+  drained in 18 ms. No node exited on its own.
+- **A connection looks whether its server is stopping before every
+  read**, and every `WATCH` while it waits: it ends at its next question,
+  the one in hand answered, a claim asked ahead's second frame included.
+  The node asking finds it ended and asks the next Storage node, as of
+  one stopped. A server's stop so takes about a millisecond over loopback
+  where it took as long as a node asked.
+
+Built 2026-11-12: `persist::storage::server`'s `Watched`. Held by
+`storage/server/tests.rs`: a node asking on its one kept connection as
+soon as it is answered, and its server stopped; before this day the stop
+waited out the test's five-second bound, and now it returns at once. The
+root's `failover` test, its carrying nodes scanning every millisecond
+rather than every 50, failed one run in five before, as the landings had,
+and none in fifteen after.
