@@ -66,6 +66,7 @@ resources:
       certificate: "[path(parameters('staging'), 'files', 'authority.pem')]"
       node: "[parameters('node')]"
       account: "[parameters('account')]"
+      program: "[parameters('layout').program]"
   - name: Certificate
     type: Xmip.Node/File
     requireVersion: ^0.1

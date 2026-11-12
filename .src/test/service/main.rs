@@ -6,8 +6,12 @@
 //!
 //! - `stop.rs`: a stop drains the node and the process exits 0, within a
 //!   bound, having declared and audited itself; a node it cannot start, or
-//!   a Storage node it cannot open, is refused with exit 2; a Subscription paused
-//!   through an order is paused still after a restart.
+//!   a Storage node it cannot open, is refused with exit 2 (`refused.rs`);
+//!   a Subscription paused through an order is paused still after a restart.
+//! - `activation.rs`: a correctly signed slice the node cannot start leaves
+//!   the configuration that ran before running and recoverable, the pin
+//!   kept and an older serial still refused; signed again, it runs, and
+//!   `--activation` says so (ADR-0031, amendment 2026-11-12).
 //! - `operate.rs`: a node configured with `[operate]` is reached on its
 //!   operate listener as a surface on another machine reaches it, its
 //!   publication read and an act taken as the certificate's subject.
@@ -53,8 +57,11 @@ use xmip_observe::Act;
 
 mod started;
 use started::*;
+mod refused;
+use refused::*;
 
 mod accepted;
+mod activation;
 mod authority;
 mod failover;
 mod operate;

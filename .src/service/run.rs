@@ -3,6 +3,12 @@
 //! orders and publish it again while it waits for the stop, drain it, audit
 //! the drain and publish that it stopped.
 //!
+//! The start is the runtime's order (`running::activation::started`;
+//! ADR-0031, amendment 2026-11-12): the node's candidate tried first, the
+//! program's own steps part of the attempt (`opened`), and, where any step
+//! refuses it, the same attempt over the node's active configuration. Only
+//! when nothing runs is the start refused.
+//!
 //! While it serves, the service waits to be told ([`Told`]), using no
 //! processor: by a stop — the Service Control Manager's, a signal from
 //! systemd or launchd, the console's Ctrl+C — by the operating system that
@@ -12,7 +18,6 @@
 
 use std::path::Path;
 use std::process::ExitCode;
-use std::sync::Arc;
 use std::sync::mpsc::{Receiver, RecvTimeoutError, Sender};
 use std::time::{Duration, Instant};
 
@@ -20,12 +25,14 @@ use xmip_audit::program_audit::ProgramAudit;
 use xmip_core::ExecutionPhase;
 use xmip_node::Declaration;
 use xmip_runtime::outcome::Outcomes;
-use xmip_runtime::plane::{Listener, Published, deadline};
+use xmip_runtime::plane::deadline;
 use xmip_runtime::registration::REFUSED;
 use xmip_runtime::running::Running;
+use xmip_runtime::running::activation;
 
 use crate::arguments::Arguments;
 use crate::audit::{fail, record};
+use crate::opened::{Opened, configured, opened};
 use crate::publication::{self, Publisher};
 use crate::{authority, built, orders};
 
@@ -75,8 +82,13 @@ pub fn serve(
     stopping: impl FnOnce(),
 ) -> Ended {
     let configuration = arguments.configuration.as_str();
-    let running = match Running::start(configuration, built::linked(audit)) {
-        Ok(running) => running,
+    let started = activation::started(
+        configuration,
+        || built::linked(audit),
+        |running| opened((program, audit), configuration, running, tell),
+    );
+    let (running, held) = match started {
+        Ok(started) => started,
         Err(refusal) => {
             fail(
                 audit,
@@ -86,36 +98,24 @@ pub fn serve(
             return Ended::Refused;
         }
     };
-    if let Some(refused) = running.refused() {
-        fail(audit, "configuration", &format!("{program}: {refused}"));
-    }
+    let Opened {
+        mut publisher,
+        operate: _operate,
+        listening,
+        authority: serving,
+        orders,
+        watch,
+    } = held;
     let location = running.location();
-    let orders = orders::place(&running);
-    let place = orders.display().to_string();
-    let publication_path = publication::place(&running);
-    let snapshot = publication_path.display().to_string();
-    let mut publisher = Publisher::new(program, audit, &running, publication_path, &orders);
-    let board = publisher.board(tell);
-    let Some((_operate, listening)) = operated(program, audit, configuration, &running, &board)
-    else {
-        let _ = running.stop();
-        return Ended::Refused;
-    };
-    let Ok(_authority) = authority::authorized(program, audit, configuration) else {
-        let _ = running.stop();
-        return Ended::Refused;
-    };
-    let watch = match orders::watch(&orders, &location, tell) {
-        Ok(watch) => watch,
-        Err(problem) => {
-            fail(audit, "orders", &format!("{program}: {problem}"));
-            let _ = running.stop();
-            return Ended::Refused;
-        }
-    };
     // Every record from here carries the location it declares, so a reader
     // knows whose it is (ADR-0062, amendment 2026-09-29).
     audit.locate(&location);
+    configured(program, audit, &running);
+    if let Some(serving) = &serving {
+        authority::said(program, audit, serving);
+    }
+    let place = orders.display().to_string();
+    let snapshot = publication::place(&running).display().to_string();
 
     // What this process says of itself while it runs (ADR-0053); the file
     // goes when `declared` does, after the drain.
@@ -286,40 +286,6 @@ fn drained_record(
             .collect::<Vec<_>>()
             .join(", ")
     )
-}
-
-/// The node's operate listeners over what `board` holds (ADR-0067) —
-/// its local endpoint and its network address, each where its
-/// configuration's `[operate]` names it — and where they listen; `None`
-/// after saying why where one cannot listen, which refuses the node before
-/// it accepts work, as every refusal at start does.
-fn operated(
-    program: &str,
-    audit: &ProgramAudit,
-    configuration: &str,
-    running: &Running,
-    board: &Arc<dyn Published>,
-) -> Option<(Vec<Listener>, Option<String>)> {
-    match running.operate(board, audit) {
-        Ok(operate) => {
-            let listening = (!operate.is_empty()).then(|| {
-                operate
-                    .iter()
-                    .map(Listener::address)
-                    .collect::<Vec<_>>()
-                    .join(" and ")
-            });
-            Some((operate, listening))
-        }
-        Err(refusal) => {
-            fail(
-                audit,
-                "operate",
-                &format!("{program}: {configuration} {refusal}"),
-            );
-            None
-        }
-    }
 }
 
 /// Say on the console where the node `who` names keeps what it keeps.

@@ -51,9 +51,12 @@ pub const EVERY: Duration = Duration::from_millis(250);
 /// file for the instant it reads it.
 pub const AGAIN: Duration = Duration::from_millis(1);
 
-/// Where the node publishes, beneath its data directory.
+/// Where the node publishes, beneath its data directory: the one place a
+/// surface and `--activation` read it (`running::publication::SNAPSHOT`).
 pub fn place(running: &Running) -> PathBuf {
-    running.data().join("snapshot.xmip")
+    running
+        .data()
+        .join(xmip_runtime::running::publication::SNAPSHOT)
 }
 
 /// What publishes the node, what it published last, and the window its

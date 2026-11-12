@@ -603,7 +603,8 @@ environment's nodes and bound on the Parties' far end the Essentials serves
 listens on, and its service
 (ADR-0015, amendment 2026-10-21). Every rule about the node is
 `xmip-service`'s — `--slice --cluster --bind --nodes`, `--listening`, `--install
---account` — and `cargo test --test deploy` reads the Essentials' cluster
+--account`, and `--activation`, whether the node runs the slice it was shipped
+(ADR-0031, amendment 2026-11-12) — and `cargo test --test deploy` reads the Essentials' cluster
 file, which the example environment runs, as `xmip-service` reads it for
 every node it declares. That file is the same on one computer and on the
 machines (ADR-0028, amendment 2026-10-21).

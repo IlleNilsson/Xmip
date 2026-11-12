@@ -532,6 +532,14 @@ OK has not reached any node but the one the desktop starts
 (`module/platform/configure/doc/cluster-configuration.md`, *Saving is not
 delivering*; ADR-0031, amendments 2026-10-05; open problem 31).
 
+A node holds three things of its slices, never one for another (ADR-0031,
+amendment 2026-11-12): its **candidate**, the `node.xmip` it was given and
+never writes; its **pin**, what it trusts the next slice by, the highest
+serial seen among it; and its **active configuration**, the last slice that
+ran. Acceptance pins a candidate as seen; activation makes it the active
+configuration, and a candidate refused before the node accepts work is
+never made active and runs nothing.
+
 ## Report and Quest
 
 Two words, never one for the other. The owner, 2026-11-07: *A report

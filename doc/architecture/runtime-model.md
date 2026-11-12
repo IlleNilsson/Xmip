@@ -596,6 +596,19 @@ waiting for its backoff holds no thread, no claim and no place in the pool,
 its due time kept at its place in its queue (section 10, corrected
 2026-10-16).
 
+**Built for the Work Process step, 2026-11-12** (ADR-0066, third amendment
+2026-11-12). The node's Work pool is calculated the same way, by a key of
+its own (`[tuning] work_threads_per_hardware_thread`, two by default, idle
+as a send thread), and its most is the bulkhead of the turns the step holds:
+a turn is admitted only under a place, queued and running together never
+more than the pool's threads, and each Work Process with work holds no more
+than its share, the places divided among those with work. Each queue is
+read a page a round from where its pass stands, the Work Processes in
+rotation, so what has no place stays in the Ledger, never in memory, and a
+backlog in one holds back no turn of another (section 22). However a turn
+ends, its place is given back; one that panics is written Failed with what
+the panic said.
+
 **A node's budget beside its pools, built 2026-10-19** (`open-problems.md`
 problem 38). A pool bounds threads, not what they hold, and each Receive
 Location's pool is its own — its isolation — so a node of many Locations
@@ -2513,8 +2526,22 @@ are `StartupPhase` in `xmip-core-runtime`
 (`module/platform/runtime/src/service.rs`), and `running::Running::start`
 runs them (`module/platform/runtime/src/running.rs`): it loads each Module a
 node's configuration names once, from what the program starting the node
-linked or from its library, and serves every Receive Location until the node
-stops.
+linked or from its library, and builds what serves every Receive Location,
+serving nothing yet.
+
+Phase 9 completes at activation (ADR-0031, amendment 2026-11-12):
+`Running::activate` first keeps the slice the node runs as its active
+configuration, the last slice that ran, and then serves until the node
+stops. Before phase 1 the node's trust reads its configuration: a
+candidate, `node.xmip`, that verifies against the pinned authority, names
+the pinned node and carries a serial above the highest seen is pinned as
+seen, and the phases, then the program's own steps that can refuse, run
+over it as one attempt. A candidate refused by its trust, at any phase or
+at any of those steps is never made active and is tried again at the next
+start; the node lets the attempt go and runs its active configuration in
+the same process, saying so at `<node>/configuration`. Only with no active
+configuration that starts is the start refused
+(`running::activation::started`).
 
 ## 22. The Work Process
 
@@ -2631,6 +2658,19 @@ that Instance as it read it, and one whose Stream waits behind another of
 its sequence on that sequence's head, each taken up the moment another node
 moves it (section 10, corrected again 2026-11-12; ADR-0066, second
 amendment 2026-11-12).
+
+**Built 2026-11-12, as well:** the step holds no more turns than its Work
+pool runs, each Work Process with work its share of them, and reads each
+queue a page a round from where its pass stands, an entry already in a turn
+here or failed moved past (section 3; ADR-0066, third amendment
+2026-11-12). A read's place in its queue is the node's convenience, never
+the truth: lost on a restart, it costs a read again. A turn that panics
+under its claim — in its flow, a unit, a split or the runtime's own acts —
+ends its Journey `Failed` with what the panic said, kept in its
+Work Process's queue for an operator as an uncaught error is (*Process outcome*),
+its claim given back where that cannot be written; one that unwinds before
+its claim is let go of and taken up again, and no panic ends the
+dispatching.
 
 **Decided, not built:** the `settings` a Work Process gives its unit; unit
 calls through the standard units' registry (a node calls none yet, and a call

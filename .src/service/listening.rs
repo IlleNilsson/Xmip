@@ -64,7 +64,7 @@ fn listening(document: &XmipConfigurationDocument) -> Vec<String> {
     if let Some(port) = storage.and_then(port_of) {
         said.push((port, "storage".to_string()));
     }
-    for (address, what) in crate::authority::listens(document) {
+    for (address, what) in crate::authority::listens(&document.provision) {
         if let Some(port) = port_of(&address) {
             said.push((port, what.to_string()));
         }

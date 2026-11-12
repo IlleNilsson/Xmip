@@ -66,10 +66,13 @@ node fetches what the Essentials drops and puts what it sends where the
 Essentials is told of it (ADR-0028, amendment 2026-10-22). The nodes are the
 environment file's, never written again. A node never slices and never
 holds the authority's key, so a `node.xmip` edited on it is refused there
-and the node runs its last accepted slice; that slice, kept in the node's
-data folder, pins the authority, the node's name and the serial, so a
-swapped certificate, an older slice or another node's is refused too
-(ADR-0031, amendments 2026-11-06 and 2026-11-07). A signature and its
+and the node runs its active configuration, the last slice that ran. Its
+pin, kept in the node's data folder apart from that configuration, holds
+the authority, the node's name and the highest serial it has seen, so a
+swapped certificate, an older slice or another node's is refused too; and a
+correctly signed slice the node cannot start is refused as it starts, the
+active configuration running instead and the slice tried again at the
+next start (ADR-0031, amendments 2026-11-06, 2026-11-07 and 2026-11-12). A signature and its
 serial differ each time it is made, so a slice is made again only where
 the text it signs differs — its set too, which DSC asks without a test
 first — and a run over an environment restarts no node for a new
@@ -89,7 +92,14 @@ signature.
    account may modify it, the virtual account's SID computed as Windows
    computes it, since the account exists only once the package registers the
    service; on AlmaLinux it is the account's, group root, mode 0640;
-   `Xmip.Node/Slice` sets it (`NodeAccess.ps1`), and get and test report it;
+   `Xmip.Node/Slice` sets it (`NodeAccess.ps1`), and get and test report it.
+   Where the package is installed, the slice is in its desired state only
+   once the node runs it as its active configuration, as `xmip-service
+   --activation` says in the node's words (`activation`): a service that
+   started does not say so, since a correctly signed slice the node cannot
+   start is refused and the node runs the last one that ran; set restarts
+   the node then, which tries the slice again (ADR-0031, amendment
+   2026-11-12);
 3. its certificate, key and anchors from the cluster's own authority,
    `tls/node.pem`, `tls/node.key` and `tls/anchors.pem`, as the file's
    `[operate]` names them, the key private;

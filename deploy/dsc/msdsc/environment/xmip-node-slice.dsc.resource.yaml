@@ -5,8 +5,10 @@ description: >-
   The node's configuration, node.xmip, as the machine deploying the environment
   sliced and signed it, and the certificate of the authority that signed it,
   authority/authority.pem beside it, in place, node.xmip writable by the node's
-  account and the administrators alone; the service restarted when they changed
-  and it is installed. The node never slices.
+  account and the administrators alone, and, where the node is installed, the
+  configuration it runs, as xmip-service --activation says; the service
+  restarted when they changed or the node does not run it, and it is
+  installed. The node never slices.
 tags:
   - Xmip
 get:
@@ -66,9 +68,15 @@ schema: !embedded
       - certificate
       - node
       - account
+      - program
     properties:
       configuration:
         description: 'The folder the node reads its configuration in.'
+        type: string
+      program:
+        description: >-
+          The xmip-service the package installs, asked whether the node runs
+          the slice placed for it; not asked before it is installed.
         type: string
       source:
         description: 'The node.xmip it was shipped, signed.'
@@ -93,6 +101,15 @@ schema: !embedded
         type: array
         items:
           type: string
+      activation:
+        description: >-
+          What xmip-service --activation said, in the node's words: the slice
+          it runs as its active configuration, or why it does not run the one
+          placed — a correctly signed slice the node cannot start is refused
+          and the node runs the last one that ran. Empty where it was not
+          asked.
+        readOnly: true
+        type: string
       _exist:
         type: boolean
         readOnly: true

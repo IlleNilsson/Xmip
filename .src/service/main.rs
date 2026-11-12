@@ -8,13 +8,17 @@
 //! xmip-service --configuration <cluster cluster.xmip> --node <name> --cluster <name>
 //!     [--account <account>] --install
 //! xmip-service --configuration <path> --listening
+//! xmip-service --configuration <path> --activation
 //! xmip-service --configuration <path> --uninstall
 //! ```
 //!
 //! It starts the node configured at `<path>` with the technologies this build
-//! linked (`running::Running::start`), serves until it is stopped, and then
-//! drains it (`Running::stop`, ADR-0018 clause 12) and exits 0. Every stop is
-//! the same drain, however it arrives:
+//! linked, by the runtime's order (`running::activation::started`): the slice
+//! at `<path>` where its trust admits it and every step of its start passes,
+//! else the node's active configuration, the last slice that ran (ADR-0031,
+//! amendment 2026-11-12). It serves until it is stopped, and then drains it
+//! (`Running::stop`, ADR-0018 clause 12) and exits 0. Every stop is the same
+//! drain, however it arrives:
 //!
 //! - **Windows, as a service**: the service control manager's Stop or
 //!   Shutdown (`control_manager.rs`).
@@ -24,10 +28,15 @@
 //! - **In a console, `--console`, on every platform**: Ctrl+C (and on Linux
 //!   and macOS SIGTERM and SIGHUP too) (`console.rs`).
 //!
-//! A node its configuration or this build cannot start is refused before
-//! anything serves, in words, with exit code 2, which no service manager
-//! restarts (`registration::REFUSED`). Nothing here restarts anything: the
-//! service manager owns restarts, and nothing in Xmip starts itself.
+//! A node with nothing it can start — its slice refused and no active
+//! configuration that starts — is refused before anything serves, in words,
+//! with exit code 2, which no service manager restarts
+//! (`registration::REFUSED`). Nothing here restarts anything: the service
+//! manager owns restarts, and nothing in Xmip starts itself.
+//!
+//! `--activation` says, in the node's words, whether the node runs the slice
+//! at `<path>` as its active configuration, and exits 0 only where it does
+//! (`activation.rs`): what a deployment asks after it restarts a node.
 //!
 //! `--definition` prints what this platform's service manager is told about
 //! the node's service — a systemd unit, a launchd property list, or the
@@ -77,6 +86,7 @@
 //! order and every failure (`audit.rs`; ADR-0062).
 
 mod account;
+mod activation;
 mod arguments;
 mod audit;
 mod authority;
@@ -87,6 +97,7 @@ mod control_manager;
 mod definition;
 mod install;
 mod listening;
+mod opened;
 mod orders;
 mod publication;
 mod readiness;
@@ -129,6 +140,7 @@ fn main() -> ExitCode {
         Mode::Slice => slice::print(&audit, &arguments),
         Mode::Install => install::install(&audit, &arguments),
         Mode::Listening => listening::print(&audit, &arguments),
+        Mode::Activation => activation::print(&audit, &arguments),
         Mode::Uninstall => install::uninstall(&audit, &arguments),
         Mode::Console => console::run(&program, &audit, &arguments),
         #[cfg(windows)]

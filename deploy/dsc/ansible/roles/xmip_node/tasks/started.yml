@@ -28,3 +28,36 @@
   retries: "{{ (xmip_started_window | int) // 5 }}"
   delay: 5
   when: ansible_facts['os_family'] == 'Windows'
+
+# A service that started does not say its slice took: a correctly signed
+# slice the node cannot start is refused, and the node runs the last one
+# that ran (ADR-0031, amendment 2026-11-12). `xmip-service --activation`
+# says, in the node's words, and the node is out of its desired state until
+# it runs the slice it was shipped; a run again restarts it, which tries the
+# slice again (tasks/linux.yml, tasks/windows.yml).
+- name: The node runs the slice it was shipped
+  ansible.builtin.command:
+    argv:
+      - "{{ xmip_program }}"
+      - --configuration
+      - "{{ xmip_configuration }}/node.xmip"
+      - --activation
+  register: xmip_activation
+  changed_when: false
+  failed_when: xmip_activation.rc != 0 and not ansible_check_mode
+  check_mode: false
+  become: true
+  when: ansible_facts['os_family'] != 'Windows'
+
+- name: The node runs the slice it was shipped, on Windows
+  ansible.windows.win_command:
+    argv:
+      - "{{ xmip_program }}"
+      - --configuration
+      - "{{ xmip_configuration }}\\node.xmip"
+      - --activation
+  register: xmip_activation_windows
+  changed_when: false
+  failed_when: xmip_activation_windows.rc != 0 and not ansible_check_mode
+  check_mode: false
+  when: ansible_facts['os_family'] == 'Windows'

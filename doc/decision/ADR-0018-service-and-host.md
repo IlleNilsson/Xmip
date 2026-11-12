@@ -1913,3 +1913,69 @@ Provenance: the design of 2026-11-12, *early send under a readable claim*,
 the assistant's; agreed by the owner the same day, as quoted above; how it
 is built and the decisions marked above are the assistant's, the same day,
 for the owner to overrule.
+
+## Amendment, 2026-11-12: the watch keeps what none waits on within a bound
+
+**Provenance.** The owner, 2026-11-12, brought a review of the estate,
+*Here are some thoughts*, and gave the order its findings are taken up in;
+one finding, verified the same day, was this defect. The bound, the order
+it lets go in, its key and its default are the assistant's, decided while
+designing, for the owner to overrule.
+
+Until this day a Storage node's watch (`persist::storage::watch`) kept
+where its writer left everything any wait ever named: a wait added its
+count to the watch, and the last waiter letting go took the waiter out and
+left the count. Nothing bounded what was kept and nothing let one go, so
+it grew with every Instance, correlation key and sequence head ever waited
+on — with every conversation the node carried — never with the waits under
+way. The first amendment of this date, *the watch keeps where its writer
+left each queue a node has waited on, so a wait reads the store only for a
+queue none waited on before*, holds for what is waited on now and is
+bounded for the rest:
+
+- **What is waited on now is always kept.** A waiter is listed before the
+  store is read, and a count it lists is kept as its writer tells it or the
+  read found it, a tell winning. Let go between the two, it would come back
+  as the read found it, older than a write told meanwhile, and the next
+  wait would wait past that write. A listed count is never let go: the
+  order counts are let go in holds only those none waits on, it lets one go
+  only where the count's own stamp still matches, and the read after a
+  listing fills a count only where it is kept, never puts one back.
+- **What none waits on now is a cache, and bounded.** The writer tells the
+  watch even where none waits, so an unlisted count is only where its
+  writer left it. Let go, the next wait on it reads the store as the first
+  wait on it ever did, listed first, so a write between the two is read or
+  told whichever way they fall — told before the listing, between the
+  listing and the read's standing, read before and told after, or both
+  after the read. The latest of them are kept, at most `[tuning]
+  storage_unwaited` (`persist::storage::UNWAITED`, 16,384, about 3 MB;
+  0 to 4,194,304), and **the longest unwaited goes first**, stamped as its
+  last waiter lets go: a step's queues, waited on again at every wake, stay
+  the newest, and an Instance, key or head named once ages out first;
+  writes do not count as use. One that holds nothing — its read failed, or
+  its writer told it unreadable — is let go at once.
+- **Storage owns the bound**, every Storage node alike: the only one sets
+  it as it opens (`Embedded::keep_unwaited`), and a primary among several
+  as it is promoted, from what bounds its dealings with the others
+  (`standby::Timings::unwaited`, filled by the runtime's
+  `Tuning::storage`). What a node keeps is at most what is waited on now
+  and the bound. A bound below the queues a cluster's steps wait on costs a
+  read per such queue per wake, never a lost wake.
+
+Decided by the assistant within the review's finding, each in a line: the
+cache moved to `persist/.src/storage/watch/known.rs` and the wire forms of
+what a wait watches to `watch/form.rs`, so `watch.rs` stays under the size
+gate; the key is the primary's of several as well as the only node's, the
+standby work that held those files having landed first.
+
+Tested in persist (`storage::watch::tests::kept`: a hundred distinct
+Instances made, watched and ended leave the watch at its bound of eight,
+the latest kept and read no more, the longest unwaited read again as it
+stands; a count let go read again, its racing write answered in all four
+orders; a count waited on never let go at a bound of none; waits on the
+real node racing writes while another thread lets counts go all along,
+none missed; `storage::standby::tests::waited`: a primary among several
+keeps its node's bound) and in the runtime (`tuning`: the key's default is
+the constant, and what a node says reaches the only Storage node and a
+primary among several alike). Every wait test before it runs at the
+default bound unchanged.

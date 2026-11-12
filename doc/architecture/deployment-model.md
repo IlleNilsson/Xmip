@@ -785,7 +785,10 @@ as the node's account, a firewall opening for exactly the ports
 `xmip-service --listening` says, and its service running — started with
 the environment's other nodes together, since none accepts work before its
 Xmip Storage, and no Storage node before every one its cluster lists
-(ADR-0015 and ADR-0056, amendments 2026-11-11). Each slice has
+(ADR-0015 and ADR-0056, amendments 2026-11-11) — and running the slice it
+was shipped, as `xmip-service --activation` says, since a correctly signed
+slice a node cannot start is refused and the node runs the last one that
+ran (ADR-0031, amendment 2026-11-12). Each slice has
 every Receive Location and Send Port the file designs placed over the
 environment's nodes by `xmip-core-configure`'s one placement and bound on
 the far end the environment names (ADR-0028, amendment 2026-10-22). Which

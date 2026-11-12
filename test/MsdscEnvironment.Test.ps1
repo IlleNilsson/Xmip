@@ -486,6 +486,7 @@ Describe 'The Xmip resources'' own steps' {
             certificate   = Join-Path $shipped 'authority.pem'
             node          = 'n'
             account       = 'NT SERVICE\xmip-n'
+            program       = Join-Path $TestDrive 'not-installed/xmip-service'
         }
 
         Test-NodeSlice -Instance $slice | Should -BeFalse
@@ -499,6 +500,65 @@ Describe 'The Xmip resources'' own steps' {
         # Its bytes in place and its access list another: out of desired state.
         $script:AccessSet = $false
         Test-NodeSlice -Instance $slice | Should -BeFalse
+    }
+
+    It 'asks the installed node whether it runs the slice placed, and says why not' {
+        # ADR-0031, amendment 2026-11-12: a correctly signed slice the node
+        # cannot start is refused and the node runs the last one that ran.
+        [string] $program = Join-Path $TestDrive 'installed/xmip-service'
+        [hashtable] $slice = @{ configuration = Join-Path $TestDrive 'config'; program = $program }
+        Mock -CommandName Invoke-DscProgram -MockWith {
+            throw "$Program exited 2: node.xmip is not what the node runs: candidate refused"
+        }
+
+        (Get-NodeActivation -Instance $slice).active | Should -BeTrue -Because 'not installed'
+        Should -Invoke -CommandName Invoke-DscProgram -Times 0 -Exactly
+
+        New-Item -ItemType File -Force -Path $program | Out-Null
+        [hashtable] $refused = Get-NodeActivation -Instance $slice
+        $refused.active | Should -BeFalse
+        $refused.said | Should -BeLike '*is not what the node runs: candidate refused*'
+        [string] $placed = Join-Path -Path $slice.configuration -ChildPath 'node.xmip'
+        Should -Invoke -CommandName Invoke-DscProgram -Times 1 -ParameterFilter {
+            ($Argument -join ' ') -eq "--configuration $placed --activation"
+        }
+
+        Mock -CommandName Invoke-DscProgram -MockWith { 'activated: serial 3 of save sha256:00' }
+        [hashtable] $runs = Get-NodeActivation -Instance $slice
+        $runs.active | Should -BeTrue
+        $runs.said | Should -Be 'activated: serial 3 of save sha256:00'
+    }
+
+    It 'restarts a running node that does not run the slice it holds, though no file changed' {
+        Mock -CommandName Test-NodeSlice -MockWith { $true }
+        Mock -CommandName Get-NodeSliceAccess -MockWith { @() }
+        Mock -CommandName Get-NodeFileState -MockWith { @{ _exist = $true } }
+        Mock -CommandName Set-NodeSliceAccess -MockWith { }
+        Mock -CommandName Test-NodeRegistered -MockWith { $true }
+        Mock -CommandName Get-NodeActivation -MockWith { @{ active = $false; said = 'refused' } }
+        Mock -CommandName Invoke-DscProgram -MockWith { }
+        if ($IsWindows) {
+            Mock -CommandName Get-Service -MockWith { [pscustomobject]@{ Status = 'Running' } }
+            Mock -CommandName Restart-Service -MockWith { }
+        }
+        [hashtable] $slice = @{
+            configuration = Join-Path $TestDrive 'config'; source = 'node.xmip'
+            certificate = 'authority.pem'; node = 'n'; account = 'xmip'
+            program = Join-Path $TestDrive 'installed/xmip-service'
+        }
+
+        (Get-NodeMachineState -Kind Slice -Instance $slice)._exist | Should -BeFalse
+        (Get-NodeMachineState -Kind Slice -Instance $slice).activation | Should -Be 'refused'
+        Set-NodeSlice -Instance $slice -Confirm:$false
+
+        if ($IsWindows) {
+            Should -Invoke -CommandName Restart-Service -Times 1 -Exactly
+        }
+        else {
+            Should -Invoke -CommandName Invoke-DscProgram -Times 1 -Exactly -ParameterFilter {
+                $Program -eq 'systemctl' -and $Argument[0] -eq 'try-restart'
+            }
+        }
     }
 
     It 'hands the slice its node''s account in node.dsc.yaml' {

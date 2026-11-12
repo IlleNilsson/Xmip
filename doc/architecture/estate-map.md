@@ -114,9 +114,13 @@ authority beside the file; desired state slices it and signs it on the machine
 the environment is deployed from (`xmip-service --slice --authority`) and
 ships each node its slice and the authority's certificate alone. A node runs
 only a slice that verifies against the authority's certificate beside it,
-refuses and audits one changed by hand and runs its last accepted slice
-instead (`runtime::signed`). A changed slice takes effect when the node starts
-again. Records: ADR-0031 (amendments 2026-10-01, 2026-10-05, 2026-11-06).
+refuses and audits one changed by hand, and one that verifies and that it
+cannot start, and runs its active configuration, the last slice that ran,
+instead (`runtime::signed`, `runtime::running::activation`); its record at
+`<node>/configuration` and `xmip-service --activation` say which, and desired
+state asks the latter. A changed slice takes effect when the node starts
+again. Records: ADR-0031 (amendments 2026-10-01, 2026-10-05, 2026-11-06,
+2026-11-12).
 
 #### `embedded-storage`
 
@@ -430,7 +434,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 353615 lines of production
+Where each repository mounts and what it holds: 356199 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -745,13 +749,13 @@ hold no source to count.
 │   │   ├── party                                193
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                            44982
-│       ├── persist                            18418
+│       ├── runtime                            47090
+│       ├── persist                            18806
 │       │   ├── rocksdb                          323
 │       │   ├── sqlite                           288
 │       │       declared, not built 1
 │       │       postgresql
-│       └── configure                           8440
+│       └── configure                           8528
 └── test/
     └── core/
         ├── essentials                         16543

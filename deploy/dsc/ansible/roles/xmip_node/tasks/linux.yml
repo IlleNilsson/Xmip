@@ -61,6 +61,25 @@
   notify: Restart the Xmip node
   become: true
 
+# A slice the node holds and does not run, refused as it started while the
+# node runs its active configuration, is tried again by a restart, so a run
+# again makes it take once what refused it has gone (ADR-0031, amendment
+# 2026-11-12). Asked only where the node's program is installed.
+- name: Whether the node runs the slice it holds
+  ansible.builtin.command:
+    argv:
+      - "{{ xmip_program }}"
+      - --configuration
+      - "{{ xmip_configuration }}/node.xmip"
+      - --activation
+    removes: "{{ xmip_program }}"
+  register: xmip_activation_held
+  changed_when: xmip_activation_held.rc | default(0) != 0
+  failed_when: false
+  check_mode: false
+  notify: Restart the Xmip node
+  become: true
+
 - name: The certificate's folder, the node's account's
   ansible.builtin.file:
     path: "{{ xmip_configuration }}/tls"
