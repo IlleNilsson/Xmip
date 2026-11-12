@@ -10,7 +10,10 @@
 //! - `carried.rs`: the getting-started node — roles executing and storage —
 //!   carries a file dropped in its drop directory, accepted by the
 //!   circumstance, to a file of the same name in its send directory, whole,
-//!   audited, with Xmip's own work measured against the millisecond rule.
+//!   audited, with Xmip's own work measured against the millisecond rule;
+//!   and, where the build links `content` and `edi`, the same with an
+//!   EDIFACT order routed by its message type, promoted from the content
+//!   (ADR-0046, amendment 2026-11-11).
 //! - `told.rs`: an order is acted on the moment it is left, within about a
 //!   millisecond beyond what it carries, and a service nothing tells uses
 //!   next to no processor.

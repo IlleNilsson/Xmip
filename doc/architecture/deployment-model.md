@@ -782,11 +782,21 @@ the operator's machine by `New-XmipCertificate -Node`, `xmip_operate.h`
 section 22, since a node starts no provisioner yet — the estate's package,
 whose `xmip-service --install --account` registers and starts the service
 as the node's account, a firewall opening for exactly the ports
-`xmip-service --listening` says, and its service running. Each slice has
+`xmip-service --listening` says, and its service running — started with
+the environment's other nodes together, since none accepts work before its
+Xmip Storage, and no Storage node before every one its cluster lists
+(ADR-0015 and ADR-0056, amendments 2026-11-11). Each slice has
 every Receive Location and Send Port the file designs placed over the
 environment's nodes by `xmip-core-configure`'s one placement and bound on
-the far end the environment names (ADR-0028, amendment 2026-10-22). Which node runs on which machine is the templates'
-parameters, never the cluster's file. Nothing in YAML or a template reads,
+the far end the environment names (ADR-0028, amendment 2026-10-22). Which
+node runs on which machine is the environment file's, never the cluster's
+file: one TOML file names the technology that makes the environment, the
+hypervisor, the machines with the node each runs and what a node is given,
+and `Deploy-XmipEnvironment` writes the YAML each technology reads from it,
+DSC's parameters or Ansible's inventory; the environment keeps the
+technology that made it, in its private state and in each libvirt
+machine's record, and refuses the other (ADR-0015, amendment 2026-11-11).
+Nothing in YAML or a template reads,
 slices or writes the configuration: `xmip-core-configure`'s one slicing does
 (`module/platform/configure/doc/cluster-configuration.md`), and the node
 reads the document `xmip-core-configure` reads
@@ -814,9 +824,15 @@ from the publisher's ISO (*the lab shall install from the ISO's*), with a
 generated `autounattend.xml` for Windows or kickstart for AlmaLinux, built
 from Xmip's own resources, `Xmip.HyperV/Network` and `Xmip.HyperV/Machine`,
 PowerShell 7 behind manifests as the libvirt template's are, each answering
-what is not there yet as absent (ADR-0015, amendment 2026-11-11). What
-runs inside a machine once installed belongs to the environment templates
-above.
+what is not there yet as absent (ADR-0015, amendment 2026-11-11). Its
+second is `deploy/dsc/msdsc/libvirt`, for a Linux host's KVM, and Ansible
+makes the same machines with its role `xmip_machine`. What a network, a
+pool, a domain, a kickstart or an answer medium is, is written once, in
+`deploy/dsc/machine`, which both technologies ask; one machine installs at
+a time, and each AlmaLinux machine is given an SSH host key made where the
+environment is deployed from, so every login to it is checked against a
+known key (ADR-0015, amendment 2026-11-11). What runs inside a machine once
+installed belongs to the environment templates above.
 
 ## 9. Recovery
 

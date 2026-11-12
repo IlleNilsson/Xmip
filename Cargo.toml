@@ -163,6 +163,21 @@ transport-sftp = ["dep:xmip-transport-sftp"]
 transport-tcp = ["dep:xmip-transport-tcp", "xmip-transport-tcp/tls"]
 transport-udp = ["dep:xmip-transport-udp"]
 
+# The route technologies xmip-service links and hands to the node it starts
+# (`xmip_runtime::linked::Linked::sources`): each the source a Subscription
+# filter's prefix names (ADR-0046). A property with no prefix is the
+# context's, which every node reads. `content` follows a path into the
+# Message's first section, `content:<language>:<expression>`, in the path
+# languages this build links: `edi`, a segment, element and component of an
+# EDIFACT or X12 interchange (`content:edi:UNH/2/1`, the message type). A
+# filter naming a source or a language the build left out is refused as the
+# node starts. A site links those it names (deploy/site). The source and the
+# list of the languages it carries are made in one place,
+# `xmip_route_content::ContentSource::linked`, by the route technology's own
+# features, which a language's feature here turns on.
+route-content = ["dep:xmip-route-content"]
+path-edi = ["dep:xmip-path-edi", "route-content", "xmip-route-content/edi"]
+
 # The cluster's authority, served by the node whose `[provision.node]` names
 # it with `serve`: the premises' own ACME service, with renewal information
 # and revocation, and its revocation list published over plain HTTP
@@ -212,6 +227,7 @@ xmip-node = { package = "xmip-core-node", git = "https://github.com/IlleNilsson/
 xmip-observe = { package = "xmip-core-observe", git = "https://github.com/IlleNilsson/xmip-core-observe", branch = "main", optional = true }
 xmip-party = { package = "xmip-core-party", git = "https://github.com/IlleNilsson/xmip-core-party", branch = "main", optional = true }
 xmip-path = { package = "xmip-core-path", git = "https://github.com/IlleNilsson/xmip-core-path", branch = "main", optional = true }
+xmip-path-edi = { package = "xmip-core-path-edi", git = "https://github.com/IlleNilsson/xmip-core-path-edi", branch = "main", optional = true }
 xmip-persist = { package = "xmip-core-persist", git = "https://github.com/IlleNilsson/xmip-core-persist", branch = "main", optional = true }
 xmip-persist-rocksdb = { package = "xmip-core-persist-rocksdb", git = "https://github.com/IlleNilsson/xmip-core-persist-rocksdb", branch = "main", optional = true }
 xmip-persist-sqlite = { package = "xmip-core-persist-sqlite", git = "https://github.com/IlleNilsson/xmip-core-persist-sqlite", branch = "main", optional = true }
@@ -225,6 +241,7 @@ xmip-report = { package = "xmip-core-report", git = "https://github.com/IlleNils
 xmip-resilience = { package = "xmip-core-resilience", git = "https://github.com/IlleNilsson/xmip-core-resilience", branch = "main", optional = true }
 xmip-retain = { package = "xmip-core-retain", git = "https://github.com/IlleNilsson/xmip-core-retain", branch = "main", optional = true }
 xmip-route = { package = "xmip-core-route", git = "https://github.com/IlleNilsson/xmip-core-route", branch = "main" }
+xmip-route-content = { package = "xmip-core-route-content", git = "https://github.com/IlleNilsson/xmip-core-route-content", branch = "main", optional = true }
 # Opening Modules from their libraries, a compiled Work Process unit among
 # them (ADR-0066, amendment 2026-10-22).
 xmip-runtime = { package = "xmip-core-runtime", git = "https://github.com/IlleNilsson/xmip-core-runtime", branch = "main", features = ["dynamic-loading"] }

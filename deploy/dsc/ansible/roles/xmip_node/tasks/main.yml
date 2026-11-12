@@ -33,8 +33,8 @@
 
 - name: The node on a Windows machine
   ansible.builtin.import_tasks: windows.yml
-  when: ansible_os_family == 'Windows'
+  when: ansible_facts['os_family'] == 'Windows'
 
 - name: The node on an AlmaLinux machine
   ansible.builtin.import_tasks: linux.yml
-  when: ansible_os_family != 'Windows'
+  when: ansible_facts['os_family'] != 'Windows'

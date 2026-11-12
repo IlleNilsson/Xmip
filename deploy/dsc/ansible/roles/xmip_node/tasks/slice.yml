@@ -16,4 +16,5 @@
   delegate_to: localhost
   register: xmip_slice
   changed_when: false
+  check_mode: false
   when: xmip_cluster_configuration | length > 0

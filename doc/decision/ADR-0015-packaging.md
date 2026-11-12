@@ -10,7 +10,7 @@ Accepted. Implementation follows in separate reviewed changes.
 - Subject: Packaging and distribution
 - Name: Packaging and distribution
 - Order: 2
-- Concepts: arm64, embedded, IoT; MSI, winget, deb, rpm, OCI, pkg, launchd; target, site; archive target; schema version, upgrade; environment template
+- Concepts: arm64, embedded, IoT; MSI, winget, deb, rpm, OCI, pkg, launchd; target, site; archive target; schema version, upgrade; environment template, environment file
 
 Packaging covers the node; Modules are out of scope. MSI via WiX, published
 through winget, on Windows. `.deb` and `.rpm` on Linux. An OCI image every
@@ -22,9 +22,13 @@ turned into a build by `Build-XmipService` (amendments 2026-10-01 and
 2026-10-19), every built technology built and tested, archive targets
 among them: the site chooses them (amendment 2026-10-20). macOS gets a `.pkg` with a
 launchd daemon, and every package installs by running
-`xmip-service --install`; only the Windows packages are built for now
-(amendment 2026-10-13). Every database records its schema version, and a
-release's upgrade scripts only add (amendment 2026-10-20).
+`xmip-service --install`; the Windows packages are built on Windows and the
+`.rpm` on Linux, the macOS `.pkg` not yet (amendments 2026-10-13 and
+2026-11-11). Every database records its schema version, and a
+release's upgrade scripts only add (amendment 2026-10-20). One environment
+file names the technology, Microsoft DSC v3 or Ansible, that makes an
+environment's machines and its nodes, in one command, and the environment
+keeps it: the other one is refused there (amendment 2026-11-11).
 
 ## Context
 
@@ -709,7 +713,9 @@ Every rule about the node is `xmip-service`'s, which the templates ask; no
 template reads the TOML, slices it or knows a port. The mapping of nodes
 onto machines is each template's parameters —
 `environment.example.parameters.yaml` and `inventory.example.yml`, held
-equal by `test/MsdscEnvironment.Test.ps1` — and never the cluster's file:
+equal by `test/MsdscEnvironment.Test.ps1`; since the second amendment of
+2026-11-11 the environment file's alone, the YAML written from it — and
+never the cluster's file:
 the example runs R1 on XMIP-IN01, S1 on XMIP-OUT01, P1 on XMIP-APP01, L1
 on XMIP-APP02 and D1 on XMIP-APP03, and the Essentials simulates the rest.
 
@@ -773,7 +779,8 @@ certificate is made where the authority is kept.
 with every resource replaced by an echo, and the Xmip resources' steps are
 held with the machine's commands stubbed (`test/MsdscEnvironment.Test.ps1`);
 the playbook passes `ansible-playbook --syntax-check` and `--list-tasks` in
-the WSL AlmaLinux guest. Neither has been run against a machine.
+the WSL AlmaLinux guest. Neither has been run against a machine; both were
+on 2026-11-11 (the second amendment of that date).
 
 Which account a node runs as was open (the amendment of 2026-10-13); the
 virtual account and `xmip` are the assistant's draft of 2026-10-21, for the
@@ -817,7 +824,9 @@ environment with DSC*; and of the language of what manages it: *.NET or
 PowerShell. That is for management, Rust is for runtime.*
 
 **One command.** `Deploy-XmipEnvironment -Path <environment.toml>` makes an
-environment's machines and waits until each is installed. The environment
+environment's machines and waits until each is installed — and since the
+second amendment of 2026-11-11 its nodes too, in the technology the file
+names, one installation at a time. The environment
 file is TOML, Xmip's configuration: the hypervisor, whose template it
 selects (`deploy/dsc/msdsc/<hypervisor>`), the network, the images and the
 machines, with the nodes each runs. It applies the template's
@@ -931,3 +940,305 @@ protector rests on the host's Untrusted Guardian, whose certificates
 Windows keeps in the LocalMachine store *Shielded VM Local Certificates*,
 not on this host yet; the first run shows it, and the documents follow.
 The assistant's, 2026-11-11.
+
+## Amendment, 2026-11-11: an environment in one command, in either technology
+
+The owner, 2026-11-11: *I won't see the full picture until we get msdsc and
+ansible running on Windows & Linux.* The amendment of 2026-11-03 made the
+machines in one command; this one makes the nodes on them too, in either
+technology, from one file (`deploy/dsc/README.md`).
+
+**One environment file, the technology a value in it.** The environment
+file, TOML, is the only place that says what an environment is:
+`technology`, `msdsc` or `ansible`, the template set that makes all of it,
+never a mix (the amendment of 2026-10-09); the hypervisor; the network, the
+images and the machines, each with the node it runs, one at most, since a
+package lays one node out in one folder, the assistant's for the owner to
+strike; and what a node is given — the cluster's file, this machine's
+`xmip-service` that slices and signs, the authority, each node's
+certificate folder, the far end, the package per family and, for msdsc,
+the tools DSC is brought with. A file naming no technology is refused,
+naming the line to add. `Deploy-XmipEnvironment` reads it and writes the
+YAML each tool reads into the run folder — DSC's parameters, Ansible's
+`inventory.yml` — generated, never configuration. The mapping the
+amendment of 2026-10-21 wrote twice and held equal by a test is written
+once: `environment.example.dsc.yaml`, `environment.example.parameters.yaml`
+and `inventory.example.yml` are deleted, and the examples are
+`deploy/dsc/hyperv.example.toml` and `libvirt.example.toml`, an environment
+in either technology. Both map D2 beside D1: neither Storage node serves
+until both answer (ADR-0056, amendments 2026-11-08 and of this date).
+
+**msdsc, the nodes too.** After the network and the machines, one
+installation at a time — a machine is applied again every thirty seconds
+until it answers, and only then is the next made — the command applies
+`names.dsc.yaml` where a machine is the network's DNS server, then
+`environment/machine.dsc.yaml` once for each node in the order the file
+lists the machines, and last `started.dsc.yaml`. An AlmaLinux machine needs
+nothing but its sshd: `Xmip.Environment/Machine` reaches it with OpenSSH,
+brings DSC there — the `pwsh` and `dsc` tarballs the file names, refused
+where a SHA-256 differs, copied once and unpacked under
+`/var/tmp/xmip-environment/tools`, never installed for the machine — and
+runs `dsc` there with sudo; a Windows machine is reached over WinRM as
+before and still has PowerShell 7 and DSC put on it once. `node.dsc.yaml`
+names no built-in resource: DSC refuses a document naming a resource its
+machine has none of, a condition notwithstanding, so
+`Microsoft.Windows/Service` gave way to `Xmip.Node/Service` for both
+families. `Xmip.Node/Package` compares an installed `.rpm` with the shipped
+one by its header's SHA-256, so a build made again under one version
+reaches the machine. A node refuses to accept work until its cluster's
+Xmip Storage answers, and a Storage node until every one listed does, so
+no node of them starts alone, one machine after another: each node's
+document enables its service and starts it waiting for nothing, and
+`Xmip.Environment/Started` starts them together, and again every five
+seconds each one that stopped, until every one runs or 180 seconds are
+spent. A resource answers a machine that does not answer yet, and openings
+before the package, as absent.
+
+**Ansible, the machines too.** The role `xmip_machine` makes them —
+`community.libvirt` on libvirt, Microsoft's `microsoft.hyperv` on Hyper-V
+— one installation at a time; then `xmip_name`; then `xmip_node`, one
+machine at a time; and a last play starts every node together, as msdsc
+does. Ansible's controller does not run on Windows, so there the command
+refuses `technology = "ansible"` and names the WSL command. Its `-WhatIf`
+is `--check`, and answers what msdsc's test does: every task that only
+reads runs under it (`check_mode: false`), the `.rpm`'s headers,
+`--listening` and the ports firewalld holds among them; every command that
+changes names the file it needs in `removes`, which is how the command
+module says under `--check` that it would run; a host is in its desired
+state only where nothing would change; and a machine not made yet is
+answered unreached, never refused, a domain not defined yet is not asked
+to run.
+
+**What a machine is, written once.** The network, pool and domain
+definitions, the Hyper-V machine's files, MAC and drives, the kickstart,
+the Windows answer and the answer medium moved to `deploy/dsc/machine`,
+plain PowerShell 7: DSC's machine resources dot-source it and Ansible's
+role asks `machine.ps1`; no task writes a definition of its own. After the
+review of the same day so did each step of a libvirt machine's
+installation, `LibvirtInstallation.ps1`: `virsh`, the media put in the
+pool, the domain started with Space pressed for a Windows ISO, and the
+installation completed. Ansible's role asks `machine.ps1` for `State`,
+`Install` and `Complete`, and `Xmip.Libvirt/Machine` keeps only where a
+machine is and moving it on. An ISO's volume is named by its SHA-256 and
+made only once it was checked, so its gigabytes are read once, not once
+per machine; it is made sparse and uploaded, and trusted by its name only
+where libvirt says all of it is allocated, so one an upload that stopped
+left short is deleted and uploaded again. The answer medium, which holds a
+machine's host key or a Windows Administrator's password, is written in a
+folder made for it alone, named at random and, off Windows, `0700`, as
+.NET's `Directory.CreateTempSubdirectory` makes it — never at a name in
+`/tmp` another account could know or make first — and the folder is
+removed. A machine is recorded installed only once both its drives are
+empty and its answer medium is gone from the pool: either left is refused
+before the record, and the next run tries again. How the Windows machines'
+Administrator secret is read is placed once too, `MachineSecret.ps1`: off
+Windows `Export-Clixml` keeps a password as plain text, a Unicode
+character array
+([Microsoft](https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/export-clixml)),
+so a file whose password is not encrypted by Windows' Data Protection API
+is refused wherever it is read, and an encrypted one is read on Windows
+alone.
+
+**One technology, held.** An environment is made by one technology, never a
+mix (the amendment of 2026-10-09), and the environment now keeps which: the
+first run that applies writes it into the private state, `technology`, and
+a run of the other one, `-WhatIf` too, is refused until the environment is
+removed (`deploy/dsc/README.md`, *Starting again from nothing*); a libvirt
+machine's record in its domain names the technology that made it, and the
+other is refused there, by the one function both technologies ask. On a
+node machine msdsc stages in its own folder, the login's alone, `0700`,
+one another account owns refused, and what a node is given, its key among
+it, is removed from it once `dsc` has run; Ansible stages the package in a
+folder of its own, `/var/tmp/xmip-ansible`.
+
+**Keys known in advance.** The command keeps an environment's private
+state — on Linux under `~/.local/state/xmip/deploy/<name>`, on Windows in
+the run folder, its access the account's alone — and in it the
+environment's own SSH key, which each AlmaLinux machine's account is
+given; a host key for each AlmaLinux machine, which its kickstart writes;
+and `known_hosts` holding exactly those, so every login is checked strictly
+and none trusts on first use. The run takes the folder's `run.lock` before
+it writes any of that, so a run refused changes no key and no
+`known_hosts` the running one reads. The environment file's
+`ssh_public_key` is deleted: the owner's key carried a passphrase, so no
+run could go unattended, and on a Windows drive mounted in WSL every file
+shows as `0777`, which OpenSSH refuses for a private key. The key made in
+its place has no passphrase, and every AlmaLinux machine gives its account
+sudo without a password, so whoever reads that one file is root on every
+node — and on Windows the file is inside the clone. That trade is the
+assistant's, made without the owner: it is not a decision of his, and it
+waits on him (below). `credential` is `secret`, as the owner's word for it
+is.
+
+**The `.rpm`, built and installed.** `Build-XmipService -Package rpm` on
+Linux makes it with nfpm 2.48.0 from `deploy/package/linux/nfpm.yaml`
+(`New-XmipLinuxPackage`), and still refuses it off Linux. Built in the WSL
+AlmaLinux guest, the systemd branches of `install.rs` compiled for the
+first time, warnings denied, with no change.
+
+**The first runs**, in the WSL AlmaLinux guest, on libvirt: three AlmaLinux
+10.2 machines of two virtual processors and 4 GiB — XMIP-APP03 for D1,
+XMIP-APP04 for D2, XMIP-IN01 for R1 — one installation at a time, twelve
+to twenty-two minutes each beside builds, each answering SSH with the host
+key `known_hosts` held. **msdsc**, from a clean state: the network, the
+pool and the machines; the nodes' first step found a defect, a package
+step that failed on a machine with no package, fixed with its test; the
+next run brought DSC to each machine, placed its slice, certificate and
+account, installed the `.rpm` — its `postinstall.sh` ran `xmip-service
+--install` — opened exactly the ports `--listening` says, `7401/tcp`, and
+`7443/tcp` on D1 and D2, and started the three together. Each unit was
+`active` and `enabled`, each journal said `accepts work`, R1 and D2 were
+connected to D1 on 7443, `node.xmip` was `xmip:root 0640` and
+`tls/node.key` `0600`, with no SELinux denial. A line appended to R1's
+`node.xmip`, and a restart: refused, the node running its accepted slice;
+the next run put the shipped slice back, every one of its eight steps in
+its desired state, exit 0. A node's step took four to nine minutes: DSC
+and PowerShell 7 start once for each resource and method on a
+two-processor machine, and the document runs there three times a step, a
+set and two tests; to be measured and cut. Those runs used the code as it
+stood before the private state moved under `~/.local/state`, before
+`run.lock`, `Invoke-XmipDeployRun` and the later edits of the day to
+`Deploy-XmipEnvironment.ps1` and `Initialize-XmipDeployState.ps1`, and no
+log of them was kept.
+
+**Ansible**, on the same host and file, with ansible-core 2.22.0 on Python
+3.13: from a clean state its machines play made the network, the pool and
+the three machines, one installation at a time, in 57 minutes beside
+builds. Its runs found three defects, each fixed with its test or its run.
+`register_secret`, which masks the node's key, is ansible-core 2.22's, so
+the controller is 2.22 (`prerequisite.toml`). firewalld refuses a service
+made permanent and enabled at once (`INVALID_SERVICE`), so the role makes
+it permanent and reloads, and asks the running firewall, reloading where a
+run that stopped before its handlers left it without: D1's opening missing,
+D2 and R1 never reached it and refused to accept work. And a second run was
+started while the first still started its nodes, so `Deploy-XmipEnvironment`
+holds the environment's private state through `run.lock` and refuses a
+second run while one runs. No one of those runs took the node play from
+fresh machines to running nodes, though: the first failed on XMIP-APP03
+after seven changes, the second there too, the third installed the nodes
+on XMIP-APP04 and XMIP-IN01 and failed at the last play while a fourth
+was started beside it, and the fourth, first offered here as the proof,
+changed one thing per host, the firewall reloaded — the account, slice,
+certificate, key, package and firewalld service were there from before.
+Its tasks read a machine's facts through `ansible_facts`, as ansible-core
+2.24 requires once it injects none as variables, the inventory names each
+AlmaLinux machine's Python rather than discovering it, and every group is
+written, an empty one too, so no run warns. The review of the same day
+said all of this.
+
+**From nothing, after the review**, the same day, on the code as it
+stands: before each run every machine, every volume of the pool, the ISO's
+among them, the pool, the network, the run folder and the private state
+were removed (`deploy/dsc/README.md`, *Starting again from nothing*), and
+the run went once from start to finish, its log kept beside the run
+folder, `.local-work/deploy/xmip.*.run.log`.
+
+- **Ansible.** `-WhatIf` against the empty host made nothing: the machines
+  play would change eleven things, and XMIP-APP03 was not reached. The
+  play run a host at a time stopped there and its recap named no other
+  host, so since then a host the recap lacks is answered unreached too.
+  Then one run made the network, the pool,
+  the ISO uploaded whole (10,106,380,288 bytes allocated of 10,106,372,096),
+  the three machines, the nodes and their start in 30 minutes 2 seconds:
+  `failed=0` on every host, each node machine `ok=30 changed=17`, the
+  controller `ok=30 changed=11`, exit 0. Each unit `active` and `enabled`,
+  each journal `accepts work`, D1 serving five connections on 7443 — R1's
+  three and D2's two — firewalld's service for each node holding
+  `7401/tcp`, and `7443/tcp` on D1 and D2, `node.xmip` `xmip:root 0640` and
+  `tls/node.key` `xmip:root 0600`, no SELinux denial, nothing in msdsc's
+  staging folder, no answer medium in `/tmp`, and each domain's record
+  `installed="yes" technology="ansible"`. `-WhatIf` over it: `changed=0`
+  everywhere. A port added by hand to R1's firewalld service, `7999/tcp`:
+  `-WhatIf` answered XMIP-IN01 not in its desired state, the close counted
+  as a change, and the next run closed it and reloaded the firewall,
+  `changed=2` there and 0 elsewhere. `-WhatIf` with `technology = "msdsc"`
+  over it was refused by the state's `technology` and, that record set
+  aside, by XMIP-APP03's own: `REFUSED: XMIP-APP03 was made by 'ansible',
+  not msdsc`. msdsc's test of the network and the pool found what that run
+  had left undone: neither was started with the host, since `virt_net` and
+  `virt_pool` answer a task naming a state before they look at `autostart`
+  (community.libvirt 2.4.0, `core`); starting and starting with the host
+  are a task each now, with their test, and the next run set both,
+  `changed=2` on the controller alone.
+- **msdsc.** `-WhatIf` against the empty host: each of its eight steps not
+  in its desired state, nothing made and no technology recorded. The first
+  run made the network, the pool and the machines and placed every node,
+  and no node started: `xmip-service` was refused reading
+  `authority/authority.pem`, *Permission denied*. The staging folder now
+  makes the node's files `0600`, and a copy keeps its source's mode, so the
+  authority's certificate, root's, was no longer the node account's to
+  read. `Xmip.Node/File` gives a file named not private `0644` whatever
+  its source's mode, and checks it, with its test. The next run from
+  nothing: every one of its eight steps in its desired state, exit 0, in
+  36 minutes 42 seconds — each machine eight to ten minutes, each node's
+  step two and a half, the start 37 seconds. Each unit `active` and
+  `enabled`, each journal `accepts work`, D1 serving four connections on
+  7443, the same ports, `node.xmip` and `tls/node.key` as Ansible's,
+  `node.pem`, `anchors.pem` and `authority/authority.pem` `0644`, no
+  SELinux denial, the staging folder `0700` and the login's with no
+  `files` left in it, no answer medium in `/tmp`, the network and the pool
+  started with the host, and each domain's record `installed="yes"
+  technology="msdsc"`. Run again, every step was in its desired state in
+  7 minutes 19 seconds, and every node restarted: DSC asks
+  `Xmip.Environment/Slice` to set without a test first
+  (`implementsPretest`), and each set signed the slice anew, so each
+  machine's `node.xmip` was replaced for a new signature. A slice whose
+  signed text is the one there is kept now, with its test, and the next
+  run, 7 minutes 46 seconds, every step in its desired state, restarted no
+  node. `-WhatIf` with `technology = "ansible"` over it was refused by the
+  state's `technology`.
+- **Ansible once more from nothing**, on the code with both fixes.
+  `-WhatIf` against the empty host: the controller's play would change
+  thirteen things, and all three node machines were answered unreached.
+  Then one run, 28 minutes 15 seconds: `failed=0` on every host, each node
+  machine `ok=30 changed=17`, the controller `ok=32 changed=13`, exit 0;
+  each unit `active` and `enabled`, each journal `accepts work` once, D1
+  serving five connections on 7443, the ports, modes and records as the
+  first, the network and the pool started with the host. Run again:
+  `changed=0` on every host in 1 minute 36 seconds, and no node restarted.
+  The environment is left as that run made it, its machines shut down.
+
+**What is still written twice, and why.** Ansible's Hyper-V tasks carry
+three rules the msdsc Hyper-V resources hold: the host's address on the
+switch and the network's NAT (`HyperVNetwork.ps1`), the TPM's key
+protector (`HyperVHardware.ps1`) and Space pressed at a Windows ISO's
+prompt (`HyperVInstallation.ps1`), inside `win_powershell` scripts the
+analyzers and Pester never read. They run on the Windows host, where no
+file of the controller's is, and the resources they copy were being
+rebuilt by another worker that day; the way to place them once is a
+script of `deploy/dsc/machine` that both call, Ansible handing it to the
+host as `win_powershell`'s script. That is left for once the Hyper-V
+template has run. The `.rpm` header comparison is the other copy: an
+Ansible node machine has no PowerShell 7, so its role asks `rpm` for
+`%{SHA256HEADER}` itself, as `Xmip.Node/Package` does on an msdsc one; the
+rule is `rpm`'s, and each technology asks it.
+
+**What waits on the owner.** Hyper-V, either technology: membership of
+Hyper-V Administrators, which the owner's account has not joined yet, so
+the Hyper-V way of `doc/getting-started.md` has never run. For Ansible
+there: how its Linux controller reaches the host — the file's `host`,
+`ANSIBLE_REMOTE_USER` and its password, asked — and how that controller is
+given the Windows machines' Administrator password, which a secret file
+cannot carry off Windows: asked at each run, Ansible Vault, or Xmip's own
+secret store (`Set-XmipSecret`). Until he chooses, a Windows machine is
+made by msdsc on a Windows host. The environment's SSH key: kept without a
+passphrase, so whoever reads it is root on every AlmaLinux node, and on
+Windows inside the clone; the ways the review named are an `ssh-agent`
+holding a key with a passphrase, or the owner's own protected key loaded
+into an agent for the run, and the Windows state moved out of the clone,
+under `%LOCALAPPDATA%`. His answer is to be recorded here. The `.rpm`
+needs a Linux build of `xmip-service`, made in the guest against his
+choice of 2026-11-02 to build Windows alone; the assistant read his words
+of 2026-11-11 as lifting it for the Linux package, which is his to
+confirm. The MSI (WiX 7's terms). Ansible on Hyper-V is written and held
+by `--syntax-check`, `--list-tasks` and `ansible-doc`, never run.
+ansible-core 2.22 needs Python
+3.13, on AlmaLinux 10.2 EPEL's `python3.13`, which `dnf` installs with sudo:
+the guest runs it from those packages unpacked into its account, its
+library named by `LD_LIBRARY_PATH`, until it is installed so. A
+switch that takes an environment down is not built; the run sheet does it
+with `virsh` (`deploy/dsc/README.md`). Deploy is management tooling in
+PowerShell, not an act on a node: the ABI, the CLI and the GUIs have
+nothing to follow. The mapping of 2026-10-21 and its *Validated, never
+applied* are answered here; the amendment of 2026-11-03 now covers the
+nodes too.

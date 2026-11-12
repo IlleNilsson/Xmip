@@ -6,13 +6,16 @@
 # installs and starts its service, the firewall openings its configuration
 # listens on, and its service running. The node never slices
 # (ADR-0031, amendment 2026-11-06). Applied on the node machine itself by Xmip.Environment/Machine
-# (environment.example.dsc.yaml), which copies this folder and the files
+# (machine.dsc.yaml), which copies this folder and the files
 # below to the machine's staging folder first; README.md says how.
 #
-# Where a built-in resource of DSC fits, it is used: Microsoft.Windows/Service
-# for the Windows service. Everything else is an Xmip resource of this
-# folder (node.resource.ps1), because the rules it applies — the ports, the
-# layout — are xmip-service's, which it asks.
+# Every resource is an Xmip resource of this folder (node.resource.ps1),
+# because the rules it applies — the ports, the layout — are xmip-service's,
+# which it asks, and because one document serves both families: DSC refuses
+# a document naming a resource its machine has none of, a condition
+# notwithstanding, so the built-in Microsoft.Windows/Service, which DSC has
+# on Windows alone, cannot be named here (checked 2026-11-11, DSC
+# 3.4.0-preview.2: "Resource not found" on AlmaLinux).
 $schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
 directives:
   version: ^3.4.0-preview.2
@@ -69,6 +72,7 @@ resources:
     properties:
       path: "[path(parameters('layout').configuration, 'tls', 'node.pem')]"
       source: "[path(parameters('staging'), 'files', 'node.pem')]"
+      private: false
   - name: Key
     type: Xmip.Node/File
     requireVersion: ^0.1
@@ -85,6 +89,7 @@ resources:
     properties:
       path: "[path(parameters('layout').configuration, 'tls', 'anchors.pem')]"
       source: "[path(parameters('staging'), 'files', 'anchors.pem')]"
+      private: false
   - name: Package
     type: Xmip.Node/Package
     requireVersion: ^0.1
@@ -107,21 +112,9 @@ resources:
       program: "[parameters('layout').program]"
       configuration: "[path(parameters('layout').configuration, 'node.xmip')]"
       node: "[parameters('node')]"
-  - name: Windows service
-    type: Microsoft.Windows/Service
-    requireVersion: ^0.1
-    condition: "[equals(parameters('family'), 'Windows')]"
-    dependsOn:
-      - "[resourceId('Xmip.Node/Package', 'Package')]"
-    properties:
-      name: "[concat('xmip-', parameters('node'))]"
-      status: Running
-      startType: Automatic
-      logonAccount: "[parameters('account')]"
-  - name: Linux service
+  - name: Service
     type: Xmip.Node/Service
     requireVersion: ^0.1
-    condition: "[equals(parameters('family'), 'Linux')]"
     dependsOn:
       - "[resourceId('Xmip.Node/Package', 'Package')]"
     properties:

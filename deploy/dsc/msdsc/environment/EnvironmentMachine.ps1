@@ -3,8 +3,11 @@
 
 <#
     The Machine kind of environment.resource.ps1: a document of this folder
-    applied on another machine. Dot-sourced by environment.resource.ps1 and
-    by test/MsdscEnvironment.Test.ps1.
+    applied on another machine. A Windows machine is reached over PowerShell
+    Remoting, WinRM as its Administrator; an AlmaLinux one over OpenSSH with
+    the environment's key and known_hosts, DSC brought to it first
+    (EnvironmentSsh.ps1). Dot-sourced by environment.resource.ps1 and by
+    test/MsdscEnvironment.Test.ps1.
 
     Style: doc/governance/powershell-style.md
 #>
@@ -32,11 +35,37 @@ function Get-EnvironmentStaging {
     return '/var/tmp/xmip-environment'
 }
 
+function Write-EnvironmentParameter {
+    <#
+    .SYNOPSIS
+    The document's parameters, given the staging folder, written here as
+    YAML, configuration as dsc takes it (CONTRIBUTING), by powershell-yaml:
+    the machine needs no module. Answers the file's path; the caller removes
+    it.
+    #>
+    [CmdletBinding()]
+    [OutputType([string])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [hashtable] $Instance,
+
+        [Parameter(Mandatory = $true)]
+        [string] $Staging
+    )
+
+    [hashtable] $parameters = $Instance.parameters.Clone()
+    $parameters.staging = $Staging
+    Import-Module -Name powershell-yaml
+    [string] $file = [IO.Path]::GetTempFileName()
+    [IO.File]::WriteAllText($file, (@{ parameters = $parameters } | ConvertTo-Yaml))
+    return $file
+}
+
 function New-EnvironmentSession {
     <#
     .SYNOPSIS
-    A PowerShell Remoting session on the machine: WinRM as its
-    Administrator for Windows, SSH with its key for AlmaLinux.
+    A PowerShell Remoting session on a Windows machine: WinRM as its
+    Administrator, the secret file holding its password.
     #>
     [CmdletBinding()]
     [OutputType([System.Management.Automation.Runspaces.PSSession])]
@@ -45,81 +74,75 @@ function New-EnvironmentSession {
         [hashtable] $Instance
     )
 
-    if ($Instance.family -eq 'Windows') {
-        [hashtable] $winrm = @{
-            ComputerName = $Instance.address
-            Credential   = Import-Clixml -LiteralPath $Instance.credentialPath
-        }
-        return New-PSSession @winrm
+    [hashtable] $winrm = @{
+        ComputerName = $Instance.address
+        Credential   = Read-MachineSecret -Path $Instance.secretPath
     }
-
-    [hashtable] $ssh = @{
-        HostName    = $Instance.address
-        UserName    = $Instance.login
-        KeyFilePath = $Instance.keyPath
-        SSHTransport = $true
-    }
-    return New-PSSession @ssh
+    return New-PSSession @winrm
 }
 
-function Copy-EnvironmentDocument {
+function Invoke-EnvironmentWinRmDocument {
     <#
     .SYNOPSIS
-    Copy this folder, the document's files and its parameters to the
-    machine's staging folder, and answer the parameters file's path there.
+    Apply or test a document on a Windows machine over PowerShell Remoting:
+    this folder, the document's files and its parameters copied to the
+    staging folder, and dsc run there as the Administrator. Answers what dsc
+    wrote, its JSON.
     #>
     [CmdletBinding()]
     [OutputType([string])]
     param(
         [Parameter(Mandatory = $true)]
-        [System.Management.Automation.Runspaces.PSSession] $Session,
+        [hashtable] $Instance,
 
         [Parameter(Mandatory = $true)]
-        [hashtable] $Instance
+        [ValidateSet('test', 'set')]
+        [string] $Operation,
+
+        [Parameter(Mandatory = $true)]
+        [string] $Staging,
+
+        [Parameter(Mandatory = $true)]
+        [string] $Parameters
     )
 
-    [string] $staging = Get-EnvironmentStaging -Family $Instance.family
-    [string] $separator = if ($Instance.family -eq 'Windows') { '\' } else { '/' }
-    [string] $template = "$staging${separator}template"
-    [string] $files = "$staging${separator}files"
-
-    Invoke-Command -Session $Session -ArgumentList $template, $files -ScriptBlock {
-        param($Template, $Files)
-        Remove-Item -LiteralPath $Template -Recurse -Force -ErrorAction SilentlyContinue
-        New-Item -ItemType Directory -Force -Path $Template, $Files | Out-Null
-    }
-    [hashtable] $folder = @{
-        Path        = Join-Path -Path $PSScriptRoot -ChildPath '*'
-        Destination = $template
-        ToSession   = $Session
-        Recurse     = $true
-    }
-    Copy-Item @folder
-
-    foreach ($name in @($Instance.files.Keys)) {
-        [hashtable] $copy = @{
-            Path        = $Instance.files[$name]
-            Destination = "$files$separator$name"
-            ToSession   = $Session
-            Recurse     = $true
-            Force       = $true
+    $session = New-EnvironmentSession -Instance $Instance
+    try {
+        [string] $template = "$Staging\template"
+        [string] $files = "$Staging\files"
+        Invoke-Command -Session $session -ArgumentList $template, $files -ScriptBlock {
+            param($Template, $Files)
+            Remove-Item -LiteralPath $Template -Recurse -Force -ErrorAction SilentlyContinue
+            New-Item -ItemType Directory -Force -Path $Template, $Files | Out-Null
         }
-        Copy-Item @copy
+        [hashtable] $folder = @{
+            Path        = Join-Path -Path $PSScriptRoot -ChildPath '*'
+            Destination = $template
+            ToSession   = $session
+            Recurse     = $true
+        }
+        Copy-Item @folder
+        foreach ($name in @($Instance.files.Keys)) {
+            Copy-Item -Path $Instance.files[$name] -Destination "$files\$name" -ToSession (
+                $session) -Force
+        }
+        Copy-Item -Path $Parameters -Destination "$Staging\parameters.yaml" -ToSession $session
+        [object[]] $argument = @($template, $Instance.document, "$Staging\parameters.yaml",
+            $Operation)
+        # Windows PowerShell may answer at the far end, so the block asks
+        # nothing PowerShell 7 alone has; dsc finds this folder's resources on
+        # the PATH it is given.
+        return Invoke-Command -Session $session -ArgumentList $argument -ScriptBlock {
+            param($Template, $Document, $Parameters, $Operation)
+            $env:PATH = "$Template;$env:PATH"
+            $config = @('config', '--parameters-file', $Parameters, $Operation, '--file',
+                "$Template\$Document")
+            return (& dsc @config) -join "`n"
+        }
     }
-
-    [hashtable] $parameters = $Instance.parameters.Clone()
-    $parameters.staging = $staging
-    # The parameters are configuration, so dsc is given YAML (CONTRIBUTING),
-    # written on this host by powershell-yaml; the far end needs no module.
-    Import-Module -Name powershell-yaml
-    [string] $yaml = @{ parameters = $parameters } | ConvertTo-Yaml
-    [string] $file = "$staging${separator}parameters.yaml"
-    Invoke-Command -Session $Session -ArgumentList $file, $yaml -ScriptBlock {
-        param($File, $Yaml)
-        [System.IO.File]::WriteAllText($File, $Yaml)
+    finally {
+        Remove-PSSession -Session $session
     }
-
-    return $file
 }
 
 function Invoke-EnvironmentDocument {
@@ -133,9 +156,6 @@ function Invoke-EnvironmentDocument {
     [OutputType([hashtable])]
     param(
         [Parameter(Mandatory = $true)]
-        [System.Management.Automation.Runspaces.PSSession] $Session,
-
-        [Parameter(Mandatory = $true)]
         [hashtable] $Instance,
 
         [Parameter(Mandatory = $true)]
@@ -143,24 +163,24 @@ function Invoke-EnvironmentDocument {
         [string] $Operation
     )
 
-    [string] $parameters = Copy-EnvironmentDocument -Session $Session -Instance $Instance
     [string] $staging = Get-EnvironmentStaging -Family $Instance.family
-    [object[]] $argument = @($Instance.family, $staging, $Instance.document, $parameters, $Operation)
-
-    # Windows PowerShell may answer at the far end, so the block asks
-    # nothing PowerShell 7 alone has; dsc finds this folder's resources on
-    # the PATH it is given.
-    [string] $said = Invoke-Command -Session $Session -ArgumentList $argument -ScriptBlock {
-        param($Family, $Staging, $Document, $Parameters, $Operation)
-        $windows = $Family -eq 'Windows'
-        $template = if ($windows) { "$Staging\template" } else { "$Staging/template" }
-        $file = if ($windows) { "$template\$Document" } else { "$template/$Document" }
-        $config = @('config', '--parameters-file', $Parameters, $Operation, '--file', $file)
-        if ($windows) {
-            $env:PATH = "$template;$env:PATH"
-            return (& dsc @config) -join "`n"
+    [string] $parameters = Write-EnvironmentParameter -Instance $Instance -Staging $staging
+    [hashtable] $asked = @{
+        Instance = $Instance
+        Operation = $Operation
+        Staging = $staging
+        Parameters = $parameters
+    }
+    try {
+        [string] $said = if ($Instance.family -eq 'Windows') {
+            Invoke-EnvironmentWinRmDocument @asked
         }
-        return (& sudo env "PATH=${template}:$env:PATH" dsc @config) -join "`n"
+        else {
+            Invoke-EnvironmentSshDocument @asked
+        }
+    }
+    finally {
+        Remove-Item -LiteralPath $parameters -Force -ErrorAction Ignore
     }
 
     [hashtable] $result = $said | ConvertFrom-Json -AsHashtable
@@ -187,18 +207,17 @@ function Get-EnvironmentMachine {
         [hashtable] $Instance
     )
 
-    $session = New-EnvironmentSession -Instance $Instance
-
-    [hashtable] $asked = @{ Session = $session; Instance = $Instance; Operation = 'test' }
-
-    try {
-        [hashtable] $tested = Invoke-EnvironmentDocument @asked
-    }
-    finally {
-        Remove-PSSession -Session $session
-    }
-
     [hashtable] $state = $Instance.Clone()
+    # A machine not answering yet, as before it is installed, is answered
+    # absent, never refused, so a fresh host is tested too.
+    [int] $port = if ($Instance.family -eq 'Windows') { 5985 } else { 22 }
+    [hashtable] $reach = @{ TargetName = $Instance.address; TcpPort = $port; TimeoutSeconds = 1 }
+    if (-not (Test-Connection @reach -Quiet)) {
+        $state._exist = $false
+        $state.differing = @("$($Instance.name) does not answer on port $port")
+        return $state
+    }
+    [hashtable] $tested = Invoke-EnvironmentDocument -Instance $Instance -Operation test
     $state._exist = $tested.inDesiredState
     $state.differing = $tested.differing
     return $state
@@ -217,14 +236,7 @@ function Set-EnvironmentMachine {
     )
 
     if ($PSCmdlet.ShouldProcess($Instance.name, "Apply $($Instance.document)")) {
-        $session = New-EnvironmentSession -Instance $Instance
-
-        try {
-            Invoke-EnvironmentDocument -Session $session -Instance $Instance -Operation set | Out-Null
-        }
-        finally {
-            Remove-PSSession -Session $session
-        }
+        Invoke-EnvironmentDocument -Instance $Instance -Operation set | Out-Null
     }
 
     return Get-EnvironmentMachine -Instance $Instance

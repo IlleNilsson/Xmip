@@ -1,0 +1,104 @@
+# An Xmip environment on a Linux host's KVM, through libvirt: what
+# Deploy-XmipEnvironment reads (deploy/dsc/README.md). Copy it to
+# .local-work/deploy/libvirt.toml and write in linux_account, slicer, the
+# package and, for msdsc, the tools.
+#
+# The network's DHCP and DNS give each machine its address and name, and
+# answer the names of the nodes each machine runs and of the cluster, so the
+# environment needs no DNS server of its own. Which node runs on which
+# machine is here, never in the cluster's file: the Essentials simulates
+# the nodes no machine runs.
+
+name = "xmip"
+# The template set that makes it all, machines and nodes: msdsc (Microsoft
+# DSC v3) or ansible, never a mix (ADR-0015, amendment 2026-10-09).
+technology = "msdsc"
+hypervisor = "libvirt"
+# The pool's directory, which libvirt makes and owns.
+root = "/var/lib/libvirt/images/xmip"
+domain = "xmip.test"
+cluster = "C1"
+# The account each AlmaLinux machine's kickstart makes; it is given the
+# environment's own SSH key, which Deploy-XmipEnvironment makes.
+linux_account = ""
+
+# The cluster's file, each node's configuration sliced from it.
+configuration = "test/core/essentials/configuration/cluster.xmip"
+# This machine's xmip-service, which slices each node's configuration and
+# signs it with the authority below; a node never slices (ADR-0031,
+# amendment 2026-11-06).
+slicer = ""
+# The folder the cluster's authority is kept in: it signs every slice, and
+# issued each node's certificate, New-XmipCertificate -Node.
+authority = ".local-work/environment/authority"
+# A folder per node of what New-XmipCertificate -Node wrote: node.pem,
+# node.key and anchors.pem.
+identity = ".local-work/environment/identity"
+# The Parties' far end the Essentials serves, where the machines reach it:
+# every Receive Location and Send Port is bound there over SFTP, port 7422
+# (ADR-0028, amendment 2026-10-22).
+far_end = "10.77.0.1"
+
+# The package each AlmaLinux machine's node is installed from:
+# Build-XmipService -Site personal-computer -CargoArgument '--release'
+# -Package rpm on a Linux machine (deploy/package/README.md).
+[packages.Linux]
+path = ""
+
+# msdsc only: what DSC is brought to each AlmaLinux machine with, each
+# tarball checked against its SHA-256 and unpacked in the machine's staging
+# folder, never installed for the machine. PowerShell 7's
+# powershell-<version>-linux-x64.tar.gz and DSC's
+# DSC-<version>-x86_64-linux.tar.gz, from their GitHub releases.
+[tools.Linux]
+pwsh = { path = "", sha256 = "" }
+dsc = { path = "", sha256 = "" }
+
+[network]
+name = "xmip"
+bridge = "virbr-xmip"
+prefix = "10.77.0.0/24"
+gateway = "10.77.0.1"
+dns_server = "10.77.0.1"
+nat = true
+
+[images.AlmaLinux10]
+path = "/mnt/d/Downloads/OS/Images/AlmaLinux/AlmaLinux-10.2-x86_64-dvd.iso"
+sha256 = "90244ac532f67c978831a381b420da8bda363729e1f4cf8fb8991daca70ee287"
+family = "Linux"
+
+# The machines are made in this order, one installation at a time, and
+# their nodes are given theirs in the same order: Xmip Storage first, which
+# the other nodes reach. The cluster's file lists D1 and D2 as its Storage
+# nodes, and neither serves until both answer (ADR-0056, amendment
+# 2026-11-08), so both run on machines of their own.
+
+# application server, Xmip Storage
+[[machines]]
+name = "XMIP-APP03"
+address = "10.77.0.53"
+image = "AlmaLinux10"
+memory_gb = 4
+cpu = 2
+disk_gb = 32
+nodes = ["D1"]
+
+# application server, Xmip Storage
+[[machines]]
+name = "XMIP-APP04"
+address = "10.77.0.54"
+image = "AlmaLinux10"
+memory_gb = 4
+cpu = 2
+disk_gb = 32
+nodes = ["D2"]
+
+# inbound
+[[machines]]
+name = "XMIP-IN01"
+address = "10.77.0.61"
+image = "AlmaLinux10"
+memory_gb = 4
+cpu = 2
+disk_gb = 32
+nodes = ["R1"]

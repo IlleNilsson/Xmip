@@ -9,62 +9,10 @@
 #
 # Pool: a directory pool libvirt keeps, where each machine's disk, its answer
 # medium and the installation images are volumes any machine can read.
+#
+# What each is, is deploy/dsc/machine's (LibvirtDefinition.ps1).
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
-
-function Get-LibvirtNetworkDefinition {
-    <#
-    .SYNOPSIS
-    The network's definition as libvirt reads it, from the instance.
-    .DESCRIPTION
-    $Instance: name, bridge, gateway, prefixLength, machines (each name and
-    address: a DHCP host and a DNS host) and names (each name and its
-    addresses: DNS hosts the environment adds).
-    #>
-    [CmdletBinding()]
-    [OutputType([string])]
-    param(
-        [Parameter(Mandatory = $true)]
-        [hashtable] $Instance
-    )
-
-    # libvirt takes one DNS host per address, holding every name it answers.
-    [Collections.Specialized.OrderedDictionary] $named = [ordered] @{}
-    [Collections.Generic.List[string]] $dhcp = [Collections.Generic.List[string]]::new()
-    foreach ($machine in @($Instance['machines'])) {
-        [string] $name = ConvertTo-LibvirtText -Value $machine.name
-        [string] $mac = Get-LibvirtMacAddress -Address $machine.address
-        $dhcp.Add("      <host mac='$mac' name='$name' ip='$($machine.address)'/>")
-        $named[$machine.address] = @($named[$machine.address]) + $name
-    }
-    foreach ($entry in @($Instance['names'])) {
-        foreach ($address in @($entry.addresses)) {
-            $named[$address] = @($named[$address]) + (ConvertTo-LibvirtText -Value $entry.name)
-        }
-    }
-    [string[]] $dns = @(foreach ($address in $named.Keys) {
-        [string[]] $names = @($named[$address] | Where-Object { $_ })
-        "    <host ip='$address'>" +
-            (($names | ForEach-Object { "<hostname>$_</hostname>" }) -join '') + '</host>'
-    })
-    [string] $network = ConvertTo-LibvirtText -Value $Instance['name']
-    [string] $bridge = ConvertTo-LibvirtText -Value $Instance['bridge']
-    return @(
-        '<network>'
-        "  <name>$network</name>"
-        "  <forward mode='nat'/>"
-        "  <bridge name='$bridge' stp='on' delay='0'/>"
-        '  <dns>'
-        $dns
-        '  </dns>'
-        "  <ip address='$($Instance['gateway'])' prefix='$($Instance['prefixLength'])'>"
-        '    <dhcp>'
-        $dhcp
-        '    </dhcp>'
-        '  </ip>'
-        '</network>'
-    ) -join "`n"
-}
 
 function Get-LibvirtNetworkFinding {
     <#
@@ -222,8 +170,8 @@ function Set-LibvirtPool {
         throw "REFUSED: $($finding -match 'not a directory pool'); it is not moved."
     }
     if ($finding -match 'no such pool') {
-        Invoke-Virsh -Argument @('pool-define-as', $name, 'dir', '--target', $Instance['path']) |
-            Out-Null
+        Invoke-VirshDefinition -Command 'pool-define' -Definition (
+            Get-LibvirtPoolDefinition -Instance $Instance)
         Invoke-Virsh -Argument @('pool-build', $name) | Out-Null
     }
     if ((Invoke-Virsh -Argument @('pool-info', $name)) -notmatch '(?m)^State:\s+running') {

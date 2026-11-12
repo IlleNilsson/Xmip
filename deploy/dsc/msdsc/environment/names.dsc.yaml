@@ -1,0 +1,39 @@
+# The names of a cluster and its nodes, from the machine DSC runs on:
+# name.dsc.yaml applied on the environment's DNS server by
+# Xmip.Environment/Machine. Deploy-XmipEnvironment applies it where one of
+# the environment's machines is the network's DNS server, with the records
+# it writes from the environment file: the cluster at every node machine's
+# address, each node at its machine's (deploy/dsc/README.md). Where none is,
+# as on libvirt, the network's own DNS answers those names.
+$schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
+directives:
+  version: ^3.4.0-preview.2
+parameters:
+  common:
+    type: object
+    description: How the server is reached, linuxAccount, secretPath, keyPath and knownHosts.
+  server:
+    type: object
+    description: The DNS server, its name, address and family.
+  zone:
+    type: string
+    description: The DNS domain the names are in.
+  records:
+    type: array
+    description: Each name, the cluster's and each node's, with its addresses.
+resources:
+  - name: Names
+    type: Xmip.Environment/Machine
+    requireVersion: ^0.1
+    properties:
+      name: "[parameters('server').name]"
+      address: "[parameters('server').address]"
+      family: "[parameters('server').family]"
+      login: "[parameters('common').linuxAccount]"
+      secretPath: "[parameters('common').secretPath]"
+      keyPath: "[parameters('common').keyPath]"
+      knownHosts: "[parameters('common').knownHosts]"
+      tools: "[createObject()]"
+      document: name.dsc.yaml
+      files: "[createObject()]"
+      parameters: "[createObject('zone', parameters('zone'), 'records', parameters('records'))]"

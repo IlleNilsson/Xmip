@@ -1,0 +1,23 @@
+---
+# The environment's machines, made on the host its hypervisor runs on, the
+# same machines Microsoft DSC's template makes: the network the machines
+# share, then each machine, installed unattended from its ISO, one at a
+# time. How each hypervisor does it is libvirt.yml's and hyperv.yml's.
+
+- name: Refuse a hypervisor this role makes no machines on
+  ansible.builtin.assert:
+    that:
+      - xmip_hypervisor in ['libvirt', 'hyperv']
+      - xmip_machine_definition | length > 0
+    fail_msg: >-
+      REFUSED: xmip_hypervisor names the hypervisor, libvirt or hyperv, and
+      xmip_machine_definition deploy/dsc/machine/machine.ps1, which says
+      what each machine is.
+
+- name: The machines on libvirt
+  ansible.builtin.include_tasks: libvirt.yml
+  when: xmip_hypervisor == 'libvirt'
+
+- name: The machines on Hyper-V
+  ansible.builtin.include_tasks: hyperv.yml
+  when: xmip_hypervisor == 'hyperv'

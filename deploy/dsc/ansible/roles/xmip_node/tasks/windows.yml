@@ -138,6 +138,9 @@
       - --listening
   register: xmip_listening
   changed_when: false
+  # Asked under --check too, so a check sees an opening that differs.
+  failed_when: xmip_listening.rc != 0 and not ansible_check_mode
+  check_mode: false
 
 - name: An opening for each, named for the node
   ansible.windows.win_firewall_rule:
@@ -165,8 +168,9 @@
       Node: "{{ xmip_node_name }}"
       Wanted: "{{ xmip_listening.stdout_lines | map('split') | map('first') | map('replace', '/', '-') | map('regex_replace', '^', 'xmip-' ~ xmip_node_name ~ '-') | list }}"
 
-- name: The node's service running, started with the machine
+# Started with the machine; started now by started.yml, with every node of
+# the environment together, since none accepts work before its Xmip Storage.
+- name: The node's service started with the machine
   ansible.windows.win_service:
     name: "xmip-{{ xmip_node_name }}"
-    state: started
     start_mode: auto

@@ -264,6 +264,23 @@ Applied that day:
 | ansible-core | 2.22, with four security fixes over 2.21 | GitHub releases, 2026-11-02 |
 | NuGet packages | the newest release at least 24 hours old | nuget.org |
 
+## Amendment, 2026-11-11: the deploy track's tools
+
+Checked 2026-11-11, for the environments `Deploy-XmipEnvironment` makes in
+either technology (ADR-0015, amendment 2026-11-11):
+
+| | Xmip requires | Source |
+| --- | --- | --- |
+| PowerShell | 7.7.0, out 2026-11-10; the release candidate rc.1 before it | GitHub releases, PowerShell/PowerShell |
+| Microsoft DSC | 3.4.0-preview.2, still the latest; the Linux tarball a node machine is brought | GitHub releases, PowerShell/DSC |
+| ansible-core | 2.22, which needs Python 3.13: on AlmaLinux 10.2, whose python3 is 3.12, pip stops at 2.21.6 until python3.13 is installed from EPEL | pypi.org, 2026-11-02 |
+| community.libvirt | 2.4.0, of 2026-10-09, with libvirt's Python binding and lxml from the distribution | Ansible Galaxy |
+| microsoft.hyperv | 1.1.0, of 2026-05-19 | Ansible Galaxy |
+| nfpm | 2.48.0, of 2026-10-12 | GitHub releases, goreleaser/nfpm |
+
+The tarballs a machine is brought are named in the environment file with
+their SHA-256, each the release's own digest, and refused where they differ.
+
 ## Alternatives considered
 
 **Support the previous major of each platform.** The conventional choice, and

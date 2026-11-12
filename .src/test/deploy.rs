@@ -12,10 +12,11 @@
 //!
 //! The Ansible role asks `xmip-service` for the slice, its cluster and the
 //! ports the firewall opens, and keeps no starter of its own; the example
-//! inventory maps only nodes the file declares, and every Location the file
-//! designs is placed on one of them, bound on the Parties' far end, in a
-//! slice the runtime reads. The Microsoft DSC v3
-//! documents are held by `test/MsdscEnvironment.Test.ps1`.
+//! environment files, from which both technologies' parameters are written
+//! (`deploy/dsc/README.md`), map only nodes the file declares, and every
+//! Location the file designs is placed on one of the Hyper-V example's, bound
+//! on the Parties' far end, in a slice the runtime reads. The Microsoft DSC
+//! v3 documents are held by `test/MsdscEnvironment.Test.ps1`.
 
 use std::path::{Path, PathBuf};
 
@@ -27,7 +28,12 @@ const ESSENTIALS: &str = "test/core/essentials/configuration/cluster.xmip";
 const TASKS_WINDOWS: &str = "deploy/dsc/ansible/roles/xmip_node/tasks/windows.yml";
 const TASKS_LINUX: &str = "deploy/dsc/ansible/roles/xmip_node/tasks/linux.yml";
 const TASKS_SLICE: &str = "deploy/dsc/ansible/roles/xmip_node/tasks/slice.yml";
-const INVENTORY: &str = "deploy/dsc/ansible/inventory.example.yml";
+/// The example environment files: the one place each says which node runs
+/// on which machine, `[[machines]]`' `nodes`.
+const ENVIRONMENTS: [&str; 2] = [
+    "deploy/dsc/hyperv.example.toml",
+    "deploy/dsc/libvirt.example.toml",
+];
 const DEFAULTS: &str = "deploy/dsc/ansible/roles/xmip_node/defaults/main.yml";
 
 fn source(relative: &str) -> String {
@@ -49,6 +55,23 @@ fn keys(table: &toml::Table, prefix: &str) -> Vec<String> {
         paths.push(path);
     }
     paths
+}
+
+/// The nodes an environment file maps onto its machines, in its order.
+fn mapped_by(relative: &str) -> Vec<String> {
+    let environment: toml::Table = source(relative)
+        .parse()
+        .unwrap_or_else(|error| panic!("{relative} is TOML: {error}"));
+    environment
+        .get("machines")
+        .and_then(toml::Value::as_array)
+        .unwrap_or_else(|| panic!("{relative} lists its [[machines]]"))
+        .iter()
+        .filter_map(|machine| machine.get("nodes").and_then(toml::Value::as_array))
+        .flatten()
+        .filter_map(toml::Value::as_str)
+        .map(str::to_string)
+        .collect()
 }
 
 fn holds(table: &toml::Table, path: &str) -> bool {
@@ -175,25 +198,19 @@ fn every_node_configuration_deploy_writes_is_the_one_the_runtime_reads() {
         );
     }
 
-    // The example environment puts only nodes the file declares on machines.
-    let inventory = source(INVENTORY);
-    let mapped: Vec<String> = inventory
-        .lines()
-        .filter(|line| line.contains("xmip_node_name:"))
-        .map(|line| {
-            line.split(':')
-                .nth(1)
-                .unwrap_or_default()
-                .trim()
-                .to_string()
-        })
-        .collect();
-    for named in &mapped {
-        assert!(
-            nodes.iter().any(|node| node == named),
-            "{INVENTORY} maps {named}, which {ESSENTIALS} does not declare"
-        );
+    // Each example environment puts only nodes the file declares on machines.
+    for environment in ENVIRONMENTS {
+        let named = mapped_by(environment);
+        assert!(!named.is_empty(), "{environment} maps nodes onto machines");
+        for one in &named {
+            assert!(
+                nodes.iter().any(|node| node == one),
+                "{environment} maps {one}, which {ESSENTIALS} does not declare"
+            );
+        }
     }
+    // The Hyper-V example's nodes are the ones every Location is placed over.
+    let mapped = mapped_by(ENVIRONMENTS[0]);
 
     // Every node it maps, its Locations placed over the mapped nodes on the
     // Parties' far end as `xmip-service --slice --bind --nodes` places them

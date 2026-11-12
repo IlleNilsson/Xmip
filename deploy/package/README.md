@@ -26,13 +26,14 @@ layout, the starter or the registration.
 | folder | package | status |
 | --- | --- | --- |
 | `windows/` | MSI per architecture (x64, arm64), WiX Toolset 7, and its winget manifest | **written, not built**: WiX 7 refuses to build until its EULA is accepted (below) |
-| `linux/` | `.deb` and `.rpm` from one nfpm definition, systemd | **written, not built** |
+| `linux/` | `.deb` and `.rpm` from one nfpm definition, systemd | the `.rpm` built on Linux x86-64 and installed on AlmaLinux 10.2 by the environment templates (2026-11-11); the `.deb` built by the same definition, installed nowhere yet |
 | `macos/` | `.pkg` (pkgbuild and productbuild), launchd | **written, not built** |
 | `archive/` | the portable archive, zip | built and run on Windows x64; tar.gz for Linux and macOS not built |
 
-Builds are Windows-only for now, the owner's choice of the moment. The
-Linux and macOS definitions are complete as written and have never been
-built or installed; nothing here claims they work.
+The macOS definition is complete as written and has never been built or
+installed; nothing here claims it works. A Linux package is built on Linux,
+where `Build-XmipService -Package rpm` or `deb` runs nfpm; the CI and the
+landing build Windows alone.
 
 **Build from a site whose node starts on its own.** A one-machine node is
 its own embedded Storage node and needs SQLite, which only the `storage`
@@ -71,14 +72,23 @@ in `-CargoArgument` makes the arm64 MSI.
   (ADR-0015, amendments 2026-10-13 and 2026-10-21).
 - **Remove**: Apps in Settings, or `msiexec /x <msi>`.
 
-## Linux (written, not built)
+## Linux
+
+On a Linux machine with nfpm 2.48 on `PATH` (`prerequisite.toml`), cargo,
+libclang and a C++ compiler, the build directory on the Linux filesystem:
 
 ```text
-XMIP_BINARY_DIRECTORY=<built> XMIP_VERSION=<version> XMIP_ARCH=amd64 \
-  nfpm package --config deploy/package/linux/nfpm.yaml --packager deb
+Build-XmipService -Site personal-computer -CargoArgument '--release' -Package rpm
 ```
 
-and `--packager rpm` for the `.rpm`; `XMIP_ARCH=arm64` for arm64. The layout
+Makes `xmip-<version>-<site>-linux-x64.rpm` under
+`.local-work/package/<version>/`, `-Package deb` the `.deb`: nfpm runs in
+`deploy/package/linux` with `XMIP_BINARY_DIRECTORY`, `XMIP_VERSION` and
+`XMIP_ARCH` (`amd64`, or `arm64` with `--target aarch64-unknown-linux-gnu`)
+set to the staged build (`New-XmipLinuxPackage`). On 2026-11-11 the `.rpm`
+was built in the WSL AlmaLinux guest, the systemd branches of
+`xmip-service --install` compiled for the first time with no change, and
+installed by both environment templates on AlmaLinux 10.2. The layout
 is `/opt/xmip`; the unit is `/etc/systemd/system/xmip-<node>.service`, and
 its `RuntimeDirectory=xmip` makes `/run/xmip` for the node's account, where
 the node's local endpoint is, `/run/xmip/xmip-<node>.sock`.

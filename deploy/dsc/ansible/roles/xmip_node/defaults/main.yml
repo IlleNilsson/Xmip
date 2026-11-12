@@ -42,12 +42,21 @@ xmip_package: ""
 # The account the node's service runs as: a virtual account of its own on
 # Windows, a system account on Linux. The assistant's draft of 2026-10-21,
 # for the owner to strike (ADR-0015, amendment 2026-10-21).
-xmip_account: "{{ ('NT SERVICE\\xmip-' ~ xmip_node_name) if ansible_os_family == 'Windows' else 'xmip' }}"
+xmip_account: "{{ ('NT SERVICE\\xmip-' ~ xmip_node_name) if ansible_facts['os_family'] == 'Windows' else 'xmip' }}"
 # Where the package puts the node: xmip-service, and its config folder.
-xmip_program: "{{ 'C:\\Program Files\\Xmip\\bin\\xmip-service.exe' if ansible_os_family == 'Windows' else '/opt/xmip/bin/xmip-service' }}"
-xmip_configuration: "{{ 'C:\\ProgramData\\Xmip\\config' if ansible_os_family == 'Windows' else '/opt/xmip/config' }}"
-# Where the package and the certificate are copied before they are used.
-xmip_staging: "{{ 'C:\\ProgramData\\Xmip\\environment' if ansible_os_family == 'Windows' else '/var/tmp/xmip-environment' }}"
+xmip_program: "{{ 'C:\\Program Files\\Xmip\\bin\\xmip-service.exe' if ansible_facts['os_family'] == 'Windows' else '/opt/xmip/bin/xmip-service' }}"
+xmip_configuration: "{{ 'C:\\ProgramData\\Xmip\\config' if ansible_facts['os_family'] == 'Windows' else '/opt/xmip/config' }}"
+# How long, in seconds, the environment's nodes are started again together
+# until each runs (tasks/started.yml).
+xmip_started_window: 180
+# Where the package is copied before it is installed: Ansible's own, never
+# the folder Microsoft DSC's template stages in.
+xmip_staging: "{{ 'C:\\ProgramData\\Xmip\\ansible' if ansible_facts['os_family'] == 'Windows' else '/var/tmp/xmip-ansible' }}"
+# firewalld's command on an AlmaLinux machine, and the ports the node's
+# configuration listens on and its firewalld service holds (tasks/linux.yml).
+xmip_firewall_cmd: /usr/bin/firewall-cmd
+xmip_listened_ports: "{{ xmip_listening.stdout_lines | map('split') | map('first') | list }}"
+xmip_held_ports: "{{ xmip_opened.stdout.split() if xmip_opened.rc == 0 else [] }}"
 
 # The site the package is built from (ADR-0015, amendment 2026-10-01):
 # Build-XmipService -Site builds its xmip-service with what the site's

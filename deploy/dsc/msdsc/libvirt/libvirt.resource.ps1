@@ -33,7 +33,9 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
-foreach ($part in 'LibvirtCommon.ps1', 'LibvirtNetwork.ps1', 'LibvirtMachine.ps1') {
+# virsh, the definitions and each installing step are deploy/dsc/machine's.
+foreach ($part in '../../machine/LibvirtInstallation.ps1', 'LibvirtNetwork.ps1',
+    'LibvirtMachine.ps1') {
     . (Join-Path -Path $PSScriptRoot -ChildPath $part)
 }
 

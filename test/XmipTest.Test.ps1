@@ -1085,6 +1085,90 @@ observed_unix_nanos = 1789208338038783900
         $rollup.Transport | Should -Be ''
     }
 
+    It 'reads a served run: one row, the verdict of the run''s test, never a node''s own' {
+        # ADR-0028, amendment 2026-11-11: a run that reads every node carries
+        # the configured flows, and Carried's verdict sits beneath the Receive
+        # Location on the node it is placed on.
+        [string] $scope = $script:Cluster.Scope
+        [string] $node = $script:Stage.receiving
+        [string] $area = Join-Path $TestDrive 'served'
+        $null = New-Item -ItemType Directory -Force -Path $area
+        [string] $served = Join-Path $area 'C1-snapshot.xmip'
+        @"
+source = "essentials"
+node = "$scope"
+
+[run]
+cluster = "$($script:Cluster.Name)"
+tests = ["Carried"]
+real = ["$node"]
+
+[[records]]
+scope = "$scope/node/$node/receive/Sales orders from Party-A/delivery"
+state = "stressed"
+severity = 60
+evidence = "a document no Subscription takes was dropped this turn"
+observed_unix_nanos = 1789208338038783900
+
+[[records]]
+scope = "$scope/node/$node/receive/Sales orders from Party-A"
+state = "fine"
+severity = 0
+evidence = "started at C:/drop"
+observed_unix_nanos = 1789208338038783900
+"@ | Set-Content -LiteralPath $served -Encoding utf8
+
+        [object[]] $results = @(Get-XmipTestResult -Path $served)
+
+        # Exactly one row: the run's test's verdict. The node's own record of
+        # its Receive Location is the product's, no test result at all.
+        $results.Count | Should -Be 1 -Because 'a read node''s own record is no test result'
+        $carried = $results[0]
+        $carried.Test | Should -Be 'Carried'
+        $carried.Node | Should -Be $node
+        $carried.Stage | Should -Be 'receive'
+        $carried.Location | Should -Be 'Sales orders from Party-A'
+        $carried.Scenario | Should -Be 'delivery' -Because 'the leaf the record carries'
+        $carried.Transport | Should -Be ''
+        $carried.State | Should -Be 'stressed'
+
+        # Nothing is read by name: another test and another leaf read the
+        # same way, from the run and the record alone.
+        (Get-Content -LiteralPath $served -Raw).
+            Replace('tests = ["Carried"]', 'tests = ["Renamed"]').
+            Replace('/delivery"', '/verdict"') | Set-Content -LiteralPath $served -Encoding utf8
+        [object[]] $renamed = @(Get-XmipTestResult -Path $served)
+        $renamed.Count | Should -Be 1
+        $renamed[0].Test | Should -Be 'Renamed'
+        $renamed[0].Scenario | Should -Be 'verdict'
+    }
+
+    It 'says a served run''s tests from its snapshot, never what the start record asked' {
+        # ADR-0028, amendment 2026-11-11: an unnamed run asked for nothing,
+        # and a run that reads its nodes runs Carried alone.
+        [string] $node = $script:Stage.receiving
+        [string] $area = Join-Path $TestDrive 'status'
+        $null = New-Item -ItemType Directory -Force -Path $area
+        [string] $served = Join-Path $area 'C1-snapshot.xmip'
+        @"
+source = "essentials"
+node = "$($script:Cluster.Scope)"
+
+[run]
+cluster = "$($script:Cluster.Name)"
+tests = ["Carried"]
+real = ["$node"]
+"@ | Set-Content -LiteralPath $served -Encoding utf8
+
+        InModuleScope Xmip -Parameters @{ Served = $served; Node = $node } {
+            Import-XmipOperatorModule
+            $run = Get-XmipTestRun -Snapshot $Served
+            @($run.Tests) | Should -Be @('Carried')
+            @($run.RealNodes) | Should -Be @($Node)
+            Get-XmipTestRun -Snapshot (Join-Path $Served 'none') | Should -BeNullOrEmpty
+        }
+    }
+
     It 'filters by test and by node, and names the worst' {
         @(Get-XmipTestResult -Path $script:Snapshot -Test RoundTrip).Count | Should -Be 2
         # A wildcard over each node's first letter picks that node alone.

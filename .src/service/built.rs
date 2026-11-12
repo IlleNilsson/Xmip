@@ -35,8 +35,16 @@
 //! authentication (ADR-0019 clause 1), and at each Send Location the node
 //! starts what reached it (the owner, 2026-10-19). A Stream any gate
 //! refuses is refused, and the attempt refused at authentication is
-//! audited with the claim it carried (ADR-0013 clause 1). No route
-//! technology is linked yet.
+//! audited with the claim it carried (ADR-0013 clause 1).
+//!
+//! The route technologies, each the source a Subscription filter's prefix
+//! names (ADR-0046): `content`, where the site links it, reads a path into
+//! the Message's first section in the path languages the build links —
+//! `edi`, a segment, element and component of an EDIFACT or X12
+//! interchange — so a filter routes by what the document says,
+//! `"content:edi:UNH/2/1" = 'ORDERS'`, as the real world does (the owner,
+//! 2026-11-10; ADR-0046, amendment 2026-11-11). A property with no prefix is
+//! the context's, which every node reads.
 
 use xmip_audit::program_audit::ProgramAudit;
 use xmip_authenticate::Authenticator;
@@ -49,6 +57,7 @@ use xmip_runtime::linked::{Linked, LinkedEngine, LinkedKeyStore, LinkedTransport
 pub fn linked(audit: &ProgramAudit) -> Linked {
     Linked {
         transports: transports(),
+        sources: sources(),
         engine: engine(),
         administration: administration(),
         key_stores: key_stores(),
@@ -120,6 +129,22 @@ fn location(started: xmip_runtime::linked::Started<'_>) -> Box<dyn xmip_authoriz
                 policy.admit(admission.anyone())
             }),
     )
+}
+
+/// The route technologies this build carries: `content` where the site
+/// links it, over the path languages the build links — the source and its
+/// languages made where they are made once,
+/// `xmip_route_content::ContentSource::linked`.
+#[allow(
+    unused_mut,
+    clippy::vec_init_then_push,
+    reason = "each push is a feature this build may leave out"
+)]
+pub fn sources() -> Vec<Box<dyn xmip_route::Source>> {
+    let mut sources: Vec<Box<dyn xmip_route::Source>> = Vec::new();
+    #[cfg(feature = "route-content")]
+    sources.push(Box::new(xmip_route_content::ContentSource::linked()));
+    sources
 }
 
 /// The runtime database's engine, where this build carries it.
@@ -345,6 +370,22 @@ mod tests {
         assert_eq!(
             policy.decide(&facts, &Attempt::now(Action::Send, "Elsewhere")),
             None
+        );
+    }
+
+    #[cfg(all(feature = "route-content", feature = "path-edi"))]
+    #[test]
+    fn a_filter_reads_what_an_edifact_document_says_where_the_build_links_content() {
+        let sources = sources();
+        let names: Vec<&str> = sources.iter().map(|source| source.technology()).collect();
+        assert_eq!(names, ["content"]);
+        assert!(
+            sources[0].compile("edi:UNH/2/1").is_ok(),
+            "the message type"
+        );
+        assert!(
+            sources[0].compile("dot:order.id").is_err(),
+            "a language the build left out is refused"
         );
     }
 

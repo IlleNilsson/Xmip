@@ -1,0 +1,39 @@
+---
+# An environment's machines on their hypervisor (README.md), one
+# installation at a time. Deploy-XmipEnvironment's inventory gives every
+# value from the environment file; what a network, a pool, a domain or an
+# answer medium is, is asked of deploy/dsc/machine, the code Microsoft DSC's
+# machine resources use, and never written here.
+#
+# libvirt on a Linux host, or hyperv on a Windows one.
+xmip_hypervisor: ""
+# The environment's name, its pool's and each domain's description.
+xmip_environment: ""
+# The pool's directory on a libvirt host.
+xmip_root: ""
+# The network: name, bridge, gateway, prefixLength and dnsServer.
+xmip_network: {}
+# Each machine's name and address, the network's DHCP and DNS hosts.
+xmip_network_machines: []
+# The names the environment adds, each a name and its addresses.
+xmip_names: []
+# Each machine, with the properties Microsoft DSC's machine resource takes:
+# name, technology, address, memoryGB, cpu, diskGB, pool, network, image,
+# domainName, linuxAccount, sshPublicKeyPath, secretPath and hostKeyPath.
+xmip_machines: []
+# deploy/dsc/machine/machine.ps1 on the controller, and the PowerShell 7
+# that runs it.
+xmip_machine_definition: ""
+xmip_pwsh: pwsh
+xmip_definition: >-
+  {{ [xmip_pwsh, '-NoLogo', '-NoProfile', '-NonInteractive', '-File',
+  xmip_machine_definition, '-Hypervisor', xmip_hypervisor, '-Kind'] }}
+# The environment's private state on the controller, where a Hyper-V
+# machine's answer medium is written before it is copied to the host: it
+# holds a key or a password. A libvirt machine's is written in a folder of
+# its own (deploy/dsc/machine/LibvirtInstallation.ps1).
+xmip_state: ""
+# libvirt's system connection, where the machines run.
+xmip_libvirt_uri: qemu:///system
+# How long, in seconds, one machine's installation is waited for.
+xmip_install_timeout: 3600

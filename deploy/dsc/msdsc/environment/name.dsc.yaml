@@ -3,7 +3,7 @@
 # each node holding its machine's. A node finds another by its name, and the
 # Essentials uses a node whose name resolves (ADR-0028, amendment
 # 2026-10-21). Applied on the DNS server by Xmip.Environment/Machine
-# (environment.example.dsc.yaml); README.md says how.
+# (names.dsc.yaml); deploy/dsc/README.md says how.
 $schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
 directives:
   version: ^3.4.0-preview.2

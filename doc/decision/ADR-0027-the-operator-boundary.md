@@ -660,3 +660,61 @@ their argument lists are the boundary's own, held by the runtime's tests.
 
 Provenance: the defect is the trust path review's, the rules the owner's,
 2026-11-10; the in-place change is the assistant's, 2026-11-11.
+
+## Amendment, 2026-11-11: a stage's title, and what is configured at it
+
+The owner, 2026-11-10, of what the demo shows: *it is "Work Process", never
+"Process"*. A surface capitalized the stage word, so the middle card read
+`Process`. Section 7 gains one thin forwarder, `XMIP_OPERATE_VERSION`
+unchanged and the symbol bound as required, as every section 7 symbol is:
+
+| Symbol | Forwards to |
+|---|---|
+| `xmip_stage_title_v1` | `node::Stage::title`: Receive, Work Process, Send |
+
+`xmip_stage_location_v1` keeps its shape and now answers in the owner's
+capitals what sits directly beneath each stage today: Receive Location,
+Subscription, Send Port. A Subscription routes to a Send Port, never a Send
+Location, so the runtime publishes a Send Location of a Port named apart
+from it beneath that Port, `<node>/send/<Port>/<Location>`
+(`ExecutionTree::beneath`; ADR-0018, amendment 2026-11-11), and the Send
+card counts Ports alone. The scope keeps its stage word, `process`, until
+the kind-and-name layout of 2026-10-06 is built, so clause 4's drawing reads
+`receive location | subscription | send port` beneath a node, and clause
+5's "in an Xmip Process" is in a Work Process. `English.Stage` reads the
+title through the runtime and no .NET code capitalizes a stage word any
+more; one rule in `Xmip.Surface`, `ScopeIndex.Label`, reads a stage segment
+by its title wherever a surface shows one — a crumb, a drill row, a
+Configuration row. The prompt keeps its letters R, P and S, the stage
+word's first, as the owner set them (ADR-0052).
+
+**The owner decides the words.** *Subscription* for the process stage's
+children and *Send Port* for the send stage's are the assistant's reading
+of the records, not the owner's call, which the ERP design's review asked
+to be his (*let the owner decide whether the card words become Subscription
+and Send Port*). He is asked in one line; his answer is recorded here. Until
+then the Work Process card says *Subscription ×N · no Work Process placed*
+while no Work Process is placed on any node
+(`IOperatorSurface.NoWorkProcessPlaced`), so it never teaches that a
+Subscription is a Work Process.
+
+**Section 8 gains `xmip_publication_from_to_v1`,** and section 14's list
+gains `send_ports`, `XMIP_OPERATE_VERSION` unchanged, both bound as section
+8's and 14's other symbols are:
+
+| Symbol | Forwards to |
+|---|---|
+| `xmip_publication_from_to_v1` | `observe::topology::from_to`: where the work observed at a scope of a read publication came from and went — `from`, `to`, `hops`, `unrouted`, `line`, `path`, every word the runtime's |
+| `send_ports` in `xmip_subscriptions_v1`'s and `xmip_publication_subscriptions_v1`'s list | `ConfiguredSubscription::ports`: the Send Ports a Subscription's destination reaches |
+
+`Xmip.Abi` asks the first for every thing a publication's topology draws as
+it reads it (`TopologySnapshot.Paths`), and `IOperatorSurface.FromTo` answers
+a scope with the nearest drawn thing's at or above it, which every row,
+command and cmdlet shows (ADR-0052, amendment 2026-11-11). Section 14 lists
+no Subscription of a node that routes by none, and refuses an act on one in
+words (ADR-0018, amendment 2026-11-11).
+
+Provenance: the owner's words of 2026-11-10; the symbols are the
+assistant's, 2026-11-11 (ADR-0052, amendment 2026-11-11); the review the
+same day moved the send stage's word to Send Port, put the label rule in one
+place and added section 8's from and to.

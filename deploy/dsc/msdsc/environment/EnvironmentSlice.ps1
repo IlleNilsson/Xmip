@@ -141,6 +141,17 @@ function Set-EnvironmentSlice {
 
     [string] $sliced = Get-EnvironmentSliced -Instance $Instance
     [string] $anchor = Join-Path -Path $Instance.authority -ChildPath 'authority.pem'
+    # DSC asks set without a test first (implementsPretest): a slice whose
+    # signed text is the one there is kept, signature and all, so the node
+    # is shipped the same bytes and never restarted for a new signature.
+    [bool] $kept = (Test-Path -LiteralPath $slice -PathType Leaf) -and
+        (Test-Path -LiteralPath $certificate -PathType Leaf) -and
+        ((Get-EnvironmentSignedText -Slice ([IO.File]::ReadAllText($slice))) -ceq
+            (Get-EnvironmentSignedText -Slice $sliced)) -and
+        ([IO.File]::ReadAllText($certificate) -ceq [IO.File]::ReadAllText($anchor))
+    if ($kept) {
+        return
+    }
     New-Item -ItemType Directory -Force -Path (Split-Path -Path $certificate) | Out-Null
     [IO.File]::WriteAllText($certificate, [IO.File]::ReadAllText($anchor))
     [IO.File]::WriteAllText($slice, $sliced)

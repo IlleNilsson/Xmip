@@ -1,0 +1,91 @@
+$schema: https://aka.ms/dsc/schemas/v3/bundled/resource/manifest.json
+type: Xmip.Environment/Started
+version: '0.1.0'
+description: >-
+  Every node of the environment running, started together and again until
+  each runs or the window is spent, each machine reached as
+  Xmip.Environment/Machine reaches it.
+tags:
+  - Xmip
+get:
+  executable: pwsh
+  args:
+    - -NoLogo
+    - -NonInteractive
+    - -NoProfile
+    - -File
+    - ./environment.resource.ps1
+    - -Kind
+    - Started
+    - -Operation
+    - get
+  input: stdin
+test:
+  executable: pwsh
+  args:
+    - -NoLogo
+    - -NonInteractive
+    - -NoProfile
+    - -File
+    - ./environment.resource.ps1
+    - -Kind
+    - Started
+    - -Operation
+    - test
+  input: stdin
+  return: state
+set:
+  executable: pwsh
+  args:
+    - -NoLogo
+    - -NonInteractive
+    - -NoProfile
+    - -File
+    - ./environment.resource.ps1
+    - -Kind
+    - Started
+    - -Operation
+    - set
+  input: stdin
+  implementsPretest: true
+  return: state
+exitCodes:
+  '0': Success
+  '1': Error
+schema: !embedded
+    $schema: https://json-schema.org/draft/2020-12/schema
+    type: object
+    required:
+      - nodes
+      - window
+    properties:
+      nodes:
+        type: array
+        description: >-
+          Each node the environment runs on a machine of its own: node, and
+          machine with its name, address and family.
+      window:
+        type: integer
+        description: 'How long, in seconds, the nodes are started again until each runs.'
+      login:
+        type: string
+        description: 'Linux: the account SSH logs in as.'
+      secretPath:
+        type: string
+        description: 'Windows: the Administrator''s secret, Export-Clixml.'
+      keyPath:
+        type: string
+        description: 'Linux: the private SSH key, readable by its owner alone.'
+      knownHosts:
+        type: string
+        description: 'Linux: the environment''s known_hosts.'
+      services:
+        type: object
+        readOnly: true
+        description: 'How each node''s service stands.'
+      _exist:
+        type: boolean
+        readOnly: true
+      _inDesiredState:
+        type: boolean
+        readOnly: true

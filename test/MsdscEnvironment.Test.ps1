@@ -6,10 +6,9 @@
     deploy/dsc/ansible; ADR-0015, amendment 2026-10-21) without the
     machines: what can be held on any machine, unelevated.
 
-    - The Microsoft DSC v3 documents and the example parameters parse as
-      YAML, read by the module's YAML reader and evaluated by DSC below;
-      each document declares every parameter it
-      uses and uses every one it declares — but staging, which
+    - The Microsoft DSC v3 documents parse as YAML, read by the module's
+      YAML reader and evaluated by DSC below; each document declares every
+      parameter it uses and uses every one it declares — but staging, which
       Xmip.Environment/Machine gives every document it applies.
     - Every document requires DSC 3.4.0-preview.2 and none asks for
       elevation whole; each resource manifest elevates exactly the methods
@@ -18,18 +17,22 @@
     - The Ansible role makes node.xmip the node's alone to write, and masks
       the node's key, never logging or diffing it; ansible-playbook
       --syntax-check where Ansible is here, SKIPPED where it is not.
-    - The example environment runs through DSC with every resource replaced
-      by Microsoft.DSC.Debug/Echo: the names are given every node machine's
-      address, each node machine is given its node's files and values, the
-      mapping of nodes onto machines is the Ansible inventory's, and every
-      node mapped is one the Essentials' cluster file declares.
+    - The Hyper-V example environment, deploy/dsc/hyperv.example.toml, runs
+      through DSC as Deploy-XmipEnvironment applies it, with every resource
+      replaced by Microsoft.DSC.Debug/Echo: the names are given every node
+      machine's address, each node machine is given its node's files and
+      values and the environment's known_hosts, and every node mapped is one
+      the Essentials' cluster file declares.
+    - An AlmaLinux machine is reached over OpenSSH with the environment's
+      key and known_hosts, checked strictly, and DSC is brought to it only
+      from a tarball whose SHA-256 is the one named.
     - The Xmip resources' own steps that touch nothing but a folder:
       a file in place, the ports a configuration listens on, the staging
       folder, and node.xmip made the node's alone to write on a file of the
       test's own (Windows; on Linux that needs root and is SKIPPED).
 
-    The machines themselves are proved by running the templates:
-    deploy/dsc/msdsc/environment/README.md and deploy/dsc/ansible/README.md.
+    The machines themselves are proved by running Deploy-XmipEnvironment:
+    deploy/dsc/README.md.
 
     Style: doc/governance/powershell-style.md
 #>
@@ -39,18 +42,18 @@ BeforeAll {
 
     [string] $script:Template = Join-Path $script:Root 'deploy/dsc/msdsc/environment'
     foreach ($part in 'Program.ps1', 'NodeMachine.ps1', 'NodeFile.ps1', 'NodeOpening.ps1',
-        'NodeAccess.ps1', 'EnvironmentMachine.ps1', 'EnvironmentSlice.ps1') {
+        'NodeAccess.ps1', 'NodePackage.ps1', 'EnvironmentSsh.ps1', 'EnvironmentMachine.ps1',
+        'EnvironmentSlice.ps1') {
         . (Join-Path $script:Template $part)
     }
     [bool] $script:HasDsc = $null -ne (Get-Command -Name dsc -ErrorAction SilentlyContinue)
     [string] $script:NoDsc = 'dsc (Microsoft DSC v3) is not on PATH; README.md installs it'
-    [string[]] $script:Document = @('environment.example.dsc.yaml', 'machine.dsc.yaml',
-        'node.dsc.yaml', 'name.dsc.yaml')
-
+    [string[]] $script:Document = @('machine.dsc.yaml', 'names.dsc.yaml', 'node.dsc.yaml',
+        'name.dsc.yaml', 'started.dsc.yaml')
 
     # A copy of a document, in YAML, whose every instance is an Echo of its
     # type and properties, its condition kept, so evaluating it changes
-    # nothing; an Include names the copy of the file it includes.
+    # nothing.
     function Write-EchoDocument {
         param(
             [Parameter(Mandatory = $true)]
@@ -60,53 +63,58 @@ BeforeAll {
         [hashtable] $document = Read-XmipTestYaml -Path (Join-Path $script:Template $Name)
         $document.Remove('directives')
         $document.resources = @($document.resources | ForEach-Object {
-            if ($_.type -eq 'Microsoft.DSC/Include') {
-                $_.Remove('dependsOn')
-                $_
+            [hashtable] $output = @{ type = $_.type; properties = $_.properties }
+            [hashtable] $echo = @{ name = $_.name; type = 'Microsoft.DSC.Debug/Echo'
+                properties = @{ output = $output } }
+            if ($_.Contains('condition')) {
+                $echo.condition = $_.condition
             }
-            else {
-                [hashtable] $output = @{ type = $_.type; properties = $_.properties }
-                [hashtable] $echo = @{ name = $_.name; type = 'Microsoft.DSC.Debug/Echo'
-                    properties = @{ output = $output } }
-                if ($_.Contains('condition')) {
-                    $echo.condition = $_.condition
-                }
-                $echo
-            }
+            $echo
         })
         Write-XmipTestYaml -Path (Join-Path $TestDrive $Name) -Value $document
     }
 
-    # The example environment evaluated: each instance's Echo by name, an
-    # Include's machine beneath it, and its slice as "<name> slice".
+    # The Hyper-V example as Deploy-XmipEnvironment applies it: its steps of
+    # this folder, the names and each node, each evaluated with the values
+    # of the parameters its document declares. The machine an instance is
+    # applied on by its step's name, its slice as "<name> slice".
+    $script:Example = Read-XmipTestEnvironment -Path (
+        Join-Path $script:Root 'deploy/dsc/hyperv.example.toml') -Folder (
+        Join-Path $TestDrive 'environment')
+    [hashtable[]] $script:Steps = @(Get-XmipTestDeployStep -Environment $script:Example -Run (
+            [string] $TestDrive) | Where-Object {
+            [IO.Path]::GetFullPath((Split-Path -Path $_.Document -Parent)) -eq
+                [IO.Path]::GetFullPath($script:Template) })
+    $script:Nodes = @{}
+    foreach ($step in $script:Steps | Where-Object { $_.Value.ContainsKey('node') }) {
+        $script:Nodes[$step.Name] = $step.Value.machine
+    }
+
     function Invoke-EchoEnvironment {
         foreach ($name in $script:Document) {
             Write-EchoDocument -Name $name
         }
-        [hashtable] $parameters = Read-XmipTestYaml -Path (
-            Join-Path $script:Template 'environment.example.parameters.yaml')
-        $parameters.parameters.common.template = [string] $TestDrive
-        $parameters.parameters.common.linuxAccount = 'account'
-        [string] $file = Join-Path $TestDrive 'parameters.yaml'
-        Write-XmipTestYaml -Path $file -Value $parameters
-        [string] $environment = Join-Path $TestDrive 'environment.example.dsc.yaml'
-        [string] $json = dsc config --parameters-file $file get --file $environment
-        if ($LASTEXITCODE -ne 0) {
-            throw 'dsc could not evaluate the example environment.'
-        }
         [hashtable] $result = @{}
-        foreach ($instance in ($json | ConvertFrom-Json -AsHashtable).results) {
-            if ($instance.type -ne 'Microsoft.DSC/Include') {
-                $result[$instance.name] = $instance.result.actualState.output.properties
-                continue
+        foreach ($step in $script:Steps) {
+            [string] $document = Join-Path $TestDrive (Split-Path -Path $step.Document -Leaf)
+            [Collections.IDictionary] $declared = (Read-XmipTestYaml -Path $document).parameters
+            [hashtable] $value = @{}
+            foreach ($name in $declared.Keys) {
+                if ($step.Value.ContainsKey($name)) {
+                    $value[$name] = $step.Value[$name]
+                }
             }
-            foreach ($included in $instance.result) {
-                $output = $included.result.actualState.output
+            [string] $file = Join-Path $TestDrive "$($step.Name).parameters.yaml"
+            Write-XmipTestYaml -Path $file -Value @{ parameters = $value }
+            [string] $json = dsc config --parameters-file $file get --file $document
+            if ($LASTEXITCODE -ne 0) {
+                throw "dsc could not evaluate the example's $($step.Name)."
+            }
+            foreach ($echo in ($json | ConvertFrom-Json -AsHashtable).results) {
+                $output = $echo.result.actualState.output
                 switch ($output.type) {
-                    'Xmip.Environment/Machine' { $result[$instance.name] = $output.properties }
-                    'Xmip.Environment/Slice' {
-                        $result["$($instance.name) slice"] = $output.properties
-                    }
+                    'Xmip.Environment/Machine' { $result[$step.Name] = $output.properties }
+                    'Xmip.Environment/Slice' { $result["$($step.Name) slice"] = $output.properties }
                 }
             }
         }
@@ -115,14 +123,10 @@ BeforeAll {
 
     if ($script:HasDsc) {
         $script:Parsed = @{}
-        foreach ($name in $script:Document + 'environment.example.parameters.yaml') {
+        foreach ($name in $script:Document) {
             $script:Parsed[$name] = Read-XmipTestYaml -Path (Join-Path $script:Template $name)
         }
         $script:Evaluated = Invoke-EchoEnvironment
-        $script:Nodes = $script:Parsed['environment.example.parameters.yaml'].parameters.nodes
-        [hashtable] $inventory = Read-XmipTestYaml -Path (
-            Join-Path $script:Root 'deploy/dsc/ansible/inventory.example.yml')
-        $script:Inventory = $inventory.all.children.xmip_nodes.hosts
     }
 
     $script:Declared = InModuleScope Xmip { Read-XmipEssentialsCluster }
@@ -135,13 +139,14 @@ Describe 'The documents' {
         }
     }
 
-    It 'parses <_> as YAML' -ForEach @('environment.example.dsc.yaml', 'machine.dsc.yaml',
-        'node.dsc.yaml', 'name.dsc.yaml', 'environment.example.parameters.yaml') {
+    It 'parses <_> as YAML' -ForEach @('machine.dsc.yaml', 'names.dsc.yaml', 'node.dsc.yaml',
+        'name.dsc.yaml', 'started.dsc.yaml') {
         $script:Parsed[$_] | Should -Not -BeNullOrEmpty
     }
 
     It 'declares in <_> every parameter it uses, and uses every one' -ForEach @(
-        'environment.example.dsc.yaml', 'machine.dsc.yaml', 'node.dsc.yaml', 'name.dsc.yaml') {
+        'machine.dsc.yaml', 'names.dsc.yaml', 'node.dsc.yaml', 'name.dsc.yaml',
+        'started.dsc.yaml') {
         [string] $text = Get-Content -LiteralPath (Join-Path $script:Template $_) -Raw
         [string[]] $used = @(@([regex]::Matches($text, "parameters\('(\w+)'\)") |
             ForEach-Object { $_.Groups[1].Value }) + 'staging' | Sort-Object -Unique)
@@ -150,19 +155,21 @@ Describe 'The documents' {
         ($used -join ',') | Should -Be ($declared -join ',')
     }
 
-    It 'requires DSC 3.4.0-preview.2 or newer in <_>' -ForEach @('environment.example.dsc.yaml',
-        'machine.dsc.yaml', 'node.dsc.yaml', 'name.dsc.yaml') {
+    It 'requires DSC 3.4.0-preview.2 or newer in <_>' -ForEach @('machine.dsc.yaml',
+        'names.dsc.yaml', 'node.dsc.yaml', 'name.dsc.yaml', 'started.dsc.yaml') {
         $script:Parsed[$_].directives.version | Should -Be '^3.4.0-preview.2'
     }
 
     It 'leaves elevation in <_> to each resource, never the whole document' -ForEach @(
-        'environment.example.dsc.yaml', 'machine.dsc.yaml', 'node.dsc.yaml', 'name.dsc.yaml') {
+        'machine.dsc.yaml', 'names.dsc.yaml', 'node.dsc.yaml', 'name.dsc.yaml',
+        'started.dsc.yaml') {
         $script:Parsed[$_].directives.Contains('securityContext') | Should -BeFalse
     }
 
     It 'elevates exactly the methods of <Type> that need administrator rights' -ForEach @(
         @{ Type = 'Xmip.Environment/Machine'; Elevated = @() }
         @{ Type = 'Xmip.Environment/Slice'; Elevated = @() }
+        @{ Type = 'Xmip.Environment/Started'; Elevated = @() }
         @{ Type = 'Xmip.Environment/Name'; Elevated = @('get', 'set', 'test') }
         @{ Type = 'Xmip.Node/Account'; Elevated = @('set') }
         @{ Type = 'Xmip.Node/File'; Elevated = @('get', 'set', 'test') }
@@ -201,7 +208,7 @@ Describe 'The documents' {
         }
 
         $found | Should -Be @('Xmip.Environment/Machine', 'Xmip.Environment/Name',
-            'Xmip.Environment/Slice',
+            'Xmip.Environment/Slice', 'Xmip.Environment/Started',
             'Xmip.Node/Account', 'Xmip.Node/File', 'Xmip.Node/Opening', 'Xmip.Node/Package',
             'Xmip.Node/Service', 'Xmip.Node/Slice')
     }
@@ -215,27 +222,19 @@ Describe 'The example environment' {
     }
 
     It 'maps only nodes the Essentials''s cluster file declares' {
+        $script:Nodes.Count | Should -Be 6
         foreach ($node in $script:Nodes.Keys) {
             $node | Should -BeIn $script:Declared.Nodes
         }
     }
 
-    It 'maps the nodes onto the machines as the Ansible inventory does' {
-        foreach ($machine in $script:Inventory.Keys) {
-            [string] $node = $script:Inventory[$machine].xmip_node_name
-            $script:Nodes[$node].name | Should -Be $machine
-            $script:Nodes[$node].address | Should -Be $script:Inventory[$machine].ansible_host
-        }
-        $script:Inventory.Count | Should -Be $script:Nodes.Count
-    }
-
     It 'gives the names every node machine''s address under the cluster''s name' {
-        $names = $script:Evaluated['Names']
+        $names = $script:Evaluated['names']
         $names.document | Should -Be 'name.dsc.yaml'
+        $names.name | Should -Be 'XMIP-DC01'
         [string[]] $addresses = @($script:Nodes.Values | ForEach-Object { $_.address } |
             Sort-Object)
-        $example = $script:Parsed['environment.example.parameters.yaml']
-        [string] $named = $example.parameters.common.cluster
+        [string] $named = $script:Example['cluster']
         $cluster = $names.parameters.records | Where-Object { $_.name -eq $named }
         @($cluster.addresses | Sort-Object) | Should -Be $addresses
     }
@@ -254,6 +253,9 @@ Describe 'The example environment' {
             $machine.files.Keys | Should -Not -Contain 'cluster.xmip'
             $machine.files['node.xmip'] | Should -BeLike "**node.xmip"
             $machine.files['node.key'] | Should -BeLike "*$node*node.key"
+            $machine.knownHosts | Should -Be 'known_hosts'
+            [string] $tool = if ($machine.family -eq 'Linux') { 'dsc,pwsh' } else { '' }
+            (@($machine.tools.Keys | Sort-Object) -join ',') | Should -Be $tool
             [string] $account = if ($machine.parameters.family -eq 'Windows') {
                 "NT SERVICE\xmip-$node"
             }
@@ -265,8 +267,7 @@ Describe 'The example environment' {
     }
 
     It 'tells each node machine the far end and every node the Locations are placed over' {
-        $example = $script:Parsed['environment.example.parameters.yaml']
-        [string] $farEnd = $example.parameters.common.farEnd
+        [string] $farEnd = $script:Example['far_end']
         $farEnd | Should -Not -BeNullOrEmpty
         [string[]] $mapped = @($script:Nodes.Keys | Sort-Object)
 
@@ -275,7 +276,7 @@ Describe 'The example environment' {
             $slice.node | Should -Be $node
             $slice.bind | Should -Be $farEnd
             @($slice.nodes -split ',' | Sort-Object) | Should -Be $mapped
-            $slice.authority | Should -Be $example.parameters.common.authority
+            $slice.authority | Should -Be $script:Example['authority']
             $slice.into | Should -BeLike "*$node"
         }
     }
@@ -339,17 +340,42 @@ Describe 'The Ansible role xmip_node' {
             Should -BeNullOrEmpty -Because 'the key is copied by its own task alone'
     }
 
-    It 'passes ansible-playbook --syntax-check' {
+    It 'names only modules the installed collections have, Hyper-V''s included' {
+        if (-not $script:HasAnsible) {
+            Set-ItResult -Skipped -Because ('SKIPPED: ansible-doc is not on PATH; ' +
+                'deploy/dsc/README.md installs it')
+            return
+        }
+
+        [string] $roles = Join-Path $script:Root 'deploy/dsc/ansible/roles'
+        [string[]] $named = @(Get-ChildItem -LiteralPath $roles -Recurse -File -Filter '*.yml' |
+            Select-String -Pattern '^\s+(?:- )?([a-z0-9_]+\.[a-z0-9_]+\.[a-z0-9_]+):\s*$' |
+            ForEach-Object { $_.Matches[0].Groups[1].Value } | Sort-Object -Unique)
+        [hashtable] $listed = & ansible-doc --list --json 2>$null | ConvertFrom-Json -AsHashtable
+        [string[]] $known = @($listed.Keys)
+        $named | Should -Contain 'microsoft.hyperv.hv_vm'
+        $named | Should -Contain 'community.libvirt.virt'
+        @($named | Where-Object { $_ -notin $known }) | Should -BeNullOrEmpty
+    }
+
+    It 'passes ansible-playbook <_> over the inventory each example writes' -ForEach @(
+        '--syntax-check', '--list-tasks') {
         if (-not $script:HasAnsible) {
             Set-ItResult -Skipped -Because ('SKIPPED: ansible-playbook is not on PATH; ' +
-                'deploy/dsc/ansible/README.md installs it')
+                'deploy/dsc/README.md installs it')
             return
         }
 
         [string] $playbook = Join-Path $script:Root 'deploy/dsc/ansible/environment.yml'
-        [string] $inventory = Join-Path $script:Root 'deploy/dsc/ansible/inventory.example.yml'
-        & ansible-playbook --syntax-check -i $inventory $playbook *> $null
-        $LASTEXITCODE | Should -Be 0
+        foreach ($example in 'libvirt', 'hyperv') {
+            [string] $folder = Join-Path $TestDrive "ansible-$example"
+            [string] $inventory = Write-XmipTestInventory -Environment (
+                Read-XmipTestEnvironment -Path (
+                    Join-Path $script:Root "deploy/dsc/$example.example.toml") -Folder (
+                    $folder) -Technology 'ansible') -Run $folder
+            [string[]] $said = @(& ansible-playbook $_ -i $inventory $playbook 2>&1)
+            $LASTEXITCODE | Should -Be 0 -Because "$example`: $($said -join ' ')"
+        }
     }
 }
 
@@ -364,6 +390,21 @@ Describe 'The Xmip resources'' own steps' {
         Set-NodeFile -Instance $file -Confirm:$false
         (Get-NodeFileState -Instance $file)._exist | Should -BeTrue
         Set-Content -LiteralPath $source -Value 'two'
+        (Get-NodeFileState -Instance $file)._exist | Should -BeFalse
+    }
+
+    It 'places a file not private 0644, whatever the mode of its staged source' -Skip:$IsWindows {
+        # The staging folder is the login's alone, its files 0600: a copy
+        # keeping that mode left the authority's certificate unread by the node.
+        [string] $source = Join-Path $TestDrive 'authority.pem'
+        Set-Content -LiteralPath $source -Value 'authority'
+        [IO.File]::SetUnixFileMode($source, [IO.UnixFileMode] 'UserRead, UserWrite')
+        [hashtable] $file = @{ path = Join-Path $TestDrive 'authority/authority.pem'
+            source = $source; private = $false }
+        Set-NodeFile -Instance $file -Confirm:$false
+        (Get-Item -LiteralPath $file.path).UnixMode | Should -Be '-rw-r--r--'
+        (Get-NodeFileState -Instance $file)._exist | Should -BeTrue
+        [IO.File]::SetUnixFileMode($file.path, [IO.UnixFileMode] 'UserRead, UserWrite')
         (Get-NodeFileState -Instance $file)._exist | Should -BeFalse
     }
 
@@ -389,6 +430,31 @@ Describe 'The Xmip resources'' own steps' {
         $asked.nodes = 'n,m'
         Get-EnvironmentSliced -Instance $asked |
             Should -Be "$asking --bind 10.77.0.1 --nodes n,m --slice`n"
+    }
+
+    It 'keeps a slice whose signed text is the one there, so its node is shipped the same bytes' {
+        # DSC asks set without a test first; a new signature each run would
+        # replace node.xmip on the machine and restart its node every time.
+        $script:Signature = 'a'
+        Mock -CommandName Invoke-DscProgram -MockWith {
+            "[service]`nnode_name = `"n`"`n[signature]`nvalue = `"$script:Signature`""
+        }
+        [string] $authority = Join-Path $TestDrive 'keep'
+        New-Item -ItemType Directory -Force -Path $authority | Out-Null
+        Set-Content -LiteralPath (Join-Path $authority 'authority.pem') -Value 'authority'
+        [hashtable] $asked = @{ program = 'xmip-service'; configuration = 'cluster.xmip'
+            node = 'n'; cluster = 'c'; authority = $authority; into = Join-Path $TestDrive 'n' }
+        Set-EnvironmentSlice -Instance $asked -Confirm:$false
+        [string] $slice = Join-Path $TestDrive 'n/node.xmip'
+        [string] $first = Get-Content -LiteralPath $slice -Raw
+        $script:Signature = 'b'
+        Set-EnvironmentSlice -Instance $asked -Confirm:$false
+        Get-Content -LiteralPath $slice -Raw | Should -BeExactly $first
+        Mock -CommandName Invoke-DscProgram -MockWith {
+            "[service]`nnode_name = `"m`"`n[signature]`nvalue = `"c`""
+        }
+        Set-EnvironmentSlice -Instance $asked -Confirm:$false
+        Get-Content -LiteralPath $slice -Raw | Should -BeLike "*node_name = `"m`"*"
     }
 
     It 'compares a signed slice by the text it signs, the same however often it is signed' {
@@ -494,5 +560,102 @@ Describe 'The Xmip resources'' own steps' {
     It 'stages a machine''s files in a folder of the machine''s own' {
         Get-EnvironmentStaging -Family Windows | Should -Be 'C:\ProgramData\Xmip\environment'
         Get-EnvironmentStaging -Family Linux | Should -Be '/var/tmp/xmip-environment'
+    }
+
+    It 'keeps nothing a node is given in the staging folder once dsc ran, in one this login owns' {
+        $script:Said = [Collections.Generic.List[string]]::new()
+        function Invoke-EnvironmentSsh {
+            param([hashtable] $Instance, [string] $Command, [string] $Trace)
+            $script:Said.Add($Command)
+            if ($Command -like '*dsc config*') {
+                '{"results":[]}'
+            }
+        }
+        function Send-EnvironmentFile { param($Instance, $File, $Folder) }
+        function Install-EnvironmentTool { param($Instance, $Staging) '/s/tools/dsc' }
+        [hashtable] $instance = @{ name = 'XMIP-IN01'; document = 'node.dsc.yaml'
+            files = [ordered] @{ 'node.key' = 'node.key' } }
+        [hashtable] $asked = @{ Instance = $instance; Operation = 'test'; Staging = '/s'
+            Parameters = 'parameters.yaml' }
+        Invoke-EnvironmentSshDocument @asked | Out-Null
+        # Made 0700, and refused where another account owns it.
+        $script:Said[0] | Should -BeLike "mkdir -p -m 0700 '/s' && { ``[ -O '/s' ``]*exit 3*"
+        $script:Said[0] | Should -BeLike "*chmod 0700 '/s'/files"
+        # The node's files read by this login and root alone, and removed whatever dsc said.
+        $script:Said[1] | Should -BeLike "chmod -R go-rwx '/s/files' && sudo env *dsc config*"
+        $script:Said[1] | Should -BeLike "*; status=`$?; rm -rf -- '/s/files'; exit `$status"
+    }
+
+    It 'reaches an AlmaLinux machine with its key and known_hosts, checked strictly' {
+        [string[]] $option = Get-EnvironmentSshOption -Instance @{
+            keyPath = 'state/ssh/id_ed25519'; knownHosts = 'state/known_hosts' }
+        ($option -join ' ') | Should -Be ('-i state/ssh/id_ed25519 -o ' +
+            'UserKnownHostsFile=state/known_hosts -o StrictHostKeyChecking=yes ' +
+            '-o BatchMode=yes -o ConnectTimeout=10')
+    }
+
+    It 'brings DSC to a machine only from a tarball whose SHA-256 is the one named' {
+        [string] $tarball = Join-Path $TestDrive 'pwsh.tar.gz'
+        Set-Content -LiteralPath $tarball -Value 'not the release'
+        $script:Reached = $false
+        function ssh { $script:Reached = $true }
+        function scp { $script:Reached = $true }
+        [hashtable] $instance = @{ name = 'XMIP-IN01'; address = '10.77.0.61'; login = 'a'
+            keyPath = 'k'; knownHosts = 'h'
+            tools = @{ pwsh = @{ path = $tarball; sha256 = ('0' * 64) } } }
+        { Install-EnvironmentTool -Instance $instance -Staging '/var/tmp/xmip-environment' } |
+            Should -Throw "REFUSED: $tarball has SHA-256 *, not $('0' * 64)."
+        $script:Reached | Should -BeFalse -Because 'nothing is sent before the check'
+    }
+
+    It 'names in node.dsc.yaml no resource one family lacks, so DSC runs it on both' {
+        [object[]] $resources = (Read-XmipTestYaml -Path (
+                Join-Path $script:Template 'node.dsc.yaml')).resources
+        [string[]] $types = @($resources | ForEach-Object { $_.type })
+        @($types | Where-Object { $_ -notlike 'Xmip.*' }) | Should -BeNullOrEmpty
+    }
+
+    It 'answers the openings absent, never refused, before the package is installed' {
+        [hashtable] $state = Get-NodeMachineState -Kind 'Opening' -Instance @{
+            program = (Join-Path $TestDrive 'no-such-xmip-service'); node = 'n'
+            configuration = 'node.xmip' }
+        $state._exist | Should -BeFalse
+        @($state.ports).Count | Should -Be 0
+    }
+
+    It 'finds an .rpm installed only where it is the one shipped, by its header' -Skip:$IsWindows {
+        function Test-NodeRegistered { param($Node) $true }
+        $script:Header = @{ Shipped = 'aa'; Installed = 'bb' }
+        function rpm {
+            $global:LASTEXITCODE = 0
+            if ($args[0] -eq '-qp') { $script:Header.Shipped } else { $script:Header.Installed }
+        }
+        [hashtable] $package = @{ node = 'n'; path = 'xmip.rpm' }
+        Test-NodePackage -Instance $package | Should -BeFalse -Because 'a build made again'
+        $script:Header.Installed = 'aa'
+        Test-NodePackage -Instance $package | Should -BeTrue
+    }
+
+    It 'installs an .rpm with dnf, and over another build with rpm''s upgrade' -Skip:$IsWindows {
+        $script:Ran = [Collections.Generic.List[string]]::new()
+        $script:Installed = ''
+        function rpm {
+            $script:Ran.Add("rpm $($args -join ' ')")
+            [bool] $none = $args[0] -eq '-q' -and -not $script:Installed
+            $global:LASTEXITCODE = if ($none) { 1 } else { 0 }
+            if ($args[0] -eq '-q') { $script:Installed }
+        }
+        function dnf { $script:Ran.Add("dnf $($args -join ' ')"); $global:LASTEXITCODE = 0 }
+        [hashtable] $package = @{ node = 'n'; path = 'xmip.rpm'; cluster = 'c'; account = 'xmip' }
+        Install-NodePackage -Instance $package -Confirm:$false
+        $script:Installed = 'aa'
+        Install-NodePackage -Instance $package -Confirm:$false
+        @($script:Ran | Where-Object { $_ -notlike 'rpm -q *' }) |
+            Should -Be @('dnf install --assumeyes xmip.rpm',
+                'rpm --upgrade --replacepkgs --replacefiles xmip.rpm')
+    }
+
+    It 'quotes every value it hands the machine''s shell as one word' {
+        ConvertTo-EnvironmentShellWord -Value "it's /var/tmp" | Should -Be "'it'\''s /var/tmp'"
     }
 }

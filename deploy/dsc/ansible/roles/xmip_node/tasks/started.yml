@@ -1,0 +1,30 @@
+---
+# The node's service running, started with every node of the environment
+# together (environment.yml's last play, no host waiting for another): a
+# node refuses to accept work until its cluster's Xmip Storage answers, and
+# a Storage node until every Storage node the cluster lists does (ADR-0056,
+# amendment 2026-11-08), so none of them starts alone, one machine after
+# another. Started again every five seconds until it runs or the window,
+# xmip_started_window seconds, is spent, as Microsoft DSC's
+# Xmip.Environment/Started does.
+
+- name: The node's service running, started with the others
+  ansible.builtin.systemd_service:
+    name: "xmip-{{ xmip_node_name }}"
+    state: started
+  register: xmip_started
+  until: xmip_started is succeeded
+  retries: "{{ (xmip_started_window | int) // 5 }}"
+  delay: 5
+  become: true
+  when: ansible_facts['os_family'] != 'Windows'
+
+- name: The node's service running on Windows, started with the others
+  ansible.windows.win_service:
+    name: "xmip-{{ xmip_node_name }}"
+    state: started
+  register: xmip_started_windows
+  until: xmip_started_windows is succeeded
+  retries: "{{ (xmip_started_window | int) // 5 }}"
+  delay: 5
+  when: ansible_facts['os_family'] == 'Windows'

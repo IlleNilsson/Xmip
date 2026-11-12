@@ -1,0 +1,86 @@
+---
+# The machines on a Linux host's KVM, through libvirt's system connection:
+# a network with NAT whose DHCP and DNS give each machine its address and
+# name and answer the names the environment adds, a directory pool for the
+# disks, images and answer media, then each machine (libvirt-machine.yml),
+# one installation at a time. The definitions are deploy/dsc/machine's,
+# the ones Microsoft DSC's Xmip.Libvirt resources hand libvirt.
+
+- name: The network's definition
+  ansible.builtin.command:
+    argv: "{{ xmip_definition + ['Network'] }}"
+    stdin: "{{ xmip_instance | to_json }}"
+  vars:
+    xmip_instance:
+      name: "{{ xmip_network.name }}"
+      bridge: "{{ xmip_network.bridge }}"
+      gateway: "{{ xmip_network.gateway }}"
+      prefixLength: "{{ xmip_network.prefixLength }}"
+      machines: "{{ xmip_network_machines }}"
+      names: "{{ xmip_names }}"
+  register: xmip_network_definition
+  changed_when: false
+  check_mode: false
+
+- name: The network defined
+  community.libvirt.virt_net:
+    uri: "{{ xmip_libvirt_uri }}"
+    command: define
+    name: "{{ xmip_network.name }}"
+    xml: "{{ xmip_network_definition.stdout }}"
+
+# virt_net and virt_pool answer a task naming a state before they look at
+# autostart, so starting and starting with the host are a task each.
+- name: The network started
+  community.libvirt.virt_net:
+    uri: "{{ xmip_libvirt_uri }}"
+    name: "{{ xmip_network.name }}"
+    state: active
+
+- name: The network started with the host
+  community.libvirt.virt_net:
+    uri: "{{ xmip_libvirt_uri }}"
+    name: "{{ xmip_network.name }}"
+    autostart: true
+
+- name: The pool's definition
+  ansible.builtin.command:
+    argv: "{{ xmip_definition + ['Pool'] }}"
+    stdin: "{{ {'name': xmip_environment, 'path': xmip_root} | to_json }}"
+  register: xmip_pool_definition
+  changed_when: false
+  check_mode: false
+
+- name: The pool defined
+  community.libvirt.virt_pool:
+    uri: "{{ xmip_libvirt_uri }}"
+    command: define
+    name: "{{ xmip_environment }}"
+    xml: "{{ xmip_pool_definition.stdout }}"
+  register: xmip_pool_defined
+
+- name: The pool's directory made, once it is defined
+  community.libvirt.virt_pool:
+    uri: "{{ xmip_libvirt_uri }}"
+    command: build
+    name: "{{ xmip_environment }}"
+  when: xmip_pool_defined.changed
+
+- name: The pool started
+  community.libvirt.virt_pool:
+    uri: "{{ xmip_libvirt_uri }}"
+    name: "{{ xmip_environment }}"
+    state: active
+
+- name: The pool started with the host
+  community.libvirt.virt_pool:
+    uri: "{{ xmip_libvirt_uri }}"
+    name: "{{ xmip_environment }}"
+    autostart: true
+
+- name: Each machine, one installation at a time
+  ansible.builtin.include_tasks: libvirt-machine.yml
+  loop: "{{ xmip_machines }}"
+  loop_control:
+    loop_var: xmip_machine
+    label: "{{ xmip_machine.name }}"

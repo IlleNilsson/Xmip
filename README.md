@@ -584,7 +584,7 @@ amendment 2026-10-19).
 | --- | --- | --- | --- |
 | PowerShell 7.7.0 or later, Core edition | `winget` | `snap`, `apt`, `dnf`, `zypper`, `pacman` | `brew` |
 | Prerequisites | `Install-XmipPrerequisite` reads [`prerequisite.toml`](prerequisite.toml), one package per operating system and package manager | | |
-| Desired state | Microsoft DSC v3 (`deploy/dsc/msdsc`): the machines on Hyper-V (`hyperv`), made by `Deploy-XmipEnvironment`, and what runs inside them (`environment`); the same environment in Ansible (`deploy/dsc/ansible`) | the machines on KVM through libvirt (`libvirt`), by the same command; the rest the same | the same |
+| Desired state | One environment file and `Deploy-XmipEnvironment` (`deploy/dsc`): Microsoft DSC v3 (`msdsc`) makes the machines on Hyper-V (`hyperv`) and what runs inside them (`environment`), or the file names Ansible (`ansible`), whose controller is a Linux machine | the machines on KVM through libvirt (`libvirt`) and the nodes, by the same command in either technology | the same |
 | Remote operation | PowerShell Remoting over WinRM or SSH | SSH | SSH |
 
 The environment templates put a cluster's nodes on machines of their own,
@@ -652,7 +652,11 @@ starts it, after laying the node out from a starter configuration where
 there is none, and `--uninstall` removes it; every package runs them
 ([Install](#install)). The build links the transports its site
 names, by feature; a Location naming another transport is refused
-when the node starts. A node declaring the `storage` role — its cluster's
+when the node starts. It links the route technologies its site names the
+same way: `route-content` with `path-edi` lets a Subscription route by what
+an EDIFACT or X12 document says, `"content:edi:UNH/2/1" = 'ORDERS'`, and a
+filter naming a source or a path language the build left out is refused as
+the node starts (ADR-0046, amendment 2026-11-11). A node declaring the `storage` role — its cluster's
 `[nodes.<node>] roles`, which the slice gives it — is its own embedded
 Storage node, under its
 data directory — `data/storage`, RocksDB for the runtime database and
@@ -1032,8 +1036,9 @@ module/               the modules: foundation/ and platform/ start a node, the r
 test/                 the estate's Pester suite; test/core/essentials is the Essentials
 deploy/               the sites and profiles a build is made from (site/, profile/),
                       and desired state per technology under dsc/: msdsc/
-                      (Microsoft DSC v3: hyperv/, the machines on Hyper-V, and
-                      environment/, what runs inside them) and ansible/
+                      (Microsoft DSC v3: hyperv/ and libvirt/, the machines,
+                      and environment/, what runs inside them), ansible/, and
+                      machine/, what a machine is for both
 template/             the Rust and .NET repository templates
 doc/                  the record
 ```
@@ -1102,7 +1107,7 @@ Every command that changes state accepts `-WhatIf`. Reporting is the default.
 | `Publish-XmipPin` | Move the superproject's gitlinks to where the modules now are: how a land ends, and how one that stopped halfway is finished. |
 | `Start-XmipTest`, `Get-XmipTestStatus`, `Stop-XmipTest` | A suite of Xmip's tests: `Core.Essentials`, `Core.Estate`, `Core.Demo` — a bare name is accepted and resolves to those — or a provider's `<Provider>.<Name>`. `-Suite` takes wildcards. Xmip's own start detached and are observed and stopped from outside; `-Tester` is the demo readiness check's alone. |
 | `Start-XmipTestNode`, `Get-XmipTestNode`, `Stop-XmipTestNode` | Simulated node processes, by name. |
-| `Deploy-XmipEnvironment` | Make an environment's machines with Microsoft DSC v3 from one TOML file: the network, then each machine installed from its ISO, on Hyper-V or libvirt (`deploy/dsc/msdsc/<hypervisor>`); `-WhatIf` tests. |
+| `Deploy-XmipEnvironment` | Make an environment from one TOML file with the technology it names, Microsoft DSC v3 or Ansible: the network, each machine installed from its ISO one at a time, on Hyper-V or libvirt, then the Xmip node on each machine (`deploy/dsc/README.md`); the environment keeps the technology that made it and refuses the other; `-WhatIf` tests, a host where nothing is made yet too. |
 | `Get-XmipTestResult`, `Get-XmipHistory` | What a run reports, now and over time. `Get-XmipTestResult -Suite Core.Estate` reads the estate run's record and returns its failures, and `-Suite Core.Demo` every part of the latest demo readiness check, OK, FAILED or SKIPPED with its reason. `Get-XmipTestResult` reads the snapshot through the operator module's `Xmip.Surface` and ranks by the runtime's order, as every surface does, and `Get-XmipHistory` reads the history through the runtime's reader (`observe::Curve`) the same way; the module is built once per change of its sources into `.local-work/operator` and loaded from there on first use, and the runtime (`cargo build` in `module/platform/runtime`) must be built. |
 | `Start-XmipOperationWeb`, `Get-XmipOperationWeb`, `Stop-XmipOperationWeb` | The web GUI, detached; it opens no browser. One host holds one cluster per `-Snapshot`. |
 | `Get-XmipDecisionRecord`, `New-XmipDecisionIndex` | The decision record and its index. |

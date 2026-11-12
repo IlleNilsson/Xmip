@@ -1,20 +1,28 @@
 ---
 # A changed slice or certificate takes effect when the node starts again,
 # never mid-flight (module/platform/configure/doc/cluster-configuration.md,
-# Activation).
+# Activation). Only a node that runs is restarted: one that does not, as
+# before the environment's nodes are started together, is started by
+# started.yml with the others.
 
 - name: Restart the Xmip node
-  ansible.windows.win_service:
-    name: "xmip-{{ xmip_node_name }}"
-    state: restarted
-  when: ansible_os_family == 'Windows'
+  ansible.windows.win_powershell:
+    parameters:
+      Name: "xmip-{{ xmip_node_name }}"
+    script: |
+      param($Name)
+      $Ansible.Changed = (Get-Service -Name $Name -ErrorAction SilentlyContinue).Status -eq 'Running'
+      if ($Ansible.Changed) {
+          Restart-Service -Name $Name
+      }
+  when: ansible_facts['os_family'] == 'Windows'
   listen: Restart the Xmip node
 
 - name: Restart the Xmip node on Linux
-  ansible.builtin.systemd_service:
-    name: "xmip-{{ xmip_node_name }}"
-    state: restarted
-  when: ansible_os_family != 'Windows'
+  ansible.builtin.command:
+    argv: [systemctl, try-restart, "xmip-{{ xmip_node_name }}"]
+  changed_when: true
+  when: ansible_facts['os_family'] != 'Windows'
   become: true
   listen: Restart the Xmip node
 

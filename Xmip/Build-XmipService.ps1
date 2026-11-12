@@ -40,11 +40,13 @@ function Build-XmipService {
             makes each package under .local-work/package/<version>. On
             Windows, msi builds deploy/package/windows/Xmip.wixproj with
             dotnet and WiX 7, and the winget manifest beside it; archive
-            zips the portable layout. deb, rpm and pkg are written under
-            deploy/package and REFUSED here, in words naming what their
-            build needs: builds are Windows-only for now. Each package runs
-            xmip-service --install, so the layout, the starter configuration
-            and the service's registration are written once, there.
+            zips the portable layout. On Linux, deb and rpm are made by nfpm
+            from deploy/package/linux/nfpm.yaml. A package another system
+            builds is REFUSED, in words naming what its build needs; pkg is
+            written under deploy/package and refused everywhere. Each
+            package runs xmip-service --install, so the layout, the starter
+            configuration and the service's registration are written once,
+            there.
 
             -Remote builds no site: it builds the runtime's remote build,
             --no-default-features --features remote, the library an

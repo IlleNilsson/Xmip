@@ -430,7 +430,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 343522 lines of production
+Where each repository mounts and what it holds: 347707 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -639,7 +639,7 @@ hold no source to count.
 │   │   │   │   └── csv                          140
 │   │   │   ├── route                            739
 │   │   │   │   ├── metadata                     125
-│   │   │   │   ├── content                       88
+│   │   │   │   ├── content                      108
 │   │   │   │   ├── contract                      86
 │   │   │   │   ├── regex                         76
 │   │   │   │   ├── party                         69
@@ -683,7 +683,7 @@ hold no source to count.
 │   │   │           azure-blob  file  gcs  s3  sql
 │   │   ├── library/
 │   │   │   ├── net                             7332
-│   │   │   ├── tls                             3474
+│   │   │   ├── tls                             3486
 │   │   │   ├── codec                           3159
 │   │   │   ├── mariadb                         1797
 │   │   │   ├── ssh                             1756
@@ -691,17 +691,17 @@ hold no source to count.
 │   │   │   ├── ntlm                             804
 │   │   │   └── asn1                             678
 │   │   └── operation/
-│   │       ├── cli                             9770
-│   │       ├── gui                             6595
+│   │       ├── cli                             9903
+│   │       ├── gui                             6731
 │   │       │   └── vscode                      3517
-│   │       ├── observe                         4464
+│   │       ├── observe                         5174
 │   │       │   ├── otlp                         587
 │   │       │   └── prometheus                   328
 │   │       ├── audit                           4121
 │   │       │       declared, not built 10
 │   │       │       elasticsearch  file  kafka  mssql  opensearch  otlp
 │   │       │       postgres  sqlite  syslog  windows-event-log
-│   │       ├── powershell                      3717  C# 3717 · PowerShell 0
+│   │       ├── powershell                      3733  C# 3733 · PowerShell 0
 │   │       ├── report                          2281
 │   │       │       declared, not built 6
 │   │       │       csv  html  json  pdf  prometheus  sql
@@ -717,7 +717,7 @@ hold no source to count.
 │   │           ├── postgresql                    62
 │   │           └── mssql                         59
 │   ├── foundation/
-│   │   ├── abi                                33907  C# 31144 · Rust 2360 · PowerShell 403
+│   │   ├── abi                                34428  C# 31647 · Rust 2378 · PowerShell 403
 │   │   ├── event                               5753
 │   │   │       declared, not built 3
 │   │   │       amqp  http  kafka
@@ -739,14 +739,14 @@ hold no source to count.
 │   │   │   ├── edi-tradacoms                     56
 │   │   │   └── binary                            38
 │   │   ├── context                             1037
-│   │   ├── node                                 988
+│   │   ├── node                                1008
 │   │   ├── journey                              745
 │   │   ├── stream                               382
 │   │   ├── party                                193
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                            41628
-│       ├── persist                            15340
+│       ├── runtime                            42725
+│       ├── persist                            15492
 │       │   ├── rocksdb                          323
 │       │   ├── sqlite                           288
 │       │       declared, not built 1
@@ -754,7 +754,7 @@ hold no source to count.
 │       └── configure                           8440
 └── test/
     └── core/
-        ├── essentials                         15175
+        ├── essentials                         16543
         └── module                                83
 ```
 

@@ -1418,10 +1418,13 @@ release:
 
 - **The Windows MSI and its winget manifest.** WiX 7 builds nothing until its
   Open Source Maintenance Fee terms are accepted — the owner's decision.
-- **The Linux `.deb` and `.rpm`, and the macOS `.pkg`**: written under
-  `deploy/package/`, never built; they need Linux and macOS builds, which the
-  owner has switched off for now. Their systemd and launchd branches of
-  `install.rs` have not been compiled.
+- **The Linux `.deb` and the macOS `.pkg`**: the `.rpm` is built on Linux
+  and was installed on AlmaLinux 10.2 by both environment templates on
+  2026-11-11, the systemd branch of `install.rs` compiled for the first time
+  (ADR-0015, amendment 2026-11-11); the `.deb`, from the same definition, is
+  installed nowhere yet, and the `.pkg` and the launchd branch need a macOS
+  build, which waits on the owner. No Linux package is built by the CI or
+  the landing, which build Windows alone.
 - **Signing**: Authenticode, Apple Developer ID with notarization, Linux
   package signing.
 - **The service account** (open problem 28) and whether the starter grants
@@ -1475,7 +1478,11 @@ which the sending node's scan waits on instead of its interval; the
 node-to-node sync plane (ADR-0067) is the other way, and decided, not built.
 A Work Process's queue waits on the same scan (ADR-0066, amendment
 2026-10-22): a Journey published for it on another node is taken up at the
-next `WORK_SCAN`.
+next `WORK_SCAN`. Seen again 2026-11-11 on the board the demo shows: each
+Receive Location whose Send Port another node sends says a median of about
+half a second in its delivery verdict, against tens of milliseconds where
+one node does both (ADR-0028, amendment 2026-11-11). Scheduled ahead of the
+demo, as the proposal above.
 
 ## 47. Debatching on receive is decided, not built
 
@@ -1798,25 +1805,25 @@ connection's session, which a server insisting on reuse checks (vsftpd's
 nothing, so no test fails if they stop resuming. Left: a test against a
 far end that refuses a data connection that is not `Resumed`.
 
-## 62. Nothing travels between real nodes on the Topology
+## 62. What a standby copies, and who acted through the roll
 
 Found 2026-11-11, building motion that follows traffic (ADR-0052,
-amendment 2026-11-10). An Essentials roll of real nodes — C1, the board of
-the demo of 2026-12-18 — draws no line at all: the hops between nodes are
-counted by the simulated relay alone, a real node hands a Stream on through
-Xmip Storage and publishes nothing of it as a figure, and the roll draws
-its Parties over transport words while a real node names each endpoint by
-its Location, so no Party faces a stage (`observe::topology::party`). The
-nodes' rings now move with what moved through them, and nothing moves on a
-line. Left, from the plan of 2026-11-10: each Subscription published with
-the Send Ports it reaches, `send_ports`, through the ABI, the CLI,
-PowerShell and the Subscriptions view; the hand-over drawn once, in
-`observe::topology::handoff`, from the process stage of the node that
-routed a Message to the send stage of the node that sends its Port, the
-runtime's drawing and the roll both calling it; and a real node's Parties
-drawn by what its configuration says each Location takes (problem 33). To
-land by 2026-12-08, so the demo's board shows pulses traveling between its
-nodes.
+amendment 2026-11-10). The traffic between real nodes is drawn since the
+same day, measured where it passes: each Storage node counts, from their
+answers, the Publications each node of the cluster wrote into it and the
+Journeys each took on from it, and draws them; the roll merges what each
+node it reads drew of itself, so R → D1 → S moves at the rate measured.
+From and to is said on every observation since the same day, once in
+observe, and each Subscription publishes the Send Ports it reaches
+(ADR-0052, amendments 2026-11-11). Left: what a primary ships to its
+standby, counted per follower and drawn D1 → D2; a Party per Location,
+named by what its configuration says it takes (problem 33), so from and to
+start and end at a Party and not at `any-party`; and who acted: an order
+the roll carries to a node it reads is audited by the node as the run's
+tester, not the person who left it (ADR-0028, amendment 2026-11-11), so the
+Audit view names the rig for every Pause, Replay, Retry and Dismiss from
+the Web or Desktop on a served node until the operate plane carries the
+person an act was relayed for beside the tester's proven identity.
 
 ## 63. The board and the Topology measure a rate in two places
 

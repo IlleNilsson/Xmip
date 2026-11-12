@@ -44,7 +44,7 @@ $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
 [string[]] $parts = @('Program.ps1', 'NodeMachine.ps1', 'NodeFile.ps1', 'NodeOpening.ps1',
-    'NodeAccess.ps1')
+    'NodeAccess.ps1', 'NodePackage.ps1')
 
 foreach ($part in $parts) {
     . (Join-Path -Path $PSScriptRoot -ChildPath $part)

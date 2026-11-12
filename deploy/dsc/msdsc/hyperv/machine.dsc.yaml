@@ -13,12 +13,17 @@ parameters:
   root:
     type: string
     description: The folder that holds a folder per machine on the host.
-  credentialPath:
+  secretPath:
     type: string
-    description: The Administrator credential of the Windows machines, Export-Clixml.
+    description: The Windows machines' Administrator secret, Export-Clixml.
   sshPublicKeyPath:
     type: string
     description: The ed25519 public key the AlmaLinux machines' account is given.
+  hostKeyPath:
+    type: string
+    description: >-
+      An AlmaLinux machine's SSH host key, made where the environment is
+      deployed from, which its kickstart gives it; empty for Windows.
   linuxAccount:
     type: string
     description: The account the kickstart creates on the AlmaLinux machines.
@@ -64,5 +69,6 @@ resources:
       domainName: "[parameters('domainName')]"
       linuxAccount: "[parameters('linuxAccount')]"
       sshPublicKeyPath: "[parameters('sshPublicKeyPath')]"
-      credentialPath: "[parameters('credentialPath')]"
+      hostKeyPath: "[parameters('hostKeyPath')]"
+      secretPath: "[parameters('secretPath')]"
       image: "[parameters('image')]"

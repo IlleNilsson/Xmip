@@ -97,7 +97,11 @@ schema: !embedded
         type: string
       sshPublicKeyPath:
         type: string
-      credentialPath:
+      hostKeyPath:
+        description: 'An AlmaLinux machine''s SSH host key, which its kickstart gives it.'
+        type: string
+      secretPath:
+        description: 'The Windows machines'' Administrator secret, Export-Clixml.'
         type: string
       installation:
         readOnly: true

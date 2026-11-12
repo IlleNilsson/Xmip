@@ -2,8 +2,9 @@ $schema: https://aka.ms/dsc/schemas/v3/bundled/resource/manifest.json
 type: Xmip.Environment/Machine
 version: '0.1.0'
 description: >-
-  A document of this folder applied on another machine over PowerShell Remoting:
-  WinRM to Windows as its Administrator, SSH to AlmaLinux with its key.
+  A document of this folder applied on another machine: over PowerShell
+  Remoting, WinRM, to Windows as its Administrator; over OpenSSH to AlmaLinux
+  with the environment's key and known_hosts, DSC brought there first.
 tags:
   - Xmip
 get:
@@ -76,12 +77,20 @@ schema: !embedded
       login:
         type: string
         description: 'Linux: the account SSH logs in as.'
-      credentialPath:
+      secretPath:
         type: string
-        description: 'Windows: the Administrator credential, Export-Clixml.'
+        description: 'Windows: the Administrator''s secret, Export-Clixml.'
       keyPath:
         type: string
-        description: 'Linux: the private SSH key.'
+        description: 'Linux: the private SSH key, readable by its owner alone.'
+      knownHosts:
+        type: string
+        description: 'Linux: the environment''s known_hosts, holding the machine''s host key.'
+      tools:
+        type: object
+        description: >-
+          Linux: each tool DSC is brought to the machine with, a name and its
+          tarball's path and SHA-256: pwsh and dsc.
       document:
         type: string
         description: 'The document of this folder applied there.'

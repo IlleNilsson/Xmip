@@ -7,35 +7,10 @@
 # generation 2, its hardware the machine's (HyperVHardware.ps1), and it is
 # installed unattended from its operating system's ISO
 # (HyperVInstallation.ps1). A machine that is not there is found absent,
-# never refused.
+# never refused. Its folder's files, its MAC and its drives' places are
+# deploy/dsc/machine's (HyperVDefinition.ps1).
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
-
-# Hyper-V's MAC prefix: the adapter's static MAC ends in the address's last
-# three octets (MachineAnswer.ps1).
-$script:HyperVMacPrefix = '00155D'
-
-# Where the VM's drives sit on SCSI controller 0: the disk New-VM attaches
-# first, then the two DVD drives.
-$script:HyperVDiskLocation = 0
-$script:HyperVInstallLocation = 1
-$script:HyperVAnswerLocation = 2
-
-function Get-HyperVMachineDisk {
-    <#
-    .SYNOPSIS
-    The machine's disk, os.vhdx in its folder, <root>\<name>.
-    #>
-    [CmdletBinding()]
-    [OutputType([string])]
-    param(
-        [Parameter(Mandatory = $true)]
-        [hashtable] $Instance
-    )
-
-    [string] $directory = Join-Path -Path $Instance['root'] -ChildPath $Instance['name']
-    return Join-Path -Path $directory -ChildPath 'os.vhdx'
-}
 
 function Get-HyperVVm {
     <#

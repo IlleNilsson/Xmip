@@ -1,6 +1,7 @@
 # One machine on a libvirt host, installed unattended from its operating
 # system's ISO into the environment's pool and network (network.dsc.yaml).
-# Deploy-XmipEnvironment applies it once per machine; README.md says how.
+# Deploy-XmipEnvironment applies it once per machine, one installation at a
+# time; deploy/dsc/README.md says how.
 $schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
 directives:
   version: ^3.4.0-preview.2
@@ -8,12 +9,22 @@ parameters:
   environment:
     type: string
     description: The environment's name, its pool's and each domain's description.
-  credentialPath:
+  technology:
     type: string
-    description: The Administrator credential of the Windows machines, Export-Clixml.
+    description: >-
+      The technology making the environment, which the domain's record
+      names, so the other one is refused there: msdsc, never a mix.
+  secretPath:
+    type: string
+    description: The Windows machines' Administrator secret, Export-Clixml.
   sshPublicKeyPath:
     type: string
     description: The ed25519 public key the AlmaLinux machines' account is given.
+  hostKeyPath:
+    type: string
+    description: >-
+      An AlmaLinux machine's SSH host key, made where the environment is
+      deployed from, which its kickstart gives it; empty for Windows.
   linuxAccount:
     type: string
     description: The account the kickstart creates on the AlmaLinux machines.
@@ -43,6 +54,7 @@ resources:
     type: Xmip.Libvirt/Machine
     properties:
       name: "[parameters('name')]"
+      technology: "[parameters('technology')]"
       environment: "[parameters('environment')]"
       address: "[parameters('address')]"
       memoryGB: "[parameters('memoryGB')]"
@@ -53,5 +65,6 @@ resources:
       domainName: "[parameters('domainName')]"
       linuxAccount: "[parameters('linuxAccount')]"
       sshPublicKeyPath: "[parameters('sshPublicKeyPath')]"
-      credentialPath: "[parameters('credentialPath')]"
+      hostKeyPath: "[parameters('hostKeyPath')]"
+      secretPath: "[parameters('secretPath')]"
       image: "[parameters('image')]"

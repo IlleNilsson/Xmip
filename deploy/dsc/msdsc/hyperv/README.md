@@ -31,8 +31,8 @@ account Hyper-V does not let manage VMs, is an error.
 
 ## The example environment
 
-`environment.example.toml`, which `Deploy-XmipEnvironment` reads,
-describes ten machines:
+`deploy/dsc/hyperv.example.toml`, which `Deploy-XmipEnvironment` reads
+(`deploy/dsc/README.md`), describes eleven machines:
 
 | Machine | Operating system | Role | Memory | CPUs | Disk | Address |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -44,6 +44,7 @@ describes ten machines:
 | XMIP-APP01 | Windows Server 2025 | Xmip node | 4 GiB | 2 | 64 GiB | 10.77.0.51 |
 | XMIP-APP02 | Windows Server 2025 | Xmip node | 4 GiB | 2 | 64 GiB | 10.77.0.52 |
 | XMIP-APP03 | Windows Server 2025 | Xmip node | 4 GiB | 2 | 64 GiB | 10.77.0.53 |
+| XMIP-APP04 | Windows Server 2025 | Xmip node | 4 GiB | 2 | 64 GiB | 10.77.0.54 |
 | XMIP-IN01 | AlmaLinux 10 | Xmip node | 4 GiB | 2 | 32 GiB | 10.77.0.61 |
 | XMIP-OUT01 | AlmaLinux 10 | Xmip node | 4 GiB | 2 | 32 GiB | 10.77.0.71 |
 
@@ -79,7 +80,7 @@ the disk; every later boot starts from the disk.
   Setup reads from the root of a removable medium. It partitions the disk for
   UEFI, installs the image the parameters name as `edition` (the image's
   `NAME` in the ISO's `sources\install.wim`), sets the computer name, enables
-  the built-in Administrator with the password in the credential file, and
+  the built-in Administrator with the password in the secret file, and
   skips the out-of-box experience. The password is in Windows's answer-file
   encoding, Base64, which keeps it from a glance, not from a reader. A
   Windows ISO boots only after *Press any key to boot from CD or DVD*, so for
@@ -118,23 +119,24 @@ Add-LocalGroupMember -SID 'S-1-5-32-578' -Member $account
 
 The ISOs go where the environment file names them, under
 `D:\Downloads\OS\Images`. Then, as the Windows user that will run DSC, not
-elevated: the Administrator credential of the Windows machines, encrypted to
-that user on this host, the SSH key of the AlmaLinux machines, and the
-environment file copied to where it is yours:
+elevated: the Administrator secret of the Windows machines, encrypted to
+that user on this host, and the environment file copied to where it is
+yours:
 
 ```powershell
 [string] $local = 'D:\Repos\Xmip\.local-work\hyperv'
-New-Item -ItemType Directory -Force -Path "$local\ssh"
+New-Item -ItemType Directory -Force -Path $local
 Get-Credential -UserName 'Administrator' -Message 'The Windows machines' |
-    Export-Clixml -LiteralPath "$local\credential.xml"
-ssh-keygen -t ed25519 -N '' -f "$local\ssh\xmip"
-[string] $example = 'D:\Repos\Xmip\deploy\dsc\msdsc\hyperv\environment.example.toml'
+    Export-Clixml -LiteralPath "$local\secret.xml"
+[string] $example = 'D:\Repos\Xmip\deploy\dsc\hyperv.example.toml'
 Copy-Item -LiteralPath $example -Destination 'D:\Repos\Xmip\.local-work\deploy\hyperv.toml'
 ```
 
 In the copy, write in `linux_account`, the account the kickstart creates on
-the AlmaLinux machines, `ssh_public_key` and `credential`, and strike the
-machines you do not want.
+the AlmaLinux machines, `secret` and what the nodes are given
+(`deploy/dsc/README.md`), and strike the machines you do not want. The
+AlmaLinux machines' account is given the environment's own SSH key, which
+`Deploy-XmipEnvironment` makes.
 
 ## Running it
 
@@ -155,8 +157,11 @@ each on its own with the parameters it declares and with this folder on
 `PATH` so DSC finds the resources, and writes one line per step with the
 time left. An installation runs on its own; while a machine installs, its
 document is applied again every thirty seconds until it is installed, its
-media gone, and running. Everything DSC says goes to
-`.local-work\deploy\<environment>\run.log`.
+media gone, and running, and only then is the next machine made. The names
+and the nodes follow (`deploy/dsc/msdsc/environment`). Everything DSC says
+goes to `.local-work\deploy\<environment>\run.log`. The same environment
+with `technology = "ansible"` is made by `deploy/dsc/ansible` from a Linux
+controller.
 
 ## The files
 
@@ -164,7 +169,6 @@ media gone, and running. Everything DSC says goes to
 | --- | --- |
 | `network.dsc.yaml` | the network, `Xmip.HyperV/Network` |
 | `machine.dsc.yaml` | one machine, `Xmip.HyperV/Machine` |
-| `environment.example.toml` | the example environment: the network and its ten machines, as `Deploy-XmipEnvironment` reads it |
 | `hyperv.resource.ps1` | the resources' entry, run by DSC with the kind and the operation |
 | `HyperVResource.ps1` | what the entry runs: the state each operation answers, and the parts below |
 | `HyperVNetwork.ps1` | the switch, the host's address and NAT |
@@ -172,8 +176,9 @@ media gone, and running. Everything DSC says goes to
 | `HyperVHardware.ps1` | the VM's settings, devices and firmware |
 | `HyperVInstallation.ps1` | the installation from the ISO |
 | `xmip-hyperv-*.dsc.resource.yaml` | the resource manifests |
-| `../answer/MachineAnswer.ps1` | the install answers and the answer medium, shared with the libvirt template |
-| `../answer/autounattend.template.xml` | the Windows answer `MachineAnswer.ps1` fills in |
+| `../../machine/HyperVDefinition.ps1` | the machine's folder files, static MAC, drives' places and answer medium, shared with Ansible's template |
+| `../../machine/MachineAnswer.ps1` | the install answers and the answer medium, shared with the libvirt template |
+| `../../machine/autounattend.template.xml` | the Windows answer `MachineAnswer.ps1` fills in |
 
 Each document requires DSC `^3.4.0-preview.2`, the latest release.
 

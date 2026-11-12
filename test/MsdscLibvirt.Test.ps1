@@ -11,8 +11,9 @@
     - The domain's definition: UEFI with Secure Boot, the disk first, the
       DVD drives on SATA, virtio for AlmaLinux and SATA and e1000e for
       Windows, a TPM only where the host has swtpm.
-    - The example, as Deploy-XmipEnvironment reads it: the network, then
-      each machine, each with every parameter its document declares.
+    - The example, deploy/dsc/libvirt.example.toml, as
+      Deploy-XmipEnvironment reads it: the network, then each machine, each
+      with every parameter its document declares.
     - The machine's set while it installs, virsh a stub: it is left to
       install and nothing is written, since DSC reads what the resource
       writes as its answer.
@@ -27,17 +28,15 @@ BeforeAll {
     . (Join-Path $PSScriptRoot 'Initialize-XmipTest.ps1')
 
     [string] $script:Template = Join-Path $script:Root 'deploy/dsc/msdsc/libvirt'
-    foreach ($part in 'LibvirtCommon.ps1', 'LibvirtNetwork.ps1', 'LibvirtMachine.ps1') {
+    foreach ($part in '../../machine/LibvirtInstallation.ps1', 'LibvirtNetwork.ps1',
+        'LibvirtMachine.ps1') {
         . (Join-Path $script:Template $part)
     }
 
     # The names are configuration (ADR-0056): the example's own node and cluster.
-    $script:Example = InModuleScope Xmip -Parameters @{
-        Path = Join-Path $script:Template 'environment.example.toml'
-    } {
-        param($Path)
-        Read-XmipToml -Path $Path
-    }
+    $script:Example = Read-XmipTestEnvironment -Path (
+        Join-Path $script:Root 'deploy/dsc/libvirt.example.toml') -Folder (
+        Join-Path $TestDrive 'environment')
     [string] $script:Node = @($script:Example['machines'])[0]['nodes'][0]
     [string] $script:Cluster = $script:Example['cluster']
 
@@ -154,15 +153,13 @@ Describe 'The documents and the resources' {
 
 Describe 'The example, as Deploy-XmipEnvironment reads it' {
     It 'applies the network, then each machine, with every parameter declared' {
-        [hashtable[]] $steps = @(InModuleScope Xmip -Parameters @{
-            Path = Join-Path $script:Template 'environment.example.toml'
-            Template = $script:Template
-        } {
-            param($Path, $Template)
-            Get-XmipDeployStep -Environment (Read-XmipToml -Path $Path) -Template $Template
-        })
+        [hashtable[]] $steps = @(Get-XmipTestDeployStep -Environment $script:Example -Run (
+                [string] $TestDrive) | Where-Object {
+                [IO.Path]::GetFullPath((Split-Path -Path $_.Document -Parent)) -eq
+                    [IO.Path]::GetFullPath($script:Template) })
         $steps[0].Name | Should -Be 'network'
-        @($steps | Select-Object -Skip 1 | ForEach-Object { $_.Name }) | Should -Be @('XMIP-IN01')
+        @($steps | Select-Object -Skip 1 | ForEach-Object { $_.Name }) |
+            Should -Be @('XMIP-APP03', 'XMIP-APP04', 'XMIP-IN01')
         foreach ($step in $steps) {
             [Collections.IDictionary] $declared = (
                 Read-XmipTestYaml -Path $step.Document).parameters
@@ -170,8 +167,9 @@ Describe 'The example, as Deploy-XmipEnvironment reads it' {
                 $step.Value.ContainsKey($name) | Should -BeTrue -Because "$($step.Name) $name"
             }
         }
+        [string[]] $nodes = @($script:Example['machines'] | ForEach-Object { @($_['nodes']) })
         @($steps[0].Value['names'] | ForEach-Object { $_.name }) |
-            Should -Be @($script:Node, $script:Cluster)
+            Should -Be @($nodes + $script:Cluster)
     }
 }
 
@@ -183,8 +181,8 @@ Describe 'The machine, virsh a stub' {
         function Invoke-Virsh {
             param([string[]] $Argument, [switch] $Quiet)
             $script:Asked.Add($Argument -join ' ')
-            if ($Argument[0] -eq 'dominfo') {
-                return "Name:           XMIP-IN01`nState:          running"
+            if ($Argument[0] -eq 'domstate') {
+                return 'running'
             }
             return $null
         }
@@ -192,7 +190,31 @@ Describe 'The machine, virsh a stub' {
         function Test-Connection { $false }
         [hashtable] $machine = New-Machine -Family 'Linux'
         @(Set-LibvirtMachine -Instance $machine -Confirm:$false *>&1) | Should -BeNullOrEmpty
-        $script:Asked | Should -Be @('dominfo XMIP-IN01',
-            'metadata XMIP-IN01 urn:xmip:machine --config')
+        $script:Asked | Should -Be @('domstate XMIP-IN01',
+            'metadata XMIP-IN01 urn:xmip:machine --config', 'domstate XMIP-IN01')
+    }
+
+    It 'hashes an ISO only where its volume is not in the pool whole: once, not per machine' {
+        # The volumes the pool holds whole; vol-info of any other answers nothing.
+        $script:Held = @()
+        function Invoke-Virsh {
+            param([string[]] $Argument, [switch] $Quiet)
+            if ($Argument[0] -eq 'vol-info' -and $Argument[-1] -in $script:Held) {
+                return "Name: $($Argument[-1])`nCapacity:       10 bytes`nAllocation:     12 bytes"
+            }
+            if ($Argument[0] -eq 'domstate') {
+                return 'running'
+            }
+            return $null
+        }
+        function Get-FileHash { throw 'the ISO was read' }
+        function New-LibvirtAnswerMedium { param($Instance, $Path, [switch] $Confirm) }
+        function Invoke-VirshDefinition { param($Command, $Definition) }
+        function Start-LibvirtMachine { param($Instance) }
+        [hashtable] $machine = New-Machine -Family 'Linux'
+        $machine['image']['path'] = Join-Path $TestDrive 'image.iso'
+        { Start-LibvirtMachineInstallation -Instance $machine } | Should -Throw 'the ISO was read'
+        $script:Held = @('image-90244ac532f67c97.iso', 'XMIP-IN01.qcow2', 'XMIP-IN01-answer.iso')
+        { Start-LibvirtMachineInstallation -Instance $machine } | Should -Not -Throw
     }
 }

@@ -100,6 +100,7 @@
         <TableHeaders>
           <TableColumnHeader><Label>Test</Label><Width>14</Width></TableColumnHeader>
           <TableColumnHeader><Label>Node</Label><Width>10</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Location</Label><Width>24</Width></TableColumnHeader>
           <TableColumnHeader><Label>Transport</Label><Width>22</Width></TableColumnHeader>
           <TableColumnHeader><Label>Contract</Label><Width>14</Width></TableColumnHeader>
           <TableColumnHeader><Label>State</Label><Width>9</Width></TableColumnHeader>
@@ -111,6 +112,7 @@
             <TableColumnItems>
               <TableColumnItem><PropertyName>Test</PropertyName></TableColumnItem>
               <TableColumnItem><PropertyName>Node</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Location</PropertyName></TableColumnItem>
               <TableColumnItem><PropertyName>Transport</PropertyName></TableColumnItem>
               <TableColumnItem><PropertyName>Contract</PropertyName></TableColumnItem>
               <TableColumnItem><PropertyName>State</PropertyName></TableColumnItem>
