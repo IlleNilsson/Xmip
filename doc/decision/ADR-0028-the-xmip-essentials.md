@@ -24,6 +24,7 @@
   sending node's scan, measured before and after
 - Amended: 2026-11-12 — what a delivery's time is on the sending node, step
   by step, read from the Essentials itself
+- Amended: 2026-11-12 — the claim answered once readable, measured
 - Related: ADR-0018 (the Service and the Host Services), ADR-0027 (the operator
   boundary), ADR-0010 (contract and transport boundaries), ADR-0025 (when a
   Module loads), ADR-0052 (the views' "show test clusters" box, its
@@ -1402,3 +1403,38 @@ Provenance: the task of 2026-11-12 to break the Essentials' gap down per
 step inside the Essentials and to cut any round trip needing no decision of
 the owner's; the runs, the reading and the steps' timing are the
 assistant's, the same day.
+
+## Amendment, 2026-11-12: the claim answered once readable, measured
+
+ADR-0018's third amendment of this date answers a claim once readable and
+lets the far end have the send once the claim is durable (open problem 46).
+Measured with `Start-XmipTest -Suite Core.Essentials -Cluster CT -Stress
+Realistic -Rounds 12 -Hidden`, the assistant's own hidden test cluster on
+the Essentials' cluster file, the audit to `.local-work/audit-agent`, each
+Receive Location's median read with `Get-XmipTestResult`, the steps from the
+snapshot. The roll of 18:54 ran with a quarter to two fifths of the machine
+busy with other work by its own headroom (a web browser), so its delivery
+times stand above the morning's on one node and across alike, and only what
+does not depend on load is compared:
+
+| | The roll of 10:31 | The roll of 18:54 |
+| --- | --- | --- |
+| The claim, per Send Port | 3.4 to 5.8 ms | 0.37 to 0.58 ms |
+| Sales orders to ERP, from another node (Party-C on the receiving node) | 14.8 ms | 18.3 ms |
+| Sales orders to ERP, received by the executing node itself (Party-A) | 10.9 ms | 17.1 ms |
+| Like for like, across nodes behind one node | 3.9 ms | 1.2 ms |
+
+On the sending node, the Port Sales orders to ERP, the median of each step
+over its latest eleven sends each way: taken from its queue, the wake
+0.04 ms, a send thread 0.05 ms, the claim 0.40 ms, its place, Journey and
+Message 0.50 ms, its sequences 0.34 ms, durable in the Ledger 0.04 ms, the
+send 11.04 ms; handed in memory, a send thread 0.14 ms, its sequences
+0.43 ms, the send 9.68 ms. The sends differ by 1.36 ms, the Stream's chunks
+read over the wire where another node received it: what is left of open
+problem 46. A roll of 18:41 on cluster C1, the same code, with two fifths
+to half of the machine busy, said 0.35 to 0.96 ms for the claim and 0.8 ms
+like for like.
+
+Provenance: the owner, 2026-11-12, *Do what you have to do*; the runs and
+the reading are the assistant's, the same day. A roll on a quiet machine is
+to replace the absolute times when one runs.

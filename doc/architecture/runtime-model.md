@@ -333,8 +333,11 @@ owner, 2026-10-03). The embedded Storage node's writer answers a Publication
 once it is written and decided, and syncs it right after: the answer carries
 when it is durable (`persist::storage::Durable`), what the receive cycle and
 every send of its Messages waits on before anything is acknowledged or seen
-by a far end (section 10; ADR-0018, amendment 2026-10-20). Every other write
-is answered once durable. The write-ahead log is written to its file by the
+by a far end (section 10; ADR-0018, amendment 2026-10-20). So is the claim a
+send scan takes, asked ahead of its sync: answered once readable, with when
+it is durable, and no far end sees the send before that (ADR-0018,
+amendment 2026-11-12). Every other write is answered once durable. The
+write-ahead log is written to its file by the
 sync alone (`RocksDB`'s `manual_wal_flush`): a write before it is kept in
 `RocksDB`'s own buffer of the log, so a Stream's chunks never wait while
 another thread syncs the log — on Windows a write to a file waits while the
@@ -1328,7 +1331,10 @@ Messages it claimed are handed to the Send pool as soon as the Publication
 is decided, before its sync, and a far end sees one only once the Publication is
 durable: a technology that holds its delivery back (the file transport,
 which renames its file into place last) prepares the send meanwhile, and
-every other is handed it once durable (ADR-0018, amendment 2026-10-20). The
+every other is handed it once durable (ADR-0018, amendment 2026-10-20). A
+Message a scan takes from its queue is sent the same way under its claim,
+answered once readable, and seen by a far end only once that claim is
+durable (*Corrected 2026-11-12*, the third, below). The
 Publication keeps the Message, for every Subscription not held, in the queue
 of where it leads, each with its Journey — a Send Port's, found by the name-based identifier of
 `<cluster>/<kind>/<name>`, the same on every node — and, where this node
@@ -1744,6 +1750,25 @@ key it correlates by; each is taken up the moment any node moves what it
 waits on, never at the next scan. Each send is timed step by step on the
 sending node, each Storage call apart, and each Send Port's snapshot says
 the median of each step over its latest sends (`send_step::Steps`).
+
+**Corrected a third time 2026-11-12** (problem 46; ADR-0018, third
+amendment 2026-11-12; the owner: *Do as you recommend*, *Go ahead*): **a
+claim a send is taken under is answered once readable, and its far end
+sees the send once the claim is durable.** A Message taken from its queue
+waited for its claim's sync before anything of its send began, 3.4 to
+5.8 ms in the Essentials. Now the scan claims ahead
+(`XmipStorage::claim_ahead`), answered once the claim is decided and
+readable with when it is durable; over the wire one request answered in
+two frames, the claim and then its durability, its connection asked
+nothing between. The Message is read under the readable claim and its send
+prepared while the claim syncs: a technology that holds its delivery back
+lets its far end see it at its last step, once the claim is durable and
+still the node's — the file transport's rename — and every other sends its
+first byte only then. A claim whose sync fails, or whose word never comes,
+abandons the send: no far end saw it, and no try is counted. *Every Ledger
+write counts only once the database has it durably* holds: the claim counts
+toward a far end only then, and a claim durable after its Publication's
+batch means the Publication is durable too.
 
 **Where it is configured.** The Send Port's policy — the order of its Send
 Locations, retry and failover — is configured as section 20, *Where the

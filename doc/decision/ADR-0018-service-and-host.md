@@ -1780,3 +1780,136 @@ for a turn that lost its Instance — and the owner's task of that day to
 break the Essentials' gap down per step and cut any round trip needing no
 decision of his; how each is built, the read under a claim and the steps'
 timing are the assistant's, the same day, for the owner to overrule.
+
+## Amendment, 2026-11-12: a claim a send is taken under is answered once readable, and its far end sees the send once the claim is durable
+
+What open problem 46 left on the sending node was the claim, 3.4 to 5.8 ms
+in the Essentials, its sync on the path before the send; the amendment above
+left it to the owner, since it changes what a claim answers. The owner,
+2026-11-12: *Do as you recommend*, to a transport that can hold its last
+step sending under a readable claim and every other keeping the wait; and
+*Go ahead*, to the design of that day, with the claim asked ahead for every
+transport and no byte of one that cannot hold sent before the claim is
+durable, and without the Publication answered early over the wire.
+Agreed: a technology that can hold its send's last step
+(`Transport::holds_back`, `Outgoing::kept`, built for the Publication by the
+amendment of 2026-10-20) sends under a claim answered once readable, and
+lets the send out only once the claim is durable and still its node's; a
+claim lost or refused before it is durable abandons the held send, so its
+far end never sees it. Agreed besides: the claim is taken ahead for a
+technology that cannot hold too, and it sends no byte before the claim is
+durable. Not agreed, and left out: a Publication answered early over the
+wire — a Storage node reached over the network still answers a Publication
+once durable (amendment of 2026-10-20).
+
+This corrects the first amendment of this date, *a claim is answered once
+its own batch is durable, after the batches before it*: the claim a send
+scan takes is answered once readable. What that sentence relied on holds
+still, at the send instead of the answer: no far end sees a send before its
+claim is durable, and a claim decided in a batch after its Publication's is
+durable only after that Publication is, since the one writer's batches are
+synced in order and a sync covers every write before it. *Every Ledger write
+counts only once the database has it durably* (runtime-model section 3)
+stands: the claim counts toward a far end only once durable.
+
+- **`XmipStorage::claim_ahead`** answers a claim once decided and readable,
+  with when it is durable (`Durable`). Its default is `claim`, answered once
+  durable, so every implementation that cannot answer sooner stays correct,
+  as `read_claimed`'s default keeps it. The embedded Storage node answers it
+  from its writer's `ahead` (`Embedded::claimed_ahead`, which `claim` waits
+  on: one place), and a claim asked again under its token is the same claim,
+  durable with the batch that took it. A Storage node of several lends its
+  primary for the answer alone (`Delegated::claim_ahead`): the durability
+  outlives the loan, and a primary stopping in order syncs what its writer
+  was handed before it lets go.
+- **Over the wire, one request and two frames.** Wire operation 40
+  (`ClaimAhead`), admitted as a claim (`write`, `claim`), is answered with
+  the claim once readable (answer 4) and, where it was taken, with a second
+  frame once the Storage node's wait on its durability ends (answer 28,
+  `Kept`: nothing where durable, why where not). A claim another holds, a
+  standby's refusal and a failure are one frame. **A connection that carried
+  the first frame is asked nothing before its second is read**: the client
+  holds it out of its idle connections and hands it to the claim's `Durable`
+  (`Durable::fetching`), whose first wait reads the second frame within
+  `storage_timeout` and only then puts the connection back; a Durable never
+  waited on drops it with its last clone, closing it, and a read that fails
+  or times out drops it too, so no second frame is ever read as another
+  request's answer.
+- **The send step claims ahead** (`send_step::scan`). The Message's place,
+  Journey and Message are read under the readable claim, its sequences
+  checked and its send prepared while the claim syncs. A technology that
+  holds back waits on the claim's durability at its last step
+  (`Outgoing::kept`), as for a Publication handed in memory; every other
+  waits before its first byte (`departure::depart_one`). Once durable, the
+  claim is asked again whether it is still surely its node's
+  (`SendStep::holds`), so a claim a renewal found another's is never let
+  out. Where either fails, nothing reached the far end: the Location's try
+  is not counted, the pass ends `Untried`, its claim is given back where
+  Xmip Storage answers, and its queue is read again. Until now a Publication
+  not kept counted a retryable try.
+- **A write that ends the claim waits on its durability first** — the
+  release of a claim a scan passes over, a hand-on, the release of a pass
+  that tried nothing — so its word is read and its connection reused. It
+  costs the path nothing: that write is durable only after the claim in any
+  case.
+- **No asking again after a lost word.** A claim asked again under its token
+  after a Storage node lost the unsynced one is taken anew with the same
+  fence, and its taking does not say the Publication survived; a word that
+  never came, or a failed sync, abandons the held send.
+- **The steps** (`send_step::Steps`): the claim is its readable answer, and
+  `Durable`, said *durable in the Ledger*, is the wait for its Publication on
+  a send handed in memory and for its claim on one taken from its queue,
+  each beyond the send's own work meanwhile. Handed and taken are told apart
+  by `Departure::handed`, no longer by whether a send carries a durability.
+- **The file transport holds already**: its rename is its last step. SFTP,
+  FTP and FTPS, and the SQL family learn to hold theirs in pieces of their
+  own (the design's order); until then they send no byte before the claim
+  is durable.
+
+Decided by the assistant within the agreement, each in a line: a failed
+durability counts no try for a technology that holds and for one that does
+not alike, since nothing reached a far end; no new step, the `Durable`
+step's words widened; the second frame only where the claim was taken; a
+`Kept` frame that says why the claim is not durable is read whole, so its
+connection is put back; every write that ends the claim waits on its word
+first; the claim a node asks for is formed once (`Claim::asked`);
+`client/operations.rs`, at the size gate, gave its answer readers to
+`client/expected.rs`, and `client.rs` its statement's pinning to
+`client/statement.rs`. The kill test the design proposed — a sending node
+killed between its far end's write and the claim's sync, the Ledger opened
+again lacking the claim — needs a far end outside the killed process, which
+the runtime's tests do not link; the conservative choice proves the loss
+through a sync that fails and a word that never comes instead, and leaves
+the kill for the piece that brings a holding far end of its own.
+
+Tested in persist (`storage::durable`: a read from afar run once for every
+waiter and never where none waits, what it holds let go of with the last
+clone; `storage::embedded::submitted`: a claim ahead answered while its
+sync is held and not durable before it, asked again under its token the
+same claim durable with it, another holder refused, and one whose sync
+fails never durable; `storage::wire`: operation 40 admitted as a claim, and
+answer 28, across a frame; `storage::client::ahead`: over the wire, a claim
+answered while its sync is held, its word read only once synced and its
+connection back for the next request, one frame where another holds it; a
+connection whose word was never read closed, never asked again, the next
+request answered with its own answer; a word that never comes and a sync
+that fails, never durable; `storage::client`: Storage answering no claim
+ahead answering it once durable) and in the runtime
+(`tests/ledger/claim_ahead.rs`: a far end that holds back written while the
+claim's sync is held and taking nothing until it is let go, the taken
+send's steps saying *durable in the Ledger*; one whose claim's sync fails
+abandoning what it wrote, unseen, the pass `Untried`; a far end that cannot
+hold reached only once the claim is durable, though the Message was read
+under the readable claim; over the wire, a send let out on the claim's
+second frame, and one whose word never came abandoned and sent once after,
+its Journey counting one try).
+
+**Measured:** not yet. The timing programs — persist's, the runtime's
+(`tests/measured/woken.rs`) and the root's (`.src/test/measured/woken.rs`) —
+each run alone, and the Essentials' rolls before and after, are ADR-0028's
+to record and open problem 46's to cut by.
+
+Provenance: the design of 2026-11-12, *early send under a readable claim*,
+the assistant's; agreed by the owner the same day, as quoted above; how it
+is built and the decisions marked above are the assistant's, the same day,
+for the owner to overrule.
