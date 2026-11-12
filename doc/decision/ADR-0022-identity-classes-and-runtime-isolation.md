@@ -187,3 +187,14 @@ rules above, so a Quest probes for it, and it is listed on every surface as
 not yet available until that Quest is built. Being in the list on every
 installation is what *mandatory* asks: nobody has to know its name to ask
 for it.
+
+## Amendment, 2026-11-12: identity and isolation are the Security Report's
+
+The Report clause 5 makes mandatory is now part of the **Security Report**,
+whose Quest probes every identity context, its class and where it runs, and
+every isolation rule evaluated on it with its result: what the amendment of
+2026-11-10 named the Identity and isolation Report, unchanged, under the
+name of the Report that takes it in (ADR-0072, amendment 2026-11-12; the
+owner, the same day, of the Reports: *lets reflect over what is actually
+needed*, and to the list put to him, *Go ahead*). It stays mandatory, in the
+one list on every installation, with the Firewall Report.
