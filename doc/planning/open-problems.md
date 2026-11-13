@@ -1844,7 +1844,7 @@ connection's session, which a server insisting on reuse checks (vsftpd's
 nothing, so no test fails if they stop resuming. Left: a test against a
 far end that refuses a data connection that is not `Resumed`.
 
-## 62. What a standby copies, and who acted through the roll
+## 62. A Party per Location, and who acted through the roll
 
 Found 2026-11-11, building motion that follows traffic (ADR-0052,
 amendment 2026-11-10). The traffic between real nodes is drawn since the
@@ -1854,8 +1854,10 @@ Journeys each took on from it, and draws them; the roll merges what each
 node it reads drew of itself, so RX → DS1 → TX moves at the rate measured.
 From and to is said on every observation since the same day, once in
 observe, and each Subscription publishes the Send Ports it reaches
-(ADR-0052, amendments 2026-11-11). Left: what a primary ships to its
-standby, counted per follower and drawn DS1 → DS2; a Party per Location,
+(ADR-0052, amendments 2026-11-11). What a primary ships to its standby is
+counted per standby, by the node its certificate names, and drawn DS1 →
+DS2, *copies to*, at the rate measured, since 2026-11-13 (ADR-0052 and
+ADR-0056, amendments 2026-11-13). Left: a Party per Location,
 named by what its configuration says it takes (problem 33), so from and to
 start and end at a Party and not at `any-party`; and who acted: an order
 the roll carries to a node it reads is audited by the node as the run's

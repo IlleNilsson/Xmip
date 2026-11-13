@@ -226,9 +226,15 @@ page by page, which the pages reflect in part, as far as the primary said
 its read reached — then **ready**, and only a ready one is promoted: the
 state is kept durable, so one started again part way is still not
 promoted, and it is said in the Storage node's record at `<node>/storage`,
-which every surface shows (ADR-0056, amendment 2026-11-12; the owner's
-order, 2026-11-12). A Storage node whose sync fails stops: it reads and writes
-nothing more until it is opened again over its log.
+which every surface shows, Working until it is ready (ADR-0056, amendments
+2026-11-12 and 2026-11-13; the owner's order, 2026-11-12). A primary knows
+each standby by the node its certificate names, never by its address, and
+counts what it hands each — writes, the entries of a whole copy, and their
+bytes — and its node draws a link to each standby in the Topology, the
+relation *copies to*, streaming over Xmip Storage at the rate it copies
+(ADR-0052 and ADR-0056, amendments 2026-11-13). A Storage node whose sync
+fails stops: it reads and writes nothing more until it is opened again over
+its log.
 
 **What is behind the Storage nodes is decided per site** (the owner, later on
 2026-10-01: *The storage node may or may not carry the SQL storage, it is an

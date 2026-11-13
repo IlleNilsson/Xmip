@@ -186,12 +186,16 @@ equals; each standby copies the primary's engine writes in order,
 asynchronously, copied whole first where it cannot take them on (its data keys
 handed inside the mutual TLS, wrapped under its own key-encryption key); each
 promotion raises the epoch, a primary that meets a later one steps down, and a
-primary stopped in order hands on everything it wrote. No witness, so no
-automatic failover: a primary that is gone is waited for, never replaced, and
-automatic failover returns with a witness (the owner, 2026-11-08). Drafted,
-for the owner (ADR-0056, amendment 2026-10-22); promotion decided (amendment
-2026-11-08). Records: ADR-0056 (amendments 2026-10-22 and 2026-11-08),
-ADR-0063 (amendment 2026-10-22), deployment-model.md sections 7 and 9.
+primary stopped in order hands on everything it wrote. A primary knows each
+standby by the node its certificate names and counts what it hands each, and
+its node draws each as *copies to* at the rate it copies; a standby not ready
+yet stands Working (amendments 2026-11-13). No witness, so no automatic
+failover: a primary that is gone is waited for, never replaced, and automatic
+failover returns with a witness (the owner, 2026-11-08). Drafted, for the
+owner (ADR-0056, amendment 2026-10-22); promotion decided (amendment
+2026-11-08). Records: ADR-0056 (amendments 2026-10-22, 2026-11-08 and
+2026-11-13), ADR-0052 (amendment 2026-11-13), ADR-0063 (amendment 2026-10-22),
+deployment-model.md sections 7 and 9.
 
 #### `subscription-pause`
 
@@ -434,7 +438,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 356378 lines of production
+Where each repository mounts and what it holds: 356853 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -749,8 +753,8 @@ hold no source to count.
 │   │   ├── party                                193
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                            47268
-│       ├── persist                            18806
+│       ├── runtime                            47371
+│       ├── persist                            19178
 │       │   ├── rocksdb                          323
 │       │   ├── sqlite                           288
 │       │       declared, not built 1
