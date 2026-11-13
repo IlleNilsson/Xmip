@@ -967,3 +967,43 @@ Built 2026-11-13, the assistant's. Held by persist (`standby::followers`,
 `standby/tests/handed.rs`) and the runtime (`storage`, `storage::reached`,
 `running::publication::drawn`), as ADR-0052's amendment of the same day
 lists.
+
+## Amendment, 2026-11-13: a node's roles relate it, stand it and say what it is for
+
+The owner, 2026-11-12: *Related by its role in the cluster, not by name*;
+*It has to focus on roles*; *There has to be a tooltip, regardless of Web
+or MAUI. what are nodes purpose*. The design he approved that day, its
+second landing piece (ADR-0052, amendment of the same date, says the whole
+of it), makes a node's declared roles — and, for a Storage node, its place
+in `[storage] nodes` — what everything a surface draws of the cluster is
+decided by:
+
+- **Related by them** (`observe::topology::relate`): a node not declaring
+  storage writes into the first-listed Storage node, which hands work to
+  every node whose roles serve process or send and copies to each
+  later-listed one; a node declaring operational or monitoring operates or
+  monitors every other. The listed order is the configured one: the first
+  listed is the first primary (amendment 2026-10-22), and the configured
+  lines stay with it through a promotion.
+- **Stood by them** (`observe::topology::layout`): storage, then the stage
+  roles, then the rest — a Storage node in the Storage column, the first
+  listed on the path; receiving or sending alone on the path; processing
+  alone over Storage; executing, or two stage roles, in a lane of its own;
+  operational, monitoring, development or none in the operation band on
+  top.
+- **Said by them** (`node::NodeRole::meaning`, worded from
+  `deployment-model.md` section 3's *May* column, and `NodeRole::purpose`,
+  each role as one declaration says it with its meaning; *declares no
+  role* for none): a node's purpose, shown on hover and in a node's row on
+  every surface (`xmip_role_purpose_v1`).
+- **Carried by them.** A drawn node says the roles it declares
+  (`node::Capability::words`) and its place in `[storage] nodes`: the roll
+  from the cluster's file (`configure::cluster::storage_places`, an entry's
+  host the node's name as every name resolves), a running node its own
+  roles from its configuration, `[nodes.<name>] roles`.
+
+Nothing reads a name or its letters: the tests rename every node — the
+receiving nodes given the Storage nodes' names — and read the same
+relations and the same bands and columns back through the renaming, and
+two nodes swapping roles swap relations and places. Built 2026-11-13, the
+assistant's.

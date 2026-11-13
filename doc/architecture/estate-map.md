@@ -438,7 +438,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 356853 lines of production
+Where each repository mounts and what it holds: 361066 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -699,17 +699,17 @@ hold no source to count.
 │   │   │   ├── ntlm                             804
 │   │   │   └── asn1                             678
 │   │   └── operation/
-│   │       ├── cli                             9903
-│   │       ├── gui                             7397
+│   │       ├── cli                             9959
+│   │       ├── gui                             7793
 │   │       │   └── vscode                      3517
-│   │       ├── observe                         5174
+│   │       ├── observe                         7702
 │   │       │   ├── otlp                         587
 │   │       │   └── prometheus                   328
 │   │       ├── audit                           4121
 │   │       │       declared, not built 10
 │   │       │       elasticsearch  file  kafka  mssql  opensearch  otlp
 │   │       │       postgres  sqlite  syslog  windows-event-log
-│   │       ├── powershell                      3733  C# 3733 · PowerShell 0
+│   │       ├── powershell                      3736  C# 3736 · PowerShell 0
 │   │       ├── report                          2250
 │   │       │       declared, not built 6
 │   │       │       csv  html  json  pdf  prometheus  sql
@@ -725,7 +725,7 @@ hold no source to count.
 │   │           ├── postgresql                    62
 │   │           └── mssql                         59
 │   ├── foundation/
-│   │   ├── abi                                34514  C# 31733 · Rust 2378 · PowerShell 403
+│   │   ├── abi                                35230  C# 32376 · Rust 2451 · PowerShell 403
 │   │   ├── event                               5753
 │   │   │       declared, not built 3
 │   │   │       amqp  http  kafka
@@ -746,23 +746,23 @@ hold no source to count.
 │   │   │   ├── text                              59
 │   │   │   ├── edi-tradacoms                     56
 │   │   │   └── binary                            38
+│   │   ├── node                                1045
 │   │   ├── context                             1037
-│   │   ├── node                                1008
 │   │   ├── journey                              745
 │   │   ├── stream                               382
 │   │   ├── party                                193
 │   │   └── cluster                               21
 │   └── platform/
-│       ├── runtime                            47371
+│       ├── runtime                            47645
 │       ├── persist                            19178
 │       │   ├── rocksdb                          323
 │       │   ├── sqlite                           288
 │       │       declared, not built 1
 │       │       postgresql
-│       └── configure                           8528
+│       └── configure                           8563
 └── test/
     └── core/
-        ├── essentials                         16543
+        ├── essentials                         16711
         └── module                                83
 ```
 

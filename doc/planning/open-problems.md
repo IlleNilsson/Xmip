@@ -1168,8 +1168,8 @@ What remains of the first part:
   so `certificate` over a terminated handshake has nothing to walk; a
   failed handshake, which no audit records; which Parties a Location takes,
   which the node's publication and the Topology do not show (one Party per
-  side, `any-party`); renewal of the `receive` certificate while a node
-  runs (problem 27).
+  node and side, `TX-Party n` and `RX-Party n`); renewal of the `receive`
+  certificate while a node runs (problem 27).
 
 The second part, a Storage node in the service: a node declaring the
 `storage` role is its own embedded Storage node in the assembled service
@@ -1857,9 +1857,12 @@ observe, and each Subscription publishes the Send Ports it reaches
 (ADR-0052, amendments 2026-11-11). What a primary ships to its standby is
 counted per standby, by the node its certificate names, and drawn DS1 →
 DS2, *copies to*, at the rate measured, since 2026-11-13 (ADR-0052 and
-ADR-0056, amendments 2026-11-13). Left: a Party per Location,
-named by what its configuration says it takes (problem 33), so from and to
-start and end at a Party and not at `any-party`; and who acted: an order
+ADR-0056, amendments 2026-11-13); every node is related by its roles, and
+a Party faces each node on each side, *TX-Party n* and *RX-Party n*, since
+the same day (ADR-0052, amendment 2026-11-13, the cluster's nodes related
+and stood by role). Left: a Party per Location, named by what its
+configuration says it takes (problem 33), so from and to start and end at
+that Party and not at the one facing the node; and who acted: an order
 the roll carries to a node it reads is audited by the node as the run's
 tester, not the person who left it (ADR-0028, amendment 2026-11-11), so the
 Audit view names the rig for every Pause, Replay, Retry and Dismiss from

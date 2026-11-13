@@ -236,6 +236,19 @@ relation *copies to*, streaming over Xmip Storage at the rate it copies
 fails stops: it reads and writes nothing more until it is opened again over
 its log.
 
+**How the cluster's nodes are related is by role, against the configured
+order** (`observe::topology::relate`; ADR-0052 and ADR-0056, amendments
+2026-11-13, the owner: *Related by its role in the cluster, not by name*).
+Every node not declaring storage *writes into* the first Storage node
+`[storage] nodes` lists, the configured primary; that node *hands work to*
+every node whose roles serve process or send, and *copies to* each
+later-listed one; a node declaring operational or monitoring *operates*,
+*monitors*, or *operates and monitors* every other. The configured lines
+never move with a promotion: after one, the observed traffic draws at the
+new primary and the configured line stays dashed, which is the truth. The
+map stands the nodes by the same roles and order, never by traffic
+(`observe::topology::layout`).
+
 **What is behind the Storage nodes is decided per site** (the owner, later on
 2026-10-01: *The storage node may or may not carry the SQL storage, it is an
 IT-infrastructure question… How IT-infrastructure designs their Database
