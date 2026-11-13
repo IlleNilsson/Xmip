@@ -11,31 +11,31 @@
 
 [service]
 name = "xmip"
-cluster_name = "C1"
+cluster_name = "CL1"
 
-[nodes.R1]
+[nodes.RX1]
 roles = "receiving"
 
-[nodes.R2]
+[nodes.RX2]
 roles = "receiving"
 
-[nodes.P1]
+[nodes.PX1]
 roles = "processing"
 
-[nodes.S1]
+[nodes.TX1]
 roles = "sending"
 
-[nodes.S2]
+[nodes.TX2]
 roles = "sending"
 
-[nodes.L1]
+[nodes.EX1]
 roles = "executing"
 
-[nodes.O1]
+[nodes.OP1]
 roles = "operational, monitoring"
 
-[nodes.D1]
+[nodes.DS1]
 roles = "storage"
 
-[nodes.D2]
+[nodes.DS2]
 roles = "storage"

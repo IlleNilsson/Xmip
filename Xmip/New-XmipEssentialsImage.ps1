@@ -46,8 +46,8 @@ function Get-XmipEssentialsImageName {
             what makes the kind a shape rather than a word a node may not be
             called. The owner, 2026-09-20: a node is a node and can have one
             or more roles, roll is something different. So
-            xmip-essentials-C1-node-roll is the node called roll, and
-            xmip-essentials-C1-roll is still the roll; nothing collides and no
+            xmip-essentials-CL1-node-roll is the node called roll, and
+            xmip-essentials-CL1-roll is still the roll; nothing collides and no
             name is refused (ADR-0053, amendment 2026-09-20).
     #>
     [CmdletBinding()]

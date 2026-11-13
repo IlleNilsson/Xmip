@@ -213,8 +213,10 @@ Describe 'Which processes are Xmip''s' {
         the command line is found and stopped with the rest.
     #>
     It 'is xmip or xmip-<what>, and nothing else' {
-        InModuleScope Xmip {
-            foreach ($owned in 'xmip', 'xmip-service', 'xmip-essentials-C1-roll') {
+        InModuleScope Xmip -Parameters @{ Roll = "xmip-essentials-$($script:Named.Name)-roll" } {
+            param([string] $Roll)
+
+            foreach ($owned in 'xmip', 'xmip-service', $Roll) {
                 Test-XmipProcessName -Name $owned | Should -BeTrue -Because $owned
             }
 

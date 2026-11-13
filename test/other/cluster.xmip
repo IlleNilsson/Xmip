@@ -6,13 +6,13 @@
 
 [service]
 name = "xmip"
-cluster_name = "C2"
+cluster_name = "CL2"
 
-[nodes.R1]
+[nodes.RX1]
 roles = "receiving"
 
-[nodes.S1]
+[nodes.TX1]
 roles = "sending"
 
-[nodes.L1]
+[nodes.EX1]
 roles = "executing"

@@ -1851,11 +1851,11 @@ amendment 2026-11-10). The traffic between real nodes is drawn since the
 same day, measured where it passes: each Storage node counts, from their
 answers, the Publications each node of the cluster wrote into it and the
 Journeys each took on from it, and draws them; the roll merges what each
-node it reads drew of itself, so R → D1 → S moves at the rate measured.
+node it reads drew of itself, so RX → DS1 → TX moves at the rate measured.
 From and to is said on every observation since the same day, once in
 observe, and each Subscription publishes the Send Ports it reaches
 (ADR-0052, amendments 2026-11-11). Left: what a primary ships to its
-standby, counted per follower and drawn D1 → D2; a Party per Location,
+standby, counted per follower and drawn DS1 → DS2; a Party per Location,
 named by what its configuration says it takes (problem 33), so from and to
 start and end at a Party and not at `any-party`; and who acted: an order
 the roll carries to a node it reads is audited by the node as the run's

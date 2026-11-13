@@ -129,9 +129,9 @@ On the Linux host, the WSL AlmaLinux guest included, KVM and libvirt as
   personal-computer -CargoArgument '--release' -Package rpm`, the package
   and the `slicer` both (`deploy/package/README.md`);
 - on Windows, not elevated, the cluster's authority and each node's
-  certificate: `New-XmipCertificate -Node R1 -Cluster C1 -Authority
+  certificate: `New-XmipCertificate -Node RX1 -Cluster CL1 -Authority
   D:\Repos\Xmip\.local-work\environment\authority -Path
-  D:\Repos\Xmip\.local-work\environment\identity\R1`, and the same for
+  D:\Repos\Xmip\.local-work\environment\identity\RX1`, and the same for
   every node the file maps.
 
 ## Starting again from nothing

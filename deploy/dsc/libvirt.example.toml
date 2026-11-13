@@ -17,7 +17,7 @@ hypervisor = "libvirt"
 # The pool's directory, which libvirt makes and owns.
 root = "/var/lib/libvirt/images/xmip"
 domain = "xmip.test"
-cluster = "C1"
+cluster = "CL1"
 # The account each AlmaLinux machine's kickstart makes; it is given the
 # environment's own SSH key, which Deploy-XmipEnvironment makes.
 linux_account = ""
@@ -69,7 +69,7 @@ family = "Linux"
 
 # The machines are made in this order, one installation at a time, and
 # their nodes are given theirs in the same order: Xmip Storage first, which
-# the other nodes reach. The cluster's file lists D1 and D2 as its Storage
+# the other nodes reach. The cluster's file lists DS1 and DS2 as its Storage
 # nodes, and neither serves until both answer (ADR-0056, amendment
 # 2026-11-08), so both run on machines of their own.
 
@@ -81,7 +81,7 @@ image = "AlmaLinux10"
 memory_gb = 4
 cpu = 2
 disk_gb = 32
-nodes = ["D1"]
+nodes = ["DS1"]
 
 # application server, Xmip Storage
 [[machines]]
@@ -91,7 +91,7 @@ image = "AlmaLinux10"
 memory_gb = 4
 cpu = 2
 disk_gb = 32
-nodes = ["D2"]
+nodes = ["DS2"]
 
 # inbound
 [[machines]]
@@ -101,4 +101,4 @@ image = "AlmaLinux10"
 memory_gb = 4
 cpu = 2
 disk_gb = 32
-nodes = ["R1"]
+nodes = ["RX1"]

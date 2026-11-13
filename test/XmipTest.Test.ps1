@@ -1093,7 +1093,7 @@ observed_unix_nanos = 1789208338038783900
         [string] $node = $script:Stage.receiving
         [string] $area = Join-Path $TestDrive 'served'
         $null = New-Item -ItemType Directory -Force -Path $area
-        [string] $served = Join-Path $area 'C1-snapshot.xmip'
+        [string] $served = Join-Path $area "$($script:Cluster.Name)-snapshot.xmip"
         @"
 source = "essentials"
 node = "$scope"
@@ -1149,7 +1149,7 @@ observed_unix_nanos = 1789208338038783900
         [string] $node = $script:Stage.receiving
         [string] $area = Join-Path $TestDrive 'status'
         $null = New-Item -ItemType Directory -Force -Path $area
-        [string] $served = Join-Path $area 'C1-snapshot.xmip'
+        [string] $served = Join-Path $area "$($script:Cluster.Name)-snapshot.xmip"
         @"
 source = "essentials"
 node = "$($script:Cluster.Scope)"

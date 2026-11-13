@@ -52,13 +52,13 @@ function Start-XmipTestNode {
             Return one Xmip.TestNode object per node started.
 
         .EXAMPLE
-            Start-XmipTestNode -Nodes R1, P1, S1 -OnlineNodes R1, S1
+            Start-XmipTestNode -Nodes RX1, PX1, TX1 -OnlineNodes RX1, TX1
 
             The names are the tester's and mean nothing to Xmip: a node
             started here declares no stage, whatever it is called.
 
         .EXAMPLE
-            Start-XmipTestNode -Nodes S1, S2 -Stress Harsh -Rounds 100 -PassThru
+            Start-XmipTestNode -Nodes TX1, TX2 -Stress Harsh -Rounds 100 -PassThru
     #>
     [CmdletBinding(SupportsShouldProcess)]
     [OutputType('Xmip.TestNode')]

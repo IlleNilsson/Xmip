@@ -172,11 +172,16 @@ Describe 'The built operator module reads the snapshot under the estate root' {
                 'module/core/operation/powershell/src/Xmip.PowerShell/powershell.toml')
             Copy-Item -LiteralPath $shipped -Destination $document
 
+            # The snapshot's file is the shipped document's configuration, a
+            # cluster's name in it: what is held is the climb to it.
+            [string] $leaf = @(Get-Content -LiteralPath $shipped |
+                    Where-Object { $_ -match '^Snapshot\s*=' })[0] -replace '^.*/|"\s*$', ''
+
             Set-XmipOperatorModuleRoot -Directory $build -Root $tree
 
             [string] $line = @(Get-Content -LiteralPath $document |
                     Where-Object { $_ -match '^Snapshot\s*=' })[0]
-            $line | Should -Be 'Snapshot = "../../../.local-work/essentials/C1-snapshot.xmip"'
+            $line | Should -Be "Snapshot = `"../../../.local-work/essentials/$leaf`""
         }
     }
 }

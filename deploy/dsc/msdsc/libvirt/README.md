@@ -23,8 +23,8 @@ network, a pool or a domain is libvirt's.
 
 `deploy/dsc/libvirt.example.toml`, which `Deploy-XmipEnvironment` reads
 (`deploy/dsc/README.md`), describes two machines on 10.77.0.0/24, AlmaLinux
-10 both: XMIP-APP03, the Essentials' D1, and XMIP-IN01, its R1. The
-network's DNS answers `D1`, `R1` and the cluster, `C1`, at the addresses of
+10 both: XMIP-APP03, the Essentials' DS1, and XMIP-IN01, its RX1. The
+network's DNS answers `DS1`, `RX1` and the cluster, `CL1`, at the addresses of
 the machines that run them, so the environment needs no DNS server of its
 own.
 

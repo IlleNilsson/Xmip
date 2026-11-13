@@ -23,8 +23,8 @@ function Get-XmipEssentialsProcess {
         .PARAMETER Name
             The process name, wildcards allowed. Since 2026-09-20 a
             Essentials process is named for its cluster and what it is —
-            xmip-essentials-C1-roll, xmip-essentials-C1-node-R1, for a
-            cluster someone called C1 and a node they called R1,
+            xmip-essentials-CL1-roll, xmip-essentials-CL1-node-RX1, for a
+            cluster someone called CL1 and a node they called RX1,
             both names free — so the Essentials' own callers ask for
             xmip-essentials-* and say which of the three with -Kind.
             xmip-gui-web is named outright.

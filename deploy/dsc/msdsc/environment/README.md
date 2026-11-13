@@ -29,19 +29,19 @@ documents here their parameters from it; the layout and the accounts are
 `machine.dsc.yaml`'s own defaults.
 
 The Hyper-V example, `deploy/dsc/hyperv.example.toml`, puts six of the
-file's nine nodes on six node machines, and the libvirt example D1, D2 and
-R1 on three; the Essentials simulates the others. Both Storage nodes the
-file lists, D1 and D2, run on machines of their own: neither serves until
+file's nine nodes on six node machines, and the libvirt example DS1, DS2 and
+RX1 on three; the Essentials simulates the others. Both Storage nodes the
+file lists, DS1 and DS2, run on machines of their own: neither serves until
 both answer (ADR-0056, amendment 2026-11-08).
 
 | Node | Roles | Machine | Operating system | Address |
 | --- | --- | --- | --- | --- |
-| R1 | receiving | XMIP-IN01 | AlmaLinux 10 | 10.77.0.61 |
-| S1 | sending | XMIP-OUT01 | AlmaLinux 10 | 10.77.0.71 |
-| P1 | processing | XMIP-APP01 | Windows Server 2025 | 10.77.0.51 |
-| L1 | executing | XMIP-APP02 | Windows Server 2025 | 10.77.0.52 |
-| D1 | storage | XMIP-APP03 | Windows Server 2025 | 10.77.0.53 |
-| D2 | storage | XMIP-APP04 | Windows Server 2025 | 10.77.0.54 |
+| RX1 | receiving | XMIP-IN01 | AlmaLinux 10 | 10.77.0.61 |
+| TX1 | sending | XMIP-OUT01 | AlmaLinux 10 | 10.77.0.71 |
+| PX1 | processing | XMIP-APP01 | Windows Server 2025 | 10.77.0.51 |
+| EX1 | executing | XMIP-APP02 | Windows Server 2025 | 10.77.0.52 |
+| DS1 | storage | XMIP-APP03 | Windows Server 2025 | 10.77.0.53 |
+| DS2 | storage | XMIP-APP04 | Windows Server 2025 | 10.77.0.54 |
 
 Which six, and on which machine, is the assistant's draft of 2026-10-21 and
 2026-11-11, for the owner to strike.
@@ -49,9 +49,9 @@ Which six, and on which machine, is the assistant's draft of 2026-10-21 and
 ## What each machine is given
 
 **The DNS server**, XMIP-DC01 (`name.dsc.yaml`): the zone, `xmip.test`,
-where it is not there, and an A record for the cluster, `C1`, holding every
+where it is not there, and an A record for the cluster, `CL1`, holding every
 node machine's address, and one for each node holding its machine's. A node
-finds another by its name — `D1:7443` — and the Essentials uses a node whose
+finds another by its name — `DS1:7443` — and the Essentials uses a node whose
 name resolves.
 
 **Each node's slice, on this machine** (`machine.dsc.yaml`,
@@ -206,7 +206,7 @@ are brought theirs waits on the owner's Hyper-V run.
 
 **On the host**, in an elevated Xmip PowerShell Console, once: WinRM may
 reach the Windows machines by address, and the host asks XMIP-DC01 for the
-environment's names, so `R1` and `C1` resolve where the Essentials runs.
+environment's names, so `RX1` and `CL1` resolve where the Essentials runs.
 
 ```powershell
 Set-Item -Path WSMan:\localhost\Client\TrustedHosts -Value '10.77.0.*' -Force
@@ -235,12 +235,12 @@ machine), and the cluster's authority and each node's certificate from it.
 Import-Module -Name D:\Repos\Xmip\Xmip\Xmip.psd1
 Build-XmipService -Site personal-computer -CargoArgument '--release' -Package msi
 [string] $local = 'D:\Repos\Xmip\.local-work\environment'
-foreach ($node in 'R1', 'S1', 'P1', 'L1', 'D1') {
+foreach ($node in 'RX1', 'TX1', 'PX1', 'EX1', 'DS1') {
     [hashtable] $issue = @{
         Node      = $node
-        Cluster   = 'C1'
+        Cluster   = 'CL1'
         Authority = "$local\authority"
-        Name      = "$node.xmip.test", $node, 'C1', 'C1.xmip.test'
+        Name      = "$node.xmip.test", $node, 'CL1', 'CL1.xmip.test'
         Path      = "$local\identity\$node"
     }
     New-XmipCertificate @issue
@@ -269,7 +269,7 @@ Then the Essentials runs against the machines: the names typed resolve and
 answer, and the run says which nodes are real. The tester's operator
 certificate is signed by the same authority — a file naming it,
 `D:\Repos\Xmip\.local-work\environment\authority\operator.xmip`, holds
-`[service]` with `name`, `cluster_name = "C1"` and `node_name`, and
+`[service]` with `name`, `cluster_name = "CL1"` and `node_name`, and
 `[provision.operator] authority = "."`. Type exactly the nodes the
 environment file maps, which the Essentials places the Locations over as
 the machines did:
@@ -280,26 +280,26 @@ the machines did:
 New-XmipCertificate -Operator 'tester@xmip.test' -Path $tester |
     New-XmipCertificate -Configuration "$local\authority\operator.xmip" -Path "$tester\operator.pem"
 Copy-Item -LiteralPath "$local\authority\authority.pem" -Destination "$tester\anchors.pem"
-Start-XmipTest -Suite Core.Essentials -Cluster C1 -Nodes R1, S1, P1, L1, D1 -Certificate $tester
+Start-XmipTest -Suite Core.Essentials -Cluster CL1 -Nodes RX1, TX1, PX1, EX1, DS1 -Certificate $tester
 Get-XmipTestStatus
 Get-XmipTestResult -Test Carried
-Start-XmipOperationWeb -Snapshot D:\Repos\Xmip\.local-work\essentials\C1-snapshot.xmip
+Start-XmipOperationWeb -Snapshot D:\Repos\Xmip\.local-work\essentials\CL1-snapshot.xmip
 ```
 
 Open <https://127.0.0.1:5087> in a Web Browser tab: the Monitor follows the
 real nodes as they receive, process and send.
 
-**What runs.** A node that declares no Storage role reaches D1 over Xmip's
+**What runs.** A node that declares no Storage role reaches DS1 over Xmip's
 mutual TLS on the Storage plane's port, 7443, presenting its own
 `tls/node.pem`
 ([built, in the assembled service](../../../../doc/architecture/estate-map.md#storage-nodes));
-D1's `xmip-service --listening` says `7443/tcp storage`, so its machine's
-firewall opens it. D2 runs on no machine of the example: every node passes
-it over, and D1 is the primary on its own (ADR-0056, amendment
+DS1's `xmip-service --listening` says `7443/tcp storage`, so its machine's
+firewall opens it. DS2 runs on no machine of the example: every node passes
+it over, and DS1 is the primary on its own (ADR-0056, amendment
 2026-10-22). The Essentials serves the Parties' far end on the host, port
 7422, each Location placed on the real nodes a user of its own there; each
 round it drops a file for every Receive Location, a real receiving node
-fetches it, writes it to the Ledger on D1, and a real sending node puts it
+fetches it, writes it to the Ledger on DS1, and a real sending node puts it
 back under its name, which the far end tells the Essentials of:
 each Receive Location's `delivery` says how many of the documents dropped
 there arrived whole where their route sends them and how long each took

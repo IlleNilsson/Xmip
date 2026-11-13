@@ -520,6 +520,9 @@ Data will be the name for Storage Nodes*.
   of resources like FILE and (S)FTP(s)* — and *only one Rn should win*: two
   receiving nodes on one shared drop, each file taken by exactly one.
 
+*The letters became two on 2026-11-12: CLn, RXn, PXn, TXn, EXn, OPn and
+DSn (the amendment of that date).*
+
 ## Amendment, 2026-10-20: only a node with the Storage role stores
 
 **Provenance.** The owner, 2026-10-20: only a node with the Storage role
@@ -872,3 +875,53 @@ waited out the test's five-second bound, and now it returns at once. The
 root's `failover` test, its carrying nodes scanning every millisecond
 rather than every 50, failed one run in five before, as the landings had,
 and none in fifteen after.
+
+## Amendment, 2026-11-12: the designations, two letters
+
+**Provenance.** The owner, 2026-11-12: *I think we should name C CL, R RX,
+P PX, O OP, S TX, D DT*. The executing node, Ln until then, was missing
+from the list; put to him as EX: *Let's go with it, EX*. And of Storage:
+*DT, if that's what for storage, it would be better as DS instead of DT*.
+
+- **The owner's node and cluster designations are two letters**, in place
+  of the one letter of the amendment of 2026-10-12:
+
+  | Was | Now | What it reminds a person of |
+  | --- | --- | --- |
+  | Cn | CLn | a cluster |
+  | Rn | RXn | a node that declares `receiving` |
+  | Pn | PXn | a node that declares `processing` |
+  | Sn | TXn | a node that declares `sending` |
+  | Ln | EXn | a node that declares `executing`, the low-latency one |
+  | On | OPn | a node that declares `operational` and `monitoring` |
+  | Dn | DSn | a node that declares `storage`, Xmip Storage |
+
+  CT, the assistant's own hidden test cluster, is unchanged.
+- **They are still parameters and configuration** (the amendment of
+  2026-10-03; the owner, 2026-10-03: *Parameters and configuration is the
+  way to go*). The letters remind a person; nothing reads them, and a node
+  does what its `roles` declare (clause 1). They change where they are
+  values: the test clusters, `test/cluster.xmip` (CL1: RX1, RX2, PX1, TX1,
+  TX2, EX1, OP1, DS1 and DS2) and `test/other/cluster.xmip` (CL2: RX1, TX1
+  and EX1); the Essentials' own `cluster.xmip`; the snapshot fixtures the
+  .NET tests hold to them, the second test cluster's renamed
+  `cluster-cl2.xmip`; the snapshot the surfaces ship following,
+  `CL1-snapshot.xmip`; the example environments under `deploy/dsc`; and
+  every README, help example and usage text that shows them.
+- **What was measured or said under a one-letter name keeps it**: this
+  record's earlier amendments, ADR-0028's rolls on C1, the open problems'
+  measurements and the commit history are history. A present-tense
+  description says the two letters.
+- **`test/NodeName.Test.ps1` knows both shapes.** Either, written in code
+  or a test, is a name and refused. Where a name may stand — a README, the
+  getting-started guide, a `cluster.xmip`, a help example, a usage text,
+  and now also the estate's `README.md` and `deploy/`'s READMEs and example
+  environment files — a one-letter designation is refused, naming the two
+  letters that replaced it.
+
+Built 2026-11-13, the assistant's. Four tests that wrote a cluster's name
+where `test/NodeName.Test.ps1` does not look now take it from configuration:
+a snapshot's file name and a roll's process name from the test cluster
+(`test/XmipTest.Test.ps1`, `test/XmipProcess.Test.ps1`), a web address from
+.NET's `TestCluster` (`BarOrderTest`), and the snapshot an operator module
+follows from the shipped `powershell.toml` (`test/OperatorModule.Test.ps1`).
