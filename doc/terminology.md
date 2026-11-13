@@ -195,6 +195,13 @@ each side it is on: left of the nodes whose receive stages it sends into,
 right of the nodes whose send stages deliver to it (ADR-0052, amendment
 2026-09-29).
 
+How two of a cluster's nodes are related is a **relation**, by the roles
+each declares and the order of `[storage] nodes`, never by a name: *writes
+into*, *hands work to*, *copies to*, *operates*, *monitors*, *operates and
+monitors* (ADR-0052 and ADR-0056, amendments 2026-11-13). A node's
+**purpose** is what its roles are for, each said with its meaning
+(`node::NodeRole::purpose`), shown on hover over it on every surface.
+
 Another system or organization that sends to or receives from Xmip is a
 **Party**, plural **Parties**, and the estate has no other word for it. The
 owner, 2026-09-29: *Partner is the wrong word. It is Party, plural Parties.*

@@ -2428,3 +2428,107 @@ to*, the standby known by its certificate's node. The assistant's, while
 designing, for the owner to change: the volume as writes and entries
 together, the id with the relation, the copy link drawn whatever the
 bindings place, and a standby not ready shown by its own record.
+
+## Amendment, 2026-11-13: the cluster's nodes related and stood by role
+
+The owner, 2026-11-12: *I miss how the cluster nodes are related*;
+*Related by its role in the cluster, not by name*; *We got to straighten
+out the map. It has to focus on roles*; *There has to be a tooltip,
+regardless of Web or MAUI. what are nodes purpose*. This is the second
+landing piece of the design he
+approved on 2026-11-12 (all thirteen recommendations), sections 5.1 to
+5.5, one change across observe, the runtime, the ABI and every surface.
+
+- **Relations, by role, configured** (`observe::topology::relate`, one
+  rule, fed members — a node's name as an opaque id, its declared roles and
+  its place in `[storage] nodes` — and nothing else of it). Every member
+  not declaring storage *writes into* the configured primary, the first
+  `[storage] nodes` lists; the primary *hands work to* every member serving
+  process or send, and *copies to* each later-listed Storage node; a member
+  declaring operational and/or monitoring *operates*, *monitors* or
+  *operates and monitors* every other member — drawn, as the owner chose.
+  Standbys are reached through *copies to* alone, and every other line says
+  which standby is asked if the primary is gone; the configured lines never
+  move with a promotion. Each is drawn configured (dashed, its volume zero)
+  until traffic crosses it; what is placed on a node labels its line (*PX1
+  writes into DS1; Work Process: none placed*) and never adds one; its mood
+  is the worse of its ends' `<node>/reached` and `<node>/storage`, with
+  that record's words. The rig's receive → process → send pairing is the
+  same module's (`relate::handed`), which the Essentials' hand-off calls.
+  Relations are the cluster's facts: the roll draws them from the cluster
+  file (`Roster::members`, `configure::cluster::storage_places`), and a
+  lone node's own publication draws none.
+- **One id rule**, `observe::topology::link_id(from, to, relation)`, for
+  every link — a Party's, a Location's to its Subscription, the hand-off,
+  the traffic a Storage node measured (now *writes into* and *hands work
+  to*) and the copy link of this morning's amendment, whose id
+  `<from>→<to> copies to` goes. `Topology::merge` joins a configured link
+  and an observed one sharing an id into the observed one, configured and
+  observed both (`Origin::joined`), in either order.
+- **Across the ABI, changed in place** (pre-GA, no `_v2`; held by the
+  drift tests in Rust and .NET): `XmipTopologyLink.relation`
+  (`XmipTopologyRelation`, its words by `xmip_topology_relation_words_v1`);
+  `XmipTopologyNode.roles`, the declared role words, and `.place`, its
+  place in `[storage] nodes` or -1; `xmip_publication_layout_v1` and
+  `XmipTopologyPlace` (section 8); `xmip_role_purpose_v1` (section 7).
+  The C, C++, Java and Python bindings carry neither section 8 struct.
+- **The map, by role** (`observe::topology::layout`): TX-Parties,
+  receiving, Storage, sending, RX-Parties left to right; the operation band
+  on top, each of its nodes where its lines run clear, nearest the middle;
+  processing over Storage, shifted across as little as lets the operation
+  lines pass; the first-listed Storage node on the path row and the others
+  below it, half a column toward sending; executing in a lane of its own
+  below. Within a column, the place in `[storage] nodes`, then the scope as
+  bytes: renaming may reorder within a column and never moves a node across
+  one. Inside a node its stages stand Receive, Work Process, Send. Only
+  configured lines place anything, so traffic never moves a node. The
+  reader computes it through the export, for every focus as it reads a
+  publication; a publication carries facts. `TopologyGraph.razor` scales
+  the places to its canvas, Web and Desktop alike, and its stopgap layout
+  (`Flowing`, `Apart`, `Stacked`, `Ring`, `Holder`, the order by label)
+  is deleted. Tested: a renamed cluster stands the same, swapped roles swap
+  places, the listed order stacks Storage, traffic never moves a node, no
+  line runs within 0.05 of the unit square of a thing it does not join —
+  the test cluster with a Party facing each node, and with one to three
+  Parties a side — and a drill lays out its stages in path order. Held to
+  the millisecond rule: the runtime lays out every focus once per
+  publication it reads (`layout::every_focus`), the operation band's search
+  is bounded, and observe's timing program holds every focus of the
+  176-thing publication `SnapshotReadCostTest` reads, and of a cluster
+  related by role drawing as many, under a millisecond — the first build
+  added about 100 ms to that read.
+- **A stand-in Party facing each node** (`observe::topology::party`):
+  where a publication cannot say which Parties a Location takes, the one
+  `any-party` per side is gone, and one Party faces each node on each side,
+  numbered per side in the order the nodes stand on the map
+  (`layout::place_order`), its id naming the node it faces, so a node's own
+  drawing and the roll's meet whatever number each gave it. Its labels are
+  the owner's (2026-11-13): *TX-Party 1, 2, …* for those sending into the
+  receiving and executing nodes, and *RX-Party 1, …* for those the sending
+  and executing nodes deliver to. From and to say the Party as drawn.
+- **Every surface says it.** `English.Traffic` puts the relation before
+  the figure — *writes into · configured · no traffic observed*, *copies to
+  · 48,213 · 310/s* — the legend lists the relations, and the inspector's
+  Traffic list says relation, origin and evidence. A node's purpose — each
+  declared role with its meaning, `node::NodeRole::meaning`, composed once
+  by `NodeRole::purpose` — is its tooltip on the Topology and on the
+  Monitor's node rows, Web and Desktop alike, and a node row's purpose in
+  `xmip list` and `Get-XmipScope` (`ScopeItem.Purpose`).
+
+Left: a running node still draws the traffic its Storage node measured
+only for the nodes the bindings place a Location on (`bound`); drawing
+every member waits on the members a node can know, which membership
+through Xmip Storage gives (the design's fourth piece). A running Storage
+node says no place of its own; the cluster's drawing carries it from the
+cluster file.
+
+Who decided what. The owner's: the design and its decisions — relations to
+the configured primary only, the operation node's lines drawn, the grid,
+the layout computed by the reader — the purpose tooltip, the numbered
+Parties facing each node and their labels. The assistant's, while
+building, for the owner to change: the link id `<from>→<to> <relation word>`; a node's roles carried
+as their words and its place as -1 where none; the purpose one role a
+line; the relation's mood from the ends' reach and Storage records; the
+clearance of 0.05 and how the operation band and the processing band move
+to keep it; the order within a column by scope; the legend leaving
+*traffic* out.

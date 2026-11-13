@@ -86,8 +86,8 @@ fn as_it_starts(first: &Publication) {
         (format!("{at}/receive/In"), NodeKind::Endpoint),
         (format!("{at}/process"), NodeKind::Stage),
         (format!("{at}/send/Out"), NodeKind::Endpoint),
-        ("party/sending/any-party".to_string(), NodeKind::Party),
-        ("party/receiving/any-party".to_string(), NodeKind::Party),
+        (format!("party/sending/{at}"), NodeKind::Party),
+        (format!("party/receiving/{at}"), NodeKind::Party),
     ] {
         assert!(
             drawn
@@ -156,7 +156,11 @@ fn the_node_publishes_its_snapshot_and_a_pause_left_where_it_says_shows_in_the_n
     // And they move its drawing, over the window the service keeps
     // (ADR-0018, amendment 2026-11-10): the Party sending in, at a rate, and
     // the node, at what moved through it.
-    let into = format!("party/sending/any-party/{}", node_name());
+    let into = xmip_observe::topology::link_id(
+        &format!("party/sending/node/{}", node_name()),
+        &format!("node/{}/receive", node_name()),
+        xmip_observe::Relation::Traffic,
+    );
     let drawn = received.topology.expect("the node is drawn");
     let link = drawn.links.iter().find(|link| link.id == into);
     assert!(link.is_some_and(|link| link.rate > 0.0), "{link:?}");
