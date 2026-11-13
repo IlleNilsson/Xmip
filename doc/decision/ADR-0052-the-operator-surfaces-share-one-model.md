@@ -2364,3 +2364,67 @@ frame's theme at once and the file keeps it).
 Who decided what. The owner's: themes as a choice, dark among them. The
 assistant's, for the owner to change: the system's as the start, the
 button's order, the cookie's and the table's names.
+
+## Amendment, 2026-11-13: what a primary copies to each standby, drawn
+
+The amendment of 2026-11-11, *traffic between nodes, measured where it
+passes*, left in open problem 62 what a primary ships to its standby, drawn
+D1 → D2. The owner approved the design of 2026-11-12, *the operation node,
+the standby's copying, and how the cluster's nodes are related*, all
+thirteen of its recommendations; this is its first landing piece, the copy
+relation alone, so the Topology shows DS1 → DS2 moving, Web and Desktop
+alike, with no code of either surface's own.
+
+- **The primary counts what it hands each standby, by the node the
+  standby's certificate names** (`persist`, `storage/standby/followers.rs`;
+  ADR-0056, amendment 2026-11-13): each write, each entry of a whole copy,
+  and the bytes of the frames that carried them, added atomically as each
+  frame is sent; `StorageNode::followers` hands them out with how far
+  behind each standby is, and the primary's standing reads the same list.
+- **The primary's node draws it** (`runtime`,
+  `running/publication/drawn.rs`, fed by `Reached::followers`): a link
+  `node/<primary> → node/<standby>` for each standby following now,
+  pattern Streaming, protocol `observe::topology::XMIP_STORAGE`, origin
+  observed, its evidence beginning with the relation, *copies to*, then
+  the writes copied, the entries copied whole, the bytes, how many writes
+  behind, and where the standby connected from — *copies to: 48213
+  write(s) copied, 61 MiB; 3 write(s) behind; the standby connected from
+  …*. Its volume is what moved, each write and each entry copied whole, so
+  the window the primary's publisher keeps states the rate it copies at
+  (amendment 2026-11-10) and the pulses travel primary → standby at it;
+  the roll merges it as any node's link (`Topology::merge`).
+- **Who the standby is comes from what the primary knows of it**, the
+  common name of the certificate it proved, read by `tls::Name`, never a
+  name's letters and never its address. A standby whose certificate names
+  no node, or names the primary itself, draws nothing; a standby not
+  following now draws nothing, and its own `<node>/storage` record says
+  why. Unlike the traffic of 2026-11-11, the copy link is not limited to
+  the nodes the cluster's bindings place a Location on: a Storage node is
+  placed none, and a node handed the Ledger is shown wherever it is.
+- **A standby not ready is drawn as such by its own record**, not by the
+  link: copying or catching up, its `<node>/storage` is Working (ADR-0056,
+  amendment 2026-11-13), and its node is drawn in its worst record's mood.
+  Only the standby knows how far its bootstrap is, kept durable across its
+  restarts; a standby started again while it catches up asks to follow
+  from where it is, and its primary cannot tell it from a ready one.
+
+Until the relations by role land (the design's second piece), the
+relation is said in the link's evidence and its id, `<from>→<to> copies
+to`, so it never meets a link of Journeys taken on between the same two
+nodes; that piece gives every link its relation as a field, across the
+ABI, and one id rule. Tested in persist (`standby::followers`: a standby
+known by its node across its connections, counted on; one naming no node
+known by its address for its connection alone; `standby/tests/handed.rs`:
+a whole copy's entries and then each write counted against the standby's
+node over mutual TLS), and the runtime (`drawn`: the primary draws one
+link to each standby by its node, moving at its rate over the window,
+none to an unnamed one or itself; `storage`: the primary of two Storage
+nodes hands its node the standby by name with what it copied, a standby
+and a node reaching Storage none; `storage::reached`: a standby copying or
+catching up stands Working).
+
+Who decided what. The owner's: the design and its first piece, *copies
+to*, the standby known by its certificate's node. The assistant's, while
+designing, for the owner to change: the volume as writes and entries
+together, the id with the relation, the copy link drawn whatever the
+bindings place, and a standby not ready shown by its own record.

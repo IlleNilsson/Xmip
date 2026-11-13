@@ -925,3 +925,45 @@ a snapshot's file name and a roll's process name from the test cluster
 (`test/XmipTest.Test.ps1`, `test/XmipProcess.Test.ps1`), a web address from
 .NET's `TestCluster` (`BarOrderTest`), and the snapshot an operator module
 follows from the shipped `powershell.toml` (`test/OperatorModule.Test.ps1`).
+
+## Amendment, 2026-11-13: a primary knows each standby by its node, and counts what it copies
+
+**Provenance.** The owner approved, 2026-11-12, the design *the operation
+node, the standby's copying, and how the cluster's nodes are related*, all
+thirteen of its recommendations; its first landing piece is the standby's
+copying counted and drawn (ADR-0052, amendment 2026-11-13). Until this day
+a primary kept each standby following it by the socket address it
+connected from, a new one with each connection, and counted nothing of
+what it handed it: its standing said only `standbys <address> N writes
+behind`.
+
+- **A standby is known by the node its certificate names**: the Storage
+  server reads the common name of the certificate the standby proved, once
+  per connection, through the reading the traffic counts already use
+  (`server/admitted.rs`, `node`; `tls::Name::common_name`), and hands it
+  with the address to the primary's shipping. The address is evidence
+  only. A standby whose certificate names no node is known by its address,
+  for that connection alone.
+- **The primary counts what it hands each standby**
+  (`storage/standby/followers.rs`): each write, each entry of a whole
+  copy's pages, and the bytes of the frames that carried them, added
+  atomically as each frame is sent (`wire::sent`), so nothing on the path
+  waits for a count. What a standby was handed is kept across its
+  connections while the primary runs. `StorageNode::followers` lists each
+  standby a connection of its is handed writes on now, with its node, its
+  latest address, its counts and how many writes it is behind; it lists
+  none while the node is not the primary. The standing says the same list:
+  `standbys <node> from <address> N writes behind`.
+- **A standby not ready stands Working.** A node publishes its own Storage
+  node's record at `<node>/storage` Fine, Done while it finds its primary,
+  and since this day Working while it is a standby copied whole and not
+  ready — copying, or catching up — with the words the amendment of
+  2026-11-12 gave it, at the severity of a start under way (20, below a
+  deliberate hold's). Its node is drawn in that mood, so a standby not yet
+  ready shows so on every surface; the copy link its primary draws says
+  only what the primary measured.
+
+Built 2026-11-13, the assistant's. Held by persist (`standby::followers`,
+`standby/tests/handed.rs`) and the runtime (`storage`, `storage::reached`,
+`running::publication::drawn`), as ADR-0052's amendment of the same day
+lists.
