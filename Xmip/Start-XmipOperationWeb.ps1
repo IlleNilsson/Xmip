@@ -117,7 +117,7 @@ function Start-XmipOperationWeb {
             Start-XmipOperationWeb
 
         .EXAMPLE
-            Start-XmipTest -Suite Core.Essentials -Cluster C1 -Stress Harsh -PassThru |
+            Start-XmipTest -Suite Core.Essentials -Cluster CL1 -Stress Harsh -PassThru |
                 Start-XmipOperationWeb
 
         .EXAMPLE
@@ -134,7 +134,7 @@ function Start-XmipOperationWeb {
 
         .EXAMPLE
             $tls = @{ Certificate = 'node.pem'; PrivateKey = 'node.key'; TrustAnchor = 'ca.pem' }
-            $snapshot = '.local-work/essentials/C1-snapshot.xmip'
+            $snapshot = '.local-work/essentials/CL1-snapshot.xmip'
             Start-XmipOperationWeb -Url https://0.0.0.0:5443 -Snapshot $snapshot @tls
     #>
     [CmdletBinding(SupportsShouldProcess)]

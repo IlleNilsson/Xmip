@@ -119,7 +119,7 @@ function Start-XmipTest {
             simulated clock faster (the Retention test ages on it).
 
         .PARAMETER Nodes
-            The nodes, by name — one process each: -Nodes R1, P1, S1 is three called that
+            The nodes, by name — one process each: -Nodes RX1, PX1, TX1 is three called that
             under one cluster called -Cluster. They are written, with
             -Cluster and -NodeRole, into the run's own cluster cluster.xmip,
             <Path>/<Cluster>.xmip, and XMIP_TEST_CLUSTER names it to the
@@ -128,9 +128,9 @@ function Start-XmipTest {
             roles it is started with (ADR-0056), stated with
             -NodeRole. A name says nothing about it: the owner,
             2026-09-20, *Rn, Pn and Sn are arbitrary node names*. The names
-            are the tester's: these examples call clusters C1, C2 and nodes
-            R1, P1, S1, as the owner does when he tests (2026-09-25), a
-            reminder to the person and never to Xmip. A node given no
+            are the tester's: these examples call clusters CL1, CL2 and nodes
+            RX1, PX1, TX1, as the owner names them (ADR-0056, amendment
+            2026-11-12), a reminder to the person and never to Xmip. A node given no
             role declares none and runs the shared-directory tests
             whole, which is said in words where RoundTrip was asked for.
             RoundTrip across nodes hands each pair from receive to process to
@@ -153,9 +153,9 @@ function Start-XmipTest {
             and the [run] table carry the nodes and the cluster file.
 
         .PARAMETER NodeRole
-            The roles each node declares, stated per node: -Nodes R1, P1
-            -NodeRole @{ R1 = 'receiving'; P1 = 'processing,sending' }, or
-            @{ E1 = 'executing' }. The roles are node::NodeRole's (ADR-0056, amendment 2026-10-01):
+            The roles each node declares, stated per node: -Nodes RX1, PX1
+            -NodeRole @{ RX1 = 'receiving'; PX1 = 'processing,sending' }, or
+            @{ EX1 = 'executing' }. The roles are node::NodeRole's (ADR-0056, amendment 2026-10-01):
             receiving, processing and sending serve one stage of the message
             path each, and executing serves all three in one process, the
             low-latency choice — each pair it receives stays in it to the end;
@@ -182,7 +182,7 @@ function Start-XmipTest {
             activity. Any name a file can carry will do, and none means
             anything to Xmip. Two rolls with two names are two clusters side
             by side, each with its own web GUI:
-            Start-XmipTest -Cluster C2 -PassThru | Start-XmipOperationWeb -Url ...
+            Start-XmipTest -Cluster CL2 -PassThru | Start-XmipOperationWeb -Url ...
 
         .PARAMETER Certificate
             operator.pem, operator.key and anchors.pem's folder: a -Cluster or
@@ -210,8 +210,8 @@ function Start-XmipTest {
             Get-XmipTestStatus and Get-XmipAudit do until -IncludeHidden. The
             declaration hides it, never its name. The assistant's test cluster
             is started so, always: Start-XmipTest -Suite Core.Essentials
-            -Cluster C2 -Test RoundTrip -Nodes R1, P1, S1 -NodeRole
-            @{ R1 = 'receiving'; P1 = 'processing'; S1 = 'sending' } -Hidden
+            -Cluster CL2 -Test RoundTrip -Nodes RX1, PX1, TX1 -NodeRole
+            @{ RX1 = 'receiving'; PX1 = 'processing'; TX1 = 'sending' } -Hidden
 
         .PARAMETER Tester
             Core.Demo's alone: the person who demonstrates, as New-XmipCertificate
@@ -219,43 +219,43 @@ function Start-XmipTest {
 
         .EXAMPLE
             # Omitted -Nodes: the Essentials' own cluster file's nodes
-            # ([nodes.R1] roles = "receiving", and so on).
-            Start-XmipTest -Suite Core.Essentials -Cluster C1
+            # ([nodes.RX1] roles = "receiving", and so on).
+            Start-XmipTest -Suite Core.Essentials -Cluster CL1
 
         .EXAMPLE
-            Start-XmipTest -Suite Core.Essentials -Cluster C1 -Test HeavyLoad -Stress Harsh
+            Start-XmipTest -Suite Core.Essentials -Cluster CL1 -Test HeavyLoad -Stress Harsh
 
         .EXAMPLE
-            Start-XmipTest -Suite Core.Essentials -Cluster C1 -Nodes R1, S1 -PassThru |
+            Start-XmipTest -Suite Core.Essentials -Cluster CL1 -Nodes RX1, TX1 -PassThru |
                 Start-XmipOperationWeb
 
         .EXAMPLE
             # The names are the tester's; -NodeRole says what each does.
-            Start-XmipTest -Test RoundTrip -Cluster C1 -Nodes R1, P1, S1
-                -NodeRole @{ R1 = 'receiving'; P1 = 'processing'; S1 = 'sending' }
+            Start-XmipTest -Test RoundTrip -Cluster CL1 -Nodes RX1, PX1, TX1
+                -NodeRole @{ RX1 = 'receiving'; PX1 = 'processing'; TX1 = 'sending' }
 
         .EXAMPLE
-            Start-XmipTest -Test RoundTrip -Cluster C2 -Nodes R1, R2, P1, S1
-                -OnlineNodes R1, S1 -NodeRole @{ R1 = 'receiving'
-                    R2 = 'receiving'; P1 = 'processing'; S1 = 'sending' }
+            Start-XmipTest -Test RoundTrip -Cluster CL2 -Nodes RX1, RX2, PX1, TX1
+                -OnlineNodes RX1, TX1 -NodeRole @{ RX1 = 'receiving'
+                    RX2 = 'receiving'; PX1 = 'processing'; TX1 = 'sending' }
 
         .EXAMPLE
             Start-XmipTest -Suite Core.Estate -Test Rust.Style, XmipTest
 
         .EXAMPLE
-            Start-XmipTest -Cluster C1 -Duration 00:15:00 -TimeFactor 9.5e-6 -WhatIf
+            Start-XmipTest -Cluster CL1 -Duration 00:15:00 -TimeFactor 9.5e-6 -WhatIf
 
         .EXAMPLE
-            Start-XmipTest -Suite Example.Essentials -Cluster C1
+            Start-XmipTest -Suite Example.Essentials -Cluster CL1
 
         .EXAMPLE
             Start-XmipTest -Suite Core.Estate -Test Sync-Xmip*
 
         .EXAMPLE
-            Start-XmipTest -Suite * -Cluster C1
+            Start-XmipTest -Suite * -Cluster CL1
 
         .EXAMPLE
-            Start-XmipTest -Suite Core.Demo -Cluster C1 -Stress Realistic -Tester alice@example.org
+            Start-XmipTest -Suite Core.Demo -Cluster CL1 -Stress Realistic -Tester alice@example.org
     #>
     [CmdletBinding(SupportsShouldProcess, PositionalBinding = $false)]
     [OutputType('Xmip.TestStatus')]

@@ -13,12 +13,12 @@ pub const USAGE: &str = "usage: xmip-service --configuration <path> [--console] 
      xmip-service --configuration <path> --activation\n       \
      xmip-service --configuration <path> --uninstall\n\
      example: xmip-service --configuration /opt/xmip/config/node.xmip --console\n\
-     example: xmip-service --configuration /opt/xmip/config/cluster.xmip --node R1 \
-     --cluster C1 --slice\n\
-     example: xmip-service --configuration /opt/xmip/config/cluster.xmip --node R1 \
-     --cluster C1 --bind 10.77.0.1 --nodes R1,S1,P1,L1,D1 --slice\n\
-     example: xmip-service --configuration /opt/xmip/config/cluster.xmip --node R1 \
-     --cluster C1 --account xmip --install\n\
+     example: xmip-service --configuration /opt/xmip/config/cluster.xmip --node RX1 \
+     --cluster CL1 --slice\n\
+     example: xmip-service --configuration /opt/xmip/config/cluster.xmip --node RX1 \
+     --cluster CL1 --bind 10.77.0.1 --nodes RX1,TX1,PX1,EX1,DS1 --slice\n\
+     example: xmip-service --configuration /opt/xmip/config/cluster.xmip --node RX1 \
+     --cluster CL1 --account xmip --install\n\
      example: xmip-service --configuration /opt/xmip/config/node.xmip --listening\n\
      --slice prints the node's configuration, sliced from its cluster's cluster.xmip; \
      --cluster names the cluster where the file names none; --bind places each \

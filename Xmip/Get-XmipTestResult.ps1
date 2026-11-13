@@ -76,7 +76,7 @@ function Get-XmipTestResult {
             Get-XmipTestResult -Test RoundTrip -Worst
 
         .EXAMPLE
-            Get-XmipTestResult -Path .local-work/essentials/C1-snapshot.xmip -Node R1
+            Get-XmipTestResult -Path .local-work/essentials/CL1-snapshot.xmip -Node RX1
     #>
     [CmdletBinding()]
     [OutputType('Xmip.TestResult')]

@@ -93,13 +93,13 @@ function Stop-XmipTest {
             Stop-XmipTest -Suite Core.Estate
 
         .EXAMPLE
-            Stop-XmipTest -Cluster C1 -Test RoundTrip
+            Stop-XmipTest -Cluster CL1 -Test RoundTrip
 
         .EXAMPLE
             Stop-XmipTest -Cluster 'C*'
 
         .EXAMPLE
-            Stop-XmipTest -Cluster C2 -IncludeHidden
+            Stop-XmipTest -Cluster CL2 -IncludeHidden
 
         .EXAMPLE
             Get-XmipTestStatus | Where-Object -Property Stress -EQ -Value brutal |

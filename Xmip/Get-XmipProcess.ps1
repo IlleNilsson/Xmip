@@ -36,8 +36,8 @@ function Get-XmipProcess {
         .PARAMETER Name
             Only the processes whose name matches, wildcards allowed:
             -Name 'xmip-essentials-*' is every roll, cluster and node on this
-            machine, and -Name 'xmip-essentials-C1-*' is the tree of a
-            cluster someone called C1, since an Essentials process carries
+            machine, and -Name 'xmip-essentials-CL1-*' is the tree of a
+            cluster someone called CL1, since an Essentials process carries
             its cluster and what it is (ADR-0053, amendment 2026-09-20). Every
             Xmip process unless said.
 
@@ -58,7 +58,7 @@ function Get-XmipProcess {
             Get-XmipProcess -Purpose Test | Stop-Process -Force
 
         .EXAMPLE
-            Get-XmipProcess -Name 'xmip-essentials-C1-*'
+            Get-XmipProcess -Name 'xmip-essentials-CL1-*'
 
         .EXAMPLE
             Get-XmipProcess -Name 'xmip-service*' | Start-XmipOperationWeb

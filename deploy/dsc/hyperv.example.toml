@@ -17,7 +17,7 @@ hypervisor = "hyperv"
 # The folder that holds a folder per machine.
 root = 'D:\HyperV\Xmip'
 domain = "xmip.test"
-cluster = "C1"
+cluster = "CL1"
 # The account each AlmaLinux machine's kickstart makes; it is given the
 # environment's own SSH key, which Deploy-XmipEnvironment makes.
 linux_account = ""
@@ -148,9 +148,9 @@ image = "WindowsServer2025"
 memory_gb = 4
 cpu = 2
 disk_gb = 64
-nodes = ["D1"]
+nodes = ["DS1"]
 
-# Xmip node, Xmip Storage: the cluster's file lists D1 and D2, and neither
+# Xmip node, Xmip Storage: the cluster's file lists DS1 and DS2, and neither
 # serves until both answer (ADR-0056, amendment 2026-11-08)
 [[machines]]
 name = "XMIP-APP04"
@@ -159,7 +159,7 @@ image = "WindowsServer2025"
 memory_gb = 4
 cpu = 2
 disk_gb = 64
-nodes = ["D2"]
+nodes = ["DS2"]
 
 # Xmip node
 [[machines]]
@@ -169,7 +169,7 @@ image = "WindowsServer2025"
 memory_gb = 4
 cpu = 2
 disk_gb = 64
-nodes = ["P1"]
+nodes = ["PX1"]
 
 # Xmip node
 [[machines]]
@@ -179,7 +179,7 @@ image = "WindowsServer2025"
 memory_gb = 4
 cpu = 2
 disk_gb = 64
-nodes = ["L1"]
+nodes = ["EX1"]
 
 # Xmip node
 [[machines]]
@@ -189,7 +189,7 @@ image = "AlmaLinux10"
 memory_gb = 4
 cpu = 2
 disk_gb = 32
-nodes = ["R1"]
+nodes = ["RX1"]
 
 # Xmip node
 [[machines]]
@@ -199,4 +199,4 @@ image = "AlmaLinux10"
 memory_gb = 4
 cpu = 2
 disk_gb = 32
-nodes = ["S1"]
+nodes = ["TX1"]

@@ -28,10 +28,11 @@
     - a parameter or flag that names a cluster or nodes: -Cluster, -Nodes,
       -OnlineNodes, -Node, -Name, --cluster, --name, --nodes, --node,
       --online;
-    - one of the names the owner types (Cn, Rn, Pn, Sn, Ln, On, Dn, CT), the Nn a test
-      once numbered its nodes with, or the struck ones (alpha … zeta),
-      quoted or backticked on its own, or standing before a / as a scope's
-      part.
+    - one of the names the owner types (CLn, RXn, PXn, TXn, EXn, OPn, DSn,
+      CT), the one-letter ones they replaced (Cn, Rn, Pn, Sn, Ln, On, Dn),
+      the Nn a test once numbered its nodes with, or the struck ones
+      (alpha … zeta), quoted or backticked on its own, or standing before a
+      / as a scope's part.
 
     Searched: .src/, module/, test/, template/, sdk/, Xmip/ and doc/ outside
     doc/decision/, in every language the estate writes and every text it
@@ -51,6 +52,15 @@
       is configuration that test checks: $script:Held names each and the
       test that holds it, and is held to that test in turn.
 
+    And where a name stands, it is written as the owner writes it since
+    2026-11-12: *I think we should name C CL, R RX, P PX, O OP, S TX, D DT*;
+    *Let's go with it, EX*; *DT, if that's what for storage, it would be
+    better as DS instead of DT* (ADR-0056, amendment 2026-11-12). A one-letter
+    designation, C1 for CL1, is refused in every place above, in the
+    estate's README.md, and in deploy/'s READMEs and example environment
+    files; what a record measured or quoted under one keeps it, and those
+    places hold no record.
+
     Two kinds of token are not names and are said here once: $script:Word,
     the products and specifications the estate integrates with, and
     $script:Value, the files whose token is a value inside a message.
@@ -60,9 +70,20 @@ BeforeAll {
     . (Join-Path $PSScriptRoot 'Initialize-XmipTest.ps1')
 
     [string] $quote = '[''"`]'
+    # The owner's designations, each one-letter one with the two letters that
+    # replaced it (ADR-0056, amendment 2026-11-12).
+    $script:Designation = [ordered]@{
+        C = 'CL'; R = 'RX'; P = 'PX'; S = 'TX'; L = 'EX'; O = 'OP'; D = 'DS'
+    }
+    [string] $twoLetter = "(?:$(@($script:Designation.Values) -join '|'))[0-9]+"
+    # Numbered from 1: S009, a UN/EDIFACT composite element, is no designation.
+    [string] $oneLetter = "[$(@($script:Designation.Keys) -join '')][1-9][0-9]*"
     # The names the owner types and the ones invented and struck: anywhere
     # quoted they are a name.
-    [string] $known = '(?:[CRPSNLOD][0-9]+|CT|alpha|beta|gamma|delta|epsilon|zeta)'
+    [string] $known = "(?:$twoLetter|[CRPSNLOD][0-9]+|CT|alpha|beta|gamma|delta|epsilon|zeta)"
+    # A one-letter designation where a name may stand: never inside a word,
+    # a T-SQL parameter, @P1, nor a compiler's flag, -O2 and /O2.
+    $script:Struck = [regex]::new("(?<![\w@])(?<!(?:^|\s)[-/])(?<n>$oneLetter)(?!\w)", 'Compiled')
     # Any name, where only a name can stand.
     [string] $literal = '[A-Za-z][A-Za-z0-9_-]*'
     # The role words a node declares and the stage words it declared before
@@ -101,9 +122,9 @@ BeforeAll {
         'a scope''s part'          = "(?<![\w-])(?<n>$known)/(?=\w)"
     }
 
-    # Amazon S3, Siemens S7 and the FHIR releases: names of things Xmip talks
-    # to, never of a node; and .NET's N0, a number format.
-    $script:Word = @('S3', 'S7', 'R4', 'R5', 'N0')
+    # Amazon S3, Siemens S7, the FHIR releases and LoRaWAN's L2: names of
+    # things Xmip talks to, never of a node; and .NET's N0, a number format.
+    $script:Word = @('S3', 'S7', 'R4', 'R5', 'L2', 'N0')
 
     # A token that is a value in a document a test reads or writes.
     $script:Value = @{
@@ -119,15 +140,15 @@ BeforeAll {
     # cluster.xmip: the test's file and the test.
     [string] $surface = 'module/foundation/abi/dotnet/Xmip.Surface.Test'
     $script:Held = @{
-        "$surface/Fixture/cluster.xmip"    = @{
+        "$surface/Fixture/cluster.xmip"     = @{
             Test = "$surface/ClusterSnapshotTest.cs"
             Name = 'TheClusterFixtureIsTheTestClustersOwn'
         }
-        "$surface/Fixture/snapshot.xmip"   = @{
+        "$surface/Fixture/snapshot.xmip"    = @{
             Test = "$surface/ClusterSnapshotTest.cs"
             Name = 'TheNodesAreWhatThePublisherDrawsAsNodes'
         }
-        "$surface/Fixture/cluster-c2.xmip" = @{
+        "$surface/Fixture/cluster-cl2.xmip" = @{
             Test = "$surface/ClusterSurfacesTest.cs"
             Name = 'TheSecondFixtureIsTheSecondTestClustersOwn'
         }
@@ -137,7 +158,8 @@ BeforeAll {
         '.rs', '.cs', '.ps1', '.psm1', '.psd1', '.razor', '.xmip', '.toml', '.md', '.json'
     )
     $script:Candidate = [regex]::new(
-        '(?i:xmip):///|alpha|beta|gamma|delta|epsilon|zeta|\b(?:[CRPSNLOD][0-9]+|CT)\b|' +
+        '(?i:xmip):///|alpha|beta|gamma|delta|epsilon|zeta|' +
+        "\b(?:$twoLetter|[CRPSNLOD][0-9]+|CT)\b|" +
         "=(?:$role)\b|cluster_name|node_name|\[nodes\.", 'Compiled')
     $script:Tree = @('.src', 'module', 'test', 'template', 'sdk', 'Xmip', 'doc')
     $script:Self = 'test/NodeName.Test.ps1'
@@ -174,9 +196,33 @@ BeforeAll {
 
     <#
         .SYNOPSIS
+        The documents beside the searched tree that show the owner's names:
+        the estate's README.md, and deploy/'s READMEs and example environment
+        files, which name a cluster and its nodes as a cluster.xmip does.
+    #>
+    function Get-ShownNameFile {
+        'README.md'
+
+        [System.IO.FileInfo[]] $file = @(
+            InModuleScope Xmip -Parameters @{ At = (Join-Path $script:Root 'deploy') } {
+                param($At)
+                Find-XmipFile -Path $At -Filter '*'
+            }
+        )
+
+        foreach ($one in $file) {
+            if ($one.Name -eq 'README.md' -or $one.Name -like '*.example.toml') {
+                [IO.Path]::GetRelativePath($script:Root, $one.FullName) -replace '\\', '/'
+            }
+        }
+    }
+
+    <#
+        .SYNOPSIS
         The indexes of the lines of a file where the owner's names belong:
-        all of an cluster.xmip and a README.md, the .EXAMPLE and .PARAMETER
-        sections of a script's help, a binary's usage text.
+        all of an cluster.xmip, an example environment file and a README.md,
+        the .EXAMPLE and .PARAMETER sections of a script's help, a binary's
+        usage text.
     #>
     function Get-NodeNameHelpLine([string] $Path, [string[]] $Line) {
         [string] $leaf = ($Path -split '/')[-1]
@@ -184,7 +230,7 @@ BeforeAll {
         [bool] $test = $Path -like 'test/*' -or $leaf -like '*.Test.ps1'
 
         if ($leaf -eq 'README.md' -or $Path -eq 'doc/getting-started.md' -or
-            $leaf -like '*cluster.xmip') {
+            $leaf -like '*cluster.xmip' -or $leaf -like '*.example.toml') {
             return 0..([Math]::Max($Line.Count - 1, 0))
         }
 
@@ -274,6 +320,24 @@ BeforeAll {
             }
         }
     }
+
+    <#
+        .SYNOPSIS
+        Every one-letter designation written where the owner's names belong,
+        as file:line: the designation and the two letters that replaced it.
+    #>
+    function Find-StruckName([string] $Path, [string[]] $Line) {
+        foreach ($at in @(Get-NodeNameHelpLine -Path $Path -Line $Line)) {
+            foreach ($match in $script:Struck.Matches($Line[$at])) {
+                [string] $token = $match.Groups['n'].Value
+
+                if ($token -notin $script:Word) {
+                    [string] $now = $script:Designation[[string] $token[0]] + $token.Substring(1)
+                    "${Path}:$($at + 1): $token, now $now"
+                }
+            }
+        }
+    }
 }
 
 Describe 'No cluster or node is named in code or tests' {
@@ -301,6 +365,43 @@ Describe 'No cluster or node is named in code or tests' {
         $found | Should -BeNullOrEmpty -Because (
             ('a name is configuration: take it from the test cluster''s cluster.xmip ' +
                 'through the fixture, by role or place (ADR-0056, amendment 2026-10-03)'))
+    }
+
+    It 'writes the owner''s two-letter designations where a name may stand, never one letter' {
+        [string[]] $found = @(
+            foreach ($path in @(Get-NodeNameFile) + @(Get-ShownNameFile)) {
+                [string] $text = [IO.File]::ReadAllText((Join-Path $script:Root $path))
+
+                if ($path -ne $script:Self -and $script:Struck.IsMatch($text)) {
+                    Find-StruckName -Path $path -Line ($text -split '\r?\n')
+                }
+            }
+        )
+
+        $found | Should -BeNullOrEmpty -Because (
+            'the owner names CLn, RXn, PXn, TXn, EXn, OPn and DSn since 2026-11-12 ' +
+            '(ADR-0056, amendment 2026-11-12)')
+    }
+
+    It 'tells a one-letter designation from the two letters that replaced it' {
+        [string] $readme = 'module/core/example/README.md'
+        [string[]] $old = @(Find-StruckName -Path $readme -Line @(
+                'Start-XmipTest -Cluster C1 -Nodes R1, P1, S1'
+                '`xmip:///C2/node/L1`, O1 and D1.xmip.test'))
+
+        $old | Should -HaveCount 8
+        $old[0] | Should -Be "${readme}:1: C1, now CL1"
+        $old[3] | Should -Be "${readme}:1: S1, now TX1"
+        $old[4] | Should -Be "${readme}:2: C2, now CL2"
+
+        @(Find-StruckName -Path $readme -Line 'Start-XmipTest -Cluster CL1 -Nodes RX1, DS2') |
+            Should -BeNullOrEmpty -Because 'the two letters are the owner''s'
+        @(Find-StruckName -Path $readme -Line 'cl /O2, cc -O2, `@P1`, Amazon S3, LoRaWAN L2') |
+            Should -BeNullOrEmpty -Because 'a flag, a parameter and a product are no designation'
+        @(Find-StruckName -Path 'deploy/dsc/sample.example.toml' -Line 'nodes = ["D1"]') |
+            Should -HaveCount 1 -Because 'an example environment file names nodes'
+        @(Find-StruckName -Path 'module/core/sample/src/lib.rs' -Line 'near.send(b"C1")') |
+            Should -BeNullOrEmpty -Because 'a payload in code is no place a name may stand'
     }
 
     It 'recognizes each place a name stands' {

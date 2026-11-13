@@ -707,7 +707,7 @@ an order or an act over its operate listener, and declares the file, so the oper
 ```powershell
 Get-XmipProcess -Name 'xmip-service*' | Start-XmipOperationWeb
 Start-XmipOperationWeb -Snapshot /opt/xmip/data/snapshot.xmip
-xmip subscriptions --snapshot /opt/xmip/data/snapshot.xmip --location xmip:///C1/node/S1 --name onward --pause
+xmip subscriptions --snapshot /opt/xmip/data/snapshot.xmip --location xmip:///CL1/node/TX1 --name onward --pause
 ```
 
 When the node stops, the file says it stopped.
@@ -806,12 +806,12 @@ The Essentials runs Xmip's own tests continuously, at a chosen stress level,
 over as many node processes as you name.
 
 ```powershell
-Start-XmipTest -Suite Core.Essentials -Cluster C1 -Test HeavyLoad, LowLatency `
-    -Stress Harsh -Nodes R1, R2, P1, S1 -OnlineNodes R1 `
-    -NodeRole @{ R1 = 'receiving'; R2 = 'receiving'; P1 = 'processing'; S1 = 'sending' }
+Start-XmipTest -Suite Core.Essentials -Cluster CL1 -Test HeavyLoad, LowLatency `
+    -Stress Harsh -Nodes RX1, RX2, PX1, TX1 -OnlineNodes RX1 `
+    -NodeRole @{ RX1 = 'receiving'; RX2 = 'receiving'; PX1 = 'processing'; TX1 = 'sending' }
 Get-XmipTestStatus
 Get-XmipTestResult -Test HeavyLoad -Worst
-Stop-XmipTest -Cluster C1 -Test HeavyLoad, LowLatency
+Stop-XmipTest -Cluster CL1 -Test HeavyLoad, LowLatency
 ```
 
 `Start-XmipTest` returns at once: the build runs detached before the roll,
@@ -843,9 +843,9 @@ declared, never by its name (ADR-0028, amendment 2026-09-30). The assistant's
 test cluster is started so, and stopped by name:
 
 ```powershell
-Start-XmipTest -Suite Core.Essentials -Cluster C2 -Test RoundTrip -Nodes R1, P1, S1 `
-    -NodeRole @{ R1 = 'receiving'; P1 = 'processing'; S1 = 'sending' } -Hidden
-Stop-XmipTest -Cluster C2 -IncludeHidden
+Start-XmipTest -Suite Core.Essentials -Cluster CL2 -Test RoundTrip -Nodes RX1, PX1, TX1 `
+    -NodeRole @{ RX1 = 'receiving'; PX1 = 'processing'; TX1 = 'sending' } -Hidden
+Stop-XmipTest -Cluster CL2 -IncludeHidden
 ```
 
 Every tier is a process of its own: the test spawns the cluster, the cluster
@@ -906,9 +906,9 @@ Start-XmipTest -Suite Core.Estate                     # every test/*.Test.ps1, d
 Start-XmipTest -Suite Core.Estate -Test Rust.Style    # test/Rust.Style.Test.ps1 alone
 Get-XmipTestStatus                                    # building, running, OK or FAILED
 Get-XmipTestResult -Suite Core.Estate                 # one object per failed test
-Start-XmipTest -Suite Core.Essentials -Cluster C1 -Test RoundTrip  # omit -Nodes: dealt
-Start-XmipTest -Suite * -Cluster C1                   # every suite but Core.Demo, run by name
-Start-XmipTest -Suite Core.Demo -Cluster C1 -Stress Realistic -Tester alice@example.org
+Start-XmipTest -Suite Core.Essentials -Cluster CL1 -Test RoundTrip  # omit -Nodes: dealt
+Start-XmipTest -Suite * -Cluster CL1                   # every suite but Core.Demo, run by name
+Start-XmipTest -Suite Core.Demo -Cluster CL1 -Stress Realistic -Tester alice@example.org
 ```
 
 Five kinds of test. `Publish-XmipChange` runs the first three where a

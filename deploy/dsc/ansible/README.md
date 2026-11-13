@@ -171,8 +171,8 @@ its rights wait on the owner's Hyper-V run.
 Then the Essentials runs against the machines as
 `deploy/dsc/msdsc/environment/README.md` says under *Running it*, typing
 exactly the environment's nodes, and what runs is the same: the real nodes
-reach D1 for Xmip Storage, and the Essentials drives them through the
-Parties' far end it serves on the host, counting at `xmip:///C1/carried`
+reach DS1 for Xmip Storage, and the Essentials drives them through the
+Parties' far end it serves on the host, counting at `xmip:///CL1/carried`
 what they carried.
 
 ## How it is held

@@ -548,24 +548,24 @@ as processes on your machine and carries payloads through them, round after
 round, over every transport and content contract, the file transport among
 them. It needs no network and no other software.
 
-Start a cluster called `C1` with three nodes, one per stage: receive, process,
+Start a cluster called `CL1` with three nodes, one per stage: receive, process,
 send.
 
 ```powershell
-Start-XmipTest -Suite Core.Essentials -Cluster C1 -Test RoundTrip -Nodes R1, P1, S1 `
-    -NodeRole @{ R1 = 'receiving'; P1 = 'processing'; S1 = 'sending' } -OnlineNodes R1
+Start-XmipTest -Suite Core.Essentials -Cluster CL1 -Test RoundTrip -Nodes RX1, PX1, TX1 `
+    -NodeRole @{ RX1 = 'receiving'; PX1 = 'processing'; TX1 = 'sending' } -OnlineNodes RX1
 ```
 
 `-NodeRole` states each node's roles — receiving, processing and sending one
 stage each, or `executing` for all three in one process, the low-latency
 choice ([ADR-0056](decision/ADR-0056-a-node-declares-what-it-can-do.md)).
 Omit `-Nodes` and the run takes every node of the Essentials' own cluster
-file, `test/core/essentials/configuration/cluster.xmip`, whose `[nodes.R1]
+file, `test/core/essentials/configuration/cluster.xmip`, whose `[nodes.RX1]
 roles = "receiving"` and so on cover the whole path; a node you name with no
 `-NodeRole` takes the roles that file declares for it. A node
 given no role declares none and runs the shared-directory tests whole, which
-`Start-XmipTest` says in words before it starts anything. `-OnlineNodes R1`
-records that `R1` may assume a route to the internet and the others may not
+`Start-XmipTest` says in words before it starts anything. `-OnlineNodes RX1`
+records that `RX1` may assume a route to the internet and the others may not
 (ADR-0045): it is the receiving edge, the node that may obtain its server
 certificate over ACME from a public authority (ADR-0033, ADR-0034;
 [built, not in the assembled service](architecture/estate-map.md#certificate-provisioning)).
@@ -578,8 +578,8 @@ Get-XmipTestStatus
 ```
 
 It says `building` until the nodes start, then `running`, or `FAILED` with the
-first error. The names `C1`, `R1`, `P1` and `S1` are yours to choose; this page
-uses `C1` because the surfaces in a fresh clone are set to follow it.
+first error. The names `CL1`, `RX1`, `PX1` and `TX1` are yours to choose; this page
+uses `CL1` because the surfaces in a fresh clone are set to follow it.
 
 The Essentials injects faults on purpose, of the kinds real integrations
 suffer: a reset connection, an unresolved host, content that fails its
@@ -589,12 +589,12 @@ transport is the one path it keeps fault-free.
 Watch it on each surface:
 
 ```powershell
-Get-XmipTestResult -Path .local-work/essentials/C1-snapshot.xmip -Worst
-Get-XmipHealth -Scope xmip:///C1
-Get-XmipScope -Scope xmip:///C1/*
-dotnet run --project module/core/operation/cli/src/Xmip.Cli -- show xmip:///C1
-dotnet run --project module/core/operation/cli/src/Xmip.Cli -- measure xmip:///C1
-Start-XmipOperationWeb -Snapshot .local-work/essentials/C1-snapshot.xmip
+Get-XmipTestResult -Path .local-work/essentials/CL1-snapshot.xmip -Worst
+Get-XmipHealth -Scope xmip:///CL1
+Get-XmipScope -Scope xmip:///CL1/*
+dotnet run --project module/core/operation/cli/src/Xmip.Cli -- show xmip:///CL1
+dotnet run --project module/core/operation/cli/src/Xmip.Cli -- measure xmip:///CL1
+Start-XmipOperationWeb -Snapshot .local-work/essentials/CL1-snapshot.xmip
 ```
 
 The web GUI at <http://127.0.0.1:5087> opens on the Monitor view, the board
@@ -609,18 +609,18 @@ the views say which cluster they are on and move between them (ADR-0052,
 amendment 2026-09-20):
 
 ```powershell
-Start-XmipTest -Suite Core.Essentials -Cluster C2 -Test RoundTrip -Nodes R1, P1 `
-    -NodeRole @{ R1 = 'receiving'; P1 = 'processing,sending' } -OnlineNodes R1
+Start-XmipTest -Suite Core.Essentials -Cluster CL2 -Test RoundTrip -Nodes RX1, PX1 `
+    -NodeRole @{ RX1 = 'receiving'; PX1 = 'processing,sending' } -OnlineNodes RX1
 Get-XmipTestStatus | Start-XmipOperationWeb
 ```
 
-`P1` carries two roles because `-NodeRole` says so, not because of its name,
-and `C2`'s `R1` is not `C1`'s: each cluster names its own nodes, and Xmip
+`PX1` carries two roles because `-NodeRole` says so, not because of its name,
+and `CL2`'s `RX1` is not `CL1`'s: each cluster names its own nodes, and Xmip
 reads none of those names (the owner, 2026-09-20: *Rn, Pn and Sn are
 arbitrary node names*, and the same of clusters).
 
 The prompt follows one cluster and says how many it is not showing —
-`[C2+1 ≡ R:1.2K/s P:240/s S:238/s]`. The letters are the three stages of the
+`[CL2+1 ≡ R:1.2K/s P:240/s S:238/s]`. The letters are the three stages of the
 message path, the one place in Xmip where a letter means anything, and each
 is what that stage moves per second, not a total since the roll began:
 `R:0/s` says stalled, which a rising total never can, and a dash says there
@@ -631,8 +631,8 @@ because a single reading has no interval to take a rate over.
 
 Every System Process Xmip owns is named `xmip-<what>` and declares its name,
 its location and its purpose, test or runtime (ADR-0053). An Essentials
-process says which cluster and which node it is — `xmip-essentials-C1-roll`,
-`xmip-essentials-C1-cluster`, `xmip-essentials-C1-node-R1` (amendment
+process says which cluster and which node it is — `xmip-essentials-CL1-roll`,
+`xmip-essentials-CL1-cluster`, `xmip-essentials-CL1-node-RX1` (amendment
 2026-09-20). `Get-XmipProcess` lists them with what they said, and one line
 stops every one of them, whatever started it:
 
@@ -653,7 +653,7 @@ Everything above is test level 1: one computer, every node a process the run
 spawned. Where the run's nodes include one declaring the Storage role —
 every node of the Essentials' file, when `-Nodes` is left out — each is a
 process of `xmip-service`, the build `Start-XmipTest` makes beside the
-Essentials: D1 and D2 keep Xmip Storage, the primary and its standby, and
+Essentials: DS1 and DS2 keep Xmip Storage, the primary and its standby, and
 every other node reaches them over Xmip's mutual TLS on loopback, with a
 certificate from the Essentials' authority, the one the web GUI is served
 under, kept in .local-work/essentials/authority across runs. The rig is the Parties and the company's ERP: it drops real EDIFACT
@@ -662,17 +662,17 @@ type and recipient to a Send Port, and the rig reads what the Send Ports
 write; beneath each Receive Location, `delivery` says whether every
 document dropped there arrived whole where its route sends it (ADR-0028,
 amendments 2026-10-22 and 2026-11-11).
-Where none declares the Storage role, as with `-Nodes R1, P1, S1` above,
+Where none declares the Storage role, as with `-Nodes RX1, PX1, TX1` above,
 every node is simulated.
 
 ```powershell
-Start-XmipTest -Suite Core.Essentials -Cluster C1
+Start-XmipTest -Suite Core.Essentials -Cluster CL1
 Get-XmipTestResult -Test Carried
-Get-XmipHealth -Scope xmip:///C1/node/R1/storage
+Get-XmipHealth -Scope xmip:///CL1/node/RX1/storage
 ```
 
-`xmip:///C1/node/R1/storage` says which Storage node R1 reaches and whether
-it answered, and D1's which it is, the primary or a standby.
+`xmip:///CL1/node/RX1/storage` says which Storage node RX1 reaches and whether
+it answered, and DS1's which it is, the primary or a standby.
 
 At test level 2 the same cluster file runs with
 real nodes — `xmip-service` on machines of their own — and the same
@@ -728,7 +728,7 @@ one. Each README says each step in full.
    against the machines:
 
 ```powershell
-Start-XmipTest -Suite Core.Essentials -Cluster C1 -Nodes R1, S1, P1, L1, D1 `
+Start-XmipTest -Suite Core.Essentials -Cluster CL1 -Nodes RX1, TX1, PX1, EX1, DS1 `
     -Certificate D:\Repos\Xmip\.local-work\environment\tester
 Get-XmipTestStatus
 Get-XmipTestResult -Test Carried
@@ -738,7 +738,7 @@ Get-XmipTestStatus | Start-XmipOperationWeb
 Type exactly the nodes the environment maps: the Essentials places the
 Locations over them as the machines did. It drops a file into every
 Receive Location's directory on the far end each round; a real receiving
-node fetches it, D1 keeps it, a real sending node puts it back under its
+node fetches it, DS1 keeps it, a real sending node puts it back under its
 name, and each Receive Location's `delivery` says what arrived and how
 long it took.
 The Web Browser tab at <https://127.0.0.1:5087> follows them on the
@@ -766,7 +766,7 @@ technologies (ADR-0015, amendment 2026-11-11).
 The desktop host is the phone app too (ADR-0014, amendment 2026-10-14): on
 Android it follows one node over its operate listener and observes it. One
 command builds the app, the runtime's two Android libraries first, and
-`-Address` names the node it follows — here D1 on the machines above, a
+`-Address` names the node it follows — here DS1 on the machines above, a
 network the phone must reach, over the Wi-Fi of a host that routes to it or
 a VPN:
 
@@ -803,10 +803,10 @@ production; the authority is yours, kept in a folder you choose, and an
 up once, on the machine that will keep it:
 
 ```powershell
-xmip certificate --authority D:\Xmip\authority --cluster C1 --publish http://ca.xmip.test:8080
+xmip certificate --authority D:\Xmip\authority --cluster CL1 --publish http://ca.xmip.test:8080
 ```
 
-or `New-XmipCertificate -Authority D:\Xmip\authority -Cluster C1 -Publish
+or `New-XmipCertificate -Authority D:\Xmip\authority -Cluster CL1 -Publish
 http://ca.xmip.test:8080`. It answers with the authority's SHA-256: the
 fingerprint every machine that comes to trust it compares by another way.
 The node that keeps it serves ACME where its configuration says, and its
@@ -862,25 +862,25 @@ is that machine's owner's to run; Xmip runs none of them.
 | Debian, Ubuntu | copy `authority.crt` into `/usr/local/share/ca-certificates/`, then `update-ca-certificates` |
 | Chrome, Edge on Windows | the Windows store above |
 | Firefox | the enterprise policy `Certificates`, `Install` naming the file — on Linux the one way, since `ImportEnterpriseRoots` reads the Windows and macOS stores alone |
-| Chrome on Linux | `certutil -d sql:$HOME/.local/share/pki/nssdb -A -t "C,," -n "Xmip C1" -i authority.crt` |
+| Chrome on Linux | `certutil -d sql:$HOME/.local/share/pki/nssdb -A -t "C,," -n "Xmip CL1" -i authority.crt` |
 
 **A node no network reaches the authority from.** Its certificate is
 carried by hand, each step checking the file it is given and audited:
 
 ```powershell
 # On the node: a fresh key that stays, and a request to carry.
-xmip certificate --node R1 --names R1.xmip.test --out D:\Xmip\tls
+xmip certificate --node RX1 --names RX1.xmip.test --out D:\Xmip\tls
 # Where the authority is kept: its signature, its names, ninety days.
-xmip certificate E:\R1\node.csr --authority D:\Xmip\authority --names R1,R1.xmip.test --out E:\R1\node.pem
+xmip certificate E:\RX1\node.csr --authority D:\Xmip\authority --names RX1,RX1.xmip.test --out E:\RX1\node.pem
 # Back on the node: every signature, the key, the names, the anchor; then it is used.
-xmip certificate E:\R1\node.pem --import D:\Xmip\tls
+xmip certificate E:\RX1\node.pem --import D:\Xmip\tls
 ```
 
-`New-XmipCertificate -Node R1 -Name R1.xmip.test -Path D:\Xmip\tls`,
-`New-XmipCertificate -Request E:\R1\node.csr -Authority D:\Xmip\authority`
-and `New-XmipCertificate -Import E:\R1\node.pem -Path D:\Xmip\tls` are the
+`New-XmipCertificate -Node RX1 -Name RX1.xmip.test -Path D:\Xmip\tls`,
+`New-XmipCertificate -Request E:\RX1\node.csr -Authority D:\Xmip\authority`
+and `New-XmipCertificate -Import E:\RX1\node.pem -Path D:\Xmip\tls` are the
 same three. The node says when its next request is due: at
-`xmip:///C1/node/R1/certificate/operate`, Stressed and *renewal due* from two
+`xmip:///CL1/node/RX1/certificate/operate`, Stressed and *renewal due* from two
 thirds of its ninety days, which `xmip certificate --inspect
 D:\Xmip\tls\node.pem` says too.
 
