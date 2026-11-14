@@ -783,8 +783,9 @@ ADR-0031, amendment 2026-10-03): desired state writes each node the
 cluster's shared sections and its own `[nodes.<name>]`, the node's value
 winning where both say one. Every outward and hardware assumption — the TCP
 segment, the segments a chunk holds, the receive pool's threads per
-hardware thread, idle times, the Storage client's timeouts — is configured
-there, per cluster and per node, under `[tuning]`.
+hardware thread, idle times, the most one caller's turn on a Receive
+Location takes, the Storage client's timeouts — is configured there, per
+cluster and per node, under `[tuning]`.
 
 **Desired state configuration does not replace Xmip TOML.** It orchestrates
 installation and places the configuration; the TOML remains the node and runtime

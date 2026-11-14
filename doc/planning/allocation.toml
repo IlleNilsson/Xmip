@@ -2056,3 +2056,102 @@ amendment of 2026-09-09) survived and the older one did not."""
 #     -> module/foundation/core/src/audit_chain.rs, Head and digest over
 #     codec::digest; audit_chain.rs keeps the walk, chain.rs the canonical
 #     form
+
+# Code placed once on 2026-11-14, a Dead Message Queue entry's form number,
+# its bytes unchanged:
+#   module/platform/persist/.src/storage/dead/form.rs, DeadMessage's own
+#   writing and check of its form's number
+#     -> module/core/library/codec/src/form.rs, numbered and opened, through
+#     DeadMessage::write_numbered and read_numbered, which its queue's entry
+#     (Dead) and a Publication call
+
+# Code placed once on 2026-11-14, a Send Port's retry (ADR-0048, amendment
+# 2026-11-14):
+#   module/platform/runtime/src/sending.rs Port::tries and Port::backoff,
+#   module/platform/runtime/src/departure.rs's own count of tries against
+#   them and module/platform/runtime/src/send_step/pass.rs backoff
+#     -> module/core/capability/resilience/retry/src/lib.rs, Retry, built
+#     for each Send Port by sending::guards from the guard the program
+#     hands in (Linked::retry), and asked through
+#     module/core/capability/resilience/.src/guard.rs judged
+
+# Moved on 2026-11-14, the event bindings' rules into the transports of
+# their names (ADR-0065, amendment 2026-11-14); the two modes stay in event:
+#   module/foundation/event/src/binding.rs Binding: each binding's prefix,
+#   its matching of a header's name and HTTP's percent-encoding
+#     -> module/core/capability/transport/http/src/event_wire.rs
+#     HttpEventRules, module/core/capability/transport/kafka/src/event_wire.rs
+#     KafkaEventRules and module/core/capability/transport/amqp/src/event_wire.rs
+#     AmqpEventRules, each a binding::Rules; Binding::write and Binding::read
+#     stay in binding.rs as Rules::write and Rules::read
+#   module/foundation/event/tests/wire.rs, the HTTP, Kafka and AMQP binding
+#   examples
+#     -> tests/event_wire.rs in each of the three transports
+
+# Code placed once on 2026-11-14, one clock (ADR-0068, amendment
+# 2026-11-14): every production SystemTime::now() but SystemClock's, in
+#   module/core/capability/transport/.src/claim/{claimant,unfinished}.rs,
+#   transport/{aws/src/sigv4,azure/src/sas,azure/src/shared_key,
+#   msmq/src/lib,nfs/src/attributes,opc-ua/src/wire,sftp/src/directory,
+#   smb/src/directory,syslog/src/message}.rs,
+#   module/core/capability/provision/.src/lib.rs now,
+#   module/core/operation/archive/mariadb/src/lib.rs archived_at and
+#   module/platform/runtime/src/plane/handle.rs now
+#     -> module/foundation/core/src/clock.rs, SystemClock
+#   module/core/library/codec/src/civil.rs CivilTime::now, removed; its
+#   callers module/core/capability/transport/as4/src/{envelope,signal}.rs
+#   and module/core/operation/archive/.src/timestamp.rs read SystemClock
+#   and hand CivilTime::from_unix the seconds
+#   module/core/capability/transport/.src/secured.rs Kept::drawn, off the
+#   clock -> module/core/library/codec/src/random.rs
+# and the same day, the 1601 epoch once (ADR-0044, amendment 2026-11-14):
+#   module/core/capability/transport/smb/src/directory.rs
+#   FILETIME_AT_UNIX_EPOCH, module/core/capability/transport/opc-ua/src/
+#   wire.rs EPOCH_1601 and module/core/library/ntlm/src/client_challenge.rs
+#   EPOCH_GAP and TICKS_PER_SECOND
+#     -> module/core/library/codec/src/filetime.rs, AT_UNIX_EPOCH,
+#     from_unix_nanos and to_unix_nanos
+#   module/platform/runtime/src/membership/said.rs and
+#   module/platform/runtime/src/plane/gather/reached.rs to_the_second, each
+#     -> module/core/library/codec/src/civil.rs, CivilTime::from_unix_nanos
+
+# Moved on 2026-11-14, net's calls to Windows into one folder, the crate's
+# one place for unsafe code (ADR-0050, amendment 2026-11-14):
+#   module/core/library/net/src/pipe/windows/{account,client,instance,io}.rs
+#     -> module/core/library/net/src/system/pipe/
+#   its io.rs Event, waited, signaled and code_of, the overlapped wait,
+#   which the connect's ConnectEx takes too, its end read per kind of handle
+#     -> module/core/library/net/src/system/overlapped.rs
+#   the TCP connect's socket, its SYN sent once (ADR-0044, amendment
+#   2026-11-14), new
+#     -> module/core/library/net/src/system/connect.rs
+
+# Moved on 2026-11-14, an EDI interchange walked a segment at a time, so
+# the edi path cuts only its segment and builds no tree (ADR-0066,
+# amendment 2026-11-14):
+#   module/core/capability/contract/edi-edifact/src/syntax.rs segments,
+#   push and segment, and the UNA read by Interchange::parse
+#     -> module/core/capability/contract/edi-edifact/src/walk.rs, Walk and
+#     Lying, which Interchange::parse walks whole
+#   module/core/capability/contract/edi-x12/src/syntax.rs segments and the
+#   ISA read by Interchange::parse
+#     -> module/core/capability/contract/edi-x12/src/walk.rs, Walk and Lying
+#   module/core/capability/path/edi/src/lib.rs Address::segment, a write's
+#   choice of segment, and the read's parse into a tree (Form), removed
+#     -> Address::picked, the read's and the write's one choice
+
+# Moved on 2026-11-14, within xmip-core-persist, each to a file named for
+# what it defines, as the writer's own work grew (ADR-0018, amendment
+# 2026-11-14):
+#   module/platform/persist/.src/storage/columns.rs Searched, its row and
+#   its stamp
+#     -> module/platform/persist/.src/storage/columns/searched.rs, with lay,
+#     the one stamping of a record read from its bytes or made new
+#   module/platform/persist/.src/storage/commit.rs Op and Done
+#     -> module/platform/persist/.src/storage/commit/op.rs
+#   module/platform/persist/.src/storage/due/kept.rs MOST, how many queues'
+#   due places the writer keeps, a hardware assumption
+#     -> [tuning] storage_due_places, read by
+#     module/platform/runtime/src/tuning.rs and handed to the writer by
+#     Embedded::keep_due and standby::Timings::due_places; its default
+#     DUE_QUEUES in module/platform/persist/.src/storage/embedded/opened.rs

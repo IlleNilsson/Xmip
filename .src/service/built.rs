@@ -45,6 +45,11 @@
 //! `"content:edi:UNH/2/1" = 'ORDERS'`, as the real world does (the owner,
 //! 2026-11-10; ADR-0046, amendment 2026-11-11). A property with no prefix is
 //! the context's, which every node reads.
+//!
+//! The retry guard, with the `resilience` feature every role that sends
+//! carries: each Send Port stating `retry` is given it as the node starts,
+//! and it decides whether and when a send that failed is tried again
+//! (ADR-0048, amendment 2026-11-14).
 
 use xmip_audit::program_audit::ProgramAudit;
 use xmip_authenticate::Authenticator;
@@ -65,9 +70,19 @@ pub fn linked(audit: &ProgramAudit) -> Linked {
         transport_identifiers: transport_identifiers(),
         authenticators: authenticators(),
         location_policies: location_policies(),
+        #[cfg(feature = "resilience")]
+        retry: Some(retry),
         audit: Some(audit.clone()),
         ..Linked::default()
     }
+}
+
+/// The retry guard this build carries, as a Send Port's `retry` is built:
+/// `tries` in all, `backoff` after each that failed, flat (ADR-0048,
+/// amendment 2026-11-14).
+#[cfg(feature = "resilience")]
+fn retry(tries: u32, backoff: std::time::Duration) -> Box<dyn xmip_resilience::Guard> {
+    Box::new(xmip_resilience_retry::Retry::new(tries, backoff))
 }
 
 /// The authenticators this build carries, each taken where a Receive
@@ -387,6 +402,29 @@ mod tests {
             sources[0].compile("dot:order.id").is_err(),
             "a language the build left out is refused"
         );
+    }
+
+    #[cfg(feature = "resilience")]
+    #[test]
+    fn a_send_ports_retry_is_the_retry_guard_this_build_links() {
+        use std::time::Duration;
+        use xmip_resilience::{Attempt, Decision};
+
+        let failed = |number| Attempt {
+            number,
+            elapsed: Duration::ZERO,
+            failure: Some(xmip_core::Failure::retryable("the far end is down")),
+        };
+        // As the node is handed it (`Linked::retry`): two tries, 5 s apart.
+        let built: xmip_runtime::linked::RetryGuard = retry;
+        let guard = built(2, Duration::from_secs(5));
+
+        assert_eq!(guard.technology(), "retry");
+        assert_eq!(
+            guard.after(&failed(1)),
+            Decision::Wait(Duration::from_secs(5))
+        );
+        assert_eq!(guard.after(&failed(2)), Decision::Proceed, "its last try");
     }
 
     #[test]

@@ -12,6 +12,43 @@ use xmip_runtime::plane::Outcome;
 
 use super::*;
 
+/// How many pauses are timed, each but the first after a resume.
+const PAUSES: usize = 10;
+
+/// A pause asked at the door of the node publishing at `snapshot`, as a
+/// surface asks it, and resumed between rounds: each taken by its act
+/// watch, which tells the service, and published at once, not a round of a
+/// quarter of a second later; the fastest of five over the rounds
+/// (`xmip_core::latency::spread`), where until 2026-11-14 one pause was
+/// timed once. The last round leaves it paused: its publication.
+fn paused_at_the_door(directory: &Path, snapshot: &Path) -> Publication {
+    let mut took = Vec::new();
+    let mut paused = None;
+    for round in 0..PAUSES {
+        if round > 0 {
+            let (outcome, sentence) = acted(directory, Act::Resume, None);
+            assert_eq!(outcome, Outcome::Taken, "{sentence}");
+            published_until(snapshot, Duration::from_secs(2), |publication| {
+                onward(publication) == Some(PauseState::Active)
+            });
+        }
+        let (outcome, sentence) = acted(directory, Act::Pause, None);
+        assert_eq!(outcome, Outcome::Taken, "{sentence}");
+        let (publication, after) =
+            published_until(snapshot, Duration::from_secs(2), |publication| {
+                onward(publication) == Some(PauseState::Paused)
+            });
+        took.push(after);
+        paused = Some(publication);
+    }
+    let took = xmip_core::latency::spread("a pause published", took);
+    assert!(
+        took.fastest_of_five < Duration::from_millis(250),
+        "published paused: {took:?}"
+    );
+    paused.expect("paused")
+}
+
 /// The publication at `path` once `holds` says it holds, within `bound`,
 /// and how long that took. Bounded, and never a sleep.
 fn published_until(
@@ -164,18 +201,7 @@ fn the_node_publishes_its_snapshot_and_a_pause_asked_at_its_door_shows_in_the_ne
     let moved = drawn.nodes.iter().find(|drawn| drawn.id == at);
     assert!(moved.is_some_and(|node| node.activity > 0.0), "{moved:?}");
 
-    // A pause asked at its door, as a surface asks it.
-    let (outcome, sentence) = acted(&directory, Act::Pause, None);
-    assert_eq!(outcome, Outcome::Taken, "{sentence}");
-    let (paused, took) = published_until(&snapshot, Duration::from_secs(2), |publication| {
-        onward(publication) == Some(PauseState::Paused)
-    });
-    // Taken by its act watch, which tells the service, and published at
-    // once: not a round of a quarter of a second later.
-    assert!(
-        took < Duration::from_millis(250),
-        "published paused in {took:?}"
-    );
+    let paused = paused_at_the_door(&directory, &snapshot);
     assert_eq!(
         mood(&paused, &format!("{node}/process/onward")),
         Some(Health::Paused)

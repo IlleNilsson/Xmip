@@ -10,6 +10,11 @@
   compiled form per Message; only the names the filters use are gathered
 - Amended: 2026-11-11 — xmip-service links the `content` source and the `edi`
   path language, so a node routes by what a document says
+- Amended: 2026-11-14 — an `edi` property walks the whole text and cuts only
+  its segment, never parsing the interchange into a tree (ADR-0066,
+  amendment 2026-11-14)
+- Amended: 2026-11-14 — a received Message is promoted once: its sequences'
+  keys and its Publication read what arrival promoted
 - Related: ADR-0013 (the journey model, publication and subscription),
   ADR-0043 (Logic is the method — the same shape of decision for another
   capability), ADR-0044 (a technology shares through its capability),
@@ -353,3 +358,36 @@ bound with an EDIFACT document routed by content on the path).
 
 Provenance: the owner's words of 2026-11-10; the build is the assistant's,
 2026-11-11, and its review the same day made the source in one place.
+
+## Amendment, 2026-11-14: an `edi` property cuts only its segment
+
+The amendment of 2026-11-11 says the document is parsed once per Message
+however many properties read it. For `edi` that no longer stands: each
+`content:edi:` property walks the interchange's text, borrowed from the
+Stream, to its end, cutting only the segment it points at, and nothing
+parses the interchange into a tree to read it (ADR-0066, amendment
+2026-11-14, which holds the figures). The walk reaches the end, so a
+malformed interchange is refused as before, wherever it is malformed; the
+filter above walks it once for `UNB/3/1` and once for `UNH/2/1`.
+
+Provenance: the coordinator's brief of 2026-11-14, under the millisecond
+rule, and its follow-up the same day that what is refused stays refused;
+the drafting is the assistant's.
+
+## Amendment, 2026-11-14: a received Message is promoted once
+
+The gathering reads a received Message once, at its creation: the
+`route::Promoted` arrival reads is what routing matches, what the keys of
+the sequences its Stream holds end to end read (`sequence::received`) and
+what its Publication takes its places at the destinations by
+(`ledger::publish`), carried on `Arrived::Routed` as it was already on
+`Arrived::Unroutable` for the Dead Message Queue. Until now both promoted the
+Message again through the same gathering, so a filter reading the content
+read it two or three times per Message, not once as clause 3 of the
+amendment of 2026-09-27 says. A place taken later, once a Stream heads its
+sequences (`sequence::take_late`), is another step's and promotes the
+Message it reads then.
+
+Provenance: the coordinator's brief of 2026-11-14 (*promote once and hand
+the promoted properties on … the promotion is computed in one place*),
+under the millisecond rule; the build is the assistant's.

@@ -1125,8 +1125,9 @@ Xmip's own pipe code, placed once.
   for every instance, the instance made, its client waited for with an
   `OVERLAPPED` of its own, the overlapped reads and writes, the client
   opened lent for identification alone, the account read from its token
-  and the identifier of an account admitted — are `net`'s folder
-  `src/pipe/windows/` (ADR-0050, amendment 2026-10-21). The runtime's
+  and the identifier of an account admitted — are `net`'s folder of calls
+  to Windows, `src/system/pipe/` since 2026-11-14 (ADR-0050, amendments
+  2026-10-21 and 2026-11-14). The runtime's
   `ffi::pipe`, `ffi::pipe_io` and `ffi::system` are deleted; its local
   endpoint on Windows calls `net::pipe` (`plane::local::windows`), and its
   Unix domain socket is unchanged.

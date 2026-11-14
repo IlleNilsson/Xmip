@@ -929,3 +929,68 @@ through `roxmltree`.
 Provenance: the owner's words above; the backend is the coordinator's plan
 of the same day, and the reader's shape is the assistant's drafting, for
 the owner to overrule.
+
+## Amendment, 2026-11-14: an `edi` path cuts only its segment and builds no tree
+
+The millisecond rule (`CONTRIBUTING.md`, *Rust is here for one reason*):
+promoting an EDIFACT order's message type, `content:edi:UNH/2/1`, cost
+about 59 µs of a carried file's 0.6 ms own share, because the `edi` path
+technology read the whole interchange into a tree, every segment cut into
+owned elements and components, to answer one path, and the node promoted
+each Message two or three times.
+
+- **A read cuts only its segment.** Each syntax has one walk,
+  `walk::Walk`: `xmip-core-contract-edi-edifact`'s in the service
+  characters the `UNA` advises or the default set, a segment ended by the
+  first terminator no release stands before, and `-edi-x12`'s with the
+  separators the `ISA` declares. It yields a segment at a time, its tag
+  read at once and its elements cut only when asked. A path walks the
+  Stream's own text (`Content::text`, borrowed) and cuts only a segment of
+  its tag, to compare a qualifier or to answer. Every path form reads as
+  before: `TAG[+QUALIFIER][#N]/ELEMENT[/COMPONENT]`, releases and the `UNA`
+  honored.
+- **The walk reaches the end, and what is refused stays refused.** Past
+  the segment it answers from, a read walks on to the end of the
+  interchange and cuts nothing, so a short `UNA` or `ISA`, a tag that is not
+  one, a text ending on a release character or a last segment without its
+  terminator is refused wherever it is, in the same words as before. That
+  walk is in proportion to the interchange, so it is load (the
+  coordinator, 2026-11-14: *the speed-up was not meant to loosen what is
+  refused*); the tree is still not built.
+- **A write needs the whole interchange.** Demote reads the tree the syntax
+  reads, `Interchange::parse`, which collects the same walk, replaces one
+  component and writes the interchange back, a new Stream (ADR-0013). A read
+  and a write choose their segment by one function (`Address::picked`).
+- **The parse is the same walk, and no slower.** EDIFACT copies a
+  component no release stands in whole from the text; X12 cuts a segment's
+  elements and components in one pass over its text, where it split it once
+  per element. Before each old parse was deleted, the walk was held
+  identical to it over generated texts, four million EDIFACT and two
+  million X12, refusals in the same words, with one exception: an X12
+  interchange whose terminator is a line break was refused whole, the last
+  terminator trimmed off with the trailing whitespace; it is read now.
+- **Measured**, the fastest of five, before and after alternating in the
+  same minutes on a machine carrying the owner's daytime load. The `edi`
+  crate's timing program (`tests/measured`, new), which holds the carried
+  order under the millisecond and a grown one to a third of the tree read
+  in the same rounds, three rounds: `UNH/2/1` of the order the root's
+  `carried` program routes, 14.2, 40.0 and 17.8 µs before, 3.8, 4.5 and
+  4.4 µs after; of the same order grown to 20,006 segments, walked whole,
+  42.5, 46.6 and 54.9 ms before, 2.4, 3.2 and 2.8 ms after. The root's
+  `carried` EDIFACT test, Xmip's own share per file, two builds of the same
+  tree differing only in the three crates, 48 rounds, the order swapped
+  each round: before median 490 µs, after 486 µs, the median of the paired
+  differences +4 µs, after faster in 23; the plain `carried` test beside it,
+  the same code either way, differed by −21 µs, so a change of the ten or so
+  microseconds one read saves is below what it resolves. A received Message
+  is promoted once (ADR-0046, amendment 2026-11-14, the same day), where it
+  was two or three times, which is where most of the 59 µs went. X12's
+  parse, both in its crate in one program, alternating: 31.9 to 37.2 µs
+  against 33.9 to 39.7 µs before for a purchase order, faster in all six
+  passes, and level grown; EDIFACT's 6.1 µs against 7.1 µs.
+
+Provenance: the coordinator's brief of 2026-11-14 under the millisecond
+rule, and its follow-up the same day that what is refused stays refused and
+nothing on the message path gets slower; placing the walk in the contract
+technologies, one per syntax that the parse and the path both walk, is the
+assistant's, for the owner to overrule.

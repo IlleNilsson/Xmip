@@ -2021,10 +2021,11 @@ that saying again will not mend.
   IEC 60870-5-104 and SECS/GEM. After every receive the Location audits
   each as a refusal of that caller, a Warning naming the Location and the
   caller's address (`receiving/refusal.rs`, ADR-0013 clause 1).
-- **Not bounded yet:** a caller that sends part of an exchange and stops
-  holds the turn for as long as a read waits — the Location's `timeout`,
-  or for good where it sets none — and every other caller waits behind it
-  (open problem 69).
+- **Bounded the next day:** a caller that sent part of an exchange and
+  stopped held the turn for as long as a read waits — the Location's
+  `timeout`, or for good where it sets none — and every other caller
+  waited behind it (open problem 69); since the amendment of 2026-11-14 a
+  turn is bounded whole.
 
 Proved by the runtime's `tests/ledger/turned_away.rs` (a caller whose head
 runs past `net::read::MAX_LINE` is turned away and audited, the next caller
@@ -2062,3 +2063,168 @@ lists every declaration standing in the directory.
 The assistant's, 2026-11-13, carrying the placement review the owner asked
 for (*Good that you found it, fix it*); no decision of the owner's was
 needed.
+
+## Amendment, 2026-11-14: a caller's turn is bounded whole
+
+The first amendment of 2026-11-13 left one caller able to hold a Receive
+Location: a caller that sent part of an exchange and stopped held its turn
+for as long as a read waits — the Location's `timeout`, or for good where
+it sets none — and one that sent a byte inside each read's wait held it as
+long as it liked, every other caller waiting behind it (open problem 69).
+Decided by the owner, 2026-11-14: a deadline for the whole turn, its
+default in `[tuning]`, set per cluster and per node in the Cluster TOML.
+
+- **Every read of a turn waits only what is left of it.**
+  `transport::serving::Serving` hands every connection it accepts to its
+  technology as a `transport::deadline::Within`, and gives it a deadline
+  before each turn, the turn's span from then. A read waits at most what is
+  left where that ends before the Location's own wait would — one
+  `setsockopt` for each such read, none otherwise — and a read past the
+  deadline answers `TimedOut` without reading: the caller is turned away
+  and audited as any failure of its own is, and the others are served. The
+  Location's `timeout` still bounds each read; between turns the socket
+  waits as it says.
+- **Every technology serving through `Serving` reads through it**: HTTP
+  and every technology receiving through `http::inbound` — AS2, AS4, MSMQ,
+  Peppol, SNS's subscription and Event Grid's webhook — MLLP, SMTP, syslog
+  over TCP, WebSocket, Modbus, DNP3, IEC 60870-5-104 and SECS/GEM. One
+  accepting a single connection alone, as a far end does, reads it through
+  a `Within` no turn is given.
+- **DICOM, COTP and DNS over TCP serve through `Serving` too**, decided the
+  same day, so one serving rule bounds every listening caller; each had
+  accepted one connection per receive and read it on the Location's own
+  thread. A DICOM association's opening — its request answered, its
+  command read — is its one turn, its data set read off it outside the
+  turn (`dicom`'s `association`); a COTP connection is kept between its
+  messages, its CR one turn and each message one more (`cotp::Caller`); a
+  DNS client's TCP connection is kept between its updates, each one turn,
+  taking no next message until it is answered (`dns::Client`). Each
+  forwards the callers it turned away (`Transport::turned_away`), where a
+  caller's failure had stopped the Location.
+- **The span is `[tuning] receive_turn`**, `transport::serving::TURN` by
+  default: a minute, enough for `net::MAX_BODY`, 64 MiB, at ten megabits a
+  second — the assistant's drafting; the span is the owner's to set. The
+  runtime hands it to every transport it builds, once, as it builds it
+  (`transport::Configured::turning_within`, from `linked::open`), and each
+  technology serving through `Serving` hands it to its serving wait
+  (`Serving::turning_within`).
+- **Not carried:** a deadline bounds one caller's hold; many slow callers
+  still take their turns one after another. Raw TCP and a Unix domain
+  socket stay outside `Serving`, decided the same day: each hands its
+  connection to the runtime as the body it reads on a carry thread, so a
+  slow sender holds that carry, not the Location.
+
+Proved by `transport::serving`'s tests (a caller sending a hundred bytes
+twenty milliseconds apart is cut at a turn of 200 ms and the next caller
+served; one sending steadily within its turn is served),
+`transport::deadline`'s (a read past the turn reads nothing; the
+Location's wait is put back between turns, and left alone where it ends a
+read first), `http::inbound`'s (a head sent in part is cut at its turn and
+its caller turned away), DICOM's, COTP's and DNS's (half a request, a CR
+or an update sent and stopped, cut at its turn and the next caller
+served), the runtime's `tuning` tests (`receive_turn` read
+from the Cluster TOML, the node's own winning, defaulted, refused out of
+bounds), and measured in transport's timing program (a thousand exchanges
+whose every read the turn shortens, within a second).
+
+The owner's decision, 2026-11-14, built by the assistant the same day.
+
+## Amendment, 2026-11-14: the Storage node's writer reads nothing a batch makes new, and keeps each queue's due places
+
+**Provenance.** Xmip's own share of a carried file was some 0.6 ms at the
+median, and a profile of it, phase by phase on the embedded Storage node's
+writer, found some 260 µs of the writer's work on each Message's
+Publication: its queue's places by when each is due read and decrypted
+every batch, every record the Publication made read before it was written
+— a read of nothing — and decoded and encoded again to be stamped, and the
+whole Publication written out again and hashed to recognize a repeat.
+
+- **The writer keeps each queue's places by when each is due**
+  (`persist::storage::due::Kept`): read from the store the first time one of
+  its batches writes a held Message of the queue, and kept as each batch
+  leaves them once the batch is in the engine, so a batch refused keeps what
+  the store keeps. The writer is their one writer: a Storage node opened
+  anew — restarted, or a standby promoted, which copied its primary's writes
+  beneath no writer of its own — reads each again, and a writer that
+  panicked forgets them. How many queues it keeps is a hardware assumption:
+  `[tuning] storage_due_places`, set per cluster and per node in the Cluster
+  TOML, 16,384 by default (`persist::storage::DUE_QUEUES`, some 100 bytes
+  each; 0 to 4,194,304, 0 keeping none), handed to the only Storage node as
+  it opens and to a primary among several as it is promoted
+  (`Embedded::keep_due`, `standby::Timings::due_places`); past it the first
+  kept is let go of first, read again by the next batch that writes it. A
+  queue a batch
+  leaves holding none finds each part's first where its next place is, with
+  no range read.
+- **A place a batch makes new is never read** (`Batch::absent`): a queue's
+  next place; and a Publication's Message, its Journeys, their claims, the
+  places it holds of them or of its Message, its Dead Message Queue entry
+  and the holder record of the Journeys its Message is the origin of —
+  their identifiers drawn fresh (`UUIDv7`), the premise the Publication's
+  own record, by its Message, rests on already. A Publication of one Message
+  held in one queue reads two records from the store, its own record and its
+  queue's places, where it read seven.
+- **A record a batch makes new is laid out as it is made**
+  (`Batch::created`, `Columns::laid`): a Publication's Message and Journeys
+  and every queue's entry are stamped and their index entries taken from
+  them as they are, never decoded and encoded again for their columns; one
+  stamping (`columns::searched::lay`) serves a record read from its bytes
+  and one made new.
+- **A Publication is known again by its identifiers**
+  (`publication::identity`): the SHA-1 of its Message, each Journey, each
+  place it holds and its queue, its Dead Message Queue entry's queue, its
+  audit record, each claim it asks for by its Journey, its holder and its
+  token, and its lease. One asked again carries the same; one built again
+  draws a new audit record and new claim tokens and is refused, as before.
+  One differing only in its bodies under every same identifier is taken for
+  the one asked again: only a caller reusing identifiers makes one. A
+  Publication record written before keeps the digest of the whole; before
+  the first release nothing migrates it.
+- **Sealing was verified and left alone.** The cipher is set up once per
+  data key (amendment 2026-10-21), never per record. Per record, measured
+  the same day: a nonce drawn 0.19 µs, a keyed hash 0.21 µs, a seal
+  0.68 µs (16 bytes, an index entry) to 0.89 µs (300 bytes); some 25 seals
+  a Publication's batch. A nonce drawn once a batch would save at most
+  5 µs and change how every record's nonce is made: not done.
+- **Found, for the owner: a Message's hand-on is in no one's share.** A
+  Message is two of the writer's batches, its Publication and its Journey's
+  hand-on after the send (amendment 2026-10-21); its Stream's chunks are
+  written to the engine on the receiving thread, no batch, and counted
+  there. Only the Publication's batch share enters the node's own share,
+  read once the far end has the Message (`runtime::send_step::pass`), and
+  the hand-on — the send thread building it and its batch, some 150 to
+  250 µs — is counted nowhere. Counting it changes what
+  `XmipStorage::hand_on` answers and where the own share's window ends.
+
+Measured (2026-11-14, the owner's daytime load on the machine, each pair
+alternated in the same minutes, three rounds; a bench outside the estate:
+an embedded Storage node over `RocksDB`, one Publication and one hand-on
+per Message, two thousand Messages): the writer's work on a Publication's
+batch (`Durable::worked`) and the calling thread's processor time across a
+hand-on, medians.
+
+| Change | Publication batch | Hand-on |
+| --- | --- | --- |
+| Due places kept, a new place never read | 266 → 247 µs (−12 to −27) | 445 → 372 µs (−67 to −87) |
+| A made record laid out as made | 272 → 263 µs (−2 to −19) | +16 to −7 µs, unchanged |
+| Identity hashed, made places never read | 223 → 173 µs (−37 to −64) | −6 to −81 µs, its code unchanged: the load falling |
+| All of them, eight pairs of a thousand | −21 to −65 µs, −31 at the median | −3 to −65 µs |
+
+Xmip's own share of a carried file as the node reports it (`carried.rs`,
+ten alternated rounds, the service built before and after over the same
+runtime): 727 → 643 µs at the median, routed by its context, and 762 →
+715 µs routed by its EDIFACT order's content; the load moved single rounds
+by up to 0.6 ms, both builds alike.
+
+Proved by persist's tests: what the writer keeps is what the store holds
+after every write that moves a due, a write the engine refused, and a
+restart (`due::kept`), and after a standby's promotion
+(`standby::tests::due`) — each failing when the writer keeps what it
+settled before the batch is in, or never keeps it; a Publication of a new
+Message reads two records and one range (`publication`); a Publication
+asked again is answered as written, and one built again — another audit
+record, claim token, place, lease or Journey — is refused.
+
+Provenance: the millisecond rule and its terms are the owner's; the
+profile, the three changes and the sealing verified are the assistant's,
+2026-11-14, for the owner to confirm or strike.

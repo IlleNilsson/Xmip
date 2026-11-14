@@ -173,3 +173,55 @@ attempt and freed a slot it had not taken (the deep review, group 2).
   half-open circuit breaker's trial — is not told that the attempt will not
   happen, so it keeps what it took. Telling it is a method on `Guard`, a
   change to the trait, and waits on the owner.
+
+## Amendment, 2026-11-14: a Send Port's retry is the retry guard
+
+A Send Port's `retry = { attempts, backoff }` was a second retry rule beside
+the retry technology: the runtime's send step counted the tries on the
+active Send Location and read the backoff itself, and only the Event
+forwarder asked a guard (the placement audit of 2026-11-13; the owner, that
+day: *Do we have all code in the modules, repos that we should. This is a
+refactoring statement*, and *Good that you found it, fix it*).
+
+- **The retry guard decides whether and when a send is tried again.** As a
+  node starts, each Send Port whose design states `retry` is given the retry
+  guard, built for `attempts` tries after the first and `backoff` between
+  them, flat. After each try that did not send, the send step asks the
+  Port's guards as `execute` asks them after an attempt, in order, the first
+  that does not say proceed deciding (`resilience::judged`, public since
+  this date): a wait is how long the Message waits before its active Send
+  Location is tried again; anything else lets the try stand, and the Port
+  fails over where it says `failover = "next"`, or the Message is Failed. A
+  try that never reached the transport — not permitted, or with nowhere to
+  go — is a permanent failure, judged the same way.
+- **No thread waits between tries.** `execute` sleeps between attempts; the
+  send step does not, since a retry waiting for its backoff holds no
+  thread, no claim and no place (`runtime-model.md` section 10). It asks
+  after a try and not before one: no guard a Send Port is given judges
+  before an attempt yet.
+- **The due time is `xmip-core-schedule`'s to keep** (ADR-0058, amendment
+  2026-11-13): the guard's wait goes into the hand-on as the Message's due
+  time in Xmip Storage, and the node wakes for its queue's earliest.
+- **The runtime takes the guard from its program.** A platform service links
+  no technology (`architecture.toml` [policy]), so the runtime depends on
+  `xmip-core-resilience` for `Guard`, and the program starting a node hands
+  in how the retry guard is built (`Linked::retry`). `xmip-service` links
+  `xmip-core-resilience-retry` with its `resilience` feature, which every
+  role that sends carries (`deploy/profile/role`). A Send Port stating
+  `retry` on a node whose program linked no retry guard refuses the node as
+  it starts, in words.
+- **The configuration means what it meant**: the same tries, counted in the
+  Journey's `attempts` across passes and restarts; the same flat backoff; a
+  permanent failure never tried again; and a Send Port without `retry` tried
+  once.
+
+Built 2026-11-14 (`xmip-core-runtime`'s `sending` and `departure`; the
+retry technology unchanged). Proved by the runtime's `sending` tests (the
+guard a retrying Port is given, its tries and its backoff; none without
+`retry`; the refusal where none is linked), `tests/ledger/send.rs` (tries
+counted, the backoff kept as the due time, a retry tried again once due,
+the count surviving a restart, and a Port with retry off failing a
+retryable failure after one try), `tests/running` (the node refused) and
+`tests/measured/due.rs` (a retry woken for within a millisecond of its due
+time). The send artifacts' pipeline (the amendment of 2026-10-06) is
+unchanged: decided, not built.

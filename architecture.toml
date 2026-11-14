@@ -231,14 +231,14 @@ record = ["ADR-0018 (amendment 2026-10-05)"]
 [implementation.resilience-guards]
 name = "The six resilience guards"
 state = "built"
-note = "Retry, timeout, circuit breaker, rate limit, bulkhead and fallback are guards `xmip-core-resilience` asks in order; the Event forwarder runs them for the http, amqp and kafka Event wires, and only tests build a guard. The timeout judges an attempt after it ended; it does not interrupt one."
+note = "Retry, timeout, circuit breaker, rate limit, bulkhead and fallback are guards `xmip-core-resilience` asks in order; the Event forwarder runs them for the http, amqp and kafka Event wires. Only the retry guard is in the assembled service, as a Send Port's retry. The timeout judges an attempt after it ended; it does not interrupt one."
 record = ["ADR-0048"]
 
 [implementation.send-port-retry]
 name = "A Send Port's retry"
 state = "assembled"
-note = "A Send Port tries each Send Location again by its `retry = { attempts, backoff }`, and a Message whose every Location failed its tries is written Failed and waits for Retry or Dismiss."
-record = ["ADR-0013", "runtime-model.md section 10"]
+note = "A Send Port's `retry = { attempts, backoff }` is built as the retry guard its node's program linked (`xmip-service` links `xmip-core-resilience-retry`); after each failed try the guard decides whether and when it is tried again, and a Message whose every Location failed its tries is written Failed and waits for Retry or Dismiss."
+record = ["ADR-0013", "ADR-0048 (amendment 2026-11-14)", "runtime-model.md section 10"]
 
 [implementation.send-resilience]
 name = "Guards configured on Send Port Groups, Send Ports and Send Locations"
@@ -445,7 +445,7 @@ dependency = ["xmip-core-library-codec"]
     [xmip.core.transport.amqp]
     maturity = "scaffolded"
     dependency = ["xmip-core-library-codec", "xmip-core-event", "xmip-core-resilience", "xmip-core-library-net", "xmip-core-context", "xmip-core"]
-    specification = "AMQP 0-9-1 with PLAIN, one channel, publish with content-type and a headers table, publisher confirms, consume and acknowledge; the event capability's wire events (the AMQP binding's attributes in the 0-9-1 headers table)"
+    specification = "AMQP 0-9-1 with PLAIN, one channel, publish with content-type and a headers table, publisher confirms, consume and acknowledge; the event capability's wire events and the event binding, the AMQP binding's rules (cloudEvents_ attributes in the 0-9-1 headers table)"
     [xmip.core.transport.as2]
     maturity = "scaffolded"
     description = "AS2: EDI over HTTP with S/MIME signing and encryption and signed MDN receipts. RFC 4130."
@@ -461,7 +461,7 @@ dependency = ["xmip-core-library-codec"]
     specification = "IETF RFC 959, passive mode and binary type; RFC 3659 MLSD, SIZE and MDTM; FTPS by RFC 4217 with the estate's TLS"
     [xmip.core.transport.http]
     maturity = "scaffolded"
-    description = "HTTP transport: one request body is one Stream, with a reply channel. HTTP/2 or HTTP/1.1 per connection, agreed by ALPN over TLS or known beforehand (h2c) where configured; a Receive Location serves either. HTTPS behind the tls feature. The event capability's wire event webhook. A xmip-core-transport technology."
+    description = "HTTP transport: one request body is one Stream, with a reply channel. HTTP/2 or HTTP/1.1 per connection, agreed by ALPN over TLS or known beforehand (h2c) where configured; a Receive Location serves either. HTTPS behind the tls feature. The event capability's wire event webhook and the event binding. A xmip-core-transport technology."
     dependency = ["xmip-core-library-tls", "xmip-core-library-net", "xmip-core-library-codec", "xmip-core-event", "xmip-core-resilience", "xmip-core-context", "xmip-core"]
     specification = "IETF RFC 9110; HTTP/1.1 (RFC 9112) and HTTP/2 (RFC 9113, HPACK RFC 7541) built, HTTP/3 (RFC 9114) open problem 30"
     [xmip.core.transport.imap]
@@ -500,7 +500,7 @@ dependency = ["xmip-core-library-codec"]
     [xmip.core.transport.aws]
     maturity = "scaffolded"
     description = "What every AWS technology speaks over HTTP: Signature Version 4, the Query API and the JSON 1.1 protocol, both sides of each. Not a transport of its own: s3, aws-sqs, aws-sns and aws-kinesis ride on it. A xmip-core-transport technology."
-    dependency = ["xmip-core-transport-http", "xmip-core-library-codec", "xmip-core-library-net"]
+    dependency = ["xmip-core-transport-http", "xmip-core-library-codec", "xmip-core-library-net", "xmip-core"]
     specification = "AWS Signature Version 4; the AWS Query and JSON 1.1 protocols"
     [xmip.core.transport.aws-kinesis]
     maturity = "scaffolded"
@@ -689,7 +689,7 @@ dependency = ["xmip-core-library-codec"]
     [xmip.core.transport.azure]
     maturity = "scaffolded"
     description = "What every Azure technology speaks over HTTP: the Shared Access Signature and Shared Key, both sides of each, and what a Service Bus namespace answers when it refuses. Not a transport of its own: azure-blob, azure-service-bus and azure-event-hubs ride on it. A xmip-core-transport technology."
-    dependency = ["xmip-core-transport-http", "xmip-core-library-codec", "xmip-core-library-net"]
+    dependency = ["xmip-core-transport-http", "xmip-core-library-codec", "xmip-core-library-net", "xmip-core"]
     specification = "Azure Shared Access Signature and Shared Key authorization"
     [xmip.core.transport.azure-blob]
     maturity = "scaffolded"
@@ -730,7 +730,7 @@ dependency = ["xmip-core-library-codec"]
     [xmip.core.transport.kafka]
     maturity = "scaffolded"
     dependency = ["xmip-core-library-codec", "xmip-core-event", "xmip-core-resilience", "xmip-core-library-net", "xmip-core"]
-    specification = "Apache Kafka protocol: Metadata v1, Produce v3, Fetch v4, record batches with CRC-32C and record headers; the event capability's wire events"
+    specification = "Apache Kafka protocol: Metadata v1, Produce v3, Fetch v4, record batches with CRC-32C and record headers; the event capability's wire events and the event binding, the Kafka binding's rules (ce_ record headers)"
     [xmip.core.transport.mariadb]
     maturity = "scaffolded"
     description = "MariaDB transport: one row of a query is one Stream, a send is one INSERT; the client/server protocol of xmip-core-library-mariadb with MariaDB's native password, TLS through the estate's own behind the tls feature. A xmip-core-transport technology."
@@ -942,8 +942,8 @@ dependency = ["xmip-core-library-codec"]
     specification = "Xmip content selector: name, ordinal, key and any segments, runtime-model.md section 9"
     [xmip.core.path.edi]
     maturity = "scaffolded"
-    description = "EDI path: a segment, element and component of an EDIFACT or X12 interchange, read and written, cut by the contract technologies' own syntax. A xmip-core-path technology."
-    dependency = ["xmip-core", "xmip-core-contract", "xmip-core-contract-edi-edifact", "xmip-core-contract-edi-x12", "xmip-core-stream"]
+    description = "EDI path: a segment, element and component of an EDIFACT or X12 interchange, in the contract technologies' own syntax; a read walks the whole text and cuts only its segment, never building the tree, a write edits the whole interchange. A xmip-core-path technology."
+    dependency = ["xmip-core", "xmip-core-contract", "xmip-core-contract-edi-edifact", "xmip-core-contract-edi-x12"]
     specification = "UN/EDIFACT (ISO 9735) and ASC X12 segment, element and component positions"
     [xmip.core.path.fhirpath]
     maturity = "scaffolded"
@@ -1294,29 +1294,17 @@ dependency = ["xmip-core-library-codec"]
   dependency = ["xmip-core"]
 
   [xmip.core.event]
-  description = "The Xmip Event and its taxonomy, the one subscription rule, and the wire event between processes: JSON over HTTP, Kafka and AMQP, and the Wire a transport carries it over (ADR-0065). Delivering it is xmip-core-cluster's (ADR-0065, amendment 2026-11-13)."
+  description = "The Xmip Event and its taxonomy, the one subscription rule, and the wire event between processes: its JSON format, its two modes over a protocol binding's Rules, and the Wire a transport carries it over, which answers its binding's Rules (ADR-0065). Delivering it is xmip-core-cluster's (ADR-0065, amendment 2026-11-13)."
   architecturalDomain = "Foundation"
   repositoryRole = "common-architecture"
   maturity = "scaffolded"
   dependency = ["xmip-core", "xmip-core-library-codec", "xmip-core-node"]
-    # The wire event is the event capability's wire format, and each binding
-    # rides the transport of its name (ADR-0065 clause 3). The format and
-    # the three bindings' header mappings are carried by xmip-core-event
-    # itself (src/wire.rs, src/json_format.rs, src/binding.rs), and each transport
-    # carries the one Wire that puts them on its protocol: Foundation does
-    # not depend on a Technology, and a Technology may depend on
-    # Foundation (repository-model.md section 4). None has a repository of
-    # its own, so each stays reserved; a repository for one is the owner's
-    # decision.
-    [xmip.core.event.http]
-    maturity = "reserved"
-    description = "Wire events over HTTP, structured and binary mode (the HTTP protocol binding 1.0.2): a webhook POST through xmip-core-transport-http, 2xx acknowledged. Mapping carried by xmip-core-event (src/binding.rs), the wire by the http transport."
-    [xmip.core.event.kafka]
-    maturity = "reserved"
-    description = "Wire events over Kafka, structured and binary mode (the Kafka protocol binding 1.0.2): one record, ce_ headers, produced through xmip-core-transport-kafka. Mapping carried by xmip-core-event (src/binding.rs), the wire by the kafka transport."
-    [xmip.core.event.amqp]
-    maturity = "reserved"
-    description = "Wire events over AMQP, structured and binary mode (the AMQP protocol binding 1.0.2, cloudEvents_ properties in the 0-9-1 headers table): published through xmip-core-transport-amqp. Mapping carried by xmip-core-event (src/binding.rs), the wire by the amqp transport."
+  # The wire event's format and its two modes are carried here (src/wire.rs,
+  # src/json_format.rs, src/binding.rs); each protocol binding's rules, its
+  # prefix, matching and escaping, are the transport's of its name, in its
+  # src/event_wire.rs, beside the Wire that answers them (ADR-0065,
+  # amendment 2026-11-14): Foundation does not depend on a Technology, and
+  # a Technology may depend on Foundation (repository-model.md section 4).
 
   [xmip.core.audit]
   description = "Configurable Begin, Execute, Finished and Failure audit functionality, for every Xmip action and every Xmip program, and the operating system's log when audit cannot persist (ADR-0062)."
@@ -1418,7 +1406,7 @@ dependency = ["xmip-core-library-codec"]
   architecturalDomain = "Operation"
   repositoryRole = "operational-capability"
   maturity = "scaffolded"
-  dependency = ["xmip-core-library-codec", "xmip-core-library-sql"]
+  dependency = ["xmip-core-library-codec", "xmip-core-library-sql", "xmip-core"]
     [xmip.core.archive.azure-blob]
     description = "Azure Blob Storage archive target: one item is one blob in a container. A xmip-core-archive technology."
     maturity = "scaffolded"
@@ -1622,6 +1610,9 @@ dependency = ["xmip-core-library-codec"]
       # Every Report in one list, and a Quest probing a node's configuration
       # the runtime composes (ADR-0072, amendment 2026-11-10).
       "xmip-core-report",
+      # The guards a Send Port's tries are judged by; the retry guard
+      # itself is handed in by the program (ADR-0048, amendment 2026-11-14).
+      "xmip-core-resilience",
       "xmip-core-route",
       # When a Receive Location rests and a queue's retry is due: decided
       # there, waited here (ADR-0058, amendment 2026-11-13).
@@ -1764,7 +1755,7 @@ dependency = ["xmip-core-library-codec"]
 
 
   [xmip.core.library.net]
-  description = "Network primitives the capabilities share, one copy of each: an address, a URI's authority, path and endpoint, a network in prefix notation, a MAC address, a line-oriented head, HTTP/1.1 and HTTP/2 with HPACK, both halves, and the named pipe the named pipe transport and the runtime's local endpoint share."
+  description = "Network primitives the capabilities share, one copy of each: an address, a URI's authority, path and endpoint, a network in prefix notation, a MAC address, the one TCP connect, a line-oriented head, HTTP/1.1 and HTTP/2 with HPACK, both halves, and the named pipe the named pipe transport and the runtime's local endpoint share."
   architecturalDomain = "Library"
   repositoryRole = "common-architecture"
   maturity = "scaffolded"
