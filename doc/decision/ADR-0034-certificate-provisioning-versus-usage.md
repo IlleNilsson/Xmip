@@ -713,3 +713,38 @@ revoked refused by the operate plane and its neighbor reading, no list
 revoking nothing and an empty one refused in words; and
 `running::revocation_list`, a list a day old made again, a fresh one kept
 and a node keeping none making none.
+
+## Amendment, 2026-11-13: provisioning writes; the estate's one reader reads
+
+The owner, 2026-11-13: *Do we have all code in the modules, repos that we
+should. This is a refactoring statement*. `xmip-core-provision` wrote a
+certificate, a request and a revocation list over `xmip-core-library-asn1`
+and read them back with a walk, a PEM, a SHA-256 and a P-256 check of its
+own, beside two other certificate readers and three other PEM readers in
+the estate (ADR-0033, amendment 2026-11-13):
+
+- **Writing stays here.** The key, the request, the certificate, the list
+  and what an authority signs are written once in this capability, as
+  decided; `der` keeps the writers alone.
+- **Reading is the TLS library's.** `provision::Parsed`, `provision::pem`,
+  `provision::sha256`, `provision::verify` and `provision::point_of` are
+  deleted. A certificate is read by `tls::certificate::Certificate`, a
+  request's subject, names and key and a list's times by its parts
+  (`text_attributes`, `dns_names`, `point_of`, `time`), a P-256 signature
+  checked by `tls::certificate::verify`; the object identifiers both sides
+  name are `tls::certificate::oid`'s. PEM is `codec::pem`'s and SHA-256
+  `codec::digest`'s. `xmip-core-provision` takes `xmip-core-library-tls`,
+  a layer below it; `self-signed` takes `xmip-core-library-codec` for its
+  PEM.
+- **Every caller follows**: `acme`, `internal-ca`, `self-signed`, the
+  runtime's authority export, signed slices and certificate standing, the
+  Essentials and the root's service test read through the same reader.
+  `fingerprint` (an anchor's SHA-256, uppercase, as an operator compares
+  it) and `verify_fixed` (a JWS signature) stay here.
+
+Proved by every test of the capability and its technologies, unchanged in
+what they assert, and by `tls::certificate`'s own.
+
+Provenance: the audit is the coordinator's; the split, writing here and
+reading in the library, is the assistant's drafting, 2026-11-13, for the
+owner to overrule.

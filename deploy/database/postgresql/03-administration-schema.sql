@@ -17,7 +17,7 @@ CREATE TABLE xmip.schema_version (
     CONSTRAINT schema_version_key PRIMARY KEY (version)
 );
 
--- registration, membership, Modules, Handlers, deployment and operator state, and when each was last written.
+-- registration, Modules, Handlers, deployment and operator state, and when each was last written.
 CREATE TABLE xmip.administration (
     kind text NOT NULL,
     id uuid NOT NULL,
@@ -41,6 +41,55 @@ CREATE TABLE xmip.secret (
 );
 
 CREATE INDEX secret_name ON xmip.secret (name);
+
+-- each operator's act, kept, never deleted: the node it is asked of and its place among that node's acts, what it acts on and the act, who asked it, how the door that admitted it proved them, the role it judged them by, the relay they came through and the door, when it was asked, and what its node decided, its sentence and when; an act is decided once.
+CREATE TABLE xmip.operator_act (
+    act uuid NOT NULL,
+    node text NOT NULL,
+    node_id uuid NOT NULL,
+    place bigint NOT NULL,
+    noun text NOT NULL,
+    target text NOT NULL,
+    act_word text NOT NULL,
+    who text NOT NULL,
+    proven text NOT NULL,
+    certificate bytea NULL,
+    role text NOT NULL,
+    through text NULL,
+    door text NOT NULL,
+    asked_at timestamptz NOT NULL,
+    outcome text NOT NULL,
+    said text NOT NULL,
+    decided_at timestamptz NULL,
+    open boolean NOT NULL,
+    CONSTRAINT operator_act_key PRIMARY KEY (act)
+);
+
+CREATE INDEX operator_act_node ON xmip.operator_act (node_id, place);
+
+CREATE INDEX operator_act_open ON xmip.operator_act (node_id, place) WHERE open;
+
+-- each start of each node of the cluster, kept, never deleted: its scope, the roles it declares and its capability's evidence, where its operate and sync listeners answer, its place among the Storage nodes, the signed save it runs, its process, when it started and when it stopped in order, the table's write count at its last write and whether it is its node's latest row.
+CREATE TABLE xmip.membership (
+    process uuid NOT NULL,
+    node text NOT NULL,
+    roles text NOT NULL,
+    evidence text NOT NULL,
+    operate text NULL,
+    sync text NULL,
+    storage_place integer NULL,
+    save text NOT NULL,
+    serial bigint NOT NULL,
+    started_at timestamptz NOT NULL,
+    stopped_at timestamptz NULL,
+    written bigint NOT NULL,
+    latest boolean NOT NULL,
+    CONSTRAINT membership_key PRIMARY KEY (process)
+);
+
+CREATE INDEX membership_latest ON xmip.membership (latest, node) WHERE latest;
+
+CREATE INDEX membership_written ON xmip.membership (written);
 
 -- The schema version it holds now.
 INSERT INTO xmip.schema_version (version, recorded_at) VALUES (1, now());

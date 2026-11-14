@@ -189,6 +189,7 @@ the parent is displeased and reports `Holding` — drill in. A parent is only ev
 ### What a node says it can do, in the terms work is matched against
 
 authentication capability; runtime capability; placement criteria;
+  requirement; placement; Rotation;
   Storage role, Xmip Storage; primary and standby Storage nodes, epoch
 
 **A node declares its capabilities, and work is placed on a node whose
@@ -764,6 +765,15 @@ only for what has no node behind it (ADR-0052, amendment 2026-10-05;
 amendment 2026-10-13), and SignalR is only between the web host and a GUI
 client.
 
+**An operator's act goes through Xmip Storage.** The node a surface reaches
+is the act's door: it admits the caller by the caller's own role and writes
+the act to Xmip Storage, with who and when, asked of the node that owns
+what it acts on; that node's act watch judges the caller again by its own
+lists, takes it and decides it once, and the door answers *taken*,
+*refused* or *asked*, an act that waits, never expiring, for a node not
+running. Only a door declaring the operational role carries an act to
+another node, and a snapshot is never acted on (amendment 2026-11-13).
+
 → [The operator surfaces, in full](ADR-0014-operator-surfaces.md)
 
 ### Packaging and distribution
@@ -1089,6 +1099,7 @@ You have a word. This gives you the decision that governs it.
 | ABI, C header, `xmip_module.h` | [The module boundary](ADR-0012-module-boundary.md) |
 | ABI, the interface into Xmip | [The operator surfaces](ADR-0014-operator-surfaces.md) |
 | ACME, Let's Encrypt | [Certificates on Receive and Send](ADR-0033-certificates-on-receive-and-send.md) |
+| act, an operator's: taken, refused or asked | [The operator surfaces](ADR-0014-operator-surfaces.md) |
 | Activity, recent items | [Recent activity](ADR-0032-recent-activity.md) |
 | Actor | [The Communication Domain model](ADR-0007-communication-domain-model.md), [Entities as Actors](ADR-0008-xmip-entities-as-actors.md) |
 | Alignment, misalignment | [Identity, Parties and direction](ADR-0019-identity-parties-and-direction.md) |
@@ -1139,6 +1150,7 @@ You have a word. This gives you the decision that governs it.
 | Dismiss, Dismissed | [The Journey model](ADR-0013-journey-model.md) |
 | Disposition | [The Journey model](ADR-0013-journey-model.md) |
 | Documentation, one document per subject | [The documentation structure](ADR-0020-documentation-structure.md) |
+| door, an operator's act's | [The operator surfaces](ADR-0014-operator-surfaces.md) |
 | Durable, a Publication | [The Service and the Host Services](ADR-0018-service-and-host.md) |
 | encryption at rest | [Xmip encrypts its own traffic and its own storage](ADR-0063-xmip-encrypts-its-traffic-and-its-storage.md) |
 | encryption in transit | [Xmip encrypts its own traffic and its own storage](ADR-0063-xmip-encrypts-its-traffic-and-its-storage.md) |
@@ -1260,6 +1272,7 @@ You have a word. This gives you the decision that governs it.
 | schema version, upgrade | [Packaging and distribution](ADR-0015-packaging.md) |
 | SDK | [A provider builds against the capabilities; the SDK simulates](ADR-0061-a-provider-builds-against-the-sdk.md) |
 | second link | [A node has one address](ADR-0067-a-node-has-one-address.md) |
+| secure scheme on a receive riding on HTTP | [Certificates on Receive and Send](ADR-0033-certificates-on-receive-and-send.md) |
 | Security roles | [Security roles versus Actor capabilities](ADR-0009-security-roles-vs-actor-capabilities.md) |
 | Send Location target, destination::OWN | [Developers design in VS Code](ADR-0064-developers-design-in-vs-code.md) |
 | Send Location, Send Port | [Send-side identity inheritance](ADR-0006-send-side-identity-inheritance.md) |
@@ -1302,6 +1315,7 @@ You have a word. This gives you the decision that governs it.
 | the surface is | [The operator surfaces share one model](ADR-0052-the-operator-surfaces-share-one-model.md) |
 | the vendor crate | [A technology shares through its capability](ADR-0044-a-technology-shares-through-its-capability.md) |
 | the whole suite | [A test suite carries its provider](ADR-0059-a-test-suite-carries-its-provider.md) |
+| third-party backend, its one crate | [A technology shares through its capability](ADR-0044-a-technology-shares-through-its-capability.md) |
 | Throughput, measurement, window | [The operator boundary](ADR-0027-the-operator-boundary.md) |
 | TLS session resumption | [Certificates on Receive and Send](ADR-0033-certificates-on-receive-and-send.md) |
 | Trait | [Every dependency is a trait, handed in](ADR-0068-every-dependency-is-a-trait-handed-in.md) |
@@ -1309,6 +1323,7 @@ You have a word. This gives you the decision that governs it.
 | translation | [Languages beyond American English are an opportunity](ADR-0073-languages-beyond-american-english-are-an-opportunity.md) |
 | Transport, direction-neutral | [Contract and transport boundaries](ADR-0010-contract-transport-repository-boundaries.md) |
 | Transport, JSON | [Configuration is TOML; JSON is transport](ADR-0031-configuration-is-toml-json-is-transport.md) |
+| turned away, a caller | [The Service and the Host Services](ADR-0018-service-and-host.md) |
 | User principal name, UPN | [A principal name is read one way](ADR-0054-a-principal-name-is-read-one-way.md) |
 | Version floors, channels | [Current platforms only](ADR-0021-current-platforms-only.md) |
 | vtable shim | [A vtable is a promise; only a loader is a saving](ADR-0057-a-vtable-is-a-promise-only-a-loader-is-a-saving.md) |
@@ -1320,6 +1335,7 @@ You have a word. This gives you the decision that governs it.
 | Xmip URI, scope | [The operator boundary](ADR-0027-the-operator-boundary.md) |
 | xmip- | [Every System Process Xmip owns says whose it is](ADR-0053-every-system-process-xmip-owns-says-whose-it-is.md) |
 | Xmip.Surface | [The operator surfaces share one model](ADR-0052-the-operator-surfaces-share-one-model.md) |
+| XML reader, the one | [A technology shares through its capability](ADR-0044-a-technology-shares-through-its-capability.md) |
 
 Concepts with **no decision recorded yet**, and where they live instead:
 Event and Schedule

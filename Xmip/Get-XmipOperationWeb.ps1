@@ -10,9 +10,10 @@ function Get-XmipOperationWeb {
 
         .DESCRIPTION
             A web host is a process running the GUI's own web executable; what
-            it reads is on its command line — the Kestrel address, the surface
-            (ADR-0052 clause 3: chosen, never guessed) and the snapshot path
-            when the surface is a snapshot. Nothing running means no output.
+            it reads is on its command line — the Kestrel address, and the
+            surface of each cluster it holds (ADR-0052 clause 3: chosen, never
+            guessed), the local endpoint of a node or the path of a snapshot.
+            Nothing running means no output.
 
         .EXAMPLE
             Get-XmipOperationWeb
@@ -46,14 +47,21 @@ function ConvertTo-XmipOperationWeb {
     )
 
     [string] $line = try { "$($Process.CommandLine)" } catch { '' }
-    [string] $surface = Read-XmipOperationWebArgument -CommandLine $line -Name 'Xmip:Surface'
 
-    # One key for one snapshot, an indexed key each for several: a host may
-    # hold a cluster per snapshot (ADR-0052, amendment 2026-09-20).
+    # One surface per cluster, each of its own kind, as
+    # Get-XmipOperationWebClusterArgument wrote them (the design approved
+    # 2026-11-12, section 3.4); else the one surface a line named the plain
+    # way; else the host reads its gui.toml.
     $read = @{
         CommandLine = $line
-        Name        = 'Xmip:Snapshot'
         Every       = $true
+    }
+    [string[]] $kinds = @(Read-XmipOperationWebArgument @read -Name 'Xmip:Clusters:*:Surface')
+    [string] $surface = if ($kinds.Count -gt 0) {
+        $kinds -join ', '
+    }
+    else {
+        Read-XmipOperationWebArgument -CommandLine $line -Name 'Xmip:Surface'
     }
 
     $url = @{
@@ -66,7 +74,12 @@ function ConvertTo-XmipOperationWeb {
         Id         = $Process.Id
         Url        = Read-XmipOperationWebArgument @url
         Surface    = if ([string]::IsNullOrEmpty($surface)) { 'configured' } else { $surface }
-        Snapshot   = @(Read-XmipOperationWebArgument @read)
+        Local      = @(Read-XmipOperationWebArgument @read -Name 'Xmip:Clusters:*:Local')
+        Snapshot   = @(
+            Read-XmipOperationWebArgument @read -Name 'Xmip:Clusters:*:Snapshot'
+            Read-XmipOperationWebArgument -CommandLine $line -Name 'Xmip:Snapshot' |
+                Where-Object { $_ }
+        )
         StartTime  = $Process.StartTime
     }
 }
@@ -78,20 +91,20 @@ function Read-XmipOperationWebArgument {
             line, quotes removed; empty when absent. Pure.
 
         .DESCRIPTION
-            A host may be told several of one thing — one snapshot per cluster,
-            as --Xmip:Snapshot:0 and --Xmip:Snapshot:1 (ADR-0052, amendment
-            2026-09-20). -Every reads them all, in the order they were written,
-            and reads a plain --Name= too; without it the plain key alone is
-            read, as it always was.
+            A host may be told several of one thing — one surface per cluster,
+            as --Xmip:Clusters:0:Local and --Xmip:Clusters:1:Snapshot (ADR-0052,
+            amendment 2026-11-13). -Every reads them all, in the order they
+            were written; without it the first is read.
 
         .PARAMETER CommandLine
             The host process's command line.
 
         .PARAMETER Name
-            The key, without its leading dashes.
+            The key, without its leading dashes. A * in it stands for an
+            index: Xmip:Clusters:*:Snapshot is each cluster's snapshot.
 
         .PARAMETER Every
-            Read every value of the key, indexed ones included.
+            Read every value the key names.
     #>
     [CmdletBinding()]
     [OutputType([string])]
@@ -107,18 +120,20 @@ function Read-XmipOperationWebArgument {
         [switch] $Every
     )
 
-    [string] $key = [regex]::Escape($Name)
-    [string] $value = '=("[^"]*"|\S+)'
-    [string] $pattern = if ($Every) { "--$key(?::\d+)?$value" } else { "--$key$value" }
+    [string] $key = [regex]::Escape($Name).Replace('\*', '\d+')
+
+    # The whole argument quoted, as a path with a space in it is passed, or
+    # its value alone, or neither.
+    [string] $pattern = "`"--$key=(?<v>[^`"]*)`"|--$key=(?<v>`"[^`"]*`"|\S+)"
 
     if (-not $Every) {
         if ($CommandLine -match $pattern) {
-            return $Matches[1].Trim('"')
+            return $Matches['v'].Trim('"')
         }
 
         return ''
     }
 
     return @([regex]::Matches($CommandLine, $pattern) |
-            ForEach-Object { $_.Groups[1].Value.Trim('"') })
+            ForEach-Object { $_.Groups['v'].Value.Trim('"') })
 }

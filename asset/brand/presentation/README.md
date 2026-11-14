@@ -14,6 +14,18 @@ files. Narration, flex poses and accessibility notes were updated on 2026-11-07.
 source references record the documentation used, rather than a promise of
 release readiness.
 
+## Outreach
+
+The approved material was introduced to 34 public organizational contacts on
+2026-11-05: national routes across 27 EU countries, two European Commission
+teams and five companies. This was an initial batch, not exhaustive coverage.
+The [outreach record](outreach/2026-11-05.xmip) preserves the recipients, official
+contact sources, exact message wording and immutable links to the shared files.
+All 34 send requests succeeded; recipient delivery and responses are not confirmed.
+
+Private Outlook identifiers, mailbox links and raw tool responses remain in the
+local working area. Review drafts remain in Outlook and must not be resent.
+
 ## Edit
 
 `story.toml` is the shared editorial source, in TOML. Each section contains

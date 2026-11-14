@@ -71,19 +71,20 @@
 //! says, over `RocksDB`, the one engine, sealed under the platform's key
 //! store (ADR-0018, amendments 2026-09-30 and 2026-10-01); a build without
 //! `RocksDB`, a store naming a key store this build left out, or one that
-//! does not open, is refused as any node that cannot start is. While it serves it takes the orders an operator leaves
-//! for it — a pause or a resume of a Subscription — from `<data>/orders`,
-//! the moment the operating system tells it one was left (`orders.rs`), and
-//! publishes what the node says of itself — its health, figures, topology
-//! and Subscriptions — to `<data>/snapshot.xmip`, every quarter of a second
-//! and at once after an order or an act over its operate listener, where
-//! the operation surfaces read it (`publication.rs`; ADR-0018, amendments
-//! 2026-09-30 and 2026-10-17). Between them it waits to be told, using no
-//! processor (`run.rs`).
+//! does not open, is refused as any node that cannot start is. While it
+//! serves, its act watch takes each act an operator asked of it through
+//! Xmip Storage — a pause or a resume of a Subscription, a Replay, a Retry
+//! or a Dismiss — at any node's door (`xmip_runtime::act_watch`; ADR-0014,
+//! amendment 2026-11-13), and it publishes what the node says of itself —
+//! its health, figures, topology and Subscriptions — to
+//! `<data>/snapshot.xmip`, every quarter of a second and at once after an
+//! act was taken, where the operation surfaces read it (`publication.rs`;
+//! ADR-0018, amendments 2026-09-30 and 2026-10-17). Between them it waits
+//! to be told, using no processor (`run.rs`).
 //!
-//! It declares itself (ADR-0053) — its configuration, its orders and its
-//! snapshot among what it says — and audits its start, its stop, every
-//! order and every failure (`audit.rs`; ADR-0062).
+//! It declares itself (ADR-0053) — its configuration and its snapshot
+//! among what it says — and audits its start, its stop and every failure
+//! (`audit.rs`; ADR-0062).
 
 mod account;
 mod activation;
@@ -98,7 +99,6 @@ mod definition;
 mod install;
 mod listening;
 mod opened;
-mod orders;
 mod publication;
 mod readiness;
 mod run;

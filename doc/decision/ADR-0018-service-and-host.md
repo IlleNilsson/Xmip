@@ -18,7 +18,7 @@
 - Subject: One Service per node, and it stays out of the message path
 - Name: The Service and the Host Services
 - Order: 5
-- Concepts: Budget, what a node holds beside its pools; Durable, a Publication
+- Concepts: Budget, what a node holds beside its pools; turned away, a caller; Durable, a Publication
   answered before its sync; Host Service; Service, the Xmip Service
 
 The Xmip Service is the master and the only thing the operating system starts.
@@ -1979,3 +1979,86 @@ keeps its node's bound) and in the runtime (`tuning`: the key's default is
 the constant, and what a node says reaches the only Storage node and a
 primary among several alike). Every wait test before it runs at the
 default bound unchanged.
+
+## Amendment, 2026-11-13: a caller's own failure ends its connection, not its Receive Location
+
+A design review held to the owner's aim that every protocol comes straight
+into the node and is safe on an open network (2026-11-10) found one caller
+able to stop a Receive Location for every other Party. A failure on one
+caller's connection — a head past its bound, bytes that are not the
+protocol, a read past the Location's timeout, a request its technology
+refused at the door, an answer to a caller that hung up before its verdict
+— was the receive's failure, and the runtime stops a Location on a failure
+that saying again will not mend.
+
+- **Decided once, where connections are kept.**
+  `transport::serving::Serving` lets go of a connection whose readying
+  (`socket::accepted`), opening or turn fails, keeps its caller as turned
+  away — the address it called from and why (`transport::turned`, the
+  first `MOST_HELD`, 64, kept and the rest counted) — and goes on waiting
+  for the others. Only the listener's own failure, its bind, its wait or
+  its accept, is the receive's.
+- **Refused at the door.** A technology riding on HTTP refuses a request
+  that is not its message with `http::inbound::Heard::Refused`: answered
+  with the refusal as the connection's last, and its caller turned away
+  the same way. AS2, AS4, MSMQ, SNS's subscription and Event Grid's webhook
+  refuse through it.
+- **An answer not given is its caller's.** Every answer on a caller's own
+  connection is written through `transport::answer::Answer::with`, whose
+  failure is retryable whatever it was — a caller that hung up, or reset
+  its HTTP/2 stream, before its verdict — so it is a telling that may mend,
+  audited once per reason, never a stop; the caller, not told, sends again.
+  A broken pipe and a socket no longer connected are retryable wherever
+  they are met (`transport::error`). A machine out of descriptors or
+  network buffers (`EMFILE`, `ENFILE`, `ENOBUFS`) is retryable too: they
+  come back as other sockets close, so a flood of callers no longer stops
+  the Location for good.
+- **The runtime is told through the trait.** `Transport::turned_away`,
+  defaulting to nobody, hands over the callers turned away since it was
+  last asked (ADR-0068 clause 3); every technology serving through
+  `Serving` forwards its own — HTTP and every technology receiving through
+  `http::inbound`, MLLP, SMTP, syslog over TCP, WebSocket, Modbus, DNP3,
+  IEC 60870-5-104 and SECS/GEM. After every receive the Location audits
+  each as a refusal of that caller, a Warning naming the Location and the
+  caller's address (`receiving/refusal.rs`, ADR-0013 clause 1).
+- **Not bounded yet:** a caller that sends part of an exchange and stops
+  holds the turn for as long as a read waits — the Location's `timeout`,
+  or for good where it sets none — and every other caller waits behind it
+  (open problem 69).
+
+Proved by the runtime's `tests/ledger/turned_away.rs` (a caller whose head
+runs past `net::read::MAX_LINE` is turned away and audited, the next caller
+is served on the same Location, and a listener that cannot bind still stops
+it), by `transport::serving`'s tests (a broken turn, a refused opening, a
+listener that cannot bind), `transport::error`'s (a peer gone, a machine
+out of descriptors), `transport::answer`'s (an answer not given is
+retryable, failing first), `http::inbound`'s (a head past its bound, a request
+refused at the door) and AS2's and AS4's (a POST that is not their message
+turns its caller away and the next is taken).
+
+The assistant's, 2026-11-13, carrying the review's fix; no decision of the
+owner's was needed.
+
+## Amendment, 2026-11-13: the runtime writes a process's declaration
+
+The amendment of 2026-09-28 has `xmip-service` declare itself (ADR-0053);
+`xmip-core-node` wrote the file. A Foundation crate opens no file
+(ADR-0058 clause 1, amendment of this date), so the file is the runtime's,
+the crate Service and Host were folded into: `xmip-core-runtime`'s
+`declared` writes it, takes it away when what it answered is dropped, and
+lists every declaration standing in the directory.
+
+- **The service declares through it** (`.src/service/run.rs`,
+  `declared::declare`) once the node accepts work, and drops what it
+  answered after the drain, as before.
+- **The rest of the runtime reads through it**: section 13's exports
+  (`ffi::process`), and a surface's local call, which learns the wait the
+  node serving it declared (`plane::deadline`).
+- **What a declaration says stays the node's**: `Declaration`, `Purpose`,
+  `to_toml` and `Standing::read`.
+- **Nothing a reader sees changes**: the file, its name, its directory and
+  its text are as they were.
+
+The assistant's, 2026-11-13, carrying the placement review the owner asked
+for (*Good that you found it, fix it*); no decision of the owner's was
+needed.

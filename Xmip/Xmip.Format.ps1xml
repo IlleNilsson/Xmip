@@ -156,9 +156,9 @@
         <TableHeaders>
           <TableColumnHeader><Label>Id</Label><Width>7</Width><Alignment>Right</Alignment></TableColumnHeader>
           <TableColumnHeader><Label>Url</Label><Width>26</Width></TableColumnHeader>
-          <TableColumnHeader><Label>Surface</Label><Width>12</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Surface</Label><Width>16</Width></TableColumnHeader>
           <TableColumnHeader><Label>Started</Label><Width>11</Width></TableColumnHeader>
-          <TableColumnHeader><Label>Snapshot</Label></TableColumnHeader>
+          <TableColumnHeader><Label>Reads</Label></TableColumnHeader>
         </TableHeaders>
         <TableRowEntries>
           <TableRowEntry>
@@ -167,7 +167,7 @@
               <TableColumnItem><PropertyName>Url</PropertyName></TableColumnItem>
               <TableColumnItem><PropertyName>Surface</PropertyName></TableColumnItem>
               <TableColumnItem><ScriptBlock>$_.StartTime.ToString('MM-dd HH:mm')</ScriptBlock></TableColumnItem>
-              <TableColumnItem><ScriptBlock>if (@($_.Snapshot).Count -eq 0) { 'none' } else { (@($_.Snapshot) | ForEach-Object { [System.IO.Path]::GetFileName($_) }) -join ', ' }</ScriptBlock></TableColumnItem>
+              <TableColumnItem><ScriptBlock>$reads = @(@($_.Local) + @(@($_.Snapshot) | ForEach-Object { [System.IO.Path]::GetFileName($_) })); if ($reads.Count -eq 0) { 'none' } else { $reads -join ', ' }</ScriptBlock></TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>
         </TableRowEntries>

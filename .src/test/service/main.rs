@@ -7,7 +7,7 @@
 //! - `stop.rs`: a stop drains the node and the process exits 0, within a
 //!   bound, having declared and audited itself; a node it cannot start, or
 //!   a Storage node it cannot open, is refused with exit 2 (`refused.rs`);
-//!   a Subscription paused through an order is paused still after a restart.
+//!   a Subscription paused at its door is paused still after a restart.
 //! - `activation.rs`: a correctly signed slice the node cannot start leaves
 //!   the configuration that ran before running and recoverable, the pin
 //!   kept and an older serial still refused; signed again, it runs, and
@@ -15,6 +15,10 @@
 //! - `operate.rs`: a node configured with `[operate]` is reached on its
 //!   operate listener as a surface on another machine reaches it, its
 //!   publication read and an act taken as the certificate's subject.
+//! - `door.rs`: an act asked at the door of a node declaring the
+//!   operational role is written to Xmip Storage and taken by the receiving
+//!   node it is asked of, audited at both; asked while that node is
+//!   stopped, it is answered asked and taken as the node starts again.
 //! - `accepted.rs`: a Receive Location terminating TLS with the node's
 //!   `[provision.receive]` certificate accepts a Stream from the Party its
 //!   `accept.party` names, through the build's own identity technologies,
@@ -39,7 +43,7 @@
 //! landing runs after this one, alone, one test at a time, so what it
 //! measures is Xmip's work and not these tests'
 //! (`doc/governance/rust-style.md` section 5c). The node's publication, a
-//! pause left where it takes orders shown paused at once, is there too.
+//! pause asked at its door shown paused at once, is there too.
 //!
 //! Every Message is received and settled. Each reaches the first gate with
 //! what its transport observed, and the build's `ip` identifier claims its
@@ -63,6 +67,7 @@ use refused::*;
 mod accepted;
 mod activation;
 mod authority;
+mod door;
 mod failover;
 mod operate;
 #[cfg(all(feature = "route-content", feature = "path-edi"))]

@@ -206,3 +206,17 @@ after a review.*
   act on every surface that shows what changes — the version, the manifest,
   the dependencies, the offline declaration — takes the end user's approval,
   and is audited (ADR-0062). Decided, not built (open problem 51).
+
+## Amendment, 2026-11-13: quick-xml is reached through the estate's one XML reader
+
+The amendment of 2026-10-22 lists `quick-xml` among what the standard units
+added. Since 2026-11-13 it is the backend of the estate's one XML reader,
+`codec::xml` in `xmip-core-library-codec`, and no unit names it itself
+(ADR-0044, amendment 2026-11-13; `test/ThirdParty.Test.ps1`). It is the
+same crate under the same rule, without default features, and
+`test/Offline.Test.ps1` reads it where it now sits, beneath every unit
+that reads XML. `encoding_rs`, which the same amendment lists for the
+Character Encoding unit, is reached the same way since that day, through
+`codec::charset`, the estate's one decoding of the WHATWG encodings.
+
+Provenance: the coordinator's plan of 2026-11-13; the assistant's wording.

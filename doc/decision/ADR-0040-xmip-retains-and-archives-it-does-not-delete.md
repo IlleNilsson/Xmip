@@ -95,3 +95,26 @@ archiving; then the user of the archive decides.* The two-action framing, the
 archive-as-handoff wording and the crate/scenario consequences are the
 assistant's drafting of it, on the instruction to write it down, having first
 introduced the *purge* the owner corrected.
+
+## Amendment, 2026-11-13: the cluster's membership is kept, never deleted
+
+**Provenance.** The design the owner approved on 2026-11-12, section 3.2:
+*Rows are kept, never deleted (ADR-0040)*; its fourth landing piece is
+membership through Xmip Storage (ADR-0056 and ADR-0058, amendments of the
+same day).
+
+The administration database's `membership` table holds a row for each
+start of each node: written once the node reaches Xmip Storage, and again,
+saying when, as it stops in order. A node started again writes a row of its
+own, keyed by the process it runs in, which is drawn new at each start; its
+row before stays, and only stops being its node's latest. Nothing in Xmip
+removes a row: `XmipStorage` has no operation that could. The members now
+are each node's latest row, found by one range of an index that holds only
+those (`membership_latest`), so the history kept costs a read nothing; the
+timing program holds a row's write within a millisecond beyond Xmip
+Storage's own write over a thousand starts of each node kept
+(`xmip-core-persist`, `tests/measured/membership.rs`). A node that left the
+cluster stays a member, its row saying it stopped in order or, where it was
+killed, saying nothing, until its environment says it left (the design's
+section 9; not built: nothing says a node left yet); what becomes of the
+history beyond that is the archive's, as clause 3 says.

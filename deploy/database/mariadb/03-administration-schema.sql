@@ -16,7 +16,7 @@ CREATE TABLE `schema_version` (
     CONSTRAINT schema_version_key PRIMARY KEY (`version`)
 ) ENGINE=InnoDB;
 
--- registration, membership, Modules, Handlers, deployment and operator state, and when each was last written.
+-- registration, Modules, Handlers, deployment and operator state, and when each was last written.
 CREATE TABLE `administration` (
     `kind` varchar(32) NOT NULL,
     `id` binary(16) NOT NULL,
@@ -40,6 +40,55 @@ CREATE TABLE `secret` (
 ) ENGINE=InnoDB;
 
 CREATE INDEX `secret_name` ON `secret` (`name`);
+
+-- each operator's act, kept, never deleted: the node it is asked of and its place among that node's acts, what it acts on and the act, who asked it, how the door that admitted it proved them, the role it judged them by, the relay they came through and the door, when it was asked, and what its node decided, its sentence and when; an act is decided once.
+CREATE TABLE `operator_act` (
+    `act` binary(16) NOT NULL,
+    `node` varchar(400) NOT NULL,
+    `node_id` binary(16) NOT NULL,
+    `place` bigint NOT NULL,
+    `noun` varchar(32) NOT NULL,
+    `target` varchar(400) NOT NULL,
+    `act_word` varchar(32) NOT NULL,
+    `who` varchar(400) NOT NULL,
+    `proven` varchar(32) NOT NULL,
+    `certificate` longblob NULL,
+    `role` varchar(32) NOT NULL,
+    `through` varchar(400) NULL,
+    `door` varchar(400) NOT NULL,
+    `asked_at` datetime(6) NOT NULL,
+    `outcome` varchar(32) NOT NULL,
+    `said` longtext NOT NULL,
+    `decided_at` datetime(6) NULL,
+    `open` boolean NOT NULL,
+    CONSTRAINT operator_act_key PRIMARY KEY (`act`)
+) ENGINE=InnoDB;
+
+CREATE INDEX `operator_act_node` ON `operator_act` (`node_id`, `place`);
+
+CREATE INDEX `operator_act_open` ON `operator_act` (`node_id`, `place`);
+
+-- each start of each node of the cluster, kept, never deleted: its scope, the roles it declares and its capability's evidence, where its operate and sync listeners answer, its place among the Storage nodes, the signed save it runs, its process, when it started and when it stopped in order, the table's write count at its last write and whether it is its node's latest row.
+CREATE TABLE `membership` (
+    `process` binary(16) NOT NULL,
+    `node` varchar(400) NOT NULL,
+    `roles` varchar(400) NOT NULL,
+    `evidence` longtext NOT NULL,
+    `operate` varchar(400) NULL,
+    `sync` varchar(400) NULL,
+    `storage_place` int NULL,
+    `save` varchar(400) NOT NULL,
+    `serial` bigint NOT NULL,
+    `started_at` datetime(6) NOT NULL,
+    `stopped_at` datetime(6) NULL,
+    `written` bigint NOT NULL,
+    `latest` boolean NOT NULL,
+    CONSTRAINT membership_key PRIMARY KEY (`process`)
+) ENGINE=InnoDB;
+
+CREATE INDEX `membership_latest` ON `membership` (`latest`, `node`);
+
+CREATE INDEX `membership_written` ON `membership` (`written`);
 
 -- The schema version it holds now.
 INSERT INTO `schema_version` (`version`, `recorded_at`) VALUES (1, UTC_TIMESTAMP(6));

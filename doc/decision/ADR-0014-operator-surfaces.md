@@ -18,7 +18,7 @@ context, and ADR-0022 clause 3 governs what may sit beside it. Open problem 20.
 - Subject: The operator surfaces and their language
 - Name: The operator surfaces
 - Order: 1
-- Concepts: ABI, the interface into Xmip; Audit, the durable record; Blazor, .NET, the GUI; CLI, `xmip`, Rust; Observation, and why it is lossy; Phone app, APK; Remote operation, WinRM, SSH
+- Concepts: ABI, the interface into Xmip; act, an operator's: taken, refused or asked; Audit, the durable record; Blazor, .NET, the GUI; CLI, `xmip`, Rust; door, an operator's act's; Observation, and why it is lossy; Phone app, APK; Remote operation, WinRM, SSH
 
 Rust is the language of the runtime; everything in the message path is Rust.
 Across a language boundary everything goes through the C ABI; Rust to Rust,
@@ -51,6 +51,15 @@ pipe or a Unix domain socket, from its own — and calls the C ABI directly
 only for what has no node behind it (ADR-0052, amendment 2026-10-05;
 amendment 2026-10-13), and SignalR is only between the web host and a GUI
 client.
+
+**An operator's act goes through Xmip Storage.** The node a surface reaches
+is the act's door: it admits the caller by the caller's own role and writes
+the act to Xmip Storage, with who and when, asked of the node that owns
+what it acts on; that node's act watch judges the caller again by its own
+lists, takes it and decides it once, and the door answers *taken*,
+*refused* or *asked*, an act that waits, never expiring, for a node not
+running. Only a door declaring the operational role carries an act to
+another node, and a snapshot is never acted on (amendment 2026-11-13).
 
 ## Context
 
@@ -1495,3 +1504,112 @@ applied to it:
 Provenance: the SDK, the workload set and its packs were read from this
 computer's installation, the packages and their publication times from
 nuget.org, on 2026-11-12; ADR-0021's rule.
+
+## Amendment, 2026-11-13: an act is written to Xmip Storage at a node's door, and taken by its node
+
+**Built: the amendment of 2026-10-13's *Acts go to Xmip Storage*.** The
+owner agreed on 2026-11-12 to the design of the operation node, its
+recommendations among them: acts go through Xmip Storage, as decided
+2026-10-13, admitted once at the door rather than relayed node to node; a
+node without the operational role still takes acts on itself; the node an
+act is asked of trusts a door's row, judging the named caller again by its
+own lists, until signed slices exist; and an act asked never expires.
+
+- **The door.** The node a surface reaches is the act's door. Its operate
+  listener admits the caller first, by the caller's own role, before it
+  reads the call (ADR-0009), then writes the act to Xmip Storage, asked of
+  the node that owns what it acts on (the scope's node, which every
+  surface already sends). Where that node runs in the door's process the
+  act is written through that node's Xmip Storage, whatever the door
+  declares; where it does not, only a node declaring the operational role
+  writes it (`node::Capability::carries_acts`, read from the declared roles
+  and never from a name), and every other node refuses in words: *REFUSED:
+  no node at … runs in this process, and this node declares no operational
+  role, so it carries no act to another node; ask … itself, or a node
+  declaring the operational role (ADR-0056)*. A listener a program hosts
+  through the C ABI is the door of no node and carries no act to another.
+  `act_watch::Door` in the runtime.
+- **A dedicated table, every value its own column.** `operator_act` in the
+  administration database: `act` (its `UUIDv7`, the key), `node` (the
+  scope it is asked of) and `node_id` (that scope's name-based identifier,
+  what its waits and indexes name), `place` (its place among its node's
+  acts, Xmip Storage's to set), `noun`, `target`, `act_word`, `who`,
+  `proven` (`mutual-tls` or `peer-credentials`), `certificate` (the one the
+  caller presented, which the owning node reads its role from again by the
+  door's own rule), `role` (the role the door judged it by), `through`
+  (the relay, where one vouched), `door`,
+  `asked_at`, `outcome` (`asked`, `taken`, `refused`, `failed`), `said`,
+  `decided_at` and `open` (still asked); indexed by its node's identifier
+  and place (25, `operator_act_node`) and, holding only those still asked,
+  the same (26, `operator_act_open`). A secret's value never enters it;
+  secrets stay set at the node itself. Kept, never deleted (ADR-0040).
+  Added at schema version 1: nothing is released.
+- **Over the Storage wire**, admitted as a node's: operation 41
+  `ask_act` and 42 `decide_act` (writes) and 43 `read_acts` (a read), each
+  answered with the act (29) or the acts (30). An act asked again by its
+  identifier after a lost answer writes nothing; a decision is a
+  conditional write that takes effect only where the act is still asked,
+  so it is decided once, across a restart too.
+- **The act watch.** Every running node holds a wait on Xmip Storage for
+  the acts asked of it (operation 37, the kind *the acts asked of a
+  node*), beside its queue watch, and is told at once of each written on
+  whichever node; the administration database's writer tells as it
+  writes. It is the one taker of its node's acts: each is judged again
+  against the node's own `[operate]` lists, from the certificate or the
+  account the caller presented, by the one rule the door admitted it by
+  (`plane::grant::Grants::of`; ADR-0009, amendment 2026-11-13), applied by
+  the one apply
+  (`applied::apply`), decided, and audited at the node — *who asked at
+  which door, through which relay, to do what, and what came of it*. As
+  it starts it takes every act still asked of its node, so an act asked of
+  a node that was not running is taken when it runs. `act_watch::ActWatch`.
+- **One taker, one path.** Where the owning node runs in the door's own
+  process, the door writes the same row and the node's act watch takes it,
+  woken by the write in process; the design's fast path that applied it at
+  the door is not built, so no act is ever applied by two (decided while
+  building).
+- **The asker is answered.** The door waits on the act's decision (the
+  wait's kind *one act decided*) for at most `[tuning] operate_act`, one
+  second where it says nothing, and answers the owning node's decision and
+  sentence, or the new outcome **asked**: *asked of RX1; not taken yet; RX1
+  takes it as soon as it runs*. Every surface says it: section 17's
+  `xmip_remote_act_v1` answers `XMIP_E_AGAIN`, no failure; the command
+  line prints `ASKED.` and its sentence and exits 0, its `--json` gaining
+  `outcome`; the PowerShell module's act cmdlets return the record with
+  `Outcome` `Asked` and a warning carrying the sentence; the Web and the
+  Desktop say the node's sentence and audit it as no failure. Every act's
+  record carries `Outcome`: `Taken`, `Asked` or `Refused`
+  (`Xmip.Surface.ActOutcome`).
+- **Deleted**, every order path in one sweep: the root's order files,
+  `.src/service/orders.rs`, with the service's watch on its orders
+  directory, the `orders` its process declaration and its start record
+  said, and the place its publication named; observe's `Order::leave`,
+  `Order::take` and `Order::place` and the publication's `orders`, so no
+  list of section 11, 14, 15 or 16 carries one; section 14's
+  `xmip_order_v1` and the per-node act exports `xmip_subscription_act_v1`,
+  `xmip_dead_message_replay_v1` and `xmip_message_act_v1`, with their
+  .NET bindings and tests; the snapshot surface's orders
+  (`SnapshotOrder`): a snapshot is read and never acted on, and declines
+  every act in one sentence (`SnapshotOperator.NotActed`); and the
+  Essentials' orders — a simulated node taking them each round, the roll
+  carrying them to the nodes it reads. Every act now reaches its node
+  through a door and Xmip Storage alone; `xmip_event_subscription_act_v1`
+  stays, the act on a process's own hub.
+
+Measured on 2026-11-13 by the runtime's timing program (`acted.rs`, run
+alone, 40 acts over an embedded Storage node): an act asked at the door to
+its answer, the fastest of five 238 µs (median 339 µs), against Xmip
+Storage's own four calls of it at 96 µs and the machine's own wake at
+13 µs, taken twice, so the act path's own share is about 115 µs; the
+door's write 77 µs, Xmip Storage's own; the act watch's pickup, woken by
+that write, 0.6 µs. Run again beside another worker's builds: 378 µs
+against 151 µs and 17 µs, the share about 190 µs. The act watch's audit
+record of each act it decided, written after the decision and the answer,
+took 11.4 ms here, the file sink reading a file just written; since the
+same day it is on the disk within a millisecond of the disk's own durable
+write (ADR-0062, amendment 2026-11-13), 3.5 ms the fastest of five beside
+four workers' builds.
+
+Provenance: the owner's decisions of 2026-10-13 and 2026-11-12; the table's
+columns, the wire's numbers, the one taker and the status of *asked* are
+the assistant's, decided while building.

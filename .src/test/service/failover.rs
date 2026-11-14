@@ -50,12 +50,22 @@ filter = "xmip.transport.mechanism = 'circumstance'"
 "#;
 
 /// A path as a configuration names it.
-fn named(path: &Path) -> String {
+pub(super) fn named(path: &Path) -> String {
     path.display().to_string().replace('\\', "/")
 }
 
+/// The local endpoint the node `node` configured beneath `directory` is
+/// called: named by the test's own directory, so two tests starting the
+/// same node at once never share one.
+pub(super) fn local_of(directory: &Path, node: &str) -> String {
+    let test = directory
+        .file_name()
+        .map_or_else(String::new, |name| name.to_string_lossy().into_owned());
+    format!("{test}-{node}")
+}
+
 /// The cluster's nodes declaring `role`, by name.
-fn declaring(role: &str) -> Vec<String> {
+pub(super) fn declaring(role: &str) -> Vec<String> {
     test_cluster()
         .nodes
         .iter()
@@ -68,7 +78,7 @@ fn declaring(role: &str) -> Vec<String> {
 /// beneath `directory`: reaching the Storage nodes at `addresses` with the
 /// certificate `directory`'s `tls` holds, serving them at `served` where it
 /// is one, and `bound` — its bindings of the Application.
-fn configured(
+pub(super) fn configured(
     directory: &Path,
     (node, roles): (&str, &str),
     (addresses, served): (&[String], Option<&str>),
@@ -81,7 +91,7 @@ fn configured(
     let listen_line = served
         .map(|at| format!("listen = \"{at}\"\n"))
         .unwrap_or_default();
-    let local = format!("xmip-failover-{}-{node}", std::process::id());
+    let local = local_of(directory, node);
     let text = format!(
         "roles = \"{roles}\"\n\n[service]\nname = \"xmip-{node}\"\ncluster_name = \"{cluster}\"\n\
          node_name = \"{node}\"\ndata = \"data\"\n\n\
@@ -99,10 +109,10 @@ fn configured(
 
 /// A node running: its process, what ends it if the test does not, and the
 /// lines it says.
-type Running = (Child, Ending, Receiver<String>);
+pub(super) type Running = (Child, Ending, Receiver<String>);
 
 /// A node started from `configuration`, once it says it accepts work.
-fn started(configuration: &Path, scope: &str) -> Running {
+pub(super) fn started(configuration: &Path, scope: &str) -> Running {
     let folder = configuration.parent().expect("its folder");
     let mut child = spawned(configuration, folder);
     let ending = Ending(Some(child.id()));
@@ -160,7 +170,7 @@ fn arrived(changed: &Receiver<()>, out: &Path, count: usize) -> Vec<String> {
 
 /// The certificate, key and anchors every node reaches Xmip Storage with,
 /// written to `directory`'s `tls`.
-fn certified(directory: &Path) {
+pub(super) fn certified(directory: &Path) {
     let authority = xmip_runtime::fixture::Authority::new();
     let (certificate, key, anchors) = authority.pem("node");
     std::fs::create_dir_all(directory.join("tls")).expect("a folder");
@@ -174,7 +184,7 @@ fn certified(directory: &Path) {
 }
 
 /// The scope `node` says it accepts work in.
-fn scope(node: &str) -> String {
+pub(super) fn scope(node: &str) -> String {
     format!("{}/node/{node}", test_cluster().scope())
 }
 
@@ -206,7 +216,7 @@ fn storage_started(
 
 /// `node`'s binding of the Application's `kind` called `name` to `at`,
 /// with `accept` after it.
-fn binding(node: &str, kind: &str, name: &str, at: &Path, accept: &str) -> String {
+pub(super) fn binding(node: &str, kind: &str, name: &str, at: &Path, accept: &str) -> String {
     format!(
         "\n[[applications]]\nname = \"Carried\"\n\n[[applications.{kind}]]\n\
          name = \"{name}\"\nnode = \"{node}\"\naddress = \"{}\"\n{accept}",
@@ -250,7 +260,7 @@ fn carriers_started(
 }
 
 /// A node stopped by the console, once it has exited.
-fn stopped((child, mut ending, said): Running) {
+pub(super) fn stopped((child, mut ending, said): Running) {
     stop(&child);
     heard(&said, "stopped by the console", Duration::from_secs(10));
     assert!(exited(child, Duration::from_secs(10)).success());

@@ -14,7 +14,7 @@
   does
 - Name: A technology shares through its capability
 - Order: 11
-- Concepts: Shared code; the capability crate; the carrier technology; the vendor crate; copied files
+- Concepts: Shared code; the capability crate; the carrier technology; the vendor crate; copied files; XML reader, the one; third-party backend, its one crate
 
 **Code that two technologies both need lives in the crate both already
 depend on: their parent capability, or the technology they both ride on. A
@@ -273,3 +273,182 @@ fit under archive.*
 Provenance: the owner's two sentences above and his approval of the
 repository the same day; the shape of the one dialect is the assistant's
 drafting of clause 1.
+
+## Amendment, 2026-11-13: one SQL transport, over each technology's wire
+
+After the 2026-10-12 amendment every SQL transport still carried the same
+transport itself: the default query, the builder, the receive that turns rows
+into arrivals with their `accept` statement, the send that writes one INSERT,
+the connections kept per server and database, the settings it declares and
+reads, and the loopback. `MariaDB`'s and MySQL's differed in 21 of 266 lines;
+PostgreSQL, SQL Server, Oracle Database and IBM DB2 had the same shape with
+other names. The owner, 2026-11-13: *"Do we have all code in the modules,
+repos that we should. This is a refactoring statement."*
+
+- **The transport is the capability's**: `transport::sql::SqlTransport<W>`,
+  the one SQL transport, implements `Transport`, `Configured`, `Loopback`
+  and `Accepting` once; the settings every SQL Location declares —
+  `database`, `user`, `query`, `timeout` and the default query — are
+  `transport::sql::declared`'s, beside the column and `accept` settings
+  that were already there, and so are `tls_name` and the one reading of
+  `tls` and `tls_name` into the client's TLS settings
+  (`transport::sql::client_tls`), which `MariaDB`, MySQL and DB2 each
+  carried; what `tls` means — TLS before the login or from the first byte
+  — stays each technology's.
+- **A technology is its `Wire`**: its name and schemes, its declaration
+  (the shared settings and its own: TLS for `MariaDB`, MySQL and DB2,
+  Oracle's `service` in place of a database), the dialect it writes in and
+  the one its session reads where that may differ (`MariaDB`'s
+  `NO_BACKSLASH_ESCAPES`), the client — connect, query, execute, committed
+  where the server commits nothing until told — and its loopback's far
+  end. `MariaDbTransport`, `MySqlTransport`, `PostgresTransport`,
+  `MssqlTransport`, `OracleTransport` and `Db2Transport` are
+  `SqlTransport` over their wire; every repository stays, thinner.
+- **What a far end took** carries one origin,
+  `<scheme>://peer/database/table/column` (`SqlTransport::inserted`), and
+  a refused row is remembered by one stamp of its body
+  (`transport::sql::accept::stamp`), the `SQLite` queue's included. `SQLite`
+  keeps its own transport: an embedded file queue claimed by a column, with
+  no server, login, query or `accept` statement, is not this shape.
+- **The archive writes as the session reads**, as the transports do:
+  `archive::sql::Database::dialect` is the dialect a connection's session
+  reads, `Database::DIALECT` unless the session says otherwise, and the
+  `MariaDB` archive answers it with `mariadb::Client::dialect`, the one rule
+  the transports also call. Until 2026-11-13 the archive wrote every
+  INSERT in the backslash-escaping mode, whatever mode the server was in.
+
+Provenance: the owner's sentence above; the placement audit of the same day
+found the repetition and the shape of the seam is the assistant's drafting.
+
+## Amendment, 2026-11-13: a primitive every layer needs is the library's, not a capability's
+
+The owner, 2026-11-13: *Do we have all code in the modules, repos that we
+should. This is a refactoring statement*. The capability crate is where two
+technologies share, and `xmip-core-authenticate`'s credential store had
+grown into the estate's SHA-256, HMAC-SHA256 and PBKDF2, exported for its
+technologies while twelve crates elsewhere took `sha2` and seven `hmac`
+for the same three functions, provisioning and the TLS library hashed
+through aws-lc-rs, and Kerberos took `sha1`, `hmac` and `pbkdf2` again:
+
+- **A primitive no capability owns goes below every capability.**
+  `codec::digest` is the one SHA-256 (`sha256`, `Sha256` in parts),
+  HMAC-SHA256 (`hmac_sha256`, `HmacSha256`, its check in constant time) and
+  PBKDF2, from `sha2` and `hmac`, pure Rust; HMAC-SHA1 and PBKDF2-HMAC-SHA1
+  are RFC 2104's construction over codec's own SHA-1 (`hmac_by`), which
+  NTLM's HMAC-MD5 takes over its `md-5`. `authenticate::store` keeps
+  `salted_password`, RFC 5802's term, and nothing else of it.
+- **Every caller calls it.** `api-key` and `bearer` (both gates),
+  `digest`, `scram`, `jwt`, `kerberos`, `ntlm`, the X.509 mint, the JOSE
+  key set's HS256, the AS2, AWS, Azure, MQTT and MySQL transports, the SSH
+  library (its packet HMAC keyed once a direction), the archive's checksum,
+  provisioning and the TLS library. `sha2`, `hmac`, `sha1` and `pbkdf2` are
+  direct dependencies of `xmip-core-library-codec` alone; the `sha2` and
+  `sha1` that `rsa` 0.9's signature and OAEP types name stay rsa's.
+- **The audit chain followed the same day:** Xmip Storage's and the file
+  sink's chain are formed by one rule, `xcore::audit_chain`, over
+  `codec::digest` (ADR-0070, amendment 2026-11-13), and `sha2` left
+  `xmip-core-persist` and `xmip-core-audit` with it.
+
+Proved by `codec::digest`'s published vectors (FIPS 180-4, RFC 4231, RFC
+2202, RFC 6070, RFC 7914) and every caller's tests, unchanged.
+
+Provenance: the audit is the coordinator's, the backend the coordinator's
+choice; the generic construction for the legacy hashes is the assistant's
+drafting, 2026-11-13, for the owner to overrule.
+
+## Amendment, 2026-11-13: one XML reader, in the library
+
+The owner, 2026-11-13: *Do we have all code in the modules, repos that we
+should. This is a refactoring statement*, then *Good that you found it, fix
+it* and *Speed it up*. XML was read eight ways: the flat scan in
+`codec::xml`, with a tag walk of its own; `roxmltree` in the XML Schema,
+Schematron and WSDL contracts and the SOAP logic technology; `quick-xml` in
+Convert, the stylesheet's version and the BPMN design reader;
+`sxd-document`'s parser in the `XPath` path technology and Schematron; and a
+reader of its own each in the XML shape, the SAML authenticator, the SAML
+identifier and Peppol's payload check. The same document was well-formed to
+one and not to the next, and a namespace was resolved by two of them.
+
+- **One reader, below every capability.** `codec::xml` in
+  `xmip-core-library-codec`. `quick-xml` cuts the pieces, the one XML
+  backend the estate links, and `event` gives them back in the estate's
+  terms with where each lies. `Reader` reads text in memory a piece at a
+  time and holds a document to its order — one root, every element closed
+  by its own end tag — saying the byte where it leaves it; `streamed` does
+  the same over bytes as they arrive, holding one piece; `tree` reads a
+  document into nodes in document order, its namespaces resolved, its text
+  read as XML 1.0 reads it, a document type declaration refused and its
+  depth capped by `codec::depth` or fewer where a caller says; the flat scan
+  reads through `Reader`.
+- **Every caller calls it.** The XML shape and UBL walk through `Reader`;
+  the contracts, SOAP, BPMN, both SAML gates and `XPath` read the tree,
+  the authenticator's `Element` and BPMN's `Element` built from it;
+  Convert streams; the protocols' scans are unchanged.
+- **`XPath` keeps its engine.** `sxd-xpath` evaluates over `sxd-document`'s
+  model and nothing else, so `xmip-core-path-xpath` fills that model from
+  codec's tree and never parses text itself, and it is the one crate that
+  names either. Schematron evaluates through its `Expression` and
+  `Document`, and a selected node's location is written there once. An
+  `XPath` evaluation over codec's tree would let the pair go; not now.
+- **Held by a test.** `test/ThirdParty.Test.ps1` lists each backend with
+  the crates that may name it — `quick-xml` codec alone, `encoding_rs`
+  codec alone, `sxd-document` and `sxd-xpath` path-xpath alone,
+  `roxmltree` and eight other XML readers none — and fails a second
+  reader in the change that brings it.
+- **One decoding of text.** `codec::charset` reads the WHATWG encodings
+  into UTF-8 and writes them from it, whole or a piece at a time, strictly,
+  over `encoding_rs`. The XML reader's edge and the Character Encoding
+  prepare unit both go through it; until the same day prepare took
+  `encoding_rs` itself.
+
+What changed for a reader of XML. A document is read in the encoding its
+byte order mark or its XML declaration names, UTF-8 where neither does
+(XML 1.0 appendix F): `codec::xml::decoded` decodes it at the reader's
+edge through `codec::charset`, strictly, refusing bytes wrong for the encoding
+at the first, and the XML shape reads through it, so a document declared
+ISO-8859-1 or Windows-1252, or written in UTF-16 behind its mark, is one
+document as BizTalk and MuleSoft read it; ISO-8859-1 is read as
+Windows-1252, as WHATWG's encodings read it. A document type declaration is
+refused by the tree everywhere. The SAML identifier reads the same tree as the
+authenticator, so a document that is not namespace-well-formed is refused
+at the first gate rather than the second. An attribute's value is read as
+XML 1.0 normalizes it, which the authenticator's canonical form now
+renders as the specification does.
+
+Measured on the estate's own test documents, each reader against the one it
+replaced in the same run, rounds taken in turn, the fastest of nine — on a
+machine every other worker was building on, so the times are inflated and
+the ratios are what to read, within some fifteen to twenty percent from
+run to run. First, as the reader landed: the `XPath` and Schematron parse
+61 to 79 percent faster than `sxd-document`'s parser; the signed assertion
+7 to 14 percent faster; the BPMN design and Convert's streamed read as fast
+as before; the tree up to 32 percent slower than `roxmltree` on a schema of
+61 KB; the shape's walk 22 to 30 percent slower on a design and a schema;
+the protocols' flat scan 45 percent slower over an S3 listing of a thousand
+keys; and the SAML identifier, then a tree, 227 percent slower.
+
+Then, the same day, the message path brought back to what it was (the
+coordinator: *nothing on the message path gets slower*). The flat scan
+reads `quick-xml`'s pieces straight, making nothing of a piece but the
+names it compares: 9 percent faster to 15 percent slower over the S3
+listing in two runs of one build, parity within the noise. The shape walks
+with `Reader::read_tag`, which holds the document's order but makes no
+piece of what lies inside the root and is no tag: 7 percent faster on the
+61 KB schema and 1 percent on the design. The tree sizes its vectors from
+the text once: 8 percent slower than `roxmltree` on the schema and 10
+percent faster on the design. The SAML identifier reads in one pass of
+`Reader` and stops where the assertion ends, building no tree: from 227 to
+54 percent slower. Two remain slower, and the backend is why: measured
+bare, `quick-xml` cuts the S3 listing 72 percent slower than the old walk
+did, since it gives each run of text and each entity reference as a piece
+of its own and checks each for UTF-8 where the old walk passed text over
+with one search, and the shape's walk there is 132 percent slower; and on
+a document of a hundred bytes, creating the reader is most of the cost,
+the walk 44 percent slower (1.9 to 2.7 microseconds) and the tree 26.
+Every one is within microseconds of what it was and far under the
+millisecond (CONTRIBUTING.md); parity on those two asks the backend's
+speed on a short or entity-dense document, or a cut of the estate's own.
+
+Provenance: the audit, the backend and keeping the `XPath` engine are the
+coordinator's plan of the same day; the reader's shape, its API and the
+measurements are the assistant's drafting, for the owner to overrule.

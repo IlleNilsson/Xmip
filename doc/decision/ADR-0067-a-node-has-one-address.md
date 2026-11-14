@@ -195,3 +195,58 @@ alive listeners stay decided, not built.
 
 Provenance: the assistant's, 2026-11-12, bringing the record to what is
 built.
+
+## Amendment, 2026-11-13: the sync plane is the cluster's
+
+**Provenance.** The owner agreed on 2026-11-07, the cluster's
+consolidation put to him: *xmip-core-cluster moves from Foundation to
+Platform … because it runs the sync plane (listener, member links,
+following)*, with *a feature `sync`* holding the running part.
+
+- **Where the sync listener lives.** The sync plane of clause 2 — the
+  listener answering the other members, a link to each, the following of
+  who they are — is `xmip-core-cluster`'s, behind its default feature
+  `sync` (`xcluster::sync::Plane`), and no longer `xmip-core-event`'s,
+  which keeps its Event conversation and runs no listener (ADR-0058 and
+  ADR-0065, amendments of this date). Where every other node reaches it is
+  the member's sync address in the cluster's membership, `None` while it
+  serves none (`cluster::Member`).
+- **Its bounds are `[tuning]`'s**: `sync_beat`, `sync_silence`,
+  `sync_handshake`, `sync_watch`, `sync_connect`, `sync_write`,
+  `sync_retry`, `sync_retry_most` and `sync_follow`, per cluster and per
+  node, their defaults the constants beside the plane (ADR-0065,
+  amendment of this date).
+- **Built this day:** the remount, the cluster's pure part, the sync
+  plane moved into it and its `[tuning]` keys read by the runtime.
+  **Decided, not built:** `[sync]`, shaped as `[operate]` is (the
+  amendment of 2026-10-13), read by a node that then starts the plane; the
+  sync and alive listeners stay decided, not built in the service
+  ([`node-listeners`](../architecture/estate-map.md#node-listeners)).
+
+The wording is the assistant's, 2026-11-13.
+
+## Amendment, 2026-11-13: a monitoring node reads the operate plane node to node
+
+Clause 2 names node-to-node traffic `sync`. One exchange between nodes now
+rides operate instead, and nothing else does: a node declaring the
+monitoring role follows every member's publication over the member's
+operate listener, as an Observer there, the way a surface follows a node
+(ADR-0027, amendment 2026-11-13). The owner agreed on 2026-11-12: *Monitoring
+reads over operate (an Observer) rather than the unbuilt sync plane?
+Recommended: operate.*
+
+- **Why operate.** What it reads is what a surface reads, live state, and
+  the owner decided on 2026-10-13 that *reading live state from a node over
+  gRPC stays* (ADR-0014). The reading is an Observer's, admitted by the
+  member's own `[operate] observers` (ADR-0009, amendment 2026-11-13), so
+  no plane gains a caller it did not have.
+- **Where.** A member is reached at the operate address its membership row
+  names (`cluster::Member::operate`), presenting the monitoring node's own
+  `[operate]` certificate; the monitoring node itself is read in process,
+  never over its own listener. A member whose row names no operate address
+  is said not to answer, and why.
+- **The operate listener gains two calls**, `Cluster` and `ClusterWait`,
+  answered by the monitoring node from what it gathered; the sync and alive
+  listeners stay decided, not built.
+
+The wording is the assistant's, 2026-11-13.

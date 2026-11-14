@@ -1302,6 +1302,41 @@ Describe 'What a web host reads' {
         }
     }
 
+    It 'is told one surface per cluster, each of its own kind, and read back so' {
+        # The design approved 2026-11-12, section 3.4: a cluster local at the
+        # node that gathers its view beside a cluster a snapshot.
+        InModuleScope Xmip {
+            $named = @{ Local = 'xmip-gathering'; Snapshot = 'D:\a b\other.xmip' }
+            [string[]] $told = @(Get-XmipOperationWebClusterArgument @named)
+
+            $told | Should -Be @(
+                '--Xmip:Clusters:0:Surface=local'
+                '--Xmip:Clusters:0:Local=xmip-gathering'
+                '--Xmip:Clusters:1:Surface=snapshot'
+                '--Xmip:Clusters:1:Snapshot=D:\a b\other.xmip'
+            )
+
+            [string] $line = 'xmip-gui-web.exe ' + (($told | ForEach-Object { "`"$_`"" }) -join ' ')
+            $read = @{ CommandLine = $line; Every = $true }
+
+            @(Read-XmipOperationWebArgument @read -Name 'Xmip:Clusters:*:Surface') |
+                Should -Be @('local', 'snapshot')
+            @(Read-XmipOperationWebArgument @read -Name 'Xmip:Clusters:*:Local') |
+                Should -Be @('xmip-gathering')
+            @(Read-XmipOperationWebArgument @read -Name 'Xmip:Clusters:*:Snapshot') |
+                Should -Be @('D:\a b\other.xmip')
+            @(Get-XmipOperationWebClusterArgument).Count | Should -Be 0
+        }
+    }
+
+    It 'lets a test status object name the node a web monitor follows' {
+        $parameter = (Get-Command -Name Start-XmipOperationWeb).Parameters['Local']
+        $binding = $parameter.Attributes |
+            Where-Object { $_ -is [System.Management.Automation.ParameterAttribute] }
+
+        $binding.ValueFromPipelineByPropertyName | Should -BeTrue
+    }
+
     It 'warns that it will not show a roll it was not pointed at, and says how to' {
         InModuleScope Xmip -Parameters @{ Name = $script:Cluster.Name } {
             param($Name)

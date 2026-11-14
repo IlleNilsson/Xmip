@@ -379,3 +379,262 @@ not scheduling and stays where it is; it is the name of how a Stream arrived,
 a noun the identifying capabilities read, and Foundation is where nouns live
 (clause 1). The timer that will produce it is the first thing
 `xmip-core-schedule` holds, and it brings the mount back.
+
+## Amendment, 2026-11-13: `xmip-core-cluster` is Platform, and the layers are tested
+
+**Provenance.** The owner agreed on 2026-11-07, the cluster's
+consolidation put to him (open problem 19, *Cluster coordination*):
+*xmip-core-cluster moves from Foundation to Platform — remounted at
+module/platform/cluster, with an ADR-0058 section 5 amendment — because it
+runs the sync plane (listener, member links, following). Its pure part,
+Member, Membership, placement and Rotation, sits under
+`default-features = false` for configure and persist. A feature `sync`
+holds the running part. event keeps its Event conversation and stops
+running a listener or depending on tls.* And, among the records of its
+first piece, *a new test/Layer.Test.ps1 that checks layer direction and
+that the graph is acyclic.*
+
+- **Clause 5 is amended: Foundation keeps nine, Platform holds four.**
+  `xmip-core-cluster` leaves Foundation by clause 2: a cluster that listens
+  for the other nodes, keeps a link to each and follows who they are is
+  started, supervised and stopped, and its subject is the node; the sync
+  plane moved in from `xmip-core-event` the same day, behind the feature
+  `sync`. `module/platform/` holds four mounts: cluster, configure,
+  persist and runtime.
+- **Remounted as resilience was** (the Consequences above):
+  `Move-XmipSubmodule` moved the working tree from `module/foundation/cluster`
+  to `module/platform/cluster`; `.gitmodules` carries the new `path` and
+  keeps the historical section name `modules/foundation/cluster`, which
+  `.git/modules/` is keyed by; `architecture.toml` says
+  `architecturalDomain = "Platform"` and `repositoryRole =
+  "platform-service"`, so `Sync-XmipEstate -Compose` computes the same
+  mount. The repository, the crate and the URL do not change (ADR-0011).
+  Every caller depends on it by its URL, so no caller's `Cargo.toml`
+  changes for the move, and the local patch reads the new path from
+  `.gitmodules` (`New-XmipLocalPatch`).
+- **Its pure part opens nothing.** `Member`, `Membership`, `place` with its
+  `Candidate` and `Unplaced`, `Rotation` and `ClusterError` start no
+  thread, open no socket and read no clock, so `xmip-core-configure` and
+  `xmip-core-persist` take them with `default-features = false` (ADR-0056,
+  amendment of this date). `Member` and `Membership` moved from
+  `xmip-core-event`'s `cluster` module, with no copy and no re-export left
+  there. The timing the sync plane keeps is in it too (`Timing`, every
+  bound a `[tuning]` key), so a node reads its `[tuning]` without the
+  network.
+- **The running part is the default feature `sync`**: the sync plane,
+  moved the same day from `xmip-core-event`'s `cluster` module whole —
+  the listener, the link to each member, the following
+  (`xcluster::sync::Plane`; ADR-0065 and ADR-0067, amendments of this
+  date). The dependency runs one way: `cluster`'s `sync` depends on
+  `event`, which keeps its Event conversation, runs no listener and
+  depends on neither `cluster` nor `tls`. While `Member` and `Membership`
+  had moved and the plane had not, `event` depended on `cluster` for them,
+  Foundation on Platform; the plane's move ended it the same day.
+- **The layers are tested** (`test/Layer.Test.ps1`). A repository's layer
+  is its domain, and a Technology's its parent's, so a Library's
+  technologies are Library. Over what each mounted repository's build uses
+  and what the manifest declares for the rest, the test holds: the graph is
+  acyclic (repository-model.md section 4); Library depends only on Library;
+  Foundation only on Foundation and Library (clause 3); a Capability on
+  none of its own Technology children, and a Platform repository on no
+  Technology but a Library's (repository-model.md section 4). **That
+  clause 3 admits a Library is the assistant's reading**, drafted with the
+  test: a Library is the estate's own third-party code, holding no noun of
+  Xmip's, and five Foundation crates — `context`, `journey`, `message`,
+  `node` and `event` — took `xmip-core-library-codec` with the manifest
+  declaring it; read otherwise, clause 3 had been broken since before it
+  was written.
+- **What the test found, the day it was written.** Five dependencies
+  break clause 3 and are listed in the test with the record each stands
+  on; the list may shrink and never grow, and an entry for a breach that
+  is gone fails too. Four are `xmip-core-event`'s: `audit`, `observe`,
+  `authorize` and `resilience`, each taken after clause 3 called the
+  domain clean — Events audited (ADR-0062), a subscriber authorized
+  (ADR-0065 clause 4), a scope and an act observe's, a forwarder retrying
+  under the guards (ADR-0065 clause 3) — and nothing said so, because
+  nothing looked. The fifth is `xmip-core-sdk` on `xmip-core-transport`,
+  whose simulators are a transport's far ends (ADR-0061, amendment
+  2026-09-24). None is answered here. A sixth, `event` on `cluster`, was
+  listed while the members had moved and the plane had not, and left the
+  list with the plane.
+
+Built 2026-11-13, the assistant's: the remount, the pure part
+(`xmip-core-cluster`'s `member.rs`, `placement.rs`, `rotation.rs`,
+`timing.rs`), the sync plane under `sync` (`sync.rs`, `sync/serving.rs`,
+`sync/upstream.rs`) and `test/Layer.Test.ps1`.
+
+## Amendment, 2026-11-13: membership is kept by persist, written and followed by the runtime, and said by the cluster
+
+**Provenance.** The cluster consolidation the owner agreed on 2026-11-07:
+*runtime implements cluster::Membership over* the administration database;
+the design he approved on 2026-11-12, section 3.2 (ADR-0056, amendment of
+this date, says what is built).
+
+Each of the three Platform repositories holds one part, and none a second
+copy of another's:
+
+- **`xmip-core-persist` keeps the rows**: the administration database's
+  `membership` table, its typed row `storage::MemberRecord`, the two
+  operations that write a row and read the members now
+  (`XmipStorage::write_member`, `read_members`, wire operations 44 and 45,
+  answer 31), and the wait on the table (`Watched::Membership`, kind 6 of
+  wire operation 37). It reads no word of a row: what a role or an
+  evidence line means is `xmip-core-node`'s.
+- **`xmip-core-runtime` writes and follows them**: a node activated writes
+  its row and follows the table (`runtime::membership`, `Joined` and
+  `Followed`), and `Followed` implements `xcluster::Membership`, reading a
+  member's capability back from its evidence through `node::Capability`'s
+  one reading. The flag on a save not its peers' (`peers_save`) is the
+  runtime's, beside the rows it reads, since `Member` carries no save.
+- **`xmip-core-cluster` says what a member is** (`Member`, `Membership`),
+  as the amendment above placed it, and depends on neither of the other
+  two.
+
+## Amendment, 2026-11-13: `xmip-core-sdk` is a Capability, and its breach is gone
+
+**Provenance.** The owner, 2026-11-13: *Do we have all code in the modules,
+repos that we should. This is a refactoring statement*, and, shown what the
+placement review found: *Good that you found it, fix it*. The reading below
+is the assistant's; ADR-0061, amendment of this date, holds it in full.
+
+- **Clause 4 places it.** The manifest declared `xmip-core-sdk` Foundation,
+  and its simulators depend on `xmip-core-transport`, a Capability: the
+  fifth breach the amendment above listed. Asked in clause 4's order, the
+  message-path test answers first. Every CAN technology opens its bus on
+  `sdk::broadcast` where the build has no kernel CAN interface
+  (`xmip-core-transport-can-bus`'s `open_bus`), and HART its `loopback`
+  line on `sdk::serial`, in production code, so a Message on such a
+  Location waits for the simulated medium: the SDK is a Capability. The
+  code stays; `architecture.toml` says `architecturalDomain =
+  "Capability"` and `repositoryRole = "common-capability"`, and the
+  declared mount, `sdk/`, does not move (ADR-0061 decision 3).
+- **What stands now.** Foundation is the nine the amendment above leaves
+  it, and the manifest declares no other: `xmip-core`, `abi`, `stream`,
+  `message`, `context`, `journey`, `node`, `party` and `event`.
+  `test/Layer.Test.ps1` lists four breaches, all `xmip-core-event`'s; the
+  SDK's dependency on the transport capability is a Capability's on a
+  Capability, which the rules admit, and its entry left the list in this
+  change.
+
+## Amendment, 2026-11-13: `xmip-core-schedule` holds the estate's first scheduling, and is mounted again
+
+**Provenance.** The owner, 2026-11-13: *Do we have all code in the modules,
+repos that we should. This is a refactoring statement*; shown what the
+placement review found, *Good that you found it, fix it*. The 2026-09-22
+amendment above made `xmip-core-schedule` scheduling's only home in the
+estate — *the scheduling code if any done shall be in this repo* — and
+said that searched that day the estate had none. Searched again on
+2026-11-13 it had two pieces, both in `xmip-core-runtime`, both written
+after that search; this amendment takes the home up. The reading below is
+the assistant's.
+
+- **What moved, and nothing copied.** From `xmip-core-runtime`: the rest a
+  Receive Location takes before it asks its transport again,
+  `src/receiving/pace.rs` whole (`Pace` and its `rest`, `Asking`, `Ended`,
+  and the `[tuning]` defaults `RECEIVE_POLL`, `RECEIVE_SWEEP` and
+  `RECEIVE_BACKOFF`), with `RECEIVE_DRAIN` from `src/receiving/drain.rs`,
+  the fourth default `Pace` holds, to `schedule::pace`; and when a Send
+  Port queue's earliest retry is due, from `src/send_step/due.rs` — `Due`
+  and its rules: the earliest kept, counted by the newest read, a due time
+  a hand-on noted kept across a read under way, and the earliest the send
+  step wakes for — to `schedule::due`. The runtime's `receiving.rs`,
+  `send_step.rs` and their parts call it, by its own paths; there is no
+  re-export.
+- **What stays in the runtime is the waiting and the work.** The rest is
+  waited on the node's stop and the drain run there (`receiving.rs`,
+  `receiving/drain.rs`); the send step keeps one `Due` per queue under its
+  lock, reads Xmip Storage for it and wakes (`send_step/due.rs`). The
+  Work Process step's dispatch (`work_step/dispatch.rs`) stays whole: it
+  decides with the runtime's pool, pickup, admission and turning, and
+  moving it would make `schedule` depend on the runtime, which depends on
+  `schedule` — a cycle (repository-model.md section 4).
+- **A Capability, at `module/core/capability/schedule`.** By clause 4's
+  order the message-path test answers first: a Message waits for the rest
+  and for its retry's due time, so the repository is a Capability
+  (`common-capability`), and not Platform, where it was mounted until
+  2026-09-19 (`module/platform/schedule`). Clause 2's *fires a timer* is
+  still Platform: the waiting is the runtime's. `schedule` decides and
+  waits for nothing, opens nothing and depends on nothing. Declared in
+  `architecture.toml` as `[xmip.core.schedule]` and mounted by
+  `Sync-XmipEstate -Compose`; the runtime's dependency is optional and
+  taken by its `node` feature.
+- **The condition of the 2026-09-19 amendment is met.** It said the first
+  implementation waits on a durable store, since a trigger with nowhere
+  durable to record that it fired is a demonstration. A retry's due time
+  is kept in the Ledger at its place in its queue (`runtime-model.md`
+  section 10), and `schedule` holds only what a node decides from it.
+- **What stands.** `Arriving::Scheduled` stays in `xmip-core` (the
+  amendment of 2026-09-22). The timer that will produce it is not written;
+  when it is, it is written here.
+
+## Amendment, 2026-11-13: `xmip-core-node` opens no file, and a declaration's file is the runtime's
+
+**Provenance.** The owner, 2026-11-13: *Do we have all code in the modules,
+repos that we should. This is a refactoring statement*; shown what the
+placement review found, *Good that you found it, fix it*. The reading below
+is the assistant's.
+
+- **Clause 1 found it.** `xmip-core-node` is Foundation, and nothing in a
+  Foundation crate *starts, opens, spawns, reads a file*. Until this day
+  its `declaration.rs` made a directory, wrote a System Process's
+  declaration file and removed it when dropped, and its `standing.rs`
+  listed a directory and read every file in it: the one writer and reader
+  ADR-0053's amendment of 2026-09-27 placed there.
+- **What moved, and nothing copied.** To `xmip-core-runtime`'s
+  `src/declared.rs`: `DIRECTORY_VARIABLE` and `directory`, where every
+  process on the machine meets; `declare` and `declare_in`, methods of
+  `Declaration` until then and functions over one now; `Declared`, the
+  declaration standing while it is held and taken away when it is dropped
+  or `handed_over` across the C boundary; and `standing`, the listing of a
+  directory. No re-export and no shim is left in node.
+- **What stays in node is the definition**: `Declaration`, `Purpose` and
+  `KEYS`, the refusal of a name that is no System Process's, `with`,
+  `to_toml`, the text a declaration is written as, and `Standing` with
+  `Standing::read`, the one reading of that text. Pure functions over the
+  shape, as clause 1 admits.
+- **Who calls the runtime for it.** Its own section 13 exports
+  (`ffi::process`) and the wait a surface's local call learns from the
+  node serving it (`plane::deadline`); `xmip-service`
+  (`.src/service/run.rs`); and the Essentials, whose roll, cluster and
+  nodes declare through one function, `process_audit::declared`, which now
+  writes the declaration where each of the three had made the call itself.
+  The .NET surfaces and the estate's PowerShell module reached the file
+  only through section 13 and change nothing; the file's name, place and
+  text are unchanged.
+- **Held by a test.** `test/Foundation.Test.ps1` reads the production code
+  of every crate mounted at `module/foundation` and fails on a line that
+  reaches the file system. It found none once node's moved; clause 1's
+  other verbs — start, spawn, wait on a clock — it does not read.
+
+## Amendment, 2026-11-13: Event delivery is the cluster's, and the last of clause 3's breaches is gone
+
+**Provenance.** The owner, 2026-11-13: *Do we have all code in the
+modules, repos that we should. This is a refactoring statement*; *Good
+that you found it, fix it*. Where delivery goes is the assistant's, in
+the placement plan put to him the same day.
+
+- **`xmip-core-event` is a noun again.** What an Event is stays
+  Foundation: the Event and its taxonomy, the one subscription rule
+  (`filter`), the wire form (`wire`, `json_format`, `binding`) and the
+  `Wire` a transport carries it over. It depends on `xmip-core`,
+  `xmip-core-node` and `xmip-core-library-codec` alone.
+- **Delivering it is a lifecycle, so it is Platform's**, by clause 2: the
+  hub a process holds and every subscriber is admitted to, the queue per
+  subscription, the listener's thread, the forwarder pumping a
+  subscription over a wire, an operator's acts and the audit of each are
+  started, held and stopped for a node. They moved whole into
+  `xmip-core-cluster`, beside the sync plane that already carried the
+  cluster's Events: `delivery`, behind the feature of that name, on by
+  default and included by `sync`, and the Event link's conversation as
+  `sync::link`, compiled with `delivery` because the hub keeps its taps
+  and carriers by it (ADR-0065, amendment of this date). No copy and no
+  re-export is left in `event`.
+- **The four breaches the layer test listed for `event` are gone**:
+  `audit`, `authorize`, `observe` and `resilience` were delivery's, and
+  `xmip-core-cluster` takes them, a Platform repository on a Capability
+  and on Operation, which the rules allow. The scope rule an Event's
+  filter asks is `xmip-core-node`'s since the same day (ADR-0027,
+  amendment of this date), so the filter took none of them.
+  `test/Layer.Test.ps1` lists no breach now.
+
+Built 2026-11-13, the assistant's.

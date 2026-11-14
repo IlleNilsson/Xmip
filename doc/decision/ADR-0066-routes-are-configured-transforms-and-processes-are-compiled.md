@@ -850,3 +850,82 @@ assistant's, the same day, the Work pool's own key among it, for the owner
 to overrule. A failed turn letting go of its place under `skip` is the
 owner's rule of 2026-10-22 applied, found missing from the refused and the
 panicked turn once the amendment had landed.
+
+## Amendment, 2026-11-13: an attribute rule's condition is an expression
+
+The placement review the owner asked for (2026-11-13: *Do we have all code
+in the modules, repos that we should. This is a refactoring statement*;
+*Good that you found it, fix it*) found a second condition model:
+`xmip-core-authorize-abac` declared its own `Condition` — equals,
+not-equals, in and starts-with over an attribute, all-of and any-of — and
+decided it with its own evaluator, beside the one language clause 2 makes
+every condition in Xmip.
+
+- **An abac rule's condition is an `Expression`**, `path::expression`'s,
+  compiled once and decided from its tree (`abac::Rule::permit` and
+  `deny`). Its names are the attributes': `mechanism`, `class`,
+  `assurance`, `party`, `value`, `action`, `artifact`, `location`,
+  `contract`, `path`, and `evidence:` before a claim's name
+  (`abac::Attribute`), read through the language's `Names` off the
+  identity's facts and the attempt. The old operators are the language's:
+  equals `=`, not-equals `<>`, in `in (…)`, all-of `and`, any-of `or`, and
+  starts-with `abac::Attribute::starts_with`, which writes
+  `like 'prefix%' escape '\'` through `path::expression::Condition::starts_with`.
+- **`like` takes SQL's `ESCAPE` clause**, which clause 2 left out:
+  `value [not] like pattern escape 'c'`, the escape one character in single
+  quotes, before `%`, `_` or itself that character as itself, and before
+  anything else, or at the end, refused as SQL's standard refuses an invalid
+  escape sequence — when the expression is compiled for a pattern written as
+  text, as unknown, with the reason, for one read off a name. `escape` is a
+  word only after a pattern, so a name may still be `escape`; the canonical
+  text writes it lower case. A designer's row holds the pattern and its
+  escape as the value written as an expression (`'a\_b%' escape '\'`), read
+  back by `path::expression::pattern`, so a row loses nothing.
+  `Condition::starts_with` is the one place a text becomes a pattern that
+  matches it as written: a starts-with rule wrote `like 'prefix%'` without
+  it, and a `%` or `_` in a Party name or a value's prefix matched more than
+  the rule named — a loosening the coordinator caught the same day.
+- **Absence is unknown.** An attribute the record does not carry satisfies
+  nothing, not even `<>`, as before: in the language's three truths it is
+  unknown, and only true holds.
+- **A name that is no attribute is refused when the rule is made**, in
+  words naming the rule and the name, never left unknown at every attempt.
+- `abac::Condition`, `abac::Operator` and their evaluator are deleted;
+  `architecture.toml`'s abac row depends on `xmip-core-path`, a
+  capability, which the policy allows a technology. Tested in the crate:
+  each old operator as the language writes it, absence under `=`, `<>`
+  and `not`, `and` and `or` with `true` and `false`, a misspelled
+  attribute refused, and a prefix's `_`, `%` and `\` matching only
+  themselves; in path, the escape read, printed, refused and decided, and a
+  prefix matched as written; in `configure`, an escaped pattern's row
+  written back byte for byte.
+
+Provenance: the owner's words above; how it is built is the assistant's,
+the same day, for the owner to overrule.
+
+## Amendment, 2026-11-13: a design and Convert's XML are read by the estate's one XML reader
+
+The owner, 2026-11-13: *Do we have all code in the modules, repos that we
+should. This is a refactoring statement*, and then *Good that you found it,
+fix it*. The amendment of 2026-10-22 named the BPMN technology's reader,
+**the XML reader is quick-xml**, linked by the technology itself, while
+Convert linked `quick-xml` of its own and four other crates read XML
+through `roxmltree`.
+
+- **A design is read by `codec::xml::tree`**, the estate's one XML reader
+  in `xmip-core-library-codec` (ADR-0044, amendment 2026-11-13). What the
+  amendment of 2026-10-22 holds stays true of it: every namespace resolved
+  and compared, never fetched; a document type declaration refused, so no
+  entity of anyone else's is expanded; no network code.
+  `bpmn::document::Element` keeps its shape, built from the tree, the
+  namespaces an element declares standing first among its attributes where
+  the editor looks for a prefix.
+- **Convert reads XML through the same reader streamed**
+  (`codec::xml::streamed`), a piece at a time, as clause 3 asks of a
+  standard unit; the stylesheet's declared version is read through it too.
+- `quick-xml` is the reader's backend and is named by `codec` alone, which
+  `test/ThirdParty.Test.ps1` holds.
+
+Provenance: the owner's words above; the backend is the coordinator's plan
+of the same day, and the reader's shape is the assistant's drafting, for
+the owner to overrule.

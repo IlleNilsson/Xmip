@@ -5,12 +5,15 @@
 - Date: 2026-09-24
 - Amended: 2026-09-24, later — the SDK holds simulators, emulators and the
   test ACME server only; every trait stays in its capability
+- Amended: 2026-11-13 — the SDK is a Capability, by the message-path test;
+  its mount stays at `sdk/`
 - Related: ADR-0012 (the module boundary and the C ABI), ADR-0016 (submodule
   composition: what starts Xmip mounts without a provider), ADR-0021 (latest
   everywhere until the first release), ADR-0023 (AGPL-3.0-or-later, and no
   second license), ADR-0044 (a technology shares through its capability),
-  ADR-0057 (a vtable is a promise, only a loader is a saving), ADR-0059 (a test
-  suite carries its provider), doc/planning/open-problems.md problem 26
+  ADR-0057 (a vtable is a promise, only a loader is a saving), ADR-0058 (the
+  message-path test first), ADR-0059 (a test suite carries its provider),
+  doc/planning/open-problems.md problem 26
 
 ## In brief
 
@@ -188,3 +191,40 @@ only contain simulator/emulators, local ACME server for now*, and
    license boundary, and a provider declares its modules in core's manifest.
 7. **Decision 5 is open**: whether a simulator crate is taken at a versioned
    tag was decided for an SDK of traits, and is the owner's to rule on again.
+
+## Amendment, 2026-11-13: the SDK is a Capability
+
+**Provenance.** The owner, 2026-11-13: *Do we have all code in the modules,
+repos that we should. This is a refactoring statement*, and, shown what the
+placement review found: *Good that you found it, fix it*. Among what it
+found, `test/Layer.Test.ps1` listed `xmip-core-sdk` on `xmip-core-transport`
+as a Foundation repository depending on a Capability, which ADR-0058 clause
+3 forbids. The reading below, that the domain was wrong and not the code, is
+the assistant's.
+
+1. **The code is where this record put it; the domain was wrong.** The
+   manifest declared the SDK Foundation, from the morning it was to hold the
+   traits a node cannot start without (decision 3), and the domain stayed
+   when the traits went home. Its simulators
+   use the transport capability's `Line` and failures (`transport::line`,
+   `transport::error`) because clause 5 of the amendment above says a
+   simulated bus is a `Line`, so nothing in the code moves.
+2. **A Message travels over the SDK's media, so it is a Capability.**
+   Decision 9 made a simulator selectable by an end user as well as used by
+   tests, and clause 5 made the simulators the SDK's whole content. Both are
+   built, in production code: `xmip-core-transport-can-bus` opens a bus on
+   `sdk::broadcast` wherever the build has no kernel CAN interface
+   (`open_bus`), and every CAN technology opens its bus there; and
+   `xmip-core-transport-hart` opens its `loopback` line on `sdk::serial`
+   (`configured`). A Message received or sent on such a Location waits for
+   the simulated medium, and ADR-0058 clause 4 applies the message-path test
+   first. `architecture.toml` says `architecturalDomain = "Capability"` and
+   `repositoryRole = "common-capability"`.
+3. **Decision 3 stands**: the SDK mounts at `sdk/`. Its manifest entry
+   declares `mount = "sdk"`, which the domain does not override, so nothing
+   moves on disk and no `Cargo.toml` changes. The repository, the crate and
+   the URL keep their names (ADR-0011).
+4. **Its dependency on `xmip-core-transport` is no breach.** A Capability on
+   another Capability breaks no layer rule, and the SDK has no Technology
+   children; `test/Layer.Test.ps1` admits the dependency by its rules and
+   lists it no more (ADR-0058, amendment of this date).

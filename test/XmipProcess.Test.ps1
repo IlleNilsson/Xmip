@@ -16,8 +16,8 @@ BeforeAll {
 
 Describe 'Where a System Process declares itself' {
     It 'is the directory the node names, and this module keeps no rule for it' {
-        # The rule is xmip-core-node's, tested there; the listing reads where
-        # the node says (xmip_operate.h section 13). Until 2026-09-27 this
+        # The rule is xmip-core-runtime's (declared.rs), tested there; the
+        # listing reads where it says (xmip_operate.h section 13). Until 2026-09-27 this
         # module kept the rule again, and read the files with a reader of its own.
         InModuleScope Xmip {
             Get-Command -Name 'Get-XmipProcessDirectory' -ErrorAction SilentlyContinue |
@@ -97,6 +97,17 @@ Describe 'What a killed process left behind' {
         InModuleScope Xmip {
             [string] $nowhere = Join-Path ([System.IO.Path]::GetTempPath()) "xmip-none-$PID"
             (Read-XmipProcessDeclaration -Path $nowhere).Count | Should -Be 0
+        }
+    }
+
+    It 'is taken away by the runtime, and this module removes no declaration itself' {
+        # Until 2026-11-13 the listing deleted a gone process's file with
+        # Remove-Item (xmip_operate.h section 13, xmip_process_undeclare_v1).
+        InModuleScope Xmip {
+            [string] $listing = (Get-Command -Name 'Read-XmipProcessDeclaration').Definition
+
+            $listing | Should -Match 'ProcessDeclaration\]::Undeclare\('
+            $listing | Should -Not -Match 'Remove-Item|IO\.File\]::Delete'
         }
     }
 }

@@ -60,8 +60,11 @@ this machine's `xmip-service --slice --cluster --bind --nodes --authority`
 prints it, signed by the environment's authority kept in `authority`, and
 that authority's certificate beside it, written into `slices/<node>`: every
 Receive Location and Send Port the cluster's file designs is placed over the
-environment's nodes, round robin by their roles, and bound over SFTP on the
-Parties' far end at `far_end`, port 7422, each a user of its own there, so a
+environment's nodes, round robin over those whose roles serve its stage,
+every Work Process on each node serving its stage, and work no node
+satisfies refused (ADR-0056, amendment 2026-11-13); the Locations bound
+over SFTP on the Parties' far end at `far_end`, port 7422, each a user of
+its own there, so a
 node fetches what the Essentials drops and puts what it sends where the
 Essentials is told of it (ADR-0028, amendment 2026-10-22). The nodes are the
 environment file's, never written again. A node never slices and never

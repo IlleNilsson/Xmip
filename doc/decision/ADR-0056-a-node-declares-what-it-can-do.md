@@ -23,6 +23,7 @@
 - Order: 13
 - Concepts: node capability; node role; online capability; feature capability;
   authentication capability; runtime capability; placement criteria;
+  requirement; placement; Rotation;
   Storage role, Xmip Storage; primary and standby Storage nodes, epoch
 
 **A node declares its capabilities, and work is placed on a node whose
@@ -385,7 +386,8 @@ name, and the name is the role.
 `xmip-service` derives them from its Locations today; the storage role is
 read from its `roles` since the amendment of 2026-10-20 — and whether placement
 (ADR-0022's solver) matches work against roles or against the stages they
-serve. Named so the gaps are on the record.
+serve. Named so the gaps are on the record. *Placement is answered by the
+amendment of 2026-11-13: against the stages.*
 
 Provenance: the seven roles, the three new ones and Executing as their sum
 for low latency are the owner's, 2026-10-01, quoted above, as is the
@@ -558,7 +560,8 @@ words parsed by `NodeRole::declared`. That a running node reads
 its storage role from that key is the assistant's drafting, the owner's to
 strike. The stages a running node says it serves are still derived from
 its Locations (`Capability::serving`), and placement against roles stays
-open.
+open. *Closed by the amendment of 2026-11-13: placement matches the stages
+a node's roles serve.*
 
 Built 2026-10-20: `xmip-core-runtime`'s `storage::plan` refuses a node
 without the storage role and without `[storage] nodes`; the root crate's
@@ -1007,3 +1010,250 @@ receiving nodes given the Storage nodes' names — and read the same
 relations and the same bands and columns back through the renaming, and
 two nodes swapping roles swap relations and places. Built 2026-11-13, the
 assistant's.
+
+## Amendment, 2026-11-13: a node is a member through Xmip Storage
+
+**Provenance.** The cluster consolidation the owner agreed on 2026-11-07:
+*each node registers at start in the administration database (sync
+address, Capability evidence, signed save it runs); runtime implements
+cluster::Membership over it; a differing save is flagged*; and the design
+he approved on 2026-11-12, section 3.2, its fourth landing piece. The two
+differ in one point: the agreement of 2026-11-07 named a kind of the shared
+`administration` table, `AdministrationKind::Membership`; the design gives
+membership a table of its own, as every type of data has (the owner,
+2026-10-10: *every type of data goes into dedicated tables, dedicated
+columns*). The table is built; the kind, which nothing wrote, is deleted
+and the kinds after it numbered on with no gap, since nothing is kept for
+compatibility before the first release; the values the agreement named
+are columns of the table.
+
+- **Each node writes its row** of the administration database's
+  `membership` table once it reaches Xmip Storage, tried again each
+  `[tuning] storage_pass_over` until it does, and again as it stops in
+  order, before its own Storage node stops (`runtime::membership`, begun as
+  the node is activated). The stop is written only where the node's Storage
+  client already knows Storage answers (`storage::Reached::answers`, the
+  rule `<node>/storage` stands by), one round trip; where it does not, the
+  stop is not written, nothing waits on Storage, and the node's stop record
+  says why its row still says it runs, so a stop never waits out a Storage
+  node's timeout (the millisecond rule; the runtime's timing program holds
+  a stop with Storage gone under a millisecond). Its columns: `node`, its
+  scope; `roles`, the
+  roles `[nodes.<name>] roles` declares as one declaration says them, and
+  `evidence`, that declaration's evidence with the node's online
+  capability (`node::Capability::evidence`); `operate`, where its operate
+  listener answers on the network, as bound, or none; `sync`, where its sync
+  listener answers, none while no node starts one (ADR-0065); for a Storage
+  node of several, `storage_place`, its place in `[storage] nodes`, which it
+  finds by the process it answers as and never by a name
+  (`StorageNode::place`); `save` and `serial`, the signed slice it runs
+  (ADR-0031, amendment 2026-11-06, point 3); `process`, drawn new at each
+  start, the row's key; and Xmip Storage's own: `started_at`, `stopped_at`
+  (empty while it runs), `written`, the table's write count at the row's
+  last write, and `latest`, whether it is its node's latest row. Rows are
+  kept, never deleted (ADR-0040, amendment 2026-11-13). A Storage node of
+  several writes through the Xmip Storage it holds for its own work. A
+  person's connection writes no row: the Storage plane admits nodes alone.
+- **Followed, never asked again.** The wait on queues (wire operation 37)
+  names the table too (`Watched::Membership`), counted by its latest write,
+  so a node is told as a row is written. Each node follows the members
+  once its row is written (`runtime::membership::Followed`), which
+  implements `xcluster::Membership`: each node's latest row, running or
+  stopped in order, as an `xcluster::Member` — its node, sync and operate
+  addresses, capability, place among the Storage nodes and when it stopped
+  — the one seam every follower of the members takes (ADR-0058, amendment
+  2026-11-13).
+- **A save not its peers' is flagged.** A node says its membership at
+  `<node>/membership`: Working until its row is in Xmip Storage, saying
+  why; Fine with when it became a member, its process, where it answers and
+  the save it runs; and Stressed where that save is not its peers' — the
+  save most of the running members run, alone at the most
+  (`runtime::membership::peers_save`); where two saves are run by as many
+  members each, no save is the peers' and every running member is flagged.
+  Every surface reads the record from the snapshot, so none keeps words of
+  its own.
+
+Not built: a sync listener, so every row's sync address is none; anything
+that says a node left the cluster; the monitoring node's gathering over
+the members (the design's next piece).
+
+## Amendment, 2026-11-13: placement reads stages, and one Rotation turns
+
+**Provenance.** The owner agreed on 2026-11-07, the cluster's
+consolidation put to him: *placement reads stages: Receive Location →
+receive, Send Port → send, executing serves all, plus online where needed.
+node gains `Requirement` and `Capability::satisfies`. The ADR-0056 open
+question is closed.* Decided by the assistant the same day and told to
+him: *one `cluster::Rotation` serves Storage's round robin and placement*,
+amending the amendment of 2026-10-01 and `deployment-model.md` section 3;
+*unplaced work is refused per clause 4*; *configure::cluster::roles uses
+NodeRole::declared*; and *Node.capabilities, supports and
+select_capable_node, the string capabilities, are deleted*.
+
+- **The open question of 2026-10-01 is closed.** Placement matches work
+  against the stages a node's roles serve, never against the role words:
+  a Receive Location requires the receive stage served, a Send Port the
+  send stage, and the executing role serves every stage, so it satisfies
+  both. Work that must reach off the machine requires the online
+  capability too (clause 2).
+- **Work states its requirement in a node's own terms** (clause 3):
+  `node::Requirement` — the stage the work needs served, if any, and
+  whether it needs the online capability — said in words for a refusal
+  (`Requirement::said`: *serving Receive*, *serving Send, online*). The
+  one match is `node::Capability::satisfies`: one of the node's roles
+  serves the stage, and it is online where the work needs it to be.
+  Authentication and runtime capability stay unmodeled, as no node
+  declares them.
+- **Placement is `xmip-core-cluster`'s `place`** (ADR-0058, amendment of
+  this date): among the candidates satisfying the requirement, in the order
+  given, the one the rotation's next turn starts at. A candidate is any
+  node named with what it declares (`cluster::Candidate`): a member, or a
+  node of a cluster's file. Nothing reads a name; a node is named only to
+  say which it was.
+- **Work no node satisfies is refused** (clause 4), never left silently
+  unplaced: `cluster::Unplaced` names the requirement and every node
+  considered with what it declares — *REFUSED: no node satisfies work
+  requiring serving Send, online; considered `<node>` (receiving; offline),
+  …*, or *considered none*.
+- **One rotation for every round robin** (amends the amendment of
+  2026-10-01, *a node reaches the Storage nodes round robin*):
+  `cluster::Rotation` is where the next turn starts, one atomic step a
+  turn, each turn asking every place once from one further than the turn
+  before. Xmip Storage's round robin over the Storage nodes, one turn a
+  statement (the amendment of 2026-10-03), and placement's over the nodes
+  that can take a piece of work, take their turns from it. What a caller
+  passes over — a Storage node that did not answer lately, a standby — and
+  in what order it asks the rest stays the caller's.
+- **The string capabilities are gone.** `node::Node` lost `capabilities`
+  and `supports`, and the cluster crate's `Cluster` model — an identifier,
+  a name and its `Node`s, which nothing built or read — went with its
+  `select_capable_node`: a node matched by a string such as
+  `transport:http`, which no node declared and nothing placed by, beside
+  the four kinds of clause 2. The name `Cluster` is left to the running
+  sync plane that moves in (ADR-0065, amendment 2026-11-13).
+
+Built 2026-11-13, the assistant's: `node::Requirement` and
+`Capability::satisfies` (`module/foundation/node/src/requirement.rs`);
+`cluster::place`, `Candidate`, `Unplaced` and `Rotation`
+(`module/platform/cluster/src/placement.rs`, `rotation.rs`); the deletions.
+Held by node's and cluster's tests: a node chosen by what it declares, the
+same after every node is renamed; work going round the nodes that satisfy
+it and never elsewhere; online work only to an online node; the refusal's
+words; every turn asking every place once, wrapping included, and four
+threads sharing one rotation spread evenly. **Built the same day:**
+`xmip-core-persist`'s Storage client takes its turns from `Rotation` —
+its own counter is deleted, every clone and every statement's client
+sharing one rotation, the ranking after it (a Storage node that did not
+answer lately last, a standby after those that are not) unchanged and the
+client's (`persist::storage::client`), held by persist's round robin and
+standby tests. **Decided, not built:** `xmip-core-configure` placing a
+cluster's Receive Locations and Send Ports through `place`, reading each
+node's roles by `NodeRole::declared` (`configure::cluster::roles`), and
+refusing what it cannot place where it now leaves it unplaced — which
+changes `xmip-service --slice --bind` and the Essentials, which place by
+it. *Built the same day, with a Work Process placed by its stage: the
+amendment below, a cluster's file places its work through `place`.*
+
+## Amendment, 2026-11-13: the monitoring role gathers the cluster
+
+The amendment of 2026-11-05 put the web GUI on a node declaring the
+monitoring role, as that role's surface for inspecting runtime state, and
+assumed such a node sees its cluster. Now it does: the owner agreed on
+2026-11-12 that a monitoring node may gather (ADR-0027, amendment
+2026-11-13).
+
+- **What the role does, read from the role.** `node::Capability::gathers`
+  — the declared roles contain monitoring — is the one rule. A node it
+  holds for hands its operate listeners the cluster's publication as they
+  start, so `Cluster` answers at once (revision 0 until the first view),
+  and once activated follows its membership through Xmip Storage
+  (amendment 2026-11-13, *a node is a member through Xmip Storage*),
+  gathering every member as an Observer (`running::gathering`,
+  `plane::monitoring`). A node it does not hold for refuses `Cluster` in
+  words naming the role. The rule reads roles, never a name: the
+  configure tests give the test cluster's names other roles and swap them,
+  and what gathers follows the roles.
+- **It stays a monitoring node.** It reads and acts on nothing through
+  these connections; every member lists it as an Observer, by role, when
+  the environment is written (ADR-0009, amendment 2026-11-13). Several
+  nodes may declare the role, each one more follower on every member.
+- **Its vantage point is said** in the gathered publication's source,
+  *CL1, gathered by OP1: 9 of 9 nodes reached*.
+
+Built 2026-11-13, the assistant's: `Capability::gathers`
+(`module/foundation/node/src/capability.rs`) and the runtime's gathering.
+**Decided, not built:** the web host started on the monitoring node itself
+(the amendment of 2026-11-05); today `Start-XmipOperationWeb` starts it on
+the operator's computer.
+
+## Amendment, 2026-11-13: a cluster's file places its work through `place`, a Work Process by its stage
+
+**Provenance.** The half of the amendment *placement reads stages, and one
+Rotation turns* that it left decided and not built, on the owner's
+agreement of 2026-11-07; and the first landing piece of the design he
+approved on 2026-11-12, *The Essentials exercises every role*: *a
+Work Process is placed and bound by its stage, and its library is found
+from its configuration*. The design's choice for a Work Process — every node serving
+its stage, not round robin like a Location, its alternative — was kept the
+same day.
+
+- **`configure::placed` places through `xcluster`.** Each piece of work a
+  cluster's file designs states its requirement by its stage
+  (`Placed::requirement`, a `node::Requirement`): a Receive Location
+  serving Receive, a Send Port serving Send, a Work Process serving
+  Work Process. What each node present declares is read from the file
+  (`configure::cluster::capabilities`): its roles, which
+  `configure::cluster::roles` reads through `node::NodeRole::declared` — a
+  word that is no role REFUSED, naming the node — and its online
+  capability, `[service] online` as its slice reads it. A Receive Location
+  or Send Port goes to the one node `xcluster::place` gives it, a rotation
+  for each of the two, in the file's order — the round robin of before,
+  matched against capability where it matched role words. The by-word
+  path is deleted. No design says its work reaches off the machine, so
+  none requires the online capability yet.
+- **A Work Process runs on every node serving its stage**
+  (`xcluster::every`, beside `place`, refusing in the same words): the
+  processing and executing nodes, whose turns of it Xmip Storage already
+  shares — two first arrivals of one key, on one node or several, start
+  one Instance (ADR-0066). Its binding is `[[applications.work_processes]]`,
+  its name and one node, written once for each node; `configure::bind`
+  gives a node each it runs as a `WorkProcessConfiguration` built from the
+  design's `module`, `unit` and settings, started
+  (`Bound::work_processes`). One the Application does not declare, one
+  bound twice to one node and one named as the node's own
+  `[[work_processes]]` too are refused in words.
+- **Unplaced work is refused** (clause 4), one sentence for each
+  requirement unmet, naming the work: *REFUSED: no node satisfies work
+  requiring serving Send; considered `<node>` (receiving; offline),
+  `<another>` (storage; offline). Not placed: the Send Port 'To A' of
+  'Orders', the Send Port 'To B' of 'Orders'.* `xmip-service --slice
+  --bind --nodes` refuses so where it printed slices missing the work, and
+  the Essentials' run, which places by the same `placements`, where it
+  started nodes without it.
+- **The node starts what is bound.** The execution tree chains a node's
+  bound Work Processes after its own, as it chains its Locations, so a node
+  running one declares processing (the amendment of 2026-11-11). A module
+  holding only Work Process units is opened where a Work Process the node
+  starts names it and nowhere else (`runtime::library::to_open`), so a
+  unit's module given to the whole cluster is opened by the nodes that run
+  its flow; and a module's `library_path` is read against the folder of
+  the node's configuration, as every other path it names is, never the
+  service's working directory (`runtime::library::located`, which the
+  capability registry records too).
+
+Built 2026-11-13, the assistant's: `cluster::every`; `configure::placed`,
+`cluster::capabilities` and `cluster::roles`, the binding's
+`BoundWorkProcess`; the runtime's `library::located`, `to_open` and
+`holds_only_work_processes`, and the execution tree's bound
+Work Processes. Held by tests: work going round the nodes serving its stage and
+a Work Process to each; placement following roles through a renaming;
+the refusal's words, `--slice --bind` refusing the same; the far end
+binding exactly what the placement places; a bound Work Process carrying
+its design and refused where undeclared or bound twice; the tree starting
+it where bound with only the module it names; and a unit generated from a
+design (`examples/approval_unit.bpmn`, generated by `process::generate`
+into the runtime's example `approval_unit`, held equal to what the design
+generates now) opened through the C ABI from beside a node's configuration
+and turned — the first test of `xmip_module.h` section 13 over a library a
+node opens. **Not built:** the Essentials' own Work Processes, their units
+and their libraries' paths per environment (the design's next pieces).

@@ -10,8 +10,9 @@ use std::sync::mpsc::{self, Receiver};
 use std::time::{Duration, Instant};
 
 use xmip_net::fixture::unheld;
-use xmip_observe::{Act, Noun, Order};
+use xmip_observe::Act;
 use xmip_runtime::directory_watch::DirectoryWatch;
+use xmip_runtime::plane::{Outcome, Remote};
 use xmip_transport::Transport;
 
 /// The Loopback Application, as its section of the node's configuration.
@@ -53,16 +54,29 @@ pub(crate) fn node_scope() -> String {
     test_cluster().node_scope(0)
 }
 
-/// Who leaves an order: the test cluster's operator.
+/// Who acts at the node's local endpoint: the account this test runs as,
+/// as the operating system names it.
 pub(crate) fn operator() -> String {
-    format!("{}-operator", test_cluster().name)
+    xmip_runtime::plane::local::running_as().expect("this test's account")
+}
+
+/// `[operate]`'s line listing [`operator`] as an Operator.
+pub(crate) fn operating() -> String {
+    format!("operators = ['{}']\n", operator())
+}
+
+/// The configuration at `configuration`, as [`written`] wrote it, listing
+/// [`operator`] as an Operator, signed again.
+pub(crate) fn operated(configuration: &Path) {
+    let text = xmip_runtime::fixture::unsigned(configuration);
+    xmip_runtime::fixture::write_signed(configuration, &format!("{text}{}", operating()));
 }
 
 /// The test cluster's first node takes both ends: a tcp Receive Location
 /// on `receive` and a tcp Send Port to `far`. Its Location waits a tenth
 /// of a second per receive, which is what bounds the drain. It declares the
 /// storage role, so it keeps Xmip Storage itself; its data — its own
-/// Storage node, its keys, its orders, its pin and its active
+/// Storage node, its keys, its pin and its active
 /// configuration — is in the default data directory, the `data` beside its
 /// configuration folder ([`written`]).
 pub(crate) fn node(receive: &str, far: &str) -> String {
@@ -237,17 +251,21 @@ pub(crate) fn endpoint(directory: &Path) -> String {
     name.expect("a directory of its own").to_string()
 }
 
-/// Leave `act` on the Subscription `onward` where the node takes orders.
-pub(crate) fn order(directory: &Path, act: Act) {
-    Order {
-        node: node_scope(),
-        noun: Noun::Subscription,
-        target: "onward".to_string(),
-        act,
-        who: operator(),
-    }
-    .leave(&directory.join("data").join("orders"))
-    .expect("the order is left");
+/// Ask `act` of the Subscription `onward` at the node configured in
+/// `directory`, as [`operator`], at its door on its local endpoint, through
+/// `surface` where one is held: what came of it and the node's sentence.
+pub(crate) fn acted(directory: &Path, act: Act, surface: Option<&Remote>) -> (Outcome, String) {
+    let opened;
+    let surface = if let Some(surface) = surface {
+        surface
+    } else {
+        opened = Remote::local(&endpoint(directory), Duration::ZERO).expect("a local surface");
+        &opened
+    };
+    let asked = ("subscription", "onward", act.word());
+    surface
+        .act(0, &node_scope(), asked)
+        .expect("the node answers")
 }
 
 /// `directory` watched: a word on the channel each time it changes, until

@@ -92,7 +92,7 @@ function Test-XmipClusterLocation {
             the cluster's is not.
 
         .DESCRIPTION
-            Containment is observe::Scope's rule, asked of the runtime through
+            Containment is node::Scope's rule, asked of the runtime through
             Xmip.Surface's ScopeTree.Beneath (xmip_scope_contains_v1), as every
             other surface asks it; this module keeps no copy of it.
 

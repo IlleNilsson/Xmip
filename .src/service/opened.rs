@@ -2,18 +2,17 @@
 //! the attempt's steps (ADR-0031, amendment 2026-11-12): its publisher, its
 //! operate listeners over the board the publisher posts to (ADR-0067), the
 //! cluster's authority where the slice the node runs serves it (ADR-0034,
-//! amendment 2026-10-22), and the watch on where it takes orders. Each can
+//! amendment 2026-10-22). Each can
 //! refuse the attempt, at accept-work, with nothing served: the runtime
 //! then makes the same attempt over the node's active configuration
 //! (`running::activation::started`). And what the node runs, audited once
 //! it is activated (`configured`).
 
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::sync::mpsc::Sender;
 
 use xmip_audit::program_audit::ProgramAudit;
 use xmip_core::ExecutionPhase;
-use xmip_runtime::directory_watch::DirectoryWatch;
 use xmip_runtime::plane::Listener;
 use xmip_runtime::running::activation::Standing;
 use xmip_runtime::running::{Refusal, Running};
@@ -21,7 +20,6 @@ use xmip_runtime::service::StartupPhase;
 
 use crate::audit::{fail, record};
 use crate::authority;
-use crate::orders;
 use crate::publication::{self, Publisher};
 use crate::run::Told;
 
@@ -34,14 +32,11 @@ pub struct Opened<'a> {
     pub listening: Option<String>,
     /// The cluster's authority it serves, held until the drain.
     pub authority: Option<authority::Served>,
-    /// Where it takes orders, and the watch on it.
-    pub orders: PathBuf,
-    pub watch: DirectoryWatch,
 }
 
 /// Open for `running`, an attempt started and serving nothing, the node
 /// configured at `configuration`, what the program holds while it runs,
-/// telling `tell` of each act and order.
+/// telling `tell` of each act its node takes.
 ///
 /// # Errors
 /// What cannot be opened, at accept-work, in words naming it.
@@ -52,9 +47,8 @@ pub fn opened<'a>(
     tell: &Sender<Told>,
 ) -> Result<Opened<'a>, Refusal> {
     let refused = |problem: String| Refusal::at(StartupPhase::AcceptWork, vec![problem]);
-    let orders = orders::place(running);
     let place = publication::place(running);
-    let publisher = Publisher::new(program, audit, running, place, &orders);
+    let publisher = Publisher::new(program, audit, running, place);
     let board = publisher.board(tell);
     let operate = running.operate(&board, audit).map_err(refused)?;
     let listening = (!operate.is_empty()).then(|| {
@@ -63,14 +57,11 @@ pub fn opened<'a>(
     });
     let authority =
         authority::serve(running.provision(), Path::new(configuration)).map_err(refused)?;
-    let watch = orders::watch(&orders, &running.location(), tell).map_err(refused)?;
     Ok(Opened {
         publisher,
         operate,
         listening,
         authority,
-        orders,
-        watch,
     })
 }
 

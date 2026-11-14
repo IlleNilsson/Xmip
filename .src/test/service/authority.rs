@@ -95,7 +95,7 @@ fn the_service_answers_acme_for_the_premises_and_publishes_its_list() {
     writer.flush().expect("flushed");
     let listed = xmip_net::http::read_response(&mut Reading::new(tcp)).expect("answered");
     let list = xmip_provision::crl::read(&listed.body).expect("a revocation list");
-    let leaf = xmip_provision::Parsed::first(&chain).expect("the leaf");
+    let leaf = xmip_tls::certificate::Certificate::first(&chain).expect("the leaf");
     assert!(
         list.names(&leaf.serial).is_some(),
         "revoked into the list the node publishes"

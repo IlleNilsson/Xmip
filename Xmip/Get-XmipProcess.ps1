@@ -21,9 +21,9 @@ function Get-XmipProcess {
             it and its pid, and takes the file away where it ends. A process
             that was killed leaves its file behind; this drops it.
 
-            The declarations are read by the node (xmip-core-node), through the
-            runtime's library, as the processes write them: this module reads
-            no declaration file itself.
+            The declarations are read by the runtime (xmip-core-runtime), through
+            its library, as the processes write them: this module reads no
+            declaration file itself.
 
             A process that declared nothing is still listed, by its name, with
             Declared false: the name is the rule, the declaration the courtesy.
@@ -121,11 +121,13 @@ function Read-XmipProcessDeclaration {
             whose process is gone: a killed process cannot take its own away.
 
         .DESCRIPTION
-            The node reads the files (xmip-core-node, through the runtime's
+            The runtime reads the files (xmip-core-runtime, through its
             library: [Xmip.Surface.ProcessDeclaration]::Standing); this judges
             which processes still run, which only a reader that sees the
-            operating system's processes can, and removes the files of the
-            ones that do not. Each declaration is a dictionary of what the
+            operating system's processes can, and has the runtime take away
+            the declarations of the ones that do not
+            ([Xmip.Surface.ProcessDeclaration]::Undeclare): this module
+            removes no file itself. Each declaration is a dictionary of what the
             file says — name, location, purpose, pid, started_unix, path, and
             whatever else the process said of itself, such as an Essentials
             node's flags — and file, where it stands.
@@ -150,7 +152,8 @@ function Read-XmipProcessDeclaration {
         $alive = Get-Process -Id $standing.Pid -ErrorAction SilentlyContinue
 
         if ($null -eq $alive -or -not (Test-XmipProcessName -Name $alive.ProcessName)) {
-            Remove-Item -LiteralPath $standing.File -Force -ErrorAction SilentlyContinue
+            # One the runtime could not remove is dropped by the next listing.
+            [void] [Xmip.Surface.ProcessDeclaration]::Undeclare($standing.File)
             continue
         }
 

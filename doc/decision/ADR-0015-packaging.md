@@ -1242,3 +1242,11 @@ PowerShell, not an act on a node: the ABI, the CLI and the GUIs have
 nothing to follow. The mapping of 2026-10-21 and its *Validated, never
 applied* are answered here; the amendment of 2026-11-03 now covers the
 nodes too.
+
+## Amendment, 2026-11-13: the PostgreSQL wire Storage reuses is a library
+
+The PostgreSQL wire protocol the 2026-10-01 amendment has Xmip Storage reuse
+"in its PostgreSQL transport" is `xmip-core-library-postgresql`'s since
+2026-11-13, and the transport, the archive target and
+`xmip-core-persist-postgresql` reach it there (ADR-0011, amendment of this
+date). Still one implementation, no async runtime.

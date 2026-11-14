@@ -22,7 +22,7 @@ CREATE TABLE xmip.schema_version (
 );
 GO
 
--- registration, membership, Modules, Handlers, deployment and operator state, and when each was last written.
+-- registration, Modules, Handlers, deployment and operator state, and when each was last written.
 CREATE TABLE xmip.administration (
     kind nvarchar(32) NOT NULL,
     id binary(16) NOT NULL,
@@ -49,6 +49,61 @@ CREATE TABLE xmip.secret (
 GO
 
 CREATE INDEX secret_name ON xmip.secret (name);
+GO
+
+-- each operator's act, kept, never deleted: the node it is asked of and its place among that node's acts, what it acts on and the act, who asked it, how the door that admitted it proved them, the role it judged them by, the relay they came through and the door, when it was asked, and what its node decided, its sentence and when; an act is decided once.
+CREATE TABLE xmip.operator_act (
+    act binary(16) NOT NULL,
+    node nvarchar(400) NOT NULL,
+    node_id binary(16) NOT NULL,
+    place bigint NOT NULL,
+    noun nvarchar(32) NOT NULL,
+    target nvarchar(400) NOT NULL,
+    act_word nvarchar(32) NOT NULL,
+    who nvarchar(400) NOT NULL,
+    proven nvarchar(32) NOT NULL,
+    certificate varbinary(max) NULL,
+    role nvarchar(32) NOT NULL,
+    through nvarchar(400) NULL,
+    door nvarchar(400) NOT NULL,
+    asked_at datetime2(7) NOT NULL,
+    outcome nvarchar(32) NOT NULL,
+    said nvarchar(max) NOT NULL,
+    decided_at datetime2(7) NULL,
+    open bit NOT NULL,
+    CONSTRAINT operator_act_key PRIMARY KEY (act)
+);
+GO
+
+CREATE INDEX operator_act_node ON xmip.operator_act (node_id, place);
+GO
+
+CREATE INDEX operator_act_open ON xmip.operator_act (node_id, place) WHERE open = 1;
+GO
+
+-- each start of each node of the cluster, kept, never deleted: its scope, the roles it declares and its capability's evidence, where its operate and sync listeners answer, its place among the Storage nodes, the signed save it runs, its process, when it started and when it stopped in order, the table's write count at its last write and whether it is its node's latest row.
+CREATE TABLE xmip.membership (
+    process binary(16) NOT NULL,
+    node nvarchar(400) NOT NULL,
+    roles nvarchar(400) NOT NULL,
+    evidence nvarchar(max) NOT NULL,
+    operate nvarchar(400) NULL,
+    sync nvarchar(400) NULL,
+    storage_place int NULL,
+    save nvarchar(400) NOT NULL,
+    serial bigint NOT NULL,
+    started_at datetime2(7) NOT NULL,
+    stopped_at datetime2(7) NULL,
+    written bigint NOT NULL,
+    latest bit NOT NULL,
+    CONSTRAINT membership_key PRIMARY KEY (process)
+);
+GO
+
+CREATE INDEX membership_latest ON xmip.membership (latest, node) WHERE latest = 1;
+GO
+
+CREATE INDEX membership_written ON xmip.membership (written);
 GO
 
 -- The schema version it holds now.

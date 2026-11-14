@@ -22,8 +22,10 @@ pub const USAGE: &str = "usage: xmip-service --configuration <path> [--console] 
      example: xmip-service --configuration /opt/xmip/config/node.xmip --listening\n\
      --slice prints the node's configuration, sliced from its cluster's cluster.xmip; \
      --cluster names the cluster where the file names none; --bind places each \
-     Receive Location and Send Port the file designs on the environment's --nodes, \
-     over SFTP on the Parties' far end at <host>, port 7422 where it names none; \
+     Receive Location and Send Port the file designs on one of the environment's \
+     --nodes and each Work Process on every one serving its stage, refusing work no \
+     node satisfies, the Locations over SFTP on the Parties' far end at <host>, port \
+     7422 where it names none; \
      what --slice prints is signed by the cluster's authority kept in --authority, \
      beside cluster.xmip where it names none, made there where none is kept.\n\
      --install, where the node has no configuration yet, writes a starter cluster.xmip \

@@ -1,7 +1,7 @@
 //! The one way `xmip-service` runs a node, whichever stop it waits for:
-//! start it, declare and audit it, publish it, say it is ready, take its
-//! orders and publish it again while it waits for the stop, drain it, audit
-//! the drain and publish that it stopped.
+//! start it, declare and audit it, publish it, say it is ready, publish it
+//! again as acts are taken and rounds are due while it waits for the stop,
+//! drain it, audit the drain and publish that it stopped.
 //!
 //! The start is the runtime's order (`running::activation::started`;
 //! ADR-0031, amendment 2026-11-12): the node's candidate tried first, the
@@ -11,12 +11,11 @@
 //!
 //! While it serves, the service waits to be told ([`Told`]), using no
 //! processor: by a stop — the Service Control Manager's, a signal from
-//! systemd or launchd, the console's Ctrl+C — by the operating system that
-//! an order was left where it takes them, and by its operate listener that
-//! an act was taken there. Each wakes it the moment it arrives; only the
+//! systemd or launchd, the console's Ctrl+C — and by the node's act watch
+//! that it took an act asked of it through Xmip Storage
+//! (`xmip_runtime::act_watch`). Each wakes it the moment it arrives; only the
 //! publication's round, [`publication::EVERY`], wakes it otherwise.
 
-use std::path::Path;
 use std::process::ExitCode;
 use std::sync::mpsc::{Receiver, RecvTimeoutError, Sender};
 use std::time::{Duration, Instant};
@@ -24,6 +23,7 @@ use std::time::{Duration, Instant};
 use xmip_audit::program_audit::ProgramAudit;
 use xmip_core::ExecutionPhase;
 use xmip_node::Declaration;
+use xmip_runtime::declared::declare;
 use xmip_runtime::outcome::Outcomes;
 use xmip_runtime::plane::deadline;
 use xmip_runtime::registration::REFUSED;
@@ -34,7 +34,7 @@ use crate::arguments::Arguments;
 use crate::audit::{fail, record};
 use crate::opened::{Opened, configured, opened};
 use crate::publication::{self, Publisher};
-use crate::{authority, built, orders};
+use crate::{authority, built};
 
 /// Who stopped the node, as the stop record says it.
 pub type StoppedBy = &'static str;
@@ -44,9 +44,7 @@ pub type StoppedBy = &'static str;
 pub enum Told {
     /// Stop, by whom.
     Stop(StoppedBy),
-    /// The place it takes orders changed: one may have been left.
-    Orders,
-    /// An act was taken over its operate listener.
+    /// Its act watch took an act asked of it.
     Acted,
 }
 
@@ -103,8 +101,6 @@ pub fn serve(
         operate: _operate,
         listening,
         authority: serving,
-        orders,
-        watch,
     } = held;
     let location = running.location();
     // Every record from here carries the location it declares, so a reader
@@ -114,14 +110,12 @@ pub fn serve(
     if let Some(serving) = &serving {
         authority::said(program, audit, serving);
     }
-    let place = orders.display().to_string();
     let snapshot = publication::place(&running).display().to_string();
 
     // What this process says of itself while it runs (ADR-0053); the file
     // goes when `declared` does, after the drain.
     let declared = Declaration::new(program, location.as_str(), arguments.purpose)
         .and_then(|declaration| declaration.with("configuration", configuration))
-        .and_then(|declaration| declaration.with("orders", place.as_str()))
         .and_then(|declaration| declaration.with("snapshot", snapshot.as_str()))
         .and_then(|declaration| match listening.as_deref() {
             Some(operate) => declaration.with("operate", operate),
@@ -131,7 +125,7 @@ pub fn serve(
             let within = running.local_timeout().as_millis().to_string();
             declaration.with(deadline::DECLARED, within)
         })
-        .and_then(|declaration| declaration.declare().map_err(|error| error.to_string()));
+        .and_then(|declaration| declare(&declaration).map_err(|error| error.to_string()));
     if let Err(problem) = &declared {
         fail(
             audit,
@@ -149,7 +143,6 @@ pub fn serve(
             ("configuration", configuration),
             ("purpose", arguments.purpose.word()),
             ("storage", said.as_str()),
-            ("orders", place.as_str()),
             ("snapshot", snapshot.as_str()),
             ("operate", listening.as_deref().unwrap_or("")),
         ],
@@ -157,7 +150,6 @@ pub fn serve(
     say_where(
         &format!("{program}: {location}"),
         &running,
-        &place,
         &snapshot,
         listening.as_deref(),
     );
@@ -165,8 +157,7 @@ pub fn serve(
     println!("{program}: {location} accepts work");
     ready();
 
-    let by = served(program, audit, &running, &orders, &mut publisher, told);
-    drop(watch);
+    let by = served(program, audit, &running, &mut publisher, told);
     stopping();
     let draining = Instant::now();
     let outcomes = running.stop();
@@ -179,59 +170,49 @@ pub fn serve(
     Ended::Stopped
 }
 
-/// Serve `running` until `told` says who stopped it: take the orders left
-/// in `orders` when told one may have been, and publish at once after an
-/// order or an act, and otherwise when the round is due.
+/// Serve `running` until `told` says who stopped it: publish at once after
+/// an act its act watch took, and otherwise when the round is due.
 fn served(
     program: &str,
     audit: &ProgramAudit,
     running: &Running,
-    orders: &Path,
     publisher: &mut Publisher,
     told: &Receiver<Told>,
 ) -> StoppedBy {
-    let location = running.location();
     // The authority's list, kept current where the node keeps it (ADR-0034).
     let mut list = running.revocation_list();
-    // Orders left before the watch began are taken at once.
-    let (mut taking, mut acted) = (true, false);
+    let mut acted = false;
     loop {
         if let Err(problem) = list.keep() {
             fail(audit, "revocation-list", &format!("{program}: {problem}"));
         }
-        let applied = if taking {
-            orders::take(program, audit, orders, &location)
-        } else {
-            0
-        };
-        if applied > 0 || acted || publisher.due() {
+        if acted || publisher.due() {
             publisher.publish(running);
         }
         match hear(told, publisher.next()) {
-            Ok(now) => (taking, acted) = now,
+            Ok(now) => acted = now,
             Err(by) => return by,
         }
     }
 }
 
 /// What `told` says within `within`, every message waiting heard at once,
-/// so a burst of changes is one look: whether orders may have been left
-/// and whether an act was taken — or who stopped the node.
-fn hear(told: &Receiver<Told>, within: Duration) -> Result<(bool, bool), StoppedBy> {
+/// so a burst of changes is one look: whether an act was taken — or who
+/// stopped the node.
+fn hear(told: &Receiver<Told>, within: Duration) -> Result<bool, StoppedBy> {
     let first = match told.recv_timeout(within) {
         Ok(first) => first,
-        Err(RecvTimeoutError::Timeout) => return Ok((false, false)),
+        Err(RecvTimeoutError::Timeout) => return Ok(false),
         Err(RecvTimeoutError::Disconnected) => return Err("its stop closing"),
     };
-    let (mut orders, mut acted) = (false, false);
+    let mut acted = false;
     for heard in std::iter::once(first).chain(told.try_iter()) {
         match heard {
             Told::Stop(by) => return Err(by),
-            Told::Orders => orders = true,
             Told::Acted => acted = true,
         }
     }
-    Ok((orders, acted))
+    Ok(acted)
 }
 
 /// Record the stop of the node at `location` by `by`, drained in `drained`
@@ -269,6 +250,11 @@ fn drained_record(
             properties.push((*name, taken.as_str()));
         }
     }
+    // Where its stop left its membership row saying it runs, why, in the
+    // runtime's words (`Outcomes::membership`).
+    if let Some(why) = outcomes.membership {
+        properties.push(("membership", why));
+    }
     record(audit, "stop", ExecutionPhase::Finished, &properties);
     let share = outcomes
         .own_share
@@ -278,8 +264,12 @@ fn drained_record(
         .disk_sync
         .map(|disk| format!(", the disk's sync beside it {disk:?}"))
         .unwrap_or_default();
+    let membership = outcomes
+        .membership
+        .map(|why| format!("; {why}"))
+        .unwrap_or_default();
     format!(
-        "stopped by {by}, drained in {drained} ms: {}{share}{disk}",
+        "stopped by {by}, drained in {drained} ms: {}{share}{disk}{membership}",
         counts
             .iter()
             .map(|(name, count)| format!("{name} {count}"))
@@ -289,12 +279,11 @@ fn drained_record(
 }
 
 /// Say on the console where the node `who` names keeps what it keeps.
-fn say_where(who: &str, running: &Running, orders: &str, snapshot: &str, operate: Option<&str>) {
+fn say_where(who: &str, running: &Running, snapshot: &str, operate: Option<&str>) {
     println!(
         "{who} reaches Xmip Storage through {}",
         running.storage().said()
     );
-    println!("{who} takes orders at {orders}");
     println!("{who} publishes its snapshot at {snapshot}");
     if let Some(operate) = operate {
         println!("{who} is operated at {operate}");

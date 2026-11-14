@@ -813,3 +813,82 @@ another certificate's differs, no certificate carries none.
 
 Provenance: the assistant's, 2026-11-12, found when the owner saw the
 Operation Web over the Essentials stand still.
+
+## Amendment, 2026-11-13: the node an act is asked of judges its caller again, by name
+
+An operator's act is written to Xmip Storage at the node a surface reaches,
+its door, and taken by the node it is asked of (ADR-0014, amendment
+2026-11-13). The security order holds at the door: the connection opened,
+its identity presented and identified, authenticated by the one gate
+(`plane::caller`), and authorized by the caller's own role from the door's
+`[operate]` lists (`plane::role::admitted`) before the call is read; a
+refusal is answered `denied`, audited at the door, and nothing is written.
+Only then does the act enter Xmip Storage, with who asked, how the door
+proved them (`mutual-tls` or `peer-credentials`), the certificate they
+presented where they presented one, the role it judged them by, and the
+relay they came through.
+
+- **The owning node judges again, by the rule the door admitted by**
+  (`plane::grant::Grants::of`, over what the caller presented,
+  `plane::grant::Presented`): the certificate the row carries by its
+  subject or an alternative name it carries, as the listener reads one,
+  or an account as the local endpoint reads one. The listener admits its
+  own callers and the callers a relay vouched for by the same function, so
+  the node refuses nothing its own lists granted at the door, and a caller
+  its own lists do not grant Operator or above is refused in words,
+  *REFUSED. CN=alice holds no role at …*: a door can grant nothing the
+  owning node's configuration does not.
+- **The trust bound, accepted until signed slices** (the owner,
+  2026-11-12): the Storage wire admits nodes alone (amendment 2026-10-29),
+  so any node holding a node certificate can write an act row — the trust
+  every Ledger write already has. A compromised node can act only as a
+  name the owning node lists as an Operator, and both audits name it: the
+  door records the admission, the owning node the outcome with the door
+  and the relay. Limiting act rows to doors declaring the operational role
+  needs a node's roles to be provable, which the signed slices agreed
+  2026-11-06 give.
+
+Proved in the runtime (`act_watch`'s tests: a caller the owning node does
+not list is refused there; a certificate it lists only by an alternative
+name is taken; a door without the operational role carries no act to
+another node; a relayed caller's row says who and through; `plane::grant`:
+what a caller presented holds the role its certificate or account is
+listed with) and the root's service tests (`door.rs`).
+
+Provenance: the owner's agreement of 2026-11-12 to the design's
+recommendations; the coordinator's correction of 2026-11-13, one rule at
+the door and the node; the carrying of the certificate is the assistant's.
+
+## Amendment, 2026-11-13: the monitoring nodes are Observers on every node, listed by role
+
+A node declaring the monitoring role reads every member's publication over
+its operate listener (ADR-0027, amendment 2026-11-13), and the listener is
+closed by default (amendment 2026-11-07). The owner decided on 2026-11-12
+how it is admitted, agreeing to the design of that day: *observers listed
+by role when the environment is written, not granted at run time.*
+
+- **Written once, by role.** Every node's slice lists, under `[operate]
+  observers`, each node its cluster's file declares with the monitoring
+  role (`node::Capability::gathers`), by the subject its node certificate
+  carries, `CN=<node>`, as the cluster's authority issues it
+  (`provision::node`): `configure::observers`, called by the one slice
+  (`configure::cluster::slice`). Every environment writes a node's
+  configuration through it — the Essentials' served runs and the deploy
+  templates' `xmip-service --slice` alike — so no environment holds a copy
+  of the rule, and no name decides it.
+- **Granted nothing more.** An Observer reads the publication and its
+  wait, and the cluster's and its wait (`plane::role::RULES`); it acts on
+  nothing and lists no secrets. A name the cluster's file already lists
+  under any role keeps that role and is not listed again, so the start's
+  refusal of a name listed twice is never met.
+- **The security order is the listener's, unchanged.** The monitoring node
+  presents its node certificate, is identified and authenticated by the
+  one gate, and is authorized by the role its name is listed with, before
+  a byte of a call is read.
+- **Not built:** granting the role at run time from a membership row's
+  roles. A node's roles must be provable first, which the signed slices
+  agreed 2026-11-06 give.
+
+Built 2026-11-13, the assistant's; held by configure's tests (the nodes
+declaring monitoring listed whatever they are called, their roles swapped
+swapping what is listed, and a name granted more keeping its role).

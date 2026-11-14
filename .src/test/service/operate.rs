@@ -84,12 +84,7 @@ fn a_node_is_read_and_acted_on_over_its_local_endpoint() {
     let directory = std::env::temp_dir().join(format!("xmip-service-local-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&directory);
     let configuration = written(&directory, &unheld().to_string());
-    let text = format!(
-        "{}{}",
-        xmip_runtime::fixture::unsigned(&configuration),
-        operator()
-    );
-    xmip_runtime::fixture::write_signed(&configuration, &text);
+    operated(&configuration);
     operated_locally(&directory, &configuration, &endpoint(&directory));
     let _ = std::fs::remove_dir_all(&directory);
 }
@@ -108,17 +103,11 @@ fn a_node_naming_no_endpoint_is_operated_at_its_service_name() {
     let text = format!(
         "{}\n[operate]\n{}",
         node(&unheld().to_string(), &unheld().to_string()),
-        operator()
+        operating()
     );
     xmip_runtime::fixture::write_signed(&configuration, &text);
     operated_locally(&directory, &configuration, &format!("xmip-{}", node_name()));
     let _ = std::fs::remove_dir_all(&directory);
-}
-
-/// `[operate]`'s line listing the account this test runs as an Operator.
-fn operator() -> String {
-    let account = xmip_runtime::plane::local::running_as().expect("this test's account");
-    format!("operators = ['{account}']\n")
 }
 
 /// Start the node configured at `configuration`, read and act on it at its
