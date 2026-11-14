@@ -7,8 +7,8 @@
     pwsh of its own, recorded, as the estate's Pester suite starts.
 
 .DESCRIPTION
-    The owner's demo is on 2026-12-18; a demo branch is cut on his word and
-    must be workable by 2026-12-16. Core.Demo proves a tree is: it builds
+    The owner's demo is on 2026-12-18 and runs from main. Core.Demo proves
+    a tree is demo-ready: it builds
     what the demo runs and runs it, part by part, and says each OK or FAILED
     in words, with the reason (ADR-0028, amendment 2026-11-10).
     Start-XmipTest -Suite Core.Demo starts it, Get-XmipTestStatus lists it,

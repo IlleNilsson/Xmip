@@ -889,3 +889,19 @@ done; this one narrows 2026-11-06 point 2 and 2026-11-07 points 2 to 5.
 A node that holds `<stem>.accepted.xmip` has no pin and pins the first
 slice it is given; the environments deployed before this day are deployed
 again. Not built: the deployment seeding the pin itself (as 2026-11-07).
+
+## Amendment, 2026-11-13: a node's save is compared with its peers'
+
+Point 3 of the amendment of 2026-11-06 is built, through the cluster's
+membership (ADR-0056, amendment 2026-11-13). The structured value the
+amendment of 2026-11-12 said the comparison needed is each node's row of
+the `membership` table: the save and the serial of the slice it runs
+(`Slice::which`), written as it is activated. Each node follows the
+members, and its record `<node>/membership` is Stressed where the save it
+runs is not its peers': the save most of the running members run, alone at
+the most, and where two saves are run by as many members each, none
+(`runtime::membership::peers_save`). The record names each running member
+on another save, so the Monitor, and every surface, shows which node runs
+what; a node stopped in order is not compared. A rolling deployment flags
+its nodes until every one runs the new save, which is what it is meant to
+show.

@@ -62,11 +62,11 @@ layout's home). The scoping error was mine: ADR-0011 is about names.*
 
 | Domain | What it holds | Examples |
 | --- | --- | --- |
-| **Foundation** | things Xmip *is* | `xmip-core`, `xmip-core-abi`, `xmip-core-stream`, `xmip-core-message`, `xmip-core-context`, `xmip-core-journey`, `xmip-core-node`, `xmip-core-cluster`, `xmip-core-party`, `xmip-core-event` |
-| **Capability** | things Xmip *does* | `xmip-core-receive`, `xmip-core-send`, `xmip-core-transport`, `xmip-core-logic`, `xmip-core-prepare`, `xmip-core-identify`, `xmip-core-authenticate`, `xmip-core-authorize`, `xmip-core-contract`, `xmip-core-path`, `xmip-core-assign`, `xmip-core-transform`, `xmip-core-route`, `xmip-core-process`, `xmip-core-resilience` |
+| **Foundation** | things Xmip *is* | `xmip-core`, `xmip-core-abi`, `xmip-core-stream`, `xmip-core-message`, `xmip-core-context`, `xmip-core-journey`, `xmip-core-node`, `xmip-core-party`, `xmip-core-event` |
+| **Capability** | things Xmip *does* | `xmip-core-receive`, `xmip-core-send`, `xmip-core-transport`, `xmip-core-logic`, `xmip-core-prepare`, `xmip-core-identify`, `xmip-core-authenticate`, `xmip-core-authorize`, `xmip-core-contract`, `xmip-core-path`, `xmip-core-assign`, `xmip-core-transform`, `xmip-core-route`, `xmip-core-process`, `xmip-core-resilience`, `xmip-core-sdk` |
 | **Technology** | how a capability is implemented | `xmip-core-transport-ftp`, `xmip-core-path-xpath` |
 | **Operation** | running and governing Xmip | audit, observe, report, archive, CLI, PowerShell, GUI |
-| **Platform** | what a running node needs to keep the rest alive | `xmip-core-runtime`, `xmip-core-configure`, `xmip-core-persist` |
+| **Platform** | what a running node needs to keep the rest alive | `xmip-core-runtime`, `xmip-core-configure`, `xmip-core-persist`, `xmip-core-cluster` |
 
 **The test between Foundation and Platform is the lifecycle** (ADR-0058).
 Foundation is what Xmip *is* — a noun that is true of a Message, a Journey or
@@ -102,6 +102,33 @@ so since ADR-0049: a `.src/` host crate with six technologies mounted beside
 it, which is the shape of `xmip-core-authenticate` and of no platform service.
 It sat in Platform because nothing had written the Foundation-Platform test
 down, and anything runtime-shaped landed there by default.
+
+`xmip-core-cluster` moved the other way, from Foundation to Platform, on
+2026-11-13, by the lifecycle test: it runs the sync plane — the listener,
+the link to each member, the following of who they are — which is started,
+supervised and stopped, and whose subject is the node (the owner,
+2026-11-07; ADR-0058, amendment 2026-11-13), moved in from `event` the
+same day behind the default feature `sync`. Delivery followed it the same
+day, behind the feature `delivery` that `sync` includes: the hub, its
+subscribers and their gate, an operator's acts, the forwarder and the
+Event link's conversation are started, held and stopped for a node, and
+they took the audit, authorize, observe and resilience crates that
+Foundation may not (ADR-0058 clause 3; ADR-0065, amendment 2026-11-13).
+`event` keeps what an Event is — the Event, its taxonomy, its filter and
+its wire form — and depends on Foundation and Library alone. The
+cluster's pure part — the members, placement, the one rotation and the
+plane's timing — opens nothing, and `configure` and `persist` take it with
+`default-features = false`.
+
+`xmip-core-sdk` was declared Foundation and is a Capability since
+2026-11-13, by the message-path test asked first (ADR-0058 clause 4; ADR-0058
+and ADR-0061, amendments 2026-11-13). Its simulated media are not only what a
+module is tested on: every CAN technology opens its bus on `sdk::broadcast`
+where the build has no kernel CAN interface, and HART its `loopback` line on
+`sdk::serial`, so a Message waits for them. Nothing moved: it still mounts at
+`sdk/`, which its manifest entry declares, so the domain does not compute its
+place (ADR-0061 decision 3), and its dependency on `xmip-core-transport`,
+whose `Line` a simulated bus is, is a Capability's on a Capability.
 
 Every Technology repository is a direct child of exactly one Capability
 repository. That is what makes the name computable from the tree, and the tree
@@ -209,7 +236,12 @@ here would be wrong within a week.
 
 ## 4. Dependency rules
 
-The graph must be acyclic. Beyond that:
+The graph must be acyclic, and every dependency points down the layers:
+Library, then Foundation, which depends only on Foundation and Library
+(ADR-0058 clause 3), then the rest. `test/Layer.Test.ps1` holds both,
+over what each mounted repository's build uses, and lists by name the
+breaches it found the day it was written, which may only shrink (ADR-0058,
+amendment 2026-11-13). Beyond that:
 
 - Foundation must not depend on Technology.
 - A Capability must not depend on its own Technology children.
@@ -220,6 +252,11 @@ The graph must be acyclic. Beyond that:
 - Operation repositories consume public contracts and events, never implementation
   internals.
 - Platform services must not depend on specific technology implementations.
+- A third-party backend the estate reads a format through is named by the
+  one crate that owns that reading and by no other: `quick-xml` by
+  `xmip-core-library-codec`, `sxd-document` and `sxd-xpath` by
+  `xmip-core-path-xpath`. `test/ThirdParty.Test.ps1` holds the list
+  (ADR-0044, amendment 2026-11-13).
 
 The technology tree is a dependency graph, not a directory hierarchy. Transport,
 content and Contract stay independent and are composed by configuration:
@@ -419,17 +456,17 @@ Xmip/
 ├── module/
 │   ├── foundation/           what starts a node, no provider
 │   │   ├── core   abi   stream   message   context   journey
-│   │   └── node   cluster   party   event
+│   │   └── node   party   event
 │   ├── platform/             what starts a node, no provider
-│   │   └── runtime   configure   persist
+│   │   └── runtime   configure   persist   cluster
 │   └── core/                 the provider core: everything else it ships
 │       ├── library/
-│       │   └── asn1   codec   net   ntlm   sql   ssh   tls
+│       │   └── asn1   codec   mariadb   net   ntlm   postgresql   sql   ssh   tls
 │       ├── capability/
 │       │   ├── receive   send   transport   logic   prepare   identify
 │       │   ├── authenticate   authorize   contract   path   assign   promote
 │       │   ├── demote   transform   route   process   retain   resilience
-│       │   └── secret
+│       │   └── secret   schedule
 │       └── operation/
 │           ├── audit   observe   report   archive
 │           └── cli   powershell   gui
@@ -451,6 +488,12 @@ ADR-0020 predicts a drawing will.)
 *Redrawn 2026-09-19. `migrate`, `diagnose` and `schedule` left the tree that
 day: three repositories with no implementation, unmounted on the owner's
 instruction. ADR-0058, amendment 2026-09-19.*
+
+*Redrawn 2026-11-13. `cluster` moved from `foundation/` to `platform/`:
+ADR-0058, amendment 2026-11-13. The same day `schedule` came back, a
+Capability at `capability/schedule`, with the runtime's receive rest and
+retry due times, the estate's first scheduling: ADR-0058, amendment
+2026-11-13, on `xmip-core-schedule`.*
 
 **What starts Xmip carries no provider; everything else does, provider
 before purpose.** The owner, 2026-09-23, reading the estate map: *there is no
@@ -514,8 +557,8 @@ xmip-core-path/
 
 The mount name is the last segment of the repository name and the owner is the
 name minus that segment, so both are computed from the manifest rather than
-configured. Grouping exists at depth two only: `capability/` has eighteen
-entries and would be a wall without it, while `xmip-core-transport` has one kind
+configured. Grouping exists at depth two only: `capability/` has more than
+twenty entries and would be a wall without it, while `xmip-core-transport` has one kind
 of child and needs none.
 
 A fresh `git clone` of `Xmip` gets source and manifest and no submodules.

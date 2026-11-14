@@ -14,13 +14,10 @@
 //!   and, where the build links `content` and `edi`, the same with an
 //!   EDIFACT order routed by its message type, promoted from the content
 //!   (ADR-0046, amendment 2026-11-11).
-//! - `told.rs`: an order is acted on the moment it is left, within about a
-//!   millisecond beyond what it carries, and a service nothing tells uses
-//!   next to no processor.
+//! - `told.rs`: a service nothing tells uses next to no processor.
 //! - `publication.rs`: the node publishes its snapshot where it declares,
-//!   read by observe's one reader; a pause left where the snapshot says the
-//!   node takes orders shows paused in the next one, at once; and the stop
-//!   leaves it saying so.
+//!   read by observe's one reader; a pause asked at its door shows paused
+//!   in the next one, at once; and the stop leaves it saying so.
 //! - `wire.rs`: a read and a write over the wire to the primary of two
 //!   Storage nodes, its standby copying every write behind it, cost less
 //!   than a millisecond beyond the same calls in process.
@@ -38,7 +35,7 @@ use std::sync::mpsc::Receiver;
 use std::time::{Duration, Instant};
 
 use xmip_net::fixture::unheld;
-use xmip_observe::{Act, Noun, Order};
+use xmip_observe::Act;
 
 #[path = "../service/started.rs"]
 mod started;

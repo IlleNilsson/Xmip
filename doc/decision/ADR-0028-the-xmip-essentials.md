@@ -965,11 +965,11 @@ and so on (ADR-0053). What the Essentials is and does is unchanged.
 
 ## Amendment, 2026-11-10: Core.Demo, the demo readiness check
 
-The coordinator, preparing the owner's demo of 2026-12-18, 2026-11-10: a
-demo branch is cut on the owner's word, *demo time* (2026-12-15), and must
-be workable by 2026-12-16, so a check proves a tree demo-ready: it builds
-what the demo runs, runs it, says each part passed or failed in words with
-the reason, and stops everything it started. It is a third suite of Xmip's
+The coordinator, preparing the owner's demo of 2026-12-18, 2026-11-10: the
+demo runs from `main` (the owner, 2026-11-13: *The demo branch can be merged
+to main and we can continue on the main branch*), so a check proves a tree
+demo-ready: it builds what the demo runs, runs it, says each part passed or
+failed in words with the reason, and stops everything it started. It is a third suite of Xmip's
 own beside `Core.Essentials` and `Core.Estate`, not a cmdlet of its own (the
 owner: as few cmdlets as possible; a new act on a known noun is a
 parameter).
@@ -1438,3 +1438,52 @@ like for like.
 Provenance: the owner, 2026-11-12, *Do what you have to do*; the runs and
 the reading are the assistant's, the same day. A roll on a quiet machine is
 to replace the absolute times when one runs.
+
+## Amendment, 2026-11-13: the rollup and `<node>/reached` moved to their homes
+
+The third landing piece of the design the owner approved on 2026-11-12,
+*the operation node, the standby's copying, and how the cluster's nodes are
+related* (section 3.3 and section 3.4's served run without a monitoring
+node). It moves two rules out of the rig, and what the Essentials shows is
+unchanged: a served run and a simulated run draw, roll up and say the same
+words as before.
+
+- **The cluster's rollup at `<cluster>/node`** is observe's one rule,
+  `observe::rollup::nodes` (ADR-0052, amendment of this date). The cluster
+  process calls it as each tick assembles its view (`src/cluster.rs`), and
+  its own copy, `src/cluster/rollup.rs`, is deleted. Its cases moved to
+  observe with it.
+- **What the roll reads of every node it does not simulate is followed by
+  the runtime's one gatherer**, `runtime::plane::gather`, over the run's
+  roster as the cluster's membership, `xcluster::Membership` (`src/real.rs`,
+  `real::gathered`): each node a real one or one started as `xmip-service`,
+  running, followed through the surface it was found through (the roll's
+  `Reach`), told as its publication advances and
+  read then, never asked again and again. Each round the roll merges what
+  was heard into its own snapshot at the round's time, with each node's
+  `<node>/reached` stated by the gatherer's rule — *real, at* where it
+  answered; *did not answer* and why, Exhausted; *stopped in order*, Paused,
+  which no roster says yet — and merges what each node drew of itself into
+  its drawing of the cluster as before (`Gathered::merged`). The roll's own
+  loop, `real::published_into` and `RealNode::published_into`, is deleted:
+  one implementation, two callers, the roll now and a node declaring the
+  monitoring role in the design's fifth piece. The gatherer hears every
+  node once before the roll's first round, so that round is whole, as the
+  synchronous read made it.
+- **What the roll does not take of the gatherer**, so nothing changes: the
+  view the gatherer assembles for itself — the rollup over the nodes it
+  follows and its own drawing with its own window — is for the monitoring
+  node; the roll keeps its rollup where it was, the cluster process's over
+  the simulated nodes, and its drawing and window over the whole run.
+
+Tested: the Essentials' library and spawned suites unchanged and passing;
+the moved rules in their new homes, observe's (`rollup`) and the runtime's
+(`plane::gather`'s tests and `tests/plane/gathered.rs`). Not run: a served
+roll of the Essentials' cluster, which needs the machine alone.
+
+Who decided what. The owner's: the design and its landing order. The
+assistant's, while building, for the owner to change: the roll merging what
+the gatherer heard at its own round's time rather than taking the
+gatherer's assembled view, so the board and the Monitor read exactly as
+before; the reach said *real, at* by the roster's members, and a node
+stopped in order said Paused at the severity a pause publishes.

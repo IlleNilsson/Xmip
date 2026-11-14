@@ -201,7 +201,7 @@ record = ["ADR-0031 (amendment 2026-10-02)"]
 [implementation.subscription-pause]
 name = "Pausing and resuming a Subscription"
 state = "assembled"
-note = "An order the node takes: what the Subscription matches is held in Xmip Storage, surviving a restart, and picked up oldest first on resume; every surface lists Subscriptions and takes the act."
+note = "An act the node takes, asked at any node's door through Xmip Storage (ADR-0014, amendment 2026-11-13): what the Subscription matches is held in Xmip Storage, surviving a restart, and picked up oldest first on resume; every surface lists Subscriptions and takes the act."
 record = ["ADR-0013 (amendments 2026-09-30, 2026-10-01)"]
 
 [implementation.process-declaration]
@@ -314,9 +314,9 @@ record = ["ADR-0018 (amendment 2026-10-06)", "ADR-0053 (amendment 2026-10-06)"]
 
 [implementation.operator-acts-through-storage]
 name = "An operator's act written to Xmip Storage, honored by every node"
-state = "decided"
-note = "A pause, resume, retry, dismiss or replay still reaches one node: over its operate listener, or as an order file it takes the moment its operating system says it was left (`xmip_order_v1`, `.src/service/orders.rs`), the snapshot file beside it; no act is written to Xmip Storage with who and when, and no node reads one there. Xmip Storage is assembled in the service since 2026-10-22 and no act is written to it yet, open problem 33; the order files and the per-node act exports are deleted with every use then, and snapshot files kept for tests only."
-record = ["ADR-0014 (amendment 2026-10-13, acts through Xmip Storage)", "ADR-0052 (note of 2026-10-13, acts through Xmip Storage)", "deployment-model.md section 7"]
+state = "assembled"
+note = "A pause, resume, retry, dismiss or replay reaching any node's operate listener is admitted there by the caller's own role and written to the administration database's `operator_act` table, asked of the node that owns what it acts on, with who, how proven, the role, the relay, the door and when: through that node's Xmip Storage where it runs in the door's process, and otherwise only at a door declaring the operational role, every other refusing in words. Every node's act watch in `xmip-service` is told at once by its wait on Xmip Storage, judges the caller again by its own `[operate]` lists, takes the act by the one apply, decides it once and audits it; an act asked of a node that is not running stays asked, never expiring, and is taken as it starts. The door answers the decision, or `asked` past `[tuning] operate_act`, which every surface says. Every act reaches its node through a door and Xmip Storage alone, and a snapshot is never acted on."
+record = ["ADR-0014 (amendments 2026-10-13, acts through Xmip Storage, and 2026-11-13)", "ADR-0052 (note of 2026-10-13, acts through Xmip Storage; amendment 2026-11-13)", "ADR-0009 (amendment 2026-11-13)", "runtime-model.md section 13", "deployment-model.md section 7"]
 
 [implementation.node-listeners]
 name = "A node's sync and alive listeners, each configured as operate is"
@@ -330,11 +330,11 @@ record = ["ADR-0067 (amendments 2026-10-13 and 2026-10-22)"]
 # children.
 
 [xmip.core]
-description = "Core Xmip identifiers, shared types and stable public contracts; the clock and the message path's one timed wait (wake), kept to the microsecond — on Windows a kernel event and a high-resolution waitable timer, the operating system's calls in one file, system.rs (ADR-0050, amendment 2026-10-17)."
+description = "Core Xmip identifiers, shared types and stable public contracts; the clock and the message path's one timed wait (wake), kept to the microsecond — on Windows a kernel event and a high-resolution waitable timer, the operating system's calls in one file, system.rs (ADR-0050, amendment 2026-10-17); the audit chain's rule (audit_chain)."
 architecturalDomain = "Foundation"
 repositoryRole = "common-architecture"
 maturity = "scaffolded"
-dependency = []
+dependency = ["xmip-core-library-codec"]
 
   [xmip.core.abi]
   description = "The interface into Xmip: configuration, runtime, observing, eventing, auditing. C header, specification and language bindings. Used by cli, powershell and gui, and the boundary loadable Modules plug into."
@@ -343,14 +343,17 @@ dependency = []
   maturity = "scaffolded"
   dependency = []
 
-  # Simulators and emulators a module is tested on, and the local ACME server
-  # for tests; no trait — each stays in its capability (ADR-0061, amended
+  # Simulators and emulators of a medium; no trait — each stays in its
+  # capability (ADR-0061, amended
   # 2026-09-24). Mounted at the estate root, sdk/, beside module/ (the owner,
-  # 2026-09-24).
+  # 2026-09-24). A Capability, not Foundation: CAN and HART open its media in
+  # production, so a Message travels over them, and the message-path test
+  # comes first (ADR-0058 clause 4; ADR-0058 and ADR-0061, amendments
+  # 2026-11-13). Its mount is declared, so the domain does not move it.
   [xmip.core.sdk]
-  description = "Simulators and emulators a module is tested on, in process: a serial multi-drop bus first; and the local ACME server for tests (ADR-0061)."
-  architecturalDomain = "Foundation"
-  repositoryRole = "common-architecture"
+  description = "Simulators and emulators of a medium, in process: a serial multi-drop bus and a broadcast medium, which a module is tested on and an end user may select (ADR-0061)."
+  architecturalDomain = "Capability"
+  repositoryRole = "common-capability"
   maturity = "scaffolded"
   mount = "sdk"
   dependency = ["xmip-core-transport"]
@@ -732,7 +735,7 @@ dependency = []
     maturity = "scaffolded"
     description = "MariaDB transport: one row of a query is one Stream, a send is one INSERT; the client/server protocol of xmip-core-library-mariadb with MariaDB's native password, TLS through the estate's own behind the tls feature. A xmip-core-transport technology."
     specification = "MariaDB client/server protocol, the protocol-41 handshake: native password, COM_QUERY text protocol"
-    dependency = ["xmip-core-library-mariadb", "xmip-core-library-sql", "xmip-core"]
+    dependency = ["xmip-core-library-mariadb", "xmip-core-library-sql", "xmip-core-library-tls", "xmip-core"]
     [xmip.core.transport.modbus]
       dependency = ["xmip-core"]
     maturity = "scaffolded"
@@ -749,7 +752,7 @@ dependency = []
     maturity = "scaffolded"
     description = "MySQL transport: one row of a query is one Stream, a send is one INSERT; xmip-core-library-mariadb's protocol with MySQL's caching_sha2_password, full authentication over the estate's TLS or the server's RSA key. What Oracle changes in MySQL lands here only. Never a Storage server. A xmip-core-transport technology."
     specification = "MySQL client/server protocol, the protocol-41 handshake: caching_sha2_password (fast and full authentication, RSA-OAEP or TLS), mysql_native_password where a server still switches to it, COM_QUERY text protocol"
-    dependency = ["xmip-core-library-mariadb", "xmip-core-library-codec", "xmip-core-library-sql", "xmip-core"]
+    dependency = ["xmip-core-library-mariadb", "xmip-core-library-codec", "xmip-core-library-sql", "xmip-core-library-tls", "xmip-core"]
     [xmip.core.transport.named-pipe]
       dependency = ["xmip-core-library-net", "xmip-core-context", "xmip-core"]
     maturity = "scaffolded"
@@ -776,8 +779,8 @@ dependency = []
     description = "Oracle Database transport: one row of a query is one Stream, a send is one INSERT; TNS and the two-task layer's order against a listener — the bodies and O5LOGON not yet Oracle's, so only its own far end answers — in the Oracle dialect of xmip-core-library-sql. A transport only: Oracle is never a Storage server. A xmip-core-transport technology."
     [xmip.core.transport.postgresql]
     maturity = "scaffolded"
-    specification = "PostgreSQL frontend/backend protocol 3.0, simple query flow"
-    dependency = ["xmip-core-library-codec", "xmip-core-library-sql", "xmip-core-library-net", "xmip-core"]
+    specification = "PostgreSQL frontend/backend protocol 3.0, simple query flow, through the xmip-core-library-postgresql client"
+    dependency = ["xmip-core-library-postgresql", "xmip-core-library-sql", "xmip-core"]
     [xmip.core.transport.rabbitmq]
     maturity = "scaffolded"
     specification = "AMQP 0-9-1, the RabbitMQ native protocol"
@@ -873,16 +876,16 @@ dependency = []
     maturity = "scaffolded"
     dependency = ["xmip-core-stream", "xmip-core"]
     [xmip.core.contract.schematron]
-    description = "Schematron content contract: business rules over XML, the way Peppol, UBL, ISO 20022 and HL7 CDA state them. A xmip-core-contract technology."
+    description = "Schematron content contract: business rules over XML, the way Peppol, UBL, ISO 20022 and HL7 CDA state them, the rules read by the estate's one XML reader and their XPath evaluated by xmip-core-path-xpath. A xmip-core-contract technology."
     maturity = "scaffolded"
-    dependency = ["xmip-core-stream", "xmip-core"]
+    dependency = ["xmip-core-stream", "xmip-core", "xmip-core-library-codec", "xmip-core-path-xpath"]
     [xmip.core.contract.sql]
     maturity = "scaffolded"
     dependency = ["xmip-core-stream", "xmip-core-library-codec", "xmip-core-library-sql", "xmip-core"]
     specification = "ISO/IEC 9075 statement syntax, vendor-neutral; statement kinds bind as the conformance claim"
     [xmip.core.contract.wsdl]
     maturity = "scaffolded"
-    dependency = ["xmip-core-stream", "xmip-core"]
+    dependency = ["xmip-core-stream", "xmip-core", "xmip-core-library-codec"]
     specification = "WSDL 1.1 and 2.0, every reference landing"
     [xmip.core.contract.xml-schema]
     maturity = "scaffolded"
@@ -967,7 +970,8 @@ dependency = []
     specification = "A regular expression over text: the first match or a named group reads, a match writes"
     [xmip.core.path.xpath]
     maturity = "scaffolded"
-    dependency = ["xmip-core", "xmip-core-contract", "xmip-core-stream"]
+    description = "XPath path technology: XPath 1.0 read and written over an XML Stream, its prefixes bound by the Path's namespaces, and the evaluation Schematron's rules run through; the document read by the estate's one XML reader and evaluated by sxd-xpath over sxd-document's model filled from it, the one crate that names either. A xmip-core-path technology."
+    dependency = ["xmip-core", "xmip-core-contract", "xmip-core-stream", "xmip-core-library-codec"]
 
   [xmip.core.prepare]
   description = "Preparation: the standard prepare units, on a Stream's bytes, streamed, at receive, process and send."
@@ -1121,13 +1125,13 @@ dependency = []
   dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify", "xmip-core-library-asn1", "xmip-core-library-codec", "xmip-core-library-ntlm", "xmip-core-library-tls"]
     [xmip.core.authenticate.api-key]
     maturity = "scaffolded"
-    dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify"]
+    dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify", "xmip-core-library-codec"]
     [xmip.core.authenticate.basic]
     maturity = "scaffolded"
     dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify"]
     [xmip.core.authenticate.bearer]
     maturity = "scaffolded"
-    dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify"]
+    dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify", "xmip-core-library-codec"]
     [xmip.core.authenticate.certificate]
     maturity = "scaffolded"
     dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify"]
@@ -1163,7 +1167,7 @@ dependency = []
     dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify"]
     [xmip.core.authenticate.saml]
     maturity = "scaffolded"
-    dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify", "xmip-core-library-codec"]
+    dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify", "xmip-core-library-codec", "xmip-core-library-tls"]
     [xmip.core.authenticate.scram]
     maturity = "scaffolded"
     dependency = ["xmip-core", "xmip-core-context", "xmip-core-library-codec", "xmip-core-identify"]
@@ -1182,7 +1186,7 @@ dependency = []
   dependency = ["xmip-core", "xmip-core-context"]
     [xmip.core.authorize.abac]
     maturity = "scaffolded"
-    dependency = ["xmip-core", "xmip-core-context"]
+    dependency = ["xmip-core", "xmip-core-context", "xmip-core-path"]
     [xmip.core.authorize.acl]
     maturity = "scaffolded"
     dependency = ["xmip-core", "xmip-core-context"]
@@ -1276,18 +1280,11 @@ dependency = []
   dependency = ["xmip-core"]
 
   [xmip.core.node]
-  description = "Xmip Node model, roles and capabilities."
+  description = "The Node: its roles, the capability it declares and the requirement work states, which a capability satisfies (ADR-0056); the scope, an Xmip URI as its path in the one tree, its node, stage and the one wildcard (ADR-0027); and what a System Process declares of itself, as text, opening no file: the file is xmip-core-runtime's (ADR-0053, ADR-0058)."
   architecturalDomain = "Foundation"
   repositoryRole = "common-architecture"
   maturity = "scaffolded"
   dependency = ["xmip-core", "xmip-core-library-codec"]
-
-  [xmip.core.cluster]
-  description = "Xmip Cluster model and node membership."
-  architecturalDomain = "Foundation"
-  repositoryRole = "common-architecture"
-  maturity = "scaffolded"
-  dependency = ["xmip-core", "xmip-core-node"]
 
   [xmip.core.party]
   description = "Xmip Party model, associations, and the identities a Party is recognized by on receive and presents on send. ADR-0019."
@@ -1297,23 +1294,11 @@ dependency = []
   dependency = ["xmip-core"]
 
   [xmip.core.event]
-  description = "The Xmip Event and its taxonomy, the one subscription rule, the in-process hub delivering it to admitted subscribers, audited, the cluster's Events over the Event link between nodes (mutual TLS, one hop), and the wire event between processes: JSON over HTTP, Kafka and AMQP, at least once (ADR-0065)."
+  description = "The Xmip Event and its taxonomy, the one subscription rule, and the wire event between processes: JSON over HTTP, Kafka and AMQP, and the Wire a transport carries it over (ADR-0065). Delivering it is xmip-core-cluster's (ADR-0065, amendment 2026-11-13)."
   architecturalDomain = "Foundation"
   repositoryRole = "common-architecture"
   maturity = "scaffolded"
-  dependency = [
-      "xmip-core",
-      "xmip-core-audit",
-      "xmip-core-authorize",
-      "xmip-core-context",
-      "xmip-core-library-codec",
-      "xmip-core-library-net",
-      "xmip-core-library-tls",
-      "xmip-core-node",
-      "xmip-core-observe",
-      "xmip-core-party",
-      "xmip-core-resilience",
-  ]
+  dependency = ["xmip-core", "xmip-core-library-codec", "xmip-core-node"]
     # The wire event is the event capability's wire format, and each binding
     # rides the transport of its name (ADR-0065 clause 3). The format and
     # the three bindings' header mappings are carried by xmip-core-event
@@ -1338,9 +1323,10 @@ dependency = []
   architecturalDomain = "Operation"
   repositoryRole = "operational-capability"
   maturity = "scaffolded"
-  # xmip-core-observe for the one scope rule and the one wildcard the audit
-  # read filters by (ADR-0062, amendment 2026-09-29).
-  dependency = ["xmip-core", "xmip-core-abi", "xmip-core-library-codec", "xmip-core-observe"]
+  # xmip-core-node for the one scope rule and the one wildcard the audit read
+  # filters by, xmip-core-observe for whether a hidden run's record is shown
+  # (ADR-0062, amendment 2026-11-13).
+  dependency = ["xmip-core", "xmip-core-abi", "xmip-core-library-codec", "xmip-core-node", "xmip-core-observe"]
     # file, syslog and windows-event-log are carried by the capability itself
     # (src/file_sink.rs, src/syslog.rs, src/windows_event_log.rs): the file is
     # every program's default sink and the other two are ADR-0062's fallback,
@@ -1463,8 +1449,8 @@ dependency = []
     [xmip.core.archive.postgresql]
     description = "PostgreSQL archive target: one item is one row of an archive table. A xmip-core-archive technology."
     maturity = "scaffolded"
-    dependency = ["xmip-core-transport-postgresql", "xmip-core-library-sql"]
-    specification = "SQL over the PostgreSQL frontend/backend protocol 3.0, through the postgresql transport client"
+    dependency = ["xmip-core-library-postgresql", "xmip-core-library-sql"]
+    specification = "SQL over the PostgreSQL frontend/backend protocol 3.0, through the xmip-core-library-postgresql client"
     [xmip.core.archive.s3]
     description = "S3 archive target: one item is one object in a bucket. A xmip-core-archive technology."
     maturity = "scaffolded"
@@ -1501,6 +1487,17 @@ dependency = []
     maturity = "scaffolded"
     [xmip.core.resilience.timeout]
     maturity = "scaffolded"
+
+  # Scheduling's one home in the estate (ADR-0058, amendment 2026-09-22:
+  # "the scheduling code if any done shall be in this repo"), mounted again
+  # with its first code on 2026-11-13 (ADR-0058, amendment of that date).
+  # It decides when; the runtime waits and acts.
+  [xmip.core.schedule]
+  description = "Decides when work runs: a Receive Location's rest before it asks its transport again (poll, sweep, backoff, drain) and when a Send Port queue's earliest retry is due, kept per queue."
+  architecturalDomain = "Capability"
+  repositoryRole = "common-capability"
+  maturity = "scaffolded"
+  dependency = []
 
   # The key home, ADR-0063 clause 4, created on the owner's word of
   # 2026-09-25. A Capability rather than Platform by ADR-0058 clause 4: it is
@@ -1547,7 +1544,7 @@ dependency = []
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   maturity = "scaffolded"
-  dependency = ["xmip-core", "xmip-core-library-asn1", "xmip-core-library-codec", "xmip-core-secret"]
+  dependency = ["xmip-core", "xmip-core-library-asn1", "xmip-core-library-codec", "xmip-core-library-tls", "xmip-core-secret"]
     [xmip.core.provision.acme]
     description = "ACME client (RFC 8555): account, order, http-01 on any port or dns-01 through a provider's DNS writer, CSR finalized, chain fetched, against any directory a node names, over Xmip's HTTP and TLS. A xmip-core-provision technology."
     maturity = "scaffolded"
@@ -1563,7 +1560,7 @@ dependency = []
     [xmip.core.provision.self-signed]
     description = "A self-signed certificate for a lone offline node, its own anchor. A xmip-core-provision technology."
     maturity = "scaffolded"
-    dependency = ["xmip-core-provision", "xmip-core"]
+    dependency = ["xmip-core-provision", "xmip-core", "xmip-core-library-codec"]
     [xmip.core.provision.platform]
     maturity = "reserved"
 
@@ -1577,7 +1574,7 @@ dependency = []
 # repositories for 10 KB that always change together would be ceremony.
 # ADR-0018.
   [xmip.core.runtime]
-  description = "A node started from its configuration and the technologies its program links: the nine startup phases, each Module loaded once, the message path on every Receive Location, a draining stop; and the native library the operator surfaces load."
+  description = "A node started from its configuration and the technologies its program links: the nine startup phases, each Module loaded once, the message path on every Receive Location, a draining stop; the declaration file every System Process writes about itself, and the listing of them (ADR-0053); and the native library the operator surfaces load."
   # What each Cargo feature carries (ADR-0014, amendment 2026-10-14: the
   # phone follows nodes remotely and runs none).
   features = [
@@ -1597,6 +1594,9 @@ dependency = []
       "xmip-core-audit",
       "xmip-core-authenticate",
       "xmip-core-authorize",
+      # Who a cluster's members are, which the operate plane's gatherer is
+      # handed (`plane::gather`; ADR-0052, amendment 2026-11-13).
+      "xmip-core-cluster",
       "xmip-core-configure",
       "xmip-core-context",
       "xmip-core-event",
@@ -1623,6 +1623,9 @@ dependency = []
       # the runtime composes (ADR-0072, amendment 2026-11-10).
       "xmip-core-report",
       "xmip-core-route",
+      # When a Receive Location rests and a queue's retry is due: decided
+      # there, waited here (ADR-0058, amendment 2026-11-13).
+      "xmip-core-schedule",
       "xmip-core-secret",
       "xmip-core-send",
       "xmip-core-stream",
@@ -1630,7 +1633,7 @@ dependency = []
   ]
 
   [xmip.core.persist]
-  description = "Xmip Storage: its operations over the runtime and administration databases (Stream chunks, Messages, Journeys, held Messages, the Dead Message Queue, claims, hand-ons, audit, operator state), the embedded Storage node, the wire over mutual TLS, one Storage node per statement, and the database schema. Embedded records encrypted (ADR-0063)."
+  description = "Xmip Storage: its operations over the runtime and administration databases (Stream chunks, Messages, Journeys, held Messages, Dead Message Queues, claims, hand-ons, audit, operator state and acts, membership), the embedded Storage node, the wire over mutual TLS, one Storage node per statement, the schema. Embedded records encrypted (ADR-0063)."
   architecturalDomain = "Platform"
   repositoryRole = "platform-service"
   maturity = "scaffolded"
@@ -1642,6 +1645,9 @@ dependency = []
       "xmip-core-library-tls",
       "xmip-core-secret",
       "xmip-core-authorize",
+      # The one Rotation its Storage client turns on, from the cluster's
+      # pure part (ADR-0056, amendment 2026-11-13).
+      "xmip-core-cluster",
   ]
     # The engines, each a technology under persist (ADR-0015, amendment
     # 2026-09-25), so a device build can leave RocksDB out. The embedded
@@ -1666,7 +1672,21 @@ dependency = []
   architecturalDomain = "Platform"
   repositoryRole = "platform-service"
   maturity = "scaffolded"
-  dependency = ["xmip-core-abi", "xmip-core-route", "xmip-core-path", "xmip-core", "xmip-core-library-net", "xmip-core-node", "xmip-core-context", "xmip-core-contract", "xmip-core-demote", "xmip-core-prepare", "xmip-core-process", "xmip-core-promote", "xmip-core-transform"]
+  dependency = ["xmip-core-abi", "xmip-core-route", "xmip-core-path", "xmip-core", "xmip-core-library-net", "xmip-core-node", "xmip-core-cluster", "xmip-core-context", "xmip-core-contract", "xmip-core-demote", "xmip-core-prepare", "xmip-core-process", "xmip-core-promote", "xmip-core-transform"]
+
+  # Platform since 2026-11-13 (ADR-0058, amendments of that date): it runs
+  # the sync plane — the listener, the member links, the following — behind
+  # its default feature `sync`, and delivers Events — the hub, its
+  # subscribers, an operator's acts, the forwarder and the Event link's
+  # conversation — behind `delivery`, which `sync` includes, both moved in
+  # from xmip-core-event the same day; its pure part, which configure and
+  # persist take with default-features = false, opens nothing.
+  [xmip.core.cluster]
+  description = "The Xmip Cluster: its members, placing work on a node whose capability satisfies it, the one Rotation every round robin turns on (ADR-0056), delivering Events to the subscribers authorized for them (ADR-0065), and the sync plane linking its nodes, its bounds [tuning] keys (ADR-0067)."
+  architecturalDomain = "Platform"
+  repositoryRole = "platform-service"
+  maturity = "scaffolded"
+  dependency = ["xmip-core", "xmip-core-audit", "xmip-core-authorize", "xmip-core-context", "xmip-core-event", "xmip-core-library-net", "xmip-core-library-tls", "xmip-core-node", "xmip-core-observe", "xmip-core-party", "xmip-core-resilience"]
 
 # Surfaces, ADR-0014. abi is above. These three were named in surface and had
 # no module, so they were invisible to repository creation.
@@ -1726,7 +1746,7 @@ dependency = []
 
 
   [xmip.core.library.codec]
-  description = "Encoding primitives every layer shares, one copy of each: XML and TOML quoting, MIME media types and multipart, the character reader, byte cursor and writer, varint, hex, base64, UTF-16LE, the parameterised CRC, SHA-1 and the civil calendar. What a format means stays with the format."
+  description = "Encoding primitives every layer shares, one copy of each: the one XML reader (over quick-xml: in memory, streamed, a tree, a flat scan), XML and TOML quoting, MIME, the character reader, byte cursor and writer, varint, hex, base64, PEM, text encodings, the CRC, SHA-1, SHA-256, HMAC and PBKDF2 (over sha2 and hmac), the civil calendar."
   architecturalDomain = "Library"
   repositoryRole = "common-architecture"
   maturity = "scaffolded"
@@ -1762,11 +1782,11 @@ dependency = []
 
 
   [xmip.core.library.postgresql]
-  description = "PostgreSQL's frontend/backend protocol 3.0, both halves: what a client and a server send, read and written, the bytea hex form, and a client that logs in by trust, a cleartext password or SCRAM-SHA-256, over TLS where asked, in the simple query flow. One protocol for the transport, the archive target and Xmip Storage."
+  description = "PostgreSQL's frontend/backend protocol 3.0, both halves: the messages each side sends, a client logging in by trust or a cleartext password in the simple query flow (no SCRAM or TLS yet), and the far end a test serves. One protocol for the transport, the archive target and, once built, Xmip Storage."
   architecturalDomain = "Library"
   repositoryRole = "common-architecture"
   maturity = "scaffolded"
-  dependency = ["xmip-core-library-codec", "xmip-core-library-net", "xmip-core-library-tls"]
+  dependency = ["xmip-core-library-codec", "xmip-core-library-net", "xmip-core-library-sql"]
   mount = "module/core/library/postgresql"
 
 
@@ -1789,11 +1809,11 @@ dependency = []
 
 
   [xmip.core.library.tls]
-  description = "TLS for every transport that needs it: a connection wrapped as a client or served as one, upgraded in place for STARTTLS, the protocol inside agreed by ALPN, and the node's certificate and trust store. The key exchange is hybrid first, X25519MLKEM768, so a recorded session is no easier to read later than it is today (ADR-0033)."
+  description = "TLS for every transport that needs it: a connection wrapped as a client or served, upgraded in place for STARTTLS, ALPN, the node's certificate and trust store, what a client checks a server by (ClientSettings), and the one certificate reader over xmip-core-library-asn1. The key exchange is hybrid first, X25519MLKEM768 (ADR-0033)."
   architecturalDomain = "Library"
   repositoryRole = "common-architecture"
   maturity = "scaffolded"
-  dependency = ["xmip-core-library-codec"]
+  dependency = ["xmip-core-library-codec", "xmip-core-library-asn1"]
   mount = "module/core/library/tls"
 
 # What exercises Xmip, under the provider whose work it exercises. `test` is
@@ -1839,6 +1859,9 @@ dependency = []
       "xmip-core-authenticate-ssh-key",
       "xmip-core-authorize",
       "xmip-core-authorize-party",
+      # The run's roster as the cluster's membership (`real.rs`; ADR-0028,
+      # amendment 2026-11-13).
+      "xmip-core-cluster",
       "xmip-core-configure",
       "xmip-core-context",
       "xmip-core-contract",
@@ -1865,6 +1888,7 @@ dependency = []
       "xmip-core-library-codec",
       "xmip-core-library-mariadb",
       "xmip-core-library-net",
+      "xmip-core-library-postgresql",
       "xmip-core-library-sql",
       "xmip-core-library-tls",
       "xmip-core-message",

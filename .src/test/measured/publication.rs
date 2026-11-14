@@ -1,13 +1,14 @@
 //! The node publishes its snapshot where it declares (ADR-0018, amendment
-//! 2026-09-30): its health, figures and topology, its Subscription and where
-//! it takes orders, read by observe's one reader — the function the
-//! runtime's library forwards to every .NET surface as
-//! `xmip_publication_read_v1`. A pause left where the snapshot says, as a
-//! surface leaves it, shows paused in the next snapshot, published at once
-//! and not a round later; the stop leaves the node Done and the pause
-//! standing.
+//! 2026-09-30): its health, figures and topology and its Subscription, read
+//! by observe's one reader — the function the runtime's library forwards to
+//! every .NET surface as `xmip_publication_read_v1`. A pause asked at the
+//! node's door on its local endpoint, as a surface asks it, is taken by its
+//! act watch through Xmip Storage and shows paused in the next snapshot,
+//! published at once and not a round later (ADR-0014, amendment
+//! 2026-11-13); the stop leaves the node Done and the pause standing.
 
 use xmip_observe::{Counted, Health, NodeKind, PauseState, Publication};
+use xmip_runtime::plane::Outcome;
 
 use super::*;
 
@@ -56,17 +57,12 @@ fn mood(publication: &Publication, scope: &str) -> Option<Health> {
 }
 
 /// What the first publication says: the node at its location, published
-/// by the service, where it takes orders, every record Fine, the
-/// Subscription active, and the node drawn with its Parties.
+/// by the service, every record Fine, the Subscription active, and the node
+/// drawn with its Parties.
 fn as_it_starts(first: &Publication) {
     let node = node_scope();
     assert_eq!(first.node, node);
     assert_eq!(first.source, "xmip-service");
-    assert!(
-        Path::new(&first.orders).ends_with(Path::new("data").join("orders")),
-        "{}",
-        first.orders
-    );
     assert_eq!(onward(first), Some(PauseState::Active));
     for scope in [
         node.clone(),
@@ -111,12 +107,13 @@ fn count(publication: &Publication, scope: &str, counted: Counted) -> u64 {
 }
 
 #[test]
-fn the_node_publishes_its_snapshot_and_a_pause_left_where_it_says_shows_in_the_next() {
+fn the_node_publishes_its_snapshot_and_a_pause_asked_at_its_door_shows_in_the_next() {
     let directory =
         std::env::temp_dir().join(format!("xmip-service-publication-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&directory);
     let receive = unheld().to_string();
     let configuration = written(&directory, &receive);
+    operated(&configuration);
     let snapshot = directory.join("data").join("snapshot.xmip");
     let node = node_scope();
 
@@ -137,8 +134,7 @@ fn the_node_publishes_its_snapshot_and_a_pause_left_where_it_says_shows_in_the_n
         "the service declares where it publishes: {declared:?}"
     );
 
-    // Published before it accepts work, at its own location, with where it
-    // takes orders.
+    // Published before it accepts work, at its own location.
     let (first, _) = published_until(&snapshot, Duration::from_secs(1), |_| true);
     as_it_starts(&first);
 
@@ -168,21 +164,14 @@ fn the_node_publishes_its_snapshot_and_a_pause_left_where_it_says_shows_in_the_n
     let moved = drawn.nodes.iter().find(|drawn| drawn.id == at);
     assert!(moved.is_some_and(|node| node.activity > 0.0), "{moved:?}");
 
-    // A pause left where the publication says, as a surface leaves it.
-    Order {
-        node: first.node.clone(),
-        noun: Noun::Subscription,
-        target: "onward".to_string(),
-        act: Act::Pause,
-        who: operator(),
-    }
-    .leave(Path::new(&first.orders))
-    .expect("the order is left");
+    // A pause asked at its door, as a surface asks it.
+    let (outcome, sentence) = acted(&directory, Act::Pause, None);
+    assert_eq!(outcome, Outcome::Taken, "{sentence}");
     let (paused, took) = published_until(&snapshot, Duration::from_secs(2), |publication| {
         onward(publication) == Some(PauseState::Paused)
     });
-    // Taken the moment the operating system says it was left, and
-    // published at once: not a round of a quarter of a second later.
+    // Taken by its act watch, which tells the service, and published at
+    // once: not a round of a quarter of a second later.
     assert!(
         took < Duration::from_millis(250),
         "published paused in {took:?}"

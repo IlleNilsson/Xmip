@@ -1,19 +1,19 @@
 //! The node's publication: what the node `xmip-service` runs says of itself
 //! — its health and figures, its topology, its Subscriptions and their
-//! standing, and where it takes orders — written where a surface reads it
-//! (ADR-0018, amendment 2026-09-30; ADR-0052).
+//! standing — written where a surface reads it (ADR-0018, amendment
+//! 2026-09-30; ADR-0052).
 //!
 //! The runtime says what the node is (`Running::publication`), observe
 //! writes it whole or not at all (`observe::Publication::write`) and states
 //! what moved over the window this keeps from one publication to the next
 //! (`observe::topology::window`), and this decides only where and when.
-//! **Where**: `<data>/snapshot.xmip`, beside
-//! the node's `orders`, in its data directory (`[service] data`); the
+//! **Where**: `<data>/snapshot.xmip`, in its
+//! data directory (`[service] data`); the
 //! service declares it (ADR-0053, `snapshot`), so whoever finds the process
 //! finds its publication, and `Start-XmipOperationWeb -Snapshot` opens the
 //! operation web over it. **When**: as the node starts to accept work, at
-//! once after an order was applied or an act taken over the operate
-//! listener — the listener tells the service (`Published::acted`) — so a
+//! once after its act watch took an act asked of it through Xmip Storage
+//! — the act watch tells the service (`Published::acted`) — so a
 //! pause shows in the next publication and not a round later, and
 //! otherwise every [`EVERY`]; and once more after the drain, saying the
 //! node stopped (`running::publication::stopped`). It is written on the
@@ -29,7 +29,7 @@
 //! the failure to `publish` (ADR-0062), once, not at every round, and said
 //! once it publishes again.
 
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::mpsc::Sender;
 use std::time::{Duration, Instant};
@@ -66,7 +66,6 @@ pub struct Publisher<'a> {
     program: &'a str,
     audit: &'a ProgramAudit,
     path: PathBuf,
-    orders: String,
     cluster: String,
     node: String,
     written: Option<Instant>,
@@ -77,20 +76,17 @@ pub struct Publisher<'a> {
 }
 
 impl<'a> Publisher<'a> {
-    /// A publisher of `running` to `path`, saying a surface leaves its acts
-    /// in `orders`.
+    /// A publisher of `running` to `path`.
     pub fn new(
         program: &'a str,
         audit: &'a ProgramAudit,
         running: &Running,
         path: PathBuf,
-        orders: &Path,
     ) -> Self {
         Self {
             program,
             audit,
             path,
-            orders: orders.display().to_string(),
             cluster: running.cluster().to_string(),
             node: running.node().to_string(),
             written: None,
@@ -133,9 +129,7 @@ impl<'a> Publisher<'a> {
 
     /// Publish what the node says of itself now.
     pub fn publish(&mut self, running: &Running) {
-        let publication = running
-            .publication(self.program, &mut self.window)
-            .with_orders(self.orders.clone());
+        let publication = running.publication(self.program, &mut self.window);
         self.write(&publication);
         self.last = Some(publication);
     }

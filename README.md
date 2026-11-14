@@ -287,10 +287,15 @@ system; Platform repositories provide runtime-wide services. One repository
 per module and per technology: what starts a node is mounted at
 `module/foundation/<leaf>` or `module/platform/<leaf>`, every other module at
 `module/<provider>/<domain>/<leaf>`, and a technology inside its capability. Dependency
-rules are stated in the manifest and enforced by a test: foundation never
-depends on a technology, a technology may depend on its capability,
-operations consume public contracts only
-([repository-model.md](doc/architecture/repository-model.md)).
+rules are stated in the manifest, and `test/Layer.Test.ps1` holds the
+direction: the graph is acyclic, a library depends only on libraries,
+foundation only on foundation and libraries, a capability never on its own
+technologies and a platform repository on no technology but a library's,
+the breaches found the day it was written listed by name and only ever
+fewer. A technology may depend on its capability, and operations consume
+public contracts only
+([repository-model.md](doc/architecture/repository-model.md); ADR-0058,
+amendment 2026-11-13).
 
 Receive and Send own orchestration, ports and locations. Direction-neutral
 Transport Modules move Streams. Message Modules own representation. Contract
@@ -683,7 +688,12 @@ the primary's writes, and a primary that is gone waited for, never
 replaced, until there is a witness
 ([built, in the assembled service](doc/architecture/estate-map.md#storage-standby);
 ADR-0056, amendments 2026-10-22, drafted, and 2026-11-08); every node publishes at
-`<node>/storage` which Storage it uses and whether it answers. A
+`<node>/storage` which Storage it uses and whether it answers. Every node
+is a member of its cluster through Xmip Storage: it writes its row of the
+`membership` table as it starts and again as it stops in order, follows the
+other members' rows as they are written, and says at `<node>/membership`
+whether the save it runs is its peers' (ADR-0056 and ADR-0031, amendments
+2026-11-13). A
 node declaring neither the `storage` role nor `[storage] nodes` is refused
 as it starts, in words naming both. The
 database servers it is to be put in front of are set up by IT from
@@ -693,21 +703,27 @@ upgrade, which only adds, by `xmip database <server> --from <version>`
 and the PowerShell module's database script cmdlet (ADR-0015, amendment 2026-10-20); a
 Storage node reads `[storage.database]` and connects to neither yet
 ([decided, not built](doc/architecture/estate-map.md#database-server)). A
-pause or resume of a Subscription reaches it as an
-order left in `data/orders`, taken the moment the operating system tells it
-one was left — it never looks, and idle it waits using no processor between
-its publications — and survives its restart
+pause or resume of a Subscription reaches it at the door of whichever node
+an operator's surface reaches: that node admits the operator by the
+operator's own role and writes the act to Xmip Storage, asked of the node
+it concerns, whose act watch is told at once — it never looks, and idle it
+waits using no processor between its publications — takes it, and the
+pause survives its restart
 ([ADR-0018, amendment 2026-09-30](doc/decision/ADR-0018-service-and-host.md);
-[built, in the assembled service](doc/architecture/estate-map.md#subscription-pause)).
+[built, in the assembled service](doc/architecture/estate-map.md#subscription-pause));
+an act asked of a node that is not running is answered *asked* and taken
+as it starts
+([ADR-0014, amendment 2026-11-13](doc/decision/ADR-0014-operator-surfaces.md);
+[built, in the assembled service](doc/architecture/estate-map.md#operator-acts-through-storage)).
 It publishes what the node says of itself — its health and figures, its
-topology with the Parties on each side, its Subscriptions and where it takes
-orders — to `data/snapshot.xmip`, every quarter of a second and at once after
-an order or an act over its operate listener, and declares the file, so the operation surfaces open over it:
+topology with the Parties on each side and its Subscriptions — to
+`data/snapshot.xmip`, every quarter of a second and at once after an act
+was taken, and declares the file, so the operation surfaces open over it:
 
 ```powershell
 Get-XmipProcess -Name 'xmip-service*' | Start-XmipOperationWeb
 Start-XmipOperationWeb -Snapshot /opt/xmip/data/snapshot.xmip
-xmip subscriptions --snapshot /opt/xmip/data/snapshot.xmip --location xmip:///CL1/node/TX1 --name onward --pause
+xmip subscriptions --local xmip-TX1 --location xmip:///CL1/node/TX1 --name onward --pause
 ```
 
 When the node stops, the file says it stopped.

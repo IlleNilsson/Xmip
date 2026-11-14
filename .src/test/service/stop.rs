@@ -1,6 +1,8 @@
 //! A stop drains the node and the service exits 0; what it cannot start is
 //! refused with exit 2; a paused Subscription outlives a restart.
 
+use xmip_runtime::plane::Outcome;
+
 use super::*;
 
 #[test]
@@ -100,9 +102,9 @@ fn a_node_it_cannot_start_is_refused_with_exit_code_two() {
     let _ = std::fs::remove_dir_all(&directory);
 }
 
-/// Start the service at `configuration`, act on its Subscription as each
-/// of `acts` says, hearing each answer, and stop it the operating system's
-/// way.
+/// Start the service at `configuration`, act on its Subscription at its
+/// door as each of `acts` says, each taken and answered as it says, and
+/// stop it the operating system's way.
 fn served(configuration: &Path, directory: &Path, acts: &[(Act, &str)]) {
     let mut child = spawned(configuration, directory);
     let mut ending = Ending(Some(child.id()));
@@ -118,8 +120,9 @@ fn served(configuration: &Path, directory: &Path, acts: &[(Act, &str)]) {
         Duration::from_secs(10),
     );
     for (act, answer) in acts {
-        order(directory, *act);
-        heard(&said, answer, Duration::from_secs(2));
+        let (outcome, sentence) = acted(directory, *act, None);
+        assert_eq!(outcome, Outcome::Taken, "{sentence}");
+        assert!(sentence.contains(answer), "{answer} in {sentence}");
     }
     stop(&child);
     heard(&said, "stopped by the console", Duration::from_secs(5));
@@ -132,6 +135,7 @@ fn a_paused_subscription_is_paused_still_after_the_service_restarts() {
     let directory = std::env::temp_dir().join(format!("xmip-service-store-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&directory);
     let configuration = written(&directory, &unheld().to_string());
+    operated(&configuration);
     let operator = operator();
 
     served(

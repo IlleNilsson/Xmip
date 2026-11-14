@@ -11,9 +11,11 @@
 //! `--cluster`, a cluster's file that names no cluster is sliced as that
 //! one, and one naming another is refused (`slice_named`; ADR-0028,
 //! amendment 2026-10-21). With `--bind`, each Receive Location and Send
-//! Port the file designs is placed on the environment's `--nodes` over SFTP
-//! on the Parties' far end first (`placed::at_far_end`; ADR-0028, amendment
-//! 2026-10-22), and the node's own placements are in its slice.
+//! Port the file designs is placed on one of the environment's `--nodes`
+//! and each Work Process on every one serving its stage, refusing work no
+//! node satisfies, the Locations over SFTP on the Parties' far end first
+//! (`placed::at_far_end`; ADR-0028, amendment 2026-10-22; ADR-0056,
+//! amendment 2026-11-13), and the node's own placements are in its slice.
 
 use std::process::ExitCode;
 

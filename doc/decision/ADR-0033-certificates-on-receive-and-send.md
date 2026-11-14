@@ -13,7 +13,7 @@
 - Subject: Certificate identity is the first mechanism built, provisioned by ACME
 - Name: Certificates on Receive and Send
 - Order: 5
-- Concepts: Certificates, mutual-TLS; ACME, Let's Encrypt; TLS session resumption
+- Concepts: Certificates, mutual-TLS; ACME, Let's Encrypt; TLS session resumption; secure scheme on a receive riding on HTTP
 
 **Certificate identity is the first authentication mechanism Xmip implements,
 on both directions: a Receive Location verifies the certificate a caller
@@ -500,3 +500,106 @@ Provenance: the defect and the reading of rustls are the trust design's,
 2026-11-10; turning resumption off on both sides, placing it once, keeping
 the client's group and resuming within one login are the assistant's, for
 the owner to overrule.
+
+## Amendment, 2026-11-13: a secure scheme on a receive riding on HTTP is refused, never served in the clear
+
+A design review of 2026-11-10 found AS2 and AS4 Receive Locations entered
+with a secure scheme — `as2s://`, `as4s://` — listening in the clear: the
+address was read and the listener bound at its authority whatever the
+scheme said, so a Party believed it spoke TLS while the node served plain
+text. WebDAV's far end did the same with `webdavs://`. HTTP refused
+`https://` as it binds (ADR-0064, amendment 2026-10-28) in a copy of its
+own, and MSMQ handed `msmq://…` to the socket as it was, so its
+Receive Location bound under neither scheme.
+
+- **One rule, in the http technology:** `http::server::listen(entered,
+  schemes)` reads a listener's address as it was entered, under the
+  technology's schemes (`net::Endpoint::parse_under`), refuses it where the
+  scheme asks for TLS and binds it in the clear where it does not; a bare
+  `host:port` a program gives names no scheme and is bound as it is. HTTP,
+  AS2, AS4 (and Peppol's access point through it), MSMQ and WebDAV's far
+  end bind through it; HTTP's copy and its `secure` flag are deleted.
+- **The words name what to enter.** The refusal is permanent and names the
+  address from its scheme, authority and path, never its user information,
+  then the same under its plain twin, the port kept
+  (`net::Schemes::plain_twin`): *as4s://host:8443/msh asks for TLS, which a
+  Receive Location riding on HTTP does not terminate yet, and is refused
+  rather than served without it: enter it as as4://host:8443/msh to listen
+  in the clear* (`http::server::NOT_TERMINATED`).
+- **Not served in TLS yet.** No receive riding on HTTP terminates TLS: its
+  callers' connections are read as bare sockets (`http::inbound`), and
+  none takes the guard `Configured::guarded_by` hands it. A node with a
+  `receive` certificate refuses the address as one without does, so HTTP,
+  AS2, AS4, Peppol and MSMQ over TLS cannot be received yet; the Peppol AS4
+  profile requires TLS between access points. Terminating TLS there with
+  the guard is open problem 68; until it is built, a secure scheme never
+  listens.
+
+Proved by `http::server`'s tests (a secure scheme refused naming its plain
+twin, a plain one and a bare address bound), HTTP's, AS2's, AS4's and
+MSMQ's (each Location entered with its secure scheme refused as it binds,
+AS2's and AS4's as they receive too, both failing first by binding in the
+clear) and `net::endpoint`'s (`plain_twin`).
+
+Provenance: the defect is the review's; the shared function and its words
+are the assistant's, 2026-11-13, for the owner to overrule.
+
+## Amendment, 2026-11-13: one certificate reader, one PEM, one client settings
+
+The owner, 2026-11-13: *Do we have all code in the modules, repos that we
+should. This is a refactoring statement*, then *Good that you found it, fix
+it*. The placement audit found a certificate read three ways, PEM read four
+ways and the pair a client checks a server by declared three times:
+
+- **One certificate reader, `tls::certificate`.** `Certificate::read` walks
+  a certificate once over the estate's X.690 reader
+  (`xmip-core-library-asn1`), which `xmip-core-library-tls` now takes: what
+  its issuer signed, serial, issuer and subject, validity, key, extensions in
+  order and signature, and from them its common name, DNS names, other
+  names, authority key identifier and extended key usages;
+  `unique_extension` refuses one carried twice; `signed_by`, `verifies` and
+  `verify` check a P-256 signature; `certificate::oid` holds the object
+  identifiers the reader and provisioning's writer both name. Provisioning's
+  walk (`provision::Parsed`) moved here; `tls::Name`,
+  `peer::authenticates_servers` and `possession`'s transcript check, the
+  `x509` module of `xmip-core-authenticate` (alternative names, the user
+  principal name, validity, the alternative signature's extensions, the
+  anchor's key) and the SAML gate's IdP key read through it. x509-parser is
+  in no build of the estate. webpki stays the one that walks and verifies a
+  chain: reading is not verifying.
+- **One PEM, `codec::pem`.** Read and written in the lowest layer, beside
+  base 64, because `xmip-core-library-ssh` takes no TLS: certificates,
+  chains, anchors, revocation lists, requests, the three private-key labels
+  (`first_of`) and `OPENSSH PRIVATE KEY` (`encode_wrapped`, its 70 columns).
+  rustls-pki-types' `PemObject` is read nowhere; provisioning's, SAML's and
+  SSH's own armor are deleted.
+- **One client settings, `tls::ClientSettings`.** The trust store a
+  server's certificate is checked against and the name it is checked for,
+  with `client` (the host reached where no name is given, the operating
+  system's store where no trust is) and `login` (FTPS's per-login
+  configuration). The `MariaDB` library's `Guard` and DB2's and FTP's
+  `Secured` are deleted, and the MariaDB and MySQL transports, the LDAP and
+  OAuth 2.0 gates and the ACME client hold it where they kept a trust store
+  alone. `tls::client_trusting` and `tls::login_trusting` are no longer
+  public.
+- **SHA-256 from `codec::digest`.** The fingerprint `peer` reports and
+  `possession`'s nonce binding hash through the estate's one SHA-256 (ADR-0044,
+  amendment 2026-11-13). The TLS 1.3 transcript a recorded handshake is read
+  with, by suite SHA-256 or SHA-384, its HKDF and its AEAD stay the
+  provider's (aws-lc-rs), as rustls's own key schedule is.
+
+What changes for a peer: nothing a test of the old readers held. A name's
+attribute that is not text is still written `#` and its hexadecimal; a
+certificate is read DER-strict, as the X.690 reader reads everything, where
+x509-parser forgave some BER; a PEM block of another label that does not
+end refuses the text where the old readers passed it over. Proved by
+`tls::certificate`'s tests (a leaf's names, times, usages and issuer; an
+other name; a twice-carried extension refused), `tls::pem`'s (a key under
+each label), `tls::client_settings`' (a login's own configuration),
+`tls::client`'s (a given store trusted for the name the settings give, the
+system's refusing), `codec::pem`'s, and every test of the readers' callers,
+unchanged.
+
+Provenance: the audit and the destinations are the coordinator's; the
+names `Certificate`, `ClientSettings` and `encode_wrapped` are the
+assistant's drafting, 2026-11-13, for the owner to overrule.

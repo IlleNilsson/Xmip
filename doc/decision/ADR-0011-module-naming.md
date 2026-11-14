@@ -272,3 +272,27 @@ PL/SQL stays a provider's: the token-discipline example shows it under
 `xmip-<provider>-contract-oracle`. The owner: *"PL/SQL from Oracle we will keep
 our hands off. If a third party or provider wants to include it, it is on
 them."*
+
+## Amendment, 2026-11-13: PostgreSQL's wire is a library, as MariaDB's
+
+PostgreSQL's frontend/backend protocol 3.0 is placed once, in
+`xmip-core-library-postgresql` at `module/core/library/postgresql`, as
+MariaDB's is in `xmip-core-library-mariadb`: the framing and the messages
+both halves send, the client that logs in by trust or a cleartext password in
+the simple query flow, and the far end a test serves. It had sat in
+`xmip-core-transport-postgresql`, and the archive target and the Essentials
+reached it through the transport. Now the transport, the archive target and
+the Essentials' archive cabinet depend on the library for the wire, and Xmip
+Storage's PostgreSQL backend, decided and not built (ADR-0015, amendment
+2026-10-01), will too. The library's refusal is the network library's
+`NetError`, as every library's is; nothing in it names the transport. The
+repository had been declared and created and was never mounted. The owner,
+2026-11-13: *"Do we have all code in the modules, repos that we should. This
+is a refactoring statement"*, and on the finding, *"Good that you found it, fix
+it."*
+
+The wires that only their own transport speaks stay in it: Tabular Data
+Stream in `xmip-core-transport-mssql`, TNS and the two-task layer in
+`xmip-core-transport-oracle`, DRDA in `xmip-core-transport-db2`
+(repository-model.md section 5: a layer only one family consumes is not
+extracted).

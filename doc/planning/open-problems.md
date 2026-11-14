@@ -202,11 +202,28 @@ Three of its items are still open, and this register is where they belong:
   owner (`deployment-model.md`, *Proposed 2026-10-09: laid-out columns, in
   the clear*; the amendment drafted for ADR-0063).
 - **Cluster coordination.** The consolidation the owner agreed on
-  2026-11-07, not started: the cluster code moved from Foundation to
-  Platform, where it runs the sync plane, the protocol between nodes
-  (ADR-0067); placement by a node's stages; and membership through Xmip
-  Storage. One Rotation for Storage's round robin and placement is the
-  assistant's, told to the owner the same day.
+  2026-11-07: the cluster code moved from Foundation to Platform, where it
+  runs the sync plane, the protocol between nodes (ADR-0067); placement by
+  a node's stages; and membership through Xmip Storage. One Rotation for
+  Storage's round robin and placement is the assistant's, told to the
+  owner the same day. **Begun 2026-11-13:** `xmip-core-cluster` is Platform
+  at `module/platform/cluster`, its pure part built — the members moved
+  from `xmip-core-event`, placement over `node::Requirement` and
+  `Capability::satisfies`, refusing what no node satisfies, and the one
+  Rotation — and `test/Layer.Test.ps1` holds the layers (ADR-0058 and
+  ADR-0056, amendments 2026-11-13). **Membership through Xmip Storage is
+  built the same day:** each node writes its row of the `membership`
+  table as it starts and stops in order, follows the members through
+  Xmip Storage's wait, implements `xcluster::Membership` over them, and
+  flags a save not its peers' (ADR-0056, amendment 2026-11-13). **Also
+  built the same day:** persist's Storage client turns on the Rotation, and
+  the sync plane is the cluster's behind `sync`, its bounds `[tuning]`
+  keys, and Event delivery with it behind `delivery` — the hub, its
+  subscribers, an operator's acts, the forwarder and the Event link's
+  conversation — `xmip-core-event` keeping what an Event is and running
+  nothing (ADR-0058, ADR-0065 and ADR-0067, amendments 2026-11-13). Left:
+  `configure` placing through it, and `[sync]`, read by a node that then
+  joins the plane.
 - **A typed configuration loader.** The surfaces' library carries no
   technology's declaration (problem 48), and the estate's PowerShell still
   reads TOML through `Read-XmipToml` and PSToml, not through `configure`
@@ -333,8 +350,10 @@ an atomic rename, so a schedule finds an artifact claimed-or-gone and moves on.
 **Built (thin).** `xmip-core-persist` is types and a trait only —
 `DurableRecordIdentity`, `DurableExecutionCheckpoint`, `DurableJourneyState`,
 `RecoveryLease`, `DeduplicationRecord`, the `RuntimeStore` trait — with **no
-backend implementing it**. `schedule` is a stub — unmounted 2026-09-19, the
-repository kept on GitHub (ADR-0058, amendment); `resilience` is types. So
+backend implementing it**. `schedule` was a stub — unmounted 2026-09-19, the
+repository kept on GitHub, and mounted again on 2026-11-13 with the
+runtime's receive rest and retry due times, its first code (ADR-0058,
+amendments of both days); `resilience` is types. So
 recovery is not executable today: the contracts exist, the durable store behind
 them does not.
 
@@ -775,8 +794,10 @@ one composition root (the root crate's features and `.src/service/built.rs`):
 
 Kept as they are: the composition root, `Linked`, the core traits
 (`Transport`, `Engine`, `XmipStorage`, `KeyStore`, the gates), canopen's
-handed-in `Bus`, archive's `Dialect`, audit's `AuditSink`, event's
-`Membership` and `Wire`, `IOperatorSurface` and the hosts' DI containers.
+handed-in `Bus`, archive's `Dialect`, audit's `AuditSink`, the cluster's
+`Membership` (event's until 2026-11-13, when it moved to
+`xmip-core-cluster`, ADR-0058, amendment of that date), event's `Wire`,
+`IOperatorSurface` and the hosts' DI containers.
 
 ## 33. The assembled service authenticates by two mechanisms alone, and keeps no credentials
 
@@ -1586,7 +1607,7 @@ what one holds grows with the payload. Recorded as the owner's rule asks
 | --- | --- | --- |
 | `json-schema`, bare | a piece and one string | streamed since 2026-10-22: well-formedness read through `serde_json`'s reader and discarded |
 | `json-schema`, bound | the document | the schema's keywords look across it (`required`, `oneOf`); a streamed evaluation is a validator of its own |
-| `xml-schema`, `schematron`, `wsdl` | the document, as `roxmltree`'s tree | the XML Schema subset and Schematron's XPath read a tree; well-formedness alone could stream through `quick-xml`, which checks less than `roxmltree` does |
+| `xml-schema`, `schematron`, `wsdl` | the document, as the estate's one XML reader's tree (`codec::xml::tree`); a bound `schematron` also as `sxd-document`'s model, filled from it for the `XPath` engine (2026-11-13) | the XML Schema subset and Schematron's XPath read a tree; well-formedness alone could stream through the same reader streamed (`codec::xml::streamed`), which holds a document to the order the tree does |
 | `csv`, `fixed-width` | the text | the record walk takes a slice; `message::record`'s streamed walk (2026-10-22) is what a streamed check reads through |
 | `edi-edifact`, `edi-x12`, `hl7-v2` | the text and its segments | the envelope checks count segments across the interchange; a streamed reader keeps the counts and one segment |
 | `yaml`, `toml`, `avro`, `protobuf`, `fhir`, `openapi`, `asyncapi`, `graphql-schema`, `sql`, `toon`, `regex` | the text or the bytes | each parser reads a slice |
@@ -1595,7 +1616,7 @@ what one holds grows with the payload. Recorded as the owner's rule asks
 Each is bounded by the payload and by nothing else, and each holds it once
 however many gates read it (`Stream::load`, `path::Content`). The order is
 the owner's to decide; the cheapest first are CSV through the streamed
-walk and bare XML through `quick-xml`.
+walk and bare XML through `codec::xml::streamed`.
 
 ## 51. A module is updated only on the end user's request, and no surface asks yet
 
@@ -1837,14 +1858,14 @@ owner's ruling; each is a gap in a built transport.
 
 Found 2026-11-10, when TLS session resumption was turned off in
 `xmip-core-library-tls` (ADR-0033, amendment 2026-11-10). The ftp
-transport builds a client configuration for each login (`Secured::login`,
-`tls::login_trusting`), so a login's data connections resume its control
+transport builds a client configuration for each login
+(`tls::ClientSettings::login`), so a login's data connections resume its control
 connection's session, which a server insisting on reuse checks (vsftpd's
 `require_ssl_reuse`, on by default). Xmip's own FTP server insists on
 nothing, so no test fails if they stop resuming. Left: a test against a
 far end that refuses a data connection that is not `Resumed`.
 
-## 62. A Party per Location, and who acted through the roll
+## 62. A Party per Location
 
 Found 2026-11-11, building motion that follows traffic (ADR-0052,
 amendment 2026-11-10). The traffic between real nodes is drawn since the
@@ -1860,14 +1881,13 @@ DS2, *copies to*, at the rate measured, since 2026-11-13 (ADR-0052 and
 ADR-0056, amendments 2026-11-13); every node is related by its roles, and
 a Party faces each node on each side, *TX-Party n* and *RX-Party n*, since
 the same day (ADR-0052, amendment 2026-11-13, the cluster's nodes related
-and stood by role). Left: a Party per Location, named by what its
-configuration says it takes (problem 33), so from and to start and end at
-that Party and not at the one facing the node; and who acted: an order
-the roll carries to a node it reads is audited by the node as the run's
-tester, not the person who left it (ADR-0028, amendment 2026-11-11), so the
-Audit view names the rig for every Pause, Replay, Retry and Dismiss from
-the Web or Desktop on a served node until the operate plane carries the
-person an act was relayed for beside the tester's proven identity.
+and stood by role). Who acted is answered since 2026-11-13: an act asked
+at a node's door is written to Xmip Storage with who asked, the relay they
+came through and the door, and audited so at the node that takes it, and
+the roll carries no act (ADR-0014, amendment 2026-11-13). Left: a Party per
+Location, named by what its configuration says it takes (problem 33), so
+from and to start and end at that Party and not at the one facing the
+node.
 
 ## 63. The board and the Topology measure a rate in two places
 
@@ -1993,6 +2013,64 @@ build: a serving node hands the process's hub its configured policy, which
 `xmip_event_authorize_v1` cannot replace while it serves, and an act's
 actor is the proven caller (`plane::caller::local_of`), never an argument.
 
+## 68. A receive riding on HTTP terminates no TLS
+
+Found by the design review of 2026-11-10; the owner wants every protocol
+to come directly into the node and to be safe on an open network. HTTP,
+AS2, AS4, Peppol and MSMQ Receive Locations, and WebDAV's far end, listen
+in the clear only: one entered `https://`, `as2s://`, `as4s://`,
+`msmqs://` or `webdavs://` is refused as it binds (`http::server::listen`;
+ADR-0033, amendment 2026-11-13), whether or not the node has a `receive`
+certificate. So none of them can be received over TLS, and a Peppol access
+point cannot be received on the network, whose AS4 profile requires TLS.
+tcp already terminates TLS through the node's guard (ADR-0033, amendment
+2026-10-19). Not built:
+
+- **The connection read through the guard.** `http::inbound` (and the
+  `transport::serving` it keeps callers on) generic over the stream
+  `transport::Guard` answers, `tls::GuardedServer`, rather than a bare
+  `TcpStream`, the handshake's peer written on the arrival as tcp's is.
+- **Each technology keeping its guard.** `Configured::guarded_by`
+  overridden by HTTP, AS2, AS4, Peppol and MSMQ: kept where the address's
+  scheme asks for TLS, refused to be built without one, as tcp does.
+- **One place deciding.** `http::server::listen` serving TLS where a guard
+  is given and refusing a secure scheme only where none is.
+- **Peppol's own address.** A Peppol Location is entered `peppol://`, and
+  its access point binds through AS4, which reads the address under AS4's
+  schemes; `peppol://` is not one of them, and there is no secure Peppol
+  scheme.
+
+Tests: a secure-scheme Location on a node with a `receive` certificate
+serves a TLS client and refuses a plain one; on a node without, it is
+refused at bind as now.
+
+## 69. One caller that stops mid-exchange holds a Receive Location's turn
+
+Found carrying the review's fix of 2026-11-10 (ADR-0018, amendment
+2026-11-13). A Receive Location takes its callers' turns one after another
+on one thread (`transport::serving`), and a read in a turn waits as long as
+the Location's `timeout`, or for good where it sets none. A caller that
+sends half a request head and stops holds the turn, and every other caller
+waits behind it; one that sends a byte inside each read's timeout holds it
+as long as it likes. A caller whose read does time out is turned away, as
+any breach is. Not built:
+
+- **A deadline for the whole turn**, every read of it given only what is
+  left of one span from when the turn began, a turn past it turned away.
+  Drafted on 2026-11-10 as `transport::deadline` (a `Within` stream every
+  technology serving through `Serving` would read through) and not carried:
+  every such technology reads its own `TcpStream` today.
+- **The span where a Location sets no `timeout`**: the draft said a minute,
+  enough for `net::MAX_BODY` at ten megabits a second. The owner's to set.
+- **A turn that never waits:** a deadline bounds the hold, and many slow
+  callers still take turns one after another. Reading a turn only once its
+  exchange is whole in this side's buffers, as `Open::waiting` already does
+  for a pipelined one, would hold nobody.
+
+Tests: a caller that dribbles a byte inside each read's timeout is turned
+away at the turn's deadline while another caller is served; between turns a
+read waits as the socket says.
+
 # Suggested order
 
 Rewritten 2026-09-23, and corrected to what is built on 2026-11-10. The
@@ -2068,11 +2146,13 @@ retires entries from stops being an order.
                                        promoted property, its laid-out
                                        columns waiting on the owner
 5. Cluster coordination and placement  problem 19: the consolidation the
-                                       owner agreed on 2026-11-07, not
-                                       started — the cluster code moved to
-                                       Platform, where it runs the sync
-                                       plane; placement by a node's stages;
+                                       owner agreed on 2026-11-07, begun
+                                       2026-11-13 — the cluster crate is
+                                       Platform and its pure part built,
                                        membership through Xmip Storage
+                                       built, persist on its Rotation, the
+                                       sync plane moved into it; left:
+                                       configure placing by it, [sync]
 6. Cross-compilation                   paused by the owner's choice of
                                        2026-11-02, Windows only: the other
                                        targets are written and not run until

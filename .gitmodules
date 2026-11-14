@@ -31,7 +31,7 @@
 	url = https://github.com/IlleNilsson/xmip-core-cli.git
 	ignore = dirty
 [submodule "modules/foundation/cluster"]
-	path = module/foundation/cluster
+	path = module/platform/cluster
 	url = https://github.com/IlleNilsson/xmip-core-cluster.git
 	ignore = dirty
 [submodule "modules/platform/configure"]
@@ -202,3 +202,9 @@
 	path = test/core/module
 	url = https://github.com/IlleNilsson/xmip-core-test-module
 	ignore = dirty
+[submodule "module/core/library/postgresql"]
+	path = module/core/library/postgresql
+	url = https://github.com/IlleNilsson/xmip-core-library-postgresql.git
+[submodule "module/core/capability/schedule"]
+	path = module/core/capability/schedule
+	url = https://github.com/IlleNilsson/xmip-core-schedule.git

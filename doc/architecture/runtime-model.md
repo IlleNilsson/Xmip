@@ -287,6 +287,37 @@ Service writes from its TOML as it starts
 ([decided, not built](estate-map.md#shared-subscriptions)); the audit
 database keeps the audit history.
 
+**Built 2026-11-13: the cluster's membership** (ADR-0056, amendment
+2026-11-13). The administration database's `membership` table has a row for
+each start of each node, kept, never deleted (ADR-0040, amendment of the
+same day): each node writes its row once it reaches Xmip Storage — its
+roles and their evidence, where its operate and sync listeners answer, its
+place among the Storage nodes, the save and serial of the slice it runs —
+and again as it stops in order, Xmip Storage setting when. The members now
+are each node's latest row. A node follows them through the same wait the
+send step takes (`XmipStorage::wait_queues`), which names the table by its
+latest write and answers as a row is written, and says at
+`<node>/membership` whether the save it runs is its peers'
+(`runtime::membership`, the `xcluster::Membership` every follower of the
+members takes).
+
+**Built 2026-11-13: a monitoring node gathers the cluster** (ADR-0027,
+ADR-0056 and ADR-0067, amendments 2026-11-13). A node declaring the
+monitoring role follows the members it reads there, each over its operate
+listener as an Observer — every node lists the monitoring nodes among its
+`[operate] observers`, written with its slice (ADR-0009, amendment of the
+same day) — and itself in process, and assembles the cluster's view with
+the one gatherer (`runtime::plane::gather`): every member's own
+publication merged, each member's `<node>/reached` (reached, did not answer
+and why, or stopped in order), the cluster's rollup and its drawing by
+role. When the members change, they are followed anew. Each view is written
+once and answered on the node's operate listener as `Cluster`, its follower
+told by `ClusterWait`, at the cluster's scope, its source saying who
+gathered it and how many it reached (*CL1, gathered by OP1: 9 of 9 nodes
+reached*); `Publication` stays the node's own, and a node that gathers
+none refuses `Cluster` in words naming the role (`runtime::plane::monitoring`,
+`runtime::running::gathering`).
+
 **Proposed 2026-10-09: what the Ledger is searched by.** A record's body
 is sealed and found by a keyed hash, which leaves an operator nothing to
 search by. The proposal lays out every single value of each Journey,
@@ -957,7 +988,9 @@ nothing rests `[tuning] receive_poll` (a second by default) before it is
 asked again, and one that failed in a way asking again may mend rests
 `[tuning] receive_backoff` (five seconds), each measured from when that
 receive began, set per cluster and per node as every `[tuning]` value is
-(ADR-0031, amendment 2026-10-03). A rest is waited on the node's stop,
+(ADR-0031, amendment 2026-10-03). How long a rest is, and the four
+defaults, `xmip-core-schedule` decides (`schedule::pace`; ADR-0058,
+amendment 2026-11-13); the runtime waits it, on the node's stop,
 which ends it at once. Until 2026-10-12 every Location was asked again at
 once, and an idle
 polled one listed its directory or ran its query without pause.
@@ -1021,6 +1054,19 @@ from the stop, so senders that never pause cannot hold it. A polled
 Location, and one whose far end is told, stops once its current receive
 returns. Until 2026-10-15 every Location did, and the listener was closed
 with its backlog in it.
+
+**A caller's own failure ends its connection, not its Location** (ADR-0018,
+amendment 2026-11-13). A transport that keeps its callers' connections
+(`transport::serving`) lets go of one whose own connection failed — a head
+past its bound, bytes that are not the protocol, a read past the
+Location's timeout, a request its technology refused at the door — and
+goes on serving the others; an answer to a caller that hung up before its
+verdict is a telling that may mend. After every receive the Location asks
+whom its transport turned away (`Transport::turned_away`) and audits each
+as a refusal of that caller, by the address it called from. Only a
+receive's own failure, its listener's, that saying again will not mend
+stops the Location. A caller that sends part of an exchange and stops
+still holds the turn for as long as a read waits (open problem 69).
 
 Refusals before Publication are audited receive failures. From Message
 creation on the Stream is kept; a Message failing Validation is kept and
@@ -1202,8 +1248,9 @@ resume picks up — its audit record, and the entry taken out, as one write;
 the entry is remembered as replayed, so a Replay asked again after a lost
 answer, or a Publication asked again, writes nothing twice. A Message that
 still matches nothing stays, and the refusal names every decline. Replay
-reaches a node as Pause does, an order its node takes (`observe::Noun::
-DeadMessage`, `observe::Act::Replay`), audited; the node publishes the oldest
+reaches a node as Pause does, asked at a node's door and taken by its node
+through Xmip Storage (`observe::Noun::DeadMessage`, `observe::Act::Replay`;
+ADR-0014, amendment 2026-11-13), audited; the node publishes the oldest
 hundred of its queue in its snapshot (`[[dead_messages]]`).
 
 **Routing matches against the cluster's Subscriptions, read from Xmip
@@ -1442,9 +1489,9 @@ waits for its due time.
   JetStream (`Nats-Msg-Id`), AS2 (`Message-ID`), AS4 and Peppol
   (`eb:MessageId`).
 - **Retry and Dismiss** (section 13) are an Operator's acts on a Message
-  that failed, through the node's orders as Pause and Replay are, audited
-  with who acted and gated by role on every surface (`xmip_operate.h`
-  section 16). Each is one hand-on under a claim: Retry writes the Message's
+  that failed, asked at a node's door and taken through Xmip Storage as
+  Pause and Replay are, audited with who acted and gated by role on every
+  surface (`xmip_operate.h` sections 16 and 17). Each is one hand-on under a claim: Retry writes the Message's
   Journey Active, its tries begun anew, and moves it to the end of its Send Port's
   queue — keeping its place in its sequence, so the sequence goes on in
   order from it; Dismiss writes it Dismissed, its history kept, and takes it
@@ -1620,7 +1667,9 @@ waits for its due time.
   node, once it is due, its tries counted on from its `attempts`. The node
   keeps per queue only the earliest due time and how many wait, as the
   queue's last read showed and as each hand-on Xmip Storage took since
-  that read began noted, and wakes for that time — within a millisecond
+  that read began noted (decided by `xmip-core-schedule`'s
+  `schedule::due`, ADR-0058, amendment 2026-11-13, and kept under the send
+  step's lock), and wakes for that time — within a millisecond
   apart from load, through `xcore::wake`, on Windows a high-resolution waitable timer where
   a `Condvar` ended on the system tick up to 14 ms late (the owner,
   2026-10-16; ADR-0050, amendment 2026-10-17): a read that passed a
@@ -1913,20 +1962,31 @@ Journey's history, its Messages, Streams, retention or audit.
 
 Built 2026-10-04 for a Message that failed at its Send Port (section 10):
 Retry and Dismiss are Operator acts on it, by its Journey's identifier,
-through the node's orders, audited and gated by role (`xmip_operate.h`
-section 16). Since 2026-10-05 each is decided on the Message's Journey as
+audited and gated by role (`xmip_operate.h` section 16). Since 2026-10-05 each is decided on the Message's Journey as
 read under its claim — refused in words where another writer moved it after
 it was first read — and every Message that failed at a Send Port is listed at the Port's scope,
 a page at a time from Xmip Storage, with the two acts on each (section 10).
 Since 2026-10-12 an operator on another machine takes them over the node's
 operate listener (ADR-0067; ADR-0014, amendment 2026-10-12): gRPC inside
 Xmip's mutual TLS, the act the certificate's subject's, admitted by the role
-the node's `[operate]` grants and applied by the same one apply as an order
+the node's `[operate]` grants and applied by the one apply
 (`applied::apply`). Since 2026-10-13 an operator on the node's own machine
 takes them over the same listener's local endpoint — a named pipe on
 Windows, a Unix domain socket elsewhere — the act the user's the operating
 system proves (ADR-0014, amendment 2026-10-13): every .NET surface operates
-a node over gRPC, here and elsewhere alike. Start, Pause, Continue and Stop on one Message's travel
+a node over gRPC, here and elsewhere alike. Since 2026-11-13 every act
+goes through Xmip Storage (ADR-0014, amendment 2026-11-13): the node a
+surface reaches is its door, admits the operator by the operator's own
+role, and writes the act to the administration database's `operator_act`
+table, asked of the node that owns what it acts on, with who and when —
+through that node's Xmip Storage where it runs in the door's process, and
+otherwise only at a door declaring the operational role, every other door
+refusing in words. The owning node's act watch is told at once by the wait
+it holds on Xmip Storage, judges the caller again by its own lists, takes
+the act by the same one apply, and decides it once; the door answers that
+decision, or *asked* where it did not come within `[tuning] operate_act`,
+and an act asked of a node that is not running is taken as it starts,
+never expiring. Start, Pause, Continue and Stop on one Message's travel
 are not built.
 
 ## 14. Replay
@@ -1965,6 +2025,12 @@ goes on forward; from the Dead Message Queue it re-publishes with the
 context the Message gathered (section 9), and a stopped Journey resumes
 from its last checkpoint with the Message generation current there
 (`terminology.md`, *Dead Message Queue*).
+
+Built for the Dead Message Queue (section 9): an operator's Replay is an
+act like any other since 2026-11-13, asked at a node's door, written to
+Xmip Storage with who asked and when, and taken by the node whose queue
+keeps the Message, even one that was not running when it was asked
+(section 13; ADR-0014, amendment 2026-11-13).
 
 ![An integration's path from Receive Location to Send Location, where replay enters it, and the audit each step writes](integration-path.svg)
 
@@ -2143,14 +2209,34 @@ types, Messages, Streams, Journeys and metadata a receiver may access. **Event
 delivery and its security outcome are audited.**
 
 ADR-0065 decides how a receiver subscribes, from any language: one Event model
-and one subscription rule in `xmip-core-event`, reached in process through
-`xmip_operate.h` section 11 and over the wire in the Event wire form on Xmip's own
+and one subscription rule in `xmip-core-event`, delivered by
+`xmip-core-cluster`'s `delivery` (ADR-0065, amendment 2026-11-13), reached
+in process through `xmip_operate.h` section 11 and over the wire in the
+Event wire form on Xmip's own
 HTTP, Kafka and AMQP transports, at least once. An Event reaches an in-process
 subscriber within about a millisecond of being published. Any node is the
 cluster's door (ADR-0065, amendment 2026-10-02): a subscriber on any node hears
 the matching Events of every node, each pushed one hop over the sync listener
 (ADR-0067) and Xmip's mutual TLS, only where a subscriber's filter wants it; a
 member that cannot be reached is said to be unheard, never silently missing.
+
+Who the members are is the cluster's, not eventing's: `xmip-core-cluster`'s
+`Member` and `Membership`, which every node writes and follows through Xmip
+Storage, a member naming no sync listener unheard until it serves one
+(ADR-0058 and ADR-0065, amendments 2026-11-13). The sync plane — the
+listener, the link to each member, the following — is `xmip-core-cluster`'s
+too, behind its default feature `sync` (`xcluster::sync::Plane`), its every
+bound a `[tuning]` key (`sync_beat`, `sync_silence` and their kin). So is
+delivery, behind its feature `delivery`, on by default and included by
+`sync`, which opens no socket: the hub every subscriber is admitted to and
+every Event published through (`xcluster::delivery::hub::Hub`), the
+subscriber and its gate, an operator's acts, the forwarder that carries a
+subscription over a transport's `xevent::wire::Wire` at least once, and the
+Event conversation the plane carries — the frames, and what each side's
+hub does with them (`xcluster::sync::link`). `xmip-core-event` is the Event,
+its taxonomy, its filter and its wire form, Foundation, and runs nothing.
+No node joins the plane from its configuration yet: `[sync]` is decided,
+not built.
 
 ## 18. Parties and Endpoints
 
@@ -2697,6 +2783,24 @@ its claim is let go of and taken up again, and no panic ends the
 dispatching. A turn that fails, however it failed, lets go of its place in
 its Work Process's sequence where the set's `on_failure` is `skip`, so the
 next Message of its key is taken its turn (section 3, *Sequences*).
+
+**Built 2026-11-13: a Work Process is placed and bound by its stage, and
+its library is found from its configuration** (ADR-0056, amendment
+2026-11-13). An Application's Work Process requires the process stage
+served, and an environment that writes no bindings by hand binds it on
+every node present whose roles serve that stage — processing or
+executing — as `[[applications.work_processes]]`, its name and its node
+(`configure::placed`, `xcluster::every`); work no node present satisfies
+is refused, naming the requirement, every node considered and the work.
+Every such node runs it, its turns shared as above. A node starts each
+Work Process bound to it as its own `[[work_processes]]` are, its flow its
+design's `module` and `unit` (`configure::bind`, the execution tree), so a
+node running one declares processing. A module holding only Work Process
+units is opened where a Work Process the node starts names it and nowhere
+else, and a module's `library_path` is read against the folder of the
+node's configuration, as every other path it names is
+(`runtime::library`). A unit generated from a design is loaded through the
+C ABI and turned in the runtime's own test.
 
 **Decided, not built:** the `settings` a Work Process gives its unit; unit
 calls through the standard units' registry (a node calls none yet, and a call

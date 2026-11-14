@@ -1047,7 +1047,7 @@ ADR-0027's amendment of the same date); `Xmip.Abi` binds each export once
 
 | Concept | The one implementation | Export | Callers |
 |---|---|---|---|
-| Scope containment, a scope's parts | `observe::Scope::contains`, `Scope::segments` (xmip-core-observe) | `xmip_scope_contains_v1`, `xmip_scope_parts_v1` | `ScopeTree.Beneath` and `Parts`, and through them `ScopeIndex`, `ScopePattern`, every face, and the script module's `Get-XmipTestResult` |
+| Scope containment, a scope's parts | `node::Scope::contains`, `Scope::segments` (xmip-core-node, since 2026-11-13; ADR-0027, amendment of that date) | `xmip_scope_contains_v1`, `xmip_scope_parts_v1` | `ScopeTree.Beneath` and `Parts`, and through them `ScopeIndex`, `ScopePattern`, every face, and the script module's `Get-XmipTestResult` |
 | The stage words, a declaration's parse | `node::Stage::WORDS`, `Stage::declared` (xmip-core-node) | `xmip_stage_words_v1`, `xmip_stage_declared_v1` | `ScopeTree.Stages`, `NodeCapability.Ordered`, and the script module's `ConvertTo-XmipNodeCapability`, its RoundTrip refusal and its roster reading |
 | A mood's word, the mood a word names, its color's name | `observe::Health::word`, `named`, `color` (xmip-core-observe) | `xmip_health_word_v1`, `xmip_health_named_v1`, `xmip_health_color_v1` | `English.Mood`, `MoodOf`, `Color`, and through them `SnapshotOperator`, the GUI (`MoodClass`), the prompt (`SegmentRender.Traffic`), the command line and `Get-XmipTestResult`; the Essentials' publisher, which is Rust, calls `Health::word` and `named` itself |
 | The worst-first order | `observe::Standing` and `Standing::worst_first` (xmip-core-observe), which `Snapshot::health` sorts by | `xmip_health_order_v1` | `ScopeTree.WorstFirst`, `Worst` and `Branches`, `ScopeIndex` (one call per publication, every "which is worse" after it a lookup of the runtime's answer), the prompt's worst stage and `Get-XmipTestResult -Worst` |
@@ -2532,3 +2532,183 @@ line; the relation's mood from the ends' reach and Storage records; the
 clearance of 0.05 and how the operation band and the processing band move
 to keep it; the order within a column by scope; the legend leaving
 *traffic* out.
+
+## Amendment, 2026-11-13: the cluster's rollup in observe, and one gatherer of a cluster's view
+
+ADR-0027 decision 8 left the cluster's view to whoever asks each node, and
+until today the Essentials' roll and its cluster process were the only ones
+that did, each with rules of its own. The design the owner approved on
+2026-11-12, section 3.3, puts each rule in its home; this is its third
+landing piece, with no change in what any surface shows (ADR-0028, amendment
+of this date).
+
+- **The rollup at `<cluster>/node`** is observe's, `observe::rollup::nodes`:
+  the worst leaf beneath every node, which node carries it, one point of
+  severity below it; every leaf Fine is Fine, nothing published is Working.
+  Whoever assembles a cluster's view calls it, the Essentials' cluster
+  process and the gatherer below.
+- **One gatherer, `runtime::plane::gather`**, beside `Remote`, built with
+  the surfaces' `remote` feature and not tied to `node`. Who the members are
+  is the cluster's one seam, `xcluster::Membership`: each `Member` its
+  scope, what it declares, where its operate listener answers, its place in
+  `[storage] nodes` and when it stopped in order, by which the gatherer
+  relates and draws it and says it stopped. How this process reaches each
+  member — what it follows it through, the identity it presents, and where
+  it says it reached it — is the caller's, a `Reach` for each
+  (`Gatherer::start(root, by, &membership, &reach)`), since no membership
+  knows a process's identity; `by` names the node gathering in the view's
+  source, *gathered by …*. What a member is followed through is one seam,
+  `plane::gather::Follow`: a `Remote` over its operate listener, or the
+  gathering node's own publication in process (`gather::own`), since a
+  node's service account holds no role on its own listener.
+  The run's roster is its one implementation today; membership through Xmip
+  Storage is the design's next piece. Each member is followed with its `Remote` — told as
+  its publication advances, read then, never asked again and again — and a
+  gatherer hears every member once before it starts. **One assembler**
+  takes the latest of every member as any is heard and assembles the
+  cluster's view, what is heard meanwhile together, next: every member's
+  snapshot merged by `Snapshot::merge`; its `<node>/reached`, the one rule
+  (`plane::gather::reached`) — Fine at where it is reached, Exhausted *did
+  not answer* and why, Paused *stopped in order* and when; the rollup; and
+  the cluster drawn by `draw::members`, then `relate::relations`, then what
+  each member drew of itself merged by its name, then what moved stated by
+  the gatherer's one window, so no rate is computed in a second place (open
+  problem 63). Its source says how many of the members answered. A caller
+  with a view of its own merges what was heard into it at its own time
+  instead (`Gathered::merged`), as the Essentials' roll does.
+- **Held to the millisecond rule.** The runtime's timing program assembles a
+  view drawing as many things as the 176-node publication
+  `SnapshotReadCostTest` reads, both as that publication draws (175 members
+  declaring no role) and as a cluster related by role draws (25 members),
+  and holds the processor time of an assembly under a millisecond. The first
+  build took 5.6 ms: observe's drawing and relating asked the snapshot about
+  one scope at a time, each a pass over every record that copied and sorted
+  what it found, and every id and scope was written by `format!`, which grows
+  its text several times. So observe orders a snapshot's records by path
+  once a drawing and searches them (`snapshot::Beneath`), draws each member
+  from its own records, relates each member's reach and placement once,
+  relates nothing where no member relates, merges every member's drawing
+  through one index (`Topology::merge_each`; `merge` is its one-drawing
+  case), and writes its ids and scopes in one allocation
+  (`topology::draw::joined`). What each finds is what it found before, held
+  by observe's tests and by `Beneath`'s own against `Snapshot::health`.
+
+Who decided what. The owner's: the design, its pieces and their order. The
+assistant's, while building, for the owner to change: the caller's `Reach`
+beside the membership; a member said *stopped in order* at the severity a
+pause publishes;
+a gatherer that hears every member once before it starts; the gatherer's
+source line; holding the assembly's processor time rather than the wall
+clock, which a machine shared with builds reaches.
+
+## Amendment, 2026-11-13: an act is taken, asked or refused, on every surface
+
+The note of 2026-10-13, *an act is written to Xmip Storage, and every node
+honors it*, is built (ADR-0014, amendment 2026-11-13): the model's acts —
+on a Subscription, a Message in a Dead Message Queue, a Message that failed
+— change where they land and not what they are. An act reaching a node's
+operate listener is admitted by the one gate, written to Xmip Storage at
+that node's door, taken by the node that owns what it acts on, and
+answered with what that node decided.
+
+- **A third outcome, asked.** Where the owning node did not take the act
+  within the door's `[tuning] operate_act`, the door answers *asked*: the
+  act is in Xmip Storage, never lost and never expiring, and its node takes
+  it as soon as it runs. Section 17 says it `XMIP_E_AGAIN`, no failure.
+- **Every act's record carries it.** `SubscriptionOperation`,
+  `DeadMessageOperation`, `MessageOperation` and
+  `EventSubscriptionOperation` keep `Applied` and gain `Outcome`, one of
+  `Xmip.Surface.ActOutcome`'s `Taken`, `Asked` and `Refused`, read from the
+  status once (`ActOutcomes.Of`) by the one surface every face acts
+  through, `ListenerOperator`.
+- **Every face says it in words**, in the order of the surfaces: the
+  command line prints `ASKED.` and the node's sentence and exits 0, and
+  `--json` says `outcome` beside `applied` (`ActOutcomes.Said`, one rule
+  for `OK.`, `ASKED.` and `REFUSED:`); the PowerShell module's act cmdlets
+  return the record, its `Outcome` `Asked`, with a warning carrying the
+  sentence; the Web and the Desktop say the node's own sentence, *asked of*
+  the node, *not taken yet*, never as a refusal, and audit it as no failure
+  (`ActSaid.Answer`, `ActSaid.Recorded`).
+- **A snapshot is never acted on**: the snapshot surface declines every
+  act in one sentence (`SnapshotOperator.NotActed`), and no list it reads
+  says where an order is left; every face acts at a node's door.
+
+Provenance: the owner's decision of 2026-10-13 and his agreement of
+2026-11-12 to the design; the outcome's words and where each face says it
+are the assistant's.
+
+## Amendment, 2026-11-13: one surface per cluster, and the cluster its monitoring node gathered
+
+The design the owner approved on 2026-11-12, section 3.4: *a host now names
+one surface per cluster, each of its own kind (CL1 local at OP1, CL2 a
+snapshot): `ClusterSurfaces` and `SurfaceChoice.OpenAll` take a list of
+`{ Surface, Local|Address|Snapshot }`. `ListenerOperator` follows `Cluster`
+where the node it reaches answers one, decided by that answer and never by a
+name, and its own publication where the node refuses.* And section 3.5, every
+surface in order: *CLI: `--remote`/`--local` at a monitoring node answers for
+the whole cluster; `health`/`status` say gathered by OP1. PowerShell: the
+same through `Xmip.Surface`; the prompt shows the cluster when it follows a
+monitoring node. GUI Web and Desktop: a per-cluster surface choice; the
+source line CL1, gathered by OP1, 9 of 9 reached.* Section 3.4 again:
+*`Start-XmipOperationWeb` points the web host at OP1's local endpoint.* Built
+as the .NET half of the design's fifth piece; the gatherer and section 17's
+calls are the runtime's (the amendment above, *one gatherer of a cluster's
+view*; ADR-0027, amendment 2026-11-13, *a monitoring node gathers the
+cluster's view*).
+
+- **Several clusters are named one way, `Clusters`.** `[Xmip] Clusters` is a
+  list of tables, each naming its `Surface` and the `Local`, `Address` or
+  `Snapshot` that word reads — `--Xmip:Clusters:0:Surface=local
+  --Xmip:Clusters:0:Local=…` on a line — each opened by the one rule a single
+  surface is and refused in its own keys. It wins over `Surface`, for the
+  reason the amendment of 2026-09-20 gave: a line naming two clusters must
+  not be quietly replaced by the one the shipped document names. A command
+  and the prompt read the first. That amendment's list of snapshots,
+  `Snapshot = [...]` and `--Xmip:Snapshot:0=…`, is deleted with every use:
+  `Snapshot` is one path, one cluster.
+- **A cluster not answering yet is named when it first publishes.** A
+  surface that has published nothing when the set is opened — a node, one
+  per cluster, not answering yet — names no cluster and is refused with
+  nothing; it is named by its first publication and keeps that name, as the
+  amendment of 2026-09-20 has a cluster keep its name. A name another
+  cluster holds already is not taken.
+- **The runtime decides what is followed.** `ListenerOperator` waits on
+  section 17's follow of `XMIP_REMOTE_FOLLOWS_ANSWERED` — the cluster's view
+  where the node answers one, else its own, the node's answer deciding as
+  each connection is made — and reads what each telling says it follows:
+  `xmip_remote_cluster_v1` for the cluster, `xmip_remote_publication_v1` for
+  the node's own (`Gathers`).
+- **The source line is the runtime's words.** Following the cluster, a
+  surface's `Source` is where the node is reached and then what the gathered
+  view says of itself — the cluster, gathered by which node, and how many of
+  its nodes it reached — never composed in .NET. Every face that says a
+  source says it: `xmip health`, `measure`, `list`, `show` and the listings,
+  in text and `--json`; each `Get-XmipHealth` record's `Source`; the run line
+  of the Web and the Desktop. `xmip status` says what a status code means
+  and reads no surface.
+- **The prompt shows the cluster** where it follows a monitoring node, read
+  from what every published scope shares, as it always was, never from a
+  name; `PromptMonitor.Follow` takes a stated line as well as a snapshot, so
+  a session can point it at that node.
+- **`Start-XmipOperationWeb -Local`** names a node's local endpoint, one
+  cluster each, beside any `-Snapshot`, bound from the pipeline by property
+  name as `-Snapshot` is; the host is told every cluster it reads as the
+  `Clusters` list, and `Get-XmipOperationWeb` reads them back (`Local`,
+  `Snapshot`).
+- **Not yet**: `Get-XmipTestStatus` naming a roll's monitoring node's
+  endpoint, so that the pipe follows CL1 at OP1, and the first run's
+  `-Local`, are the Essentials' proof (the design, section 7).
+
+Proved in `Xmip.Abi.Test` (the header's names and values; a cluster read,
+refused before a listener gathers and followed after; a follow of what the
+node answers saying which), `Xmip.Surface.Test` (`ClusterListTest`,
+`GatheredClusterTest`), `Xmip.Cli.Test` (`GatheredClusterTests`),
+`Xmip.Gui.Test` (`GatheredClusterViewTest`), the PowerShell module's Pester
+suite and the estate's `XmipTest.Test.ps1` (the host's line written and read
+back).
+
+Who decided what. The owner's: the design, its pieces and their order. The
+assistant's, while building, for the owner to change: the key `Clusters` and
+its form; deleting the list of snapshots; a cluster named by its first
+publication; `Source` on each `Get-XmipHealth` record; `PromptMonitor.Follow`
+over a stated line; `-Local` bound by property name.

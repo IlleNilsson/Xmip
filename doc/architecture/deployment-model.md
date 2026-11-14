@@ -208,6 +208,29 @@ Hosted worker      Receiving + Operational, or Processing + Sending
 
 These are deployment choices, not separate runtime models.
 
+**Work is placed by the stages a node's roles serve** (the owner,
+2026-11-07; ADR-0056, amendment 2026-11-13). A Receive Location requires
+the receive stage served and a Send Port the send stage, and work that
+must reach off the machine requires the online capability too
+(`node::Requirement`); a node satisfies it where one of its roles serves
+that stage, executing serving every stage (`Capability::satisfies`).
+Among the nodes that satisfy it, the next in turn takes it
+(`cluster::place`); where none does, it is refused, naming the
+requirement and every node considered, never left unplaced. A
+Work Process requires the process stage and runs on every node that
+satisfies it (`cluster::every`), its turns shared through Xmip Storage. A cluster's
+file is placed so, its Receive Locations and Send Ports round the nodes
+an environment has and its Work Processes on each node serving their
+stage, by the Essentials' run and `xmip-service --slice --bind` alike
+(`configure::placed`; ADR-0056, amendment 2026-11-13, *a cluster's file
+places its work through `place`*). **One rotation turns for every round
+robin** (`cluster::Rotation`, the same amendment): Xmip Storage's over
+the Storage nodes, one turn a statement, and placement's over the nodes
+that can take a piece of work, both built on it: Xmip Storage's client
+takes each turn from it and keeps only its own ranking after it, a
+Storage node that did not answer lately last and a standby after those
+that are not (`persist::storage::client`).
+
 **Storage is the doorway to all storage** (the owner, 2026-10-01: *to have
 one or more Xmip Nodes with role Storage would be a safety… Xmip could just
 do a round robin over Xmip Nodes roled Storage*). Every other node calls the
@@ -377,10 +400,13 @@ multiple IP addresses, port segmentation have to due* — and `[sync]`,
 **An act is written to Xmip Storage** — decided by the owner, 2026-10-13:
 *pause, resume, retry, dismiss and replay are written to Storage with who
 and when, and every node honors them; reading live state from a node over
-gRPC stays. Order files are deleted with every use.* Until Storage is
-assembled in the service (open problem 33) an act reaches one node, over
-its operate listener or as an order file
-([decided, not built](estate-map.md#operator-acts-through-storage)).
+gRPC stays. Order files are deleted with every use.* The node a surface
+reaches is the act's door: it admits the operator by the operator's own
+role and writes the act to Xmip Storage, asked of the node that owns what
+it acts on, which its act watch takes, judges again by its own lists and
+decides once; a door carries an act to a node outside its own process only
+where it declares the operational role (ADR-0014, amendment 2026-11-13;
+[built, in the assembled service](estate-map.md#operator-acts-through-storage)).
 
 ### Security profiles
 
@@ -519,7 +545,7 @@ different storage*; ADR-0070, amendment 2026-10-10):
 
 | | The runtime database | The administration database | The audit database |
 | --- | --- | --- | --- |
-| Holds | the Ledger: Streams in chunks, Messages, Journeys, claims; the state of each Work Process; retry, failure and replay state; the Messages a paused Subscription holds; audit records as first written | administration; operator state; the Subscriptions each Host Service writes from its TOML as it starts ([decided, not built](estate-map.md#shared-subscriptions)) | audit kept over time: each record, its body and the bytes of every Stream it carries, in its writer's chain |
+| Holds | the Ledger: Streams in chunks, Messages, Journeys, claims; the state of each Work Process; retry, failure and replay state; the Messages a paused Subscription holds; audit records as first written | administration; operator state; operators' acts, a row for each act asked, with who and when (ADR-0014, amendment 2026-11-13); the cluster's membership, a row for each start of each node (ADR-0056, amendment 2026-11-13); the Subscriptions each Host Service writes from its TOML as it starts ([decided, not built](estate-map.md#shared-subscriptions)) | audit kept over time: each record, its body and the bytes of every Stream it carries, in its writer's chain |
 | Optimized for | high write volume, read by key, replay from a known state | what is kept and queried over time | what is kept and queried over time |
 | On an embedded Storage node | RocksDB, `xmip-core-persist-rocksdb`, always | SQLite, `xmip-core-persist-sqlite` | SQLite, a store of its own |
 | Behind a database server | a database of its own on IT's server | a separate database, which IT may place on another server | a separate database, which IT may place on another server and storage |
@@ -538,8 +564,9 @@ time:**
   [decided, not built](estate-map.md#shared-subscriptions));
 - operator state: what is paused, by whom and when — every node honors a
   pause; every act an operator takes — pause, resume, retry, dismiss,
-  replay — with who and when (the owner, 2026-10-13;
-  [decided, not built](estate-map.md#operator-acts-through-storage));
+  replay — with who and when, each in the table of its own, `operator_act`
+  (the owner, 2026-10-13; ADR-0014, amendment 2026-11-13;
+  [built, in the assembled service](estate-map.md#operator-acts-through-storage));
 - the secrets Locations present, each by name in a table of its own,
   `secret`, each value sealed by Xmip before any store keeps it, so a
   database server holds ciphertext alone, and never read back out (ADR-0019, amendment 2026-10-29);
@@ -579,8 +606,9 @@ concern*). Two forms are decided:
 **PostgreSQL is the first database server Xmip Storage supports** (the
 owner, 2026-10-01: *Don't leave out the elephant, Postgres*), as a persist
 technology, `xmip-core-persist-postgresql`, reusing the PostgreSQL wire
-protocol the estate already speaks in its PostgreSQL transport — one
-implementation, no async runtime. SQL Server follows later, and MariaDB
+protocol the estate already speaks, `xmip-core-library-postgresql`, which
+the PostgreSQL transport and archive target use too — one implementation,
+no async runtime (ADR-0011, amendment 2026-11-13). SQL Server follows later, and MariaDB
 beside them (the owner, 2026-10-12: *Can MariaDB be a contender to
 PostgreSQL and MSSQL so make it a provider for Storage nodes and create
 scripts for it*; ADR-0070, amendment 2026-10-12). All three are
@@ -791,7 +819,9 @@ slice a node cannot start is refused and the node runs the last one that
 ran (ADR-0031, amendment 2026-11-12). Each slice has
 every Receive Location and Send Port the file designs placed over the
 environment's nodes by `xmip-core-configure`'s one placement and bound on
-the far end the environment names (ADR-0028, amendment 2026-10-22). Which
+the far end the environment names (ADR-0028, amendment 2026-10-22), and
+every Work Process on each node serving its stage; work no node of the
+environment satisfies is refused (ADR-0056, amendment 2026-11-13). Which
 node runs on which machine is the environment file's, never the cluster's
 file: one TOML file names the technology that makes the environment, the
 hypervisor, the machines with the node each runs and what a node is given,

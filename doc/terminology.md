@@ -30,7 +30,7 @@ unless the surrounding context makes the meaning unavoidable.
 | **Playground** | Where end users, customers and contributors play with configuration, code and settings. The owner, 2026-11-05: *Playground is where end users, customers & contributors can play with configuration, code and settings.* Not the Essentials, which exercises Xmip; until 2026-11-04 the Essentials was called the Playground (ADR-0028). |
 | **Integration** | One forward path: a Receive Location, its Receive Port, a Publication, a Subscription, an Xmip Work Process where the route has one — one that publishes hands its Message on to the next Subscription, still forward — a Send Port or Send Port Group, and a Send Location. It never runs backwards. A replay re-enters it forward, a new Journey with lineage to its source: at a Receive Location event or a Journey's start, at the Receive Port or its Publication, from the Dead Message Queue by re-publishing, and a stopped Journey by resuming from its last checkpoint (*Dead Message Queue* below; `architecture/runtime-model.md` section 14). It is the unit that works or not: the owner, 2026-11-11, *There is no such thing as a working installation. There is only working integrations, hence a gap is a gap, report it*; the Dependency Quest reports each gap (ADR-0072, amendment 2026-11-11). It is to replace the Xmip Application group (ADR-0064, amendment 2026-11-11, with its drawing, `architecture/integration-path.svg`): decided, not built (open problem 64). |
 | **Xmip Application** | A group a developer designs: its routes, and later its transforms and Xmip Work Processes, drawn once in VS Code and kept as text in the repository, the `[[xmip_applications]]` section of `cluster.xmip`. A node's configuration binds it — which Application runs there, with which addresses and secrets. Named by the owner, 2026-09-26, BizTalk's word; ADR-0064. To be replaced by the **Integration** (ADR-0064, amendment 2026-11-11), and until that is built still what the code reads. |
-| **Binding** | What a node's configuration says about an Xmip Application it runs: that it runs it, and the environment's side of it — addresses, secrets, which node takes which Receive and Send Location. The design is the Application's; the binding is the node's. ADR-0064. Whether a binding names integrations or their Locations once the integration replaces the Application is the owner's to choose (ADR-0064, amendment 2026-11-11). |
+| **Binding** | What a node's configuration says about an Xmip Application it runs: that it runs it, and the environment's side of it — addresses, secrets, which node takes which Receive and Send Location, and which nodes run each Work Process (ADR-0056, amendment 2026-11-13). The design is the Application's; the binding is the node's. ADR-0064. Whether a binding names integrations or their Locations once the integration replaces the Application is the owner's to choose (ADR-0064, amendment 2026-11-11). |
 | **Transform** | What turns one Message's content into another's. Designed in VS Code, compiled at design time into a native module (ADR-0066). |
 | **Expression** | One line of Xmip's own expression language, shaped like SQL's WHERE clause: `MessageType = 'Order' and not Amount > 1000`. A Subscription's filter is one; a Transform's conditions and an Xmip Work Process's decisions will be. Compiled once into a tree and decided in three truths — true, false and *unknown*, where a value that is not there is unknown with its reason, never a silent false. `xmip-core-path`'s `expression`; ADR-0066. |
 | **Subscription** | What picks a published Message up — a Message, never a Journey — by its context values, its Receive Location, its Receive Port, its promoted properties and its other Message values, and takes it to an Xmip Work Process, a Send Port or a Send Port Group, a Journey its metadata on the way (ADR-0013, amendment 2026-10-29): a filter and a destination, drawn in an Xmip Application and bound by a node's configuration, and added and removed in that TOML and nowhere else (ADR-0013, ADR-0064). An operator lists them and pauses or resumes one — never removes one — in the Subscriptions view, `xmip subscriptions` and `Get-XmipSubscription`; a paused one holds what it matches in the Ledger, and a resume picks it up oldest first (ADR-0013, amendments 2026-09-30 and 2026-10-01). It is not an **Event subscription**. |
@@ -93,6 +93,32 @@ which say the stages of the message path it serves, and whether it is online
 — published at `<node>/capability` and never read from its name. A **stage**
 (receive, process, send) is where a Message is on its path and a segment of a
 scope; a node does not declare a stage, its roles serve them.
+
+A **requirement** is what a piece of work needs of the node that takes it,
+in the same terms: the stage it needs served — a Receive Location the
+receive stage, a Send Port the send stage — and whether it needs the online
+capability (`node::Requirement`). **Placement** is the match: among the
+nodes whose capability satisfies the requirement, the next in turn takes
+the work, and where none does it is refused, naming the requirement and
+every node considered (`cluster::place`). The **Rotation** is the one turn
+every round robin of the cluster takes, Xmip Storage's over the Storage
+nodes and placement's (`cluster::Rotation`). A **member** is a node of the
+cluster as the others reach it — its node, its sync and operate addresses,
+what it declares — and the **membership** is the cluster's record of them,
+kept in Xmip Storage (`cluster::Member`, `cluster::Membership`; ADR-0056
+and ADR-0058, amendments 2026-11-13): the administration database's
+`membership` table, a row each node writes as it starts and again as it
+stops in order, saying the save it runs too, kept, never deleted.
+
+A node declaring the monitoring role **gathers** its cluster's view: it
+follows each member as a surface would and assembles every member's
+records, each one's `<node>/reached`, the cluster's rollup and its drawing,
+at the cluster's scope, its source saying the cluster, the node that
+gathered it and how many of its nodes it reached (`plane::gather`,
+`xmip_remote_cluster_v1`). A surface reaching that node follows this
+**gathered view** and answers for the whole cluster; reaching any other, that
+node's own publication. The node's answer decides, never its name (ADR-0052,
+amendment 2026-11-13).
 
 ## Target and Site
 
@@ -243,6 +269,7 @@ source a node's configuration names (ADR-0034; ADR-0033, amendment
 | **Carried request** | A node's certificate request written to a file where no network reaches the cluster authority, carried to it and signed there, the chain carried back and imported on the node; each step checks the file it is given and is audited. |
 | **Local endpoint** | A node's operate listener on its own machine — a named pipe on Windows, a Unix domain socket elsewhere — and the one way a surface on that machine reaches the node. Its caller is **proven by the operating system**: the account the connecting process runs as, lent for identification alone on Windows, the kernel's word on the peer on Unix, verified as `peer-credentials` by the authentication gate (ADR-0009, amendment 2026-11-01); only the node's account, the machine's administrators and whom `[operate] admit` names may open it, on Unix a socket `0660` of `[operate] group` where `admit` names anyone (ADR-0014, amendment 2026-10-21). Not **loopback**: a tcp connection over loopback proves where a caller is, not who, and presents a certificate like any other (ADR-0009, amendment 2026-10-21). |
 | **Relay** | An identity a node's `[operate] relay` names — a web host's account, or its certificate's subject — that may act on the node for a caller it serves: it hands the node the caller's **possession proof** (`Vouch`), the node verifies it and answers a handle of its own, and every act for that caller is the caller's, admitted by the role the node's `[operate]` lists the caller's own certificate with and audited `through` the relay. Relaying grants no act of its own (ADR-0009, the second amendment of 2026-11-01, and the amendment of 2026-11-02). |
+| **Door** | The node an operator's surface reaches with an act: it admits the caller by the caller's own role and writes the act to Xmip Storage, asked of the node that owns what it acts on, whose **act watch** takes it, judges the caller again by its own lists and decides it once — *taken*, *refused* or *failed* — or the door answers ***asked*** where that node did not take it within `[tuning] operate_act`. A door carries an act to a node outside its own process only where it declares the operational role (ADR-0014 and ADR-0009, amendments 2026-11-13). |
 | **Possession proof** | What a relay hands a node to show its browser held its key (ADR-0009, amendment 2026-11-02): the browser's handshake with the relay's listener, recorded, whose `ServerHello` random is bound to a fresh nonce the node issued that relay (`Nonces`), and whose client CertificateVerify the node verifies with the browser's certificate's key before it vouches. TLS 1.3 and 1.2 alike; a resumed session proves nothing, so the relay resumes none. |
 | **Secret** | The proof a Location presents to the party it connects to — a `password`, a `key` (an SSH private key) or a `certificate` with its private key — named on the Location, `secret = "<name>"`, and never in configuration: kept in the Xmip Administration Database, a table of its own, its value sealed by Xmip whatever store keeps it, set with `Set-XmipSecret`, `xmip secret` or the GUI's Secrets view and never read back out (ADR-0019, amendment 2026-10-29; ADR-0014, amendment 2026-10-30). The common word for it; not "credential". |
 

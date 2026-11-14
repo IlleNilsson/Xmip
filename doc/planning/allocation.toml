@@ -1864,3 +1864,195 @@ amendment of 2026-09-09) survived and the older one did not."""
 #     through net::frame
 #   module/core/capability/process/.src/form.rs
 #     the Form trait -> codec::form::Form; written and read stay
+
+# Moved on 2026-11-13, xmip-core-cluster from Foundation to Platform
+# (ADR-0058, amendment 2026-11-13), its working tree remounted by
+# Move-XmipSubmodule, the repository and its name unchanged:
+#   module/foundation/cluster -> module/platform/cluster
+# and the cluster's members placed once in it, at
+# module/platform/cluster/src/member.rs:
+#   module/foundation/event/src/cluster.rs
+#     Member and Membership -> xcluster::Member and xcluster::Membership
+# and, the same day, the sync plane into it behind its feature `sync`
+# (ADR-0065, amendment 2026-11-13), the Event conversation kept in event:
+#   module/foundation/event/src/cluster.rs
+#     Cluster, Joining and the following -> src/sync.rs, Cluster named
+#     sync::Plane, follow_every one of Timing's bounds (src/timing.rs)
+#   module/foundation/event/src/cluster/serving.rs -> src/sync/serving.rs
+#   module/foundation/event/src/cluster/upstream.rs -> src/sync/upstream.rs
+#     each link's timing constants -> src/timing.rs, [tuning] keys; what an
+#     answer means -> event's Hub::answered, what to write -> Tap::next,
+#     one write of frames -> event's link::send
+#   module/foundation/event/src/cluster/link.rs -> event's src/link.rs
+#   module/foundation/event/src/cluster/{tap,carriers,unheard}.rs
+#     -> event's src/link/{tap,carriers,unheard}.rs
+#   module/foundation/event/tests/cluster.rs -> tests/sync.rs
+#   module/foundation/event/tests/cluster_process.rs -> tests/sync_process.rs
+#   module/foundation/event/tests/cluster/test_cluster.rs
+#     -> tests/sync/test_cluster.rs
+#   module/foundation/event/tests/measured/cluster_latency.rs
+#     -> tests/measured/latency.rs, in a timing program of its own
+
+# Moved on 2026-11-13, the estate's first scheduling into its one home,
+# xmip-core-schedule, mounted again at module/core/capability/schedule
+# (ADR-0058, amendment 2026-11-13); the waiting and the work stay in the
+# runtime, and module/platform/runtime/src/work_step/dispatch.rs stays whole:
+#   module/platform/runtime/src/receiving/pace.rs
+#     -> module/core/capability/schedule/src/pace.rs, whole
+#   module/platform/runtime/src/receiving/drain.rs
+#     RECEIVE_DRAIN -> schedule's src/pace.rs; the drain stays
+#   module/platform/runtime/src/send_step/due.rs
+#     Due and its rules, and the earliest woken for
+#     -> module/core/capability/schedule/src/due.rs; the send step's
+#     keeping of them under its lock, its reads and its wake stay
+
+# Moved on 2026-11-13, PostgreSQL's frontend/backend protocol 3.0 out of
+# its transport into xmip-core-library-postgresql, mounted at
+# module/core/library/postgresql (ADR-0011, amendment 2026-11-13); the
+# transport, the archive target and the Essentials' archive cabinet
+# depend on the library for the wire:
+#   module/core/capability/transport/postgresql/src/wire.rs
+#     -> module/core/library/postgresql/src/wire.rs
+#   module/core/capability/transport/postgresql/src/backend.rs
+#     -> module/core/library/postgresql/src/backend.rs
+#   module/core/capability/transport/postgresql/src/frontend.rs
+#     -> module/core/library/postgresql/src/frontend.rs
+#   module/core/capability/transport/postgresql/src/client.rs
+#     -> module/core/library/postgresql/src/client.rs; its pooled check
+#     -> the transport's Wire::usable
+#   module/core/capability/transport/postgresql/src/session.rs
+#     -> module/core/library/postgresql/src/session.rs; an INSERT reported
+#     as an Insert, read as the column holds it by the transport's taken
+# and, the same day, the one SQL transport into the transport capability
+# (ADR-0044, amendment 2026-11-13), each technology left its Wire:
+#   module/core/capability/transport/{mariadb,mysql,postgresql,mssql,
+#   oracle,db2}/src/lib.rs
+#     the transport struct, its builder, receive and send
+#     -> .src/sql/sql_transport.rs, SqlTransport; its Configured
+#     -> .src/sql/sql_transport/configured.rs; its Loopback and Accepting
+#     -> .src/sql/sql_transport/loopback.rs; the trait each technology
+#     implements -> .src/sql/wire.rs
+#   module/core/capability/transport/{mariadb,mysql,oracle,db2}/src/
+#   configured.rs and the declarations in {postgresql,mssql}/src/lib.rs
+#     database, user, query, timeout and the default query
+#     -> .src/sql/declared.rs; each keeps its own settings
+#   module/core/capability/transport/sqlite/src/receipt.rs
+#     the body's stamp -> .src/sql/accept.rs, stamp
+#   module/core/capability/transport/{mariadb,mysql}/src/configured.rs
+#   and db2/src/configured.rs
+#     the reading of tls and tls_name, and tls_name's declaration
+#     -> .src/sql/declared.rs, client_tls and TLS_NAME
+
+# Code placed once on 2026-11-13, an attribute rule's condition in Xmip's
+# one expression language (ADR-0066, amendment 2026-11-13):
+#   module/core/capability/authorize/abac/src/condition.rs
+#     removed: Condition, Operator and their evaluator -> xmip-core-path's
+#     expression (Expression, Names, Truth); reading an attribute by its
+#     name stays in src/attribute.rs
+# and the same day, four records written as codec::form::Form, each in its
+# own file, their bytes unchanged: module/foundation/journey/src/record.rs,
+# module/foundation/message/.src/message_record.rs,
+# module/foundation/context/src/facts_record.rs and
+# module/platform/runtime/src/pickup/state.rs
+
+# Code placed once on 2026-11-13, the security libraries (ADR-0033, ADR-0034
+# and ADR-0044, amendments 2026-11-13):
+#   module/core/capability/provision/.src/parsed.rs
+#     -> module/core/library/tls/src/certificate.rs, Certificate
+#   module/core/capability/provision/.src/der.rs, its readers (read_name,
+#   read_alternative_names, read_time, point_of) and object identifiers
+#     -> module/core/library/tls/src/certificate/{part,oid}.rs; der.rs keeps
+#     the writers
+#   module/core/capability/provision/.src/pem.rs
+#     -> module/core/library/codec/src/pem.rs; and the PEM read in
+#     module/core/library/tls/src/{pem,revocation}.rs,
+#     module/core/capability/authenticate/.src/x509.rs,
+#     module/core/capability/authenticate/saml/src/lib.rs (to_der) and
+#     module/core/library/ssh/src/private_key.rs reads through it
+#   x509-parser's reading in module/core/library/tls/src/{name,peer}.rs and
+#   possession/proved.rs, module/core/capability/authenticate/.src/x509.rs
+#   and x509/{name,validity,alt}.rs, and
+#   module/core/capability/authenticate/saml/src/lib.rs
+#     -> module/core/library/tls/src/certificate.rs
+#   module/core/library/mariadb/src/client.rs Guard,
+#   module/core/capability/transport/db2/src/secured.rs Secured and
+#   module/core/capability/transport/ftp/src/secure.rs Secured, and the
+#   trust store kept alone in authenticate/ldap/src/lib.rs,
+#   authenticate/oauth2/src/introspection.rs and provision/acme/src/channel.rs
+#     -> module/core/library/tls/src/client_settings.rs, ClientSettings
+#   module/core/capability/authenticate/.src/store.rs sha256, hmac_sha256
+#   and pbkdf2_sha256, module/core/capability/provision/.src/key.rs sha256,
+#   and every crate's own sha2, hmac, sha1 and pbkdf2
+#     -> module/core/library/codec/src/digest.rs
+
+# Moved on 2026-11-13, a scope's rule down to Foundation, beside the stage it
+# reads (ADR-0027, amendment 2026-11-13):
+#   module/core/operation/observe/.src/scope.rs
+#     -> module/foundation/node/src/scope.rs, whole
+#   module/core/operation/observe/.src/wildcard.rs
+#     -> module/foundation/node/src/wildcard.rs, whole
+
+# Moved on 2026-11-13, Event delivery out of Foundation into
+# xmip-core-cluster, behind its feature `delivery` (ADR-0058 and ADR-0065,
+# amendments 2026-11-13); the Event, its taxonomy, filter and wire form stay:
+#   module/foundation/event/src/{hub,subscriber,gate,listener,queue,
+#   audit_trail,act,forward}.rs
+#     -> module/platform/cluster/src/delivery/, each whole but forward.rs
+#   module/foundation/event/src/forward.rs Wire
+#     -> module/foundation/event/src/wire.rs, Wire; the forwarder moves
+#   module/foundation/event/src/link.rs -> module/platform/cluster/src/sync/link.rs
+#   module/foundation/event/src/link/{carriers,tap,unheard}.rs
+#     -> module/platform/cluster/src/sync/link/
+#   module/platform/cluster/src/sync.rs Joining, Plane and the following
+#     -> module/platform/cluster/src/sync/plane.rs; sync.rs keeps the
+#     module, with the link compiled under `delivery`
+#   module/foundation/event/tests/{hub,act,forward}.rs
+#     -> module/platform/cluster/tests/
+#   module/foundation/event/tests/measured/{hub,latency,act}.rs
+#     -> module/platform/cluster/tests/measured/delivery/; event's timing
+#     program goes with them
+
+# Code placed once on 2026-11-13, one XML reader (ADR-0044, amendment
+# 2026-11-13):
+#   module/foundation/message/xml/src/root.rs, its byte walk;
+#   module/core/capability/authenticate/saml/src/xml.rs, its Reader;
+#   module/core/capability/identify/saml/src/assertion.rs, its span scan;
+#   module/core/capability/transport/peppol/src/sbdh.rs, closes();
+#   module/core/library/codec/src/xml.rs, the flat scan's tag walk; and
+#   every crate's own roxmltree (contract/xml-schema, contract/schematron,
+#   contract/wsdl, logic/soap), quick-xml (transform, process/bpmn) and
+#   sxd-document parser (path/xpath, contract/schematron)
+#     -> module/core/library/codec/src/xml/{event,reader,streamed,scan}.rs
+#     and xml/tree.rs with xml/tree/{node,build}.rs; message/xml's Root,
+#     SAML's Element and BPMN's Element stay, built from the reader
+#   module/core/capability/contract/schematron/src/rules.rs location and
+#   step, and its XPath evaluation
+#     -> module/core/capability/path/xpath/src/expression.rs
+
+# Moved on 2026-11-13, a System Process's declaration file out of Foundation
+# into the runtime (ADR-0058, amendment 2026-11-13); what a declaration says,
+# its text and the reading of it stay in node:
+#   module/foundation/node/src/declaration.rs DIRECTORY_VARIABLE, directory,
+#   Declaration::declare and declare_in, and Declared
+#     -> module/platform/runtime/src/declared.rs, declare and declare_in
+#     functions over a Declaration
+#   module/foundation/node/src/standing.rs standing, a directory's listing
+#     -> module/platform/runtime/src/declared.rs; Standing::read stays
+
+# Code placed once on 2026-11-13, one decoding of the WHATWG encodings
+# (ADR-0044, amendment 2026-11-13):
+#   module/core/capability/prepare/.src/character_encoding.rs, its own
+#   encoding_rs (the label, the decoder and the encoder), and
+#   module/core/library/codec/src/xml/decoded.rs's
+#     -> module/core/library/codec/src/charset.rs, Charset
+
+# Code placed once on 2026-11-13, the audit chain's rule (ADR-0070,
+# amendment 2026-11-13):
+#   module/core/operation/audit/src/audit_chain.rs DIGEST, Digest, FIRST,
+#   digest, written and read; module/core/operation/audit/src/file_chain.rs
+#   Head and module/core/operation/audit/src/file_sink/writer.rs's next
+#   link; and module/platform/persist/.src/storage/chain.rs's head, next
+#   link and SHA-256
+#     -> module/foundation/core/src/audit_chain.rs, Head and digest over
+#     codec::digest; audit_chain.rs keeps the walk, chain.rs the canonical
+#     form

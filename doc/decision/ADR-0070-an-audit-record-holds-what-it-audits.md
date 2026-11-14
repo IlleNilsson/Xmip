@@ -274,3 +274,38 @@ provider for Storage nodes and create scripts for it.* A data domain's
   is made `REQUIRE SSL` and locked until the operator sets its password.
 - **Its backend is decided, not built**, as SQL Server's is: a node naming
   `mariadb` for a domain is refused as it starts, in words.
+
+## Amendment, 2026-11-13: clause 5's chain is formed by one rule
+
+The owner, 2026-11-13: *Do we have all code in the modules, repos that we
+should. This is a refactoring statement*. Clause 5's chain was formed twice:
+by the file sink (`xmip-core-audit`, `audit_chain` and `file_chain`) and by
+Xmip Storage's audit keeper (`xmip-core-persist`, `storage::chain`), each
+starting a writer's chain, taking the next number and the digest before it
+from its head and digesting with `sha2` on its own. The walk that verifies
+was already one, the audit capability's.
+
+- **The rule is `xcore::audit_chain`**, in the crate every log already
+  takes: a writer's first record is number 1 after `FIRST`, the zero
+  digest; `Head::next` gives each next record its number and the digest
+  before it, `Head::after` the head once it is written, `Head::bytes` the
+  head as Xmip Storage keeps it (the number, eight bytes big-endian, then
+  the digest); `digest` is the SHA-256 of a record's canonical form, the
+  estate's one (`codec::digest`), and `written`/`read` its 64 lower-case
+  hex digits. `xmip-core` takes `xmip-core-library-codec` under its `std`
+  feature only (ADR-0058 clause 3, as amended), so a microcontroller's
+  build carries none of it.
+- **Each log keeps its canonical form**: the file sink a record's TOML
+  table without its digest line, Xmip Storage a kept record's row and the
+  Streams it carries. The walk (`audit_chain::walk`, `Walker`, `Verdict`)
+  stays the audit capability's.
+- **No byte changes.** A chain written before verifies after: two golden
+  tests hold the digests of a file record chained twice and of a kept
+  record carrying a Stream, written against the code before the move, and
+  the estate's own `audit.toml` — 22 chains, 14 965 records — walked whole
+  before and after. `sha2` leaves `xmip-core-audit` and
+  `xmip-core-persist`.
+
+Provenance: the placement audit found it; the home in `xmip-core` is the
+coordinator's choice, the `Head` type the assistant's drafting,
+2026-11-13, for the owner to overrule.

@@ -759,3 +759,105 @@ after another until then.
 
 Provenance: the assistant's, 2026-11-12, bringing the record to what is
 built.
+
+## Amendment, 2026-11-13: a monitoring node gathers the cluster's view
+
+Clause 8 is reopened for one role. The two amendments above said it was
+not; the owner decided otherwise on 2026-11-12, agreeing to the design of
+that day: *may a monitoring node gather the cluster's view, asking each node
+as a surface would, saying what it could not reach? Recommended: yes.*
+
+- **A node declaring the monitoring role gathers**
+  (`node::Capability::gathers`, by the role, never a name). It follows
+  every member of its cluster — who they are is its membership through
+  Xmip Storage (ADR-0056, amendment 2026-11-13) — over each member's
+  operate listener as an Observer there, exactly as a surface follows a
+  node, and itself in process through its own publication, never over its
+  own listener. It assembles the cluster's view with the one gatherer
+  (`runtime::plane::gather`): each member's own snapshot merged, the
+  cluster's rollup, the drawing by role, and each member's `<node>/reached`
+  — reached where it is, *did not answer* and why, or *stopped in order*
+  and when. What this clause protects stays: unreachable is health
+  information, told apart from a member that reports itself healthy.
+  When the membership changes, the members are followed anew
+  (`runtime::plane::monitoring`).
+- **A vantage point, said.** The gathered publication's scope is the
+  cluster's, and its source names who gathered it and how many members it
+  reached: *CL1, gathered by OP1: 9 of 9 nodes reached*. A partition can
+  make the monitoring node and an operator see differently; the source
+  says whose view it is, and every surface may still follow any node
+  itself.
+- **A call of its own.** The operate listener answers `Cluster` and
+  `ClusterWait` only at a node declaring monitoring; every other refuses
+  both in words naming the role, after the caller's own role is judged, so
+  a caller holding none learns nothing of the node's roles. `Publication`
+  stays the node's own, so a monitoring node gathering another reads that
+  node's own publication and never a copy of a cluster. Each view is
+  written once, as the text a publication file holds, and every call
+  answers from that text.
+- **Section 17.** `xmip_remote_cluster_v1` reads it: `XMIP_E_UNSUPPORTED`,
+  with the node's refusal, where the node gathers none, so a surface
+  follows the node's own publication there, decided by that answer and
+  never by a name. That answer is a kind of its own on the wire, and
+  everything decides by the kind, never by its words, which are for a
+  person. `xmip_remote_wait_v1` takes `follows`, which publication it
+  follows — `XMIP_REMOTE_FOLLOWS_NODE`, `XMIP_REMOTE_FOLLOWS_CLUSTER`, or
+  `XMIP_REMOTE_FOLLOWS_ANSWERED`, the cluster's where the node answers one
+  and else its own, decided by the runtime from the node's answer as each
+  connection is made, so no surface asks again and again which — and says
+  which it follows in `out_follows`; both changed in place before general
+  availability as subscribe was (amendment 2026-11-11). A handle follows
+  what its first wait names. `xmip_operate_post_cluster_v1` lets a
+  program hosting a node serve a cluster's view it gathered the same way:
+  it gathers by posting one, and until then its listener refuses `Cluster`
+  in the same words. Optional symbols; `XMIP_OPERATE_VERSION` is unchanged.
+- **Still no protocol of its own.** The monitoring node reads over operate,
+  as an Observer, rather than over the sync plane, which is not built
+  (ADR-0067, amendment of this date). Every node lists the monitoring
+  nodes as Observers, written with the environment (ADR-0009, amendment of
+  this date).
+
+Built 2026-11-13, the runtime's half, the assistant's: the calls
+(`plane::call`, `plane::role`, `plane::served::read`), the follow of either
+publication (`plane::remote::cluster`), the gathering
+(`plane::monitoring`, `running::gathering`) and the exports
+(`ffi::remote::cluster`, `ffi::served::cluster`). Held by the runtime's
+tests (`tests/plane/clustered.rs`; the exports' own across the C boundary)
+and by its timing program (`tests/measured/clustered.rs`: `Cluster`
+answered from a view of nine members within the millisecond over loopback
+TLS). The operator surfaces read it through section 17 (ADR-0052).
+
+## Amendment, 2026-11-13: a scope's rule is Foundation's
+
+**Provenance.** The owner, 2026-11-13: *Do we have all code in the
+modules, repos that we should. This is a refactoring statement*, and *fix
+it*. Where the scope rule sits is the assistant's, in the placement plan
+put to him the same day.
+
+- **`Scope` and the one wildcard are `xmip-core-node`'s**: `node::Scope` —
+  a scope read as its path, its segments, containment (clause 3), the node
+  it is on and its stage (clause 4) — and `node::wildcard`, beside
+  `node::Stage`, which a scope's stage is read as. The Event's filter is
+  Foundation and asks containment, and a Foundation crate depends on
+  Foundation and Library alone (ADR-0058 clause 3); observe, the audit and
+  the runtime ask the same rule from above it. What an operator acts with
+  (`Act`, `Noun`, `Order`), what is unheard, the Event subscription's
+  record, the pause state and whether a hidden run is shown stay
+  `xmip-core-observe`'s.
+- **Section 7 forwards to it**: `xmip_scope_contains_v1` to
+  `node::Scope::contains`, `xmip_scope_parts_v1` to
+  `node::Scope::segments`, `xmip_scope_node_v1` to `node::Scope::node`
+  and `node::Scope::stage`, and `xmip_scope_matches_v1` to
+  `node::wildcard::matches`. The symbols, their signatures and every
+  answer are unchanged, and `XMIP_OPERATE_VERSION` with them.
+- **Section 11 forwards to the cluster's hub**: Events are delivered by
+  `xmip-core-cluster`'s `delivery` since the same day (ADR-0065, amendment
+  of this date), so `xmip_event_subscribe_v1`, `xmip_event_listen_v1`,
+  `xmip_event_next_v1` and `xmip_event_publish_v1` forward to
+  `delivery::hub::Hub` and its `EventSubscription`, unchanged at the
+  boundary.
+
+Built 2026-11-13, the assistant's. Held by `xmip-core-node`'s tests of
+`scope.rs` and `wildcard.rs`, the runtime's tests of the exports
+(`src/ffi/rule.rs`) and `Xmip.Surface.Test`'s `ScopeTreeTest` and
+`ScopePatternTest`.

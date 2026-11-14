@@ -493,3 +493,127 @@ a `_v2`:
 Provenance: the defect is the review's, the rules the owner's, 2026-11-10;
 the in-place change, what the bindings' tests prove and the Essentials'
 one Party are the assistant's, 2026-11-11, for the owner to overrule.
+
+## Amendment, 2026-11-13: the membership records are written
+
+What the amendment of 2026-10-02 left undone in part: every node now
+writes its row of the administration database's `membership` table as it
+starts and stops in order, and follows the members, told by Xmip Storage's
+wait as a row is written (ADR-0056, amendment 2026-11-13).
+`runtime::membership::Followed` is the `xcluster::Membership` a node's
+cluster of Events will take; `Member` and `Membership` are
+`xmip-core-cluster`'s since the same day (ADR-0058, amendment
+2026-11-13), and `Member::address`, the sync address, is `None` for every
+member until a node starts its sync listener. Still not built, as before:
+no node starts its sync listener or joins from configuration, and the
+identity a node presents to the other nodes is not configurable.
+
+## Amendment, 2026-11-13: the members are the cluster's, and the sync plane goes with them
+
+**Provenance.** The owner agreed on 2026-11-07, the cluster's
+consolidation put to him: *xmip-core-cluster moves from Foundation to
+Platform … because it runs the sync plane (listener, member links,
+following) … event keeps its Event conversation and stops running a
+listener or depending on tls.* Decided by the assistant the same day and
+told to him: *the event cluster's timing constants become [tuning] keys.*
+
+- **Who the members are is `xmip-core-cluster`'s.** `Member` and
+  `Membership`, until this day in this crate's `cluster` module beside the
+  links that follow them, are `xmip-core-cluster`'s (ADR-0058, amendment
+  of this date), moved with no copy and no re-export left here, and a
+  `Membership` answers `ClusterError` where it answered `EventError`. A
+  member says more than where its sync listener answers: what it
+  declares, where its operate listener answers, its place among the
+  Storage nodes and when it stopped in order (ADR-0056, amendments
+  2026-11-13).
+- **The sync plane is `xmip-core-cluster`'s**, behind its default feature
+  `sync` (`xcluster::sync`): the sync listener answering the other
+  members, the link to each and the following of who they are — what
+  this crate's `cluster` module held as `Cluster`, `Joining`, `serving.rs`
+  and `upstream.rs`, moved whole and named `sync::Plane` there. The
+  dependency runs one way: the cluster's plane depends on this crate, and
+  this crate depends on neither `xmip-core-cluster` nor
+  `xmip-core-library-tls`.
+- **This crate keeps the Event conversation, and runs nothing** (`link`,
+  until this day `cluster::link`, `tap`, `carriers` and `unheard`): the
+  frames, agreed as `xmip-event/1` (`Frame`, `ALPN`, `receive`, `send`);
+  the answering side, `Tap` — what the asking node wants answered
+  (`Tap::asked`) and what to write next (`Tap::next`); and the asking
+  side, on the hub — what to ask (`Hub::asked`), what an answer means
+  (`Hub::answered`), how far each link carries the subscriptions
+  (`link_joined`, `link_made`, `link_unreachable`, `link_left`,
+  `links_made`) and who is unheard (`heard`, `not_heard`). The plane hands
+  every frame to these and decides nothing about one.
+- **A member that names no sync listener is unheard, and said so.** Its
+  sync address is `None` while it serves none, never an empty string; a
+  link cannot be made to it, so it is unheard from the moment it is
+  followed, its reason *it names no sync listener* — nothing missing
+  reaches a subscriber silently (the amendment of 2026-10-02).
+- **The link's timing constants are `[tuning]` keys**, per cluster and per
+  node, their defaults the constants beside the plane
+  (`xcluster::timing`): `sync_beat` (1 s), `sync_silence` (3 s),
+  `sync_handshake` (5 s), `sync_watch` (50 ms), `sync_connect` (2 s),
+  `sync_write` (10 s), `sync_retry` (50 ms, doubled each try),
+  `sync_retry_most` (1 s) and `sync_follow` (1 min, what `Joining`'s
+  `follow_every` was). The runtime reads them (`Tuning::sync`); no node
+  joins the plane from its configuration yet, as before. Two bounds stay
+  this crate's constants, being the hub's and not the link's: how long a
+  subscribe waits for the links to carry it (250 ms) and how many Events a
+  tap queues (4096).
+
+Built 2026-11-13, the assistant's. Held by `xmip-core-cluster`'s
+`tests/sync.rs` and `tests/sync_process.rs`, moved from this crate's
+`tests/cluster.rs` and `tests/cluster_process.rs` with their test cluster,
+the new test that a member naming no sync listener is unheard among them;
+the crossing's timing program moved with them (`tests/measured`); and
+this crate's frame tests in `link.rs`.
+
+## Amendment, 2026-11-13: the Event stays Foundation, and its delivery is the cluster's
+
+**Provenance.** The owner, 2026-11-13: *Do we have all code in the
+modules, repos that we should. This is a refactoring statement*; *Good
+that you found it, fix it*. Where delivery goes is the assistant's, in
+the placement plan put to him the same day (ADR-0058, amendment of this
+date).
+
+- **`xmip-core-event` is what an Event is**: the Event and its taxonomy
+  (`Event`, `outcome`), the one subscription rule (`filter::Filter`, its
+  scope asked of `node::Scope`; ADR-0027, amendment of this date), the
+  wire form (`wire::WireEvent`, `json_format`, `binding`) and `wire::Wire`,
+  what a transport implements to carry one to a Party (until this day
+  `forward::Wire`). It depends on `xmip-core`, `xmip-core-node` and
+  `xmip-core-library-codec` alone, and runs nothing.
+- **Delivery is `xmip-core-cluster`'s**, behind its feature `delivery`, on
+  by default and included by `sync`, which opens no socket: the hub
+  (`delivery::hub::Hub`, `Hub::process`), the subscriber and the gate that
+  authorizes it (clause 4; `delivery::subscriber`, `delivery::gate`), the
+  queue per subscription and the listener, the audit of each (ADR-0062;
+  `delivery::audit_trail`), an operator's acts (`delivery::act`; the
+  amendment of 2026-09-29) and the forwarder that carries a subscription
+  over a `wire::Wire` at least once (clause 3; `delivery::forward`). The
+  Event link's conversation (the amendment above) is `sync::link`, with
+  its `Tap`, carriers and who is unheard, compiled with `delivery`
+  because the hub keeps its taps and carriers by it; the plane that
+  carries it stays behind `sync`. Moved whole, with no copy, alias or
+  re-export left in `event`; `Subscriber::proven`, `subscriber::refused`
+  and the test support `subscriber::fixture` (behind `xmip-core-cluster`'s
+  `test-support`) move with the subscriber.
+- **Who takes it.** The runtime's section 11 exports (`ffi/event`) and its
+  one rule for who subscribes (`plane::caller`) take `delivery` with the
+  runtime's `node` feature. Its `remote` build, the phone's
+  (`Build-XmipRemoteRuntime`), links no hub — a read publication's Event
+  subscriptions and who is unheard are `observe`'s records — and takes
+  none. The Essentials take `delivery`. The HTTP, Kafka and AMQP
+  transports implement `xevent::wire::Wire`, and only their event-wire
+  tests take `delivery`, as a dev-dependency.
+- **Nothing a subscriber sees changes**: what is delivered, how it is
+  authorized, what is audited and under which names, and the C boundary
+  of section 11. The timing program moved with the hub (`hub.rs`,
+  `latency.rs`, `act.rs`, under `xmip-core-cluster`'s `tests/measured`),
+  its bounds unchanged.
+
+Built 2026-11-13, the assistant's. Held by `xmip-core-cluster`'s
+`tests/hub.rs`, `tests/act.rs` and `tests/forward.rs`, moved from this
+crate with the code, the unit tests that moved with each file, and this
+crate's `tests/wire.rs`, which stays.
+

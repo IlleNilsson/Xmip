@@ -17,7 +17,8 @@ function Start-XmipOperationWeb {
             .local-work/web/web-<start time>.log and .err, and every start,
             refusal and failure is audited (ADR-0062), as the host itself
             audits its own start, stop and every error it logs.
-            Without -Snapshot the host reads what its own gui.toml says.
+            Without -Snapshot or -Local the host reads what its own gui.toml
+            says.
 
             Each browser acts as the caller its connection proved — a client
             certificate, over this machine's loopback as from anywhere — with
@@ -59,6 +60,15 @@ function Start-XmipOperationWeb {
             names it too, and the views show it once "show test clusters" is
             ticked (ADR-0028, amendment 2026-09-30).
 
+            -Local names a node on this machine by its local endpoint, one
+            cluster each, beside any snapshot: one host, one surface per
+            cluster, each of its own kind (the design approved 2026-11-12,
+            section 3.4). At a node that gathers its cluster's view, one
+            declaring the monitoring role, the views show the whole cluster as
+            that node sees it, and their source line says who gathered it and
+            how many of its nodes it reached; a node that has not answered yet
+            is named when it first publishes.
+
             It builds the web host first, as Start-XmipTest builds a roll, and
             launches what it built, so the host is the source as it is. It binds to 127.0.0.1 by
             default rather than localhost, because a browser that cached HSTS for
@@ -81,6 +91,14 @@ function Start-XmipOperationWeb {
             two rolls on the pipeline name two. A node xmip-service runs
             publishes its own, snapshot.xmip in its data directory, and
             Get-XmipProcess names it (ADR-0018, amendment 2026-09-30).
+
+        .PARAMETER Local
+            The local endpoint of a node on this machine to follow, one per
+            cluster, as the node's [operate] local names it — xmip-<node>
+            unless it names another: the node that gathers its cluster's view,
+            so the host shows the whole cluster. The host reaches it as the
+            account it runs as. Bound from the pipeline by property name, as
+            -Snapshot is.
 
         .PARAMETER Url
             Where to bind. Defaults to http://127.0.0.1:5087, plain http on
@@ -133,6 +151,10 @@ function Start-XmipOperationWeb {
             Start-XmipOperationWeb -Snapshot /opt/xmip/data/snapshot.xmip
 
         .EXAMPLE
+            $other = '.local-work/essentials/CL2-snapshot.xmip'
+            Start-XmipOperationWeb -Local xmip-CL1-OP1 -Snapshot $other
+
+        .EXAMPLE
             $tls = @{ Certificate = 'node.pem'; PrivateKey = 'node.key'; TrustAnchor = 'ca.pem' }
             $snapshot = '.local-work/essentials/CL1-snapshot.xmip'
             Start-XmipOperationWeb -Url https://0.0.0.0:5443 -Snapshot $snapshot @tls
@@ -147,6 +169,9 @@ function Start-XmipOperationWeb {
         # one is waited for, in `end`, rather than refused.
         [Parameter(ValueFromPipelineByPropertyName)]
         [string[]] $Snapshot,
+
+        [Parameter(ValueFromPipelineByPropertyName)]
+        [string[]] $Local,
 
         [Parameter()]
         [ValidatePattern(
@@ -185,6 +210,7 @@ function Start-XmipOperationWeb {
     begin {
         $ErrorActionPreference = 'Stop'
         $following = [System.Collections.Generic.List[string]]::new()
+        $reaching = [System.Collections.Generic.List[string]]::new()
     }
 
     process {
@@ -198,6 +224,13 @@ function Start-XmipOperationWeb {
             # One file is one publication however many objects named it.
             if (-not $following.Contains($full)) {
                 $following.Add($full)
+            }
+        }
+
+        # One endpoint is one node, and one cluster, however often named.
+        foreach ($endpoint in @($Local | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })) {
+            if (-not $reaching.Contains($endpoint.Trim())) {
+                $reaching.Add($endpoint.Trim())
             }
         }
     }
@@ -220,8 +253,6 @@ function Start-XmipOperationWeb {
         }
 
         $layout = Get-XmipEssentialsLayout
-        [string] $source = 'module/core/operation/gui/src/Xmip.Gui.Web'
-        [string] $project = Join-Path -Path $layout.Root -ChildPath $source
         [string[]] $arguments = @("--Kestrel:Endpoints:Http:Url=$Url")
 
         # What the host presents and trusts, named here or left to its document
@@ -241,10 +272,11 @@ function Start-XmipOperationWeb {
 
         [bool] $rolls = $false
 
-        if ($following.Count -gt 0) {
-            $arguments += '--Xmip:Surface=snapshot'
-            $arguments += Get-XmipOperationWebSnapshotArgument -Snapshot $following
+        # One surface per cluster, each of its own kind: every node's local
+        # endpoint and every snapshot, the list winning over gui.toml's.
+        $arguments += @(Get-XmipOperationWebClusterArgument -Local $reaching -Snapshot $following)
 
+        if ($following.Count -gt 0) {
             # A web host over an Essentials roll's file is a test's, and says so
             # in its declaration (ADR-0053); over anything else it is runtime.
             [string] $area = [System.IO.Path]::GetFullPath($layout.Area)
@@ -275,10 +307,14 @@ function Start-XmipOperationWeb {
             }
         }
 
+        # Every cluster this host is told to read: each node's endpoint, each
+        # snapshot.
+        [string[]] $reads = @($reaching) + @($following)
+
         # Asked to follow what the pipeline names, and it named nothing: no roll
         # is running. An empty host would answer and show nothing (the owner's
         # console, 2026-09-19).
-        if ($following.Count -eq 0 -and $PSCmdlet.MyInvocation.ExpectingInput) {
+        if ($reads.Count -eq 0 -and $PSCmdlet.MyInvocation.ExpectingInput) {
             Write-Error ('REFUSED. The pipeline named no run to follow: nothing is rolling. ' +
                 'Start-XmipTest first.')
             return
@@ -287,7 +323,7 @@ function Start-XmipOperationWeb {
         # The surface is stated, never guessed (ADR-0052 clause 3), so a roll is
         # not followed unasked. But a host that will not show the roll beside it
         # says so, and says how (the owner's console, twice, 2026-09-19).
-        if ($following.Count -eq 0) {
+        if ($reads.Count -eq 0) {
             [string] $rolling = (Get-XmipTestStatus |
                     Where-Object -Property Suite -EQ -Value $script:XmipEssentialsSuite |
                     ForEach-Object -MemberName Cluster) -join ', '
@@ -299,8 +335,8 @@ function Start-XmipOperationWeb {
             }
         }
 
-        [string] $over = if ($following.Count -gt 0) {
-            " over $($following -join ', ')"
+        [string] $over = if ($reads.Count -gt 0) {
+            " over $($reads -join ', ')"
         }
         else {
             ''
@@ -310,20 +346,7 @@ function Start-XmipOperationWeb {
             return
         }
 
-        # A second host on a held address dies at once and says nothing, and the
-        # first keeps answering with whatever it was started over (the owner's
-        # console, 2026-09-19). Refuse, and say who holds it.
-        if (Test-XmipOperationWebAnswering -Url $Url) {
-            [string] $held = (Get-XmipOperationWeb | ForEach-Object -MemberName Id) -join ', '
-            [string] $who = 'another process holds it'
-
-            if ($held) {
-                $who = "xmip-gui-web pid $held runs"
-            }
-
-            Write-Error "REFUSED. $Url already answers: $who. Stop-XmipOperationWeb ends ours."
-            return
-        }
+        Assert-XmipOperationWebFree -Url $Url
 
         # Over a roll, https under the Essentials' authority, the host's
         # certificate issued anew, unless the call named its own.
@@ -337,22 +360,7 @@ function Start-XmipOperationWeb {
             }
         }
 
-        # Built before every start, as Start-XmipTest builds a roll: the host
-        # runs the source as it is. Until 2026-09-29 it ran whatever bin held,
-        # and xgit builds elsewhere, so a fix landed the day before was not
-        # what the owner saw.
-        if (-not (Test-Path -LiteralPath $project)) {
-            Write-Error "No web project at $project."
-            return
-        }
-
-        [string[]] $building = @('build', $project, '--verbosity', 'quiet', '--nologo')
-        [pscustomobject] $built = Invoke-XmipTool -Tool dotnet -Argument $building -Output Keep
-
-        if (-not $built.Passed) {
-            Write-Error "REFUSED. The web host did not build:`n$($built.Said -join "`n")"
-            return
-        }
+        Build-XmipOperationWeb -Root $layout.Root
 
         $launch = @{
             FilePath         = $layout.Web
@@ -378,6 +386,7 @@ function Start-XmipOperationWeb {
         Write-XmipAudit -Action 'Start-XmipOperationWeb' -Phase Begin -Property @{
             Id       = $process.Id
             Url      = $Url
+            Local    = $reaching -join ', '
             Snapshot = $following -join ', '
             Log      = $launch.RedirectStandardOutput
         }

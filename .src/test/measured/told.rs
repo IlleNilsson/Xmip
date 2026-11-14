@@ -1,32 +1,12 @@
 //! The service is told, never looks (the millisecond rule; ADR-0018,
-//! amendment 2026-10-17): an order left where it takes them is acted on
-//! the moment the operating system says it arrived, and a service nothing
-//! tells uses next to no processor.
-//!
-//! What is held for an order is the fastest round in every five
-//! (`xcore::latency`), beside the machine's own wake measured round by
-//! round under the same load: a poll is in every round, a wake that waited
-//! its turn for a processor in some only. The order measured is a pause of
-//! a Subscription already paused, which the node answers from what it
-//! holds, so the round is the telling and not Xmip Storage's write of a
-//! pause. From the order left to its answer heard, four threads are woken
-//! — the service's watch, the service's own, the test's reader of its
-//! output and the test — and the order's file is read and removed
-//! (`observe::Order::take`), the load an order carries, measured beside it
-//! by taking the same order from a directory of the test's own. So the
-//! round is held under the millisecond plus that take plus four plain
-//! wakes.
-
-use xmip_core::fastest::FIVE;
-use xmip_core::latency::{PlainWake, spread};
+//! amendment 2026-10-17): a service nothing tells uses next to no
+//! processor. An act asked at its door is told to it by its act watch
+//! (`publication.rs` holds the pause published at once), and the act's own
+//! path is held to the millisecond rule by the runtime's timing program
+//! (`acted.rs`), beside Xmip Storage's own writes, reads and wakes, which
+//! this program cannot measure apart inside the service.
 
 use super::*;
-
-/// How many orders are measured.
-const ROUNDS: usize = 4 * FIVE;
-
-/// The bound: about a millisecond.
-const BOUND: Duration = Duration::from_millis(1);
 
 /// The most processor time a service nothing tells may use in a second:
 /// its publication's round, four a second (ADR-0018, amendment
@@ -69,58 +49,6 @@ fn ended(directory: &Path, child: Child, mut ending: Ending, said: &Receiver<Str
     assert!(exited(child, Duration::from_secs(5)).success());
     ending.0 = None;
     let _ = std::fs::remove_dir_all(directory);
-}
-
-#[test]
-fn an_order_is_acted_on_the_moment_it_is_left() {
-    let (directory, child, ending, said) = started("told", true);
-    let operator = operator();
-    let plain = PlainWake::start();
-
-    order(&directory, Act::Pause);
-    let paused = heard(&said, "paused by", Duration::from_secs(2));
-    assert!(paused.contains(&operator), "{paused}");
-
-    let beside = directory.join("beside");
-    let (mut taken, mut woke, mut files) = (Vec::new(), Vec::new(), Vec::new());
-    for _ in 0..ROUNDS {
-        order(&directory, Act::Pause);
-        let left = Instant::now();
-        heard(&said, "was already paused", Duration::from_secs(2));
-        taken.push(left.elapsed());
-        woke.push(plain.round().0);
-        files.push(file_taken(&beside));
-    }
-
-    let taken = spread("an order left to its answer heard", taken);
-    let usual = spread("a plain channel beside it", woke).fastest_of_five;
-    let file = spread("its file read and removed beside it", files).fastest_of_five;
-    assert!(
-        taken.fastest_of_five < BOUND + file + usual * 4,
-        "the fastest of five {:?}, its file {file:?}, the machine's own wake {usual:?}",
-        taken.fastest_of_five
-    );
-    ended(&directory, child, ending, &said);
-}
-
-/// How long the order's own file takes to read and remove: the same order
-/// left in `beside` and taken by observe's one taker, as the service takes
-/// it.
-fn file_taken(beside: &Path) -> Duration {
-    Order {
-        node: node_scope(),
-        noun: Noun::Subscription,
-        target: "onward".to_string(),
-        act: Act::Pause,
-        who: operator(),
-    }
-    .leave(beside)
-    .expect("the order is left");
-    let began = Instant::now();
-    let taken = Order::take(beside, &node_scope());
-    let took = began.elapsed();
-    assert_eq!(taken.len(), 1);
-    took
 }
 
 #[test]

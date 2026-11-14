@@ -314,3 +314,59 @@ returned, and the keeper's inbox had no bound.
 **Provenance.** The assistant's, repairing open problem 38: the index and
 its blocks, the budget and its value, for the owner to view and overrule.
 Waiting over failing when the keeper is full is the owner's, 2026-10-16.
+
+## Amendment, 2026-11-13: the scope rule and the wildcard the reader asks are Foundation's
+
+Who a record is, by the location its process declared, and the scope
+`pattern` the read filters by are asked of `xmip-core-node`'s `Scope` and
+`wildcard` (ADR-0027, amendment of this date): the rule an Event's filter
+asks too, placed once in Foundation. The audit capability depends on
+`xmip-core-node` for both, and on `xmip-core-observe` for one rule only,
+whether what a hidden run made is shown (`observe::run::shown`). What the
+reader answers is unchanged.
+
+## Amendment, 2026-11-13: a record is on the disk before it is said written, and records waiting together share one flush
+
+The runtime's timing program of an operator's act (ADR-0014, amendment of
+this date) found the act watch's audit record of each act taking 11.4 ms,
+the fastest of five: over the millisecond rule, and before the next act
+could be taken. Measured step by step the same day on Windows, the file
+sink opened files four times a record — the lock beside the file, the
+file's end to read for a seal, the file again for where the writer's chain
+stands, and the file to append — and made the directory each time. The
+open to read a file written since it was last opened is what the operating
+system's file scanner waits on: 37 ms a record, while opening, appending,
+flushing and closing the same file took 1.6 ms. And nothing was flushed: a
+record said written could still be lost with the machine.
+
+- **On the disk before it is said written.** Every append is flushed to
+  the disk before the sink answers, and on Unix the directory's entry of a
+  file the sink made is flushed too. A record the disk did not take is one
+  the sink could not keep, and goes to the operating system's log
+  (clause 3).
+- **One flush for what waits together.** An audit file has one writer in a
+  process (`file_sink::writer`): a record handed over while a group is
+  being written waits for the next group, which the first of them writes —
+  every record of it in one append and one flush. A record waits at most
+  for the flush under way and its own, never for one flush for each record
+  before it. Records are written in the order handed over, each in its
+  writer's chain as before (ADR-0070 clause 5), and the lock beside the
+  file is taken for each group as every program takes it.
+- **The file is read only where this process did not leave it as it
+  stands** (`file_chain::whole_at`): its end, to seal what another write
+  left unfinished, and what another process appended since. Otherwise
+  nothing is read; where each chain stands is what this process wrote.
+- **Held by none between groups.** The lock and the file are opened for a
+  group and closed after it, so a reader opening the file is never kept
+  out.
+
+Measured by the audit's timing program (`written.rs`, run alone, beside
+other workers' builds): a record on the disk in 2.5 ms, the fastest of five,
+against the disk's own durable write of as many bytes, opened, flushed and
+closed, in 2.0 ms. The bound is a millisecond beyond that write, and is
+held.
+
+**Provenance.** The millisecond rule is the owner's (2026-09-26). The
+defect was found by the assistant while building the operator's door the
+same day and fixed at the coordinator's order; the group flush and the
+read only where needed are the assistant's.

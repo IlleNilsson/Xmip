@@ -409,3 +409,32 @@ rename it, and widen the one place that finds Xmip's processes.
    10's repositories (`dnf provides */bin/xmip`), Debian 13's contents
    (<https://packages.debian.org/search?searchon=contents&keywords=xmip&mode=exactfilename&suite=stable&arch=any>)
    and npm's registry each answered none on 2026-10-22.
+
+## Amendment, 2026-11-13: the declaration's file is the runtime's
+
+The amendment of 2026-09-27 made the declaration's file, its directory, its
+purpose words and its reading `xmip-core-node`'s alone. A Foundation crate
+opens no file (ADR-0058 clause 1, amendment of this date), so the two halves
+are placed apart, each still once:
+
+- **What a declaration says is the node's**: `Declaration` with its name
+  rule and `with`, `Purpose`, `to_toml`, the text it is written as, and
+  `Standing::read`, the one reading of that text.
+- **The file is the runtime's**, `xmip-core-runtime`'s `declared`: the
+  directory (`XMIP_PROCESS_DIRECTORY`, else `xmip/process` under the
+  system's temporary directory), the writing (`declare`), the taking away
+  (`Declared`, dropped or `handed_over`) and the listing of every
+  declaration standing in a directory (`standing`). Section 13's exports
+  forward to it, as they did to the node.
+- **The runtime is the one remover too.** `xmip_process_undeclare_v1`
+  (`declared::undeclare`) takes away the declaration standing in a file,
+  and only a declaration's, one named `xmip-*.toml` as the listing reads
+  them; anything else is REFUSED and left where it is. `Declared` drops
+  through it; .NET's `ProcessDeclaration.Dispose` and
+  `ProcessDeclaration.Undeclare`, and `Read-XmipProcessDeclaration` for a
+  process it found gone, call it, where until this day `File.Delete` and
+  `Remove-Item` removed the file themselves.
+
+The file, its name, its place and its text are unchanged. .NET and the
+estate's PowerShell module reach it only through section 13, its removal
+included.

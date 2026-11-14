@@ -27,9 +27,10 @@ xmip_authority: ""
 xmip_identity: ""
 # The Parties' far end the Essentials serves, where the machines reach it:
 # every Receive Location and Send Port the cluster's file designs is bound
-# there over SFTP, placed over the inventory's nodes, by `xmip-service
-# --slice --bind --nodes` (ADR-0028, amendment 2026-10-22). Left empty,
-# nothing is bound.
+# there over SFTP, placed over the inventory's nodes, and every Work Process
+# on each node serving its stage, by `xmip-service --slice --bind --nodes`
+# (ADR-0028, amendment 2026-10-22; ADR-0056, amendment 2026-11-13). Left
+# empty, nothing is bound.
 xmip_far_end: ""
 # The nodes the inventory runs, the ones the Locations are placed over.
 xmip_placed: >-
