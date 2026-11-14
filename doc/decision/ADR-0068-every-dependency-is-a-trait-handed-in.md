@@ -108,3 +108,20 @@ handshake of the TLS handed to a transport is read under its own bound,
 `[tuning] receive_handshake`, which the runtime gives the guard as it
 builds it (`transport::Guard::handshaking_within`; ADR-0033, amendment
 2026-10-20). The assistant's, 2026-10-20.
+
+## Amendment, 2026-11-14: one clock
+
+**The wall clock is a trait, `xcore::Clock`, and `xcore::SystemClock` is
+its one production implementation and the estate's one reading of the
+operating system's clock** (`SystemTime::now()`, in
+`module/foundation/core/src/clock.rs`; `test/Clock.Test.ps1` holds it).
+A part whose behavior a test must pin over time — Xmip Storage, the
+Ledger, a Message's path — is handed a Clock, as clause 2 says; a part
+that only stamps a wire with the moment — a claimed file's name, a
+signature's date, a file's write time, an archived item's moment, an AS4
+or syslog timestamp — reads `SystemClock` where the moment is taken and
+hands the moment down as a parameter, so its test pins the moment. A
+Library reads no clock: `codec::civil` converts, and `CivilTime::from_unix`
+takes the seconds a caller read. This covers the wall clock alone: no
+reading of the monotonic clock, `Instant::now()`, was moved, and none is
+held by the test. The assistant's, 2026-11-14.

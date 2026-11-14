@@ -24,7 +24,9 @@
       rule's figure, `xcore::latency`);
 
     and any call of `xcore::latency::at_once`, whose answer is only ever
-    held to such a bound. A lower bound alone, or a bound of a second or
+    held to such a bound, or of `xcore::latency::Rounds::crossing`, whose
+    rounds are held to one, or of `worked_beside_a_plain_wake`, which holds
+    a figure to one. A lower bound alone, or a bound of a second or
     more, proves a wait or a give-up and stays where it is.
     `module/foundation/core/src/latency.rs` is the instrument itself, its
     tests its own arithmetic.
@@ -74,7 +76,7 @@ BeforeAll {
         for ([int] $index = (Get-TestStart $Path $Line); $index -lt $Line.Count; $index++) {
             [string] $code = $Line[$index] -replace '//.*$', ''
 
-            if ($code -match '\bat_once\(') {
+            if ($code -match '\bat_once\(|\bRounds::crossing\(|\bworked_beside_a_plain_wake\(') {
                 "${Path}:$($index + 1)"
             }
 
@@ -139,12 +141,17 @@ Describe 'A timing test runs alone, in its module''s measured program' {
             '        assert!(waited < Duration::from_secs(2), "a give-up within seconds");'
             '        assert!(waited >= Duration::from_millis(150), "a lower bound");'
             '        let (_, fastest, _) = at_once("asked again", || ask());'
+            '        let mut rounds = Rounds::crossing(WAKES);'
+            '        worked_beside_a_plain_wake("a share", own, idle);'
             '    }'
             '}'
         )
 
         @(Find-TimingAssertion 'module/x/src/lib.rs' $test) |
-            Should -Be @('module/x/src/lib.rs:4', 'module/x/src/lib.rs:8', 'module/x/src/lib.rs:11')
+            Should -Be @(
+                'module/x/src/lib.rs:4', 'module/x/src/lib.rs:8', 'module/x/src/lib.rs:11',
+                'module/x/src/lib.rs:12', 'module/x/src/lib.rs:13'
+            )
     }
 
     It 'declares every measured program with test = false' {

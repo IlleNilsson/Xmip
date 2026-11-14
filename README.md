@@ -167,7 +167,7 @@ Journey recorded, to a Work Process, a Send Port or a Send Port Group. The terms
   ([ADR-0048](doc/decision/ADR-0048-a-resilience-technology-is-a-guard-on-the-attempt.md)).
   A guard judges; it never runs the operation. The six exist as guards
   ([built, not in the assembled service](doc/architecture/estate-map.md#resilience-guards)); a Send
-  Port's own retry is what a send has today
+  Port's retry is the retry guard, which judges each try that did not send
   ([built, in the assembled service](doc/architecture/estate-map.md#send-port-retry)); the guards
   configured on a Send Port Group, Send Port and Send Location, and a
   timeout that interrupts an attempt, are

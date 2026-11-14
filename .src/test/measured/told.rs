@@ -84,7 +84,7 @@ cfg_select! {
         /// (ADR-0050), so PowerShell reads it, as it presses Ctrl+Break.
         fn processor_time(child: &Child) -> Duration {
             let script = format!("(Get-Process -Id {}).TotalProcessorTime.Ticks", child.id());
-            let read = Command::new("pwsh")
+            let read = std::process::Command::new("pwsh")
                 .args(["-NoProfile", "-NonInteractive", "-Command", &script])
                 .output()
                 .expect("pwsh runs");
@@ -116,7 +116,7 @@ cfg_select! {
         /// The processor time the service's process has used, as `ps` says
         /// it: `minutes:seconds.hundredths`.
         fn processor_time(child: &Child) -> Duration {
-            let read = Command::new("ps")
+            let read = std::process::Command::new("ps")
                 .args(["-o", "time=", "-p", &child.id().to_string()])
                 .output()
                 .expect("ps runs");

@@ -278,7 +278,9 @@ When deployed the sections regarding a node will be sliced to that node.*
   already let go of (`receive_drain`, built 2026-10-15, the same section),
   how long each read of a TLS handshake a Receive Location terminates waits,
   apart from the Location's own wait (`receive_handshake`, built
-  2026-10-20; ADR-0033, amendment 2026-10-20),
+  2026-10-20; ADR-0033, amendment 2026-10-20), the most one caller's turn
+  on a Receive Location takes (`receive_turn`, built 2026-11-14; ADR-0018,
+  amendment 2026-11-14),
   how many of the oldest failed Journeys of each Send Port a node keeps
   (`failed_window`, built 2026-10-16, `runtime-model.md` section 10),
   the node's budget beside its pools — the arrivals it carries at once
@@ -290,7 +292,13 @@ When deployed the sections regarding a node will be sliced to that node.*
   pass-over, and the longest a Storage node holds one node's wait on its
   queues (`storage_wait`, built 2026-11-12; ADR-0018, amendment
   2026-11-12), and how many of what no node waits on a Storage node keeps
-  (`storage_unwaited`, built 2026-11-12; ADR-0018, amendment 2026-11-12)
+  (`storage_unwaited`, built 2026-11-12; ADR-0018, amendment 2026-11-12),
+  how many queues' places by when each is due a Storage node's writer
+  keeps (`storage_due_places`, built 2026-11-14; ADR-0018, amendment
+  2026-11-14),
+  and how every TCP connect of the node's process sends a SYN nobody
+  answered again (`connect_retransmit`, `connect_retransmissions`, built
+  2026-11-14; ADR-0044, amendment 2026-11-14)
   — under `[tuning]` for the cluster and `[nodes.<name>.tuning]`
   for a node (the key names are the assistant's drafting). The built-in
   values are the defaults where neither says; a new assumption of this kind

@@ -301,19 +301,12 @@ pub(crate) fn told(
 /// How many Messages a test carries through the node.
 pub(crate) const MESSAGES: u64 = 50;
 
-/// Send one Message, asking again while the Receive Location has not yet
-/// bound — it binds on its first receive. Bounded, and never a sleep.
+/// Send one Message, asked again while the Receive Location has not yet
+/// bound (`xmip_runtime::fixture::until_listening`).
 pub(crate) fn deliver(address: &str, payload: &[u8]) {
-    let deadline = Instant::now() + Duration::from_secs(5);
-    loop {
-        match xmip_transport_tcp::TcpTransport::loopback().send(address, payload) {
-            Ok(()) => return,
-            Err(refused) if refused.retryable && Instant::now() < deadline => {
-                std::thread::yield_now();
-            }
-            Err(failed) => panic!("the node took nothing at {address}: {failed:?}"),
-        }
-    }
+    xmip_runtime::fixture::until_listening(address, || {
+        xmip_transport_tcp::TcpTransport::loopback().send(address, payload)
+    });
 }
 
 pub(crate) fn declarations(directory: &Path) -> Vec<String> {

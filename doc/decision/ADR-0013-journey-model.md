@@ -904,3 +904,21 @@ that routes by none lists none of its own and refuses an act in words) and
 
 Provenance: the owner's words of 2026-11-10; the judged design's piece 7,
 built by the assistant on 2026-11-11.
+
+## Amendment, 2026-11-14: a Message's tries are the retry guard's to judge
+
+The amendment of 2026-10-04 keeps a Message that failed in its Send Port's
+queue, and the runtime model keeps its tries in its Journey's `attempts`.
+Whether a failed try is repeated, and after how long, was the runtime's own
+rule beside the retry technology; since this date it is the retry guard's
+(ADR-0048, amendment 2026-11-14), built from the Send Port's `retry` as the
+node starts.
+
+What this record keeps is unchanged: every try is an entry of the Journey,
+its `attempts` written with every hand-on and counted on from after a
+restart or on another node; a Message waiting for a retry is `Recovering`,
+its due time kept at its place in its queue (by `xmip-core-schedule`'s
+`schedule::due`, ADR-0058, amendment 2026-11-13); one whose every Send
+Location failed its tries is `Failed`, kept in its queue for an Operator;
+and an Operator's Retry begins its tries anew, the guard counting them from
+its `attempts` again.

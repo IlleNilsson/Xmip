@@ -80,6 +80,7 @@ breaking.
 | `mod.rs` | 5 | yes |
 | A repeated name covering two subjects | 5 | reported, judged by people |
 | A timing test in its module's `measured` program, run last and alone | 5c | yes: run so by `Publish-XmipChange` at landing, and where one sits by `test/Timing.Test.ps1` |
+| The wall clock read by `xcore::SystemClock` alone | 5e | yes, by `test/Clock.Test.ps1` |
 | One subject per file | 1 | reviewed by people |
 
 **400 is taken from measurement, not chosen.** On 2026-08-27 the estate's
@@ -161,8 +162,9 @@ amendment 2026-09-25). A boundary longer than a file is a folder, refined
 the same day for the runtime: its whole C boundary — the operator's exports and the module loader —
 is one folder, `src/ffi/`, each file under 400 lines, and what a boundary
 file does beyond reading and writing pointers stays outside it. `net` keeps
-its named pipe's calls into Windows the same way, in `src/pipe/windows/`
-(amendment 2026-10-21). Such a crate's `Cargo.toml` says `unsafe_code = "deny"` rather
+its calls into Windows — its named pipe's and its TCP connect's — the same
+way, in `src/system/` (amendments 2026-10-21 and 2026-11-14). A crate has
+one place, a file or a folder, never both. Such a crate's `Cargo.toml` says `unsafe_code = "deny"` rather
 than `forbid`, because Rust lets no file lower `forbid`; the file lowers
 `deny` at its top with its reason. `test/Unsafe.Test.ps1` holds the folders and
 the list of those files, one per crate, fails on any other file that allows
@@ -207,8 +209,10 @@ to it.
 ## 5c. A timing test runs alone, in its module's `measured` program
 
 A test that holds Xmip to a time — the millisecond rule's fastest of five
-(`xcore::latency`'s `spread` and `at_once`), a Message's own share
-(`xcore::spent`), a budget of milliseconds an operation — is in its module's
+(`xcore::latency`'s `spread` and `at_once`), a wait that works as it wakes
+held beside a plain wake measured in the same rounds (`Rounds`), a Message's
+own share (`xcore::spent`), a budget of milliseconds an operation — is in
+its module's
 timing program and nowhere else: the cargo test target `measured`, declared
 with `test = false` so a plain `cargo test` leaves it out:
 
@@ -252,6 +256,19 @@ under the program's folder both include with `#[path]`, or behind
 `test-support`; a helper of a line or two, such as a scratch directory, is
 written again rather than shared.
 
+**A wait that works as it wakes is held by what is Xmip's alone**
+(2026-11-14). `xcore::latency::Rounds` measures a plain wake beside each
+round, under the same load, and holds the round's wall clock under the
+millisecond plus a plain wake for each thread it wakes, and this process's
+processor time across it under the millisecond plus the plain wake's, each
+the fastest of five; the median and the tail are printed and held by
+nothing. The operate plane's, the cluster's and Xmip Storage's wakes are
+held by it, and the millisecond is never raised. A figure measured
+elsewhere is held by its processor-time half,
+`worked_beside_a_plain_wake`: the root's assembled node reports its own
+share of a Message in its stop record, held within a millisecond of the
+test's plain wake measured in the same rounds.
+
 **A storage device's sync is the disk's time, never Xmip's.** Waiting for
 the device to sync — `fsync`, `FlushFileBuffers`, a directory's sync, the
 Ledger's sync — is measured and reported apart from Xmip's own share, and
@@ -279,6 +296,17 @@ module fails. The minute is libtest's own word, not a limit Xmip sets: no
 test needs it, so a test that reaches it waits on something that will not
 come. On 2026-11-04 a landing waited
 two hours on seven TLS tests that never ended, and nothing said so.
+
+## 5e. The wall clock is read in one place
+
+A moment of wall-clock time is read through `xcore::Clock`.
+`xcore::SystemClock` holds the estate's one `SystemTime::now()`
+(`module/foundation/core/src/clock.rs`); production code anywhere else calls
+it, or the Clock it was handed, and passes the moment down as a parameter, so
+a test pins the moment (ADR-0068, amendment 2026-11-14). A Library reads no
+clock. `test/Clock.Test.ps1` holds it over every production line
+`Get-XmipSourceFile` counts; a test's own file is not held. It holds the
+wall clock alone; the monotonic clock, `Instant::now()`, is not held.
 
 ## 6. What this does not enforce
 

@@ -617,3 +617,60 @@ Built 2026-11-13, the assistant's. Held by `xmip-core-cluster`'s
 crate with the code, the unit tests that moved with each file, and this
 crate's `tests/wire.rs`, which stays.
 
+## Amendment, 2026-11-14: each protocol binding is its transport's
+
+**Provenance.** The owner, 2026-11-13: *Do we have all code in the
+modules, repos that we should. This is a refactoring statement*; *Good
+that you found it, fix it*; *Speed it up*. Where the bindings go is the
+assistant's, in the placement audit put to him the same day.
+
+- **What clause 3 kept in Foundation goes to the transports.** Until this
+  day `xmip-core-event` held each protocol binding's own rules in a
+  closed `binding::Binding`, one variant each for HTTP, Kafka and AMQP:
+  the prefix an attribute's header carries, HTTP's matching of a
+  header's name without regard to case, and HTTP's percent-encoding of a
+  value. A Foundation crate carried three technologies' rules, and a
+  closed enum closed what a module extends.
+- **The seam is a trait, `binding::Rules`**: `prefix`, `attribute` (the
+  name after the prefix, matched as the protocol matches names; by
+  default the prefix exactly), `escaped` and `unescaped` (by default the
+  value as it is), and the two modes over them, `Rules::write` and
+  `Rules::read`, written once and provided by the trait. The event crate
+  keeps the format and the two modes: `wire::WireEvent`, `wire::Data`,
+  `json_format`, `binding::Carried`, `binding::Mode`,
+  `binding::STRUCTURED` and `wire::Wire`.
+- **Each binding's rules are its transport's**, in its
+  `src/event_wire.rs`, beside its wire: `HttpEventRules` in
+  `xmip-core-transport-http` (`ce-`, in any case, each value
+  percent-encoded through `codec::percent` where the binding says),
+  `KafkaEventRules` in `xmip-core-transport-kafka` (`ce_`, exactly) and
+  `AmqpEventRules` in `xmip-core-transport-amqp` (`cloudEvents_`, exactly,
+  and `cloudEvents:`, the prefix before 1.0.2, read). Moved, with no copy
+  left in the event crate. A transport that carries Events over a
+  protocol of its own writes its own `Rules` and changes nothing here.
+  Each is named `<Protocol>EventRules`, after the trait, and not
+  `<Protocol>Binding`: a Binding is what a node's configuration says of
+  what it runs (`doc/terminology.md`), and the protocol binding is the
+  standard's word, kept in prose and in the module `binding`.
+- **A wire answers its own rules** (`Wire::rules`), so
+  `xmip-core-cluster`'s `delivery::forward::Forwarder::new` takes the
+  subscription, the mode and the wire, and no binding: a wire is never
+  paired with another protocol's rules. A receiving Xmip reads with its
+  transport's: `HttpEventRules.read(&event_wire::carried(&request))`.
+- **The manifest** drops the reserved rows `xmip.core.event.http`,
+  `xmip.core.event.kafka` and `xmip.core.event.amqp`: each binding is its
+  transport's, and no repository of its own was to carry it.
+- **Nothing on the wire changes**: what either mode writes, the headers
+  and their escaping, what is read and what is refused. The Event Grid
+  transport takes `STRUCTURED` and `WireEvent` from the event crate, as
+  before.
+
+Built 2026-11-14, the assistant's. Held by this crate's `tests/wire.rs`,
+the cases every binding shares over two test bindings' rules; the
+specification's binding examples, moved to each transport's
+`tests/event_wire.rs` — HTTP's headers in any case and its
+percent-encoding, Kafka's example, AMQP's under either prefix — beside
+the forwarding tests there; and `xmip-core-cluster`'s `tests/forward.rs`.
+The timing programs, `tests/measured` in the three transports and in
+`xmip-core-cluster`, hold their bounds unchanged.
+

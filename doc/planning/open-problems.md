@@ -1611,7 +1611,8 @@ what one holds grows with the payload. Recorded as the owner's rule asks
 | `csv`, `fixed-width` | the text | the record walk takes a slice; `message::record`'s streamed walk (2026-10-22) is what a streamed check reads through |
 | `edi-edifact`, `edi-x12`, `hl7-v2` | the text and its segments | the envelope checks count segments across the interchange; a streamed reader keeps the counts and one segment |
 | `yaml`, `toml`, `avro`, `protobuf`, `fhir`, `openapi`, `asyncapi`, `graphql-schema`, `sql`, `toon`, `regex` | the text or the bytes | each parser reads a slice |
-| path languages (`xpath`, `jsonpath`, `dot`, `json-pointer`, `fhirpath`, `index`, `regex`, `edi`, `hl7-v2`) | the form they parse, once per Message | a path reads a parsed form shared by every path of the Message; a promotion that stops early (a Content Selector's `stream-prefix`) is a reader of its own |
+| path languages (`xpath`, `jsonpath`, `dot`, `json-pointer`, `fhirpath`, `index`, `regex`, `hl7-v2`) | the form they parse, once per Message | a path reads a parsed form shared by every path of the Message; a promotion that stops early (a Content Selector's `stream-prefix`) is a reader of its own |
+| `edi` path | the text, and one segment as a read walks it; a write the whole interchange | a read walks the whole text with its syntax's walk and cuts only the segment it points at, so a malformed interchange is refused as before (2026-11-14); a write edits the tree it writes back |
 
 Each is bounded by the payload and by nothing else, and each holds it once
 however many gates read it (`Stream::load`, `path::Content`). The order is
@@ -2044,32 +2045,57 @@ Tests: a secure-scheme Location on a node with a `receive` certificate
 serves a TLS client and refuses a plain one; on a node without, it is
 refused at bind as now.
 
-## 69. One caller that stops mid-exchange holds a Receive Location's turn
+## 70. Two nodes on one machine under different accounts take each other's endpoint folder
 
-Found carrying the review's fix of 2026-11-10 (ADR-0018, amendment
-2026-11-13). A Receive Location takes its callers' turns one after another
-on one thread (`transport::serving`), and a read in a turn waits as long as
-the Location's `timeout`, or for good where it sets none. A caller that
-sends half a request head and stops holds the turn, and every other caller
-waits behind it; one that sends a byte inside each read's timeout holds it
-as long as it likes. A caller whose read does time out is turned away, as
-any breach is. Not built:
+Found by the survey of the local endpoint's folder, 2026-11-14. The systemd
+unit `xmip-service --install` writes (`registration.rs`) makes the folder
+of the local endpoints with `RuntimeDirectory=xmip`. systemd hands that
+folder to the unit's account (`User=`, which `XMIP_ACCOUNT` names), and
+where it already belongs to another account, it hands over the folder and
+everything in it, recursively (systemd.exec, `RuntimeDirectory=`). So when
+two nodes on one machine run under different accounts, each one's start
+takes `/run/xmip` and the other node's socket in it. The other node's
+account no longer owns its own socket, and `plane::local::unix::guarded`
+refuses the folder at that node's next start. On macOS each node's
+`xmip-<node>.run` daemon hands `/var/run/xmip` to its own account at boot
+in the same way. Not seen yet: every node so far runs as root. The owner
+decides between:
 
-- **A deadline for the whole turn**, every read of it given only what is
-  left of one span from when the turn began, a turn past it turned away.
-  Drafted on 2026-11-10 as `transport::deadline` (a `Within` stream every
-  technology serving through `Serving` would read through) and not carried:
-  every such technology reads its own `TcpStream` today.
-- **The span where a Location sets no `timeout`**: the draft said a minute,
-  enough for `net::MAX_BODY` at ten megabits a second. The owner's to set.
-- **A turn that never waits:** a deadline bounds the hold, and many slow
-  callers still take turns one after another. Reading a turn only once its
-  exchange is whole in this side's buffers, as `Open::waiting` already does
-  for a pipelined one, would hold nobody.
+- **One account per machine.** Every node on a machine runs as the same
+  account.
+- **A folder per node.** Each unit names a folder of its own under
+  `/run/xmip`, and the endpoint moves into it. That is another place than
+  the one decided on 2026-10-13 (ADR-0014: *a name may change, the folder
+  may not*).
 
-Tests: a caller that dribbles a byte inside each read's timeout is turned
-away at the turn's deadline while another caller is served; between turns a
-read waits as the socket says.
+Tests: in the AlmaLinux 10 guest, two nodes installed under two accounts
+each still own their socket after both have started.
+
+## 71. A node says it started before its listening Receive Locations listen
+
+Found by the timing program on 2026-11-14. A Receive Location whose
+receive waits on a listener binds it on its first receive, on the
+Location's own thread, after the node has started and been activated. HTTP
+is one (`http::HttpTransport::receive_up_to`, through `inbound.next(||
+self.bind())`). So a caller that connects the moment `started()` returns
+can be refused. Until 2026-11-14 Windows asked a refused connect again for
+about two seconds by itself, which hid this. Since then `net::connect`
+answers a refusal at once (ADR-0044, amendment 2026-11-14). The timing
+program's eight senders were refused in three runs of four, and its
+warm-up connect now asks again (`fixture::until_listening`, the one rule
+every test that sends to a node it just started asks through). A node
+started and reported serving still refuses its first callers. The owner
+decides between:
+
+- **Bound as it is opened.** Each listening technology binds when its
+  Location's transport is built, so a node is listening when it says it
+  started. A port that is taken then refuses the start at phase 9, rather
+  than stopping the Location after the start.
+- **Bound as now, and said.** The Location's record says it is not
+  listening until its first receive has bound, and a caller asks again.
+
+Tests: a caller that connects the moment a node's start returns is taken
+on its first connect, on Windows and on Linux.
 
 # Suggested order
 
@@ -2687,6 +2713,70 @@ over a reader and is unchanged. Held by
 `a_file_another_process_holds_as_a_scanner_does_is_replaced_whole`,
 `a_written_file_held_a_moment_is_waited_out_and_left_nowhere` (which fails
 with one try) and `a_switch_that_fails_leaves_nothing_beside_its_target`.
+
+## 69. One caller that stops mid-exchange holds a Receive Location's turn — **Resolved**
+
+*Resolved 2026-11-14 by the owner's decision of the same day, built the
+same day (ADR-0018, amendment 2026-11-14).*
+
+Found carrying the review's fix of 2026-11-10 (ADR-0018, amendment
+2026-11-13). A Receive Location takes its callers' turns one after another
+on one thread (`transport::serving`), and a read in a turn waited as long
+as the Location's `timeout`, or for good where it sets none. A caller that
+sent half a request head and stopped held the turn, and every other caller
+waited behind it; one that sent a byte inside each read's timeout held it
+as long as it liked. Decided by the owner, 2026-11-14: a deadline for the
+whole turn, its default in `[tuning]`, set per cluster and per node in the
+Cluster TOML.
+
+Built the same day. **Every connection a Receive Location serves is read
+through `transport::deadline::Within`**: `Serving` hands each one it
+accepts to its technology as one, and gives it a deadline before each
+turn, the turn's span from then. A read of the turn waits at most what is
+left of it where that ends before the Location's own wait would, and a read
+past the deadline answers `TimedOut` without reading: the caller is turned
+away and audited as any breach is, and the others are served. The
+Location's `timeout` still bounds each read; between turns the socket waits
+as it says. Every technology that serves through `Serving` reads through
+it — HTTP, and AS2, AS4, MSMQ, Peppol, SNS's subscription and Event Grid's
+webhook riding on it, MLLP, SMTP, syslog over TCP, WebSocket, Modbus, DNP3,
+IEC 60870-5-104 and SECS/GEM — and each hands its `Serving` the node's span
+(`Configured::turning_within`). **DICOM, COTP and DNS over TCP moved onto
+`Serving`** the same day, decided so that one serving rule bounds every
+listening caller: until then each accepted one connection per receive and
+read it on the Location's own thread. A DICOM association's opening is its
+one turn, its data set read off it outside the turn; a COTP connection is
+kept between its messages, its CR one turn and each message one more; a
+DNS client's TCP connection is kept between its updates, each one turn,
+taking no next message until it is answered. **The span is `[tuning] receive_turn`**,
+`transport::serving::TURN` by default: a minute, enough for `net::MAX_BODY`
+at ten megabits a second, the assistant's drafting; the span is the
+owner's to set.
+
+Held by `transport::serving`'s
+`a_caller_that_stops_partway_is_cut_at_its_turn_and_the_next_is_served`
+(a hundred bytes twenty milliseconds apart, cut at a turn of 200 ms, the
+next caller served) and `a_caller_sending_steadily_within_its_turn_is_served`,
+`transport::deadline`'s tests (a read past the turn is cut and reads
+nothing; the Location's wait put back between turns, and left alone where
+it ends a read first), `http::inbound`'s
+`a_head_sent_in_part_is_cut_at_its_turn_and_the_next_caller_served`,
+DICOM's, COTP's and DNS's tests of a caller that stops partway (half a
+request, a CR or an update sent, cut at a turn of 200 ms and the next
+caller served), and
+the runtime's `tuning` tests (`receive_turn` read from the Cluster TOML, the
+node's own winning, defaulted, refused out of bounds). Measured in
+transport's timing program (`tests/measured/serving.rs`): a thousand
+exchanges whose every read the turn shortens, one `setsockopt` each, within
+a second, as a thousand whose reads it leaves alone are.
+
+Not carried, and still true: a deadline bounds one caller's hold, and many
+slow callers still take their turns one after another. Reading a turn only
+once its exchange is whole in this side's buffers, as `Open::waiting`
+already does for a pipelined one, would hold nobody. And raw TCP and a
+Unix domain socket stay outside `Serving`, decided the same day: each
+hands its connection to the runtime as the body it reads on a carry
+thread, so a slow sender holds that carry, not the Location.
 
 ## 4. `assign`, `promote`, `demote` sit in Capabilities with zero implementations — **Resolved**
 

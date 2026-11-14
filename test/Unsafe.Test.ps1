@@ -8,8 +8,9 @@
     them, and every other file forbids it.
 
     The runtime keeps its whole C boundary in one folder, src/ffi/ (ADR-0050,
-    refined 2026-09-25), and net its named pipe's on Windows in another
-    (amendment 2026-10-21); every other crate gets one file. The folders and
+    refined 2026-09-25), and net its calls to Windows in another, src/system/
+    (amendments 2026-10-21 and 2026-11-14); every other crate gets one file.
+    A crate has one place, a file or a folder, never both. The folders and
     the list below are the whole of the estate's unsafe. A new file on the
     list is a change a reviewer sees here, with its reason; a file that lowers
     the lint anywhere else fails.
@@ -22,12 +23,14 @@ BeforeAll {
     # (ADR-0050, refined 2026-09-25 and amended 2026-10-21): the runtime's,
     # the operator's table and exports (ADR-0027), the loader (ADR-0057) and
     # the calls a directory watch makes (ffi/directory_watch.rs; ADR-0018,
-    # amendment 2026-10-17); and net's, the named pipe on Windows, which the
-    # runtime's local endpoint and the named pipe transport both make theirs
-    # through (ADR-0014, amendment 2026-10-21).
+    # amendment 2026-10-17); and net's calls to Windows: the named pipe, which
+    # the runtime's local endpoint and the named pipe transport both make
+    # theirs through (ADR-0014, amendment 2026-10-21), and the TCP connect,
+    # its SYN sent once so a refusal is answered at once (ADR-0044, amendment
+    # 2026-11-14).
     $script:Folders = @(
         'module/platform/runtime/src/ffi/'
-        'module/core/library/net/src/pipe/windows/'
+        'module/core/library/net/src/system/'
     )
 
     # Every other crate: exactly one file, and why it crosses a C interface.
@@ -93,13 +96,15 @@ Describe 'Unsafe code lives only in the files the estate lists' {
             'unsafe lives in a listed folder or one named file per crate (ADR-0050)')
     }
 
-    It 'lists exactly one file for each crate' {
+    It 'gives each crate one place, a file or a folder, never both' {
+        # A folder's crate is found from a file in it, as a listed file's is.
         [string[]] $twice = @(
-            $script:Allowed.Keys | ForEach-Object { Get-UnsafeCrate $_ } |
+            @($script:Allowed.Keys) + @($script:Folders | ForEach-Object { $_ + 'any.rs' }) |
+                ForEach-Object { Get-UnsafeCrate $_ } |
                 Group-Object | Where-Object Count -gt 1 | ForEach-Object Name
         )
 
-        $twice | Should -BeNullOrEmpty -Because 'one file per crate, or one folder'
+        $twice | Should -BeNullOrEmpty -Because 'one file per crate, or one folder (ADR-0050)'
     }
 
     It 'lists no file that is gone or no longer allows it' {

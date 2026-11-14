@@ -2712,3 +2712,42 @@ assistant's, while building, for the owner to change: the key `Clusters` and
 its form; deleting the list of snapshots; a cluster named by its first
 publication; `Source` on each `Get-XmipHealth` record; `PromptMonitor.Follow`
 over a stated line; `-Local` bound by property name.
+
+## Amendment, 2026-11-14: a gatherer's view assembled with each text written once
+
+The runtime's timing program failed a landing on 2026-11-14 with the
+machine half loaded by other programs: an assembly of a cluster's view took
+0.76 to 1.09 ms of processor time for 175 members declaring no role and
+0.64 to 0.78 ms for 25 members related by role (the fastest of five over
+50, three rounds each). Nothing in the gather path had changed; the bound
+held its thin headroom no longer. Measured phase by phase, most of an
+assembly was allocating, at 120 to 190 ns each, and searching again what
+was searched already. Observe now:
+
+- **Keeps each record by its scope** and each count by its scope and what
+  it counted, read from the record (`snapshot::kept`), where every record
+  and count carried a copy of its scope as its key.
+- **Orders a snapshot's paths segment by segment** (`snapshot::Beneath`),
+  so what is beneath a scope is one run of them: a node's records are
+  borrowed, never copied out, and a node's stages and what it declared are
+  read in one pass over them (`Beneath::leaves`); what is beneath a leaf of
+  a scope is asked without writing that scope out
+  (`Beneath::records_beneath`, `worst_beneath`).
+- **Writes each text of the drawing once**, into the thing that keeps it: a
+  node's scope moved into it, what is placed on a stage borrowed from the
+  snapshot, a relation's placement written at its length.
+- **Finds an id by a hash of its own** in `Topology::merge_each`, where each
+  was hashed twice by SipHash, and tells a node's own ids by `draw::owns`
+  without writing its id out; the rollup reads its leaves in one pass.
+
+What is drawn is what was drawn: the same view, health records, rollup,
+drawing and window, held by observe's tests, `Beneath`'s against
+`Snapshot::health`, and the whole assembly compared before and after. The
+same rounds now take 0.48 to 0.55 ms and 0.46 to 0.65 ms. What remains is
+mostly the view's own texts: about 1,600 allocations an assembly, each a
+text the view keeps.
+
+Who decided what. The owner's: the millisecond rule, whose cure is speed and
+never a larger bound. The assistant's, while building, for the owner to
+change: the paths ordered segment by segment, a record kept by its own
+scope, and the index's own hash.

@@ -628,3 +628,28 @@ three gates this record describes:
 
 Provenance: the rules are the owner's, 2026-11-10; how they land at each
 gate is the assistant's, 2026-11-11, for the owner to overrule.
+
+## Amendment, 2026-11-14: net's calls to Windows are one folder, `src/system/`
+
+The estate's one TCP connect, `net::connect`, makes its own socket on
+Windows so it can send each SYN once and answer a refusal at once
+(ADR-0044, amendment 2026-11-14): `WSAStartup` once a process,
+`WSASocketW`, `WSAIoctl` with `SIO_TCP_INITIAL_RTO` and for `ConnectEx`,
+`setsockopt` with `TCP_FAIL_CONNECT_ON_ICMP_ERROR` and
+`SO_UPDATE_CONNECT_CONTEXT`, `bind` and `ConnectEx`, the socket owned by
+the standard library's `TcpStream` from the moment it is made. A crate has
+one place for unsafe code, a file or a folder, so `net`'s folder is named
+for what it is, the crate's calls to the operating system, and holds them
+all: `src/system/pipe/` the named pipe's, moved from `src/pipe/windows/`;
+`src/system/connect.rs` the connect's; and `src/system/overlapped.rs` the
+one overlapped wait both take — its event, its bounded wait and cancel,
+its end read by `GetOverlappedResult` for a pipe and
+`WSAGetOverlappedResult` for a socket — moved out of the pipe's `io`,
+where it was the pipe's alone. `crate::pipe` and `crate::connect` call
+them and write none themselves.
+`test/Unsafe.Test.ps1` lists the folder, and now holds the rule as well:
+a crate with both a listed file and a folder fails it.
+
+Provenance: the assistant drafted a file beside the pipe's folder; the
+coordinator, 2026-11-14, ruled for ADR-0050's one place, and the folder's
+name and shape are the assistant's.

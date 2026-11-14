@@ -30,7 +30,7 @@
 //! and `authority.rs`.
 
 use std::path::{Path, PathBuf};
-use std::process::{Child, Command};
+use std::process::Child;
 use std::sync::mpsc::Receiver;
 use std::time::{Duration, Instant};
 

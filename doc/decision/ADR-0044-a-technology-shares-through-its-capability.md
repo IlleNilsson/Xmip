@@ -452,3 +452,148 @@ speed on a short or entity-dense document, or a cut of the estate's own.
 Provenance: the audit, the backend and keeping the `XPath` engine are the
 coordinator's plan of the same day; the reader's shape, its API and the
 measurements are the assistant's drafting, for the owner to overrule.
+
+## Amendment, 2026-11-14: a refused connect is answered at once, and only a SYN nobody answered is sent again
+
+On Windows a TCP connect to a port where nothing listens was refused after
+about two seconds; Linux refuses at once. Windows answers the peer's reset
+by sending its SYN again, half a second at a time, as often as it would
+send a lost SYN again, so a node took two seconds per stopped Storage node
+to learn it was down: the runtime's
+`a_node_reaches_the_storage_nodes_listed_and_waits_for_the_primary_gone_to_return`
+measured 2.03 s with one stopped and 4.02 s with both. The coordinator,
+2026-11-14: fix it in the estate's one connect, `net::connect`, take its
+retransmission from `[tuning]`, and never turn retransmission off
+altogether, since a connect across a lossy network needs it. Every connect
+the estate makes already goes through `net::connect`, directly or by
+`transport::socket::connect_tcp`; none had to be rerouted.
+
+**What Windows offers.** `SIO_TCP_INITIAL_RTO`, a `WSAIoctl` control code
+since Windows 8, sets "the initial (SYN / SYN+ACK) retransmission
+characteristics of a TCP socket" before it connects, from a
+`TCP_INITIAL_RTO_PARAMETERS`: `Rtt`, "the initial round trip time (RTT)
+estimate in milliseconds", and `MaxSynRetransmissions`, "the maximum number
+of retransmissions that will be attempted before the connection setup
+fails"; `TCP_INITIAL_RTO_NO_SYN_RETRANSMISSIONS` sets that number to 0,
+"the TCP SYN shouldn't be retransmitted" ([SIO_TCP_INITIAL_RTO](https://learn.microsoft.com/en-us/windows/win32/winsock/sio-tcp-initial-rto),
+[TCP_INITIAL_RTO_PARAMETERS](https://learn.microsoft.com/en-us/windows/win32/api/mstcpip/ns-mstcpip-tcp_initial_rto_parameters)).
+`mstcpip.h` writes it `(USHORT) -2`, of which the field keeps the byte 254,
+read so from Windows 10 1709 (build 16299). Go's `net` sets it on every
+loopback connect, "so that ConnectEx() fails faster if the target port on
+the localhost is not reachable, instead of waiting for 2s"
+([fd_windows.go](https://go.googlesource.com/go/+/refs/heads/master/src/net/fd_windows.go)),
+and libuv does, as a proposal to curl of August 2026 records with the same
+measurements ([curl-library](https://curl.se/mail/lib-2026-08/0002.html)).
+`TCP_FAIL_CONNECT_ON_ICMP_ERROR`, an `IPPROTO_TCP` option: "If TRUE, a
+connect API call will return upon reception of an ICMP error with value
+WSAEHOSTUNREACH"; off by default
+([IPPROTO_TCP socket options](https://learn.microsoft.com/en-us/windows/win32/winsock/ipproto-tcp-socket-options)),
+from Windows 10 2004
+([WSASetFailConnectOnIcmpError](https://learn.microsoft.com/en-us/windows/win32/api/ws2tcpip/nf-ws2tcpip-wsasetfailconnectonicmperror)).
+
+**What it does, measured on Windows 11 build 28000 the same day.** A
+refused loopback connect: 2.005 s by default; 501 ms with one SYN
+retransmission and 1.003 s with two, whatever `Rtt` from 20 ms to 3 s, so
+a reset is asked again after a fixed half second for each retransmission
+allowed; 0.3 to 0.4 ms with none. A SYN nobody answers (192.0.2.1, a
+documentation address): 21 s by default; given up after `Rtt` with none
+(1.0 s at the default, 505 ms at 500 ms); 3.0 s with one (one second, then
+two), 1.5 s at an `Rtt` of 500 ms. One count governs both, so on Windows a
+refusal answered at once is a SYN the system never sends twice.
+
+**What stands now.**
+
+- **`net::Retransmission`**: a SYN nobody answered is sent again after
+  `first`, then after twice the wait before, at most `times` times, all
+  inside the connect's own deadline (`Retransmission::waits`). A refusal,
+  or a host the network says is unreachable, is answered at once and never
+  asked again; a caller that retries decides by its kind, as before.
+- **On Windows the connect sends the SYN again itself.** Each SYN is a
+  socket of its own, which the system sends once and gives up after its
+  wait (`MaxSynRetransmissions` none, `Rtt` the wait), and a timeout is
+  followed by the next, a new socket, while the deadline lasts — the
+  system's own schedule at the same count, one second then two, the
+  refusal excepted. Every socket also ends its connect on an ICMP error
+  that the host is unreachable, as Linux ends one; that is no setting, as
+  Nagle's algorithm is none (above). The calls are
+  `xmip-core-library-net`'s `src/system/connect.rs`, in the crate's one
+  folder of calls to Windows (ADR-0050, amendment 2026-11-14).
+- **Connected by `ConnectEx`, never a socket polled.** The timing
+  program's hundred rounds found a refused connect taking 0.2 ms or 10 to
+  15 ms, runs switching between the two. Measured the same day over four
+  hundred refused loopback connects each: begun without blocking and
+  waited for with `select` or `WSAPoll`, half came back in 10 to 13 ms,
+  their failure reaching the socket's state only then, with the system
+  timer at 2.5 ms and at 1 ms alike; a blocking connect came back in 0.2
+  to 1.2 ms and `ConnectEx` on an event in 0.09 to 0.42 ms, every time. A
+  blocking connect is bounded only by the system's wait for a SYN, which
+  Windows never keeps under 300 ms, so a caller's 50 ms became 300;
+  `ConnectEx` is cancelled at the caller's time, 50.6 ms for 50, through
+  the crate's one overlapped wait (`src/system/overlapped.rs`, the named
+  pipe's until then). Through `net::connect` a refusal takes 0.15 to 0.5
+  ms, the fastest of five over a hundred rounds, in four runs as the
+  machine was loaded, none slower than 5 ms in any round, and an
+  unanswered SYN is sent again as `[tuning]` says: 0.3 s once, then 0.6
+  and 1.2 s (2.1 s in all), and one second then two at the defaults
+  (3.0 s).
+- **Linux is unchanged.** Its kernel answers a refusal at once and sends a
+  lost SYN again by its own schedule until the deadline; the keys do not
+  touch it. The net crate's tests pass in the Linux guest as before.
+- **The keys and their defaults**, `[tuning]` per cluster and per node
+  (ADR-0031, amendment 2026-10-03): `connect_retransmit`, a second, RFC
+  6298's initial retransmission timeout and Windows' own, at most 65,534 ms
+  on Windows; and `connect_retransmissions`, once, 0 to 8, the most
+  Windows' own `MaxSynRetransmissions` setting takes. A refusal takes a
+  millisecond; a peer that answers no SYN is given up three seconds on, or
+  at the caller's timeout where that is shorter.
+- **One per process, lent by the node.** The runtime lends the node's two
+  keys to its process at startup phase 3, before Xmip Storage is reached
+  (`net::retransmit_by`), as it lends the node's Parties; every connect the
+  process makes reads them (`net::retransmission`). A program that runs no
+  node — the command line, a surface — connects by the defaults
+  (`net::RETRANSMISSION`).
+- **The Essentials on one computer** give every node of the run
+  `[tuning] connect_retransmissions = 0`: every connect there is over
+  loopback, which loses no SYN, so none is sent again and a stopped node's
+  refusal is all a connect waits for. The same cluster on machines of its
+  own keeps the default, a network's: the Essentials' `cluster.xmip` says
+  nothing of where it runs, and the run on one computer gives this as it
+  gives each node its addresses on loopback.
+- **A full backlog.** A Windows listener whose backlog is full refuses as
+  a stopped one does, and that refusal is now answered at once where the
+  system asked again half a second later; a caller that retries, retries
+  it. Xmip's listeners accept as connections come, so a full backlog is
+  load the caller sees.
+
+Proved by net's tests — a refusal answered with its kind, bounded and
+unbounded, however many retransmissions are allowed; every address tried;
+the waits doubling — its timing program (a refused loopback connect, the
+fastest of five, under 2 ms, Windows included, eight retransmissions
+allowed or one, and one a listener answers as quick), the runtime's `[tuning]` tests (the keys read from a Cluster
+TOML, a node's own winning) and the storage test above: 1.3 s in all,
+900 ms of it its own sleep, where its two reads with Storage nodes
+stopped alone took six.
+
+Provenance: the defect, the decision and its limits are the
+coordinator's, 2026-11-14; the research, the measurements, the keys'
+names and defaults, the ICMP rule and the Essentials' setting are the
+assistant's, for the owner to overrule.
+
+## Amendment, 2026-11-14: the 1601 epoch is the library's
+
+Windows' `FILETIME`, hundred-nanosecond ticks since 1601-01-01, is what
+SMB's times, NTLM's timestamp and OPC UA's `DateTime` count, and each of
+the three carried the epoch as a constant of its own. **`codec::filetime`
+holds it once** — `AT_UNIX_EPOCH`, `from_unix_nanos` and `to_unix_nanos`,
+beside the civil calendar rather than in it — and the SMB and OPC UA
+transports and the NTLM library call it, the same ticks on the wire as
+before: Microsoft's documented FILETIME of the Unix epoch and NTLM's
+timestamp bytes for a pinned moment are held by the tests. The moment
+itself is read off the one clock (ADR-0068, amendment 2026-11-14). **A
+moment to the whole second is `codec::civil`'s too**:
+`CivilTime::from_unix_nanos`, which the runtime's record of a member's
+start (`<node>/membership`) and of its stop in order (`<node>/reached`)
+are each written with, where each had a helper of its own.
+
+Provenance: found by the assistant while moving the clock readings and
+ordered by the coordinator, 2026-11-14.

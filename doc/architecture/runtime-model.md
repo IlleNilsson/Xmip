@@ -1065,8 +1065,20 @@ verdict is a telling that may mend. After every receive the Location asks
 whom its transport turned away (`Transport::turned_away`) and audits each
 as a refusal of that caller, by the address it called from. Only a
 receive's own failure, its listener's, that saying again will not mend
-stops the Location. A caller that sends part of an exchange and stops
-still holds the turn for as long as a read waits (open problem 69).
+stops the Location.
+
+**A caller's turn is bounded whole** (ADR-0018, amendment 2026-11-14). The
+Location takes its callers' turns one after another, and each turn is
+given a deadline as it begins, `[tuning] receive_turn` from then — a
+minute by default (`transport::serving::TURN`), set per cluster and per
+node. Every read of the turn waits only what is left of it
+(`transport::deadline::Within`), and a caller still in its turn at the
+deadline — one that sent part of an exchange and stopped, or a byte
+inside each read's wait — is turned away and audited as any failure of
+its own is, so no caller holds the others longer than one turn. The
+Location's own `timeout` still bounds each read. Until 2026-11-14 such a
+caller held the turn as long as a read waits, for good where the Location
+sets no `timeout` (open problem 69).
 
 Refusals before Publication are audited receive failures. From Message
 creation on the Stream is kept; a Message failing Validation is kept and
@@ -1222,6 +1234,16 @@ and bounded (ADR-0026). A sequence's position, by its key, is in the
 Ledger (section 3, *Sequences*), its places taken in the Publication's own
 write. Nothing is deduplicated.
 
+**A Message is promoted once on the receive path** (2026-11-14). The
+properties promoted at Message creation are what routing matches, what the
+keys of the sequences the Stream holds end to end read, what the
+Publication takes its places at the destinations by, and what the Dead
+Message Queue keeps; none of them reads the Message's content again. Until
+then the sequences and the Publication each promoted it anew, and a
+Subscription routing an EDIFACT order by its content parsed it two or three
+times per Message. A place taken later, once its Stream heads its
+sequences, is another step's and promotes the Message it reads then.
+
 **The Dead Message Queue is Ledger state**, not a place beside it: a
 Publication that matched nothing is kept in the Ledger with its receive
 context, validation results, promoted properties and, for each Subscription,
@@ -1374,7 +1396,8 @@ prepare. Port first, then Location, the Port's Preparation Steps inside the
 Location's (section 20).
 
 A Send Port succeeds when one of its Send Locations succeeds. Retries apply to
-the active Send Location; failover moves to another per Send Port policy. If
+the active Send Location, judged by the retry guard its `retry` is built as
+(section 15); failover moves to another per Send Port policy. If
 all Send Locations fail, the Message fails there, and its Journey says so.
 
 The identity a Send Location presents resolves per ADR-0006:
@@ -1438,7 +1461,10 @@ hands it to the Send pool in memory, so the send costs no sync of its own
 before it starts — where the pool admits it (*Corrected 2026-10-06*
 below). Each pass tries the Port's Send Locations in configured
 order (`send_locations`, or the Location bound under the Port's name),
-`retry` on the active one and `failover = "next"` to the next, and hands on
+`retry` on the active one — after each try that did not send, the Port's
+guards are asked whether and when it is tried again, the retry guard its
+`retry` was built as when the node started (ADR-0048, amendment
+2026-11-14) — and `failover = "next"` to the next, and hands on
 in one write: **Completed** and out of its queue; **Failed** with why in
 words, its Message with it, kept in its queue for an operator — where its
 sequence's `on_failure` is `block` it stops the sequence behind it, and
@@ -1563,7 +1589,9 @@ waits for its due time.
   — and, apart from them, `last_failure`, the last Message that failed there since the node
   started, which may since have been retried or dismissed.
 - **A Publication is written once, by its Message.** Its write keeps, in
-  the same batch, that it was written and the digest of what was asked; a
+  the same batch, that it was written and the digest of what was asked —
+  since 2026-11-14 of every identifier it carries, never its bodies
+  (ADR-0018, amendment 2026-11-14); a
   Publication asked again — a node's request repeated after its answer was
   lost, which a Storage client asks of the next Storage node — writes
   nothing and answers the claims of it its node still holds under their
@@ -2038,9 +2066,14 @@ keeps the Message, even one that was not running when it was asked
 
 `xmip-core-resilience` owns the guards on an attempt (ADR-0048); its README
 names them ([built, not in the assembled service](estate-map.md#resilience-guards):
-the Event forwarder runs them, and a Message send does not). A send has its
-Send Port's retry
-([built, in the assembled service](estate-map.md#send-port-retry)); the guards an
+the Event forwarder runs them). A send has its Send Port's retry, which is
+the retry guard
+([built, in the assembled service](estate-map.md#send-port-retry)): the
+program starting a node hands the runtime the retry guard it linked, a Send
+Port's `retry` is built as it when the node starts, and the send step asks
+it after each try that did not send whether and when that Location is
+tried again, holding no thread meanwhile (ADR-0048, amendment 2026-11-14).
+The guards an
 operator configures on a Send Port Group, Send Port and Send Location, and
 a timeout that interrupts an attempt, are
 [decided, not built](estate-map.md#send-resilience) (ADR-0048, amendments

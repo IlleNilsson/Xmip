@@ -15,7 +15,9 @@ use std::time::{Duration, Instant};
 use xmip_persist::Engine;
 use xmip_persist::storage::client::PASS_OVER;
 use xmip_persist::storage::standby::{BEAT, KEPT, SILENCE, Timings};
-use xmip_persist::storage::{StorageClient, StorageNode, StorageServer, UNWAITED, XmipStorage};
+use xmip_persist::storage::{
+    DUE_QUEUES, StorageClient, StorageNode, StorageServer, UNWAITED, XmipStorage,
+};
 use xmip_persist_rocksdb::RocksDb;
 use xmip_persist_sqlite::Sqlite;
 use xmip_secret::KekName;
@@ -53,6 +55,7 @@ pub(super) fn storage_node(
         pass_over: PASS_OVER,
         kept: KEPT,
         unwaited: UNWAITED,
+        due_places: DUE_QUEUES,
     };
     let node = StorageNode::new(
         [runtime, administration, audit],
