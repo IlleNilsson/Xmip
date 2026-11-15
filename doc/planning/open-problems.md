@@ -403,7 +403,11 @@ port reads a protocol's frames by the length the protocol says
 (`Framing::Measured`), so a real port and the bus are the same boundary. Two
 of the four riders named below are not on a serial line: DNP3 is implemented
 over TCP only, and WirelessHART is radio with a time-slotted `Radio` of its
-own. Option C, a real port behind com0com or a pty, stays open.*
+own. Option C, a real port behind com0com or a pty, stays open. From
+2026-11-15 the port is handed in (`serial::Opens`) and the loopback line is a
+port of that kind, so the port's own paths — kept open between a write and a
+read, each read's wait set on it, a read that times out with nothing being
+nothing arrived — are what the tests drive; the driver is still C's to prove.*
 
 *The same day the CAN bus followed, into the SDK as `sdk::broadcast`, a
 medium every node hears: every other node gets each frame, the sender does
@@ -788,7 +792,7 @@ one composition root (the root crate's features and `.src/service/built.rs`):
 |---|---|---|
 | A | traits that lack a method a consumer needs: `Transport` cannot say what it holds; `IOperatorSurface` has no liveness, forcing `is ListenerOperator` and `is SnapshotOperator`; observe has no exporter trait; `ProgramAudit` cannot be handed an `AuditSink`; CAN `Bus` and Ethernet `Link` live in technology crates | 6 |
 | B | Rust singletons and names in place of injection: `ProgramAudit`'s fixed file sink and `XMIP_AUDIT_DIRECTORY`; `Hub::process()`; `catalogue::CARRIED`; `send_step`/`pickup` registries, `operator::PUBLISHED`; technology names in `configure::store` and `runtime::storage`; persist's closed `Server` enum where a dialect trait belongs; bus and link factories inside technologies; a mechanism matched by name in authorize-transport | ~25 sites |
-| C | technology-to-technology Cargo edges: observe, archive backends and every HTTP-shaped, cloud and field-bus technology on a sibling technology, and across capabilities (mllp on hl7-v2, http-api on openapi, route-regex on path-regex, toon on json-schema, ubl on message-xml); shared parts belong in a library or the capability, behavior handed in as a trait | 62 edges |
+| C | technology-to-technology Cargo edges: observe, archive backends and every HTTP-shaped, cloud and field-bus technology on a sibling technology, and across capabilities (mllp on hl7-v2, http-api on openapi, route-regex on path-regex, toon on json-schema, ubl on message-xml); shared parts belong in a library or the capability, behavior handed in as a trait. Since 2026-11-15 a Capability's or Foundation module's technology on another module's is refused but a contract's on the shape of its own standard (ADR-0044, amendment 2026-11-15), and the eight such edges standing are listed in `test/Layer.Test.ps1`, which may only shrink | 62 edges |
 | D | .NET: one interface in the estate; `RuntimeLibrary.Rules` static (61 sites), `new ConfigurationRuntime` in three hosts, `SurfaceChoice`'s closed switch, concrete `RoleContext`, `ProgramAudit`, `RuntimeCommands` registered and injected; PowerShell and CLI statics | ~30 classes |
 | E | tests reaching implementations by path, name or environment variable: runtime dev-dependencies on concrete technologies, the contract library by sibling path, fixtures by relative path, assertions keyed on technology names | ~30 |
 
@@ -1123,7 +1127,10 @@ What remains of it, the owner's to decide:
   1.1 ms of it (2026-10-21), so that test stays on raw TCP and its 480
   connections a run (ADR-0018, amendment 2026-10-21). On Linux, in the
   AlmaLinux guest, the node test fails by about 4 ms; the eight senders,
-  over HTTP now, and the deadline test, with `/run/xmip` made, pass.
+  over HTTP now, and the deadline test, with `/run/xmip` made, pass — and
+  since 2026-11-15 the deadline test passes there as the user, without
+  root, the run naming `XMIP_RUNTIME_DIRECTORY=$XDG_RUNTIME_DIR/xmip`
+  (ADR-0014, amendment 2026-11-15).
 - **Seen under load the same day, not this problem's** — and repaired on
   2026-10-21, both of the plane's: a surface connected to the local
   endpoint twice through the pipe library, which the runtime no longer
@@ -2062,32 +2069,6 @@ Tests: a secure-scheme Location on a node with a `receive` certificate
 serves a TLS client and refuses a plain one; on a node without, it is
 refused at bind as now.
 
-## 70. Two nodes on one machine under different accounts take each other's endpoint folder
-
-Found by the survey of the local endpoint's folder, 2026-11-14. The systemd
-unit `xmip-service --install` writes (`registration.rs`) makes the folder
-of the local endpoints with `RuntimeDirectory=xmip`. systemd hands that
-folder to the unit's account (`User=`, which `XMIP_ACCOUNT` names), and
-where it already belongs to another account, it hands over the folder and
-everything in it, recursively (systemd.exec, `RuntimeDirectory=`). So when
-two nodes on one machine run under different accounts, each one's start
-takes `/run/xmip` and the other node's socket in it. The other node's
-account no longer owns its own socket, and `plane::local::unix::guarded`
-refuses the folder at that node's next start. On macOS each node's
-`xmip-<node>.run` daemon hands `/var/run/xmip` to its own account at boot
-in the same way. Not seen yet: every node so far runs as root. The owner
-decides between:
-
-- **One account per machine.** Every node on a machine runs as the same
-  account.
-- **A folder per node.** Each unit names a folder of its own under
-  `/run/xmip`, and the endpoint moves into it. That is another place than
-  the one decided on 2026-10-13 (ADR-0014: *a name may change, the folder
-  may not*).
-
-Tests: in the AlmaLinux 10 guest, two nodes installed under two accounts
-each still own their socket after both have started.
-
 ## 71. A node says it started before its listening Receive Locations listen
 
 Found by the timing program on 2026-11-14. A Receive Location whose
@@ -2794,6 +2775,43 @@ already does for a pipelined one, would hold nobody. And raw TCP and a
 Unix domain socket stay outside `Serving`, decided the same day: each
 hands its connection to the runtime as the body it reads on a carry
 thread, so a slow sender holds that carry, not the Location.
+
+## 70. Two nodes on one machine under different accounts take each other's endpoint folder — **Resolved**
+
+*Resolved 2026-11-15 by the owner's decision of the same day, built the
+same day (ADR-0014, amendment 2026-11-15).*
+
+Found by the survey of the local endpoint's folder, 2026-11-14. The systemd
+unit `xmip-service --install` wrote (`registration.rs`) made the folder of
+the local endpoints with `RuntimeDirectory=xmip`. systemd hands that folder
+to the unit's account (`User=`, which `XMIP_ACCOUNT` names), and where it
+already belongs to another account, it hands over the folder and
+everything in it, recursively (systemd.exec, `RuntimeDirectory=`). So when
+two nodes on one machine ran under different accounts, each one's start
+took `/run/xmip` and the other node's socket in it, and the other node's
+next start refused the folder. On macOS each node's `xmip-<node>.run`
+daemon handed `/var/run/xmip` to its own account at boot in the same way.
+Not seen: every node so far ran as root. The choice was one account per
+machine or a folder per node.
+
+Decided by the owner, 2026-11-15: a folder per node. `/run/xmip` stays the
+root-owned parent, each node gets its own folder beneath it, owned by its
+account, and its socket moves into it, the folder named as the endpoint
+is: `/run/xmip/xmip-<node>/xmip-<node>.sock`. The unit says
+`RuntimeDirectory=xmip/<name>`, the endpoint the node's configuration names
+at install, which systemd makes the unit's account's, `/run/xmip` above it
+the service manager's, so the recursive hand-over reaches the node's own
+folder alone; on macOS the daemon makes and hands over
+`/var/run/xmip/<name>` alone. Every node binds, every surface connects and
+the registration names the folder by the one rule (`plane::local::place`,
+`own_folder`), and the node holds both
+levels as it binds: its folder its account's, the one above its account's
+or the superuser's, neither written by anyone else
+(`plane::local::folders::guarded`). Held by `registration`'s
+`two_nodes_under_two_accounts_are_given_two_folders` and
+`plane::local`'s `two_nodes_are_placed_in_two_folders`. Not proved: two
+nodes installed under two accounts in the AlmaLinux 10 guest, which needs
+root there.
 
 ## 4. `assign`, `promote`, `demote` sit in Capabilities with zero implementations — **Resolved**
 

@@ -642,3 +642,84 @@ the question's list of steps, read from `runtime-model.md` sections 9
 and 10; the replay entry points, read from section 14 and `terminology.md`
 as he asked; the drawing's layout and words; and what changes and stays
 when it is built.
+
+## Amendment, 2026-11-15: a Location's `timeout` is declared, read and kept once
+
+Found in the placement review the owner asked for on 2026-11-13 (*Do we
+have all code in the modules, repos that we should*; *Good that you found
+it, fix it*): 78 transport technologies each declared a `timeout` of their
+own, the same name and kind, and the SQL family one more for its six; each
+read it in its own `configured`, and 77 kept it through a builder of their
+own, `timing_out_after`.
+
+- **Declared once.** `transport::configured::timeout` is the setting: a
+  duration named `timeout` (`configured::TIMEOUT`), each technology giving
+  the side that waits, its default where it has one, and its meaning in
+  its own words. Every technology declares through it, the SQL family
+  through `transport::sql::TIMEOUT`.
+- **Read once.** `transport::Configured::open` reads it and hands it on
+  through `Configured::timing_out_after` once `Configured::configured`
+  built the transport; no technology reads it in its own `configured`.
+  A part built inside `configured` that waits as well — Redpanda's Admin
+  API client — reads the same setting there by its one name; M-Bus's
+  serial port waits, on each read, what its master hands it.
+- **Kept once.** `Configured::timing_out_after` is the one builder, which a
+  loopback and a test build with too; a technology says only where it
+  keeps the timeout, `Configured::timeout_kept`: an `Option<Duration>`,
+  unbounded until given, or a `Duration`, its own default until given
+  (`configured::TimeoutKept`). OBD-II and UDS keep it in their ISO-TP link;
+  one that declares no timeout keeps nothing, as by default.
+- **What an operator sees is what the node waits.** Every technology's
+  `timeout` keeps its name, kind, meaning and side, and its default where
+  it had one, so what `configure` refuses and what `node-configuration.md`
+  says stay as they were; no default moved and no bound was raised. Seven
+  that declared none yet waited one where it is left out now declare that
+  wait, which the language server and the desktop editor offer: KNX, J1939
+  and ISO-TP 1 s, LoRaWAN 5 s (each its `DEFAULT_TIMEOUT`, which its own
+  constructor waits too), OBD-II and UDS 1 s, their ISO-TP link's
+  (`iso_tp::DEFAULT_TIMEOUT`), and M-Bus 5 s, the serial port's
+  (`serial::TIMEOUT`). What a node does is unchanged, but for M-Bus: a
+  Location's timeout bounds only a read of its meter, a write to the port
+  waiting the port's own 5 s.
+
+Not moved, as they are not technologies: the clients and the far ends a
+technology speaks through or stands up — the AWS, Azure and Google
+technologies' HTTP clients and sessions, the event bindings' wires — each
+take the timeout their transport or their test hands them through a
+`timing_out_after` of their own. Found, and answered the same day: KNX,
+M-Bus, J1939, ISO-TP, LoRaWAN, OBD-II and UDS declared `timeout` optional
+with no default, yet waited where it was left out; each declares the
+default it already waited, so what an operator sees matches what the node
+does. M-Bus's is 5 s, not the 1 s first found: its master's own 1 s was
+handed to the line it reads, and a serial port, the line every M-Bus
+Location reads its meter on, waited its own 5 s whatever it was handed,
+so a meter that did not answer was waited on 5 s, and a Location's
+timeout reached the port only because M-Bus's `configured` read it a
+second time. A defect, fixed the same day: a serial port read as a line
+waits what it is handed (`transport::line::Line::receive`), so the master
+hands every read the Location's timeout, and M-Bus's `configured` no
+longer reads it. OBD-II and UDS wait their ISO-TP link's 1 s, as their
+meaning says.
+
+Two more in the serial port, found and fixed the same day. It was opened
+for every write and every read, so a meter's answer that came between
+M-Bus's transmit and its receive arrived while no handle was open and was
+lost; and a read its wait ran out on failed, where a line promises `None`
+when nothing arrived and a Receive Location an empty receive. What stands:
+a serial line opens its port at its first use, through what it is handed
+to open it with (`serial::Opens`, ADR-0068; the operating system's,
+`serial::SystemPorts`, unless another is), and keeps it open, shared by
+every clone, for as long as its Location uses it; a port that fails is
+closed, and the next use opens it again. Each read sets the wait it is
+handed on the open port (`serial::Port::wait`, `serialport`'s timeout), each
+write the port's own `timeout`. A read the wait runs out on with nothing is
+nothing arrived, to a line and to a Receive Location; a frame begun and cut
+off by the wait is an error, as a line says nothing arrived only when
+nothing did. The loopback line is a port of the same kind, so every
+loopback test reads and writes as a device is read and written.
+
+Provenance: the assistant's, 2026-11-15, carrying the placement review;
+no decision of the owner's was needed. The names `configured::timeout`,
+`TIMEOUT`, `TimeoutKept`, `timeout_kept`, the four technologies'
+`DEFAULT_TIMEOUT`, and `serial::Opens`, `Port` and `SystemPorts` are the
+assistant's, for the owner to overrule.

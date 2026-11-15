@@ -12,11 +12,19 @@
     A moment is a parameter everywhere below the reading: a test pins the
     moment, or hands in a Clock of its own.
 
+    The monotonic clock (ADR-0068, amendment 2026-11-15): a decision counts
+    its span on the monotonic reading of the Clock it was handed, so a test
+    steps `xcore::clock::Stepped` past it with no sleep; a wait the
+    operating system makes, and a span only reported, read std's `Instant`.
+    Each file whose decisions were moved onto the Clock holds no
+    `Instant` at all, and the estate's other `Instant::now` readings are
+    counted: the count may fall as the decisions move, and may not rise.
+    SystemClock's origin, its one reading, is not counted.
+
     Production code only: a file's tests, from its first `#[cfg(test)]` line
     down, are `Get-XmipSourceFile`'s `Code` boundary, and a file under
     `tests/`, `test/`, `fixture/` or `measured/`, or named for one, is a
-    test's own. The wall clock alone: the monotonic clock, `Instant::now()`,
-    is not held here.
+    test's own.
 #>
 
 BeforeAll {
@@ -28,14 +36,37 @@ BeforeAll {
     # A reading of the operating system's wall clock.
     [string] $script:Reading = '\bSystemTime::now\s*\('
 
+    # A reading of the operating system's monotonic clock: a call, or the
+    # function handed on, as SystemClock's origin is.
+    [string] $script:Monotonic = '\bInstant::now\b'
+
+    # std's Instant at all: what a file whose decisions read the Clock holds
+    # none of.
+    [string] $script:Instant = '\bInstant\b'
+
+    # The production Instant::now readings outside SystemClock on
+    # 2026-11-15, once the resilience guards' and Xmip Storage's client's
+    # and standby's decisions read the Clock. A ratchet: lower it as the
+    # decisions move (ADR-0068, amendment 2026-11-15); never raise it.
+    [int] $script:MonotonicCeiling = 148
+
+    # The files whose decisions read the Clock handed in (ADR-0068,
+    # amendment 2026-11-15): none reads std's Instant.
+    [string[]] $script:Decides = @(
+        'module/core/capability/resilience/circuit-breaker/src/lib.rs'
+        'module/core/capability/resilience/rate-limit/src/lib.rs'
+        'module/platform/persist/.src/storage/client.rs'
+        'module/platform/persist/.src/storage/standby/follow.rs'
+    )
+
     # A test's own file: an integration test, the root's test tree, a
     # fixture, a timing program, or a test module in a file of its own.
     [string] $script:TestOwn = '(^|/)(tests?|fixture|measured)(/|\.rs$)'
 
     <#
         .SYNOPSIS
-        Each production line of `Line`, a file at `Path`, that reads the wall
-        clock, as `path:line`.
+        Each production line of `Line`, a file at `Path`, that matches
+        `Pattern`, as `path:line`.
     #>
     function Find-XmipClockReading {
         [CmdletBinding()]
@@ -47,7 +78,10 @@ BeforeAll {
             [Parameter(Mandatory = $true)]
             [AllowEmptyCollection()]
             [AllowEmptyString()]
-            [string[]] $Line
+            [string[]] $Line,
+
+            [Parameter(Mandatory = $true)]
+            [string] $Pattern
         )
 
         for ([int] $index = 0; $index -lt $Line.Count; $index++) {
@@ -57,24 +91,37 @@ BeforeAll {
                 continue
             }
 
-            if ($code -match $script:Reading) {
+            if ($code -match $Pattern) {
                 "${Path}:$($index + 1)"
             }
         }
     }
 
-    $script:Found = @(
-        foreach ($file in @(Get-XmipSourceFile -Root $script:Root -Language Rust)) {
-            if ($file.Code -eq 0 -or $file.Path -eq $script:Clock -or
-                $file.Path -match $script:TestOwn) {
-                continue
-            }
+    $script:Found = [System.Collections.Generic.List[string]]::new()
+    $script:Counted = [System.Collections.Generic.List[string]]::new()
+    $script:Held = @{}
 
-            [string] $full = Join-Path $script:Root $file.Path
-            [string[]] $line = @(Get-Content -LiteralPath $full -TotalCount $file.Code)
-            Find-XmipClockReading -Path $file.Path -Line $line
+    foreach ($file in @(Get-XmipSourceFile -Root $script:Root -Language Rust)) {
+        if ($file.Code -eq 0 -or $file.Path -eq $script:Clock -or
+            $file.Path -match $script:TestOwn) {
+            continue
         }
-    )
+
+        [string] $full = Join-Path $script:Root $file.Path
+        [string[]] $line = @(Get-Content -LiteralPath $full -TotalCount $file.Code)
+        $script:Found.AddRange([string[]] @(
+                Find-XmipClockReading -Path $file.Path -Line $line -Pattern $script:Reading
+            ))
+        $script:Counted.AddRange([string[]] @(
+                Find-XmipClockReading -Path $file.Path -Line $line -Pattern $script:Monotonic
+            ))
+
+        if ($file.Path -in $script:Decides) {
+            $script:Held[$file.Path] = @(
+                Find-XmipClockReading -Path $file.Path -Line $line -Pattern $script:Instant
+            )
+        }
+    }
 }
 
 Describe 'The estate reads the wall clock in one place' {
@@ -91,7 +138,7 @@ Describe 'The estate reads the wall clock in one place' {
         [string] $full = Join-Path $script:Root $script:Clock
         [string[]] $line = @(Get-Content -LiteralPath $full)
 
-        @(Find-XmipClockReading -Path $script:Clock -Line $line).Count |
+        @(Find-XmipClockReading -Path $script:Clock -Line $line -Pattern $script:Reading).Count |
             Should -Be 1 -Because 'SystemClock reads the operating system''s clock once'
     }
 
@@ -103,12 +150,62 @@ Describe 'The estate reads the wall clock in one place' {
             'let started = Instant::now();'
             'let at = SystemClock.unix_seconds();'
         )
+        [string] $path = 'module/x/src/lib.rs'
 
-        @(Find-XmipClockReading -Path 'module/x/src/lib.rs' -Line $sample) |
-            Should -Be @('module/x/src/lib.rs:1', 'module/x/src/lib.rs:2')
+        @(Find-XmipClockReading -Path $path -Line $sample -Pattern $script:Reading) |
+            Should -Be @("${path}:1", "${path}:2")
         'module/x/tests/measured/main.rs' | Should -Match $script:TestOwn
         'module/x/.src/fixture/crowd.rs' | Should -Match $script:TestOwn
         'module/x/src/storage/commit/tests.rs' | Should -Match $script:TestOwn
         'module/x/src/contest.rs' | Should -Not -Match $script:TestOwn
+    }
+}
+
+Describe 'A decision reads the Clock it was handed, not the monotonic clock' {
+    It 'reads no Instant in a file whose decisions read the Clock' {
+        [string[]] $missing = @(
+            $script:Decides | Where-Object { -not $script:Held.ContainsKey($_) }
+        )
+        [string[]] $read = @($script:Held.Values | ForEach-Object { $_ })
+
+        $missing | Should -BeNullOrEmpty -Because 'each file held is production code'
+        $read | Should -BeNullOrEmpty -Because (
+            "a decision counts its span on the Clock handed in, " +
+            "Clock::monotonic_nanos with xcore::clock::between and nanos:`n" +
+            ($read -join "`n")
+        )
+    }
+
+    It 'reads Instant::now no more often than the ratchet allows' {
+        Write-Host "  production code reads Instant::now $($script:Counted.Count) times"
+
+        $script:Counted.Count | Should -BeLessOrEqual $script:MonotonicCeiling -Because (
+            'a new decision reads the Clock handed in, and a wait or a reported span ' +
+            'that reads Instant replaces one, never adds one: lower the ceiling as they move'
+        )
+    }
+
+    It 'holds the one monotonic reading of the one production Clock, its origin' {
+        [string] $full = Join-Path $script:Root $script:Clock
+        [string[]] $line = @(Get-Content -LiteralPath $full)
+
+        @(Find-XmipClockReading -Path $script:Clock -Line $line -Pattern $script:Monotonic).Count |
+            Should -Be 1 -Because 'SystemClock counts its monotonic reading from one origin'
+    }
+
+    It 'finds a monotonic reading when there is one, so the gate is not silent by accident' {
+        [string[]] $sample = @(
+            'let started = Instant::now();'
+            '    std::sync::LazyLock::new(std::time::Instant::now);'
+            '// Instant::now() in a comment is no reading'
+            'let now = clock.monotonic_nanos();'
+            'heard: Instant,'
+        )
+        [string] $path = 'module/x/src/lib.rs'
+
+        @(Find-XmipClockReading -Path $path -Line $sample -Pattern $script:Monotonic) |
+            Should -Be @("${path}:1", "${path}:2")
+        @(Find-XmipClockReading -Path $path -Line $sample -Pattern $script:Instant) |
+            Should -Be @("${path}:1", "${path}:2", "${path}:5")
     }
 }

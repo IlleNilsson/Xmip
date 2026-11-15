@@ -32,6 +32,12 @@
       - A Capability does not depend on its own Technology children, and a
         Platform repository on no Technology but a Library's
         (repository-model.md section 4).
+      - A Capability's or Foundation module's Technology depends on another
+        module's Technology only as a contract technology on the shape
+        technology of its own standard, both declaring the standard in the
+        manifest, or on a Library's (the owner, 2026-11-15; ADR-0044,
+        amendment 2026-11-15). A sibling, of the same parent, is the
+        declared carrier of ADR-0044 clause 1.
 
     The breaches the test found the day it was written are listed below, each
     with the record that says why it stands and what ends it. The list may
@@ -51,11 +57,24 @@ BeforeAll {
         $script:Named[$declared.Name] = $declared
     }
 
-    # Each breach of a rule standing on 2026-11-13, and why. Remove an entry
-    # in the change that ends it; never add one. None stands: the last four,
-    # xmip-core-event's, ended with Event delivery's move into
-    # xmip-core-cluster (ADR-0058, amendment 2026-11-13).
-    [hashtable] $script:Breach = @{}
+    # Each breach of a rule standing on the day it was written, and why.
+    # Remove an entry in the change that ends it; never add one. Of the
+    # layers', none stands: the last four, xmip-core-event's, ended with
+    # Event delivery's move into xmip-core-cluster (ADR-0058, amendment
+    # 2026-11-13). Of the technologies', 2026-11-15, each is open problem 32,
+    # wave C: what both need goes to a library or the capability, behavior
+    # handed in as a trait (ADR-0068).
+    [string] $waveC = 'open problem 32, wave C'
+    [hashtable] $script:Breach = @{
+        'xmip-core-contract-schematron -> xmip-core-path-xpath'   = $waveC
+        'xmip-core-logic-http-api -> xmip-core-contract-openapi'  = $waveC
+        'xmip-core-path-edi -> xmip-core-contract-edi-edifact'    = $waveC
+        'xmip-core-path-edi -> xmip-core-contract-edi-x12'        = $waveC
+        'xmip-core-path-hl7-v2 -> xmip-core-contract-hl7-v2'      = $waveC
+        'xmip-core-route-content -> xmip-core-path-edi'           = $waveC
+        'xmip-core-route-regex -> xmip-core-path-regex'           = $waveC
+        'xmip-core-transport-mllp -> xmip-core-contract-hl7-v2'   = $waveC
+    }
 
     <#
         .SYNOPSIS
@@ -158,7 +177,44 @@ BeforeAll {
             return "Platform depends on a $below Technology"
         }
 
+        [bool] $across = $depending.Domain -eq 'Technology' -and
+            $depended.Domain -eq 'Technology' -and $depending.Parent -ne $depended.Parent
+
+        if ($across -and $above -in @('Capability', 'Foundation') -and $below -ne 'Library' -and
+            -not (Test-XmipTestOwnShape -Contract $depending -Shape $depended)) {
+            return "a technology depends on another module's technology"
+        }
+
         return ''
+    }
+
+    <#
+        .SYNOPSIS
+        Whether a dependency is a contract technology's on the shape
+        technology of its own standard, the one technology of another module
+        a technology may depend on (ADR-0044, amendment 2026-11-15).
+
+        .PARAMETER Contract
+        The repository that depends.
+
+        .PARAMETER Shape
+        The repository depended on.
+    #>
+    function Test-XmipTestOwnShape {
+        [CmdletBinding()]
+        [OutputType([bool])]
+        param(
+            [Parameter(Mandatory = $true)]
+            [PSCustomObject] $Contract,
+
+            [Parameter(Mandatory = $true)]
+            [PSCustomObject] $Shape
+        )
+
+        return $Contract.Parent -eq 'xmip-core-contract' -and
+            $Shape.Parent -eq 'xmip-core-message' -and
+            -not [string]::IsNullOrEmpty($Contract.Standard) -and
+            $Contract.Standard -ceq $Shape.Standard
     }
 
     [PSCustomObject[]] $script:Edge = @(Get-XmipTestEdge)
@@ -185,9 +241,25 @@ Describe 'The estate depends down its layers' {
         )
 
         $new | Should -BeNullOrEmpty -Because (
-            "a dependency points up a layer (ADR-0058, amendment 2026-11-13):`n" +
+            'a dependency points up a layer (ADR-0058, amendment 2026-11-13), or a ' +
+            "technology depends on another module's technology but a contract's on " +
+            "the shape of its own standard (ADR-0044, amendment 2026-11-15):`n" +
             ($new -join "`n")
         )
+    }
+
+    It 'lets a contract technology depend on the shape of its own standard and no other' {
+        [PSCustomObject] $contract = $script:Named['xmip-core-contract-edi-edifact']
+        [PSCustomObject] $own = $script:Named['xmip-core-message-edi-edifact']
+        [PSCustomObject] $other = $script:Named['xmip-core-message-edi-x12']
+
+        Test-XmipTestOwnShape -Contract $contract -Shape $own | Should -BeTrue
+        Test-XmipTestOwnShape -Contract $contract -Shape $other | Should -BeFalse
+        Test-XmipTestOwnShape -Contract $own -Shape $contract | Should -BeFalse
+        [PSCustomObject[]] $reading = @(
+            $script:Edge | Where-Object { $_.From -eq $contract.Name -and $_.To -eq $own.Name }
+        )
+        $reading.Count | Should -Be 1 -Because 'the EDIFACT contract reads the UNA by its shape'
     }
 
     It 'lists no breach that is gone, so the list only shrinks' {

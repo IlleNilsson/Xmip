@@ -2,7 +2,7 @@
 # After the .pkg is unpacked (distribution.xml): xmip-service lays the node
 # out under /opt/xmip and registers it — the starter config/cluster.xmip where
 # there is none, the node's slice, the folders, and the launchd daemon
-# registration.rs writes, loaded, after the daemon that makes /var/run/xmip
+# registration.rs writes, loaded, after the daemon that makes /var/run/xmip/xmip-<node>
 # for the node's account, where its local endpoint is. An upgrade keeps the configuration and
 # loads the daemon again on the new program.
 #

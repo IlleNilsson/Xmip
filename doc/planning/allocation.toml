@@ -2197,3 +2197,80 @@ amendment of 2026-09-09) survived and the older one did not."""
 #     to the writer by Embedded::keep_written and
 #     standby::Timings::writer_kept; its default WRITER_KEPT in
 #     module/platform/persist/.src/storage/embedded/opened.rs
+
+# Code placed once on 2026-11-15, the one test clock and a span in the
+# clock's unit (ADR-0068, amendment 2026-11-15):
+#   module/foundation/core/src/clock.rs tests Pinned,
+#   module/platform/persist/.src/fixture/crowd.rs Pinned,
+#   module/platform/persist/.src/storage/columns.rs tests Pinned,
+#   module/platform/persist/.src/storage/embedded.rs tests Pinned and
+#   module/platform/persist/.src/storage/monotonic_clock.rs tests Stepped,
+#   deleted
+#     -> module/foundation/core/src/clock.rs, Stepped, under test-support
+#   module/platform/persist/.src/storage/claim.rs lease_nanos, deleted
+#     -> module/foundation/core/src/clock.rs, nanos, beside between
+# and the same day, within xmip-core-persist, as a Storage node came to
+# take its Clock:
+#   module/platform/persist/.src/storage/standby.rs BEAT, SILENCE, KEPT and
+#   Timings
+#     -> module/platform/persist/.src/storage/standby/timings.rs
+#   module/platform/persist/.src/storage/client.rs Node, a Storage node as
+#   listed, passed over and last come to
+#     -> module/platform/persist/.src/storage/client/node.rs, Node::listed
+
+# Code placed once on 2026-11-15, a Location's timeout (ADR-0064, amendment
+# 2026-11-15):
+#   each transport technology's own Setting for "timeout", in its lib.rs,
+#   settings.rs or configured.rs under module/core/capability/transport/
+#   (78), and module/core/capability/transport/.src/sql/declared.rs TIMEOUT's
+#     -> module/core/capability/transport/.src/configured.rs, timeout and
+#     TIMEOUT, which each declares through
+#   each one's reading of it in its own Configured::configured
+#     -> module/core/capability/transport/.src/configured.rs, Configured::open
+#   each one's own timing_out_after (76), and
+#   module/core/capability/transport/.src/sql/sql_transport.rs
+#   SqlTransport::timing_out_after
+#     -> module/core/capability/transport/.src/configured.rs,
+#     Configured::timing_out_after, kept where Configured::timeout_kept says
+#     (TimeoutKept)
+
+# Code placed once on 2026-11-15, each syntax's header reader in its shape,
+# which the contract of the same standard calls (ADR-0044, amendment
+# 2026-11-15):
+#   module/core/capability/contract/edi-edifact/src/syntax.rs
+#   ServiceCharacters, its Default and delimiters, and advised, the UNA
+#   read, deleted
+#     -> module/foundation/message/edi-edifact/src/lib.rs, advice, Advice and
+#     UNA_LENGTH; the contract's service characters are the walk's
+#     Delimiters (Interchange::delimiters, Segments::delimiters)
+#   module/core/capability/contract/edi-x12/src/syntax.rs Separators, its
+#   delimiters, ISA_LENGTH and Interchange::walk's ISA read, deleted
+#     -> module/foundation/message/edi-x12/src/lib.rs, delimiters and
+#     ISA_LENGTH, its ASCII and distinct-separator checks with them; the
+#     contract's separators are the walk's Delimiters
+#   module/core/capability/contract/hl7-v2/src/er7.rs Encoding::declared's
+#   MSH read and Encoding::delimiters, deleted
+#     -> module/foundation/message/hl7-er7/src/lib.rs, encoding and
+#     delimiters; Encoding::declared keeps placing the refusal at MSH,
+#     MSH-1 or MSH-2
+#   the rule a technology depends on another module's technology only as a
+#   contract on the shape of its own standard, new
+#     -> test/Layer.Test.ps1, Get-XmipTestLayerBreach and
+#     Test-XmipTestOwnShape; the standard each declares, architecture.toml
+#     standard, read by Xmip/Expand-XmipEstate.ps1 and
+#     Xmip/Get-XmipEstateRepository.ps1 (Standard)
+
+# Moved on 2026-11-15, the folders a local endpoint is in on Unix, a folder
+# per node beneath the folder of local endpoints (ADR-0014, amendment
+# 2026-11-15):
+#   module/platform/runtime/src/plane/local/unix.rs guarded, one level
+#     -> module/platform/runtime/src/plane/local/folders.rs, guarded, both
+#     levels, beside readied and made
+#   module/platform/runtime/src/registration.rs launchd_run_directory and
+#   launchd_plist
+#     -> module/platform/runtime/src/registration/launchd.rs, beside
+#     windows_scm.rs
+#   module/platform/runtime/src/running/operate.rs Running::local_endpoint's
+#   rule, [operate] local else xmip-<node>
+#     -> module/platform/runtime/src/registration.rs, local_endpoint, which
+#     the running node and xmip-service --install both call

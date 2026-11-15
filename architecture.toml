@@ -97,7 +97,7 @@ dotnet = "IlleNilsson/xmip-template-dotnet"
 
 [policy]
 acyclic = true
-rule = ["Foundation repositories must not depend on Technology repositories.", "Common capability repositories must not depend on their technology children.", "Technology repositories may depend on their parent capability.", "Technology sibling dependencies are disallowed unless explicitly declared.", "Operation repositories consume public contracts and events, not implementation internals.", "Platform services must not depend on specific Technology repositories."]
+rule = ["Foundation repositories must not depend on Technology repositories.", "Common capability repositories must not depend on their technology children.", "Technology repositories may depend on their parent capability.", "Technology sibling dependencies are disallowed unless explicitly declared.", "A Capability's or Foundation module's technology depends on another module's technology only as a contract technology on the shape technology of its own standard, both declaring it, or on a Library's.", "Operation repositories consume public contracts and events, not implementation internals.", "Platform services must not depend on specific Technology repositories."]
 
 [handler]
 separationRequired = true
@@ -385,7 +385,8 @@ dependency = ["xmip-core-library-codec"]
     [xmip.core.message.edi-edifact]
     maturity = "scaffolded"
     dependency = ["xmip-core-stream"]
-    description = "UN/EDIFACT shape: an interchange as segments named by their tag, the first UNH message type as the announced type. A xmip-core-message technology."
+    standard = "UN/EDIFACT"
+    description = "UN/EDIFACT shape: an interchange as segments named by their tag, the first UNH message type as the announced type; the one reader of the UNA, which the EDIFACT contract reads an interchange's head by. A xmip-core-message technology."
     [xmip.core.message.edi-tradacoms]
     maturity = "scaffolded"
     dependency = ["xmip-core-stream"]
@@ -394,7 +395,8 @@ dependency = ["xmip-core-library-codec"]
     [xmip.core.message.edi-x12]
     maturity = "scaffolded"
     dependency = ["xmip-core-stream"]
-    description = "ASC X12 shape: an ISA interchange as segments named by their tag, the first ST01 as the announced type. A xmip-core-message technology."
+    standard = "ASC X12"
+    description = "ASC X12 shape: an ISA interchange as segments named by their tag, the first ST01 as the announced type; the one reader of the ISA, which the X12 contract reads an interchange's head by. A xmip-core-message technology."
     [xmip.core.message.fixed-width]
     maturity = "scaffolded"
     dependency = ["xmip-core-stream"]
@@ -405,7 +407,8 @@ dependency = ["xmip-core-library-codec"]
     [xmip.core.message.hl7-er7]
     maturity = "scaffolded"
     dependency = ["xmip-core-stream"]
-    description = "HL7 v2 ER7 shape: segments as parts named by their tag, MSH-9 as the announced type. A xmip-core-message technology."
+    standard = "HL7 v2"
+    description = "HL7 v2 ER7 shape: segments as parts named by their tag, MSH-9 as the announced type; the one reader of the MSH, which the HL7 v2 contract reads a message's head by. A xmip-core-message technology."
     [xmip.core.message.json]
     maturity = "scaffolded"
     dependency = ["xmip-core-stream", "xmip-core-library-codec"]
@@ -437,7 +440,7 @@ dependency = ["xmip-core-library-codec"]
   dependency = ["xmip-core", "xmip-core-library-codec"]
 
   [xmip.core.transport]
-  description = "Direction-neutral transport contracts for moving immutable Streams between Xmip and endpoints."
+  description = "Direction-neutral transport contracts for moving immutable Streams between Xmip and endpoints; Configured, the one way a Location's address and settings build a technology, its timeout declared, read and kept once (ADR-0064)."
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   maturity = "scaffolded"
@@ -830,16 +833,23 @@ dependency = ["xmip-core-library-codec"]
   repositoryRole = "common-capability"
   maturity = "scaffolded"
   dependency = ["xmip-core", "xmip-core-stream", "xmip-core-abi", "xmip-core-node", "xmip-core-library-codec"]
+    # A contract technology reads its standard's head by the shape of the
+    # same standard, the one technology it may depend on: each names the
+    # standard, and test/Layer.Test.ps1 holds the pair to it (ADR-0044,
+    # amendment 2026-11-15).
     [xmip.core.contract.edi-edifact]
     maturity = "scaffolded"
-    dependency = ["xmip-core-stream", "xmip-core-message", "xmip-core"]
+    standard = "UN/EDIFACT"
+    dependency = ["xmip-core-stream", "xmip-core-message", "xmip-core-message-edi-edifact", "xmip-core"]
     [xmip.core.contract.edi-x12]
     maturity = "scaffolded"
-    dependency = ["xmip-core-stream", "xmip-core-message", "xmip-core"]
+    standard = "ASC X12"
+    dependency = ["xmip-core-stream", "xmip-core-message", "xmip-core-message-edi-x12", "xmip-core"]
     specification = "ASC X12 interchange, group and transaction set envelopes; every version in this repository"
     [xmip.core.contract.hl7-v2]
     maturity = "scaffolded"
-    dependency = ["xmip-core-stream", "xmip-core-message", "xmip-core"]
+    standard = "HL7 v2"
+    dependency = ["xmip-core-stream", "xmip-core-message", "xmip-core-message-hl7-er7", "xmip-core"]
     [xmip.core.contract.asyncapi]
     maturity = "scaffolded"
     dependency = ["xmip-core-stream", "xmip-core"]

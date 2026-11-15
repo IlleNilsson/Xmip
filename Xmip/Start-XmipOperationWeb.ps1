@@ -376,6 +376,7 @@ function Start-XmipOperationWeb {
         # since Start-Process wants the file named before the pid exists.
         [string] $area = (Get-XmipEstateLayout -Root $layout.Root).Web
         Initialize-XmipAudit
+        Initialize-XmipRuntimeDirectory
         $null = New-Item -ItemType Directory -Path $area -Force
         [string] $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
         $launch.RedirectStandardOutput = Join-Path -Path $area -ChildPath "web-$stamp.log"

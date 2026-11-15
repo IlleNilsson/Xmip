@@ -344,8 +344,14 @@ nothing: it presents a certificate like any caller from another machine.
 configuration names it* — at `\\.\pipe\xmip-<node>` on Windows,
 `/run/xmip/xmip-<node>.sock` on Linux and `/var/run/xmip/xmip-<node>.sock`
 on macOS: *created by systemd / launchd for the node's account; a name may
-change, the folder may not.* A name that would leave the folder is refused
-as the node starts. **A local call waits at most `[tuning] local_timeout`**,
+change, the folder may not* — since 2026-11-15 in a folder per node, named
+as the endpoint is, `/run/xmip/xmip-<node>/xmip-<node>.sock` and
+`/var/run/xmip/xmip-<node>/xmip-<node>.sock`, the node's folder its
+account's and the one above root's, so two nodes under two accounts never
+take each other's socket, and in the folder `XMIP_RUNTIME_DIRECTORY` names
+for a node no service manager started (ADR-0014, amendment 2026-11-15). A
+name that would leave its folder, or a socket's path longer than the system
+holds, is refused as the node starts. **A local call waits at most `[tuning] local_timeout`**,
 two seconds by default, then the surface says the node did not answer
 within it and shows it unreachable until the follow hears it again; the
 node declares that wait beside its endpoint (ADR-0053), where a surface on
@@ -501,8 +507,8 @@ by the account that installed it, its one operator — slices the node's
 `node.xmip` from it, makes `data/audit`, and
 registers and starts the Xmip Service as `registration.rs` defines it, to
 start with the machine: a Windows service, a systemd unit that makes
-`/run/xmip` for the node's account, a launchd daemon beside one that makes
-`/var/run/xmip` at every boot.
+`/run/xmip/xmip-<node>` for the node's account, a launchd daemon beside one
+that makes `/var/run/xmip/xmip-<node>` at every boot.
 `--uninstall` stops and removes the service and deletes nothing else
 (ADR-0040). The packages are an MSI per architecture with its winget
 manifest, a `.deb` and an `.rpm`, a macOS `.pkg`, and the portable archive;

@@ -10,7 +10,7 @@ use std::process::ExitCode;
 use xmip_audit::file_sink::DIRECTORY_VARIABLE;
 use xmip_audit::program_audit::ProgramAudit;
 use xmip_runtime::registration::{
-    REFUSED, ServiceDefinition, ServiceManager, launchd_plist, systemd_unit,
+    REFUSED, ServiceDefinition, ServiceManager, launchd_plist, local_endpoint, systemd_unit,
     windows_service_arguments, windows_service_settings,
 };
 
@@ -38,7 +38,11 @@ pub fn print(audit: &ProgramAudit, arguments: &Arguments) -> ExitCode {
 }
 
 /// The node configured at `configuration` and its Xmip Service, run by this
-/// executable, its audit in the node's data directory.
+/// executable, its audit in the node's data directory, binding the local
+/// endpoint its configuration names, whose folder the service manager makes
+/// (ADR-0014, amendment 2026-11-15). The configuration is read as it is at
+/// install: an `[operate] local` changed after it is the unit's once the
+/// node is installed again.
 ///
 /// # Errors
 /// The configuration does not read, or a path cannot be said.
@@ -51,13 +55,18 @@ pub fn node_service(configuration: &Path) -> Result<(String, ServiceDefinition),
         std::path::absolute(configuration).map_err(|error| format!("{shown}: {error}"))?;
     let audit = audit_directory(&document.service.data_directory(&configuration))?;
     let node = document.service.node_name;
+    let configured = document
+        .operate
+        .as_ref()
+        .and_then(|operate| operate.local.as_deref());
     let service = ServiceDefinition::for_node(
         &node,
         &text(&executable),
         &text(&configuration),
         &text(&installed_root(&executable)),
     )
-    .with_variable(DIRECTORY_VARIABLE, &text(&audit));
+    .with_variable(DIRECTORY_VARIABLE, &text(&audit))
+    .serving_at(&local_endpoint(&node, configured));
     Ok((node, service))
 }
 
@@ -74,7 +83,7 @@ pub fn audit_directory(data: &Path) -> Result<PathBuf, String> {
 /// registration after a blank line, its program first.
 fn render(manager: ServiceManager, service: &ServiceDefinition) -> Result<String, String> {
     match manager {
-        ServiceManager::Systemd => Ok(systemd_unit(service)),
+        ServiceManager::Systemd => systemd_unit(service),
         ServiceManager::Launchd => Ok(launchd_plist(service)),
         ServiceManager::WindowsScm => {
             let mut text: String = windows_service_arguments(service)

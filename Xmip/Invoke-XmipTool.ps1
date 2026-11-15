@@ -84,6 +84,10 @@ function Invoke-XmipTool {
         $env:RUST_TEST_THREADS = "$script:XmipParallel"
     }
 
+    # A test serves and reaches nodes' local endpoints, outside any service
+    # manager (ADR-0014, amendment 2026-11-15).
+    Initialize-XmipRuntimeDirectory
+
     [System.Collections.Generic.List[string]] $said = @()
     [string] $hung = ''
     [datetime] $started = Get-Date

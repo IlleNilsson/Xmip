@@ -249,6 +249,12 @@ amendment 2026-11-13). Beyond that:
 - Technology sibling dependencies require explicit architectural
   justification, and must be declared in the manifest. HTTP on TCP and SOAP on
   HTTP are real and are declared; they are not inferred.
+- A Capability's or Foundation module's technology depends on another
+  module's technology only as a contract technology on the shape technology
+  of its own standard, both declaring the `standard` in the manifest, or on
+  a Library's: the EDIFACT, X12 and HL7 v2 contracts read their standard's
+  head by the shape's one reader. `test/Layer.Test.ps1` holds it, the edges
+  standing on 2026-11-15 listed there (ADR-0044, amendment 2026-11-15).
 - Operation repositories consume public contracts and events, never implementation
   internals.
 - Platform services must not depend on specific technology implementations.

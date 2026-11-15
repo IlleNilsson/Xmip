@@ -220,7 +220,7 @@ cfg_select! {
             let unit = format!("/etc/systemd/system/{}.service", service.name);
             write(
                 Path::new(&unit),
-                &xmip_runtime::registration::systemd_unit(service),
+                &xmip_runtime::registration::systemd_unit(service)?,
             )?;
             let unit_name = format!("{}.service", service.name);
             command("systemctl", &[String::from("daemon-reload")], &[])?;
@@ -236,11 +236,12 @@ cfg_select! {
     target_os = "macos" => {
         fn register(service: &ServiceDefinition, _: &str, given: &[Given]) -> Result<(), String> {
             give(service, given)?;
-            // The local endpoints' folder first, made now and at every boot.
+            // The node's folder of its local endpoint first, made now and at
+            // every boot.
             let run = format!("/Library/LaunchDaemons/{}.run.plist", service.name);
             write(
                 Path::new(&run),
-                &xmip_runtime::registration::launchd_run_directory(service),
+                &xmip_runtime::registration::launchd_run_directory(service)?,
             )?;
             let _ = command(
                 "launchctl",

@@ -90,8 +90,12 @@ was built in the WSL AlmaLinux guest, the systemd branches of
 `xmip-service --install` compiled for the first time with no change, and
 installed by both environment templates on AlmaLinux 10.2. The layout
 is `/opt/xmip`; the unit is `/etc/systemd/system/xmip-<node>.service`, and
-its `RuntimeDirectory=xmip` makes `/run/xmip` for the node's account, where
-the node's local endpoint is, `/run/xmip/xmip-<node>.sock`.
+its `RuntimeDirectory=xmip/xmip-<node>` makes `/run/xmip/xmip-<node>` for
+the node's account and `/run/xmip` above it root's, where the node's local
+endpoint is, `/run/xmip/xmip-<node>/xmip-<node>.sock`: the folder is named as
+the endpoint the node's configuration names at install, `xmip-<node>`
+unless its `[operate] local` names another (ADR-0014, amendment
+2026-11-15).
 `postinstall.sh` runs `--install`, `preremove.sh` runs `--uninstall` on
 removal only, never on an upgrade. `XMIP_NODE`, `XMIP_CLUSTER` and
 `XMIP_ACCOUNT` in the installer's environment say the node, the cluster and
@@ -112,9 +116,10 @@ productbuild --distribution deploy/package/macos/distribution.xml \
 
 The layout is `/opt/xmip`; the daemon is
 `/Library/LaunchDaemons/xmip-<node>.plist`, and beside it
-`xmip-<node>.run.plist` makes `/var/run/xmip` for the node's account at
-every boot, since macOS empties `/var/run` as it starts; the node's local
-endpoint is `/var/run/xmip/xmip-<node>.sock`. macOS has no removal for a
+`xmip-<node>.run.plist` makes `/var/run/xmip/xmip-<node>` for the node's
+account, and `/var/run/xmip` above it root's, at every boot, since macOS
+empties `/var/run` as it starts; the node's local endpoint is
+`/var/run/xmip/xmip-<node>/xmip-<node>.sock`. macOS has no removal for a
 package: `sudo /opt/xmip/bin/xmip-service --configuration
 /opt/xmip/config/node.xmip --uninstall` removes the daemon and keeps
 everything else. A `.pkg` people can open is signed with a Developer ID
