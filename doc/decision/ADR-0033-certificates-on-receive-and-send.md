@@ -603,3 +603,31 @@ unchanged.
 Provenance: the audit and the destinations are the coordinator's; the
 names `Certificate`, `ClientSettings` and `encode_wrapped` are the
 assistant's drafting, 2026-11-13, for the owner to overrule.
+
+## Amendment, 2026-11-15: the handshake's costs are held by the fastest of five
+
+**Provenance.** The coordinator's brief of 2026-11-15, after the wait rule
+of 2026-11-14 (`doc/governance/rust-style.md` section 5c): every timing
+test holds its figure so that a landing under the owner's daytime load
+fails only on a real defect; no bound raised. The holds are the
+assistant's, for the owner to overrule.
+
+The library's timing program (`xmip-core-library-tls`, `tests/measured`)
+holds what the amendment of 2026-11-10 measured, and what proving a
+browser's key costs (ADR-0009, amendment 2026-11-02), by the estate's one
+figure, the fastest of five (`xcore::latency::spread`):
+
+- **A full handshake against one resumed** by rustls's defaults, 200
+  rounds of each in turn, the added cost under a millisecond; until this
+  day the fastest of all 201. Measured once on 2026-11-15 under the day's
+  load: mutual TLS 1.21 ms in full against 0.95 ms resumed, 0.26 ms more;
+  the server authenticated alone 1.26 ms against 1.17 ms, 0.09 ms more.
+- **A handshake bound and recorded against one served plainly** in the
+  same 30 rounds, the binding under a millisecond added (1.81 ms against
+  1.83 ms), and the node's check of a transcript under one (61 µs); until
+  this day the median of 31 each.
+- **A write while a read waits on the same connection**, five writes, the
+  fastest under 100 ms (`xcore::latency::at_once`; 22 µs); until this day
+  one write, timed once.
+
+The resumption setting itself, off, stands.

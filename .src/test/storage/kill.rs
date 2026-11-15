@@ -44,7 +44,7 @@ pub fn hand_on_until_killed(node: &dyn XmipStorage) {
             .expect("claimed")
             .expect("free");
         say(&format!("claimed {number}"));
-        assert!(node.hand_on(&hand_on(number, claim)).expect("handed on"));
+        assert!(node.hand_on(hand_on(number, claim)).expect("handed on").0);
         say(&format!("handed {number}"));
     }
 }

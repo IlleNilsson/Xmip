@@ -2140,6 +2140,32 @@ amendment of 2026-09-09) survived and the older one did not."""
 #   choice of segment, and the read's parse into a tree (Form), removed
 #     -> Address::picked, the read's and the write's one choice
 
+# Moved on 2026-11-15, the segment syntaxes walked by one walk (ADR-0066,
+# amendment 2026-11-15):
+#   module/core/capability/contract/edi-edifact/src/walk.rs Walk and Lying,
+#   their terminator search, release cut and end, deleted
+#     -> module/foundation/message/.src/segment.rs, Delimiters::walk, Walk,
+#     Segment::pieces and Piece; the UNA's service characters, the tag's
+#     rule and the cut into the tree's Segment
+#     -> module/core/capability/contract/edi-edifact/src/syntax.rs,
+#     Interchange::walk, Segments and Lying
+#   module/core/capability/contract/edi-x12/src/walk.rs Walk and Lying,
+#   deleted
+#     -> module/foundation/message/.src/segment.rs, the same walk; the ISA's
+#     separators, the identifier's rule and the trimmed cut
+#     -> module/core/capability/contract/edi-x12/src/syntax.rs,
+#     Interchange::walk, Segments and Lying
+#   module/core/capability/contract/hl7-v2/src/lib.rs Encoding and Message,
+#   their split into lines and fields
+#     -> module/core/capability/contract/hl7-v2/src/er7.rs, Encoding,
+#     Message::walk, Segments and Lying, over the same walk
+#   module/foundation/message/.src/segment.rs Delimiters::split and
+#   Segment::elements, removed
+#     -> Segment::pieces, which Segment::element and component read
+#   module/core/capability/path/hl7-v2/src/lib.rs the read's parse into a
+#   tree (Form for Segments), removed
+#     -> Address::read over er7::Message::walk
+
 # Moved on 2026-11-14, within xmip-core-persist, each to a file named for
 # what it defines, as the writer's own work grew (ADR-0018, amendment
 # 2026-11-14):
@@ -2155,3 +2181,19 @@ amendment of 2026-09-09) survived and the older one did not."""
 #     module/platform/runtime/src/tuning.rs and handed to the writer by
 #     Embedded::keep_due and standby::Timings::due_places; its default
 #     DUE_QUEUES in module/platform/persist/.src/storage/embedded/opened.rs
+
+# Folded on 2026-11-15, within xmip-core-persist, as the writer came to keep
+# every record it decides a condition on (ADR-0018, amendment 2026-11-15):
+#   module/platform/persist/.src/storage/due/kept.rs Kept and Settled, each
+#   queue's places by when each is due as the writer left them, deleted
+#     -> module/platform/persist/.src/storage/commit/kept.rs Kept, what the
+#     writer keeps of the records it wrote, the due places among them, read
+#     through Batch::before; the node test of the due places kept
+#     -> module/platform/persist/.src/storage/due/tests/settled.rs
+#   [tuning] storage_due_places, how many queues' due places the writer
+#   keeps, deleted
+#     -> [tuning] storage_writer_kept, the bytes of the records it wrote the
+#     writer keeps, read by module/platform/runtime/src/tuning.rs and handed
+#     to the writer by Embedded::keep_written and
+#     standby::Timings::writer_kept; its default WRITER_KEPT in
+#     module/platform/persist/.src/storage/embedded/opened.rs

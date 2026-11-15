@@ -293,9 +293,9 @@ When deployed the sections regarding a node will be sliced to that node.*
   queues (`storage_wait`, built 2026-11-12; ADR-0018, amendment
   2026-11-12), and how many of what no node waits on a Storage node keeps
   (`storage_unwaited`, built 2026-11-12; ADR-0018, amendment 2026-11-12),
-  how many queues' places by when each is due a Storage node's writer
-  keeps (`storage_due_places`, built 2026-11-14; ADR-0018, amendment
-  2026-11-14),
+  how many bytes of the records it wrote a Storage node's writer keeps
+  (`storage_writer_kept`, built 2026-11-15 in place of the due places it
+  kept by the queue since 2026-11-14; ADR-0018, amendment 2026-11-15),
   and how every TCP connect of the node's process sends a SYN nobody
   answered again (`connect_retransmit`, `connect_retransmissions`, built
   2026-11-14; ADR-0044, amendment 2026-11-14)

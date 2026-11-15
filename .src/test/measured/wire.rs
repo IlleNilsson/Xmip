@@ -12,18 +12,19 @@ use std::path::Path;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
+use xmip_core::latency::spread;
 use xmip_persist::Engine;
 use xmip_persist::storage::client::PASS_OVER;
 use xmip_persist::storage::standby::{BEAT, KEPT, SILENCE, Timings};
 use xmip_persist::storage::{
-    DUE_QUEUES, StorageClient, StorageNode, StorageServer, UNWAITED, XmipStorage,
+    StorageClient, StorageNode, StorageServer, UNWAITED, WRITER_KEPT, XmipStorage,
 };
 use xmip_persist_rocksdb::RocksDb;
 use xmip_persist_sqlite::Sqlite;
 use xmip_secret::KekName;
 
 use super::authority::{authority, issue};
-use super::node::{directory, journey, keys, percentiles, test_node, timed};
+use super::node::{directory, journey, keys, test_node};
 
 /// Each connect and each read a node makes of a Storage node.
 pub(super) const TIMEOUT: Duration = Duration::from_secs(10);
@@ -55,7 +56,7 @@ pub(super) fn storage_node(
         pass_over: PASS_OVER,
         kept: KEPT,
         unwaited: UNWAITED,
-        due_places: DUE_QUEUES,
+        writer_kept: WRITER_KEPT,
     };
     let node = StorageNode::new(
         [runtime, administration, audit],
@@ -96,19 +97,40 @@ pub(super) fn primary_and_standby(
     (nodes, listed)
 }
 
-/// How long each of `CALLS` reads of what [`timed`] wrote takes, sorted.
-fn reads(node: &dyn XmipStorage) -> Vec<Duration> {
-    let mut taken: Vec<Duration> = (0..CALLS)
-        .map(|number| {
+/// Each of `CALLS` calls `call` makes of the node in process and then of
+/// the one over the wire, in turn, so each sees the machine as the other
+/// does: each call's time, in the order measured, printed under `what`, and
+/// the fastest of five of each (`xmip_core::latency::spread`). Until
+/// 2026-11-15 the in-process calls were timed before the wire's, and the
+/// medians held.
+fn beside(
+    what: &str,
+    [local, wire]: [&dyn XmipStorage; 2],
+    call: impl Fn(&dyn XmipStorage, u64),
+) -> [Duration; 2] {
+    let mut taken = [Vec::new(), Vec::new()];
+    for number in 0..CALLS {
+        for (place, node) in [local, wire].into_iter().enumerate() {
             let started = Instant::now();
-            let read = node.read_journey(journey(number)).expect("read");
-            let taken = started.elapsed();
-            assert!(read.is_some(), "{number} was written");
-            taken
-        })
-        .collect();
-    taken.sort();
-    taken
+            call(node, number);
+            taken[place].push(started.elapsed());
+        }
+    }
+    let [local, wire] = taken;
+    [
+        spread(&format!("{what}, in process"), local).fastest_of_five,
+        spread(&format!("{what}, over the wire to the primary"), wire).fastest_of_five,
+    ]
+}
+
+/// Journey `number` written with `body`.
+fn write(node: &dyn XmipStorage, number: u64, body: &[u8]) {
+    let record = xmip_persist::storage::JourneyRecord {
+        journey: journey(number),
+        body: body.to_vec(),
+        facts: xmip_persist::storage::JourneyFacts::default(),
+    };
+    node.write_journey(&record).expect("written");
 }
 
 #[test]
@@ -118,28 +140,25 @@ fn a_storage_call_over_the_wire_costs_less_than_a_millisecond_beyond_its_load() 
     let body = vec![b'x'; 1024];
 
     let local = test_node(&test.join("local"));
-    let (local_write, _) = percentiles(&timed(&local, CALLS, &body));
-    let (local_read, _) = percentiles(&reads(&local));
-
     let (nodes, listed) = primary_and_standby(&test);
     let client = StorageClient::new(&listed, &issue(&test), TIMEOUT, PASS_OVER).expect("a client");
-    let (wire_write, slowest_write) = percentiles(&timed(&client, CALLS, &body));
-    let (wire_read, slowest_read) = percentiles(&reads(&client));
+    let both: [&dyn XmipStorage; 2] = [&local, &client];
+    // A read is the wire's own cost; a write carries its sync, the disk's
+    // time, which the same write in process carries beside it. Neither is
+    // a wake a plain wake could stand for, so each is held beside the
+    // other, the fastest of five each.
+    let [local_write, wire_write] = beside("a write and its sync", both, |node, number| {
+        write(node, number, &body);
+    });
+    let [local_read, wire_read] = beside("a read", both, |node, number| {
+        let read = node.read_journey(journey(number)).expect("read");
+        assert!(read.is_some(), "{number} was written");
+    });
     let deadline = Instant::now() + Duration::from_secs(10);
     while nodes[1].0.standing().next != nodes[0].0.standing().next && Instant::now() < deadline {
         std::thread::yield_now();
     }
     let copied = nodes[1].0.standing().next == nodes[0].0.standing().next;
-
-    eprintln!(
-        "LATENCY a read: in process median {local_read:?}; over the wire to the primary median \
-         {wire_read:?}, 99th percentile {slowest_read:?}"
-    );
-    eprintln!(
-        "LATENCY a write and its sync: in process median {local_write:?}; over the wire to the \
-         primary, its standby copying, median {wire_write:?}, 99th percentile {slowest_write:?}; \
-         the standby holding every write: {copied}"
-    );
     assert!(copied, "{}", nodes[1].0.said());
     let read_beyond = wire_read.saturating_sub(local_read);
     let write_beyond = wire_write.saturating_sub(local_write);

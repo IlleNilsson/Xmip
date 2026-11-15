@@ -13,8 +13,11 @@
 //! **Measured against the millisecond rule.** What Xmip does around the
 //! payload is what the node's threads run for each file from the moment
 //! its transport hands it to the node to the moment the file is whole in
-//! the send directory: the three gates, the Ledger write, the route, the
-//! Journey, the send step. The node counts that processor time for each
+//! the send directory and its hand-on is written: the three gates, the
+//! Ledger write, the route, the Journey, the send step and its hand-on,
+//! with the file's shares of the Storage node's batches of its Publication
+//! and its hand-on (its hand-on counted since 2026-11-15; ADR-0018,
+//! amendment 2026-11-15). The node counts that processor time for each
 //! file, apart from the payload's own I/O — the dropped file read, the
 //! Ledger's append and its sync, the sent file written, synced and renamed
 //! (`xcore::spent`; the owner, 2026-11-01); **that is Xmip's own share, and

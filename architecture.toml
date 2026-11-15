@@ -832,14 +832,14 @@ dependency = ["xmip-core-library-codec"]
   dependency = ["xmip-core", "xmip-core-stream", "xmip-core-abi", "xmip-core-node", "xmip-core-library-codec"]
     [xmip.core.contract.edi-edifact]
     maturity = "scaffolded"
-    dependency = ["xmip-core-stream", "xmip-core"]
+    dependency = ["xmip-core-stream", "xmip-core-message", "xmip-core"]
     [xmip.core.contract.edi-x12]
     maturity = "scaffolded"
-    dependency = ["xmip-core-stream", "xmip-core"]
+    dependency = ["xmip-core-stream", "xmip-core-message", "xmip-core"]
     specification = "ASC X12 interchange, group and transaction set envelopes; every version in this repository"
     [xmip.core.contract.hl7-v2]
     maturity = "scaffolded"
-    dependency = ["xmip-core-stream", "xmip-core"]
+    dependency = ["xmip-core-stream", "xmip-core-message", "xmip-core"]
     [xmip.core.contract.asyncapi]
     maturity = "scaffolded"
     dependency = ["xmip-core-stream", "xmip-core"]
@@ -942,7 +942,7 @@ dependency = ["xmip-core-library-codec"]
     specification = "Xmip content selector: name, ordinal, key and any segments, runtime-model.md section 9"
     [xmip.core.path.edi]
     maturity = "scaffolded"
-    description = "EDI path: a segment, element and component of an EDIFACT or X12 interchange, in the contract technologies' own syntax; a read walks the whole text and cuts only its segment, never building the tree, a write edits the whole interchange. A xmip-core-path technology."
+    description = "EDI path: a segment, element and component of an EDIFACT or X12 interchange; a read walks the whole text by the one segment walk in xmip-core-message, through the contract technologies' syntax, and cuts only its segment, never building the tree; a write edits the whole interchange. A xmip-core-path technology."
     dependency = ["xmip-core", "xmip-core-contract", "xmip-core-contract-edi-edifact", "xmip-core-contract-edi-x12"]
     specification = "UN/EDIFACT (ISO 9735) and ASC X12 segment, element and component positions"
     [xmip.core.path.fhirpath]
@@ -951,8 +951,8 @@ dependency = ["xmip-core-library-codec"]
     specification = "HL7 FHIRPath, the normative core over FHIR JSON"
     [xmip.core.path.hl7-v2]
     maturity = "scaffolded"
-    description = "HL7 v2 path: a segment, field, component and subcomponent of an ER7 message, read and written, cut by the contract technology's own syntax. A xmip-core-path technology."
-    dependency = ["xmip-core", "xmip-core-contract", "xmip-core-contract-hl7-v2", "xmip-core-stream"]
+    description = "HL7 v2 path: a segment, field, component and subcomponent of an ER7 message; a read walks the whole text by the one segment walk in xmip-core-message, through the contract technology's reader, and cuts only its field, never building the tree; a write edits the whole message. A xmip-core-path technology."
+    dependency = ["xmip-core", "xmip-core-contract", "xmip-core-contract-hl7-v2"]
     specification = "HL7 Version 2 encoding rules (ER7) field positions, PID-5-2"
     [xmip.core.path.index]
     maturity = "scaffolded"

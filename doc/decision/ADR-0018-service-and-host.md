@@ -2155,7 +2155,10 @@ whole Publication written out again and hashed to recognize a repeat.
   kept is let go of first, read again by the next batch that writes it. A
   queue a batch
   leaves holding none finds each part's first where its next place is, with
-  no range read.
+  no range read. Since 2026-11-15 they are kept among every record the
+  writer wrote (`persist::storage::commit::kept`), bounded in bytes by
+  `[tuning] storage_writer_kept` in place of `storage_due_places`
+  (amendment 2026-11-15).
 - **A place a batch makes new is never read** (`Batch::absent`): a queue's
   next place; and a Publication's Message, its Journeys, their claims, the
   places it holds of them or of its Message, its Dead Message Queue entry
@@ -2186,15 +2189,16 @@ whole Publication written out again and hashed to recognize a repeat.
   0.68 µs (16 bytes, an index entry) to 0.89 µs (300 bytes); some 25 seals
   a Publication's batch. A nonce drawn once a batch would save at most
   5 µs and change how every record's nonce is made: not done.
-- **Found, for the owner: a Message's hand-on is in no one's share.** A
+- **A Message's hand-on is in its own share** (amendment 2026-11-15). A
   Message is two of the writer's batches, its Publication and its Journey's
   hand-on after the send (amendment 2026-10-21); its Stream's chunks are
   written to the engine on the receiving thread, no batch, and counted
-  there. Only the Publication's batch share enters the node's own share,
-  read once the far end has the Message (`runtime::send_step::pass`), and
-  the hand-on — the send thread building it and its batch, some 150 to
-  250 µs — is counted nowhere. Counting it changes what
-  `XmipStorage::hand_on` answers and where the own share's window ends.
+  there. Found here: only the Publication's batch share entered the node's
+  own share, read once the far end had the Message, and the hand-on — the
+  send thread building it and its batch, some 150 to 250 µs — was counted
+  nowhere. Since 2026-11-15 the share is read once the hand-on is
+  answered, with both batches' shares (`XmipStorage::hand_on` answers its
+  `Durable`).
 
 Measured (2026-11-14, the owner's daytime load on the machine, each pair
 alternated in the same minutes, three rounds; a bench outside the estate:
@@ -2228,3 +2232,215 @@ record, claim token, place, lease or Journey — is refused.
 Provenance: the millisecond rule and its terms are the owner's; the
 profile, the three changes and the sealing verified are the assistant's,
 2026-11-14, for the owner to confirm or strike.
+
+## Amendment, 2026-11-15: the service's timing figures are held by the one wait rule
+
+**Provenance.** The coordinator's brief of 2026-11-15, after the wait rule
+of 2026-11-14 (`doc/governance/rust-style.md` section 5c): every timing
+test holds its figure so that a landing under the owner's daytime load
+fails only on a real defect; no bound raised, no timeout lengthened. Which
+hold each test takes is the assistant's, for the owner to overrule.
+
+- **An idle service's processor time** (`.src/test/measured/told.rs`, the
+  amendment of 2026-10-17) is read over five windows of a second, each per
+  second of the window read, and held under a tenth of a second at the
+  fastest of five (`xcore::latency::spread`). Until this day one window was
+  read, and one busy second failed it.
+- **A Storage call over the wire** (`.src/test/measured/wire.rs`): each of
+  500 writes, then 500 reads, made of the node in process and of the
+  primary over the wire in turn, the wire's under a millisecond beyond the
+  process's, the fastest of five each. Until this day the medians, every
+  call in process timed before the first over the wire.
+- **A node told of a write on a queue it waits on**
+  (`.src/test/measured/woken.rs`, open problem 46): the telling beyond the
+  write's answer, the fastest of five, under a millisecond plus a plain
+  wake for each of its two wakes, measured beside each round
+  (`xcore::latency::woke_beside_a_plain_wake`); until this day the median,
+  flat. Only the wall clock is held: both Storage nodes run in the test's
+  process, and the primary's copy to its standby lands in the same rounds.
+- **A caller's turn** (the amendment of 2026-11-14): transport's thousand
+  exchanges on a kept connection, each read bounded by the turn or not,
+  are a thousand rounds beside a plain wake (`xcore::latency::Rounds`, two
+  wakes each), the wall clock and this process's processor time each under
+  a millisecond beyond the plain wake's; until this day the thousand were
+  held within a second together.
+- **The runtime's node** (`xmip-core-runtime`, `tests/measured/running.rs`):
+  Xmip's own share of a Message, as the node's stop record says it, within
+  a millisecond of this process's processor time across a plain wake
+  measured beside each Message (`xcore::latency::worked_beside_a_plain_wake`),
+  its hand-on counted (the amendment below); until this day under a
+  millisecond flat. Eight senders side by side: each post answered within
+  five milliseconds, the fastest of five, sender by sender; until this day
+  the four hundred were timed together and their mean held. Each post is
+  answered once its Stream is carried and its Ledger write synced, so the
+  post shows the receive side side by side, where eight carried one at a
+  time would each wait out the others' syncs; from a post to the far end
+  taking it is said beside it, for information, the four hundred waiting
+  their turn at the one far end.
+- **A Work Process's turn and a hop's sequence check**
+  (`tests/measured/work_turn.rs`, `sequenced_cost.rs`): their medians were
+  held only where `debug_assertions` is off, a release build, which the
+  estate never builds (`doc/governance/rust-style.md` section 5b), so the
+  holds never ran. A turn waits on Xmip Storage's writer for its claim and
+  for its write, six wakes, each turn a round (`xcore::latency::Rounds`); a
+  check reads in process and waits on nothing, the fastest of five under
+  the millisecond.
+- **The rest of the runtime's timing program**: a give-up at a hung node's
+  wait (`deadline.rs`), five, each at a hung node of its own, the fastest
+  of five, until this day one; a session's own share proven to the nodes
+  (`relayed.rs`) by the processor-time half beside a plain wake, and a
+  node's check by the fastest of five, until this day the fastest of all
+  thirty-one; a delivery across nodes beside one on a node (`woken.rs`),
+  the fastest of five each, until this day the medians; an act's path
+  beyond Xmip Storage's own calls, its pickup and a dropped watch
+  (`acted.rs`, `directory_watch.rs`) by the wall-clock half, a copy of it
+  until this day; and the operate plane's rounds (`plane.rs`,
+  `clustered.rs`) by `Rounds::round`, a copy of it until this day.
+- **Xmip Storage's own** (`xmip-core-persist`, `tests/measured`): a read of
+  what is due, a page across a gap of a million places and the writer's
+  removal before it, and `RocksDB`'s range from its first kept key
+  (`xmip-core-persist-rocksdb`), each an answer from what is held, the
+  fastest of five (`xcore::latency::at_once`), each a copy of it until
+  this day; a node's row of the `membership` table beside Xmip Storage's
+  own write of an administration record, the two in turn, the fastest of
+  five each, until this day the medians, each write's two hundred after the
+  other's.
+
+Built 2026-11-15, the assistant's; each program run once under the day's
+load and passing, a quiet machine's run still owed before the landing.
+
+## Amendment, 2026-11-15: a Message's hand-on is in its own share, and the Storage node's writer keeps what it wrote
+
+**Provenance.** The amendment of 2026-11-14 found a Message's hand-on in
+no one's share: its own share was read once the far end had the Message,
+with the Publication's batch alone. The millisecond rule is the owner's
+(`CONTRIBUTING.md`, *Rust is here for one reason*); counting the hand-on,
+and paying for it in the same change, is the assistant's, for the owner to
+confirm or strike.
+
+- **Counted.** `XmipStorage::hand_on` takes the hand-on by value, as
+  `publish` does, and answers once durable with its `Durable`: what the
+  writer's batch worked for it (`Durable::worked`) and its sync's share
+  (`Durable::synced`). Over the wire it answers `Durable::kept()`, no
+  figures, the wire unchanged. The send thread works for its Message from
+  its sequences read to its hand-on's answer (`runtime::send_step::pass`),
+  and the share is read then: its account, with its shares of the batches
+  of what it was sent under and of its hand-on; the disk's time beside it
+  likewise. A batch that writes nothing — a request asked again, found
+  written — is durable with the latest batch but says its own figures
+  (`Durable::beside`), never the latest batch's.
+- **The writer keeps what it wrote** (`persist::storage::commit::kept`):
+  each record a later batch decides a condition on — a claim, a Journey, a
+  queue's entry, its index and its places, its places by when each is due,
+  a holder's count, the audit sequence, a failed Message's and a Dead
+  Message Queue's records, a Work Process Instance and its keys — as the
+  last batch left it, kept only once that batch is in the engine, and read
+  by every batch after (`Batch::before`), neither from the engine nor
+  decrypted again. Not kept: a Message, a Stream and its chunks, an audit
+  record and a Publication's own record. A Storage node opened anew — a
+  restart, or a standby promoted, which copied its primary's writes beneath
+  no writer of its own — keeps none; a writer that panicked forgets them.
+  The 2026-11-14 cache of each queue's due places is folded into it, and
+  deleted.
+- **The trade, decided by the assistant.** A record read from what the
+  writer keeps is the writer's own copy of what it sealed, not
+  authenticated against the store again; every other read is, as before. A record changed in the
+  engine beneath a running writer is not seen by it until the writer lets
+  it go; nothing in Xmip writes those kinds beneath it.
+- **Bounded in bytes**, a hardware assumption: `[tuning]
+  storage_writer_kept`, set per cluster and per node in the Cluster TOML,
+  16,777,216 by default (`persist::storage::WRITER_KEPT`, some eight
+  thousand Messages between their Publication and their hand-on; 0 to
+  68,719,476,736, 0 keeping none), handed to the only Storage node as it
+  opens and to a primary among several as it is promoted
+  (`Embedded::keep_written`, `standby::Timings::writer_kept`); past it the
+  first kept is let go of first. It replaces `storage_due_places`, with no
+  alias.
+- **A record replaced is laid out once** (`Batch::replaced`,
+  `Columns::laid`): stamped over what the batch read of it — the Journey
+  `origin::counted` decodes, a queue's entry a retry's due time or a
+  failure's mark changes — encoded once, and only the index entries the two
+  differ in written. Where the batch wrote the place already, it is written
+  as any record is.
+- **A place is found by its bytes** (`EncryptedStore`'s place, now the
+  crate's): a batch's maps, the writer's and the laying out are keyed by
+  it, made on the stack once a lookup, and each value a batch writes is
+  kept once, where `written` finds it in `changes`.
+- **The Journey is moved, not copied**: the send thread appends the send's
+  entry to the Journey it moves out of the departure, and puts it back.
+  After a hand-on not taken only its identifier is read, and its Message
+  is read again from the Ledger and sent again.
+- **Sealing on the thread that makes a record does not lower the share**:
+  a lone write's batch is charged to its Message wherever its seals run,
+  and the writes of a batch share it whole; only work not done lowers it.
+  Moving the seals helps the writer's serial time, for when writes queue
+  behind it, and is not built.
+
+Measured before (2026-11-15, the day's load on the machine, a bench outside
+the estate: the runtime's loopback node over `RocksDB`, two hundred
+Messages over TCP, probed phase by phase, three runs, medians). A hand-on's
+batch, 151, 200 and 179 µs: its claim read 12 to 17, its Journey counted —
+its record, its holder's count and the Stream's place in its sequence, five
+reads — 34 to 45, its Journey written 5 to 6, its place let go of, three
+reads, 19 to 26, the queues' due places 10 to 13, the laying out 31 to 39,
+sealing and the engine's write 18 to 23 µs; nine reads from the store, each
+a record its Publication wrote. The send thread's build of it, 43 to 60 µs,
+23 to 31 µs of it the call to the writer beside the batch. The Publication's
+batch 130 to 168 µs; the share as the test then read it, without the
+hand-on, 227 to 299 µs, the fastest of five.
+
+Measured after, the same bench and the same load, three runs: a hand-on's
+batch 156, 128 and 113 µs, no record read from the store; its claim read 4
+to 6, its Journey counted and laid out once 29 to 41, its place let go of
+7 to 10, the laying out 16 to 22 µs, and what the writer keeps of the
+batch, kept, 9 to 13 µs where the watch alone was 4 to 6. The send
+thread's build 29 to 44 µs. The Publication's batch 124 to 167 µs, one
+record read from the store where it read three. The share, its hand-on
+counted now, 390 to 555 µs, the fastest of five; the runtime's own timing
+test the same hour, unprobed, 370 µs. A file carried (`carried.rs`) read
+643 µs at the median without its hand-on (amendment 2026-11-14): some
+0.15 to 0.25 ms more is expected of it, under the millisecond on a quiet
+machine, the owner's run to say; should it not be, the seals move to the
+thread that makes each record next, and only then.
+
+Proved by persist's tests: a Publication asked again says its own batch's
+figures and is durable with the first; a hand-on answers durable with what
+its batch worked, and none over the wire; what the writer keeps is what the
+store holds after every write that moves a due, a write the engine refused,
+and a restart (`due::tests::settled`), a standby's promotion as before
+(`standby::tests::due`); a writer that panicked keeps nothing; a hand-on of
+a Message just published reads no key from the store; a record laid out
+once over the one it replaces leaves what a whole rewrite leaves, writing
+fewer index entries. By the runtime's: a Message's hand-on is in its own
+share (`tests/running`, Xmip Storage spinning 3 ms before each hand-on); a
+hand-on Xmip Storage did not take settles Unwritten, and its Message is
+sent again (`tests/ledger/send.rs`).
+
+Found by the first landing of this change and the ledger suite run four
+copies at once, each in code it did not touch (the same stress failed at
+the 2026-11-14 tree, and with the writer keeping nothing), repaired:
+
+- **A Work Process's pass waited for a place no turn was left to free.**
+  A round that admitted a turn into every place and found none for the
+  next entry was kept as waiting only after its turns ran, and where every
+  one ended first nothing freed a place again: the pass stood for good
+  (`work_bounded`, *turns another node holds*). It waits now only while
+  none is free, under the lock its turns give their places back under
+  (`work_step::admission`, `WorkStep::round_went`). And a turn that
+  unwound was counted before its place was given back, so a read asked
+  between the two passed it over as still in a turn (`work_panicked`); its
+  place is given back first.
+- **A Send Port's claims lapsed before their first renewal.** The renewer
+  waited a third of a lease after it began, and a loaded machine began it
+  up to 186 ms after it was spawned, past a test's 300 ms lease for what a
+  Publication claimed meanwhile (`send_bounded`, *a Publication claims no
+  more*). Its first round is at once, and it is spawned first
+  (`send_step::renewal`, `send_step::dispatch`).
+- **A Send Port's count of failed Messages went back.** Reads of its index
+  made side by side, a hand-on's each, landed in any order, and one landing
+  late kept a count already passed; the later read is kept
+  (`send_step::figures`).
+
+Built 2026-11-15, the assistant's; the root's `carried.rs`, the runtime's
+`running.rs` and persist's timing program are timed on a quiet machine
+before the landing.

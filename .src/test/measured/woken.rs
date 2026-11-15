@@ -8,12 +8,22 @@
 //! due in it; then publishing more and handing each on again, the other
 //! waiting on the first queue's head, as a Journey behind another of its
 //! sequence waits. What it holds: how long after the write was answered the
-//! waiting node is told, the median under a millisecond. Until 2026-11-12
-//! the waiting node found it at its next scan, a second by default.
+//! waiting node is told, the fastest of five under the millisecond plus a
+//! plain wake measured beside each round for each thread the telling wakes
+//! (`xmip_core::latency::woke_beside_a_plain_wake`). Until 2026-11-12 the
+//! waiting node found it at its next scan, a second by default; until
+//! 2026-11-15 the median was held under a millisecond flat.
+//!
+//! Only the wall clock is held: both Storage nodes run in this process and
+//! the primary copies every write to its standby while the waiting node is
+//! told, which this process's processor time across a round would count as
+//! the wake's. Xmip Storage's own wakes are held by `Rounds` in its own
+//! timing program.
 
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
+use xmip_core::latency::{PlainWake, spread, woke_beside_a_plain_wake};
 use xmip_core::{AuditId, MessageId};
 use xmip_persist::storage::client::PASS_OVER;
 use xmip_persist::storage::{
@@ -22,7 +32,7 @@ use xmip_persist::storage::{
 };
 
 use super::authority::{authority, issue};
-use super::node::{directory, journey, percentiles};
+use super::node::{directory, journey};
 use super::wire::{TIMEOUT, primary_and_standby};
 
 /// How many of each write are timed.
@@ -94,24 +104,30 @@ fn handed_on(writing: &StorageClient, holder: &str, number: u64) {
         waits: None,
         kept_for_nanos: None,
     };
-    assert!(writing.hand_on(&hand_on).expect("handed on"));
+    assert!(writing.hand_on(hand_on).expect("handed on").0);
 }
 
 /// The most of what is due a wait's answer carries, as a node's steps ask.
 const DUE: u32 = 64;
 
+/// What the telling wakes beyond the write's answer where a plain wake
+/// wakes one, the least it can: the Storage node's wait at the write, and
+/// the waiting node at its answer.
+const WAKES: u32 = 2;
+
 /// For each of [`ROUNDS`] writes `write` makes, each moving `watched` by
 /// one from `from` on: how long after it was asked `waiting`, waiting on it
 /// where it stood before, was told, how long the write took to be
-/// answered, and how long the telling took beyond that answer; each sorted.
-/// A queue's tail is told with what is due in it, every Journey it holds.
+/// answered, and how long the telling took beyond that answer, each in the
+/// order measured; and a plain wake beside each round. A queue's tail is
+/// told with what is due in it, every Journey it holds.
 fn told(
     waiting: &Arc<StorageClient>,
     (watched, from): (Watched, u64),
     write: impl Fn(u64),
-) -> [Vec<Duration>; 3] {
-    let waiter = Arc::new(Waiter::new());
-    let mut taken = [Vec::new(), Vec::new(), Vec::new()];
+) -> ([Vec<Duration>; 3], Vec<Duration>) {
+    let (waiter, plain) = (Arc::new(Waiter::new()), PlainWake::start());
+    let (mut taken, mut woke) = ([Vec::new(), Vec::new(), Vec::new()], Vec::new());
     for number in 0..ROUNDS {
         let seen = [Position {
             watched,
@@ -148,24 +164,26 @@ fn told(
         taken[0].push(at.saturating_duration_since(asked));
         taken[1].push(answered - asked);
         taken[2].push(at.saturating_duration_since(answered));
+        woke.push(plain.round().0);
     }
-    for each in &mut taken {
-        each.sort();
-    }
-    taken
+    (taken, woke)
 }
 
-/// What [`told`] measured, said, and the telling beyond the write's answer,
-/// the median, for the millisecond rule.
-fn said(what: &str, [told, wrote, beyond]: &[Vec<Duration>; 3]) -> Duration {
-    let ((told, slowest), (wrote, _)) = (percentiles(told), percentiles(wrote));
-    let (beyond, slowest_beyond) = percentiles(beyond);
-    eprintln!(
-        "LATENCY a node told of {what} another node wrote into a queue it waits on: from the \
-         write asked median {told:?} (99th percentile {slowest:?}), the write answered in \
-         {wrote:?}; beyond its answer median {beyond:?} (99th percentile {slowest_beyond:?})"
+/// What [`told`] measured, said, and the telling beyond the write's answer
+/// held to the millisecond rule beside the plain wakes, the fastest of five
+/// each.
+fn held(what: &str, ([told, wrote, beyond], woke): ([Vec<Duration>; 3], Vec<Duration>)) {
+    let said = format!("a node told of {what} another node wrote into a queue it waits on");
+    let _ = spread(&format!("{said}, from the write asked"), told);
+    let _ = spread(&format!("{what} written, to its answer"), wrote);
+    let beyond = spread(&format!("{said}, beyond the write's answer"), beyond);
+    let usual = spread("a plain wake beside it", woke).fastest_of_five;
+    woke_beside_a_plain_wake(
+        &format!("{what} told beyond its write's answer"),
+        beyond.fastest_of_five,
+        usual,
+        WAKES,
     );
-    beyond
 }
 
 #[test]
@@ -192,19 +210,12 @@ fn a_journey_another_node_puts_in_a_queue_is_told_within_a_millisecond_of_its_wr
     let headed = told(&watching, (Watched::Head(PUBLISHED), ROUNDS), |number| {
         handed_on(&writer, &holder, ROUNDS + number);
     });
-    let published = said("a Publication", &published);
-    let onward = said("a hand-on", &onward);
-    let headed = said("a hand-on moving its head", &headed);
-    let millisecond = Duration::from_millis(1);
-    assert!(
-        published < millisecond,
-        "a Publication told after {published:?}"
-    );
-    assert!(onward < millisecond, "a hand-on told after {onward:?}");
-    assert!(headed < millisecond, "a head told after {headed:?}");
     for (node, server) in nodes {
         node.stop();
         server.stop();
     }
     let _ = std::fs::remove_dir_all(&test);
+    held("a Publication", published);
+    held("a hand-on", onward);
+    held("a hand-on moving its head", headed);
 }
