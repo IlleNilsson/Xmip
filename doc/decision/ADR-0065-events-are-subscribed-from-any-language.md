@@ -674,3 +674,39 @@ the forwarding tests there; and `xmip-core-cluster`'s `tests/forward.rs`.
 The timing programs, `tests/measured` in the three transports and in
 `xmip-core-cluster`, hold their bounds unchanged.
 
+## Amendment, 2026-11-15: an Event's way is held round by round beside a plain wake
+
+**Provenance.** The coordinator's brief of 2026-11-15, after the wait rule
+of 2026-11-14 (`doc/governance/rust-style.md` section 5c): every timing
+test holds its figure so that a landing under the owner's daytime load
+fails only on a real defect; no bound raised. The holds are the
+assistant's, for the owner to overrule.
+
+What stands for *Near real time* (clause 4) and the crossing's figures:
+
+- **To an in-process subscriber** (`xmip-core-cluster`,
+  `tests/measured/delivery/latency.rs`), drained or called back: each Event
+  a round beside a plain wake (`xcore::latency::Rounds`, one wake), its wall
+  clock under a millisecond beyond the plain wake's, and the processor time
+  the publisher spent in `publish` and the subscriber spent for it, the
+  fastest of five, under a millisecond beyond the process's across the
+  plain wake. Until this day the processor time was an Event's share of the
+  whole run, held flat.
+- **A resume waking a waiting drain** (`delivery/act.rs`) is a round beside
+  a plain wake, one wake; until this day its fastest of five was held flat.
+  **A publish's own cost** (`delivery/hub.rs`) is each of a thousand
+  publishes timed, the fastest of five, under a millisecond; until this day
+  the thousand were timed together.
+- **Over a transport to its far end** (`tests/measured` in
+  `xmip-core-transport-http`, `-kafka` and `-amqp`): publish to the far
+  end's arrival, each Event a round beside a plain wake, two wakes (the
+  forwarder and the far end), and this process's processor time across it
+  — the publisher's, the forwarder's and the far end's — under a
+  millisecond beyond the plain wake's. Until this day the wall clock was
+  held beside a plain loopback TCP wake and the processor time as an
+  Event's share of the run, flat. Measured once on 2026-11-15 under the
+  day's load: 178 to 230 µs the fastest of five, 350 to 440 µs of the
+  process's processor time a round.
+
+The crossing to another node (`tests/measured/latency.rs`) was held so
+already (2026-11-14).

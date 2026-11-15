@@ -1471,7 +1471,12 @@ sequence's `on_failure` is `block` it stops the sequence behind it, and
 otherwise it lets its place go; or **Recovering**, its due time kept at its place in
 its queue and its claim released, a scan passing over it until it is due
 (corrected 2026-10-16, below; until then its claim was kept to its due
-time and the node kept the Message in memory to start it again).
+time and the node kept the Message in memory to start it again). The
+hand-on is in its Message's own share: what the send thread works for it
+until its hand-on is answered, and its share of the Storage node's batch
+that writes it, beside its share of its Publication's (corrected
+2026-11-15; ADR-0018, amendment 2026-11-15; until then the share was read
+once the far end had the Message, and the hand-on was in no one's).
 **Recovery** is a scan: as a node starts and every `[tuning] send_scan`
 after, what is due in each queue it sends is read, in the order it fell
 due (corrected 2026-10-21, below; until then the whole queue, oldest

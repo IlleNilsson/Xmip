@@ -994,3 +994,97 @@ rule, and its follow-up the same day that what is refused stays refused and
 nothing on the message path gets slower; placing the walk in the contract
 technologies, one per syntax that the parse and the path both walk, is the
 assistant's, for the owner to overrule.
+
+## Amendment, 2026-11-15: one segment walk, and an `hl7-v2` path cuts only its field
+
+The amendment of 2026-11-14 gave each syntax a walk of its own,
+`walk::Walk` in `xmip-core-contract-edi-edifact` and in `-edi-x12`, beside
+the Foundation's `message::segment`, which the EDI and ER7 shapes section
+by: three walks of one rule. That no longer stands, and the `hl7-v2` path,
+which read every Message whole into a tree of owned fields, now reads as
+the `edi` path does.
+
+- **One walk, in the lowest layer that has it.** `message::segment` in
+  `xmip-core-message` walks a UN/EDIFACT, ASC X12 or TRADACOMS interchange
+  and an HL7 v2 message in ER7 a segment at a time (`Delimiters::walk`).
+  Each syntax hands it only what differs, its `Delimiters`: the
+  terminator, the element and component separators, the release
+  character, whether every line break ends a segment and only line breaks
+  stand between two (ER7), and whether the last segment may end with the
+  text (what the HL7 v2 contract reads). A segment's tag is read at once
+  and its pieces cut only when asked (`Segment::pieces`); the terminator
+  is found eight bytes at a time, and a release counted only where a
+  terminator is met. The `edi-edifact`, `edi-x12`, `edi-tradacoms` and
+  `hl7-er7` shapes section by it. The EDIFACT and X12 syntaxes read by it:
+  `Interchange::walk` hands it the service characters the `UNA` advises or
+  the separators the `ISA` declares and holds each tag to the syntax's
+  rule, yielding `segments::Lying`; `Interchange::parse` collects it. The
+  HL7 v2 contract's reader, `er7::Message::walk`, hands it the separators
+  `MSH` declares; `er7::Message::parse` collects it. Both contracts'
+  `walk.rs` are deleted, and with them the second and third copy of the
+  terminator search and the release cut.
+- **An `hl7-v2` path cuts only its field.** A read walks the Stream's own
+  text (`Content::text`, borrowed) through `er7::Message::walk`, cuts the
+  field the path names of the segment it names, and walks on to the end,
+  cutting nothing, so a malformed message is refused wherever it is, in
+  the reader's words, at the segment it names; it never builds the tree. A
+  write reads the whole message into the reader's fields, as before.
+- **What is refused stays refused, in one set of words.** The walk's are
+  every syntax's: `a segment without its terminator` where the contracts
+  said `the last segment has no terminator`, `no segment at all` where they
+  said `no segment`, and `the text ends on a release character` where the
+  shapes said a segment had no terminator. Before the old walks were
+  deleted the one walk was held to them over generated texts, two million
+  each of EDIFACT, X12 and ER7, and the Foundation's old and new walk over
+  the same bytes, with these differences and no other:
+  - EDIFACT: a text ending in an unterminated segment that opens with a
+    component separator (`NAD':X`) was let through, the old end having
+    looked at the first component only; it is refused now. Whitespace
+    before an interchange's first segment stays refused (ISO 9735 opens an
+    interchange with its `UNA` or `UNB`), its words the same but where the
+    tag holds a release.
+  - X12: an unterminated last segment whose identifier is not one is named
+    by its missing terminator, where it was named by its identifier; both
+    are refused.
+  - A service character outside ASCII is refused by name (`UNA advises a
+    service character outside ASCII`, `ISA declares a separator outside
+    ASCII`), where the old contract walks read it: the walk reads bytes.
+  - A space in UNA4 is no release character, in the EDIFACT contract as in
+    the shape, where the contract took the space for one (the
+    coordinator's decision of 2026-11-15, after syntax 3's *If not used,
+    insert space character* and syntax 4's *The space character shall not
+    be used in positions 010, 020, 040, 050 or 060*), so a `?` in the data
+    is then a character like any, and a value carrying a service character
+    is refused when such an interchange is written.
+  - The ER7 shape ends a segment at every line break, as the contract
+    always did, where it took the carriage return when the message had
+    one, and refuses a space or tab before a segment, as the contract did.
+  - The shapes read an element after a tag the way the contracts do: a tag
+    followed by something other than its separator (`UNH:1+X`) has its
+    elements after that separator, and `UNZ+` has one empty element.
+- **Measured**, the fastest of five, on a machine carrying other workers'
+  builds at 85% of its processors. The old and the new code in one
+  program, interleaved round by round, new over old: the EDIFACT parse
+  0.84 to 0.96, its walk alone 0.64 to 0.83; the X12 parse 0.76 to 0.86,
+  its walk 0.44 to 0.81; the HL7 v2 contract's parse 0.90 to 0.92 over
+  300 rounds; the shapes' `segments` 0.89 to 1.04 over 300 rounds, and
+  `segments` with the parts a shape makes of them 0.94 to 1.04, level. A
+  path read, the old path crates over the old walks beside the new, three
+  rounds: `edi` `UNH/2/1` of the carried order 0.84 to 0.86 (2.2 to
+  4.2 µs before), of the order grown to 20,006 segments 0.67 to 0.73,
+  `UNZ/2` of it 0.76 to 0.84; X12 `ST/1` 0.63 to 0.66 small and grown;
+  `hl7-v2` `MSH-9-2` of a laboratory result 0.11 to 0.13 (7.1 to 9.7 µs
+  before, 0.9 to 1.1 µs after), of the result grown to 20,003 segments
+  0.03 to 0.05 (17 to 34 ms before, 0.8 to 1.1 ms after). The timing
+  programs alone, one thread: `edi`'s `UNH/2/1` 1.4 µs against the tree's
+  6 µs, grown 1.1 ms against 18.5 ms; `hl7-v2`'s new one (`tests/measured`,
+  which holds the carried read under the millisecond and the grown read to
+  a third of the message read whole into the reader's fields, as `edi`'s
+  does) `MSH-9-2` 1.1 µs against 3.1 µs, grown 1.1 ms against 9.4 ms, the
+  last segment's field 1.3 ms against 8.9 ms.
+
+Provenance: the coordinator's brief of 2026-11-15, under the placement
+refactor the owner ordered on 2026-11-13 (*Do we have all code in the
+modules, repos that we should*, *Good that you found it, fix it*) and the
+millisecond rule; the walk's shape, its words and the equivalence held are
+the assistant's, for the owner to overrule.

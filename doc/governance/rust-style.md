@@ -267,7 +267,25 @@ held by it, and the millisecond is never raised. A figure measured
 elsewhere is held by its processor-time half,
 `worked_beside_a_plain_wake`: the root's assembled node reports its own
 share of a Message in its stop record, held within a millisecond of the
-test's plain wake measured in the same rounds.
+test's plain wake measured in the same rounds. A wake whose processor time
+this process cannot count apart — two Storage nodes in the process, the
+primary copying every write to its standby while the waiting node is told
+— is held by its wall-clock half, `woke_beside_a_plain_wake`.
+
+**Every figure a timing test holds is one of these** (2026-11-15). A send
+or a receive that waits on its far end is a wait that works as it wakes:
+each call is one round, `Rounds::round`, counted as two wakes for each
+request and its answer, so a transport's thousand sends are a thousand
+rounds, not one batch. A figure with no wake in it — an answer from what
+is held, a parse, a validation, a hand-over, a give-up at its timeout, a
+budget other than the millisecond — is held by the fastest of five
+(`spread`, `at_once`) under its bound, or beside what it is measured
+against in the same rounds: the plain handshake beside the bound one, the
+call in process beside the same call over the wire, the loopback's round
+trip beside an NFS file. A single sample, a batch timed together, a mean, a
+median or a fastest of all is never held: each fails a landing on the
+load the owner's own programs put on the machine, and none tells a defect
+from load. Until 2026-11-15 a timing test of each kind held one.
 
 **A storage device's sync is the disk's time, never Xmip's.** Waiting for
 the device to sync — `fsync`, `FlushFileBuffers`, a directory's sync, the
@@ -283,9 +301,30 @@ its stop record: `own_share_ns`, held under the millisecond, and
 
 `test/Timing.Test.ps1` holds it: a timing assertion — an `assert!` holding
 a measured time, a fastest of five or a figure read in milliseconds or
-less, under a bound below a second, or a call of `xcore::latency::at_once` —
-anywhere in a module's tests outside a `measured` folder fails it, and so
-does a `measured` program declared without `test = false`.
+less, under a bound below a second, or a call of `xcore::latency`'s
+`at_once`, `Rounds::crossing`, `worked_beside_a_plain_wake` or
+`woke_beside_a_plain_wake` — anywhere in a module's tests outside a
+`measured` folder fails it, and so does a `measured` program declared
+without `test = false`. A bound a constant makes, `< WAIT * 3`, counts by
+its value: each name resolved to the file's own `const` or `let`, or to the
+estate's one `const` of that name where every declaration agrees, and the
+arithmetic done; under a second it is a timing assertion, a second or more
+an outcome check that stays where it is, and a bound naming anything else
+is not a constant. Inside a `measured` program, a time held under a
+constant bound below a second fails it unless a fastest of five holds it —
+its clause names a fastest, or a figure a `let` took from `at_once`, from
+a function of the file that holds a fastest, or as a difference with
+another measured figure — or the bound is measured beside it
+(2026-11-15).
+
+**A timing test runs in the build the estate tests with** (2026-11-15).
+That build keeps debug assertions on (section 5b), so a hold only a build
+without them runs — `if !cfg!(debug_assertions)`, `cfg!(not(...))`, `if
+cfg!(debug_assertions) { return; }`, `#[cfg(not(debug_assertions))]`,
+`#[cfg_attr(debug_assertions, ignore)]` — never runs, and holds nothing.
+None is written anywhere in a timing program or in a file's tests;
+`test/Timing.Test.ps1` fails naming each. Until 2026-11-15 two of the
+runtime's timing holds sat behind one.
 
 ## 5d. A test that runs a minute fails the landing
 

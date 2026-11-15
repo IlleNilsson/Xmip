@@ -1034,6 +1034,23 @@ node test 0.24, 0.28 and 0.28 ms, against 0.71 to 0.87 ms. Still open: under
 a parallel build the work itself
 runs two to three times longer.
 
+*Counted whole, 2026-11-15: a Message's hand-on in its own share.* Until
+then the share was read once the far end had the Message, so the send
+thread's work on its hand-on and its share of the Storage node's batch
+that writes it — some 150 to 250 µs, measured by phase the same day — were
+in no one's share. Now the send thread works for the Message until its
+hand-on is answered, and Xmip Storage answers a hand-on with what its
+batch worked for it (`XmipStorage::hand_on`, `Durable::worked`), counted
+beside its Publication's share (ADR-0018, amendment 2026-11-15). Paid for
+in the same change: the Storage node's writer keeps the records it wrote
+(`persist::storage::commit::kept`, `[tuning] storage_writer_kept`), so a
+hand-on reads none of the nine records its Publication wrote from the
+store; a Journey or a queue's entry it replaces is laid out once over
+what the batch read of it; a batch finds each place by its bytes; and the
+send thread moves the Journey out and back rather than copy it. Held
+under the millisecond on a quiet machine, as before: the owner's run
+before the landing.
+
 *Repaired again 2026-10-20, under load.* The runtime's loopback node test
 (`running.rs`, `a_node_carries_every_message_…`) went 0.8 to 1.2 ms over
 its load alone and up to 2.8 ms beside the rest of the suite: each
@@ -1611,8 +1628,8 @@ what one holds grows with the payload. Recorded as the owner's rule asks
 | `csv`, `fixed-width` | the text | the record walk takes a slice; `message::record`'s streamed walk (2026-10-22) is what a streamed check reads through |
 | `edi-edifact`, `edi-x12`, `hl7-v2` | the text and its segments | the envelope checks count segments across the interchange; a streamed reader keeps the counts and one segment |
 | `yaml`, `toml`, `avro`, `protobuf`, `fhir`, `openapi`, `asyncapi`, `graphql-schema`, `sql`, `toon`, `regex` | the text or the bytes | each parser reads a slice |
-| path languages (`xpath`, `jsonpath`, `dot`, `json-pointer`, `fhirpath`, `index`, `regex`, `hl7-v2`) | the form they parse, once per Message | a path reads a parsed form shared by every path of the Message; a promotion that stops early (a Content Selector's `stream-prefix`) is a reader of its own |
-| `edi` path | the text, and one segment as a read walks it; a write the whole interchange | a read walks the whole text with its syntax's walk and cuts only the segment it points at, so a malformed interchange is refused as before (2026-11-14); a write edits the tree it writes back |
+| path languages (`xpath`, `jsonpath`, `dot`, `json-pointer`, `fhirpath`, `index`, `regex`) | the form they parse, once per Message | a path reads a parsed form shared by every path of the Message; a promotion that stops early (a Content Selector's `stream-prefix`) is a reader of its own |
+| `edi` and `hl7-v2` paths | the text, and one segment as a read walks it; a write the whole interchange or message | a read walks the whole text by the one segment walk (`message::segment`, 2026-11-15) through its syntax and cuts only the segment it points at, so a malformed one is refused as before (`edi` 2026-11-14, `hl7-v2` 2026-11-15); a write edits the tree it writes back |
 
 Each is bounded by the payload and by nothing else, and each holds it once
 however many gates read it (`Stream::load`, `path::Content`). The order is

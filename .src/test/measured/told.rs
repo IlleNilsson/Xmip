@@ -6,6 +6,9 @@
 //! (`acted.rs`), beside Xmip Storage's own writes, reads and wakes, which
 //! this program cannot measure apart inside the service.
 
+use xmip_core::fastest::FIVE;
+use xmip_core::latency::spread;
+
 use super::*;
 
 /// The most processor time a service nothing tells may use in a second:
@@ -59,20 +62,29 @@ fn a_service_nothing_tells_uses_next_to_no_processor() {
 
     // What its start set going — its Storage node's own work — settles.
     std::thread::sleep(Duration::from_secs(1));
-    let from = processor_time(&child);
-    let began = Instant::now();
-    std::thread::sleep(Duration::from_secs(1));
-    let used = processor_time(&child).saturating_sub(from);
-    let over = began.elapsed();
-    println!("an idle service used {used:?} of processor time in {over:?}");
-    // Held per second of the window read: the second reading is taken as
-    // PowerShell starts, which on a busy machine is seconds past the sleep.
-    let bound = IDLE.mul_f64(over.as_secs_f64().max(1.0));
-    assert!(
-        used < bound,
-        "an idle service used {used:?} of processor time in {over:?}, over {bound:?}"
-    );
+    // Five windows of a second, each per second of the window read: the
+    // second reading is taken as PowerShell starts, which on a busy machine
+    // is seconds past the sleep. A poll is in every window, another
+    // program's turn on the service's processor in some only: the fastest
+    // of five (`xmip_core::latency::spread`). Processor time wakes nothing,
+    // so no plain wake is measured beside it. Until 2026-11-15 one window
+    // was read.
+    let used = (0..FIVE)
+        .map(|_| {
+            let from = processor_time(&child);
+            let began = Instant::now();
+            std::thread::sleep(Duration::from_secs(1));
+            let used = processor_time(&child).saturating_sub(from);
+            used.div_f64(began.elapsed().as_secs_f64().max(1.0))
+        })
+        .collect();
+    let used = spread("an idle service's processor time, a second", used);
     ended(&directory, child, ending, &said);
+    assert!(
+        used.fastest_of_five < IDLE,
+        "an idle service used {:?} of processor time a second, the fastest of five",
+        used.fastest_of_five
+    );
 }
 
 cfg_select! {

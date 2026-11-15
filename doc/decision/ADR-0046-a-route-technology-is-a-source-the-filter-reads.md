@@ -15,6 +15,9 @@
   amendment 2026-11-14)
 - Amended: 2026-11-14 — a received Message is promoted once: its sequences'
   keys and its Publication read what arrival promoted
+- Amended: 2026-11-15 — an `edi` property is walked by the one segment walk
+  in `xmip-core-message`, through its syntax (ADR-0066, amendment
+  2026-11-15)
 - Related: ADR-0013 (the journey model, publication and subscription),
   ADR-0043 (Logic is the method — the same shape of decision for another
   capability), ADR-0044 (a technology shares through its capability),
@@ -391,3 +394,20 @@ Message it reads then.
 Provenance: the coordinator's brief of 2026-11-14 (*promote once and hand
 the promoted properties on … the promotion is computed in one place*),
 under the millisecond rule; the build is the assistant's.
+
+## Amendment, 2026-11-15: an `edi` property is walked by the one segment walk
+
+The amendment of 2026-11-14 stands, with one walk under it: each
+`content:edi:` property walks the interchange by the Foundation's one
+segment walk, `message::segment` in `xmip-core-message`, which the EDIFACT
+or X12 syntax hands its delimiters (`Interchange::walk`), where until now
+each contract technology walked the interchange by a walk of its own
+(ADR-0066, amendment 2026-11-15, which holds the figures). It still cuts only
+the segment it points at and reaches the end, so a malformed interchange is
+refused wherever it is malformed, in the walk's words: `a segment without
+its terminator` where it said `the last segment has no terminator`, `no
+segment at all` where it said `no segment`.
+
+Provenance: the coordinator's brief of 2026-11-15, under the placement
+refactor the owner ordered on 2026-11-13 (*Do we have all code in the
+modules, repos that we should*); the drafting is the assistant's.
