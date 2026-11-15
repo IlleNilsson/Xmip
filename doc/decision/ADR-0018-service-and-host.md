@@ -2441,6 +2441,51 @@ the 2026-11-14 tree, and with the writer keeping nothing), repaired:
   late kept a count already passed; the later read is kept
   (`send_step::figures`).
 
+Found the same way after the landing:
+
+- **A scan took for a moment what its node had settled after its read.**
+  A scan whose read of the queue came before a pass's hand-on landed found
+  the Message, once the pass was settled, neither failed nor sent here,
+  took it and held a claim on it while it read it under that claim: an
+  operator's act on a failed Message in that moment was refused as claimed
+  by another (`message_act`), and another node could not claim a Message
+  waiting for its retry (`send`, *a retry waiting for its backoff*). A
+  scan now takes nothing this node settled after its read began. The send
+  step keeps each settle of a queue, and when, while a read of that queue
+  begun before it is under way — a scan of it, a page a wake brought of
+  it, or the watch's wait, whose answer the Storage node read no earlier
+  than the wait was asked — and lets it go once none is: what it keeps of
+  a queue is what it settles of it within one wait of the watch, at most
+  `[tuning] send_scan`, and the scan that reads past it. A scan reading a
+  wake's page tells each entry apart from what was settled since that wait
+  was asked; only a page read before a settle no longer kept is read again
+  (`send_step::settles`). Nothing waits for the moment, for there is none.
+  Kept first only while a scan was in flight, it refused the page of every
+  Message sent while the next was published, whose wait was asked before
+  the first settled, and read the queue again after each wake: the next
+  landing's timing program found it (`woken`, 2.7 ms at the fastest of
+  five, where a millisecond is the bound).
+- **Every test that serves a Receive Location raises its stop however it
+  ends**, its wait for the stop bounded by the test's patience
+  (`stopped::until_stopped`; `untold`, `turned_away`, `drained`), and the
+  paced test's wait for its first receive is bounded likewise (`paced`).
+- **A Work Process's turn was counted at its advance, not its place.** A
+  backlog in one Work Process holds back another's first turn by one
+  share at most, and it did: the turn had its place in the first round,
+  the ninth handed to the pool of sixteen. The test read the order turns
+  reached their flow, after three Storage asks each, and a thread stalled
+  in them on a loaded machine was passed by two shares more. Each turn now
+  waits at a gate once it reaches its flow, so none ends and none passes
+  another while the order is read, its bound sixteen as before
+  (`work_bounded`, *a backlog in one Work Process*).
+- **A test that failed waited for good instead.** A test of what the
+  carries hold stopped its Locations only once their backlogs were taken;
+  its wait, past its patience on a loaded machine, panicked, and it then
+  waited on Locations still serving, and the test that started it on it,
+  two and a half hours. The stop is raised however the wait ends, saying
+  what was left, and a test run in a process of its own is ended and fails
+  past a minute (`roomed`, `bounded::alone`).
+
 Built 2026-11-15, the assistant's; the root's `carried.rs`, the runtime's
 `running.rs` and persist's timing program are timed on a quiet machine
 before the landing.
