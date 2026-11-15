@@ -29,7 +29,8 @@ function Start-XmipDetachedShell {
             output goes to -Log and its errors beside it, with the extension
             .err. What it starts audits where the tooling does (ADR-0062):
             the audit's directory is set for this session first, and the
-            process inherits it.
+            process inherits it, as it does the folder of local endpoints on
+            Linux and macOS (Initialize-XmipRuntimeDirectory).
 
         .PARAMETER Script
             What the pwsh runs.
@@ -65,6 +66,7 @@ function Start-XmipDetachedShell {
     }
 
     Initialize-XmipAudit
+    Initialize-XmipRuntimeDirectory
 
     return Start-Process @launch
 }

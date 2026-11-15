@@ -1188,6 +1188,10 @@ and over a millisecond beyond load is a defect.
   there. The runtime's node test and its eight senders failed there by
   about 3 ms, a reset or a close alike, so not this amendment's doing; and
   the deadline test needs `/run/xmip`, which the guest does not have.
+  Answered 2026-11-15 (ADR-0014, amendment 2026-11-15): a run no service
+  manager started names its folder with `XMIP_RUNTIME_DIRECTORY`, and with
+  `$XDG_RUNTIME_DIR/xmip` the deadline test and every plane test pass in the
+  guest as the user, without root.
 
 Measured (2026-10-21), the full runtime suite, its three test programs at
 once, the loopback connections waiting to close

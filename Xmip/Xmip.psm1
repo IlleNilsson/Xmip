@@ -40,6 +40,7 @@ Set-StrictMode -Version Latest
     'maturity'
     'dependency'
     'primaryLanguage'
+    'standard'
 )
 
 [string[]] $script:XmipMaturity = @(

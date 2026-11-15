@@ -1614,3 +1614,124 @@ four workers' builds.
 Provenance: the owner's decisions of 2026-10-13 and 2026-11-12; the table's
 columns, the wire's numbers, the one taker and the status of *asked* are
 the assistant's, decided while building.
+
+## Amendment, 2026-11-15: a folder per node, and the folder a run outside the service manager names
+
+**Amends the amendment of 2026-10-13, *the owner's answers*, where it
+placed the local endpoint: *a name may change, the folder may not*.**
+Decided by the owner, 2026-11-15, two things:
+
+1. `XMIP_RUNTIME_DIRECTORY` may name another folder for a run no service
+   manager started: a shell, the tests, the WSL guest. A deployment keeps
+   `/run/xmip` on Linux and `/var/run/xmip` on macOS. Nothing falls back on
+   its own.
+2. A folder per node, so two nodes under different accounts
+   (`XMIP_ACCOUNT`) on one machine no longer take each other's socket (open
+   problem 70, found the day before). `/run/xmip` stays the root-owned
+   parent; each node gets its own folder beneath it, owned by its account,
+   and its socket moves into that folder.
+
+Decided while building, the same day, and built:
+
+- **The place** is `<folder>/<name>/<name>.sock`: the socket's name stays
+  what it was, and only the node's folder is added, named as the endpoint
+  is, whole, so `xmip-node1` is `/run/xmip/xmip-node1/xmip-node1.sock` and
+  `[operate] local = "orders"` is `/run/xmip/orders/orders.sock`; nothing
+  reads meaning from the name (`plane::local::own_folder`). Windows is
+  unchanged: the pipe namespace, and no node's folder.
+- **A socket's path the system has no room for is refused**, by the node
+  binding and the surface connecting alike, before either touches the
+  socket, in words naming the path, its bytes and the room: a Unix domain
+  socket's path holds at most 107 bytes on Linux and 103 on macOS
+  (`sun_path`, 108 and 104 with its ending zero); the standard library's
+  own refusal, *path must be shorter than SUN_LEN*, names neither. The
+  folder repeats the name, so the place costs its length twice.
+- **The variable names the parent**, the folder that holds the node
+  folders, so a surface finds any node by its name alone, through the one
+  rule the node binds by and every surface connects by
+  (`plane::local::place`). It is read on Unix alone, once a process
+  (`plane::local::folder`); unset, the system's folder; empty, relative or
+  not UTF-8, refused in words naming it. Not the Cluster TOML: a surface
+  must find the folder without the node's configuration, as it finds
+  `XMIP_AUDIT_DIRECTORY` and `XMIP_PROCESS_DIRECTORY`. Not
+  `$XDG_RUNTIME_DIR` on its own: the node would choose by who runs it, and a
+  surface in another session would look elsewhere.
+- **Both levels are guarded** as the node binds
+  (`plane::local::folders::guarded`): the folder of local endpoints is the
+  superuser's or the node's account's, the node's folder the node's
+  account's, and no one else may write either. An absent one is refused in
+  words naming the variable.
+- **systemd.** The unit `registration.rs` writes says
+  `RuntimeDirectory=xmip/<name>`, the endpoint the node will bind, placed by
+  the same rule (`plane::local::own_folder`), with
+  `RuntimeDirectoryMode=0755` and `RuntimeDirectoryPreserve=yes` as before.
+  Which endpoint is one rule too, `registration::local_endpoint`: the
+  running node binds by it (`Running::local_endpoint`), and `xmip-service
+  --install` and `--definition` hand it the node's configuration as it is
+  then (`ServiceDefinition::serving_at`), so a custom `[operate] local` is
+  the unit's folder. One changed after install is the unit's when the node
+  is installed again, as the package's postinstall does on an upgrade;
+  until then the node refuses at start, naming the folder it found absent.
+  A Host Service binds no endpoint and is given no folder. systemd.exec,
+  systemd 262, read
+  2026-11-15: *"Except in case of ConfigurationDirectory=, the innermost
+  specified directories will be owned by the user and group specified in
+  User= and Group=."* Of `RuntimeDirectory=foo/bar baz`: *"the service
+  manager creates /run/foo (if it does not exist), /run/foo/bar, and
+  /run/baz. The directories /run/foo/bar and /run/baz except /run/foo are
+  owned by the user and group specified in User= and Group="*. So
+  `/run/xmip` is the service manager's, root's, and the hand-over the
+  survey found — *"all files and directories below the specified
+  directories as well as the directories themselves will have their file
+  ownership recursively changed"* — reaches the node's own folder alone.
+  **macOS.** The launchd daemon `xmip-<node>.run` runs `mkdir -p -m 0755
+  /var/run/xmip/<name>` and, where the node runs as an account, `chown`s
+  that folder alone (`registration::launchd_run_directory`, which moved with
+  `launchd_plist` to `registration/launchd.rs`, beside `windows_scm.rs`).
+- **A node started under the variable** makes the folder it names and its
+  own folder in it where they are absent, each its account's and `0755`,
+  and keeps them when it stops, as `RuntimeDirectoryPreserve=yes` keeps the
+  service manager's (`plane::local::folders::readied`). It never makes the
+  system's folder, which is the service manager's.
+- **Who sets the variable** is whatever starts a node outside the service
+  manager. The estate's tooling sets it for its session unless it names
+  one, `$XDG_RUNTIME_DIR/xmip` on Linux and `$TMPDIR/xmip` on macOS
+  (`Initialize-XmipRuntimeDirectory`), wherever it sets the audit's
+  directory — every `Start-Xmip*` that starts a process, `Start-XmipTest`
+  and the Essentials' runs among them — and before every cargo and dotnet
+  it runs (`Invoke-XmipTool`); Windows is unaffected. A Rust test cannot
+  set it — edition 2024 makes it `unsafe`, which the runtime denies outside
+  `src/ffi/` — so a test run is started with it, and a unit test hands its
+  folder to the rule (`plane::local::place_in`).
+- **The surfaces**, in order. The ABI's `xmip_remote_open_local_v1` keeps
+  its signature; its text says the node's folder and the variable, and its
+  refusal names the folder it holds a name to, or the path and the room
+  where a socket's path is too long. `xmip --local`'s help and
+  `-Local`'s help say where it looks, and so do their READMEs. Both GUIs
+  reach a node through the ABI, so only text changed. The .NET
+  `LocalOperatorTest` wrote `/run/xmip/` itself, a second copy of the rule;
+  it takes the place from the runtime now, from an endpoint served there a
+  moment (`xmip_operate_served_address_v1`).
+
+Proved the same day in the AlmaLinux 10 guest under WSL, as the user
+(uid 1000) and without root, the guest having no `/run/xmip`: with
+`XMIP_RUNTIME_DIRECTORY=$XDG_RUNTIME_DIR/xmip`, the runtime's plane tests
+passed (27, and 70 of the library's under `plane::` and `registration::`,
+the folders' among them) and so did the deadline test, and `xmip-service`
+itself was operated at its local endpoint (the root's three `operate`
+tests); each node made its folder, `/run/user/1000/xmip/<name>`, `0755`
+and the user's, beneath the folder it named, `0755` and the user's. With
+the variable unset `xmip-service` refused in words naming it: *"refused at
+accept-work: [operate] local = "xmip-DS1": /run/xmip: No such file or
+directory (os error 2); the service manager makes it for the node's
+account, and XMIP_RUNTIME_DIRECTORY names another for a node no service
+manager starts"*. Not proved: two nodes installed under two accounts, which needs
+root in the guest; the units' two folders are held by
+`registration`'s `two_nodes_under_two_accounts_are_given_two_folders`.
+
+Provenance: the owner's two decisions of 2026-11-15; the socket's place,
+the folder named as the endpoint is and the refused path its room, the
+variable naming the parent, the guard's two levels, the unit's
+`RuntimeDirectory=xmip/<name>` from the configuration at install, the node
+making its folder and keeping it, and the tooling's folder are the
+assistant's, decided while building.

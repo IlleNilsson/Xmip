@@ -146,6 +146,7 @@ function Start-XmipTestNode {
 
         # What it starts audits where the tooling does (ADR-0062).
         Initialize-XmipAudit
+        Initialize-XmipRuntimeDirectory
         $process = Start-Process @launch
         Write-Verbose "started node $nodeName as pid $($process.Id)"
 

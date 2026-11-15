@@ -227,7 +227,12 @@ its read reached — then **ready**, and only a ready one is promoted: the
 state is kept durable, so one started again part way is still not
 promoted, and it is said in the Storage node's record at `<node>/storage`,
 which every surface shows, Working until it is ready (ADR-0056, amendments
-2026-11-12 and 2026-11-13; the owner's order, 2026-11-12). A primary knows
+2026-11-12 and 2026-11-13; the owner's order, 2026-11-12). A standby
+holding no history's writes — started empty, or a former primary — is
+copying from when it stands by its primary, before it keeps that primary's
+epoch, so one waiting for its first whole copy is never ready, never
+promoted, and never taken for one holding the epoch's Ledger (ADR-0056,
+amendment 2026-11-15). A primary knows
 each standby by the node its certificate names, never by its address, and
 counts what it hands each — writes, the entries of a whole copy, and their
 bytes — and its node draws a link to each standby in the Topology, the

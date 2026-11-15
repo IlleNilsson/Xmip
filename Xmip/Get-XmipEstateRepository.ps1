@@ -38,6 +38,11 @@ function Get-XmipEstateRepository {
             Mount is the path from the repository root, and empty when the
             repository is not composed in this tree.
 
+            Standard is the standard a technology implements, where the
+            manifest declares one, and empty everywhere else: a contract
+            technology may depend on the shape technology of its own
+            standard (ADR-0044, amendment 2026-11-15).
+
         .PARAMETER Root
             The repository root. Defaults to the one this module was imported
             from.
@@ -93,6 +98,7 @@ function Get-XmipEstateRepository {
             Parent     = $parent
             Mount      = $mount
             Mounted    = (-not [string]::IsNullOrEmpty($mount))
+            Standard   = [string] $entry.standard
             Declared   = [string[]] @($entry.dependencies)
             Uses       = [string[]] @(
                 if (-not [string]::IsNullOrEmpty($mount)) {

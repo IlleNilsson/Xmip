@@ -44,6 +44,7 @@ function Start-XmipDemoDesktop {
 
     [string] $folder = Split-Path -Path $Program -Parent
     Initialize-XmipAudit
+    Initialize-XmipRuntimeDirectory
     $process = Start-Process -FilePath $Program -WorkingDirectory $folder -PassThru
     Write-XmipAudit -Action 'Start-XmipDemoDesktop' -Phase Begin -Property @{
         Id       = $process.Id
@@ -82,6 +83,7 @@ function Start-XmipLanguageServer {
     $start.RedirectStandardOutput = $true
     $start.CreateNoWindow = $true
     Initialize-XmipAudit
+    Initialize-XmipRuntimeDirectory
     $server = [System.Diagnostics.Process]::Start($start)
     Write-XmipAudit -Action 'Start-XmipLanguageServer' -Phase Begin -Property @{
         Id      = $server.Id

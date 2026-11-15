@@ -449,7 +449,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 377720 lines of production
+Where each repository mounts and what it holds: 378045 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -474,95 +474,95 @@ hold no source to count.
 ├── module/
 │   ├── core/
 │   │   ├── capability/
-│   │   │   ├── transport                       8826
-│   │   │   │   ├── amqp                        2740
-│   │   │   │   ├── opc-ua                      2513
-│   │   │   │   ├── db2                         2482
-│   │   │   │   ├── nfs                         2177
-│   │   │   │   ├── http                        2172
-│   │   │   │   ├── kafka                       2061
-│   │   │   │   ├── smb                         2026
-│   │   │   │   ├── ibm-mq                      1967
+│   │   │   ├── transport                       8906
+│   │   │   │   ├── amqp                        2731
+│   │   │   │   ├── opc-ua                      2505
+│   │   │   │   ├── db2                         2483
+│   │   │   │   ├── nfs                         2170
+│   │   │   │   ├── http                        2163
+│   │   │   │   ├── kafka                       2054
+│   │   │   │   ├── smb                         2019
+│   │   │   │   ├── ibm-mq                      1959
 │   │   │   │   ├── ftp                         1839
-│   │   │   │   ├── sftp                        1833
-│   │   │   │   ├── mssql                       1652
-│   │   │   │   ├── snmp                        1448
-│   │   │   │   ├── nats-jetstream              1403
-│   │   │   │   ├── oracle                      1359
-│   │   │   │   ├── as4                         1354
-│   │   │   │   ├── dns                         1261
-│   │   │   │   ├── s7comm                      1245
-│   │   │   │   ├── secs-gem                    1213
-│   │   │   │   ├── imap                        1205
-│   │   │   │   ├── mqtt                        1197
-│   │   │   │   ├── canopen                     1153
-│   │   │   │   ├── webdav                      1138
-│   │   │   │   ├── dicom                       1119
-│   │   │   │   ├── iec-61850                   1113
-│   │   │   │   ├── nats                        1058
-│   │   │   │   ├── ethercat                     994
-│   │   │   │   ├── as2                          979
-│   │   │   │   ├── ethernet-ip                  949
-│   │   │   │   ├── aws-sns                      944
-│   │   │   │   ├── m-bus                        931
-│   │   │   │   ├── activemq                     925
-│   │   │   │   ├── hart                         918
-│   │   │   │   ├── j1939                        903
-│   │   │   │   ├── uds                          898
-│   │   │   │   ├── aws-kinesis                  894
-│   │   │   │   ├── bluetooth                    891
-│   │   │   │   ├── redis-streams                889
+│   │   │   │   ├── sftp                        1834
+│   │   │   │   ├── mssql                       1653
+│   │   │   │   ├── snmp                        1440
+│   │   │   │   ├── nats-jetstream              1395
+│   │   │   │   ├── oracle                      1360
+│   │   │   │   ├── as4                         1348
+│   │   │   │   ├── dns                         1254
+│   │   │   │   ├── s7comm                      1238
+│   │   │   │   ├── secs-gem                    1205
+│   │   │   │   ├── imap                        1198
+│   │   │   │   ├── mqtt                        1189
+│   │   │   │   ├── canopen                     1146
+│   │   │   │   ├── webdav                      1130
+│   │   │   │   ├── dicom                       1111
+│   │   │   │   ├── iec-61850                   1105
+│   │   │   │   ├── nats                        1049
+│   │   │   │   ├── ethercat                     987
+│   │   │   │   ├── as2                          971
+│   │   │   │   ├── ethernet-ip                  941
+│   │   │   │   ├── aws-sns                      936
+│   │   │   │   ├── m-bus                        928
+│   │   │   │   ├── activemq                     926
+│   │   │   │   ├── hart                         913
+│   │   │   │   ├── j1939                        900
+│   │   │   │   ├── uds                          899
 │   │   │   │   ├── file                         888
-│   │   │   │   ├── lorawan                      880
-│   │   │   │   ├── pop3                         877
-│   │   │   │   ├── azure-event-grid             868
-│   │   │   │   ├── azure-service-bus            868
-│   │   │   │   ├── google-pub-sub               857
-│   │   │   │   ├── aws-sqs                      849
-│   │   │   │   ├── profinet                     846
-│   │   │   │   ├── cotp                         833
-│   │   │   │   ├── dhcp                         827
-│   │   │   │   ├── wireless-hart                825
-│   │   │   │   ├── thread                       796
-│   │   │   │   ├── zigbee                       789
-│   │   │   │   ├── smtp                         780
-│   │   │   │   ├── peppol                       770
-│   │   │   │   ├── knx                          751
-│   │   │   │   ├── syslog                       735
-│   │   │   │   ├── iec-60870-5-104              731
-│   │   │   │   ├── iso-tp                       727
-│   │   │   │   ├── s3                           717
-│   │   │   │   ├── azure-blob                   703
-│   │   │   │   ├── mdns                         701
-│   │   │   │   ├── websocket                    697
-│   │   │   │   ├── dds                          695
-│   │   │   │   ├── google-cloud-storage         685
+│   │   │   │   ├── aws-kinesis                  886
+│   │   │   │   ├── bluetooth                    886
+│   │   │   │   ├── redis-streams                882
+│   │   │   │   ├── lorawan                      878
+│   │   │   │   ├── pop3                         869
+│   │   │   │   ├── azure-event-grid             860
+│   │   │   │   ├── azure-service-bus            860
+│   │   │   │   ├── google-pub-sub               848
+│   │   │   │   ├── aws-sqs                      842
+│   │   │   │   ├── profinet                     838
+│   │   │   │   ├── cotp                         825
+│   │   │   │   ├── wireless-hart                821
+│   │   │   │   ├── dhcp                         819
+│   │   │   │   ├── thread                       787
+│   │   │   │   ├── zigbee                       783
+│   │   │   │   ├── smtp                         770
+│   │   │   │   ├── peppol                       769
+│   │   │   │   ├── knx                          744
+│   │   │   │   ├── syslog                       727
+│   │   │   │   ├── iso-tp                       723
+│   │   │   │   ├── iec-60870-5-104              722
+│   │   │   │   ├── s3                           709
+│   │   │   │   ├── azure-blob                   695
+│   │   │   │   ├── mdns                         693
+│   │   │   │   ├── dds                          687
+│   │   │   │   ├── websocket                    687
 │   │   │   │   ├── io-link                      680
-│   │   │   │   ├── dnp3                         676
-│   │   │   │   ├── msmq                         673
+│   │   │   │   ├── google-cloud-storage         677
+│   │   │   │   ├── dnp3                         667
+│   │   │   │   ├── msmq                         667
+│   │   │   │   ├── serial                       633
 │   │   │   │   ├── obd-ii                       621
-│   │   │   │   ├── ssdp                         621
-│   │   │   │   ├── modbus                       592
-│   │   │   │   ├── redpanda                     587
-│   │   │   │   ├── coap                         586
-│   │   │   │   ├── azure-event-hubs             540
-│   │   │   │   ├── wireless-m-bus               536
-│   │   │   │   ├── serial                       518
+│   │   │   │   ├── ssdp                         613
+│   │   │   │   ├── modbus                       584
+│   │   │   │   ├── redpanda                     582
+│   │   │   │   ├── coap                         579
+│   │   │   │   ├── azure-event-hubs             532
+│   │   │   │   ├── wireless-m-bus               532
 │   │   │   │   ├── aws                          510
-│   │   │   │   ├── ethernet                     493
+│   │   │   │   ├── ethernet                     485
 │   │   │   │   ├── mysql                        483
-│   │   │   │   ├── can-bus                      478
 │   │   │   │   ├── sqlite                       471
-│   │   │   │   ├── bacnet                       459
-│   │   │   │   ├── mllp                         458
+│   │   │   │   ├── can-bus                      470
 │   │   │   │   ├── azure                        451
-│   │   │   │   ├── rabbitmq                     439
-│   │   │   │   ├── unix-socket                  367
-│   │   │   │   ├── named-pipe                   336
-│   │   │   │   ├── mariadb                      307
-│   │   │   │   ├── tcp                          280
-│   │   │   │   ├── postgresql                   244
-│   │   │   │   └── udp                          219
+│   │   │   │   ├── bacnet                       451
+│   │   │   │   ├── mllp                         449
+│   │   │   │   ├── rabbitmq                     430
+│   │   │   │   ├── unix-socket                  358
+│   │   │   │   ├── named-pipe                   327
+│   │   │   │   ├── mariadb                      308
+│   │   │   │   ├── tcp                          272
+│   │   │   │   ├── postgresql                   245
+│   │   │   │   └── udp                          208
 │   │   │   ├── provision                       3833
 │   │   │   │   ├── internal-ca                 2556
 │   │   │   │   ├── acme                        1222
@@ -642,10 +642,10 @@ hold no source to count.
 │   │   │   │   ├── avro                         802
 │   │   │   │   ├── toon                         716
 │   │   │   │   ├── protobuf                     714
-│   │   │   │   ├── edi-edifact                  707
-│   │   │   │   ├── edi-x12                      682
+│   │   │   │   ├── edi-edifact                  632
 │   │   │   │   ├── sql                          631
-│   │   │   │   ├── hl7-v2                       519
+│   │   │   │   ├── edi-x12                      629
+│   │   │   │   ├── hl7-v2                       515
 │   │   │   │   ├── fixed-width                  512
 │   │   │   │   ├── yaml                         504
 │   │   │   │   ├── schematron                   440
@@ -684,8 +684,8 @@ hold no source to count.
 │   │   │   ├── receive                          178
 │   │   │   ├── demote                           175
 │   │   │   ├── resilience                       166
-│   │   │   │   ├── circuit-breaker              134
-│   │   │   │   ├── rate-limit                   107
+│   │   │   │   ├── circuit-breaker              147
+│   │   │   │   ├── rate-limit                   117
 │   │   │   │   ├── bulkhead                      83
 │   │   │   │   ├── retry                         82
 │   │   │   │   ├── timeout                       74
@@ -712,7 +712,7 @@ hold no source to count.
 │   │   │   ├── ntlm                             806
 │   │   │   └── asn1                             686
 │   │   └── operation/
-│   │       ├── cli                            10146
+│   │       ├── cli                            10148
 │   │       ├── observe                         7949
 │   │       │   ├── otlp                         587
 │   │       │   └── prometheus                   328
@@ -722,7 +722,7 @@ hold no source to count.
 │   │       │       declared, not built 10
 │   │       │       elasticsearch  file  kafka  mssql  opensearch  otlp
 │   │       │       postgres  sqlite  syslog  windows-event-log
-│   │       ├── powershell                      3782  C# 3782 · PowerShell 0
+│   │       ├── powershell                      3786  C# 3786 · PowerShell 0
 │   │       ├── report                          2250
 │   │       │       declared, not built 6
 │   │       │       csv  html  json  pdf  prometheus  sql
@@ -738,20 +738,20 @@ hold no source to count.
 │   │           ├── postgresql                    62
 │   │           └── mssql                         59
 │   ├── foundation/
-│   │   ├── abi                                35673  C# 32839 · Rust 2431 · PowerShell 403
-│   │   ├── core                                4573
+│   │   ├── abi                                35712  C# 32878 · Rust 2431 · PowerShell 403
+│   │   ├── core                                4666
 │   │   ├── message                             2093
 │   │   │   ├── avro                             300
 │   │   │   ├── json                             257
 │   │   │   ├── xml                              180
 │   │   │   ├── protobuf                         173
 │   │   │   ├── csv                              150
+│   │   │   ├── hl7-er7                          121
+│   │   │   ├── edi-edifact                      107
 │   │   │   ├── fixed-width                      105
 │   │   │   ├── multipart                         99
-│   │   │   ├── hl7-er7                           94
+│   │   │   ├── edi-x12                           97
 │   │   │   ├── form-urlencoded                   86
-│   │   │   ├── edi-x12                           78
-│   │   │   ├── edi-edifact                       76
 │   │   │   ├── ubl                               65
 │   │   │   ├── text                              59
 │   │   │   ├── edi-tradacoms                     56
@@ -763,13 +763,13 @@ hold no source to count.
 │   │   ├── stream                               382
 │   │   └── party                                193
 │   └── platform/
-│       ├── runtime                            53801
-│       ├── persist                            21353
+│       ├── runtime                            54104
+│       ├── persist                            21587
 │       │   ├── rocksdb                          333
 │       │   ├── sqlite                           288
 │       │       declared, not built 1
 │       │       postgresql
-│       ├── configure                           8882
+│       ├── configure                           8885
 │       └── cluster                             4851
 └── test/
     └── core/

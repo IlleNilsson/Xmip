@@ -66,9 +66,13 @@ it, and without `[storage] nodes` naming the nodes that do, is refused as
 it starts.
 
 The node's local operate endpoint always starts, named `xmip-<node>`: a
-named pipe on Windows, `/run/xmip/xmip-<node>.sock` on Linux and
-`/var/run/xmip/xmip-<node>.sock` on macOS. In a terminal on Linux or macOS
-that folder must exist and be yours; the service's unit or daemon makes it.
+named pipe on Windows, `/run/xmip/xmip-<node>/xmip-<node>.sock` on Linux and
+`/var/run/xmip/xmip-<node>/xmip-<node>.sock` on macOS, the node's folder made
+for its account by the service's unit or daemon. Started in a terminal on
+Linux or macOS, the node needs `XMIP_RUNTIME_DIRECTORY` to name a folder of
+your own, such as `$XDG_RUNTIME_DIR/xmip`, and makes its folder there; name
+the same in the terminal you reach it from (ADR-0014, amendment
+2026-11-15).
 
 ```powershell
 bin/xmip-service --configuration config/cluster.xmip --node <node> --slice > config/node.xmip

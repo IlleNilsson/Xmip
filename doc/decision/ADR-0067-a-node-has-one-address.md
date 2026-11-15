@@ -100,8 +100,10 @@ assumed.
 Built 2026-10-13 (ADR-0014, amendments of that date): the operate plane also
 listens on the node's own machine, always, at a local endpoint named
 `xmip-<node>` unless `[operate] local` names it — a named pipe on Windows, a
-Unix domain socket in `/run/xmip` on Linux and `/var/run/xmip` on macOS —
-which is no address on the network and needs none of clause 1's.
+Unix domain socket in `/run/xmip` on Linux and `/var/run/xmip` on macOS,
+since 2026-11-15 in the node's own folder there or in the folder
+`XMIP_RUNTIME_DIRECTORY` names (ADR-0014, amendment 2026-11-15) — which is
+no address on the network and needs none of clause 1's.
 
 ## Amendment, 2026-10-13: a listener per purpose, always; an address per purpose where the network has one
 

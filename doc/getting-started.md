@@ -457,8 +457,16 @@ Ctrl+C:
 ./target/debug/xmip-service --configuration .local-work/node/config/node.xmip --console
 ```
 
-On Linux and macOS, the folder of the node's local endpoint must exist and be
-yours first: `/run/xmip` on Linux, `/var/run/xmip` on macOS.
+On Linux and macOS, `/run/xmip` and `/var/run/xmip` are the service
+manager's, so a node you start yourself keeps its local endpoint in the
+folder `XMIP_RUNTIME_DIRECTORY` names, and makes it. Name one first, in this
+Xmip PowerShell Console and in every one you reach the node from
+(ADR-0014, amendment 2026-11-15):
+
+```powershell
+$env:XMIP_RUNTIME_DIRECTORY = "$env:XDG_RUNTIME_DIR/xmip"   # Linux
+$env:XMIP_RUNTIME_DIRECTORY = "$env:TMPDIR/xmip"            # macOS
+```
 
 It says what it starts, and `accepts work` when it is ready. From a second
 Xmip PowerShell Console, in the root of the clone, drop a file in:

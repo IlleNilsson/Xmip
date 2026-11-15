@@ -68,6 +68,7 @@ function Start-XmipEssentialsRollProcess {
 
     # What it starts audits where the tooling does (ADR-0062).
     Initialize-XmipAudit
+    Initialize-XmipRuntimeDirectory
     $process = Start-Process @launch
 
     # The nodes are the cluster file's either way: an operator who named none

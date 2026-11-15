@@ -1257,3 +1257,51 @@ generates now) opened through the C ABI from beside a node's configuration
 and turned — the first test of `xmip_module.h` section 13 over a library a
 node opens. **Not built:** the Essentials' own Work Processes, their units
 and their libraries' paths per environment (the design's next pieces).
+
+## Amendment, 2026-11-15: a standby waiting for its first whole copy is copying
+
+**Provenance.** Found 2026-11-15 by the assistant, reading why a runtime
+test failed once under load
+(`storage::tests::a_primary_hands_its_node_each_standby_it_copies_to_by_name_with_what_it_copied`);
+the build is the assistant's, the same day. Until this day a standby kept
+no bootstrap record until its primary's whole copy began, and a node that
+keeps none is ready, so a standby holding no history's writes — started
+empty, or a former primary, which gave up its positions when promoted —
+was ready from the moment it stood by a primary, and of that primary's
+epoch, which it keeps before it takes a role in it. Promotion ranks the
+ready by epoch, then by what each holds of its history, and a former
+primary started again says it holds nothing of one. Where the primary
+stopped, or was killed, after a standby stood by it and before the copy
+began, and both were started again, the two stood equal and the first
+listed was promoted: a standby listed first, holding none of the Ledger,
+was promoted, and the primary holding it followed it, copied whole — the
+Ledger wiped.
+
+- **A standby holding no history's writes is copying from when it stands
+  by a primary** (`StorageNode::stand_by`), written, durable, before it
+  keeps that primary's epoch: it is never ready, never promoted and never
+  ranked as holding the epoch's Ledger until its first whole copy is in —
+  copying, catching up, then ready, as the amendment of 2026-11-12 says.
+  One holding a history's writes stands by as before: whatever its
+  primary copies it, it holds one state of that history.
+- **Ready means it holds one state of its primary's Ledger, or it never
+  stood by a primary**: a new cluster's Storage nodes, started empty, are
+  ready, and the first listed is promoted.
+- **Every surface shows it**: such a standby says `copying, not promoted
+  until ready` in its standing and stands Working at `<node>/storage` until
+  its first whole copy is in, as one copying always did, so a standby Fine
+  holds its primary's Ledger.
+- **What it costs**: a former primary waiting for its whole copy is not
+  promoted while copying, so where its primary is then lost for good, what
+  the former primary held is not taken for the Ledger: as with a copy cut
+  short, only a ready Storage node is.
+
+Held by persist's `standby/tests/uncopied.rs`, the acceptance test: an
+empty Storage node listed first stands by the second, of a later epoch and
+holding the Ledger, which stops before the whole copy begins; both started
+again, the second is promoted and the first copied whole from it, every
+Journey read back. With ready as before this day, the first is promoted,
+the second copied whole from it, and a Journey reads as none.
+`standby/tests/handed.rs` holds the Journeys written before a copy is read
+counted among its entries, never as writes; the runtime's `storage` test,
+a Journey written once the standby is ready counted as a write.

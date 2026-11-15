@@ -487,8 +487,11 @@ over gRPC to the node's operate listener, on this machine and another alike
 ([ADR-0014](doc/decision/ADR-0014-operator-surfaces.md), amendment
 2026-10-13): on its own machine at the node's local endpoint (`--local`,
 `-Local`, `Surface = "local"`), which every node serves, `xmip-<node>`
-unless its `[operate] local` names another — a named pipe on Windows,
-`/run/xmip/<name>.sock` on Linux, `/var/run/xmip/<name>.sock` on macOS —
+unless its `[operate] local` names another — a named pipe on Windows, a
+socket in its node's folder elsewhere, named as the endpoint is,
+`/run/xmip/<name>/<name>.sock` on Linux and `/var/run/xmip/<name>/<name>.sock`
+on macOS, or in the folder `XMIP_RUNTIME_DIRECTORY` names for a node no
+service manager started (ADR-0014, amendment 2026-11-15) —
 the caller the user the operating system proves, a call waiting at most
 `[tuning] local_timeout`, two seconds by default; from
 another at its operate address (`--remote`, `-Remote`, `Surface = "remote"`)
@@ -1121,7 +1124,7 @@ Every command that changes state accepts `-WhatIf`. Reporting is the default.
 | `Sync-XmipRepository` | Local working copies: clone, pull, status, branch, push, distribute. |
 | `Build-XmipService` | Build `xmip-service` for a site under `deploy/site`: its target's, roles' and chosen technologies' features, archive targets among its technologies, refused in words where the target cannot have one; `-WhatIf` says the plan and the cargo command; `-Package msi, archive` makes the MSI, its winget manifest and the zip under `.local-work/package` (`deb`, `rpm` and `pkg` are refused: builds are Windows-only for now); `-Remote Desktop, Android, iOS` builds the runtime's remote build instead, this machine's into `.ai-interaction/target-remote`, the Android phone's, ARM64 and x86_64, into `.ai-interaction/target-android`, and the iPhone's, a device's and the simulator's static library joined into `xmip_core_runtime.xcframework` under `.ai-interaction/target-ios`, only on macOS and refused in words elsewhere (the CI's `phone-ios` job builds it, and `Xmip.Operations` for the iOS simulator: not signed, not run); `-Remote Android -Package apk -Address <host:port>` then makes the phone app itself, following that node, `.local-work/package/<version>/xmip-operations-<version>-android.apk`, signed with the Android SDK's debug key, to side-load. |
 | `Get-XmipManifest`, `Test-XmipManifest` | Read and validate `architecture.toml`. |
-| `Get-XmipEstateRepository`, `New-XmipEstateMap` | Every declared repository with where it sits and whether it is composed, and the generated [`estate-map.md`](doc/architecture/estate-map.md) over them — a tree of the whole estate with the lines each repository holds; `-Format Html` builds the same map as a page with the dependency graph the build draws. `Uses` and `Declared` on each repository say what its build uses and what the manifest says it uses. |
+| `Get-XmipEstateRepository`, `New-XmipEstateMap` | Every declared repository with where it sits and whether it is composed, and the generated [`estate-map.md`](doc/architecture/estate-map.md) over them — a tree of the whole estate with the lines each repository holds; `-Format Html` builds the same map as a page with the dependency graph the build draws. `Uses` and `Declared` on each repository say what its build uses and what the manifest says it uses; `Standard` the standard a technology declares, by which a contract technology may depend on the shape of its own (ADR-0044, amendment 2026-11-15). |
 | `Get-XmipSourceFile` | Every source file the estate holds, with production and test lines counted apart. What the map weighs its tree with and what `test/Rust.Style.Test.ps1` gates file length with, so the two cannot disagree. |
 | `Get-XmipStatus` | The whole estate at once: dirty, ahead, behind, and new modules. |
 | `Publish-XmipChange` | Test and land a change, dependency order, modules first. Aliased `xgit` and `xmip-git`. |
@@ -1152,7 +1155,12 @@ the operator module (ADR-0062): every start and stop of a test or a web
 monitor, every refusal and failure of those commands, and a landing that
 stopped or finished, into `.local-work/audit/audit.toml` — the directory it
 sets `XMIP_AUDIT_DIRECTORY` to for the session when nothing else did, so
-everything it starts records there too. `Start-XmipOperationWeb` keeps the
+everything it starts records there too. On Linux and macOS it sets
+`XMIP_RUNTIME_DIRECTORY` the same way, to `xmip` under `$XDG_RUNTIME_DIR` or
+`$TMPDIR`, before it starts a process or runs cargo or dotnet, so the nodes
+it starts, which no service manager started, and the surfaces beside them
+find one another's local endpoints (ADR-0014, amendment 2026-11-15).
+`Start-XmipOperationWeb` keeps the
 host's console in `.local-work/web`, as a roll's is kept beside the roll.
 It binds plain http on loopback only, and says so in the host's log and
 audit; any other address is `https://` with `-Certificate` and `-PrivateKey`,

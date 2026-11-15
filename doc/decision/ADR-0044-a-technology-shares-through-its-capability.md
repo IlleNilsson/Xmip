@@ -597,3 +597,57 @@ are each written with, where each had a helper of its own.
 
 Provenance: found by the assistant while moving the clock readings and
 ordered by the coordinator, 2026-11-14.
+
+## Amendment, 2026-11-15: a contract reads its standard's head by the shape of the same standard
+
+The header readers of EDIFACT (`UNA`), X12 (`ISA`) and HL7 v2 (`MSH`)
+each stood twice, in the shape technology and in the contract technology
+of the same standard, in different words, and the two had disagreed on a
+space advised as UNA4. The owner, 2026-11-15, approved the design that
+stands now:
+
+- **Each syntax's header reader lives once, in its shape technology**:
+  `edi-edifact`'s `advice` (the `UNA`'s six service characters, else the
+  default set, and the `UNA` itself), `edi-x12`'s `delimiters` (the
+  separators at their fixed positions) and `hl7-er7`'s `encoding` (MSH-1
+  and MSH-2's four), with `delimiters` for what ER7 is cut by.
+- **The contract technology of the same standard depends on that shape and
+  calls the reader**; its own copy is deleted: EDIFACT's
+  `ServiceCharacters`, which kept a decimal mark nothing read, X12's
+  `Separators` and second `ISA_LENGTH`, and HL7 v2's own reading of the
+  `MSH`. The EDIFACT and X12 contracts read their service characters as the
+  walk's `Delimiters`; the HL7 v2 contract keeps its `Encoding`, the five
+  characters as text escapes them, made from what the shape read.
+- **The manifest declares the dependency, contract to shape of the same
+  standard only.** Both technologies declare the `standard` they implement
+  (`UN/EDIFACT`, `ASC X12`, `HL7 v2`), and `test/Layer.Test.ps1` holds the
+  rule: a Capability's or Foundation module's technology depends on another
+  module's technology only as a contract technology on the shape
+  technology of its own standard, or on a Library's. A sibling, of the same
+  parent, stays clause 1's declared carrier; an Operation module's
+  technologies — the archive's on the transports (clause 4), observe's,
+  the editor's, the Essentials — are not held by it. The eight such edges
+  standing that day are listed in the test, each open problem 32, wave C,
+  and the list may only shrink. This is a concrete dependency of the kind
+  ADR-0068 clause 1 refuses between parts; the owner chose it for the one
+  reader of a standard's head.
+- **A space advised as UNA4 is no release character**, in the shape and the
+  contract alike, as ISO 9735 syntax 3 says (*if not used, insert space
+  character*), because there is one reader: a value holding a service
+  character is refused on write.
+
+What the one reader holds is what the two held together: every service
+character and separator ASCII, because the walk reads bytes and a contract
+cuts UTF-8 text where they stand; X12's element separator and terminator
+neither one another nor a letter or digit; none of MSH-2's four the field
+separator. The shapes now refuse those heads too, and the contracts and
+the `edi` and `hl7-v2` paths refuse a head in the shape's words (`a UNA
+shorter than its nine characters`, `an ISA without distinct separators`,
+`no MSH at the head`), the HL7 v2 contract still placing the issue at
+`MSH`, `MSH-1` or `MSH-2` by the byte the shape names. What each contract
+did before the head is its own still: X12's passes over whitespace before
+the `ISA`, and HL7 v2's lets the last segment end with the text.
+
+Provenance: the design is the owner's, 2026-11-15; the readers' names and
+results, the joined checks and their words, the `standard` key and the
+test's reach are the assistant's, for the owner to overrule.

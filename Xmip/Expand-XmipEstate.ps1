@@ -171,7 +171,11 @@ function New-XmipRepositoryEntry {
         [string] $Mount = '',
 
         [Parameter(Mandatory = $false)]
-        [bool] $Optional = $false
+        [bool] $Optional = $false,
+
+        [Parameter(Mandatory = $false)]
+        [AllowEmptyString()]
+        [string] $Standard = ''
     )
 
     [hashtable] $crateArguments = @{
@@ -190,6 +194,7 @@ function New-XmipRepositoryEntry {
         dependencies        = @($Dependencies)
         mount               = $Mount
         optional            = $Optional
+        standard            = $Standard
         primaryLanguage     = $Language
         primaryCrate        = New-XmipCrateDescriptor @crateArguments
         github              = New-XmipGitHubDescriptor -Default $Default -Topics $Topics
@@ -277,6 +282,10 @@ function Resolve-XmipNodeFacts {
         # and optional marks a repository the estate builds without. ADR-0036.
         Mount        = [string](Get-TomlValue -Node $Node -Name 'mount' -Default '')
         Optional     = [bool](Get-TomlValue -Node $Node -Name 'optional' -Default $false)
+        # The standard a technology implements, where two technologies of one
+        # standard meet: a contract may depend on the shape of its own
+        # (ADR-0044, amendment 2026-11-15; test/Layer.Test.ps1).
+        Standard     = [string](Get-TomlValue -Node $Node -Name 'standard' -Default '')
     }
 }
 
@@ -355,6 +364,7 @@ function Expand-XmipEstate {
             Topics       = $facts.Topics
             Mount        = $facts.Mount
             Optional     = $facts.Optional
+            Standard     = $facts.Standard
             Default      = $Default
             Crate        = $Crate
         }

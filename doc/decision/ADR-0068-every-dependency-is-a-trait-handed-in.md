@@ -125,3 +125,46 @@ Library reads no clock: `codec::civil` converts, and `CivilTime::from_unix`
 takes the seconds a caller read. This covers the wall clock alone: no
 reading of the monotonic clock, `Instant::now()`, was moved, and none is
 held by the test. The assistant's, 2026-11-14.
+
+## Amendment, 2026-11-15: the monotonic clock
+
+**A decision counts its span on the monotonic reading of the Clock it was
+handed; a wait the operating system makes, and a span only reported, read
+std's `Instant`.** Three kinds, told apart by one question each:
+
+1. **It branches on the reading, or a test would assert its value: the
+   Clock** (`Clock::monotonic_nanos` of the Clock handed in, clause 2). The
+   part keeps each moment as that reading, adds a span with
+   `xcore::clock::nanos` and reads the span between two readings with
+   `xcore::clock::between`; where it must wait for what is due, it waits
+   real time through `xcore::wake` and reads the Clock again.
+2. **The operating system waits on it: `Instant`**, through `xcore::wake`
+   where it is a timed wait. A stepped clock cannot shorten a socket's
+   read, a handshake or a thread's end; a test controls these by the span
+   it configures (`[tuning]`, or the call's own bound).
+3. **It is only reported as how long work took: `Instant`.** Neither a
+   test's control nor a virtual call on a path that only measures is
+   wanted there.
+
+**One test clock, `xcore::clock::Stepped`**, under xcore's `test-support`
+(never in a node): wall and monotonic readings a test steps, held in
+atomics so a node's threads read it as the test steps it. A test hands it
+in, steps it past the edge of the span under test, and sleeps for nothing.
+It replaces the test clocks each test wrote for itself: xcore's own and Xmip
+Storage's four (`fixture/crowd.rs`, `storage/columns.rs`,
+`storage/embedded.rs`, `storage/monotonic_clock.rs`); the runtime's move
+with its decisions. Xmip Storage's own span-to-nanoseconds rule,
+`claim::lease_nanos`, is deleted for `xcore::clock::nanos`.
+
+Moved onto the Clock on 2026-11-15: the circuit breaker's open period and
+the rate limit's refill (`CircuitBreaker::new` and `RateLimit::new` take the
+Clock), Xmip Storage's client passing over a Storage node that did not
+answer (`StorageClient::with_clock`), and a standby syncing what it copied
+(`StorageNode::with_clock`, whose client and whose primary, once promoted,
+tell time by the same Clock). `StorageClient::new` and `StorageNode::new`
+hand in `SystemClock`, as `Embedded::open` does. The runtime's, the
+transports', the cluster's sync plane's and `net`'s decisions read
+`Instant` still. `test/Clock.Test.ps1` holds each file moved at no
+`Instant` at all, and counts every other production `Instant::now` reading
+but `SystemClock`'s origin: 148 on 2026-11-15, a ceiling that may fall as
+decisions move and may not rise. The assistant's, 2026-11-15.
