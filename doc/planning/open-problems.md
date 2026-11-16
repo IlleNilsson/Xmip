@@ -407,7 +407,22 @@ own. Option C, a real port behind com0com or a pty, stays open. From
 2026-11-15 the port is handed in (`serial::Opens`) and the loopback line is a
 port of that kind, so the port's own paths — kept open between a write and a
 read, each read's wait set on it, a read that times out with nothing being
-nothing arrived — are what the tests drive; the driver is still C's to prove.*
+nothing arrived — are what the tests drive; the driver is still C's to prove.
+The same day the bus became a bus on a real port too: a device has one port
+per node, shared by every Location naming its path (`transport::Sharing`,
+handed in by the node), each exchange holding it from transmit through
+receive, so several meters on one multi-drop line are each a Location
+(ADR-0064, amendment 2026-11-15). The two left open by it were decided by
+the owner the same day: M-Bus keeps its frame count bit per meter, with the
+port, so two Locations on one meter alternate one bit; and a receive holds
+the port only while a frame arrives, waiting for its first byte on the
+port's watch holding nothing — `poll` on Unix, `WaitCommEvent` on Windows,
+where the serial technology now opens the port itself for overlapped I/O,
+as `serialport` opens it for synchronous I/O, on which a wait held every
+write, each operation waited for by net's one overlapped wait. The Unix path
+is proved on a pseudo-terminal pair in the Linux guest; the calls to Windows
+are proved to compile and to refuse a port no box has, and on a device they
+are C's to prove too.*
 
 *The same day the CAN bus followed, into the SDK as `sdk::broadcast`, a
 medium every node hears: every other node gets each frame, the sender does

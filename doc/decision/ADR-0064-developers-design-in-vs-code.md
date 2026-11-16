@@ -718,8 +718,99 @@ off by the wait is an error, as a line says nothing arrived only when
 nothing did. The loopback line is a port of the same kind, so every
 loopback test reads and writes as a device is read and written.
 
+One more, found the same day and answered by the owner's decision: the
+port kept open was each Location's own, and the operating system opens a
+serial port for one handle at a time — exclusively on Windows, and as
+`serialport` opens it everywhere else — so several M-Bus meters on one
+multi-drop bus, or a Send and a Receive Location on one port, left every
+Location but the first refused, a retryable "opening COM3" every cycle.
+What stands: **one port per device path per node, shared by every
+Location naming it.** What the Locations of a node share is handed in as a
+trait (`transport::Sharing`, ADR-0068), never a process-wide global: the
+runtime makes one for each node it starts, `transport::Shared`, and hands
+it to every transport it builds there once, after `on_node`
+(`Configured::shared_by`), as it hands each the node's pins; a test hands
+in its own. A serial line takes from it the port of the device its
+Location names, by the path, opened through what the first line naming it
+opens with; a line built outside a node keeps one of its own. M-Bus hands
+it on to its line (`transport::line::Line::shared_on`), IO-Link to its
+port. **Each exchange holds the port from its transmit through its
+receive** (`serial::Exchange`; `Line::exchange` for a protocol on a line),
+so one Location's answer never reaches another: an M-Bus telegram and its
+answer, an IO-Link ISDU whole, as another Location's M-sequence inside it
+would reach the device as part of it. A port that fails is closed for
+every Location on the device and opened again once, by the next exchange
+of any of them; Locations on two devices hold two ports and never wait on
+each other. Each exchange runs at its own Location's speed, set on the
+port where another Location left it at another (`serial::Port::speed`), as
+meters on one M-Bus line may each speak their own.
+
+Two left open by it, decided by the owner the same day. A Receive
+Location's read held the shared port for its whole wait, 5 s by default,
+so a Send Location on the same port waited up to that long: a breach of
+the millisecond rule (`CONTRIBUTING.md`). What stands: **a receive holds
+the port only while a frame arrives.** It looks at the port without
+waiting; until bytes are there it waits on the port's watch
+(`serial::Watch`, which the open port gives, `Port::watch`) holding
+nothing, and once they are there it takes the port and holds it until the
+frame is whole or cut. A writer waits at most for a frame in flight; an
+exchange still holds the port from its transmit through its receive. The
+watch is the platform's own wait for a readable port, never a read, a
+sleep or a polling interval: `poll` on Unix, on a copy of `serialport`'s
+descriptor (`transport::socket::ready`); on Windows `WaitCommEvent` for
+`EV_RXCHAR`, overlapped, as Microsoft says it should be "so the other
+threads of the process can perform I/O operations during the wait"
+(*Monitoring Communications Events*). `serialport` (4.10.1, its latest) opens a COM port for
+synchronous I/O, on which Windows runs one call at a time, so a wait on it
+held every write, and it offers no wait that reads nothing; so on Windows
+the serial technology opens the port itself through the system's calls,
+for overlapped I/O and set as `serialport` sets it — eight data bits, no
+parity, one stop bit, no flow control — in one file under the estate's
+unsafe rule (`serial/src/system.rs`; ADR-0050, amendment 2026-09-25), and
+`serialport` is Unix's alone. Each read, write and wait for a first byte on
+it is waited for by the estate's one overlapped wait,
+`net::system::overlapped::waited`, which the named pipe and the TCP
+connect take too, public for it and ended early as well by a stop the
+port's close sets; the serial file keeps only what is the port's own: its
+open, its settings and the starts of its operations. One receive waits on
+a port's watch at a time, as Windows takes one `WaitCommEvent` on a
+port; another waits for what that one sees. A port closed while a receive
+waits on its watch ends
+that wait, and the close waits for it, so nothing holds the device open
+once the port is closed. Driven on a bench port handed in through
+`serial::Opens` (`serial::bench`), as no device is on the build machine;
+and on Unix on a real descriptor, a pseudo-terminal pair in the Linux
+guest (`serial`'s `shared_port/pseudo_terminal.rs`): a send goes while a
+receive waits idle, an idle receive wakes as bytes come, and a close ends
+a waiting receive and lets the terminal go. The calls to Windows are proved
+on a device by open problem 24's option C.
+
+And M-Bus's frame count bit (EN 13757-2) was each Location's, one bit for
+every meter it called, so two Locations reaching one meter toggled it
+apart and the meter took the second's telegram for a repeat of the
+first's. What stands: **the bit is the meter's**, by its primary address,
+the one address the technology calls a meter by: kept with the port on a
+node, under its path in what the node's Locations share, so every Location
+reaching a meter alternates one bit; held across each call; toggled once
+the meter answered; and set for the meter's next call by its reset
+(`SND_NKE`), as before. On a line nothing is shared on, the bits are the
+Location's own. That the node hands every Location the one sharing is
+proved by the runtime's running tests: two serial Locations naming one
+device on a node go through its one port (`linked::built_on`, the rest of
+a Location's build, for a test that builds the transport on a bench).
+
 Provenance: the assistant's, 2026-11-15, carrying the placement review;
-no decision of the owner's was needed. The names `configured::timeout`,
-`TIMEOUT`, `TimeoutKept`, `timeout_kept`, the four technologies'
-`DEFAULT_TIMEOUT`, and `serial::Opens`, `Port` and `SystemPorts` are the
+no decision of the owner's was needed until the last finding, for which the
+owner decided, the same day: one port per device path per node, shared by
+every Location naming it; each exchange holding the port's lock from
+transmit through receive; the sharing handed in by the node as a trait,
+no process-wide global; then a receive holding a shared port only while a
+frame arrives, its idle wait for the first byte without the port's lock
+and with no sleep or polling interval; and M-Bus's frame count bit kept
+per meter on the shared port, what a reset does kept. The names
+`configured::timeout`, `TIMEOUT`, `TimeoutKept`, `timeout_kept`, the four
+technologies' `DEFAULT_TIMEOUT`, `serial::Opens`, `Port`, `Port::speed`,
+`Port::watch`, `Watch`, `SystemPorts`, `Exchange` and `bench`,
+`transport::Sharing`, `Shared`, `Configured::shared_by`, `Line::exchange`,
+`Line::shared_on` and the runtime's `linked::built_on` are the
 assistant's, for the owner to overrule.

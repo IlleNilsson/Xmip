@@ -449,7 +449,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 378045 lines of production
+Where each repository mounts and what it holds: 381536 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -474,37 +474,38 @@ hold no source to count.
 ├── module/
 │   ├── core/
 │   │   ├── capability/
-│   │   │   ├── transport                       8906
+│   │   │   ├── transport                       9100
 │   │   │   │   ├── amqp                        2731
 │   │   │   │   ├── opc-ua                      2505
 │   │   │   │   ├── db2                         2483
+│   │   │   │   ├── http                        2216
 │   │   │   │   ├── nfs                         2170
-│   │   │   │   ├── http                        2163
 │   │   │   │   ├── kafka                       2054
 │   │   │   │   ├── smb                         2019
 │   │   │   │   ├── ibm-mq                      1959
 │   │   │   │   ├── ftp                         1839
 │   │   │   │   ├── sftp                        1834
+│   │   │   │   ├── serial                      1736
 │   │   │   │   ├── mssql                       1653
 │   │   │   │   ├── snmp                        1440
 │   │   │   │   ├── nats-jetstream              1395
 │   │   │   │   ├── oracle                      1360
-│   │   │   │   ├── as4                         1348
-│   │   │   │   ├── dns                         1254
+│   │   │   │   ├── as4                         1356
+│   │   │   │   ├── dns                         1260
 │   │   │   │   ├── s7comm                      1238
-│   │   │   │   ├── secs-gem                    1205
+│   │   │   │   ├── secs-gem                    1211
 │   │   │   │   ├── imap                        1198
 │   │   │   │   ├── mqtt                        1189
 │   │   │   │   ├── canopen                     1146
 │   │   │   │   ├── webdav                      1130
-│   │   │   │   ├── dicom                       1111
+│   │   │   │   ├── dicom                       1117
 │   │   │   │   ├── iec-61850                   1105
 │   │   │   │   ├── nats                        1049
+│   │   │   │   ├── m-bus                        989
 │   │   │   │   ├── ethercat                     987
-│   │   │   │   ├── as2                          971
+│   │   │   │   ├── as2                          979
+│   │   │   │   ├── aws-sns                      944
 │   │   │   │   ├── ethernet-ip                  941
-│   │   │   │   ├── aws-sns                      936
-│   │   │   │   ├── m-bus                        928
 │   │   │   │   ├── activemq                     926
 │   │   │   │   ├── hart                         913
 │   │   │   │   ├── j1939                        900
@@ -515,35 +516,34 @@ hold no source to count.
 │   │   │   │   ├── redis-streams                882
 │   │   │   │   ├── lorawan                      878
 │   │   │   │   ├── pop3                         869
-│   │   │   │   ├── azure-event-grid             860
+│   │   │   │   ├── azure-event-grid             868
 │   │   │   │   ├── azure-service-bus            860
 │   │   │   │   ├── google-pub-sub               848
 │   │   │   │   ├── aws-sqs                      842
 │   │   │   │   ├── profinet                     838
-│   │   │   │   ├── cotp                         825
+│   │   │   │   ├── cotp                         831
 │   │   │   │   ├── wireless-hart                821
 │   │   │   │   ├── dhcp                         819
 │   │   │   │   ├── thread                       787
 │   │   │   │   ├── zigbee                       783
-│   │   │   │   ├── smtp                         770
-│   │   │   │   ├── peppol                       769
+│   │   │   │   ├── peppol                       782
+│   │   │   │   ├── smtp                         776
 │   │   │   │   ├── knx                          744
-│   │   │   │   ├── syslog                       727
+│   │   │   │   ├── syslog                       733
+│   │   │   │   ├── iec-60870-5-104              728
 │   │   │   │   ├── iso-tp                       723
-│   │   │   │   ├── iec-60870-5-104              722
 │   │   │   │   ├── s3                           709
 │   │   │   │   ├── azure-blob                   695
+│   │   │   │   ├── io-link                      693
 │   │   │   │   ├── mdns                         693
+│   │   │   │   ├── websocket                    693
 │   │   │   │   ├── dds                          687
-│   │   │   │   ├── websocket                    687
-│   │   │   │   ├── io-link                      680
 │   │   │   │   ├── google-cloud-storage         677
-│   │   │   │   ├── dnp3                         667
-│   │   │   │   ├── msmq                         667
-│   │   │   │   ├── serial                       633
+│   │   │   │   ├── msmq                         675
+│   │   │   │   ├── dnp3                         673
 │   │   │   │   ├── obd-ii                       621
 │   │   │   │   ├── ssdp                         613
-│   │   │   │   ├── modbus                       584
+│   │   │   │   ├── modbus                       590
 │   │   │   │   ├── redpanda                     582
 │   │   │   │   ├── coap                         579
 │   │   │   │   ├── azure-event-hubs             532
@@ -553,9 +553,9 @@ hold no source to count.
 │   │   │   │   ├── mysql                        483
 │   │   │   │   ├── sqlite                       471
 │   │   │   │   ├── can-bus                      470
+│   │   │   │   ├── mllp                         455
 │   │   │   │   ├── azure                        451
 │   │   │   │   ├── bacnet                       451
-│   │   │   │   ├── mllp                         449
 │   │   │   │   ├── rabbitmq                     430
 │   │   │   │   ├── unix-socket                  358
 │   │   │   │   ├── named-pipe                   327
@@ -680,7 +680,7 @@ hold no source to count.
 │   │   │   │   ├── acl                          147
 │   │   │   │   └── party                        131
 │   │   │   ├── unit                             431
-│   │   │   ├── schedule                         263
+│   │   │   ├── schedule                         264
 │   │   │   ├── receive                          178
 │   │   │   ├── demote                           175
 │   │   │   ├── resilience                       166
@@ -702,7 +702,7 @@ hold no source to count.
 │   │   │           declared, not built 5
 │   │   │           azure-blob  file  gcs  s3  sql
 │   │   ├── library/
-│   │   │   ├── net                             7966
+│   │   │   ├── net                             8124
 │   │   │   ├── codec                           5889
 │   │   │   ├── tls                             4200
 │   │   │   ├── mariadb                         1785
@@ -739,7 +739,7 @@ hold no source to count.
 │   │           └── mssql                         59
 │   ├── foundation/
 │   │   ├── abi                                35712  C# 32878 · Rust 2431 · PowerShell 403
-│   │   ├── core                                4666
+│   │   ├── core                                4677
 │   │   ├── message                             2093
 │   │   │   ├── avro                             300
 │   │   │   ├── json                             257
@@ -763,17 +763,17 @@ hold no source to count.
 │   │   ├── stream                               382
 │   │   └── party                                193
 │   └── platform/
-│       ├── runtime                            54104
-│       ├── persist                            21587
+│       ├── runtime                            55605
+│       ├── persist                            21766
 │       │   ├── rocksdb                          333
 │       │   ├── sqlite                           288
 │       │       declared, not built 1
 │       │       postgresql
 │       ├── configure                           8885
-│       └── cluster                             4851
+│       └── cluster                             4948
 └── test/
     └── core/
-        ├── essentials                         16488
+        ├── essentials                         16489
         └── module                                83
 ```
 

@@ -162,9 +162,62 @@ Clock), Xmip Storage's client passing over a Storage node that did not
 answer (`StorageClient::with_clock`), and a standby syncing what it copied
 (`StorageNode::with_clock`, whose client and whose primary, once promoted,
 tell time by the same Clock). `StorageClient::new` and `StorageNode::new`
-hand in `SystemClock`, as `Embedded::open` does. The runtime's, the
-transports', the cluster's sync plane's and `net`'s decisions read
-`Instant` still. `test/Clock.Test.ps1` holds each file moved at no
-`Instant` at all, and counts every other production `Instant::now` reading
-but `SystemClock`'s origin: 148 on 2026-11-15, a ceiling that may fall as
-decisions move and may not rise. The assistant's, 2026-11-15.
+hand in `SystemClock`, as `Embedded::open` does.
+
+Moved onto the Clock next, the same day:
+
+- **`net`**, a Library, reads no clock (the amendment of 2026-11-14): its
+  watched connection takes a reading closure beside its `ending`
+  (`Watched::new(reading, ending, now)`, `heard` that reading), and an
+  HTTP/2 connection takes one at its handshake (`net::http2::Now`;
+  `Server::handshake`, `Client::handshake`, their `_within` and boxed
+  forms, `serve`, `exchange`), which the frames a span allows are counted
+  on. A caller handed a Clock hands on `xcore::clock::reading(&clock)`.
+- **The cluster's sync plane**: `Joining` carries the node's Clock, which
+  a member's silence is counted on; only the cluster and its tests build
+  one.
+- **The transports' turn deadline**: a transport is handed its node's
+  Clock once, as it is built (`Configured::timed_by`, after `on_node`); a
+  technology serving through `transport::serving::Serving` hands it to its
+  serving wait (`Serving::timed_by`), whose every accepted connection
+  counts its turn on it and lends it to the protocol on it
+  (`Within::clock`: HTTP/2's frames). The http transport hands it to its
+  receives (`Inbound::timed_by`) and to the connections it sends on
+  (`Connections::timed_by`); every technology riding on HTTP that listens
+  hands it on likewise. A connection no serving wait accepted,
+  `http::server`'s one-request path, and the connections of a technology
+  that only sends over `Connections` (the cloud stores and queues,
+  WebDAV, Redpanda) count on `SystemClock`.
+- **The runtime**: the node makes its one Clock as it starts and hands it
+  to its message path, its Locations (`linked::OnNode`), its pickup
+  (`Pickup::timed_by`: a queue read again after `AGAIN`), its work step
+  (`WorkStep::timed_by`: a scan and a timer due) and its revocation
+  list's hour, and a try's span is read on it (`Sends::again` takes the
+  span the try took). A Stream's stall (`StreamShare::timed_by`), the
+  operate plane's nonces (`Fresh::timed_by`) and its HTTP/2 connections,
+  and a surface's line silence and nonces (`Shared::clock`) are counted
+  on a Clock their part holds, `SystemClock` where nothing hands it one
+  yet: the operate listener, a surface.
+- **The send step**: `SendStep::new` takes the node's Clock, hands it to
+  its `StreamShare`, and every decision of the step reads it — a claim's
+  lease (`Departure::until`) and its renewal's round and answer, a
+  retry's due time and a scan's (`schedule::due::Due`, whose moments are
+  the Clock's readings), when a page of a queue was asked and what is
+  due in it, which of a read of a queue and a settle came first
+  (`send_step::settles`), and when a claim's renewal went unanswered,
+  said on the same Clock's wall reading. Its watch on its queues reads
+  the step's Clock for when each wait was asked and answered
+  (`QueueWatch::run` takes it; the work step's too). A wait of the
+  dispatching or of the renewer waits real time through `xcore::wake`,
+  the span between two readings of the Clock; the spans a send's steps
+  only report (`send_step::Steps`) read `Instant`. One decision is an
+  order and no span, and reads no clock at all: whether a read of a queue
+  began before or after a sequence's head moved is told by a count of the
+  moves the step was told of, kept under its lock (`send_step::behind`;
+  ADR-0018, amendment 2026-11-15).
+
+`test/Clock.Test.ps1` holds each file moved at no `Instant` at all, and
+counts every other production `Instant::now` reading but `SystemClock`'s
+origin: 148 on 2026-11-15 before the last four moves, 121 after them, 97
+once the send step's moved, a ceiling that may fall as decisions move and
+may not rise. The assistant's, 2026-11-15.
