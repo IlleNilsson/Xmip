@@ -58,6 +58,13 @@ serde = "1"
 
 [dev-dependencies]
 four = { package = "xmip-core-four", git = "https://example.invalid/four" }
+
+[target.'cfg(windows)'.dependencies]
+five = { package = "xmip-core-five", git = "https://example.invalid/five", optional = true }
+two = { package = "xmip-core-two", git = "https://example.invalid/two" }
+
+[target.'cfg(unix)'.dev-dependencies]
+six = { package = "xmip-core-six", git = "https://example.invalid/six" }
 '@
 
         New-FixtureFile -Path 'module/surface/src/Surface/Surface.csproj' -Text @'
@@ -102,6 +109,14 @@ four = { package = "xmip-core-four", git = "https://example.invalid/four" }
         $uses | Should -Contain 'xmip-core-three' -Because 'unrenamed, it is its key'
         $uses | Should -Not -Contain 'xmip-core-four' -Because 'a dev-dependency tests it'
         $uses | Should -Not -Contain 'serde' -Because 'only the estate is drawn'
+    }
+
+    It "names the estate crates a platform's own [dependencies] name, once each" {
+        [string[]] $uses = @(Get-FixtureUse -Mount 'module/one')
+
+        $uses | Should -Contain 'xmip-core-five' -Because 'a build on Windows is made of it'
+        @($uses | Where-Object { $_ -eq 'xmip-core-two' }).Count | Should -Be 1
+        $uses | Should -Not -Contain 'xmip-core-six' -Because "a platform's dev-dependency tests it"
     }
 
     It 'resolves a .NET project reference to the repository holding the project' {

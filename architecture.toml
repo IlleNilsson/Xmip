@@ -797,7 +797,10 @@ dependency = ["xmip-core-library-codec"]
     specification = "Amazon S3 REST API, Signature Version 4"
     dependency = ["xmip-core-transport-http", "xmip-core-library-codec", "xmip-core-transport-aws", "xmip-core-library-net", "xmip-core"]
     [xmip.core.transport.serial]
-      dependency = ["xmip-core"]
+      # xmip-core-library-net on Windows alone: its one overlapped wait
+      # (`net::system::overlapped`); the manifest has no way to say a
+      # platform, so it is declared plainly (ADR-0064, amendment 2026-11-15).
+      dependency = ["xmip-core", "xmip-core-library-net"]
     maturity = "scaffolded"
     specification = "TIA-232 and TIA-485 lines, delimited or fixed-length framing"
     [xmip.core.transport.smb]

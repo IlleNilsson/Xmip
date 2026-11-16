@@ -13,8 +13,12 @@
     dependencies (2026-09-21). An edge the map draws is read from the build, so
     it cannot be wrong for longer than one landing.
 
-    Rust is read from the repository's own `Cargo.toml`, `[dependencies]` only:
-    a dev-dependency is how a repository is tested, not what it is made of.
+    Rust is read from the repository's own `Cargo.toml`: `[dependencies]` and
+    every platform's own, `[target.'cfg(...)'.dependencies]`, since a
+    dependency a build takes on one platform alone is still what it is made
+    of there — until 2026-11-15 the second were not read, and a serial port's
+    use of `net` on Windows went undeclared. A dev-dependency is how a
+    repository is tested, not what it is made of, on any platform.
     .NET is read from every project file the repository holds that is not a
     test project, each `ProjectReference` resolved to the repository that
     contains the project it names.
@@ -74,7 +78,8 @@ function Get-XmipRepositoryUse {
 function Get-XmipCargoUse {
     <#
         .SYNOPSIS
-            The estate crates a Cargo manifest names under `[dependencies]`.
+            The estate crates a Cargo manifest names under `[dependencies]`,
+            and under the dependencies of each `[target.'cfg(...)']` table.
 
         .DESCRIPTION
             By package name where the entry renames it — `transport = { package
@@ -98,20 +103,31 @@ function Get-XmipCargoUse {
     }
 
     $toml = Read-XmipToml -Path $cargo
-    $table = Get-TomlValue -Node $toml -Name 'dependencies' -Default $null
+    $platforms = Get-TomlValue -Node $toml -Name 'target' -Default $null
+    [object[]] $tables = @(
+        Get-TomlValue -Node $toml -Name 'dependencies' -Default $null
+
+        foreach ($platform in @(Get-TomlKey -Node $platforms)) {
+            $own = Get-TomlValue -Node $platforms -Name $platform
+            Get-TomlValue -Node $own -Name 'dependencies' -Default $null
+        }
+    )
 
     [string[]] $named = @(
-        foreach ($key in @(Get-TomlKey -Node $table)) {
-            $entry = Get-TomlValue -Node $table -Name $key
-            [string] $package = [string](Get-TomlValue -Node $entry -Name 'package' -Default $key)
+        foreach ($table in $tables) {
+            foreach ($key in @(Get-TomlKey -Node $table)) {
+                $entry = Get-TomlValue -Node $table -Name $key
+                $renamed = Get-TomlValue -Node $entry -Name 'package' -Default $key
+                [string] $package = [string] $renamed
 
-            if ($package -like 'xmip-*') {
-                $package
+                if ($package -like 'xmip-*') {
+                    $package
+                }
             }
         }
     )
 
-    return $named
+    return [string[]] @($named | Sort-Object -Unique)
 }
 
 

@@ -25,9 +25,10 @@ BeforeAll {
     # the calls a directory watch makes (ffi/directory_watch.rs; ADR-0018,
     # amendment 2026-10-17); and net's calls to Windows: the named pipe, which
     # the runtime's local endpoint and the named pipe transport both make
-    # theirs through (ADR-0014, amendment 2026-10-21), and the TCP connect,
+    # theirs through (ADR-0014, amendment 2026-10-21), the TCP connect,
     # its SYN sent once so a refusal is answered at once (ADR-0044, amendment
-    # 2026-11-14).
+    # 2026-11-14), and the one overlapped wait they and a serial port take
+    # (ADR-0064, amendment 2026-11-15).
     $script:Folders = @(
         'module/platform/runtime/src/ffi/'
         'module/core/library/net/src/system/'
@@ -51,6 +52,12 @@ BeforeAll {
         # the move that never replaces, for every key and identity the
         # estate keeps on disk (secret::private_file).
         'module/core/capability/secret/.src/private_file/windows.rs' = 'ADR-0063 clause 4'
+        # A serial port's own calls to the system: on Windows the COM port
+        # opened for overlapped I/O, its settings and the starts of its
+        # reads, writes and WaitCommEvent, each waited for by net's one
+        # overlapped wait (src/system/overlapped.rs, in net's folder); on
+        # Unix the descriptor its watch lends to poll.
+        'module/core/capability/transport/serial/src/system.rs' = 'ADR-0064, amendment 2026-11-15'
         # xmip-core's calls to the operating system: the timed wait's kernel
         # event and high-resolution timer on Windows, the processor time tests
         # measure with, and the one counting allocator every test of bounded

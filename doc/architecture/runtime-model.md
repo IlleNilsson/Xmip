@@ -532,8 +532,25 @@ correlation = "<set>"           at a Receive Location, Receive Port,
 - **A place is taken in the write that brings work to the point** — the
   Publication, a hand-on that publishes — and work there goes on only while it
   holds the first place. What does not waits in the Ledger, its claim given
-  back, holding no thread; a step that ends a sequenced Message's travel
-  reads its queues again at once.
+  back, holding no thread, and is taken up again once what it waits on moves —
+  only the first behind it, never at every read of its queue; a step that
+  ends a sequenced Message's travel reads its queues again at once.
+- **The send side keeps up** (decided 2026-11-15, the coordinator's words for
+  the owner's agreement of that day; ADR-0018, amendment 2026-11-15). The next
+  Message of a sequence behind a send under way on its node — second in each
+  sequence it waits in, the one heading it that send's — waits beside that
+  send instead, under its claim, holding no thread, one beside each send; it
+  is passed again on the same thread the moment that send's hand-on is
+  answered. Every send reads from the Ledger that it heads its sequences,
+  and its first byte waits until its predecessor's hand-on is durable,
+  wherever the predecessor was sent — the owner, 2026-11-15: *Wait for the
+  disk*, so the order survives any crash and a backlog drains at the disk's
+  speed: a place let go of is readable before its sync, and the read of a
+  sequence's head says when the write that moved it is durable where it is
+  not yet, nothing more where none under way moved it.
+  Until 2026-11-15 the next gave its claim back, and was claimed and read
+  again from its queue after the hand-on, its claim's sync before its first
+  byte.
 - **A Receive Location's and a Receive Port's sequence is end to end.** The
   Stream's origin — the Message it was received as — holds the place until the
   last travel born from it ends, its sends and what a Work Process published
@@ -1493,7 +1510,10 @@ what waits. A Send Port naming a Correlation has one Message of each
 key in flight at a time, the oldest first, and no Message is sent until its
 Stream heads the sequences it holds end to end (section 3, *Sequences*): a
 pass that finds it does not gives its claim back, tries nothing, and is taken
-up again once it does. A paused Subscription's resume moves each Message it
+up again once it does — but the next behind a send under way on the node,
+which waits beside that send under its claim and is passed again on the
+same thread once that send's hand-on is answered (decided 2026-11-15,
+below). A paused Subscription's resume moves each Message it
 held to its Send Port's queue in one hand-on, and the send step sends it
 from there. The node's snapshot publishes, at `<node>/send/<Port>`, what
 was sent, what failed — the last Message that did, and why — and what
@@ -1904,6 +1924,39 @@ abandons the send: no far end saw it, and no try is counted. *Every Ledger
 write counts only once the database has it durably* holds: the claim counts
 toward a far end only then, and a claim durable after its Publication's
 batch means the Publication is durable too.
+
+**Decided 2026-11-15** (the coordinator, in the owner's words of the day's
+agreement, *the send side keeps up*, and the owner, *Wait for the disk*;
+ADR-0018, amendment 2026-11-15): **the
+next of a sequence waits beside the send ahead of it, and what waits further
+behind is taken up once.** Eight senders at once, each one sequence end to
+end, kept their far end idle 369 ms of 410: a sender's next send waited for
+its predecessor's hand-on (3.2 ms), a read of its queue, a claim again and
+that claim's sync (1.9 ms), then its send (0.5 ms), while every read of the
+queue claimed again what waited behind and gave it back — 3.5 claims and 3
+releases a Message — so the Messages reached the far end 57 to 126 ms after
+their post, where the post was answered in 3 to 4 ms. Now a Message found
+behind is claimed by no read of its queue until the head it waits on moves,
+and then only the first behind it (`send_step::behind`); and the next behind
+a send under way on its node waits beside that send under its claim and is
+passed again on the same thread the moment its hand-on is answered
+(`send_step::beside`; section 3, *Sequences*). Every send still reads from
+the Ledger that it heads its sequences, and its first byte waits until its
+predecessor's hand-on is durable, wherever the predecessor was sent (the
+owner, the same day: *Wait for the disk*): the read of a sequence's head
+says when the write that last moved it is durable, where it is not yet
+(`XmipStorage::read_head`), the Storage node knowing each head a batch
+moves before the batch is readable, and the send's first byte waits for it
+— until this day a Message published while its predecessor's hand-on was
+being written sent once its own Publication was durable, which could be
+before that hand-on was, on another node's hand-on as well. Where no write
+under way moved the head, as is common, nothing more is read or waited
+for. A
+sender's next Message now reaches the far end 0.30 to 0.33 ms after its
+predecessor's hand-on, the fastest of five, where it took 1.41 to 1.53 ms;
+what remains of a Message's wait is the disk's, as the owner chose: a
+sender's next waits for its predecessor's hand-on sync, as its post waits
+for its Publication's, and a backlog drains at the disk's speed.
 
 **Where it is configured.** The Send Port's policy — the order of its Send
 Locations, retry and failover — is configured as section 20, *Where the

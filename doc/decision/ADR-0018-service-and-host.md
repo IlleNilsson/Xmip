@@ -2268,7 +2268,8 @@ hold each test takes is the assistant's, for the owner to overrule.
   wakes each), the wall clock and this process's processor time each under
   a millisecond beyond the plain wake's; until this day the thousand were
   held within a second together.
-- **The runtime's node** (`xmip-core-runtime`, `tests/measured/running.rs`):
+- **The runtime's node** (`xmip-core-runtime`, `tests/measured/running.rs`,
+  the eight senders `side_by_side.rs` since the same day):
   Xmip's own share of a Message, as the node's stop record says it, within
   a millisecond of this process's processor time across a plain wake
   measured beside each Message (`xcore::latency::worked_beside_a_plain_wake`),
@@ -2493,3 +2494,149 @@ Found the same way after the landing:
 Built 2026-11-15, the assistant's; the root's `carried.rs`, the runtime's
 `running.rs` and persist's timing program are timed on a quiet machine
 before the landing.
+
+## Amendment, 2026-11-15: the send side keeps up
+
+**Provenance.** The owner agreed on 2026-11-15 that the far end is never
+idle beyond a millisecond while Messages wait for it, that Xmip's own share
+per send is under a millisecond, and that where the 57-61 ms of a Message of
+eight senders at once went is found (the runtime's timing program,
+`tests/measured/side_by_side.rs`, from its post to the far end taking it, the
+fastest of five). The coordinator decided the same day, in the words of that
+agreement, *the send side keeps up*: the mechanism that follows. And the
+owner decided the same day, asked whether the next Message of a sequence may
+go once its predecessor's hand-on is written and before it is durable:
+*Wait for the disk* — a successor's first byte waits until its
+predecessor's hand-on is durable, so the order survives any crash, and a
+backlog drains at the disk's speed.
+
+**Where the time went** (2026-11-15, a probe outside the estate, the
+eight-sender run, 400 Messages). The far end worked 41 ms of 410 and stood
+idle 369 ms while Messages waited; its gaps 138 µs at the median, 2.9 ms at
+p90, 6.9 ms at worst. Each sender's Messages go one at a time end to end
+(the Receive Location's correlation), and a sender's next send waited for
+its predecessor's hand-on to be durable (3.2 ms at the median), then for a
+read of its queue, a claim again and that claim's own sync (1.9 ms), then
+its send (0.5 ms): 7.75 ms a Message a sender, so eight passed one in
+0.97 ms where they posted one in 0.56 ms, and the backlog grew to some two
+hundred. And every read of the queue — one after each sequenced send —
+claimed again every Message waiting behind, read it under the claim, found
+it still behind and gave the claim back: 3.5 claims and 3 releases a
+Message, each a write and a sync's wait, slowing every hand-on and every
+Publication.
+
+- **What waits behind is taken up once what it waits on moves**
+  (`send_step::behind`). A Message found behind a head is claimed by no
+  read of its queue until that head moves, and then only the first behind
+  it, by a read begun after the move — told apart from one begun before it
+  by a count of the moves the step was told of, under its lock, never a
+  clock's reading (ADR-0068, amendment 2026-11-15): a queue keeps the order of the places
+  its Messages hold in each sequence, so the next of a sequence is the
+  first of its queue behind its head. The watch waits on the head again
+  where more wait behind it (`queue_watch::Woken::moved`), and a head named
+  again is waited on from where the earliest of its namers saw it, the wait
+  under way renewed where that is earlier (`QueueWatch::wait_on`): one read
+  just before a move was otherwise passed over for one read after it, and
+  waited for good. And a pass found behind has its queue read again once it
+  is let go of, under the same lock: a read begun while it was still owned
+  passed it over, a head's move or its heading by then unseen. Both were
+  found by the ledger suite run four copies at once. A read of every queue
+  (`[tuning] send_scan`) forgets it all, the bound on a wake that never
+  came; no `[tuning]` key, default or range changes.
+- **The next waits beside the send ahead of it** (`send_step::beside`). A
+  Message whose pass finds it behind, where the one heading each sequence
+  it waits in is in its send on this node and the Message is second there,
+  keeps its claim and waits in memory beside that send — owned, its claim
+  renewed, its place in the Send pool held, no thread — one beside each
+  send. The moment that send's pass ends, its hand-on answered, it is
+  passed again on the same thread. One that heads its sequences by the
+  time its pass settles goes on at once, its claim kept. As a Message heads
+  its sequences here, and as its pass ends with nothing beside it, the next
+  behind it is taken up from its queue at once, so a sequence that fell
+  behind is carried one beside the other again. Everything else gives its
+  claim back as before, and a stop gives back the claim of what waits
+  beside a send.
+- **The owner's: wait for the disk.** Every send reads from the Ledger that
+  it heads its sequences, and its first byte waits until its predecessor's
+  hand-on is durable, wherever the predecessor was sent. A place let go of
+  is readable before its sync, so the read of a sequence's head says when
+  the write that last moved it is durable, where it is not yet
+  (`XmipStorage::read_head`), and the send waits for that beside its own
+  Publication's or claim's sync, one rule for a Message its own
+  Publication handed on, one a scan took and one waiting beside a send.
+  The Storage node's one writer knows each head a batch moves, with the
+  batch's durability, before the batch is readable, and forgets it once
+  synced (`persist`'s `commit::moving`); over the wire the Storage node
+  answers the read once that write is durable there. Where no write under
+  way moved the head, as is common, the read is the one it was and nothing
+  more is read or waited for. Until this day a Message published while its
+  predecessor's hand-on was being written, and handed on in memory, sent
+  once its own Publication was durable, which could be before that hand-on
+  was: beside the send ahead where that was this node's, before another
+  node's hand-on was durable where it was that node's (and a claim a scan
+  took before such a hand-on was no surer). A head that a crash could still
+  move back is no longer remembered as headed by the process that read it.
+- **Held.** `tests/ledger/send_beside.rs`, the one sequence of a Receive
+  Location, its far end holding each send until the test lets it go:
+  sixteen Streams each received while the one ahead is held reach the far
+  end in order, none given back, at most a claim each (none was asked);
+  twelve, five behind the one held, in order, each given back and taken up
+  at most twice — once on a quiet machine, ten and ten; under the suite run
+  four copies at once one taken up while the one before it is still being
+  claimed is given back once more — where the code before this day gave
+  back fifty, and both tests fail on it; the ledger suite run four copies
+  at once, forty rounds, 160 runs, none failed.
+  `tests/ledger/send_after_durable.rs`, two nodes on one Storage node
+  whose syncs the test holds: the second node's own Publication hands on
+  the next of the sequence while the first node's hand-on ahead of it is
+  written and syncing, and its far end takes nothing until that hand-on is
+  durable — the code before this day let it out at once. Persist's own: a
+  head moved by a hand-on under way is read with its durability, and over
+  the wire answered once it is durable; a batch refused tells a read that
+  took it so. `tests/measured/side_by_side.rs`,
+  eight senders: a sender's next Message, posted and answered before its predecessor's
+  hand-on was durable, from that hand-on's answer to the far end taking it,
+  the fastest of five within a millisecond beyond a plain wake (the Rounds
+  rule, `xcore::latency`); the far end idle while a Message waits for it,
+  the same; Xmip's own share per send under a millisecond beside a plain
+  wake's processor time; from a post to the far end, and each sender's
+  Messages one after the other at the far end, printed for information.
+  The test's Xmip Storage counts a claim given back (`fixture::Operation::
+  Release`) and says when each hand-on was answered, by its Journey
+  (`fixture::Failing::handed_on`); the far end reads the Journey from the
+  send's `Idempotency-Key`.
+
+Measured the same evening, the machine otherwise quiet, three runs each,
+the code before this day alternated with a prototype of this change, then
+this change as built:
+
+| | Before | After |
+| --- | --- | --- |
+| A Message from its post to the far end, fastest of five | 60 to 126 ms | 16.7 to 24.7 ms |
+| A sender's next at the far end after its predecessor's hand-on, fastest of five | 1.41 to 1.53 ms | 0.30 to 0.33 ms |
+| The same, median | 4.3 to 5.0 ms | 0.82 to 0.88 ms |
+| The far end idle while a Message waits, fastest of five | 62 µs | 190 to 220 µs |
+| Claims and releases a Message | 3.5 and 3 | about 0.5 and 0.5 |
+| Xmip's own share per send, fastest of five | 444 to 655 µs | 582 to 738 µs |
+| A post answered, fastest of five | 3.0 to 4.2 ms | 3.7 to 4.2 ms |
+
+The far end's idle gap, the fastest of five, was within the millisecond
+before as well: its gaps come in bursts, and it is held beside the new
+figure, which the code before this day fails. The own share now counts
+more Messages: one passed again beside its predecessor keeps the account
+its receive opened, where one claimed again from its queue had none.
+
+**What remains is the disk's, as the owner decided.** A sender's next
+Message waits for its predecessor's hand-on sync — 3.9 ms at the median
+under this load, one and a half syncs, as its post waits for its
+Publication's — so the send side keeps pace with the receive side, and a
+backlog a hiccup leaves drains at the disk's speed, which while the senders
+post at full speed is no faster than they post: some 15 to 25 ms behind for
+the senders it touched. Sending the next once its predecessor's hand-on is
+written and before it is durable, which would drain it faster, would let a
+far end see the next before a crash undoes its predecessor's hand-on: the
+owner chose the order (*Wait for the disk*), and it is not built.
+
+Provenance: the measurements, the two changes and their tests are the
+assistant's, 2026-11-15; the mechanism, *the send side keeps up*, is the
+coordinator's decision, and *Wait for the disk* the owner's, the same day.

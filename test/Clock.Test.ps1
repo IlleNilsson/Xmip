@@ -45,18 +45,53 @@ BeforeAll {
     [string] $script:Instant = '\bInstant\b'
 
     # The production Instant::now readings outside SystemClock on
-    # 2026-11-15, once the resilience guards' and Xmip Storage's client's
-    # and standby's decisions read the Clock. A ratchet: lower it as the
-    # decisions move (ADR-0068, amendment 2026-11-15); never raise it.
-    [int] $script:MonotonicCeiling = 148
+    # 2026-11-15, once the resilience guards', Xmip Storage's client's and
+    # standby's, net's watched connection and HTTP/2 tally's, the cluster's
+    # sync plane's, the transports' turn deadline's and the runtime's own
+    # decisions read the Clock (148 before the last four, 121 before the
+    # send step's). A ratchet: lower it as the decisions move (ADR-0068,
+    # amendment 2026-11-15); never raise it.
+    [int] $script:MonotonicCeiling = 97
 
     # The files whose decisions read the Clock handed in (ADR-0068,
-    # amendment 2026-11-15): none reads std's Instant.
+    # amendment 2026-11-15): none reads std's Instant. `net` is a Library
+    # and reads no clock: its watched connection and HTTP/2 tally take the
+    # reading their caller made.
     [string[]] $script:Decides = @(
         'module/core/capability/resilience/circuit-breaker/src/lib.rs'
         'module/core/capability/resilience/rate-limit/src/lib.rs'
         'module/platform/persist/.src/storage/client.rs'
         'module/platform/persist/.src/storage/standby/follow.rs'
+        'module/core/library/net/src/watched.rs'
+        'module/core/library/net/src/http2/connection.rs'
+        'module/core/library/net/src/http2/limits.rs'
+        'module/core/library/net/src/http2/receive.rs'
+        'module/platform/cluster/src/sync/serving.rs'
+        'module/platform/cluster/src/sync/upstream.rs'
+        'module/core/capability/transport/.src/deadline.rs'
+        'module/platform/runtime/src/departure.rs'
+        'module/platform/runtime/src/pickup/released.rs'
+        'module/platform/runtime/src/pickup/state.rs'
+        'module/platform/runtime/src/plane/fresh.rs'
+        'module/platform/runtime/src/plane/line.rs'
+        'module/platform/runtime/src/plane/remote/fresh.rs'
+        'module/platform/runtime/src/running/revocation_list.rs'
+        'module/platform/runtime/src/sending.rs'
+        'module/platform/runtime/src/stream_share/one_read.rs'
+        'module/platform/runtime/src/work_step/dispatch.rs'
+        'module/core/capability/schedule/src/due.rs'
+        'module/platform/runtime/src/held_work.rs'
+        'module/platform/runtime/src/queue_watch.rs'
+        'module/platform/runtime/src/send_step.rs'
+        'module/platform/runtime/src/send_step/behind.rs'
+        'module/platform/runtime/src/send_step/dispatch.rs'
+        'module/platform/runtime/src/send_step/due.rs'
+        'module/platform/runtime/src/send_step/figures.rs'
+        'module/platform/runtime/src/send_step/reading.rs'
+        'module/platform/runtime/src/send_step/renewal.rs'
+        'module/platform/runtime/src/send_step/scan.rs'
+        'module/platform/runtime/src/send_step/settles.rs'
+        'module/platform/runtime/src/send_step/under_claim.rs'
     )
 
     # A test's own file: an integration test, the root's test tree, a
