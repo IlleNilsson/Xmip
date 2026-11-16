@@ -93,8 +93,9 @@ fn an_act_asked_at_the_operational_door_is_taken_by_its_node_and_asked_while_it_
     operated(&door_path);
     let door = started(&door_path, &scope(&door_node));
 
+    let clock = std::sync::Arc::new(xmip_core::SystemClock);
     let surface =
-        Remote::local(&local_of(&directory, &door_node), Duration::ZERO).expect("a surface");
+        Remote::local(&local_of(&directory, &door_node), Duration::ZERO, clock).expect("a surface");
     let (outcome, said) = surface
         .act(0, &scope(&receiver), ("subscription", "onward", "pause"))
         .expect("the door answers");
