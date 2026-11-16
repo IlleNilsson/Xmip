@@ -278,7 +278,10 @@ every act an operator takes through them and every failure, through the same
 capability — a .NET program and PowerShell through the runtime's library. When
 audit cannot persist a record, the capability writes it to the operating
 system's log instead: the Windows Event Log, the journal or syslog, the
-unified log. A failure is never only on a screen.
+unified log. Which sink and which log, the capability does not know: each
+is a technology of it, and the program that runs hands them in as it
+starts (ADR-0062, amendment 2026-11-16). A failure is never only on a
+screen.
 
 ## 10. The invariant
 

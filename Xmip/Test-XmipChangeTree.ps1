@@ -54,12 +54,12 @@ function Test-XmipChangeTree {
     [bool] $runtimeBuilt = $false
 
     # The runtime's remote build, from the working tree, before the module
-    # that needs it: the Desktop one Xmip.Abi's tests load
+    # that needs it: the Desktop one Xmip.Operate's tests load
     # (Build-XmipRemoteRuntime.ps1). The phone host's Android build waits
     # with every target but Windows (the owner, 2026-11-02: *Just build
     # Windows, we can get back to other OS and target*).
     [hashtable] $remoteFor = @{
-        'module/foundation/abi' = 'Desktop'
+        'module/core/operation/operate' = 'Desktop'
     }
 
     [string] $sharedTarget = if ($env:CARGO_TARGET_DIR) {
@@ -93,10 +93,11 @@ function Test-XmipChangeTree {
             )
         }
 
-        # The runtime's library, built once from the working tree into the
-        # shared directory and named by XMIP_RUNTIME_LIBRARY to whatever loads
-        # it next: a module's tests, and the root's own test/, whose cmdlets
-        # load it through Xmip.Surface. Dot-sourced, so $runtimeBuilt holds.
+        # The runtime's library, xmip-core-operate's, built once from the
+        # working tree into the shared directory and named by
+        # XMIP_RUNTIME_LIBRARY to whatever loads it next: a module's tests,
+        # and the root's own test/, whose cmdlets load it through
+        # Xmip.Surface. Dot-sourced, so $runtimeBuilt holds.
         [scriptblock] $useRuntime = {
             if ($runtimeBuilt) {
                 return
@@ -104,14 +105,14 @@ function Test-XmipChangeTree {
 
             [hashtable] $runtimeLibrary = @{
                 RepositoryRoot = $RepositoryRoot
-                Module         = 'module/platform/runtime'
+                Module         = 'module/core/operation/operate'
                 Patch          = $patch
                 Library        = $unhashed
             }
             $runtimeBuilt = Build-XmipTestLibrary @runtimeLibrary
 
-            [string] $file = if ($IsWindows) { 'xmip_core_runtime.dll' }
-            else { 'libxmip_core_runtime.so' }
+            [string] $file = if ($IsWindows) { 'xmip_core_operate.dll' }
+            else { 'libxmip_core_operate.so' }
             $env:XMIP_RUNTIME_LIBRARY =
                 Join-Path -Path $env:CARGO_TARGET_DIR -ChildPath "debug/$file"
         }
@@ -172,7 +173,7 @@ function Test-XmipChangeTree {
             }
 
             # A .NET module tests against the runtime's library, which
-            # Xmip.Abi copies from the shared build directory: built once,
+            # Xmip.Operate copies from the shared build directory: built once,
             # from the working tree, before the first .NET module verifies.
             [bool] $dotnet = -not (Test-Path -LiteralPath $manifest) -and
                 @(Find-XmipFile -Path $modulePath -Filter '*.csproj').Count -gt 0
@@ -346,7 +347,7 @@ function Build-XmipTestLibrary {
         .SYNOPSIS
             Builds one module's library from the working tree into the shared
             build directory, for the tests that load it: the runtime's, which
-            Xmip.Abi copies for every .NET module, and the Rust contract
+            Xmip.Operate copies for every .NET module, and the Rust contract
             module's, which the runtime's tests open.
     #>
     [CmdletBinding()]

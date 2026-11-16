@@ -653,3 +653,70 @@ a crate with both a listed file and a folder fails it.
 Provenance: the assistant drafted a file beside the pipe's folder; the
 coordinator, 2026-11-14, ruled for ADR-0050's one place, and the folder's
 name and shape are the assistant's.
+
+## Amendment, 2026-11-16: JOSE is one library, `xmip-core-library-jose`
+
+The owner, 2026-11-13: *Do we have all code in the modules, repos that we
+should. This is a refactoring statement*; 2026-11-16, *Go ahead*, to the
+repository. Four copies did JOSE's work: `identify::jwt::Compact` read a
+compact JWT (the amendment of 2026-09-16), `authenticate::jose` held the
+HS256, RS256 and ES256 keys behind a `jose` feature over the `rsa` and
+`p256` crates (the table of 2026-09-24), and ACME wrote a JWK and a
+flattened JWS of its own, `acme::Jwk` and `acme::jws`, checked by
+`provision::verify_fixed` over aws-lc-rs. The format is one library now,
+and every copy is gone:
+
+| concept | home | read by |
+|---|---|---|
+| base64url as JOSE writes it, unpadded | `jose::base64url` | the library's readers |
+| a JWS, compact or flattened; one signed by a `SigningKey` | `jose::jws` | both gates' `jwt` and `oidc`, `acme`, `internal-ca` |
+| a JWT's claims set and its registered claims | `jose::jwt::Token` | `identify/jwt`, `identify/oidc`, `authenticate/jwt`, `authenticate/oidc` |
+| the keys, a JWK and its thumbprint, the one rule for choosing a key | `jose::jwk`, behind the library's `key` feature | `authenticate/jwt`, `authenticate/oidc`, `acme`, `internal-ca` |
+| the token a property carries; the principal its claims name | `identify::jwt` (`carried`, `principal`) | `identify/jwt`, `identify/oidc` |
+| what a gate requires of the claims; which algorithms it takes | `authenticate::claims` and `clock`; each technology | `jwt`, `oidc`, `oauth2`, `saml` |
+
+- **Where the copies differed, the stricter stands.** A part with padding
+  is refused: identify dropped any number of trailing `=` and ACME took a
+  padded part, and RFC 7515 section 2 omits it. A member named twice is
+  refused in a flattened JWS and its header as in a token: ACME's reader
+  took the last. A flattened JWS without `protected`, `payload` or
+  `signature` is refused: ACME's took a missing one as empty, so a body
+  with no payload read as a POST-as-GET. A P-256 point is on the curve
+  whoever handed it over: ACME's JWK took any two 32-byte coordinates.
+- **One backend.** HS256 is `codec::digest`'s HMAC; RS256 and ES256 are
+  aws-lc-rs's, the crypto `xmip-core-library-tls` already builds, and a
+  P-256 key's PEM is read by `tls::certificate::point_of`, so it holds an
+  uncompressed point. An RS256 key has 2048 to 8192 bits, RFC 7518
+  section 3.3's floor; the `rsa` crate took a smaller one and refused one
+  over 4096. `rsa` and `p256` leave every production build; `jwt` and
+  `oidc` keep them in their tests, an issuer other than the verifier.
+- **The capabilities keep the policy.** `identify::jwt` keeps how a token
+  rides on an arrival and how its claims name a principal (ADR-0054);
+  `authenticate` keeps the window, the issuer and the audience; `oidc`
+  refuses HS256 by its own rule. `identify`, `authenticate` and
+  `provision` take `jose::JoseError` with `From`, and leave the library's
+  `key` feature off: the first gate builds no signature verifier.
+
+Proved by the library's own tests, those moved with the code among them,
+and by every test of the two gates' `jwt` and `oidc`, `acme` and
+`internal-ca`, unchanged in what they assert.
+
+Provenance: the placement audit's item 13 is the coordinator's; the
+library's shape, the backend and the stricter readings are the
+assistant's drafting, 2026-11-16, for the owner to overrule.
+
+## Amendment, 2026-11-16: xmip-core-operate keeps the exports' C boundary in one folder
+
+The exports of `xmip_operate.h` left the runtime for xmip-core-operate
+(ADR-0027 and ADR-0058, amendments of this date), and their folder went
+with them: xmip-core-operate's `src/ffi/`, each file under the limit and
+lowering the crate's `deny` at its top with its reason, as the runtime's
+did, and nothing outside it holding unsafe code; its designer, its
+operator's table state and its `wire.rs` hold none. The runtime's
+`src/ffi/` keeps the boundary facing in: the loader that opens a module's
+library (ADR-0057) and the calls a directory watch makes. The rule reads as
+it did: one file per crate, or one folder where the boundary is longer than
+a file. `test/Unsafe.Test.ps1` holds the three folders.
+
+Provenance: the owner, 2026-11-13, *Good that you found it, fix it*; the
+folder kept whole is the assistant's, 2026-11-16.

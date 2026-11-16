@@ -309,3 +309,21 @@ was already one, the audit capability's.
 Provenance: the placement audit found it; the home in `xmip-core` is the
 coordinator's choice, the `Head` type the assistant's drafting,
 2026-11-13, for the owner to overrule.
+
+## Amendment, 2026-11-16: the file sink's chain is the file technology's
+
+The file sink left `xmip-core-audit` for a repository of its own,
+`xmip-core-audit-file` (ADR-0062, amendment of this date). Clause 5 in
+`audit.toml` is formed there now: where each writer's chain stands, read
+under `audit.lock` (the crate's `chain`), and the one writer of a process
+that appends each record after its writer's head and seals a table a write
+left unfinished before it (`writer`). Everything else of clause 5 stays
+where the amendment of 2026-11-13 put it: the rule, `xcore::audit_chain`;
+the canonical form, `AuditRecord::chained`, and the seal's words,
+`audit_fragment`, the audit capability's; the walk, `audit_chain::walk`,
+and every verification, unchanged. The chain under the lock and the sealed
+fragment behave as before, and the crate's tests hold them: a whole chain
+verifies, a deleted, changed or reordered record is found where it is, a
+writer started again goes on from its last record, two writers' chains
+are each their own, and an interrupted record is sealed apart and the
+chain goes on from the last whole one.

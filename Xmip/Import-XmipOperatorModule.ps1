@@ -6,14 +6,18 @@ Set-StrictMode -Version Latest
 [System.Management.Automation.PSModuleInfo] $script:XmipOperatorModule = $null
 
 # What the operator module is built from, relative to the estate root: the
-# project and the two it references, with the files MSBuild reads beside them.
+# project and the three it references, with the files MSBuild reads beside
+# them.
 [string[]] $script:XmipOperatorModuleSource = @(
     'module/core/operation/powershell/global.json'
     'module/core/operation/powershell/src/Xmip.PowerShell'
     'module/foundation/abi/dotnet/Directory.Build.props'
     'module/foundation/abi/dotnet/global.json'
     'module/foundation/abi/dotnet/Xmip.Abi'
-    'module/foundation/abi/dotnet/Xmip.Surface'
+    'module/core/operation/operate/dotnet/Directory.Build.props'
+    'module/core/operation/operate/dotnet/global.json'
+    'module/core/operation/operate/dotnet/Xmip.Operate'
+    'module/core/operation/operate/dotnet/Xmip.Surface'
 )
 
 function Get-XmipOperatorModuleKey {
@@ -51,13 +55,14 @@ function Get-XmipOperatorModuleInput {
     <#
         .SYNOPSIS
             What the operator module is built from, as files: the sources of
-            Xmip.PowerShell, Xmip.Surface and Xmip.Abi (bin/ and obj/ aside)
-            and the runtime library Xmip.Abi.csproj copies beside them.
+            Xmip.PowerShell, Xmip.Surface, Xmip.Operate and Xmip.Abi (bin/
+            and obj/ aside) and the runtime library Xmip.Operate.csproj copies
+            beside them.
 
         .DESCRIPTION
-            Xmip.Abi.csproj chooses the runtime among CARGO_TARGET_DIR's
-            debug, the estate's shared build directory and the runtime's own
-            target. All three are returned rather than the choice repeated
+            Xmip.Operate.csproj chooses the runtime among CARGO_TARGET_DIR's
+            debug, the estate's shared build directory and xmip-core-operate's
+            own target. All three are returned rather than the choice repeated
             here: a change to any of them rebuilds, and MSBuild still chooses.
 
             In the order the file system lists them, which is the same for a
@@ -105,7 +110,9 @@ function Get-XmipOperatorModuleInput {
     # Every file cargo links beside the library is counted too, without the
     # project's exclusions: they are written with it, so they change with it.
     [string[]] $target = @($Root, $Root, $env:CARGO_TARGET_DIR)
-    [string[]] $under = @('.ai-interaction/target-windows', 'module/platform/runtime/target', '')
+    [string[]] $under = @(
+        '.ai-interaction/target-windows', 'module/core/operation/operate/target', ''
+    )
 
     for ([int] $at = 0; $at -lt $target.Length; $at++) {
         if ([string]::IsNullOrEmpty($target[$at])) {
@@ -116,7 +123,7 @@ function Get-XmipOperatorModuleInput {
 
         if ([System.IO.Directory]::Exists($runtime)) {
             [System.IO.DirectoryInfo] $built = [System.IO.DirectoryInfo]::new($runtime)
-            $found.AddRange($built.GetFiles('*xmip_core_runtime.*'))
+            $found.AddRange($built.GetFiles('*xmip_core_operate.*'))
         }
     }
 

@@ -638,3 +638,46 @@ the placement plan put to him the same day.
   `test/Layer.Test.ps1` lists no breach now.
 
 Built 2026-11-13, the assistant's.
+
+## Amendment, 2026-11-16: operating is xmip-core-operate's, and the runtime exports nothing
+
+**Provenance.** The owner, 2026-11-13: *Do we have all code in the modules,
+repos that we should. This is a refactoring statement*; shown the placement
+review, *Good that you found it, fix it*; on 2026-11-16, *Go ahead*, to the
+repositories it names. The reading below is the assistant's.
+
+- **Clause 2 found it.** The runtime is a node acting; the C exports a
+  surface calls are what an operator does to it, and so is the designer
+  that reads and edits the cluster's file for a surface. Both now live in
+  xmip-core-operate, Operation, at `module/core/operation/operate`, which
+  depends on the runtime and on Foundation; the runtime never depends on
+  it, and is an rlib alone.
+- **What moved, and nothing copied.** From the runtime: `src/ffi/`, every
+  export of `xmip_operate.h` with the library's own `resident.rs` and
+  `build.rs` (ADR-0027, amendment of this date); `operator.rs`, what a
+  surface's table answers from, with `start.rs`'s `unconfigured` and
+  `start_published`, which only the table and `xmip_start_v1` called;
+  `design.rs`, the JSON section 10 crosses as; and `wire.rs`. From
+  xmip-core-configure: its designer — `views`, `view_edit`, `filter`,
+  `edit`, `routes`, `field`, `offered`, `written`, `references` with its
+  `calls` and `correlated`, `reference_edit`, `keys`, `shape`, `probe`,
+  `element` and `kinds` — to `operate::design` (ADR-0064, amendment of
+  this date). No re-export and no shim is left behind.
+- **Clause 6's `wire.rs` is answered.** It stayed in the runtime because the
+  runtime was the one crate holding both the header's constants and
+  observe's enums. xmip-core-operate holds both now and is Operation, which
+  may depend on Foundation's abi and on observe, so the one conversion
+  moved with the exports it serves.
+- **What stays in the runtime**: its own end of the C ABI, the loader that
+  opens a module's library (`ffi/loaded_module.rs`,
+  `ffi/loaded_contract.rs`, `ffi/loaded_work_process.rs`; ADR-0057) and a
+  directory watch's calls to Windows; the operate plane's two ends
+  (`plane`), the node's own door; and every rule the exports call:
+  `start::start` and `start::validate`, the catalogue, a System Process's
+  declaration, the pickup, the Reports, a person's request signed and a
+  host's secure listener. Its test fixtures (`test-support`) carry Xmip
+  Storage in memory and a published Message, which xmip-core-operate's
+  tests take too.
+
+Built 2026-11-16, the assistant's. Held by `test/Dependency.Test.ps1` and
+`test/Layer.Test.ps1`.

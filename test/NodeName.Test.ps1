@@ -139,7 +139,7 @@ BeforeAll {
 
     # A snapshot fixture whose names a test holds to a test cluster's
     # cluster.xmip: the test's file and the test.
-    [string] $surface = 'module/foundation/abi/dotnet/Xmip.Surface.Test'
+    [string] $surface = 'module/core/operation/operate/dotnet/Xmip.Surface.Test'
     $script:Held = @{
         "$surface/Fixture/cluster.xmip"     = @{
             Test = "$surface/ClusterSnapshotTest.cs"

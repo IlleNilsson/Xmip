@@ -631,3 +631,12 @@ figure, the fastest of five (`xcore::latency::spread`):
   one write, timed once.
 
 The resumption setting itself, off, stands.
+
+## Amendment, 2026-11-16: ACME's JWS is the JOSE library's
+
+Clause 2 stands: `acme` opens an account by a P-256 key signing JWS with
+ES256, and `internal-ca` serves from the same signed requests and objects.
+The JWS and the account key's JWK, its thumbprint and its ES256 check are
+written and read by the estate's one JOSE, `xmip-core-library-jose`; what
+RFC 8555 asks of a request stays in `acme` (ADR-0034 and ADR-0050,
+amendments 2026-11-16).

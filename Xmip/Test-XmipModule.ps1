@@ -356,6 +356,15 @@ function Test-XmipModule {
                 $passed = Test-XmipExtensionShell -Path (Join-Path $path 'extension') -Name $name
             }
 
+            if ($passed -and @(Find-XmipFile -Path $path -Filter '*.csproj').Count -gt 0) {
+                # A Rust repository that also carries .NET, operate's surface
+                # library and abi's binding, is verified in both languages. Until
+                # 2026-11-16 only cargo ran for one, so Xmip.Surface, Xmip.Operate
+                # and Xmip.Abi landed with their tests never run.
+                Write-Host '   testing .NET...' -ForegroundColor DarkGray
+                $passed = Test-XmipDotnetModule -Path $path -Name $name
+            }
+
             if ($passed -and (Test-Path -LiteralPath (Join-Path $path $script:XmipEventBinding))) {
                 # The Event bindings in the languages besides Rust (ADR-0065),
                 # each verified where its optional tool is here.

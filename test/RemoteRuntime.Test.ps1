@@ -3,9 +3,10 @@
 
 <#
     The runtime's remote build (ADR-0014, amendment 2026-10-14), built once in
-    Build-XmipRemoteRuntime.ps1: the Desktop one Xmip.Abi's tests load, the
-    Android ones Xmip.Operations packages through Xmip.Abi.Native.props, and
-    the iOS xcframework it links, made only on macOS (the CI's phone-ios job).
+    Build-XmipRemoteRuntime.ps1: the Desktop one Xmip.Operate's tests load,
+    the Android ones Xmip.Operations packages through Xmip.Operate.Native.props,
+    and the iOS xcframework it links, made only on macOS (the CI's phone-ios
+    job).
     Before 2026-10-14 a hand-run script built the ARM64 one and nothing built
     the x86_64 one, so the phone build failed on a missing file with a raw zip
     exception. What can be checked without building is checked here: where
@@ -124,11 +125,11 @@ Describe 'Each remote build is one cargo command' {
             $one.Environment["CC_$under"] | Should -Be $clang
             $one.Environment["AR_$under"] | Should -BeLike (Join-Path $ndk 'llvm-ar*')
             $one.Library | Should -Be (Join-Path $script:Root (
-                    ".ai-interaction/target-android/$triple/release/libxmip_core_runtime.so"))
+                    ".ai-interaction/target-android/$triple/release/libxmip_core_operate.so"))
         }
     }
 
-    It 'builds Desktop where Xmip.Abi''s tests load it, debug' {
+    It 'builds Desktop where Xmip.Operate''s tests load it, debug' {
         [object[]] $build = Get-XmipTestBuild -Platform Desktop
         [string] $into = Join-Path $script:Root '.ai-interaction/target-remote'
 
@@ -136,7 +137,7 @@ Describe 'Each remote build is one cargo command' {
         [string] $command = $build[0].CargoArgument -join ' '
         $command | Should -Be '--no-default-features --features remote'
         $build[0].TargetDirectory | Should -Be $into
-        $build[0].Library | Should -BeLike (Join-Path $into 'debug/*xmip_core_runtime.*')
+        $build[0].Library | Should -BeLike (Join-Path $into 'debug/*xmip_core_operate.*')
     }
 
     It 'reads the working trees in a landing, through its patch' {
@@ -180,7 +181,7 @@ Describe 'iOS is built on macOS, and refused in words elsewhere' {
                 $one.TargetDirectory | Should -Be $ios
                 $one.Environment['IPHONEOS_DEPLOYMENT_TARGET'] | Should -Be '15.0'
                 $one.Library | Should -Be (Join-Path $ios (
-                        "$triple/release/libxmip_core_runtime.a"))
+                        "$triple/release/libxmip_core_operate.a"))
             }
         }
 
@@ -190,9 +191,9 @@ Describe 'iOS is built on macOS, and refused in words elsewhere' {
                 @(Get-XmipRemoteRuntimeCommand -Root $Root -Platform iOS)
             }
             [string] $ios = Join-Path $script:Root '.ai-interaction/target-ios'
-            [string] $device = Join-Path $ios 'aarch64-apple-ios/release/libxmip_core_runtime.a'
-            [string] $sim = Join-Path $ios 'aarch64-apple-ios-sim/release/libxmip_core_runtime.a'
-            [string] $output = Join-Path $ios 'xmip_core_runtime.xcframework'
+            [string] $device = Join-Path $ios 'aarch64-apple-ios/release/libxmip_core_operate.a'
+            [string] $sim = Join-Path $ios 'aarch64-apple-ios-sim/release/libxmip_core_operate.a'
+            [string] $output = Join-Path $ios 'xmip_core_operate.xcframework'
 
             $command.Count | Should -Be 3
             $command[0] | Should -Be ('cargo rustc --lib --crate-type staticlib --release ' +
@@ -225,7 +226,7 @@ Describe 'iOS is built on macOS, and refused in words elsewhere' {
 Describe 'The phone host reads what the build writes' {
     BeforeAll {
         [string] $props = Join-Path $script:Root (
-            'module/foundation/abi/dotnet/build/Xmip.Abi.Native.props')
+            'module/core/operation/operate/dotnet/build/Xmip.Operate.Native.props')
         $script:Props = Get-Content -Raw -LiteralPath $props
     }
 
@@ -233,7 +234,7 @@ Describe 'The phone host reads what the build writes' {
         $script:Props | Should -BeLike '*.ai-interaction/target-android</XmipRuntimeAndroid>*'
 
         foreach ($triple in 'aarch64-linux-android', 'x86_64-linux-android') {
-            [string] $library = "$triple/release/libxmip_core_runtime.so"
+            [string] $library = "$triple/release/libxmip_core_operate.so"
             $script:Props | Should -BeLike "*`$(XmipRuntimeAndroid)/$library*"
         }
     }
@@ -246,7 +247,7 @@ Describe 'The phone host reads what the build writes' {
     }
 
     It 'links the iOS xcframework where the build writes it, and names its command' {
-        [string] $xcframework = '.ai-interaction/target-ios/xmip_core_runtime.xcframework'
+        [string] $xcframework = '.ai-interaction/target-ios/xmip_core_operate.xcframework'
 
         $script:Props | Should -BeLike "*$xcframework</XmipRuntimeXcframework>*"
         $script:Props | Should -BeLike '*<Error *Build-XmipService -Remote iOS*'
@@ -274,12 +275,12 @@ Describe 'A landing builds the remote build before the module that needs it' {
     # Only Windows is built for now (the owner, 2026-11-02: *Just build
     # Windows, we can get back to other OS and target*): the phone host
     # verifies with no Android build.
-    It 'builds Desktop before Xmip.Abi, once, and nothing for the phone host' {
+    It 'builds Desktop before Xmip.Operate, once, and nothing for the phone host' {
         InModuleScope Xmip -Parameters @{ Root = $script:Root } {
             param($Root)
 
             $tree = Test-XmipChangeTree -RepositoryRoot $Root -Ordered @(
-                'module/foundation/abi', 'module/core/operation/gui')
+                'module/core/operation/operate', 'module/core/operation/gui')
 
             $tree.Verified.Count | Should -Be 2
             $tree.Skipped | Should -BeNullOrEmpty
@@ -297,9 +298,9 @@ Describe 'A landing builds the remote build before the module that needs it' {
             Mock Write-XmipAudit { }
 
             $tree = Test-XmipChangeTree -RepositoryRoot $Root -Ordered @(
-                'module/foundation/abi') 2>$null
+                'module/core/operation/operate') 2>$null
 
-            $tree.Failed | Should -Be 'module/foundation/abi'
+            $tree.Failed | Should -Be 'module/core/operation/operate'
             Should -Invoke Test-XmipModule -Times 0
         }
     }

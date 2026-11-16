@@ -159,9 +159,11 @@ A crate forbids unsafe code. A crate that must call a C interface allows it
 in one named file and nowhere else, and every block in that file says where
 its pointers come from, how long they live and who frees them (ADR-0050,
 amendment 2026-09-25). A boundary longer than a file is a folder, refined
-the same day for the runtime: its whole C boundary — the operator's exports and the module loader —
-is one folder, `src/ffi/`, each file under 400 lines, and what a boundary
-file does beyond reading and writing pointers stays outside it. `net` keeps
+the same day for the runtime: its C boundary — the module loader and a
+directory watch's calls — is one folder, `src/ffi/`, each file under 400
+lines, and what a boundary file does beyond reading and writing pointers
+stays outside it. xmip-core-operate keeps the operator's exports the same
+way, in its own `src/ffi/` (amendment 2026-11-16). `net` keeps
 its calls into Windows — its named pipe's and its TCP connect's — the same
 way, in `src/system/` (amendments 2026-10-21 and 2026-11-14). A crate has
 one place, a file or a folder, never both. Such a crate's `Cargo.toml` says `unsafe_code = "deny"` rather

@@ -15,7 +15,7 @@ function Clear-XmipUnhashedLibrary {
             module/platform/configure built from the root is a different
             crate from the same folder built from module/platform/runtime.
             Hashed files keep the two apart. A crate that also builds a
-            cdylib — the runtime, the Rust contract module — gets no hash:
+            cdylib — xmip-core-operate, the Rust contract module — gets no hash:
             its rlib is one file, and the workspace that wrote it last decides
             which of its dependencies it names.
 

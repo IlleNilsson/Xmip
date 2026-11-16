@@ -1681,7 +1681,10 @@ compact form spells its whole payload in one token — so each is a design of
 its own, and the dependency (the estate's `aws-lc-rs` and asn1 reader, or a
 third party's) is the owner's to choose. A key protected by a passphrase is
 not opened by any engine yet: where a passphrase is kept is the secret
-capability's (problem 29).
+capability's (problem 29). Since 2026-11-16 the JWS format itself — read
+compact or flattened, signed flattened, its keys over aws-lc-rs — is
+`xmip-core-library-jose`'s (ADR-0050, amendment 2026-11-16), which a JOSE
+engine would build on; JWE is not built.
 
 ## 53. The XSLT engine pulls in url's DNS lookup
 

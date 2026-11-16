@@ -7,7 +7,7 @@
   It passes the properties below, and the output and intermediate folders,
   which are under .local-work/package and never in the repository:
 
-    XmipBinaryDirectory  where xmip-service.exe and xmip_core_runtime.dll are
+    XmipBinaryDirectory  where xmip-service.exe and xmip_core_operate.dll are
     XmipVersion          the root crate's version, three numbers
     XmipSite             the site the binaries were built from (deploy/site)
 

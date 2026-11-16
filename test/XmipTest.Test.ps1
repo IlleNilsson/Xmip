@@ -492,8 +492,8 @@ Describe 'The environment a roll is started with' {
         foreach ($copy in @(
                 'Xmip/Get-XmipNodeRole.ps1'
                 'Xmip/Write-XmipTestCluster.ps1'
-                'module/foundation/abi/dotnet/Xmip.Surface/ScopeTree.cs'
-                'module/foundation/abi/dotnet/Xmip.Surface/NodeCapability.cs')) {
+                'module/core/operation/operate/dotnet/Xmip.Surface/ScopeTree.cs'
+                'module/core/operation/operate/dotnet/Xmip.Surface/NodeCapability.cs')) {
             Get-Content -Raw -LiteralPath (Join-Path $root $copy) |
                 Should -Not -Match $list -Because "$copy calls the node crate's words"
         }
@@ -531,11 +531,11 @@ Describe 'The environment a roll is started with' {
             'Tomlyn|is "receive" or "send"|\], "capability"'
 
         foreach ($copy in @(
-                'module/foundation/abi/dotnet/Xmip.Surface/SnapshotOperator.cs'
-                'module/foundation/abi/dotnet/Xmip.Surface/RunHeader.cs'
-                'module/foundation/abi/dotnet/Xmip.Surface/NodeCapability.cs'
-                'module/foundation/abi/dotnet/Xmip.Surface/ScopeIndex.cs'
-                'module/foundation/abi/dotnet/Xmip.Surface/ScopeTree.cs'
+                'module/core/operation/operate/dotnet/Xmip.Surface/SnapshotOperator.cs'
+                'module/core/operation/operate/dotnet/Xmip.Surface/RunHeader.cs'
+                'module/core/operation/operate/dotnet/Xmip.Surface/NodeCapability.cs'
+                'module/core/operation/operate/dotnet/Xmip.Surface/ScopeIndex.cs'
+                'module/core/operation/operate/dotnet/Xmip.Surface/ScopeTree.cs'
                 'module/core/operation/cli/src/Xmip.Cli/MeasureCommand.cs'
                 'module/core/operation/gui/src/Xmip.Gui/Pages/Cluster.razor'
                 'module/core/operation/gui/src/Xmip.Gui/Pages/Configuration.razor')) {

@@ -225,6 +225,16 @@ transport hands it over, as evidence and proofs already travel.
   transport writes the two properties yet. `tls-server-end-point` is the
   only channel type built; `tls-unique` is not.
 
+## Amendment, 2026-11-16: a token's principal is read over the JOSE library
+
+A token's principal is still read once in the capability, now by
+`identify::jwt::principal`, over the token the estate's one JOSE reads
+(`jose::jwt::Token`, ADR-0050, amendment 2026-11-16); `Compact::principal`
+is gone with `Compact`. The rule stands as decided: `upn`, else
+`preferred_username`, for a user; `azp`, else `appid`, for an
+application's token; an opaque identifier names nobody. `jwt` and `oidc`
+at the first gate both call it.
+
 ## Alternatives considered
 
 **Widen `Verified` to carry the evidence.** `Verified` is `Copy`, lives in

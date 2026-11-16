@@ -16,7 +16,7 @@
 # Build-XmipService -Site built (ADR-0015, amendment 2026-10-01), so this
 # takes the binaries as they are. The environment names them:
 #
-#   XMIP_BINARY_DIRECTORY  where xmip-service and libxmip_core_runtime.so are
+#   XMIP_BINARY_DIRECTORY  where xmip-service and libxmip_core_operate.so are
 #   XMIP_VERSION           the root crate's version
 #   XMIP_ARCH              amd64 or arm64, nfpm's words for x86-64 and arm64
 #
@@ -47,8 +47,8 @@ contents:
     expand: true
     file_info:
       mode: 0755
-  - src: ${XMIP_BINARY_DIRECTORY}/libxmip_core_runtime.so
-    dst: /opt/xmip/bin/libxmip_core_runtime.so
+  - src: ${XMIP_BINARY_DIRECTORY}/libxmip_core_operate.so
+    dst: /opt/xmip/bin/libxmip_core_operate.so
     expand: true
     file_info:
       mode: 0644

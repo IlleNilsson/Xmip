@@ -748,3 +748,33 @@ what they assert, and by `tls::certificate`'s own.
 Provenance: the audit is the coordinator's; the split, writing here and
 reading in the library, is the assistant's drafting, 2026-11-13, for the
 owner to overrule.
+
+## Amendment, 2026-11-16: an ACME request's JWS is the JOSE library's
+
+The amendment above kept `verify_fixed` (a JWS signature) here. JOSE is one
+library now, `xmip-core-library-jose` (ADR-0050, amendment 2026-11-16), and
+what stands:
+
+- **The key pair signs, the library writes and checks.** `KeyPair` signs a
+  JWS as ES256 through `jose::jws::SigningKey`, so its private half never
+  leaves this capability; `KeyPair::sign_fixed` and `verify_fixed` are
+  deleted, and an ES256 signature is checked by `jose::jwk::Key`, over
+  aws-lc-rs as before. The capability's error takes `jose::JoseError` with
+  `From`.
+- **ACME keeps what is ACME's.** `acme::signed`, which was `acme::jws`,
+  holds what RFC 8555 section 6.2 asks of a request — ES256, the nonce,
+  the URL, a key or an account and never both — over the library's
+  flattened JWS; `acme::key_authorization` holds section 8.1's answer over
+  the library's thumbprint (RFC 7638). `acme::Jwk` is deleted: an account's
+  key is a `jose::jwk::Key`, which `internal-ca` keeps on disk as its JWK
+  and compares.
+- **Stricter, as the library reads.** A request whose part is padded,
+  whose body or header names a member twice, that lacks `protected`,
+  `payload` or `signature`, or whose key is off the curve or not P-256 is
+  refused when it is read.
+
+Proved by `acme`'s and `internal-ca`'s tests, the whole exchange against
+the authority's ACME server among them, unchanged in what they assert.
+
+Provenance: the assistant's drafting, 2026-11-16, with the library, for
+the owner to overrule.

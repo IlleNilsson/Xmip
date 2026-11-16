@@ -7,9 +7,11 @@
     file says where its pointers come from, how long they live and who frees
     them, and every other file forbids it.
 
-    The runtime keeps its whole C boundary in one folder, src/ffi/ (ADR-0050,
-    refined 2026-09-25), and net its calls to Windows in another, src/system/
-    (amendments 2026-10-21 and 2026-11-14); every other crate gets one file.
+    The runtime keeps its C boundary in one folder, src/ffi/ (ADR-0050,
+    refined 2026-09-25), xmip-core-operate its exports in another, src/ffi/
+    (amendment 2026-11-16), and net its calls to Windows in a third,
+    src/system/ (amendments 2026-10-21 and 2026-11-14); every other crate
+    gets one file.
     A crate has one place, a file or a folder, never both. The folders and
     the list below are the whole of the estate's unsafe. A new file on the
     list is a change a reviewer sees here, with its reason; a file that lowers
@@ -20,10 +22,11 @@ BeforeAll {
     . (Join-Path $PSScriptRoot 'Initialize-XmipTest.ps1')
 
     # A crate whose C boundary is too long for one file keeps it in one folder
-    # (ADR-0050, refined 2026-09-25 and amended 2026-10-21): the runtime's,
-    # the operator's table and exports (ADR-0027), the loader (ADR-0057) and
-    # the calls a directory watch makes (ffi/directory_watch.rs; ADR-0018,
-    # amendment 2026-10-17); and net's calls to Windows: the named pipe, which
+    # (ADR-0050, refined 2026-09-25 and amended 2026-10-21 and 2026-11-16):
+    # the runtime's, the loader (ADR-0057) and the calls a directory watch
+    # makes (ffi/directory_watch.rs; ADR-0018, amendment 2026-10-17);
+    # xmip-core-operate's, the operator's table and exports (ADR-0027); and
+    # net's calls to Windows: the named pipe, which
     # the runtime's local endpoint and the named pipe transport both make
     # theirs through (ADR-0014, amendment 2026-10-21), the TCP connect,
     # its SYN sent once so a refusal is answered at once (ADR-0044, amendment
@@ -31,6 +34,7 @@ BeforeAll {
     # (ADR-0064, amendment 2026-11-15).
     $script:Folders = @(
         'module/platform/runtime/src/ffi/'
+        'module/core/operation/operate/src/ffi/'
         'module/core/library/net/src/system/'
     )
 
@@ -44,8 +48,10 @@ BeforeAll {
         'module/core/capability/process/.src/export.rs'         = 'ADR-0066, amendment 2026-10-22'
         # The language server loads the runtime's library.
         'module/core/operation/gui/vscode/.src/runtime.rs'      = 'ADR-0014, amendment 2026-09-10'
-        # The Windows Event Log and the registry (ADR-0062).
-        'module/core/operation/audit/src/windows_event_log.rs' = 'ADR-0050, amendment 2026-09-25'
+        # The Windows Event Log and the registry (ADR-0062), audit's
+        # windows-event-log technology (amendment 2026-11-16).
+        'module/core/operation/audit/windows-event-log/src/system.rs' =
+            'ADR-0050, amendment 2026-09-25'
         # CryptProtectData and CryptUnprotectData: the key home on Windows.
         'module/core/capability/secret/dpapi/src/crypt_protect.rs' = 'ADR-0063 clause 4'
         # A private file's calls to Windows: the owner-only access list and

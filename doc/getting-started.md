@@ -253,11 +253,11 @@ it.
 You watch and operate Xmip from four surfaces, and all four read the same
 library, so they cannot disagree: the command line `xmip`, the PowerShell
 operator module, the web GUI and the desktop GUI. The command line and the
-PowerShell module talk to Xmip through the runtime library, so build that
-first:
+PowerShell module talk to Xmip through the runtime library,
+xmip-core-operate's, so build that first:
 
 ```powershell
-cargo build --manifest-path module/platform/runtime/Cargo.toml
+cargo build --manifest-path module/core/operation/operate/Cargo.toml
 ```
 
 The command line, `xmip`, is built with .NET today:
@@ -425,7 +425,7 @@ amendment 2026-10-22). Build the server and the runtime, then name both in
 your VS Code settings, as full paths:
 
 ```powershell
-cargo build --manifest-path module/platform/runtime/Cargo.toml
+cargo build --manifest-path module/core/operation/operate/Cargo.toml
 cargo build --manifest-path module/core/operation/gui/vscode/Cargo.toml
 Build-XmipService -Extension VsCode
 code --install-extension .local-work/package/vscode/xmip-0.1.0.vsix
@@ -437,13 +437,13 @@ TypeScript's native compiler and writes its VSIX, with no Node.js.
 ```json
 {
   "xmip.server.path": "<estate>/module/core/operation/gui/vscode/target/debug/xmip-lsp.exe",
-  "xmip.runtime.library": "<estate>/module/platform/runtime/target/debug/xmip_core_runtime.dll"
+  "xmip.runtime.library": "<estate>/module/core/operation/operate/target/debug/xmip_core_operate.dll"
 }
 ```
 
 `<estate>` is the full path of your clone. On Linux the library is
-`libxmip_core_runtime.so` and the server `xmip-lsp`, on macOS
-`libxmip_core_runtime.dylib`. Left out, every validation says where to
+`libxmip_core_operate.so` and the server `xmip-lsp`, on macOS
+`libxmip_core_operate.dylib`. Left out, every validation says where to
 point it.
 
 ## 6. In practice

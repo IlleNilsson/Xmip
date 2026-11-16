@@ -814,3 +814,28 @@ technologies' `DEFAULT_TIMEOUT`, `serial::Opens`, `Port`, `Port::speed`,
 `transport::Sharing`, `Shared`, `Configured::shared_by`, `Line::exchange`,
 `Line::shared_on` and the runtime's `linked::built_on` are the
 assistant's, for the owner to overrule.
+
+## Amendment, 2026-11-16: the designer is xmip-core-operate's
+
+**Provenance.** The owner, 2026-11-13: *Good that you found it, fix it*, of
+the placement review that found the designer's only Rust caller to be the
+runtime's section 10 exports. Where it went is the assistant's.
+
+- **The designer lives in xmip-core-operate's `design`** (ADR-0058,
+  amendment of this date): the views of the cluster's file artifact by
+  artifact, an Xmip Application's routes, a filter's rows and its text,
+  every edit in place, what an editor suggests, looks up and renames by,
+  and the JSON section 10 hands the language server and the Operation
+  Desktop, beside the exports that carry it. What it does is unchanged,
+  and so is section 10.
+- **xmip-core-configure keeps what a document means**: its reading, its
+  binding, its slicing, its kinds of document, a Subscription's entry as
+  the file writes it, and the types the designer reads the keys from. The
+  designer reads through it; configure depends on nothing of the designer,
+  and dropped `xmip-core-path`, which only the filter's rows read.
+- **The language server** reaches it as before, through the operating
+  library, now `xmip_core_operate` (ADR-0027, amendment of this date), its
+  `xmip.runtime.library` setting naming that file.
+
+Built 2026-11-16, the assistant's. Held by xmip-core-operate's tests of the
+designer, moved with it.
