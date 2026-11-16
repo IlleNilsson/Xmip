@@ -64,7 +64,7 @@
         <File Id="XmipServiceExe" Source="$(var.BinaryDirectory)\xmip-service.exe" />
       </Component>
       <Component Id="RuntimeLibrary" Directory="BINFOLDER">
-        <File Id="RuntimeLibraryDll" Source="$(var.BinaryDirectory)\xmip_core_runtime.dll" />
+        <File Id="RuntimeLibraryDll" Source="$(var.BinaryDirectory)\xmip_core_operate.dll" />
       </Component>
     </Feature>
 

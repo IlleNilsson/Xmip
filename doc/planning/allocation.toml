@@ -2274,3 +2274,126 @@ amendment of 2026-09-09) survived and the older one did not."""
 #   rule, [operate] local else xmip-<node>
 #     -> module/platform/runtime/src/registration.rs, local_endpoint, which
 #     the running node and xmip-service --install both call
+
+# Moved on 2026-11-16, what operates out of Foundation's abi into
+# xmip-core-operate: abi keeps the header and its binding, a definition
+# with no verb (ADR-0058, clause 1; ADR-0052, amendment 2026-11-16):
+#   module/foundation/abi/dotnet/Xmip.Surface, Xmip.Surface.Relay and
+#   Xmip.Surface.Test, whole
+#     -> module/core/operation/operate/dotnet/Xmip.Surface,
+#     Xmip.Surface.Relay and Xmip.Surface.Test
+#   module/foundation/abi/dotnet/Xmip.Abi/Operate/*.cs, the Operate model:
+#   NativeRuntime and NativeLoading, Operator, every Runtime* and what each
+#   reads back, PublicationReader, RemoteNode, ServedNode, the Event, Audit,
+#   Secure Surface and certificate records, namespace Xmip.Abi.Operate
+#     -> module/core/operation/operate/dotnet/Xmip.Operate/*.cs, namespace
+#     Xmip.Operate; the runtime's library copied beside its users from
+#     Xmip.Operate.csproj
+#   module/foundation/abi/dotnet/Xmip.Abi/Operate/Topology.cs TopologyNode,
+#   CommunicationLink, TopologyPlace and TopologySnapshot
+#     -> module/core/operation/operate/dotnet/Xmip.Operate/Topology.cs; the
+#     header's topology values stay in abi's Topology.cs
+#   module/foundation/abi/dotnet/build/Xmip.Abi.Native.props
+#     -> module/core/operation/operate/dotnet/build/Xmip.Operate.Native.props
+#   module/foundation/abi/dotnet/Xmip.Abi.Test, the tests of the model:
+#   NativeRuntimeTest, OperatorTest, RemoteBuildTest and every Runtime*Test
+#     -> module/core/operation/operate/dotnet/Xmip.Operate.Test
+#   module/foundation/abi/dotnet/Xmip.Abi.Test/OperateAbiTest.cs
+#   ASubscribeNamesNoPartyAndIsBoundInTheHeadersShape
+#     -> module/core/operation/operate/dotnet/Xmip.Operate.Test/
+#     EventSubscribeShapeTest.cs
+
+# Moved on 2026-11-16, JOSE into its one home, xmip-core-library-jose,
+# mounted at module/core/library/jose (ADR-0050, ADR-0034, ADR-0054 and
+# ADR-0033, amendments 2026-11-16); what a gate makes of a token stays in
+# its capability:
+#   module/core/capability/identify/.src/jwt.rs Compact, decode, is_compact
+#   and the reader that refuses a member named twice
+#     -> module/core/library/jose/src/jws.rs, Jws::read_compact and
+#     is_compact; src/jwt.rs, Token and its registered claims;
+#     src/base64url.rs, decode, padding refused; src/members.rs; carried
+#     and Compact::principal stay in identify's jwt.rs, as carried and
+#     principal over jose::jwt::Token
+#   module/core/capability/authenticate/.src/jose.rs, deleted, with the
+#   capability's jose feature
+#     -> module/core/library/jose/src/jwk.rs, Algorithm in src/jws.rs, Key;
+#     src/jwk/key_set.rs, KeySet; RS256 and ES256 over aws-lc-rs where they
+#     were over rsa and p256
+#   module/core/capability/provision/acme/src/jwk.rs, deleted
+#     -> module/core/library/jose/src/jwk.rs, Key::p256_point, Key::read,
+#     Key::json, Key::thumbprint; key_authorization
+#     -> module/core/capability/provision/acme/src/key_authorization.rs
+#   module/core/capability/provision/acme/src/jws.rs, deleted
+#     -> module/core/library/jose/src/jws.rs, Jws::read_flattened and
+#     sign_flattened; what RFC 8555 asks of a request
+#     -> module/core/capability/provision/acme/src/signed.rs, sign, Signer
+#     and Signed
+#   module/core/capability/provision/.src/key.rs verify_fixed, deleted
+#     -> module/core/library/jose/src/jwk.rs, Key::verifies;
+#     KeyPair::sign_fixed -> the same file's SigningKey for KeyPair
+
+# Moved on 2026-11-16, the operating C exports out of the runtime into
+# xmip-core-operate, mounted at module/core/operation/operate, the native
+# library named for it, xmip_core_operate; the runtime an rlib alone and its
+# loader, its plane and every rule the exports call staying (ADR-0027,
+# ADR-0050, ADR-0058 and ADR-0064, amendments 2026-11-16):
+#   module/platform/runtime/src/ffi.rs and src/ffi/*, but loaded_module.rs,
+#   loaded_contract.rs, loaded_work_process.rs and directory_watch.rs
+#     -> module/core/operation/operate/src/ffi.rs and src/ffi/*, whole;
+#     src/ffi/operate.rs -> src/ffi/table.rs; the runtime's src/ffi.rs keeps
+#     the four
+#   module/platform/runtime/build.rs -> module/core/operation/operate/build.rs
+#   module/platform/runtime/src/wire.rs -> module/core/operation/operate/src/wire.rs
+#   module/platform/runtime/src/design.rs
+#     -> module/core/operation/operate/src/design.rs
+#   module/platform/runtime/src/operator.rs, and src/start.rs unconfigured
+#   and start_published
+#     -> module/core/operation/operate/src/operator.rs
+#   module/platform/runtime/src/pickup.rs tests subscription and published
+#     -> module/platform/runtime/src/fixture/published.rs, under test-support
+#   module/platform/configure/src/{views,view_edit,filter,edit,element,field,
+#   kinds,offered,reference_edit,references,routes,written,keys,shape,
+#   probe}.rs and src/references/{calls,correlated}.rs
+#     -> module/core/operation/operate/src/design/, whole
+#   module/platform/configure/src/party.rs test
+#   the_designer_offers_an_identitys_mechanism_value_and_two_purposes
+#     -> module/core/operation/operate/src/design/keys.rs
+
+# Moved on 2026-11-16, audit's three technologies into repositories of
+# their own, mounted in xmip-core-audit; the capability keeps the sink seam,
+# the operating system's log as a seam the program hands in, the fallback
+# rule and the audit file's one reader (ADR-0062 and ADR-0070, amendments
+# 2026-11-16):
+#   module/core/operation/audit/src/file_sink.rs FileSink
+#     -> module/core/operation/audit/file/src/lib.rs, FileSink;
+#     DIRECTORY_VARIABLE, FILE_NAME and the rule FileSink::stated read by
+#     -> module/core/operation/audit/src/audit_store.rs, DIRECTORY_VARIABLE,
+#     FILE_NAME and directory, which FileSink::stated and stated call
+#   module/core/operation/audit/src/file_sink/writer.rs
+#     -> module/core/operation/audit/file/src/writer.rs
+#   module/core/operation/audit/src/file_chain.rs
+#     -> module/core/operation/audit/file/src/chain.rs
+#   module/core/operation/audit/tests/measured/written.rs
+#     -> module/core/operation/audit/file/tests/measured/written.rs
+#   module/core/operation/audit/src/syslog.rs
+#     -> module/core/operation/audit/syslog/src/lib.rs, Syslog
+#   module/core/operation/audit/src/windows_event_log.rs write
+#     -> module/core/operation/audit/windows-event-log/src/lib.rs,
+#     WindowsEventLog; registered, report and wide
+#     -> module/core/operation/audit/windows-event-log/src/system.rs
+#   module/core/operation/audit/src/operating_system_log.rs
+#   OperatingSystemLog, the struct that chose a writer by platform, deleted
+#     -> the same file's OperatingSystemLog, a trait, with hand and write;
+#     each program hands its log in (.src/service/main.rs,
+#     module/core/operation/gui/vscode/.src/main.rs,
+#     test/core/essentials/src/process_audit.rs program,
+#     module/core/operation/operate/src/ffi/audit.rs)
+#   module/core/operation/operate/dotnet/Xmip.Surface/OperatingSystemLog.cs,
+#   deleted, with Xmip.Surface's System.Diagnostics.EventLog
+#     -> module/core/operation/operate/src/ffi/audit.rs, program: a .NET
+#     program reaches the operating system's log through xmip_audit_v1
+#     alone; ProgramAudit.Unreached says why a record nothing kept
+#   module/platform/runtime/src/report.rs, the probe's ProgramAudit made
+#   from a directory
+#     -> the audit the export hands in, report::Audited, made by
+#     module/core/operation/operate/src/ffi/audit.rs program

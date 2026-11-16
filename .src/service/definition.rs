@@ -7,7 +7,7 @@
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
-use xmip_audit::file_sink::DIRECTORY_VARIABLE;
+use xmip_audit::audit_store::DIRECTORY_VARIABLE;
 use xmip_audit::program_audit::ProgramAudit;
 use xmip_runtime::registration::{
     REFUSED, ServiceDefinition, ServiceManager, launchd_plist, local_endpoint, systemd_unit,

@@ -17,7 +17,7 @@ function Get-XmipEstateCrate {
             Cargo names a path crate's library without its hash when the crate
             builds a cdylib or dylib, so the rlib beside it is one file, shared
             by every workspace in the one build directory. Unhashed is that
-            library's name (`xmip_core_runtime`), empty for any other crate.
+            library's name (`xmip_core_operate`), empty for any other crate.
     #>
     [CmdletBinding()]
     [OutputType([pscustomobject])]

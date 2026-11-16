@@ -38,7 +38,7 @@
 use std::path::{Path, PathBuf};
 use std::process::{Command, ExitCode};
 
-use xmip_audit::file_sink::DIRECTORY_VARIABLE;
+use xmip_audit::audit_store::DIRECTORY_VARIABLE;
 use xmip_audit::program_audit::ProgramAudit;
 use xmip_core::ExecutionPhase;
 use xmip_runtime::registration::{REFUSED, ServiceDefinition, node_service_name};

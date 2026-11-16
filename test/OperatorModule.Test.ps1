@@ -26,9 +26,11 @@ BeforeAll {
             'module/core/operation/powershell/src/Xmip.PowerShell/bin/Xmip.PowerShell.dll'
             'module/core/operation/powershell/src/Xmip.PowerShell/obj/project.assets.json'
             'module/foundation/abi/dotnet/Directory.Build.props'
-            'module/foundation/abi/dotnet/Xmip.Abi/Operate/Operate.cs'
-            'module/foundation/abi/dotnet/Xmip.Surface/RuntimeLibrary.cs'
-            '.ai-interaction/target-windows/debug/xmip_core_runtime.dll'
+            'module/foundation/abi/dotnet/Xmip.Abi/Operate/OperateAbi.cs'
+            'module/core/operation/operate/dotnet/Directory.Build.props'
+            'module/core/operation/operate/dotnet/Xmip.Operate/RuntimeRules.cs'
+            'module/core/operation/operate/dotnet/Xmip.Surface/RuntimeLibrary.cs'
+            '.ai-interaction/target-windows/debug/xmip_core_operate.dll'
         )
 
         foreach ($relative in $file) {
@@ -58,9 +60,11 @@ Describe 'The key of the operator module build' {
     It 'changes when <Changed> changes' -ForEach @(
         @{ Changed = 'module/core/operation/powershell/src/Xmip.PowerShell/Commands.cs' }
         @{ Changed = 'module/foundation/abi/dotnet/Directory.Build.props' }
-        @{ Changed = 'module/foundation/abi/dotnet/Xmip.Abi/Operate/Operate.cs' }
-        @{ Changed = 'module/foundation/abi/dotnet/Xmip.Surface/RuntimeLibrary.cs' }
-        @{ Changed = '.ai-interaction/target-windows/debug/xmip_core_runtime.dll' }
+        @{ Changed = 'module/foundation/abi/dotnet/Xmip.Abi/Operate/OperateAbi.cs' }
+        @{ Changed = 'module/core/operation/operate/dotnet/Directory.Build.props' }
+        @{ Changed = 'module/core/operation/operate/dotnet/Xmip.Operate/RuntimeRules.cs' }
+        @{ Changed = 'module/core/operation/operate/dotnet/Xmip.Surface/RuntimeLibrary.cs' }
+        @{ Changed = '.ai-interaction/target-windows/debug/xmip_core_operate.dll' }
     ) {
         [string] $tree = New-OperatorTree -Name "changed-$([guid]::NewGuid().ToString('n'))"
 
@@ -85,8 +89,8 @@ Describe 'The key of the operator module build' {
             param([string] $Tree)
 
             [string] $before = Get-XmipOperatorModuleKey -Root $Tree
-            Set-Content -Value 'x' -LiteralPath (
-                Join-Path -Path $Tree -ChildPath 'module/foundation/abi/dotnet/Xmip.Surface/New.cs')
+            [string] $added = 'module/core/operation/operate/dotnet/Xmip.Surface/New.cs'
+            Set-Content -Value 'x' -LiteralPath (Join-Path -Path $Tree -ChildPath $added)
 
             Get-XmipOperatorModuleKey -Root $Tree | Should -Not -Be $before
         }

@@ -171,7 +171,7 @@ record = ["ADR-0034 (amendments 2026-10-15 and 2026-10-22)", "ADR-0033 (amendmen
 [implementation.program-audit]
 name = "Every Xmip program audits to its audit file"
 state = "assembled"
-note = "`xmip-service`, `xmip`, both PowerShell modules, the web host, the language server and the Essentials record through `xmip-core-audit`'s `ProgramAudit` into `audit.toml`, synchronously: a record is appended before `record` returns, chained in its writer's audit chain under `audit.lock` (ADR-0070 clause 5), the operating system's log the fallback; the next append seals a record whose write was interrupted, kept as written and in no chain; `xmip audit --verify`, `Get-XmipAudit -Verify` and the Audit view's verify walk the chains and say each such fragment apart from them."
+note = "`xmip-service`, `xmip`, both PowerShell modules, the web host, the language server and the Essentials record through `xmip-core-audit`'s `ProgramAudit` into `audit.toml`, each program handing it `xmip-core-audit-file`'s sink as it starts, synchronously: a record is appended before `record` returns, chained in its writer's audit chain under `audit.lock` (ADR-0070 clause 5), the operating system's log the program hands in — the Windows Event Log or syslog — the fallback; the next append seals a record whose write was interrupted, kept as written and in no chain; `xmip audit --verify`, `Get-XmipAudit -Verify` and the Audit view's verify walk the chains and say each such fragment apart from them."
 record = ["ADR-0062", "ADR-0070"]
 
 [implementation.audit-through-storage]
@@ -337,7 +337,7 @@ maturity = "scaffolded"
 dependency = ["xmip-core-library-codec"]
 
   [xmip.core.abi]
-  description = "The interface into Xmip: configuration, runtime, observing, eventing, auditing. C header, specification and language bindings. Used by cli, powershell and gui, and the boundary loadable Modules plug into."
+  description = "The interface into Xmip: configuration, runtime, observing, eventing, auditing. C header, specification and language bindings, a definition with no verb (ADR-0058, clause 1). Used by operate and the operator surfaces over it, and the boundary loadable Modules plug into."
   architecturalDomain = "Foundation"
   repositoryRole = "common-architecture"
   maturity = "scaffolded"
@@ -1071,7 +1071,7 @@ dependency = ["xmip-core-library-codec"]
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   maturity = "scaffolded"
-  dependency = ["xmip-core", "xmip-core-stream", "xmip-core-message", "xmip-core-context", "xmip-core-library-asn1", "xmip-core-library-codec", "xmip-core-library-net", "xmip-core-library-ntlm"]
+  dependency = ["xmip-core", "xmip-core-stream", "xmip-core-message", "xmip-core-context", "xmip-core-library-asn1", "xmip-core-library-codec", "xmip-core-library-jose", "xmip-core-library-net", "xmip-core-library-ntlm"]
     [xmip.core.identify.api-key]
     maturity = "scaffolded"
     dependency = ["xmip-core", "xmip-core-library-codec", "xmip-core-context"]
@@ -1098,7 +1098,7 @@ dependency = ["xmip-core-library-codec"]
     dependency = ["xmip-core", "xmip-core-library-net", "xmip-core-context"]
     [xmip.core.identify.jwt]
     maturity = "scaffolded"
-    dependency = ["xmip-core", "xmip-core-message", "xmip-core-context"]
+    dependency = ["xmip-core", "xmip-core-message", "xmip-core-context", "xmip-core-library-jose"]
     [xmip.core.identify.kerberos]
     maturity = "scaffolded"
     dependency = ["xmip-core", "xmip-core-library-codec", "xmip-core-context"]
@@ -1113,7 +1113,7 @@ dependency = ["xmip-core-library-codec"]
     dependency = ["xmip-core", "xmip-core-library-codec", "xmip-core-library-ntlm", "xmip-core-context"]
     [xmip.core.identify.oidc]
     maturity = "scaffolded"
-    dependency = ["xmip-core", "xmip-core-context"]
+    dependency = ["xmip-core", "xmip-core-context", "xmip-core-library-jose"]
     [xmip.core.identify.party]
     maturity = "scaffolded"
     dependency = ["xmip-core"]
@@ -1135,7 +1135,7 @@ dependency = ["xmip-core-library-codec"]
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   maturity = "scaffolded"
-  dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify", "xmip-core-library-asn1", "xmip-core-library-codec", "xmip-core-library-ntlm", "xmip-core-library-tls"]
+  dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify", "xmip-core-library-asn1", "xmip-core-library-codec", "xmip-core-library-jose", "xmip-core-library-ntlm", "xmip-core-library-tls"]
     [xmip.core.authenticate.api-key]
     maturity = "scaffolded"
     dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify", "xmip-core-library-codec"]
@@ -1153,7 +1153,7 @@ dependency = ["xmip-core-library-codec"]
     dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify", "xmip-core-library-codec"]
     [xmip.core.authenticate.jwt]
     maturity = "scaffolded"
-    dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify"]
+    dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify", "xmip-core-library-jose"]
     [xmip.core.authenticate.kerberos]
     maturity = "scaffolded"
     dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify", "xmip-core-library-asn1", "xmip-core-library-codec"]
@@ -1171,7 +1171,7 @@ dependency = ["xmip-core-library-codec"]
     dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify", "xmip-core-library-codec", "xmip-core-library-net", "xmip-core-library-tls"]
     [xmip.core.authenticate.oidc]
     maturity = "scaffolded"
-    dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify"]
+    dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify", "xmip-core-library-jose"]
     [xmip.core.authenticate.pam]
     maturity = "scaffolded"
     dependency = ["xmip-core", "xmip-core-context", "xmip-core-identify"]
@@ -1320,25 +1320,26 @@ dependency = ["xmip-core-library-codec"]
   # a Technology may depend on Foundation (repository-model.md section 4).
 
   [xmip.core.audit]
-  description = "Configurable Begin, Execute, Finished and Failure audit functionality, for every Xmip action and every Xmip program, and the operating system's log when audit cannot persist (ADR-0062)."
+  description = "Configurable Begin, Execute, Finished and Failure audit functionality, for every Xmip action and every Xmip program: the sink seam, the fallback to the operating system's log the program hands in when audit cannot persist (ADR-0062), and the audit file's one reader."
   architecturalDomain = "Operation"
   repositoryRole = "operational-capability"
   maturity = "scaffolded"
   # xmip-core-node for the one scope rule and the one wildcard the audit read
   # filters by, xmip-core-observe for whether a hidden run's record is shown
   # (ADR-0062, amendment 2026-11-13).
-  dependency = ["xmip-core", "xmip-core-abi", "xmip-core-library-codec", "xmip-core-node", "xmip-core-observe"]
-    # file, syslog and windows-event-log are carried by the capability itself
-    # (src/file_sink.rs, src/syslog.rs, src/windows_event_log.rs): the file is
-    # every program's default sink and the other two are ADR-0062's fallback,
-    # which is the capability's own rule, and a capability does not depend on
-    # its technologies. None has a repository of its own, so each stays
-    # reserved; a repository for one is the owner's decision.
+  dependency = ["xmip-core", "xmip-core-library-codec", "xmip-core-node", "xmip-core-observe"]
+    # file, syslog and windows-event-log are audit's technologies, each a
+    # repository of its own (the owner, 2026-11-16, "Go ahead"): audit keeps
+    # the sink seam, the operating system's log as a seam and ADR-0062's
+    # fallback rule, and a capability does not depend on its technologies,
+    # so the program that runs links the sink and the log it writes to and
+    # hands them in as it starts (ADR-0062, amendment 2026-11-16).
     [xmip.core.audit.elasticsearch]
     maturity = "reserved"
     [xmip.core.audit.file]
-    maturity = "reserved"
-    description = "Records appended as TOML tables to audit.toml in a directory: every Xmip program's default sink (ADR-0062). Carried by xmip-core-audit itself, src/file_sink.rs."
+    maturity = "scaffolded"
+    dependency = ["xmip-core", "xmip-core-audit"]
+    description = "Records appended as TOML tables to audit.toml in a directory, each in its writer's audit chain under audit.lock and on the disk before it is said written: every Xmip program's default sink (ADR-0062, ADR-0070 clause 5). A xmip-core-audit technology."
     [xmip.core.audit.kafka]
     maturity = "reserved"
     [xmip.core.audit.mssql]
@@ -1352,11 +1353,13 @@ dependency = ["xmip-core-library-codec"]
     [xmip.core.audit.sqlite]
     maturity = "reserved"
     [xmip.core.audit.syslog]
-    maturity = "reserved"
-    description = "The local syslog socket: the systemd journal on Linux, the unified log on macOS. ADR-0062's fallback when audit cannot persist. Carried by xmip-core-audit itself, src/syslog.rs."
+    maturity = "scaffolded"
+    dependency = ["xmip-core", "xmip-core-audit"]
+    description = "The local syslog socket: the systemd journal on Linux, the unified log on macOS. ADR-0062's operating system's log on Unix, which the program that runs hands its audit when audit cannot persist. A xmip-core-audit technology."
     [xmip.core.audit.windows-event-log]
-    maturity = "reserved"
-    description = "The Windows Event Log, Application, source Xmip. ADR-0062's fallback when audit cannot persist. Carried by xmip-core-audit itself, src/windows_event_log.rs."
+    maturity = "scaffolded"
+    dependency = ["xmip-core", "xmip-core-abi", "xmip-core-audit", "xmip-core-library-codec"]
+    description = "The Windows Event Log, Application, source Xmip: ADR-0062's operating system's log on Windows, which the program that runs hands its audit when audit cannot persist. A xmip-core-audit technology."
 
   [xmip.core.observe]
   description = "Near-real-time operational observation functionality."
@@ -1545,19 +1548,19 @@ dependency = ["xmip-core-library-codec"]
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   maturity = "scaffolded"
-  dependency = ["xmip-core", "xmip-core-library-asn1", "xmip-core-library-codec", "xmip-core-library-tls", "xmip-core-secret"]
+  dependency = ["xmip-core", "xmip-core-library-asn1", "xmip-core-library-codec", "xmip-core-library-jose", "xmip-core-library-tls", "xmip-core-secret"]
     [xmip.core.provision.acme]
     description = "ACME client (RFC 8555): account, order, http-01 on any port or dns-01 through a provider's DNS writer, CSR finalized, chain fetched, against any directory a node names, over Xmip's HTTP and TLS. A xmip-core-provision technology."
     maturity = "scaffolded"
     specification = "RFC 8555 Automatic Certificate Management Environment, JWS ES256 (RFC 7515, RFC 7518), JWK thumbprint (RFC 7638)"
-    dependency = ["xmip-core-provision", "xmip-core-library-net", "xmip-core-library-tls", "xmip-core-library-codec", "xmip-core", "xmip-core-secret"]
+    dependency = ["xmip-core-provision", "xmip-core-library-net", "xmip-core-library-tls", "xmip-core-library-codec", "xmip-core-library-jose", "xmip-core", "xmip-core-secret"]
     # internal-ca rides on acme as its carrier (ADR-0044 clause 1): the
     # authority serves the same RFC 8555 objects and JWS the client speaks.
     [xmip.core.provision.internal-ca]
     description = "The cluster's own certificate authority and the premises' own ACME service: node certificates for server and client authentication, renewal information, revocation and a published revocation list, and a person's request signed. A xmip-core-provision technology."
     maturity = "scaffolded"
     specification = "RFC 8555 server side, http-01 and dns-01 validation; RFC 5280 certificates and revocation lists; RFC 9773 ACME Renewal Information; RFC 1035 DNS over UDP"
-    dependency = ["xmip-core-provision", "xmip-core-provision-acme", "xmip-core-library-net", "xmip-core-library-tls", "xmip-core-library-codec", "xmip-core", "xmip-core-secret"]
+    dependency = ["xmip-core-provision", "xmip-core-provision-acme", "xmip-core-library-net", "xmip-core-library-tls", "xmip-core-library-codec", "xmip-core-library-jose", "xmip-core", "xmip-core-secret"]
     [xmip.core.provision.self-signed]
     description = "A self-signed certificate for a lone offline node, its own anchor. A xmip-core-provision technology."
     maturity = "scaffolded"
@@ -1575,14 +1578,14 @@ dependency = ["xmip-core-library-codec"]
 # repositories for 10 KB that always change together would be ceremony.
 # ADR-0018.
   [xmip.core.runtime]
-  description = "A node started from its configuration and the technologies its program links: the nine startup phases, each Module loaded once, the message path on every Receive Location, a draining stop; the declaration file every System Process writes about itself, and the listing of them (ADR-0053); and the native library the operator surfaces load."
+  description = "A node started from its configuration and the technologies its program links: the nine startup phases, each Module loaded once, the message path on every Receive Location, a draining stop; the declaration file every System Process writes about itself, and the listing of them (ADR-0053); and the operate plane's two ends."
   # What each Cargo feature carries (ADR-0014, amendment 2026-10-14: the
   # phone follows nodes remotely and runs none).
   features = [
-      "node (default): the running node — start, message path, Ledger, Xmip Storage, the service and its registration, persist, secret, the transports a program links, the node's side of the operate plane (listener and board) and xmip_operate.h sections 1, 5, 6, 10 to 16, section 17's serve exports, section 19's signing of a person's request and section 25, every Report listed and a Quest probing a node's configuration (xmip-core-report); includes remote",
-      "remote: a surface following nodes over their operate listener and running none, the phone's build (--no-default-features --features remote) — plane::remote with the operate plane's call, local endpoint and role, and xmip_operate.h sections 7, 8, 9 (the audit record every surface keeps) and the four publication lists of sections 11, 14, 15 and 16, section 18, section 17's client exports and section 19's request, a person's key and request made",
+      "node (default): the running node — start, message path, Ledger, Xmip Storage, the service and its registration, persist, secret, the transports a program links, the node's side of the operate plane (listener and board), a person's request signed and every Report listed and a Quest probing a node's configuration (xmip-core-report), which xmip-core-operate exports; includes remote",
+      "remote: a surface following nodes over their operate listener and running none, the phone's build (--no-default-features --features remote) — plane::remote with the operate plane's call, local endpoint and role, which xmip-core-operate's remote build exports",
       "dynamic-loading: the module loader (xmip_module.h), a contract module and a Work Process unit (section 13); includes node",
-      "test-support: the test fixtures; enabled only by the crate's own dev-dependency",
+      "test-support: the test fixtures, Xmip Storage in memory among them; enabled only by a dev-dependency, this crate's and xmip-core-operate's",
   ]
   architecturalDomain = "Platform"
   repositoryRole = "platform-service"
@@ -1612,12 +1615,15 @@ dependency = ["xmip-core-library-codec"]
       "xmip-core-node",
       "xmip-core-observe",
       "xmip-core-party",
+      # A test's Subscription written as its filter's expression, behind
+      # test-support alone (`fixture::subscription`).
+      "xmip-core-path",
       "xmip-core-persist",
       # The Work Process step runs a unit's flow (ADR-0066, amendment
       # 2026-10-22): the capability, never a design format of it.
       "xmip-core-process",
-      # An operator's request made and signed for the surfaces (ADR-0034,
-      # amendment 2026-10-15): the capability, never a technology of it.
+      # An operator's request signed on a node (ADR-0034, amendment
+      # 2026-10-15): the capability, never a technology of it.
       "xmip-core-provision",
       "xmip-core-receive",
       # Every Report in one list, and a Quest probing a node's configuration
@@ -1676,7 +1682,7 @@ dependency = ["xmip-core-library-codec"]
   architecturalDomain = "Platform"
   repositoryRole = "platform-service"
   maturity = "scaffolded"
-  dependency = ["xmip-core-abi", "xmip-core-route", "xmip-core-path", "xmip-core", "xmip-core-library-net", "xmip-core-node", "xmip-core-cluster", "xmip-core-context", "xmip-core-contract", "xmip-core-demote", "xmip-core-prepare", "xmip-core-process", "xmip-core-promote", "xmip-core-transform"]
+  dependency = ["xmip-core-abi", "xmip-core-route", "xmip-core", "xmip-core-library-net", "xmip-core-node", "xmip-core-cluster", "xmip-core-context", "xmip-core-contract", "xmip-core-demote", "xmip-core-prepare", "xmip-core-process", "xmip-core-promote", "xmip-core-transform"]
 
   # Platform since 2026-11-13 (ADR-0058, amendments of that date): it runs
   # the sync plane — the listener, the member links, the following — behind
@@ -1699,13 +1705,53 @@ dependency = ["xmip-core-library-codec"]
 # ADR-0011 governs module and repository names; it does not govern the name of
 # a command a person types, nor .NET project names.
 
+  [xmip.core.operate]
+  description = "What every operator surface calls, implemented once: the C ABI's operating exports over the runtime in the native library xmip_core_operate, the designer's view and edits of cluster.xmip, and on .NET Xmip.Surface, its Relay and the Operate model. Foundation's abi keeps the header and the binding (ADR-0058, clause 1)."
+  # What each Cargo feature carries (ADR-0014, amendment 2026-10-14: the
+  # phone follows nodes remotely and runs none).
+  features = [
+      "node (default): every export of xmip_operate.h — sections 1, 5, 6 and 10 to 16, section 17's serve exports, section 19's signing, sections 21 to 25 — over the runtime's node build, and the designer (design); includes remote",
+      "remote: the phone's build (--no-default-features --features remote) over the runtime's plane::remote — sections 7, 8, 9 and the four publication lists of sections 11, 14, 15 and 16, section 18, section 17's client exports and section 19's request",
+  ]
+  architecturalDomain = "Operation"
+  repositoryRole = "common-architecture"
+  maturity = "scaffolded"
+  dependency = [
+      "xmip-core",
+      "xmip-core-abi",
+      "xmip-core-audit",
+      # What the library hands audit as the program a .NET program audits
+      # through: the file sink and the operating system's log, each log's
+      # crate empty off its own platform (ADR-0062, amendment 2026-11-16).
+      "xmip-core-audit-file",
+      "xmip-core-audit-syslog",
+      "xmip-core-audit-windows-event-log",
+      "xmip-core-authorize",
+      "xmip-core-cluster",
+      "xmip-core-configure",
+      "xmip-core-context",
+      "xmip-core-event",
+      "xmip-core-library-codec",
+      "xmip-core-library-tls",
+      "xmip-core-node",
+      "xmip-core-observe",
+      "xmip-core-path",
+      "xmip-core-persist",
+      "xmip-core-provision",
+      "xmip-core-route",
+      # The node and the surface the exports answer for; the runtime never
+      # depends on this repository (ADR-0058, amendment 2026-11-16).
+      "xmip-core-runtime",
+      "xmip-core-secret",
+  ]
+
   [xmip.core.cli]
   description = ".NET 11 xmip executable over the Xmip ABI. Every operator action, implemented once."
   architecturalDomain = "Operation"
   repositoryRole = "common-architecture"
   maturity = "scaffolded"
   primaryLanguage = "dotnet"
-  dependency = ["xmip-core-abi"]
+  dependency = ["xmip-core-abi", "xmip-core-operate"]
 
   [xmip.core.powershell]
   description = "PowerShell module over the Xmip ABI. Cmdlets and objects, not a subprocess."
@@ -1713,7 +1759,7 @@ dependency = ["xmip-core-library-codec"]
   repositoryRole = "common-architecture"
   maturity = "scaffolded"
   primaryLanguage = "powershell"
-  dependency = ["xmip-core-abi"]
+  dependency = ["xmip-core-abi", "xmip-core-operate"]
 
   [xmip.core.gui]
   description = "Blazor component library over the Xmip ABI, with two hosts: .NET 11 MAUI on the desktop and .NET 11 Blazor on the web."
@@ -1721,12 +1767,12 @@ dependency = ["xmip-core-library-codec"]
   repositoryRole = "common-architecture"
   maturity = "scaffolded"
   primaryLanguage = "dotnet"
-  dependency = ["xmip-core-abi"]
+  dependency = ["xmip-core-operate"]
     [xmip.core.gui.vscode]
     description = "The VS Code extension: a TypeScript shell around a Rust language server that validates a node configuration or an Xmip Application through the ABI, draws an Application's routes, and designs, edits and compiles Work Processes through the design formats it carries (ADR-0014, ADR-0064, ADR-0066). A xmip-core-gui technology."
     maturity = "scaffolded"
     primaryLanguage = "rust"
-    dependency = ["xmip-core", "xmip-core-abi", "xmip-core-audit", "xmip-core-library-net", "xmip-core-process", "xmip-core-process-bpmn"]
+    dependency = ["xmip-core", "xmip-core-abi", "xmip-core-audit", "xmip-core-audit-file", "xmip-core-audit-syslog", "xmip-core-audit-windows-event-log", "xmip-core-library-net", "xmip-core-process", "xmip-core-process-bpmn"]
 
 
 # What capabilities are built out of, and what a third party may replace like
@@ -1756,6 +1802,15 @@ dependency = ["xmip-core-library-codec"]
   maturity = "scaffolded"
   dependency = []
   mount = "module/core/library/codec"
+
+
+  [xmip.core.library.jose]
+  description = "JOSE, one copy: base64url unpadded, the JSON Web Signature (RFC 7515) read compact or flattened and signed, the JSON Web Token (RFC 7519) and its registered claims, and the JSON Web Key (RFC 7517) and key set HS256, RS256 and ES256 are verified with. For the jwt and oidc gates and ACME's signed requests."
+  architecturalDomain = "Library"
+  repositoryRole = "common-architecture"
+  maturity = "scaffolded"
+  dependency = ["xmip-core-library-codec", "xmip-core-library-tls"]
+  mount = "module/core/library/jose"
 
 
   [xmip.core.library.mariadb]
@@ -1858,6 +1913,9 @@ dependency = ["xmip-core-library-codec"]
       "xmip-core-archive-sql",
       "xmip-core-archive-sqlite",
       "xmip-core-audit",
+      "xmip-core-audit-file",
+      "xmip-core-audit-syslog",
+      "xmip-core-audit-windows-event-log",
       "xmip-core-authenticate",
       "xmip-core-authenticate-password",
       "xmip-core-authenticate-ssh-key",

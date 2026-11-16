@@ -120,9 +120,9 @@ function Read-XmipModuleManifest {
                 [string] $projectText = Get-Content -LiteralPath $project -Raw
 
                 # A ProjectReference or other Include by relative path, and a
-                # path written from the project's own folder — how Xmip.Abi
-                # names the runtime's build. Globs and properties are cut at
-                # their first wildcard or property.
+                # path written from the project's own folder — how
+                # Xmip.Operate names the runtime's build. Globs and properties
+                # are cut at their first wildcard or property.
                 [string[]] $written = @(
                     [regex]::Matches($projectText, 'Include="(?<path>[^"$*;]+)"') |
                         ForEach-Object { $_.Groups['path'].Value }

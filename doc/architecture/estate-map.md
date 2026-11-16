@@ -1,6 +1,6 @@
 # The Xmip estate
 
-324 repositories are declared and 277 of them are
+326 repositories are declared and 282 of them are
 mounted in this working tree.
 
 **Generated from `architecture.toml` and from the `.gitmodules` files
@@ -33,16 +33,16 @@ the estate tree, and are counted nowhere below.
 | Foundation | 9 | 9 | 0 |
 | Library | 1 | 0 | 1 |
 | Capability | 23 | 23 | 0 |
-| Operation | 8 | 7 | 1 |
+| Operation | 9 | 8 | 1 |
 | Platform | 4 | 4 | 0 |
-| Technology | 279 | 234 | 45 |
-| **Total** | 324 | 277 | 47 |
+| Technology | 280 | 238 | 42 |
+| **Total** | 326 | 282 | 44 |
 
 | Maturity | Declared | Mounted | Not mounted |
 | --- | ---: | ---: | ---: |
 | planned | 1 | 0 | 1 |
-| reserved | 46 | 0 | 46 |
-| scaffolded | 277 | 277 | 0 |
+| reserved | 43 | 0 | 43 |
+| scaffolded | 282 | 282 | 0 |
 
 **Mounted means composed as a submodule, and composition happens at two
 levels** (ADR-0016, amended 2026-09-07). The root `.gitmodules` composes
@@ -168,13 +168,15 @@ started. Records: ADR-0018, ADR-0064.
 
 **Every Xmip program audits to its audit file.** `xmip-service`, `xmip`, both
 PowerShell modules, the web host, the language server and the Essentials
-record through `xmip-core-audit`'s `ProgramAudit` into `audit.toml`,
-synchronously: a record is appended before `record` returns, chained in its
-writer's audit chain under `audit.lock` (ADR-0070 clause 5), the operating
-system's log the fallback; the next append seals a record whose write was
-interrupted, kept as written and in no chain; `xmip audit --verify`,
-`Get-XmipAudit -Verify` and the Audit view's verify walk the chains and say
-each such fragment apart from them. Records: ADR-0062, ADR-0070.
+record through `xmip-core-audit`'s `ProgramAudit` into `audit.toml`, each
+program handing it `xmip-core-audit-file`'s sink as it starts, synchronously:
+a record is appended before `record` returns, chained in its writer's audit
+chain under `audit.lock` (ADR-0070 clause 5), the operating system's log the
+program hands in — the Windows Event Log or syslog — the fallback; the next
+append seals a record whose write was interrupted, kept as written and in no
+chain; `xmip audit --verify`, `Get-XmipAudit -Verify` and the Audit view's
+verify walk the chains and say each such fragment apart from them. Records:
+ADR-0062, ADR-0070.
 
 #### `send-port-retry`
 
@@ -449,7 +451,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 382236 lines of production
+Where each repository mounts and what it holds: 382812 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -466,7 +468,7 @@ is Rust and the exception is what a reader needs told. One total hid that the
 largest repository in the estate is almost all C# (the owner, 2026-09-21).
 
 A name under `declared, not built` is declared by the manifest and mounted
-nowhere — work not begun, not work unmounted. There are 47 of them and they
+nowhere — work not begun, not work unmounted. There are 44 of them and they
 hold no source to count.
 
 ```text
@@ -475,12 +477,12 @@ hold no source to count.
 │   ├── core/
 │   │   ├── capability/
 │   │   │   ├── transport                       9185
-│   │   │   │   ├── amqp                        2731
+│   │   │   │   ├── amqp                        2732
 │   │   │   │   ├── opc-ua                      2505
 │   │   │   │   ├── db2                         2483
-│   │   │   │   ├── http                        2239
+│   │   │   │   ├── http                        2240
 │   │   │   │   ├── nfs                         2170
-│   │   │   │   ├── kafka                       2054
+│   │   │   │   ├── kafka                       2055
 │   │   │   │   ├── smb                         2019
 │   │   │   │   ├── ibm-mq                      1959
 │   │   │   │   ├── ftp                         1839
@@ -563,13 +565,13 @@ hold no source to count.
 │   │   │   │   ├── tcp                          278
 │   │   │   │   ├── postgresql                   245
 │   │   │   │   └── udp                          214
-│   │   │   ├── provision                       3833
-│   │   │   │   ├── internal-ca                 2556
-│   │   │   │   ├── acme                        1222
+│   │   │   ├── provision                       3838
+│   │   │   │   ├── internal-ca                 2563
+│   │   │   │   ├── acme                        1152
 │   │   │   │   ├── self-signed                   81
 │   │   │   │       declared, not built 1
 │   │   │   │       platform
-│   │   │   ├── authenticate                    3318
+│   │   │   ├── authenticate                    2973
 │   │   │   │   ├── saml                         983
 │   │   │   │   ├── kerberos                     796
 │   │   │   │   ├── ldap                         781
@@ -580,8 +582,8 @@ hold no source to count.
 │   │   │   │   ├── windows                      377
 │   │   │   │   ├── pam                          339
 │   │   │   │   ├── ssh-key                      268
-│   │   │   │   ├── oidc                         233
-│   │   │   │   ├── jwt                          214
+│   │   │   │   ├── oidc                         225
+│   │   │   │   ├── jwt                          212
 │   │   │   │   ├── certificate                  152
 │   │   │   │   ├── api-key                       99
 │   │   │   │   ├── bearer                        94
@@ -609,18 +611,18 @@ hold no source to count.
 │   │   │   │       declared, not built 8
 │   │   │   │       handlebars  jolt  jq  jsonata  liquid  mustache  tera
 │   │   │   │       xquery
-│   │   │   ├── identify                        1606
+│   │   │   ├── identify                        1454
 │   │   │   │   ├── saml                         395
 │   │   │   │   ├── ip                           231
 │   │   │   │   ├── api-key                      226
 │   │   │   │   ├── dns                          195
 │   │   │   │   ├── username                     169
-│   │   │   │   ├── jwt                          165
+│   │   │   │   ├── jwt                          166
 │   │   │   │   ├── ntlm                         155
 │   │   │   │   ├── header                       148
 │   │   │   │   ├── certificate                  130
 │   │   │   │   ├── cookie                       127
-│   │   │   │   ├── oidc                         126
+│   │   │   │   ├── oidc                         127
 │   │   │   │   ├── kerberos                     116
 │   │   │   │   ├── transport                    109
 │   │   │   │   ├── party                         88
@@ -709,20 +711,25 @@ hold no source to count.
 │   │   │   ├── ssh                             1744
 │   │   │   ├── sql                             1304
 │   │   │   ├── postgresql                       963
+│   │   │   ├── jose                             881
 │   │   │   ├── ntlm                             806
 │   │   │   └── asn1                             686
 │   │   └── operation/
-│   │       ├── cli                            10148
+│   │       ├── operate                        41896  C# 30038 · Rust 11858
+│   │       ├── cli                            10155
 │   │       ├── observe                         7949
 │   │       │   ├── otlp                         587
 │   │       │   └── prometheus                   332
-│   │       ├── gui                             7921
-│   │       │   └── vscode                      3517
-│   │       ├── audit                           4388
-│   │       │       declared, not built 10
-│   │       │       elasticsearch  file  kafka  mssql  opensearch  otlp
-│   │       │       postgres  sqlite  syslog  windows-event-log
-│   │       ├── powershell                      3786  C# 3786 · PowerShell 0
+│   │       ├── gui                             7929
+│   │       │   └── vscode                      3519
+│   │       ├── powershell                      3788  C# 3788 · PowerShell 0
+│   │       ├── audit                           3674
+│   │       │   ├── file                         545
+│   │       │   ├── windows-event-log            173
+│   │       │   ├── syslog                        78
+│   │       │       declared, not built 7
+│   │       │       elasticsearch  kafka  mssql  opensearch  otlp  postgres
+│   │       │       sqlite
 │   │       ├── report                          2250
 │   │       │       declared, not built 6
 │   │       │       csv  html  json  pdf  prometheus  sql
@@ -738,7 +745,7 @@ hold no source to count.
 │   │           ├── postgresql                    62
 │   │           └── mssql                         59
 │   ├── foundation/
-│   │   ├── abi                                35712  C# 32878 · Rust 2431 · PowerShell 403
+│   │   ├── abi                                 5607  C# 2772 · Rust 2431 · PowerShell 404
 │   │   ├── core                                4677
 │   │   ├── message                             2093
 │   │   │   ├── avro                             300
@@ -763,17 +770,17 @@ hold no source to count.
 │   │   ├── stream                               382
 │   │   └── party                                193
 │   └── platform/
-│       ├── runtime                            55774
+│       ├── runtime                            47679
 │       ├── persist                            21766
 │       │   ├── rocksdb                          333
 │       │   ├── sqlite                           288
 │       │       declared, not built 1
 │       │       postgresql
-│       ├── configure                           8885
-│       └── cluster                             4948
+│       ├── configure                           5317
+│       └── cluster                             4958
 └── test/
     └── core/
-        ├── essentials                         16499
+        ├── essentials                         16515
         └── module                                83
 ```
 
@@ -811,15 +818,15 @@ What capabilities are built out of.
 
 | Repository | Maturity | Mount | Technologies |
 | --- | --- | --- | ---: |
-| `xmip-core-library` | reserved | not mounted | 9 |
+| `xmip-core-library` | reserved | not mounted | 10 |
 
-### `xmip-core-library`, 9 technologies
+### `xmip-core-library`, 10 technologies
 
 The parent is not composed here, so what it composes cannot be read; every
 technology below is declared only.
 
-- **scaffolded**, 9 — asn1, codec, mariadb, net, ntlm, postgresql, sql, ssh,
-  tls
+- **scaffolded**, 10 — asn1, codec, jose, mariadb, net, ntlm, postgresql, sql,
+  ssh, tls
 
 ---
 
@@ -986,6 +993,7 @@ Running and governing Xmip.
 | `xmip-core-cli` | scaffolded | `module/core/operation/cli` | — |
 | `xmip-core-gui` | scaffolded | `module/core/operation/gui` | 1 |
 | `xmip-core-observe` | scaffolded | `module/core/operation/observe` | 2 |
+| `xmip-core-operate` | scaffolded | `module/core/operation/operate` | — |
 | `xmip-core-powershell` | scaffolded | `module/core/operation/powershell` | — |
 | `xmip-core-report` | scaffolded | `module/core/operation/report` | 6 |
 | `xmip-core-test` | reserved | not mounted | 2 |
@@ -999,11 +1007,12 @@ All 10 composed in `module/core/operation/archive`.
 
 ### `xmip-core-audit`, 10 technologies
 
-Declared, and none composed: `module/core/operation/audit` has no
-`.gitmodules`.
+3 of 10 composed in `module/core/operation/audit`; a name marked `*` is one
+the parent does not compose.
 
-- **reserved**, 10 — elasticsearch, file, kafka, mssql, opensearch, otlp,
-  postgres, sqlite, syslog, windows-event-log
+- **reserved**, 7 — elasticsearch*, kafka*, mssql*, opensearch*, otlp*,
+  postgres*, sqlite*
+- **scaffolded**, 3 — file, syslog, windows-event-log
 
 ### `xmip-core-gui`, one technology
 

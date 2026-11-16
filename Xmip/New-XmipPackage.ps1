@@ -89,10 +89,10 @@ function New-XmipPackage {
     )
 
     $built = Get-XmipPackageBinary -Root $Root -CargoArgument $CargoArgument
-    # The runtime's own workspace resolves its dependencies apart from the
-    # root's, so its build keeps a target directory of its own: sharing one
-    # lets either overwrite what the other links.
-    [string] $libraryTarget = Join-Path $built.Target 'package-runtime'
+    # The operate library's own workspace resolves its dependencies apart from
+    # the root's, so its build keeps a target directory of its own: sharing
+    # one lets either overwrite what the other links.
+    [string] $libraryTarget = Join-Path $built.Target 'package-operate'
     [hashtable] $library = @{
         Root            = $Root
         TargetDirectory = $libraryTarget
@@ -114,8 +114,8 @@ function New-XmipPackage {
     $null = New-Item -ItemType Directory -Path $bin -Force
 
     # The two files each system names its own way.
-    [string[]] $file = if ($IsWindows) { 'xmip-service.exe', 'xmip_core_runtime.dll' }
-    else { 'xmip-service', 'libxmip_core_runtime.so' }
+    [string[]] $file = if ($IsWindows) { 'xmip-service.exe', 'xmip_core_operate.dll' }
+    else { 'xmip-service', 'libxmip_core_operate.so' }
     [string] $service = Join-Path $built.Target "$($built.Folder)/$($file[0])"
     [string] $runtime = Join-Path $libraryTarget "$($built.Folder)/$($file[1])"
     Copy-Item -LiteralPath $service, $runtime -Destination $bin
@@ -191,8 +191,8 @@ function Build-XmipRuntimeLibrary {
     <#
         .SYNOPSIS
             Builds the runtime's library, the one the operator surfaces load,
-            from module/platform/runtime into TargetDirectory, with the cargo
-            arguments xmip-service was built with.
+            from module/core/operation/operate into TargetDirectory, with the
+            cargo arguments xmip-service was built with.
 
         .PARAMETER Subcommand
             The cargo subcommand and what it builds, `build --lib` unless
@@ -220,7 +220,7 @@ function Build-XmipRuntimeLibrary {
 
     [string] $was = $env:CARGO_TARGET_DIR
     $env:CARGO_TARGET_DIR = $TargetDirectory
-    Push-Location -LiteralPath (Join-Path $Root 'module/platform/runtime')
+    Push-Location -LiteralPath (Join-Path $Root 'module/core/operation/operate')
 
     try {
         [string[]] $building = $Subcommand + $CargoArgument

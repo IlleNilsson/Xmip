@@ -100,7 +100,11 @@ default = []
 
 archive = ["dep:xmip-archive"]
 assign = ["dep:xmip-assign"]
-audit = ["dep:xmip-audit"]
+# What a program hands its audit as it starts (ADR-0062): the file sink, and
+# the operating system's log for when audit cannot persist. Each log's crate
+# is empty off its own platform, so both are linked and each builds where it
+# works.
+audit = ["dep:xmip-audit", "dep:xmip-audit-file", "dep:xmip-audit-syslog", "dep:xmip-audit-windows-event-log"]
 authenticate = ["dep:xmip-authenticate"]
 authorize = ["dep:xmip-authorize"]
 cluster = ["dep:xmip-cluster"]
@@ -209,6 +213,9 @@ xmip-abi = { package = "xmip-core-abi", git = "https://github.com/IlleNilsson/xm
 xmip-archive = { package = "xmip-core-archive", git = "https://github.com/IlleNilsson/xmip-core-archive", branch = "main", optional = true }
 xmip-assign = { package = "xmip-core-assign", git = "https://github.com/IlleNilsson/xmip-core-assign", branch = "main", optional = true }
 xmip-audit = { package = "xmip-core-audit", git = "https://github.com/IlleNilsson/xmip-core-audit", branch = "main", optional = true }
+xmip-audit-file = { package = "xmip-core-audit-file", git = "https://github.com/IlleNilsson/xmip-core-audit-file", branch = "main", optional = true }
+xmip-audit-syslog = { package = "xmip-core-audit-syslog", git = "https://github.com/IlleNilsson/xmip-core-audit-syslog", branch = "main", optional = true }
+xmip-audit-windows-event-log = { package = "xmip-core-audit-windows-event-log", git = "https://github.com/IlleNilsson/xmip-core-audit-windows-event-log", branch = "main", optional = true }
 xmip-authenticate = { package = "xmip-core-authenticate", git = "https://github.com/IlleNilsson/xmip-core-authenticate", branch = "main", optional = true }
 xmip-authenticate-mutual-tls = { package = "xmip-core-authenticate-mutual-tls", git = "https://github.com/IlleNilsson/xmip-core-authenticate-mutual-tls", branch = "main", optional = true }
 xmip-authorize = { package = "xmip-core-authorize", git = "https://github.com/IlleNilsson/xmip-core-authorize", branch = "main", optional = true }

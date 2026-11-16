@@ -208,3 +208,9 @@
 [submodule "module/core/capability/schedule"]
 	path = module/core/capability/schedule
 	url = https://github.com/IlleNilsson/xmip-core-schedule.git
+[submodule "module/core/library/jose"]
+	path = module/core/library/jose
+	url = https://github.com/IlleNilsson/xmip-core-library-jose.git
+[submodule "module/core/operation/operate"]
+	path = module/core/operation/operate
+	url = https://github.com/IlleNilsson/xmip-core-operate.git

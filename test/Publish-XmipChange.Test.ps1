@@ -367,6 +367,54 @@ path = "tests/measured/main.rs"
     }
 }
 
+Describe 'A Rust module that carries .NET is verified in both languages' {
+    # 2026-11-16: operate's Xmip.Surface and Xmip.Operate, and abi's Xmip.Abi,
+    # sit beside a Cargo.toml, and only cargo ran for them.
+
+    BeforeAll {
+        $script:Both = Join-Path ([System.IO.Path]::GetTempPath()) "xmip-both-$PID"
+        New-Item -ItemType Directory -Force -Path (Join-Path $script:Both 'm/dotnet/X') | Out-Null
+        foreach ($crate in 'm', 'r') {
+            New-Item -ItemType Directory -Force -Path (Join-Path $script:Both $crate) | Out-Null
+            [string] $manifest = Join-Path $script:Both "$crate/Cargo.toml"
+            Set-Content -LiteralPath $manifest -Value "[package]`nname = `"$crate`"`n"
+        }
+        Set-Content -LiteralPath (Join-Path $script:Both 'm/dotnet/X/X.csproj') -Value '<Project />'
+    }
+
+    AfterAll {
+        Remove-Item -LiteralPath $script:Both -Recurse -Force -ErrorAction SilentlyContinue
+    }
+
+    It 'tests the .NET projects after cargo passed, and fails the module when they fail' {
+        InModuleScope Xmip -Parameters @{ Root = $script:Both } {
+            Mock Write-Host { }
+            Mock Invoke-XmipTool { [pscustomobject]@{ Passed = $true } }
+            Mock Get-XmipBuildableFeature { }
+            Mock Test-XmipMeasuredProgram { $true }
+            Mock Test-XmipDotnetModule { $false }
+
+            @(Test-XmipModule -RepositoryRoot $Root -Module @('m') -Patch 'p.toml') |
+                Should -Be @('m')
+            Should -Invoke Test-XmipDotnetModule -Times 1 -Exactly
+        }
+    }
+
+    It 'runs no .NET for a Rust module without a project' {
+        InModuleScope Xmip -Parameters @{ Root = $script:Both } {
+            Mock Write-Host { }
+            Mock Invoke-XmipTool { [pscustomobject]@{ Passed = $true } }
+            Mock Get-XmipBuildableFeature { }
+            Mock Test-XmipMeasuredProgram { $true }
+            Mock Test-XmipDotnetModule { $false }
+
+            @(Test-XmipModule -RepositoryRoot $Root -Module @('r') -Patch 'p.toml') |
+                Should -BeNullOrEmpty
+            Should -Invoke Test-XmipDotnetModule -Times 0 -Exactly
+        }
+    }
+}
+
 Describe 'A test that never ends fails the landing in a minute' {
     # 2026-11-04: a landing waited two hours on seven TLS tests that waited on
     # each other; libtest only said each had run over 60 seconds.

@@ -5,25 +5,26 @@ using namespace System.Collections.Generic
 
 <#
 .SYNOPSIS
-    The runtime's remote build: --no-default-features --features remote,
-    the phone's (ADR-0014, amendment 2026-10-14).
+    The operate library's remote build, module/core/operation/operate with
+    --no-default-features --features remote, the phone's (ADR-0014,
+    amendment 2026-10-14).
 
 .DESCRIPTION
     Three builds of it, each into its own directory in the working area. The
     Desktop one, for this machine, debug, into .ai-interaction/target-remote,
-    is what Xmip.Abi's tests load (RemoteBuildTest). The Android one,
+    is what Xmip.Operate's tests load (RemoteBuildTest). The Android one,
     release, one library per Rust target into .ai-interaction/target-android,
     is what Xmip.Operations packages for a phone through
-    Xmip.Abi.Native.props: aarch64-linux-android for a device and
+    Xmip.Operate.Native.props: aarch64-linux-android for a device and
     x86_64-linux-android for the emulator, linked by the Android NDK's clang
     at API level 26. The iOS one, release, only on macOS, where Apple's tools
     run: a static library for aarch64-apple-ios (a device) and one for
     aarch64-apple-ios-sim (the simulator) into .ai-interaction/target-ios,
-    for iOS 15, joined by xcodebuild into xmip_core_runtime.xcframework
+    for iOS 15, joined by xcodebuild into xmip_core_operate.xcframework
     there, which Xmip.Operations links whole.
 
     Built here once, for Build-XmipService -Remote, for the landing before
-    it verifies module/foundation/abi and module/core/operation/gui, and for
+    it verifies module/core/operation/operate and module/core/operation/gui, and for
     the CI's phone-ios job (.github/workflows/rust.yml).
 
     Style: doc/governance/powershell-style.md
@@ -130,9 +131,9 @@ function Get-XmipRemoteRuntimeBuild {
 
     if ($Platform -eq 'Desktop') {
         [string] $into = Join-Path -Path $Root -ChildPath '.ai-interaction/target-remote'
-        [string] $file = if ($IsWindows) { 'xmip_core_runtime.dll' }
-        elseif ($IsMacOS) { 'libxmip_core_runtime.dylib' }
-        else { 'libxmip_core_runtime.so' }
+        [string] $file = if ($IsWindows) { 'xmip_core_operate.dll' }
+        elseif ($IsMacOS) { 'libxmip_core_operate.dylib' }
+        else { 'libxmip_core_operate.so' }
 
         return [pscustomobject] @{
             Platform        = $Platform
@@ -159,7 +160,7 @@ function Get-XmipRemoteRuntimeBuild {
                 # The oldest iOS Xmip.Operations runs on (its csproj).
                 Environment     = @{ IPHONEOS_DEPLOYMENT_TARGET = '15.0' }
                 Library         = Join-Path -Path $ios -ChildPath (
-                    "$triple/release/libxmip_core_runtime.a")
+                    "$triple/release/libxmip_core_operate.a")
             }
         }
 
@@ -187,7 +188,7 @@ function Get-XmipRemoteRuntimeBuild {
                 "AR_$under"                                        = $ar
             }
             Library         = Join-Path -Path $android -ChildPath (
-                "$triple/release/libxmip_core_runtime.so")
+                "$triple/release/libxmip_core_operate.so")
         }
     }
 }
@@ -236,7 +237,7 @@ function Get-XmipRemoteRuntimeBundle {
     }
 
     [string] $output = Join-Path -Path $Root -ChildPath (
-        '.ai-interaction/target-ios/xmip_core_runtime.xcframework')
+        '.ai-interaction/target-ios/xmip_core_operate.xcframework')
     [string[]] $library = @($static | ForEach-Object { '-library', $_.Library })
 
     [pscustomobject] @{

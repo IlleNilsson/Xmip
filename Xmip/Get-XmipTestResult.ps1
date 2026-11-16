@@ -182,7 +182,7 @@ function Get-XmipTestResult {
 
     if ($Worst) {
         $worstRecord = [Xmip.Surface.ScopeTree]::Worst(
-            [Xmip.Abi.Operate.HealthRecord[]] @($kept | ForEach-Object { $_.Record }))
+            [Xmip.Operate.HealthRecord[]] @($kept | ForEach-Object { $_.Record }))
 
         return $kept |
             Where-Object { [object]::ReferenceEquals($_.Record, $worstRecord) } |
@@ -227,7 +227,7 @@ function ConvertTo-XmipTestResult {
             into scenario, node, transport and contract.
 
         .PARAMETER Record
-            A Xmip.Abi.Operate.HealthRecord, as SnapshotOperator reads it.
+            A Xmip.Operate.HealthRecord, as SnapshotOperator reads it.
 
         .PARAMETER Root
             The scope the publisher publishes at; what is beneath it is split.

@@ -370,3 +370,71 @@ held.
 defect was found by the assistant while building the operator's door the
 same day and fixed at the coordinator's order; the group flush and the
 read only where needed are the assistant's.
+
+## Amendment, 2026-11-16: audit's sinks and logs are technologies the program hands in
+
+The owner, 2026-11-13: *Do we have all code in the modules, repos that we
+should. This is a refactoring statement*; 2026-11-16, *Go ahead*, to the
+three repositories. The audit capability carried three technologies' code
+itself — the file sink, syslog and the Windows Event Log — and chose its
+default sink and its operating system's log by platform. A capability does
+not depend on its technologies (ADR-0044), so each is now a repository of
+its own, mounted in `xmip-core-audit`, and audit no longer knows which
+sink or which log it writes to. What stands:
+
+- **The capability keeps the two seams and the rule.** `AuditSink` is where
+  a record is persisted; `operating_system_log::OperatingSystemLog` is a log
+  of the operating system's, which writes an entry at a severity and says
+  where it went. `Audit` is still the one place that persists to the sink
+  and, when the sink refuses a record or there is none, writes it to the
+  operating system's log, opening with the sentence that says why (clause
+  3). Failures are always recorded; that is not policy.
+- **The program that runs hands them in as it starts.** Its sink to its
+  `ProgramAudit` — `ProgramAudit::new(program, sink)` — and its platform's
+  log once to `operating_system_log::hand`; the first log handed stands, and
+  a program that handed none has a record its sink refused refused in
+  words. Nothing chooses a sink or a log by name: the program links what it
+  writes to. `xmip-service`, the language server, the Essentials' processes
+  and the runtime's library each hand in the file sink and, on Windows, the
+  Event Log, on Unix, syslog; each log's crate is empty off its own
+  platform, so both are linked and each builds where it works.
+- **The three technologies.** `xmip-core-audit-file`
+  (`module/core/operation/audit/file`): `FileSink`, its one writer in a
+  process and where each writer's chain stands under `audit.lock`
+  (ADR-0070 clause 5) — the second amendment of 2026-11-13 above, its
+  writer and its read only where needed, unchanged. `xmip-core-audit-syslog`
+  (`.../syslog`): one datagram to the local syslog, Unix only.
+  `xmip-core-audit-windows-event-log` (`.../windows-event-log`): the
+  Application log under `Xmip`, or `.NET Runtime` saying so, Windows only,
+  its C calls in `src/system.rs`, the one file of that crate that may hold
+  unsafe code (ADR-0050, amendment 2026-09-25). `xmip-core-audit` now
+  forbids unsafe code and no longer depends on `xmip-core-abi`.
+- **Where the audit file is, stays the capability's one rule.** The
+  directory a program was told, else `XMIP_AUDIT_DIRECTORY`, else none —
+  `audit_store::directory`, `DIRECTORY_VARIABLE` and `FILE_NAME` — because
+  the one reader (amendment 2026-09-29) reads there, and a Report's last
+  probe is read there by the runtime, which may not depend on a technology
+  (repository-model.md section 4). The file sink appends where the reader
+  reads, by that rule.
+- **A .NET program reaches the operating system's log only through the
+  runtime's library** (section 9): `xmip_audit_v1`'s `ProgramAudit` falls
+  back to the log the library handed audit, and the outcome says so.
+  `Xmip.Surface`'s `OperatingSystemLog`, a second writer of the Event Log
+  and syslog in C#, is deleted, and with it clause 3's last sentence: a
+  .NET program that cannot load the runtime's library at all writes no
+  entry of its own, and its record is refused in words that say why
+  (`ProgramAudit.Unreached`).
+- **A Report's probe is recorded in the audit the export hands in.** The
+  runtime's `report::act` takes the audit it records a probe in from its
+  caller (`report::Audited`), xmip-core-operate's `ffi/audit.rs` `program`,
+  since the runtime may not link the file sink.
+- **The timing program moved with the sink**: `xmip-core-audit-file`'s
+  `tests/measured/written.rs`, held to the same bound — a record on the
+  disk within a millisecond of the disk's own durable write of as many
+  bytes. Audit's own timing program keeps the keeper and the reader.
+
+**Provenance.** Found by the placement audit of 2026-11-13 (item 23) and
+ordered by the owner ("Good that you found it, fix it"; "Go ahead",
+2026-11-16). The seams and the hand-in at start are the coordinator's
+brief; that the file's place stays with the reader is the assistant's,
+because a Platform reader may not depend on a technology.

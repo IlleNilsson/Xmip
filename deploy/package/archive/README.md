@@ -6,7 +6,7 @@ folder, `xmip`, with two programs in `bin`:
 | file | what it is |
 | --- | --- |
 | `bin/xmip-service` (`.exe` on Windows) | the Xmip Service: the one program that runs a node |
-| `bin/xmip_core_runtime.dll` (`libxmip_core_runtime.so` or `.dylib` elsewhere) | the runtime library the operator tools load |
+| `bin/xmip_core_operate.dll` (`libxmip_core_operate.so` or `.dylib` elsewhere) | the runtime library the operator tools load |
 
 Unpack it where the node should live. The folder becomes the installed
 layout: `bin`, `config`, `modules`, `data` and `logs` (ADR-0015 clause 10).

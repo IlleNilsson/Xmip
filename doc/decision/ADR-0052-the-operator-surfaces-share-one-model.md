@@ -2751,3 +2751,62 @@ Who decided what. The owner's: the millisecond rule, whose cure is speed and
 never a larger bound. The assistant's, while building, for the owner to
 change: the paths ordered segment by segment, a record kept by its own
 scope, and the index's own hash.
+
+## Amendment, 2026-11-16: what operates is xmip-core-operate's, and abi keeps the binding
+
+Clause 1 put `Xmip.Surface` in `xmip-core-abi`, beside `Xmip.Abi`, by
+ADR-0044's rule read for .NET: code several surfaces need lives where they
+all already depend. ADR-0058, clause 1, says a Foundation module has no
+verb, and abi is Foundation: a definition, the headers and the bindings
+that declare them. By 2026-11-13 abi's `dotnet/` held about 10,500 lines of
+`Xmip.Surface`, 1,000 of `Xmip.Surface.Relay` and 7,400 of a model in
+`Xmip.Abi/Operate` that loads the runtime and calls it, beside some 1,300
+lines that declare the header. The owner, 2026-11-13: *Good that you found
+it, fix it*; and 2026-11-16, *Go ahead*, to the repository. What stands now:
+
+- **What operates is `xmip-core-operate`'s**, an Operation repository at
+  `module/core/operation/operate` that the command line, PowerShell and the
+  GUI share. Its `dotnet/` holds `Xmip.Operate`, the Operate model —
+  `NativeRuntime`, `Operator`, `RuntimeRules` and every section it calls,
+  `PublicationReader`, `RemoteNode`, `ServedNode` and the records each reads
+  back — in the namespace `Xmip.Operate`, `Xmip.Surface` over it,
+  `Xmip.Surface.Relay`, and the tests of each; its crate, the C ABI's
+  operating exports over the runtime, is its Rust half (ADR-0027).
+- **`Xmip.Abi` is the binding and no more**: each export's symbol
+  (`OperateAbi`), the structs and values that mirror the header, the module
+  boundary (`Module/`), `AbiBoundaries`, and how .NET text crosses, one
+  string (`PinnedStr`) or several in one buffer (`Utf8Pack`). A file stays
+  by what it does: a header's mirror stays, a call goes, and the header's
+  topology values stay in abi's `Topology.cs` while the records drawn from
+  them went. `Xmip.Abi.Test` holds the binding to the headers; a test of a
+  call, which earlier amendments name in `Xmip.Abi.Test`, is
+  `Xmip.Operate.Test`'s.
+- **The runtime's library is copied beside its users by `Xmip.Operate`**,
+  which loads it, and `build/Xmip.Operate.Native.props` packages it into a
+  phone host. The library's name and clause 1's discovery rule
+  (`RuntimeLibrary`) are as they were.
+- **Every surface references `Xmip.Surface` in xmip-core-operate** by
+  project path, and `Xmip.Abi` where it reads the binding itself — the
+  command line's and PowerShell's `abi`, `status` and `probe`. Clause 1's
+  place, beside the binding in `xmip-core-abi`, is superseded; what it says
+  `Xmip.Surface` holds stands.
+
+Who decided what. The owner's: that abi keeps the header and its binding,
+and the repository what operates moves to. The assistant's, while building,
+for the owner to change: the line drawn by what a file does, the header's
+values split out of `Topology.cs`, the library's copy following its loader,
+`Utf8Pack` made public beside `PinnedStr`, and the model's tests a project
+of their own, `Xmip.Operate.Test`.
+
+## Amendment, 2026-11-16: the .NET surfaces write no operating system's log
+
+`Xmip.Surface`'s `OperatingSystemLog`, the one .NET writer of the Windows
+Event Log and the local syslog, is deleted: it was a second writer of what
+audit's technologies write (ADR-0062, amendment of this date). A .NET
+program reaches the operating system's log only through `xmip_audit_v1`,
+whose `ProgramAudit` falls back to the log xmip-core-operate's library
+hands audit, and `Record`'s outcome says so. When the runtime's library
+cannot be loaded at all, `ProgramAudit` writes no entry of its own: the
+outcome is refused, in one sentence that says why first
+(`ProgramAudit.Unreached`). `Xmip.Surface` no longer takes
+`System.Diagnostics.EventLog`.

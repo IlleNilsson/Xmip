@@ -98,13 +98,13 @@ Describe 'A complete configuration a document shows is one the runtime would sta
             Join-Path -Path $script:Root -ChildPath '.ai-interaction/target-windows'
         }
         [string] $name = if ($IsWindows) {
-            'xmip_core_runtime.dll'
+            'xmip_core_operate.dll'
         }
         elseif ($IsMacOS) {
-            'libxmip_core_runtime.dylib'
+            'libxmip_core_operate.dylib'
         }
         else {
-            'libxmip_core_runtime.so'
+            'libxmip_core_operate.so'
         }
         [string] $script:Runtime = Join-Path -Path $target -ChildPath "debug/$name"
     }
@@ -116,7 +116,8 @@ Describe 'A complete configuration a document shows is one the runtime would sta
 
     It 'is valid by the runtime''s own verdict' {
         $script:Runtime | Should -Exist -Because (
-            'the runtime judges a configuration; build it: cargo build in module/platform/runtime')
+            'the runtime judges a configuration; build it: ' +
+            'cargo build in module/core/operation/operate')
 
         [hashtable] $given = @{
             Marked  = $script:Marked

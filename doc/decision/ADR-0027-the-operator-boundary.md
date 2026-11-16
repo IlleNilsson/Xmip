@@ -861,3 +861,37 @@ Built 2026-11-13, the assistant's. Held by `xmip-core-node`'s tests of
 `scope.rs` and `wildcard.rs`, the runtime's tests of the exports
 (`src/ffi/rule.rs`) and `Xmip.Surface.Test`'s `ScopeTreeTest` and
 `ScopePatternTest`.
+
+## Amendment, 2026-11-16: `xmip_operate.h` is implemented by xmip-core-operate
+
+**Provenance.** The owner, 2026-11-13: *Do we have all code in the modules,
+repos that we should. This is a refactoring statement*; shown the placement
+review, *Good that you found it, fix it*; and on 2026-11-16, *Go ahead*, to
+the repository it names. Where each file went is the assistant's.
+
+- **Where the boundary is implemented.** Every export of this header lives
+  in xmip-core-operate (Operation, `module/core/operation/operate`), in its
+  one folder that may hold unsafe code, `src/ffi/` (ADR-0050, amendment of
+  this date), over xmip-core-runtime, which never depends on it (ADR-0058,
+  amendment of this date). Until this day they were the runtime's
+  `src/ffi/`; every file moved whole and nothing was copied. The table's
+  state, what a surface's table answers from and what `xmip_start_v1`
+  publishes, moved with them (`operator.rs`), and so did the header's
+  integers for the crates' enums (`wire.rs`).
+- **The library is `xmip_core_operate`**: `xmip_core_operate.dll`,
+  `libxmip_core_operate.so`, `libxmip_core_operate.dylib`, and for iOS
+  `xmip_core_operate.xcframework`; the runtime is an rlib alone. Section 1
+  is the library's own: it pins itself as Windows loads it
+  (`ffi/resident.rs`) and is linked `-z nodelete` elsewhere (its
+  `build.rs`). Every surface finds it by the rule it always did
+  (`RuntimeLibrary`, `XMIP_RUNTIME_LIBRARY`, `xmip.runtime.library`), the
+  setting and the variable keeping their names.
+- **The boundary itself is unchanged.** The same 119 `xmip_*` symbols, and
+  `DllMain` on Windows, with the same signatures, and
+  `XMIP_OPERATE_VERSION` with them; the remote build (`remote`) exports the
+  same 66 of them it did. The loader that opens a module's library is the
+  far side of `xmip_module.h`, not of this header, and stays the runtime's.
+
+Built 2026-11-16, the assistant's. Held by xmip-core-operate's tests of
+every export, the runtime's tests of the plane and the loader, the .NET
+surfaces' tests over the library, and `test/Unsafe.Test.ps1`.

@@ -48,11 +48,11 @@ function Build-XmipService {
             configuration and the service's registration are written once,
             there.
 
-            -Remote builds no site: it builds the runtime's remote build,
-            --no-default-features --features remote, the library an
+            -Remote builds no site: it builds the operate library's remote
+            build, --no-default-features --features remote, the library an
             operator surface follows nodes with from outside (ADR-0014,
             amendment 2026-10-14). Desktop is this machine's, debug, into
-            .ai-interaction/target-remote, the one Xmip.Abi's tests load.
+            .ai-interaction/target-remote, the one Xmip.Operate's tests load.
             Android is the phone host's, release, for aarch64-linux-android
             and x86_64-linux-android at API level 26 into
             .ai-interaction/target-android, linked by the Android NDK found
@@ -61,7 +61,7 @@ function Build-XmipService {
             only on macOS and REFUSED elsewhere: a static library for
             aarch64-apple-ios and aarch64-apple-ios-sim into
             .ai-interaction/target-ios, joined by xcodebuild into the
-            xmip_core_runtime.xcframework Xmip.Operations links; the
+            xmip_core_operate.xcframework Xmip.Operations links; the
             estate's CI builds it on macOS (.github/workflows/rust.yml, job
             phone-ios). One build at a time, as every cargo runs. -WhatIf
             says the commands. Returns Platform, Triple, Path and Length per

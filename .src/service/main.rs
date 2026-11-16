@@ -108,6 +108,7 @@ mod starter;
 use std::process::ExitCode;
 
 use xmip_audit::program_audit::ProgramAudit;
+use xmip_audit_file::FileSink;
 
 use crate::arguments::{Arguments, Mode, USAGE};
 
@@ -123,7 +124,14 @@ fn main() -> ExitCode {
         .and_then(std::path::Path::file_stem)
         .and_then(|stem| stem.to_str())
         .map_or_else(|| PROGRAM.to_string(), ToString::to_string);
-    let audit = ProgramAudit::new(&program, None);
+    // What its audit keeps records in, as it starts: the file sink in the
+    // directory XMIP_AUDIT_DIRECTORY names, and the operating system's log of
+    // this platform for when audit cannot persist (ADR-0062 clause 3).
+    #[cfg(windows)]
+    xmip_audit::operating_system_log::hand(xmip_audit_windows_event_log::WindowsEventLog);
+    #[cfg(unix)]
+    xmip_audit::operating_system_log::hand(xmip_audit_syslog::Syslog);
+    let audit = ProgramAudit::new(&program, FileSink::stated(None));
     audit.watch_panics();
 
     let arguments = match Arguments::parse(std::env::args().skip(1)) {
