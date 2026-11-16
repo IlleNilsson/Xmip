@@ -449,7 +449,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 381536 lines of production
+Where each repository mounts and what it holds: 381930 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -478,7 +478,7 @@ hold no source to count.
 │   │   │   │   ├── amqp                        2731
 │   │   │   │   ├── opc-ua                      2505
 │   │   │   │   ├── db2                         2483
-│   │   │   │   ├── http                        2216
+│   │   │   │   ├── http                        2244
 │   │   │   │   ├── nfs                         2170
 │   │   │   │   ├── kafka                       2054
 │   │   │   │   ├── smb                         2019
@@ -490,36 +490,36 @@ hold no source to count.
 │   │   │   │   ├── snmp                        1440
 │   │   │   │   ├── nats-jetstream              1395
 │   │   │   │   ├── oracle                      1360
-│   │   │   │   ├── as4                         1356
+│   │   │   │   ├── as4                         1357
 │   │   │   │   ├── dns                         1260
 │   │   │   │   ├── s7comm                      1238
 │   │   │   │   ├── secs-gem                    1211
 │   │   │   │   ├── imap                        1198
 │   │   │   │   ├── mqtt                        1189
 │   │   │   │   ├── canopen                     1146
-│   │   │   │   ├── webdav                      1130
+│   │   │   │   ├── webdav                      1137
 │   │   │   │   ├── dicom                       1117
 │   │   │   │   ├── iec-61850                   1105
 │   │   │   │   ├── nats                        1049
 │   │   │   │   ├── m-bus                        989
 │   │   │   │   ├── ethercat                     987
-│   │   │   │   ├── as2                          979
-│   │   │   │   ├── aws-sns                      944
+│   │   │   │   ├── as2                          980
+│   │   │   │   ├── aws-sns                      957
 │   │   │   │   ├── ethernet-ip                  941
 │   │   │   │   ├── activemq                     926
 │   │   │   │   ├── hart                         913
 │   │   │   │   ├── j1939                        900
 │   │   │   │   ├── uds                          899
+│   │   │   │   ├── aws-kinesis                  898
 │   │   │   │   ├── file                         888
-│   │   │   │   ├── aws-kinesis                  886
 │   │   │   │   ├── bluetooth                    886
 │   │   │   │   ├── redis-streams                882
 │   │   │   │   ├── lorawan                      878
+│   │   │   │   ├── azure-event-grid             876
+│   │   │   │   ├── azure-service-bus            872
 │   │   │   │   ├── pop3                         869
-│   │   │   │   ├── azure-event-grid             868
-│   │   │   │   ├── azure-service-bus            860
-│   │   │   │   ├── google-pub-sub               848
-│   │   │   │   ├── aws-sqs                      842
+│   │   │   │   ├── google-pub-sub               860
+│   │   │   │   ├── aws-sqs                      854
 │   │   │   │   ├── profinet                     838
 │   │   │   │   ├── cotp                         831
 │   │   │   │   ├── wireless-hart                821
@@ -532,21 +532,21 @@ hold no source to count.
 │   │   │   │   ├── syslog                       733
 │   │   │   │   ├── iec-60870-5-104              728
 │   │   │   │   ├── iso-tp                       723
-│   │   │   │   ├── s3                           709
-│   │   │   │   ├── azure-blob                   695
+│   │   │   │   ├── s3                           721
+│   │   │   │   ├── azure-blob                   707
 │   │   │   │   ├── io-link                      693
 │   │   │   │   ├── mdns                         693
 │   │   │   │   ├── websocket                    693
+│   │   │   │   ├── google-cloud-storage         689
 │   │   │   │   ├── dds                          687
-│   │   │   │   ├── google-cloud-storage         677
-│   │   │   │   ├── msmq                         675
+│   │   │   │   ├── msmq                         676
 │   │   │   │   ├── dnp3                         673
 │   │   │   │   ├── obd-ii                       621
 │   │   │   │   ├── ssdp                         613
+│   │   │   │   ├── redpanda                     598
 │   │   │   │   ├── modbus                       590
-│   │   │   │   ├── redpanda                     582
 │   │   │   │   ├── coap                         579
-│   │   │   │   ├── azure-event-hubs             532
+│   │   │   │   ├── azure-event-hubs             544
 │   │   │   │   ├── wireless-m-bus               532
 │   │   │   │   ├── aws                          510
 │   │   │   │   ├── ethernet                     485
@@ -702,7 +702,7 @@ hold no source to count.
 │   │   │           declared, not built 5
 │   │   │           azure-blob  file  gcs  s3  sql
 │   │   ├── library/
-│   │   │   ├── net                             8124
+│   │   │   ├── net                             8240
 │   │   │   ├── codec                           5889
 │   │   │   ├── tls                             4200
 │   │   │   ├── mariadb                         1785
@@ -715,7 +715,7 @@ hold no source to count.
 │   │       ├── cli                            10148
 │   │       ├── observe                         7949
 │   │       │   ├── otlp                         587
-│   │       │   └── prometheus                   328
+│   │       │   └── prometheus                   332
 │   │       ├── gui                             7921
 │   │       │   └── vscode                      3517
 │   │       ├── audit                           4388
@@ -763,7 +763,7 @@ hold no source to count.
 │   │   ├── stream                               382
 │   │   └── party                                193
 │   └── platform/
-│       ├── runtime                            55605
+│       ├── runtime                            55698
 │       ├── persist                            21766
 │       │   ├── rocksdb                          333
 │       │   ├── sqlite                           288
@@ -773,7 +773,7 @@ hold no source to count.
 │       └── cluster                             4948
 └── test/
     └── core/
-        ├── essentials                         16489
+        ├── essentials                         16499
         └── module                                83
 ```
 

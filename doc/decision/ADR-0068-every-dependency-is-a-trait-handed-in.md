@@ -221,3 +221,52 @@ counts every other production `Instant::now` reading but `SystemClock`'s
 origin: 148 on 2026-11-15 before the last four moves, 121 after them, 97
 once the send step's moved, a ceiling that may fall as decisions move and
 may not rise. The assistant's, 2026-11-15.
+
+## Amendment, 2026-11-16: what a node starts tells time by its Clock
+
+**What the amendment of 2026-11-15 left on `SystemClock` takes the node's
+Clock through the seam it already had — `Configured::timed_by` for a
+technology, a parameter from `Running::start` for the runtime — and a part
+that is no node's is handed the operating system's by whoever makes it.**
+No second seam was added.
+
+- **The technologies that only send over `Connections`** — s3, azure-blob,
+  google-cloud-storage, aws-sqs, aws-kinesis, azure-event-hubs,
+  azure-service-bus, google-pub-sub, WebDAV, and Redpanda's Admin API
+  (`Admin::timed_by`) — hand the Clock `Configured::timed_by` gives them to
+  their connections. Each speaks HTTP/1.1 under its signature, which counts
+  no frame, so none decides on it yet; an HTTP/2 connection would.
+- **`http::server`'s one-request path** (`answer_on`, `serve_one`,
+  `serve_one_from`, `accept_one`) counts an HTTP/2 caller's frames in a
+  span on the Clock its caller hands it: a technology's far end the one
+  its transport was timed by, read back from its connections
+  (`Connections::clock`), the Prometheus scrape endpoint the one it is
+  started with (`Scrape::start`), and a simulated service's session,
+  which is no node's, the operating system's.
+- **The operate listener** (`Listener::start`, `Listener::local`) counts
+  its connections' frames on the Clock it is started with, and the nonces
+  a node issues its relays are fresh on the Clock `Relaying::new` is
+  handed: the node's, from `Running::operate`. `Fresh` has no default.
+- **A surface** (`Remote::open`, `retrying`, `local`, `local_retrying`)
+  tells time by the Clock it is opened with: how long a call or the
+  follow's try waited (`Shared::ran_out`, which `remote::asking` and
+  `plane::follow` read where they read `Instant` until now), a line's
+  silence and HTTP/2 frames, and the nonces it keeps. A monitoring node's
+  surfaces of its members take the node's Clock; a program's surface or
+  listener through the C ABI, which hands no Clock across the boundary,
+  the operating system's (`ffi::remote::hosted_clock`), as the Essentials'
+  rig and the root's tests hand theirs.
+- **A Stream's stall**: `StreamShare::new` takes the Clock, and
+  `StreamShare::timed_by` is deleted.
+
+Each converted decision has a test that steps `xcore::clock::Stepped` and
+sleeps for nothing: one request's frames and an operate connection's
+counted either side of a span (the PING-flooding peer both use is
+`net::fixture::pinging`, under net's `test-support`), a relay's nonce
+fresh within its span on the node's Clock, a surface's try running out at
+its patience, and a Stream's reader held back until its stall passed.
+Still on `SystemClock`, no node handing them one yet: the OTLP exporter's
+connections and the HTTP event wire's. `test/Clock.Test.ps1` holds
+`plane/shared.rs`, `plane/remote/asking.rs`, `plane/follow.rs` and
+`stream_share.rs` at no `Instant` at all, and counts 94 production
+`Instant::now` readings, its ceiling now. The assistant's, 2026-11-16.

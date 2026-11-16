@@ -259,7 +259,8 @@ pub(crate) fn acted(directory: &Path, act: Act, surface: Option<&Remote>) -> (Ou
     let surface = if let Some(surface) = surface {
         surface
     } else {
-        opened = Remote::local(&endpoint(directory), Duration::ZERO).expect("a local surface");
+        let clock = std::sync::Arc::new(xmip_core::SystemClock);
+        opened = Remote::local(&endpoint(directory), Duration::ZERO, clock).expect("a surface");
         &opened
     };
     let asked = ("subscription", "onward", act.word());

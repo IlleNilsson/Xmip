@@ -43,7 +43,8 @@ fn a_node_is_read_and_acted_on_over_its_operate_listener() {
     let operated = heard(&said, "is operated at", Duration::from_secs(10));
     assert!(operated.contains(&format!(" and {listen}")), "{operated}");
 
-    let surface = Remote::open(&listen, &authority.identity("surface")).expect("a remote");
+    let clock = std::sync::Arc::new(xmip_core::SystemClock);
+    let surface = Remote::open(&listen, &authority.identity("surface"), clock).expect("a remote");
     let (_, published) = surface.publication().expect("the node answers");
     let read = Publication::read(&published).expect("a publication");
     assert_eq!(read.node, node_scope());
@@ -119,7 +120,8 @@ fn operated_locally(directory: &Path, configuration: &Path, endpoint: &str) {
     let operated = heard(&said, "is operated at", Duration::from_secs(10));
     assert!(operated.contains(endpoint), "{operated}");
 
-    let surface = Remote::local(endpoint, Duration::ZERO).expect("a local surface");
+    let clock = std::sync::Arc::new(xmip_core::SystemClock);
+    let surface = Remote::local(endpoint, Duration::ZERO, clock).expect("a local surface");
     // The listener answers before the node's first publication is posted:
     // the follow says when it is.
     let mut state = surface.wait(0, Duration::from_secs(5));

@@ -45,18 +45,19 @@ BeforeAll {
     [string] $script:Instant = '\bInstant\b'
 
     # The production Instant::now readings outside SystemClock on
-    # 2026-11-15, once the resilience guards', Xmip Storage's client's and
+    # 2026-11-16, once the resilience guards', Xmip Storage's client's and
     # standby's, net's watched connection and HTTP/2 tally's, the cluster's
-    # sync plane's, the transports' turn deadline's and the runtime's own
-    # decisions read the Clock (148 before the last four, 121 before the
-    # send step's). A ratchet: lower it as the decisions move (ADR-0068,
-    # amendment 2026-11-15); never raise it.
-    [int] $script:MonotonicCeiling = 97
+    # sync plane's, the transports' turn deadline's, the runtime's own and
+    # an operate surface's decisions read the Clock (148 before the last
+    # four, 121 before the send step's, 97 before a surface's). A ratchet:
+    # lower it as the decisions move (ADR-0068, amendments 2026-11-15 and
+    # 2026-11-16); never raise it.
+    [int] $script:MonotonicCeiling = 94
 
     # The files whose decisions read the Clock handed in (ADR-0068,
-    # amendment 2026-11-15): none reads std's Instant. `net` is a Library
-    # and reads no clock: its watched connection and HTTP/2 tally take the
-    # reading their caller made.
+    # amendments 2026-11-15 and 2026-11-16): none reads std's Instant.
+    # `net` is a Library and reads no clock: its watched connection and
+    # HTTP/2 tally take the reading their caller made.
     [string[]] $script:Decides = @(
         'module/core/capability/resilience/circuit-breaker/src/lib.rs'
         'module/core/capability/resilience/rate-limit/src/lib.rs'
@@ -72,11 +73,15 @@ BeforeAll {
         'module/platform/runtime/src/departure.rs'
         'module/platform/runtime/src/pickup/released.rs'
         'module/platform/runtime/src/pickup/state.rs'
+        'module/platform/runtime/src/plane/follow.rs'
         'module/platform/runtime/src/plane/fresh.rs'
         'module/platform/runtime/src/plane/line.rs'
+        'module/platform/runtime/src/plane/remote/asking.rs'
         'module/platform/runtime/src/plane/remote/fresh.rs'
+        'module/platform/runtime/src/plane/shared.rs'
         'module/platform/runtime/src/running/revocation_list.rs'
         'module/platform/runtime/src/sending.rs'
+        'module/platform/runtime/src/stream_share.rs'
         'module/platform/runtime/src/stream_share/one_read.rs'
         'module/platform/runtime/src/work_step/dispatch.rs'
         'module/core/capability/schedule/src/due.rs'

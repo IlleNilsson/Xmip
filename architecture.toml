@@ -1373,7 +1373,7 @@ dependency = ["xmip-core-library-codec"]
     specification = "OpenTelemetry Protocol 1.x: OTLP/HTTP, binary protobuf, opentelemetry-proto metrics v1"
     [xmip.core.observe.prometheus]
     maturity = "scaffolded"
-    dependency = ["xmip-core-library-net", "xmip-core-transport", "xmip-core-transport-http"]
+    dependency = ["xmip-core-library-net", "xmip-core-transport", "xmip-core-transport-http", "xmip-core"]
     description = "Prometheus scrape endpoint: the figures the OTLP exporter sends, per scope, in the text exposition format 0.0.4 at /metrics, rendered at each scrape from the last snapshot the node published and served by xmip-core-transport-http on a thread of its own. A xmip-core-observe technology."
     specification = "Prometheus text-based exposition format 0.0.4"
 
