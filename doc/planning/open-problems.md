@@ -2084,32 +2084,6 @@ Tests: a secure-scheme Location on a node with a `receive` certificate
 serves a TLS client and refuses a plain one; on a node without, it is
 refused at bind as now.
 
-## 71. A node says it started before its listening Receive Locations listen
-
-Found by the timing program on 2026-11-14. A Receive Location whose
-receive waits on a listener binds it on its first receive, on the
-Location's own thread, after the node has started and been activated. HTTP
-is one (`http::HttpTransport::receive_up_to`, through `inbound.next(||
-self.bind())`). So a caller that connects the moment `started()` returns
-can be refused. Until 2026-11-14 Windows asked a refused connect again for
-about two seconds by itself, which hid this. Since then `net::connect`
-answers a refusal at once (ADR-0044, amendment 2026-11-14). The timing
-program's eight senders were refused in three runs of four, and its
-warm-up connect now asks again (`fixture::until_listening`, the one rule
-every test that sends to a node it just started asks through). A node
-started and reported serving still refuses its first callers. The owner
-decides between:
-
-- **Bound as it is opened.** Each listening technology binds when its
-  Location's transport is built, so a node is listening when it says it
-  started. A port that is taken then refuses the start at phase 9, rather
-  than stopping the Location after the start.
-- **Bound as now, and said.** The Location's record says it is not
-  listening until its first receive has bound, and a caller asks again.
-
-Tests: a caller that connects the moment a node's start returns is taken
-on its first connect, on Windows and on Linux.
-
 # Suggested order
 
 Rewritten 2026-09-23, and corrected to what is built on 2026-11-10. The
@@ -2827,6 +2801,36 @@ or the superuser's, neither written by anyone else
 `plane::local`'s `two_nodes_are_placed_in_two_folders`. Not proved: two
 nodes installed under two accounts in the AlmaLinux 10 guest, which needs
 root there.
+
+## 71. A node says it started before its listening Receive Locations listen — **Resolved**
+
+*Resolved 2026-11-16 by the owner's decision of the same day, "Bind at
+open", built the same day (ADR-0018, amendment 2026-11-16).*
+
+Found by the timing program on 2026-11-14. A Receive Location whose
+receive waits on a listener bound it on its first receive, on the
+Location's own thread, after the node had started and been activated —
+HTTP through `inbound.next(|| self.bind())` — so a caller that connected
+the moment `started()` returned could be refused. Windows had asked a
+refused connect again for about two seconds by itself, which hid it, until
+`net::connect` answered a refusal at once (ADR-0044, amendment
+2026-11-14); the timing program's eight senders were then refused in three
+runs of four, and every test that sent to a node it had just started asked
+again through `fixture::until_listening`. The choice was binding as the
+transport is opened, a taken port refusing the start at phase 9, or
+binding as before and saying the Location does not listen until its first
+receive.
+
+Decided by the owner, 2026-11-16: bind at open. Each listening Receive
+Location binds its listener as phase 9 opens its transport, through the
+transport's one seam, `Configured::listening`, which the runtime calls for
+Receive Locations alone (`linked::built_on`); a receive takes what it bound
+and binds nothing. Thirty technologies listen, and all thirty bound on
+their first receive. A port that is taken refuses the start at phase 9,
+naming the Location, the address and the port. `fixture::until_listening`
+is deleted, and every test that sends to a node it just started connects
+once. Held by the runtime's `tests/running/listening.rs` over TCP and HTTP,
+on Windows and in the AlmaLinux 10 guest.
 
 ## 4. `assign`, `promote`, `demote` sit in Capabilities with zero implementations — **Resolved**
 

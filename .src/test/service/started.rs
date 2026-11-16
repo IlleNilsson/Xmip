@@ -302,12 +302,12 @@ pub(crate) fn told(
 /// How many Messages a test carries through the node.
 pub(crate) const MESSAGES: u64 = 50;
 
-/// Send one Message, asked again while the Receive Location has not yet
-/// bound (`xmip_runtime::fixture::until_listening`).
+/// Send one Message, once: a node's Receive Location listens from the
+/// moment it says it accepts work (the owner, 2026-11-16, *Bind at open*).
 pub(crate) fn deliver(address: &str, payload: &[u8]) {
-    xmip_runtime::fixture::until_listening(address, || {
-        xmip_transport_tcp::TcpTransport::loopback().send(address, payload)
-    });
+    xmip_transport_tcp::TcpTransport::loopback()
+        .send(address, payload)
+        .unwrap_or_else(|failed| panic!("nothing took it at {address}: {failed:?}"));
 }
 
 pub(crate) fn declarations(directory: &Path) -> Vec<String> {

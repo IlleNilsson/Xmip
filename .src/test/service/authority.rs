@@ -15,7 +15,9 @@ use super::*;
 /// The node's configuration in `directory`, serving the authority on
 /// `serve` and publishing on `publish`, asking http-01 on `challenge`.
 fn serving(directory: &Path, serve: &str, publish: &str, challenge: u16) -> PathBuf {
-    let configuration = written(directory, "");
+    // A Receive Location listens as the node starts (the owner,
+    // 2026-11-16, *Bind at open*): an address of its own, one it can bind.
+    let configuration = written(directory, &unheld().to_string());
     let text = xmip_runtime::fixture::unsigned(&configuration);
     let table = format!(
         "\n[provision.node]\nsource = \"xmip-core-provision-internal-ca\"\n\
