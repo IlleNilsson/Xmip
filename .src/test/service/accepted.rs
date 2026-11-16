@@ -86,18 +86,12 @@ fn guarded(directory: &Path, authority: &Authority, receive: &str) -> std::path:
     configuration
 }
 
-/// `client` sends a Stream to `address` in TLS, connecting again while the
-/// Location has not yet bound — it binds on its first receive — and reads
-/// to the node's close. Bounded, and never a sleep.
+/// `client` sends a Stream to `address` in TLS, connecting once — the
+/// Location listens from the moment the node says it accepts work (the
+/// owner, 2026-11-16, *Bind at open*) — and reads to the node's close.
 fn send(address: &str, client: xmip_tls::ClientConfig) {
-    let deadline = Instant::now() + Duration::from_secs(5);
-    let tcp = loop {
-        match xmip_transport::socket::connect_tcp(address, Some(Duration::from_secs(5))) {
-            Ok(tcp) => break tcp,
-            Err(_) if Instant::now() < deadline => std::thread::yield_now(),
-            Err(failed) => panic!("the node took nothing at {address}: {failed:?}"),
-        }
-    };
+    let tcp = xmip_transport::socket::connect_tcp(address, Some(Duration::from_secs(5)))
+        .unwrap_or_else(|failed| panic!("the node took nothing at {address}: {failed:?}"));
     let Ok(mut stream) = xmip_tls::client_with("localhost", tcp, Arc::new(client)) else {
         return;
     };

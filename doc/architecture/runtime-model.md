@@ -2720,8 +2720,8 @@ Xmip Host Service, each within itself
  6. load-modules             ABI-verified per ADR-0012, eager or delayed per ADR-0025
  7. register-capabilities    Handlers and Extensions into its registries
  8. verify-extensions        verified, not loaded
- 9. accept-work              Receive Locations poll, Send Locations ready,
-                             Work Processes runnable
+ 9. accept-work              Receive Locations listen or poll, Send
+                             Locations ready, Work Processes runnable
 ```
 
 Phase 3 validates every Definition against the capability contracts it
@@ -2734,6 +2734,16 @@ runs them (`module/platform/runtime/src/running.rs`): it loads each Module a
 node's configuration names once, from what the program starting the node
 linked or from its library, and builds what serves every Receive Location,
 serving nothing yet.
+
+Phase 9 builds each Location's transport once, and a Receive Location
+whose receive waits on a listener — a TCP listener, a datagram socket, a
+pipe — binds it then (`transport::Configured::listening`), never on its
+first receive (the owner, 2026-11-16, *Bind at open*; ADR-0018, amendment
+2026-11-16). So a node listens when its start returns: a caller that
+connects at once waits in the listener's backlog and is taken once the
+node serves. A port that is taken refuses the start at phase 9, naming the
+Location, the address and the port, as every Location that fails to open
+does.
 
 Phase 9 completes at activation (ADR-0031, amendment 2026-11-12):
 `Running::activate` first keeps the slice the node runs as its active

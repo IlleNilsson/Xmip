@@ -2640,3 +2640,70 @@ owner chose the order (*Wait for the disk*), and it is not built.
 Provenance: the measurements, the two changes and their tests are the
 assistant's, 2026-11-15; the mechanism, *the send side keeps up*, is the
 coordinator's decision, and *Wait for the disk* the owner's, the same day.
+
+## Amendment, 2026-11-16: a Receive Location listens once its transport is opened
+
+The timing program found on 2026-11-14 that a node said it had started
+before its listening Receive Locations listened (open problem 71). Each
+bound its listener on its first receive, on the Location's own thread,
+after the node had started and been activated, so a caller that connected
+the moment the start returned could be refused. Windows had hidden it by
+asking a refused connect again for two seconds, until `net::connect`
+answered a refusal at once (ADR-0044, amendment 2026-11-14); from then the
+tests asked again through `fixture::until_listening`. The owner chose
+between binding as the transport is opened and saying the Location does
+not listen until its first receive, 2026-11-16: *Bind at open*.
+
+- **Bound at phase 9, through the transport's one seam.**
+  `transport::Configured::listening` binds what a technology's receive
+  waits on — a listener, a datagram socket, a pipe, kept in
+  `transport::kept::Kept` or `transport::serving::Serving` — and says
+  where it listens; by default it binds nothing. The runtime calls it once
+  for each Receive Location as phase 9 builds its transport, once the node
+  has given it everything but its secret (`linked::built_on`), and never
+  for a Send Location. A receive takes
+  what it bound (`Kept::listener`) and binds nothing: `Serving::next` and
+  `http::inbound::Inbound::next` take no bind. So a node listens when
+  `Running::start` returns, before its activation serves; a caller that
+  connects then waits in the listener's backlog and is taken once the node
+  serves.
+- **A port that is taken refuses the start at phase 9.** `accept-work`
+  refuses the attempt naming the Location, and the bind's failure names
+  the address and, where another holds it, the port: *the Location 'In':
+  binding the listener at 127.0.0.1:50123: port 50123 is taken*
+  (`transport::socket::bind_tcp`, `bind_udp`). It is refused as every
+  other Location that fails to open is, and a candidate's attempt falls
+  back to the active configuration (ADR-0031, amendment 2026-11-12). Until
+  this day a taken port stopped the Location after the start.
+- **Opening binds nothing else.** `Configured::open` builds a transport
+  and binds nothing, so a surface validating a Location
+  (`xmip_validate_v1`), or the runtime asking whether a Location waits
+  (`linked::LinkedTransport::waits`), takes no port.
+- **Thirty technologies listen, and every one bound on its first
+  receive.** Through `http::inbound`: HTTP, AS2, AS4, Peppol, MSMQ, SNS's
+  subscription and Event Grid's webhook. Through `Serving`: COTP, DICOM,
+  DNP3, IEC 60870-5-104, MLLP, Modbus, SECS/GEM, SMTP, WebSocket, and DNS
+  and syslog over TCP. Through `Kept`: TCP, UDP, a Unix domain socket, a
+  named pipe, BACnet, CoAP, DDS, DHCP, KNX, mDNS, SNMP, SSDP, and DNS and
+  syslog over UDP. None bound at open. A Unix domain socket's Location is
+  refused at phase 9 on a system without them, as its receive was. A
+  technology that sends only, or receives by connecting out, is
+  unchanged.
+- **A test connects once.** `fixture::until_listening` is deleted with the
+  retries of every caller: the runtime's running, ledger and timing tests
+  and the root crate's service tests, the TLS one's own loop included,
+  send to a node they just started once.
+
+Proved by the runtime's `tests/running/listening.rs`: over TCP and over
+HTTP, a caller that connects the moment the start returns is taken on its
+first connect and its Message reaches the far end, and a port another
+holds refuses the start at `accept-work`, naming the Location, the address
+and the port, on Windows and in the Linux guest; by `transport::kept`'s (a
+receive takes what the open bound and binds nothing),
+`transport::serving`'s (a listener that cannot bind fails its open, and a
+receive binds nothing), `transport::socket`'s (a taken port named, over
+TCP and UDP) and `http`'s (a Location listening once opened, a taken port
+refusing it).
+
+Provenance: *Bind at open* is the owner's decision, 2026-11-16; the seam,
+the thirty technologies and the tests are the assistant's, the same day.
