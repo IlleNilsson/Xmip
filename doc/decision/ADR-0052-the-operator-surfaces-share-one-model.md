@@ -2810,3 +2810,36 @@ cannot be loaded at all, `ProgramAudit` writes no entry of its own: the
 outcome is refused, in one sentence that says why first
 (`ProgramAudit.Unreached`). `Xmip.Surface` no longer takes
 `System.Diagnostics.EventLog`.
+
+## Amendment, 2026-11-17: the document is read by the runtime, so it names no runtime
+
+**Amends clause 1's runtime discovery and *the configuration document, read
+once*.** The owner's refactoring of 2026-11-13 (*Do we have all code in the
+modules, repos that we should*; *Good that you found it, fix it*) found two
+things a .NET surface did itself that the runtime does:
+
+1. **The configuration document, read once — by the runtime.** `TomlDocument`
+   read a host's document with Tomlyn and edited a document's syntax tree
+   with it, a second TOML parser beside the one the runtime reads its
+   configuration with. Every TOML read or write .NET makes now crosses
+   `xmip_operate.h` section 27 to `xmip-core-configure` (ADR-0031, amendment
+   of this date): `TomlDocument.Read` and `Add` build the configuration from
+   `TomlConfigurationSource`, whose provider hands the file's text to
+   `xmip_document_read_v1` and keys what comes back as the configuration's
+   paths, an array's entries by position; `TomlDocument.Set` sets or removes
+   one key through `xmip_document_set_v1`, comments and layout kept, which the
+   Desktop's preferences are kept by. The package is deleted, with its
+   syntax-tree editing.
+2. **Runtime discovery, one rule, without the document.** A document the
+   runtime reads cannot name the runtime that reads it: the library is loaded
+   before the document is. `Xmip:RuntimeLibrary` and `RuntimeLibrary.Find`
+   are deleted, and the rule is a library stated for one invocation
+   (`--runtime`, `-Library`), else `XMIP_RUNTIME_LIBRARY`, else the library
+   beside the executable (`RuntimeLibrary.Stated` and `Choose`); a statement
+   is made before the document is read (`SurfaceChoice.Answering`,
+   `ModuleSurface.Stated`). The shipped `gui.toml`, `cli.toml` and
+   `powershell.toml` say so where the key stood.
+3. **The probe's judgment** (amendment 2026-09-24, *ModuleProbe.Result.
+   Complaint*) is the runtime loader's now (ADR-0012, amendment of this date):
+   `ModuleProbed.Refusal`, from `xmip_module_probe_v1`, is what `xmip probe`
+   exits on and the cmdlet reports.

@@ -11,7 +11,9 @@ Set-StrictMode -Version Latest
     states or that file declares (ADR-0028, amendment 2026-10-21: one file
     for one computer and for machines of their own), and names it to the
     roll in XMIP_TEST_CLUSTER — the variable every language's test fixture
-    reads.
+    reads. The file is read and written by the runtime's one reader, through
+    the operator module (Read-XmipConfiguration; ADR-0031, amendment
+    2026-11-17), as every configuration Xmip runs is.
 
     Style: doc/governance/powershell-style.md
 #>
@@ -59,7 +61,7 @@ function Read-XmipTestCluster {
         throw "the cluster file $Path is not there"
     }
 
-    $document = Read-XmipToml -Path $Path
+    $document = Read-XmipConfiguration -Path $Path
     $service = Get-TomlValue -Node $document -Name 'service'
     [string] $name = [string] (Get-TomlValue -Node $service -Name 'cluster_name')
 
@@ -86,7 +88,7 @@ function Get-XmipClusterNodeRole {
             a cluster's [nodes].
 
         .PARAMETER Document
-            cluster.xmip, as Read-XmipToml read it.
+            cluster.xmip, as Read-XmipConfiguration read it.
     #>
     [CmdletBinding()]
     [OutputType([pscustomobject])]
@@ -120,7 +122,7 @@ function Read-XmipEssentialsCluster {
     param()
 
     [string] $path = (Get-XmipEssentialsLayout).Configuration
-    return Get-XmipClusterNodeRole -Document (Read-XmipToml -Path $path)
+    return Get-XmipClusterNodeRole -Document (Read-XmipConfiguration -Path $path)
 }
 
 function Join-XmipNodeRole {
@@ -236,7 +238,7 @@ function Write-XmipTestCluster {
 
     if ($PSCmdlet.ShouldProcess($file, 'Write the run''s cluster file')) {
         New-Item -ItemType Directory -Path $Path -Force | Out-Null
-        Write-XmipToml -Path $file -Value $document
+        Write-XmipConfiguration -Path $file -Value $document
     }
 
     return $file

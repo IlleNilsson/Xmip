@@ -76,18 +76,20 @@ function Initialize-XmipEssentialsAuthority {
         # cluster the Essentials rolls, from its cluster.xmip, and the folder's.
         [string] $cluster = (Read-XmipTestCluster -Path (Get-XmipTestClusterPath)).Name
         [string] $place = Split-Path -Path $full -Leaf
-        Set-Content -LiteralPath $configuration -Encoding utf8NoBOM -Value @(
-            "# What signs an Essentials tester's operator request (ADR-0009, amendment"
-            '# 2026-10-21): New-XmipCertificate -Request <operator.csr> -Configuration'
-            '# this file. The runtime reads it as a node configuration; no node runs as it.'
-            '[service]'
-            'name = "xmip-essentials-authority"'
-            "cluster_name = `"$cluster`""
-            "node_name = `"$place`""
-            ''
-            '[provision.operator]'
-            'authority = "."'
+        [string[]] $said = @(
+            "What signs an Essentials tester's operator request (ADR-0009, amendment"
+            '2026-10-21): New-XmipCertificate -Request <operator.csr> -Configuration'
+            'this file. The runtime reads it as a node configuration; no node runs as it.'
         )
+        $document = [ordered]@{
+            service   = [ordered]@{
+                name         = 'xmip-essentials-authority'
+                cluster_name = $cluster
+                node_name    = $place
+            }
+            provision = [ordered]@{ operator = [ordered]@{ authority = '.' } }
+        }
+        Write-XmipConfiguration -Path $configuration -Value $document -Comment $said
     }
 
     return [PSCustomObject]@{

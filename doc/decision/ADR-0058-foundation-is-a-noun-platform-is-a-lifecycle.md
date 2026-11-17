@@ -681,3 +681,21 @@ repositories it names. The reading below is the assistant's.
 
 Built 2026-11-16, the assistant's. Held by `test/Dependency.Test.ps1` and
 `test/Layer.Test.ps1`.
+
+## Amendment, 2026-11-17: a folder says a module's purpose, never its language
+
+The owner, 2026-11-17, asked whether operating's Rust belongs under
+`module/core/operation` beside its .NET: *Do it, so folders per purpose.*
+Where a repository mounts follows from what it is for — its provider, its
+purpose, its parent — and never from the language it is written in. So
+`module/core/operation` holds what operates Xmip in whichever language:
+xmip-core-operate's Rust exports and its .NET surface library, audit and
+its technologies, observe, archive and report, the GUI and PowerShell, and
+the command line, which becomes Rust in place, at `module/core/operation/cli`
+(ADR-0014, amendment 2026-10-12). A repository's language is its own
+`primaryLanguage` in `architecture.toml`, and nothing else reads meaning
+from it.
+
+This replaces the owner's word of 2026-10-22, *Core is Rust, Operation is
+.NET*, which would have moved every Rust module out of `operation`; it was
+never built and never recorded here.

@@ -913,3 +913,29 @@ on another save, so the Monitor, and every surface, shows which node runs
 what; a node stopped in order is not compared. A rolling deployment flags
 its nodes until every one runs the new save, which is what it is meant to
 show.
+
+## Amendment, 2026-11-17: one reader for the runtime, the surfaces and the tooling's configuration
+
+What the runtime reads is what a surface reads, and what the estate's tooling
+reads of a configuration Xmip runs, by one parser: `configure::document`
+reads a document's TOML, writes one, and sets or removes one key of its text
+in place, the comment trailing a value kept with it. xmip-core-operate exports
+the three as `xmip_document_read_v1`, `xmip_document_write_v1` and
+`xmip_document_set_v1` (`xmip_operate.h` section 27), answering JSON in
+memory, as clause 2 has every crossing do; a remote build carries them, so
+the phone reads its own document.
+
+- **The .NET surfaces** read their documents and the Desktop's preferences
+  through them and link no TOML package (ADR-0052, amendment of this date).
+- **The estate's PowerShell** reads and writes a cluster's `cluster.xmip`
+  and a node's document through them, over the operator module
+  (`Read-XmipConfiguration`, `Write-XmipConfiguration`): a test run's
+  cluster file (`Write-XmipTestCluster`, `Read-XmipTestCluster`,
+  `Read-XmipEssentialsCluster`) and the Essentials authority's
+  `operator.xmip`.
+- **The estate's own files stay on PSToml**: its manifests
+  (`architecture.toml`, `allocation.toml`, `prerequisite.toml`), its run and
+  build records, its profiles, sites and deployment environments, read by
+  `Read-XmipToml`. The tool that builds the runtime reads them — a site is
+  `Build-XmipService`'s input — so it cannot need the runtime to read them
+  (open problem 25, row u).

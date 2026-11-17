@@ -55,7 +55,8 @@ BeforeAll {
     [int] $script:MonotonicCeiling = 94
 
     # The files whose decisions read the Clock handed in (ADR-0068,
-    # amendments 2026-11-15 and 2026-11-16): none reads std's Instant.
+    # amendments 2026-11-15, 2026-11-16 and 2026-11-17): none reads std's
+    # Instant.
     # `net` is a Library and reads no clock: its watched connection and
     # HTTP/2 tally take the reading their caller made.
     [string[]] $script:Decides = @(
@@ -97,6 +98,8 @@ BeforeAll {
         'module/platform/runtime/src/send_step/scan.rs'
         'module/platform/runtime/src/send_step/settles.rs'
         'module/platform/runtime/src/send_step/under_claim.rs'
+        'module/core/operation/observe/otlp/src/exporter.rs'
+        'module/core/capability/transport/http/src/event_wire.rs'
     )
 
     # A test's own file: an integration test, the root's test tree, a

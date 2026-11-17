@@ -564,3 +564,15 @@ sends counts by; and the bound `Transport::receive_up_to` takes, the room
 the runtime has, where the table's receive pushes into a sink without one.
 Whether the table gains them is open with the loader for transports, which
 is not built; nothing here changes the header.
+
+## Amendment, 2026-11-17: the probe calls the one check
+
+The probe of a module library is the runtime loader's now, and judges a
+descriptor by `abi::validate_module_abi`, the check `abi::accepts` starts
+with (ADR-0012, amendment of this date). `ModuleProbe` and its `Complaint`
+are deleted, and with them the second reading the amendment of 2026-09-28
+left for the owner to rule on: the probe takes the header's, which section
+4 states and ADR-0011's names follow — the standard is empty only when the
+provider is `core`, and a core module may name one
+(`xmip-core-transport-http`). The owner is told, and his ruling stands
+over it.

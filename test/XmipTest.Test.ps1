@@ -377,6 +377,36 @@ Describe 'The environment a roll is started with' {
         }
     }
 
+    It 'reads and writes a cluster''s file by the runtime''s one reader, never PSToml' {
+        # ADR-0031, amendment 2026-11-17: what the runtime reads is what the
+        # tooling reads, configure through the operator module; PSToml reads
+        # the estate's own manifests alone (open problem 25, row u).
+        InModuleScope Xmip -Parameters $script:Named {
+            param($Cluster, $Stage)
+
+            Mock Read-XmipToml { throw 'a cluster''s file is the runtime''s to read' }
+            Mock Write-XmipToml { throw 'a cluster''s file is the runtime''s to write' }
+            [hashtable] $typed = @{
+                Cluster  = $Cluster.Name
+                Nodes    = @($Stage.receiving)
+                NodeRole = @{ $Stage.receiving = 'receiving' }
+                Path     = Join-Path $TestDrive 'reader'
+            }
+
+            [string] $file = Write-XmipTestCluster @typed
+            $read = Read-XmipTestCluster -Path $file
+
+            $read.Nodes | Should -Be @($Stage.receiving)
+            $read.Role[$Stage.receiving] | Should -Be 'receiving'
+            Should -Invoke Read-XmipToml -Times 0 -Exactly
+            Should -Invoke Write-XmipToml -Times 0 -Exactly
+
+            Set-Content -LiteralPath $file -Value '[service'
+            { Read-XmipTestCluster -Path $file } |
+                Should -Throw -ExpectedMessage '*REFUSED*configuration parse failed*'
+        }
+    }
+
     It 'refuses a node named twice, an online node not named, and a name no file can carry' {
         InModuleScope Xmip -Parameters $script:Named {
             param($Cluster, $Stage)
