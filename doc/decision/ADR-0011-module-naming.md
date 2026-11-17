@@ -296,3 +296,39 @@ Stream in `xmip-core-transport-mssql`, TNS and the two-task layer in
 `xmip-core-transport-oracle`, DRDA in `xmip-core-transport-db2`
 (repository-model.md section 5: a layer only one family consumes is not
 extracted).
+
+## Amendment, 2026-11-17: a cloud technology names its vendor
+
+The owner, 2026-10-27, resolving open problem 8 by its option A: *always
+name the vendor*. A technology that is one vendor's service carries the
+vendor's token first in the standard slot, as `aws-sqs`, `azure-blob` and
+`google-pub-sub` already did, and a name never leaves the vendor out because
+the product's name looks unique. On 2026-11-17 he said *"Go ahead"*, and the
+three that named none were renamed with every use (open problem 57):
+
+- `xmip-core-transport-s3` is `xmip-core-transport-aws-s3`, mounted at
+  `module/core/capability/transport/aws-s3`;
+- `xmip-core-archive-s3` is `xmip-core-archive-aws-s3`, mounted at
+  `module/core/operation/archive/aws-s3`;
+- `xmip-core-archive-gcs` is `xmip-core-archive-google-cloud-storage`,
+  mounted at `module/core/operation/archive/google-cloud-storage`, named as
+  the transport it rides on, `xmip-core-transport-google-cloud-storage`,
+  already was;
+- the reserved `retain.s3` and `retain.gcs` are `retain.aws-s3` and
+  `retain.google-cloud-storage`.
+
+The repositories were renamed on GitHub; each crate's package is its
+repository's name, and every dependency on it follows. So does what an
+operator writes: the transport declares itself `aws-s3`, and its scheme,
+which chooses the technology (ADR-0064, amendment 2026-10-28), is
+`aws-s3://`; the archives' receipts are `aws-s3://<bucket>/<key>` and
+`google-cloud-storage://<bucket>/<object>`; the Essentials files into
+`filing/aws-s3/<contract>`. The old words are deleted, with no alias. *S3*
+stays where it names Amazon's service or its interface — the S3 REST API, an
+S3-compatible store, `S3Transport` and `S3Archive`, Signature Version 4's
+`s3` service scope: only the technology's name changed.
+
+Two transport schemes still are not their technology's name: Google Cloud
+Storage answers Google's own `gs://`, and Kinesis `kinesis://`. Provenance:
+the rule and the go-ahead are the owner's; the schemes, the receipts' form
+and where *S3* stays are the assistant's, for the owner to overrule.

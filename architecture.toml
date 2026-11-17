@@ -502,7 +502,7 @@ dependency = ["xmip-core-library-codec"]
     dependency = ["xmip-core-library-net", "xmip-core-library-codec", "xmip-core"]
     [xmip.core.transport.aws]
     maturity = "scaffolded"
-    description = "What every AWS technology speaks over HTTP: Signature Version 4, the Query API and the JSON 1.1 protocol, both sides of each. Not a transport of its own: s3, aws-sqs, aws-sns and aws-kinesis ride on it. A xmip-core-transport technology."
+    description = "What every AWS technology speaks over HTTP: Signature Version 4, the Query API and the JSON 1.1 protocol, both sides of each. Not a transport of its own: aws-s3, aws-sqs, aws-sns and aws-kinesis ride on it. A xmip-core-transport technology."
     dependency = ["xmip-core-transport-http", "xmip-core-library-codec", "xmip-core-library-net", "xmip-core"]
     specification = "AWS Signature Version 4; the AWS Query and JSON 1.1 protocols"
     [xmip.core.transport.aws-kinesis]
@@ -682,6 +682,10 @@ dependency = ["xmip-core-library-codec"]
     maturity = "scaffolded"
     description = "Zigbee transport: APS framing over the network layer — a Stream is one APS data frame, or a fragmented transmission of numbered blocks acknowledged by the receiver; a loopback radio stands in for the coordinator. A xmip-core-transport technology."
     specification = "Connectivity Standards Alliance Zigbee"
+    [xmip.core.transport.aws-s3]
+    maturity = "scaffolded"
+    specification = "Amazon S3 REST API, Signature Version 4"
+    dependency = ["xmip-core-transport-http", "xmip-core-library-codec", "xmip-core-transport-aws", "xmip-core-library-net", "xmip-core"]
     [xmip.core.transport.aws-sns]
     maturity = "scaffolded"
     description = "Amazon SNS transport: Signature Version 4 over the Query API — publish a Stream as a message to a topic, and receive as the HTTP endpoint a subscription delivers to, confirming itself and taking each notification as a Stream — a topic ARN is a Location. A xmip-core-transport technology."
@@ -792,10 +796,6 @@ dependency = ["xmip-core-library-codec"]
       dependency = ["xmip-core-library-net", "xmip-core"]
     maturity = "scaffolded"
     specification = "Redis Streams over RESP2: XADD, XRANGE, XREAD"
-    [xmip.core.transport.s3]
-    maturity = "scaffolded"
-    specification = "Amazon S3 REST API, Signature Version 4"
-    dependency = ["xmip-core-transport-http", "xmip-core-library-codec", "xmip-core-transport-aws", "xmip-core-library-net", "xmip-core"]
     [xmip.core.transport.serial]
       # xmip-core-library-net on Windows alone: its one overlapped wait
       # (`net::system::overlapped`); the manifest has no way to say a
@@ -1406,13 +1406,13 @@ dependency = ["xmip-core-library-codec"]
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   maturity = "scaffolded"
+    [xmip.core.retain.aws-s3]
+    maturity = "reserved"
     [xmip.core.retain.azure-blob]
     maturity = "reserved"
     [xmip.core.retain.file]
     maturity = "reserved"
-    [xmip.core.retain.gcs]
-    maturity = "reserved"
-    [xmip.core.retain.s3]
+    [xmip.core.retain.google-cloud-storage]
     maturity = "reserved"
     [xmip.core.retain.sql]
     maturity = "reserved"
@@ -1423,6 +1423,11 @@ dependency = ["xmip-core-library-codec"]
   repositoryRole = "operational-capability"
   maturity = "scaffolded"
   dependency = ["xmip-core-library-codec", "xmip-core-library-sql", "xmip-core"]
+    [xmip.core.archive.aws-s3]
+    description = "S3 archive target: one item is one object in a bucket. A xmip-core-archive technology."
+    maturity = "scaffolded"
+    dependency = ["xmip-core-transport-aws-s3"]
+    specification = "Amazon S3 REST API, Signature Version 4, through the aws-s3 transport client"
     [xmip.core.archive.azure-blob]
     description = "Azure Blob Storage archive target: one item is one blob in a container. A xmip-core-archive technology."
     maturity = "scaffolded"
@@ -1432,7 +1437,7 @@ dependency = ["xmip-core-library-codec"]
     description = "File archive target: one item is one file under a directory, its metadata beside it. A xmip-core-archive technology."
     maturity = "scaffolded"
     dependency = ["xmip-core-library-codec", "xmip-core-library-net"]
-    [xmip.core.archive.gcs]
+    [xmip.core.archive.google-cloud-storage]
     description = "Google Cloud Storage archive target: one item is one object in a bucket. A xmip-core-archive technology."
     maturity = "scaffolded"
     dependency = ["xmip-core-transport-google-cloud-storage"]
@@ -1455,11 +1460,6 @@ dependency = ["xmip-core-library-codec"]
     maturity = "scaffolded"
     dependency = ["xmip-core-library-postgresql", "xmip-core-library-sql"]
     specification = "SQL over the PostgreSQL frontend/backend protocol 3.0, through the xmip-core-library-postgresql client"
-    [xmip.core.archive.s3]
-    description = "S3 archive target: one item is one object in a bucket. A xmip-core-archive technology."
-    maturity = "scaffolded"
-    dependency = ["xmip-core-transport-s3"]
-    specification = "Amazon S3 REST API, Signature Version 4, through the s3 transport client"
     [xmip.core.archive.sql]
     description = "SQL script archive target: one item is one INSERT in a vendor-neutral script any database loads. A xmip-core-archive technology."
     maturity = "scaffolded"
@@ -1902,14 +1902,14 @@ dependency = ["xmip-core-library-codec"]
   dependency = [
       "xmip-core",
       "xmip-core-archive",
+      "xmip-core-archive-aws-s3",
       "xmip-core-archive-azure-blob",
       "xmip-core-archive-file",
-      "xmip-core-archive-gcs",
+      "xmip-core-archive-google-cloud-storage",
       "xmip-core-archive-mariadb",
       "xmip-core-archive-mssql",
       "xmip-core-archive-parquet",
       "xmip-core-archive-postgresql",
-      "xmip-core-archive-s3",
       "xmip-core-archive-sql",
       "xmip-core-archive-sqlite",
       "xmip-core-audit",
@@ -1976,6 +1976,7 @@ dependency = ["xmip-core-library-codec"]
       "xmip-core-transport-as2",
       "xmip-core-transport-as4",
       "xmip-core-transport-aws-kinesis",
+      "xmip-core-transport-aws-s3",
       "xmip-core-transport-aws-sns",
       "xmip-core-transport-aws-sqs",
       "xmip-core-transport-azure-blob",
@@ -2036,7 +2037,6 @@ dependency = ["xmip-core-library-codec"]
       "xmip-core-transport-rabbitmq",
       "xmip-core-transport-redis-streams",
       "xmip-core-transport-redpanda",
-      "xmip-core-transport-s3",
       "xmip-core-transport-s7comm",
       "xmip-core-transport-secs-gem",
       "xmip-core-transport-serial",

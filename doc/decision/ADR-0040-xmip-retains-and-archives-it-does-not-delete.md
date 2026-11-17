@@ -51,7 +51,7 @@ remove anything.
 ### 2a. Archiving is a configured ability, not a command
 
 Archiving is *configured*, never commanded. A node or process declares it — which
-archive store, which format (`parquet`, `s3`, `sql`, …), and the retention
+archive store, which format (`parquet`, `aws-s3`, `sql`, …), and the retention
 windows — in its configuration, and the runtime enacts that declaration by age.
 There is no operator or runtime command to "archive"; it is an ability set under
 Configure (an Operator's surface, ADR-0009), like retention itself, not an action

@@ -493,8 +493,9 @@ only the `archive` feature.*
 carry the `archive` feature, `deploy/profile/role/sending.toml` and
 `operational.toml`, name the archive targets they carry in `archives`, by
 repository name, as a target names its technologies in `claims`: the ten
-under `xmip-core-archive` — `azure-blob`, `file`, `gcs`, `mariadb`,
-`mssql`, `parquet`, `postgresql`, `s3`, `sql` and `sqlite`. A composed role
+under `xmip-core-archive` — `aws-s3`, `azure-blob`, `file`,
+`google-cloud-storage`, `mariadb`, `mssql`, `parquet`, `postgresql`, `sql`
+and `sqlite`. A composed role
 carries its parts' (executing is receiving, processing and sending, so it
 carries sending's).
 

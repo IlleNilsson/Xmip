@@ -1763,19 +1763,11 @@ steps, a receive's Streams, a send's Locations — is each stage's to say.
 Decided by the owner, 2026-10-27, resolving problem 7: *Why not use the
 ABI, there shall not be any duplication of code unless it is modulewise.*
 A store is a capability with a section of its own in `xmip_module.h`; each
-store technology — postgres, s3, elasticsearch, otlp and the rest — is one
+store technology — postgres, aws-s3, elasticsearch, otlp and the rest — is one
 loadable module behind it, written once; audit, report, observe, retain
 and archive stay five modules, each with its own policy and tables, and
 each reaches its store through that section. Not built: the section, its
 Rust mirror in `xmip-core-abi`, and the five moved onto it.
-
-## 57. Cloud technologies named without their vendor
-
-Decided by the owner, 2026-10-27, resolving problem 8: option A, always
-name the vendor. Not done: `s3` renamed `aws-s3`, and every other cloud
-technology that names no vendor renamed the same way, in
-`architecture.toml`, the repositories, the crates, the configuration words
-and every document that names them.
 
 ## 58. Resilience and exclusiveness are not pluggable
 
@@ -2835,6 +2827,28 @@ is deleted, and every test that sends to a node it just started connects
 once. Held by the runtime's `tests/running/listening.rs` over TCP and HTTP,
 on Windows and in the AlmaLinux 10 guest.
 
+## 57. Cloud technologies named without their vendor — **Resolved**
+
+*Resolved 2026-11-17 by the owner's go-ahead of the same day, "Go ahead",
+on his decision of 2026-10-27, built the same day (ADR-0011, amendment
+2026-11-17).*
+
+Decided by the owner, 2026-10-27, resolving problem 8: option A, always
+name the vendor. `s3` and `gcs` named none. Renamed, with every use and no
+alias: the repository `xmip-core-transport-s3` to
+`xmip-core-transport-aws-s3`, `xmip-core-archive-s3` to
+`xmip-core-archive-aws-s3` and `xmip-core-archive-gcs` to
+`xmip-core-archive-google-cloud-storage`, named as the transport it rides
+on already was, each remounted under its new name in its capability and
+its crate's package its repository's name; the reserved `retain.s3` and
+`retain.gcs` to `retain.aws-s3` and `retain.google-cloud-storage` in
+`architecture.toml`; and what an operator writes: the transport's name and
+its scheme, `aws-s3://`, the archives' receipts, `aws-s3://` and
+`google-cloud-storage://`, and the Essentials' filing cabinet, `aws-s3`.
+Every crate, site, document and test naming the old words was changed with
+them. *S3* stays where it names Amazon's service or its interface, and
+Signature Version 4's `s3` service scope is unchanged.
+
 ## 4. `assign`, `promote`, `demote` sit in Capabilities with zero implementations — **Resolved**
 
 Resolved by the owner, 2026-10-27: they are capabilities with units
@@ -2863,7 +2877,8 @@ policy and tables. Building the section is open problem 56.
 ## 8. Cloud vendor prefixes are inconsistent — **Resolved**
 
 Resolved by the owner, 2026-10-27: option A, always name the vendor. The
-renaming is open problem 57.
+renaming was problem 57, resolved 2026-11-17 (ADR-0011, amendment
+2026-11-17).
 
 ## 9. `resilience` and `exclusiveness` are alone in the Platform tier — **Resolved**
 

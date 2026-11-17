@@ -230,7 +230,7 @@ technology, a parameter from `Running::start` for the runtime — and a part
 that is no node's is handed the operating system's by whoever makes it.**
 No second seam was added.
 
-- **The technologies that only send over `Connections`** — s3, azure-blob,
+- **The technologies that only send over `Connections`** — aws-s3, azure-blob,
   google-cloud-storage, aws-sqs, aws-kinesis, azure-event-hubs,
   azure-service-bus, google-pub-sub, WebDAV, and Redpanda's Admin API
   (`Admin::timed_by`) — hand the Clock `Configured::timed_by` gives them to
