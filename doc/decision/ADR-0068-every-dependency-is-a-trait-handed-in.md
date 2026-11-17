@@ -270,3 +270,42 @@ connections and the HTTP event wire's. `test/Clock.Test.ps1` holds
 `plane/shared.rs`, `plane/remote/asking.rs`, `plane/follow.rs` and
 `stream_share.rs` at no `Instant` at all, and counts 94 production
 `Instant::now` readings, its ceiling now. The assistant's, 2026-11-16.
+
+## Amendment, 2026-11-17: the exporter and the event wire are made with the Clock
+
+**The two connections the amendment of 2026-11-16 left on `SystemClock`
+take the Clock where they are made, with no default: the OTLP exporter at
+its start (`Exporter::start(otlp, clock)`), as the Prometheus scrape
+endpoint already did (`Scrape::start`), and the HTTP event wire at its
+making (`EventWire::new(clock)`; its `Default` is deleted).** Each hands
+it to the `Connections` it keeps (`Connections::timed_by`), which an
+HTTP/2 collector's or webhook's frames in a span are counted on. No second
+seam was added.
+
+- **No node makes either yet.** Nothing in a program or the runtime starts
+  an observe exporter — the runtime handing what it publishes to observe's
+  exporters waits on the open problem *Observation lags, or never arrives*
+  — and event delivery's forwarder is made over a wire only by tests
+  (ADR-0065, amendment 2026-11-13). The call that makes each is the one
+  place a node will hand its Clock, and with no default it cannot be left
+  out; until then the exporter's and the wire's own tests, which are no
+  node's, hand the operating system's.
+- **Each has a test on `xcore::clock::Stepped` that sleeps for nothing**:
+  an HTTP/2 collector and an HTTP/2 webhook flood `PING`s either side of a
+  span stepped on the Clock the exporter was started with and the wire
+  made with — sent where the span passed, calmed with `ENHANCE_YOUR_CALM`
+  where it did not. The flooding server is written once beside the
+  flooding client, `net::fixture::pinging::answering` under net's
+  `test-support`, its second run sent only once the client has answered
+  every `PING` of the first, so the step falls between them.
+- **What stands.** No part the earlier amendments named is left on the
+  operating system's clock. It is read, by design, by a part that is no
+  node's — a simulated service's session, a program's surface across the
+  C ABI (`ffi::remote::hosted_clock`), a test's far end — and by a
+  `Connections`, a `Serving` or a transport until `Configured::timed_by`
+  times it as the node opens it.
+
+`test/Clock.Test.ps1` holds `otlp/src/exporter.rs` and
+`http/src/event_wire.rs` at no `Instant` at all. Neither read it, so the
+count does not move: 94 production `Instant::now` readings, its ceiling.
+The assistant's, 2026-11-17.

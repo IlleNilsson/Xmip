@@ -526,6 +526,13 @@ xmip-<provider>-test-essentials  ->  test/<provider>/essentials
 `Get-XmipMountPath` computes it, and `test/Sync-XmipEstate.Test.ps1` holds it
 to that.
 
+**A folder says a module's purpose, never its language.** The owner,
+2026-11-17: *Do it, so folders per purpose.* `module/core/operation` holds
+what operates Xmip in Rust and .NET alike — xmip-core-operate's exports and
+its surface library, audit, observe, the command line — and a repository's
+language is its own `primaryLanguage` in `architecture.toml` (ADR-0058,
+amendment 2026-11-17).
+
 **This tree is where things mount, and it is two levels deep.** The estate is
 larger than that: the manifest declares 330 repositories, 290 of them
 technologies, and none of those appears above. [`estate-map.md`](estate-map.md)

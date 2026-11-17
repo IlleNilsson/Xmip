@@ -205,3 +205,45 @@ boundary; Xmip loads it and holds it to the boundary, and has no build, entry
 or template per language for it (ADR-0042, amendment of this date).
 `xmip-core-test-module` at `test/core/module` is the one the runtime's loader
 is tested against.
+
+## Amendment, 2026-11-17: the handshake is checked once, by the runtime's loader
+
+The owner, 2026-11-13: *Do we have all code in the modules, repos that we
+should. This is a refactoring statement*; and of what was found, *Good that
+you found it, fix it*. The handshake — the module exports
+`xmip_create_module_v1`, accepts the host's `abi_version`, fills the
+descriptor and destroys cleanly, conformance rule 1 of the specification's
+section 11 — was checked twice: by the runtime's loader, which a node opens
+its modules with, and by `ModuleProbe` in `xmip-core-abi`'s .NET binding,
+which `xmip probe` and `Get-XmipModuleDescriptor` drove. The two disagreed:
+the .NET probe refused a core module naming a standard and took a provider's
+module naming none, where the header's section 4 says the standard is empty
+only when the provider is `core`, and `abi::validate_module_abi` says so.
+
+What stands now:
+
+1. **One check, in Rust.** The runtime's loader opens a library to probe it
+   exactly as it opens one to run it — privately, by its path, through its one
+   entrypoint, with the host table a node hands
+   (`module/platform/runtime/src/ffi/probed.rs`, behind the runtime's
+   `loader` feature) — keeps the lines the module logs while it is held,
+   reads its descriptor and last error, destroys it and unloads it, and judges
+   the descriptor by `abi::validate_module_abi`, the rule `abi::accepts`
+   starts with. A probe has no loading capability, so the trait a module
+   answers and its version are said, not judged.
+2. **Exported once.** `xmip_module_probe_v1`, `xmip_operate.h` section 26,
+   implemented in xmip-core-operate's `src/ffi/module_probe.rs`, answers as
+   JSON: why the library could not be asked, the entrypoint's status, what it
+   declares, its last error, why the host refuses it, whether it conforms,
+   and its log.
+3. **.NET keeps the binding alone.** `ModuleProbe.cs` and the structs only it
+   crossed with (`XmipHost`, `XmipModule`, `XmipModuleDescriptor`,
+   `XmipLogLevel`) are deleted; `RuntimeModules` binds the export and
+   `ModuleProbed` is its answer, which `xmip probe` renders and
+   `Get-XmipModuleDescriptor` emits (ADR-0014 and ADR-0052, amendments of
+   this date).
+4. **The host table outlives the module.** Section 7 of the header has the
+   host pass an `XmipHost` that outlives the module; the loader built it on
+   the stack of the call that created the module. It is boxed and kept beside
+   the instance now (`ffi/host_table.rs`), destroyed after `destroy`, for a
+   node's modules and a probe's alike.

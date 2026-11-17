@@ -189,3 +189,15 @@ the technologies its user chose, built by `Build-XmipService` (ADR-0015,
 amendments 2026-10-01 and 2026-10-19); the
 deploy lists this amendment left unread are deleted (ADR-0060, amendment
 2026-10-01).
+
+## Amendment, 2026-11-17: a probe loads through the node's loader, and loading is its own feature
+
+A library a surface probes is opened by the loader a node opens its modules
+with, and nothing of it stays loaded once the probe answers (ADR-0012,
+amendment of this date). The runtime's loader — `ffi/loaded_module.rs` and
+the host table it hands a module, `ffi/host_table.rs` — is behind its own
+feature, `loader`, which the operator library's node build takes to probe;
+`dynamic-loading`, a node opening the modules its configuration starts
+(`library.rs`, the contract and Work Process tables), includes it. The table
+a module is created with is kept beside the instance until after `destroy`,
+as the header's section 7 has always required.

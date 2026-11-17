@@ -1735,3 +1735,24 @@ variable naming the parent, the guard's two levels, the unit's
 `RuntimeDirectory=xmip/<name>` from the configuration at install, the node
 making its folder and keeping it, and the tooling's folder are the
 assistant's, decided while building.
+
+## Amendment, 2026-11-17: the probe and every TOML document cross the C ABI
+
+Two answers every .NET surface gave from code of its own now come from the
+runtime's library, in the surface order ABI, CLI, PowerShell, GUI:
+
+1. **A module library probed.** `xmip_module_probe_v1` (`xmip_operate.h`
+   section 26) is the runtime loader's probe (ADR-0012, amendment of this
+   date); `xmip probe` renders its answer, the lines the module logged on
+   stderr and its refusal the exit's reason, and `Get-XmipModuleDescriptor`
+   emits it as `ModuleProbed`, the lines on the verbose stream, a library it
+   cannot load an error record. Neither surface opens the library itself any
+   more. The GUI has no probe and gains none.
+2. **A configuration document read and written.** `xmip_document_read_v1`,
+   `_write_v1` and `_set_v1` (section 27) are `xmip-core-configure`'s, the
+   runtime's one reader (ADR-0031, amendment of this date). The command
+   line's, the PowerShell module's and both GUI hosts' documents are read
+   through them, the phone's too — the remote build carries section 27 — and
+   the Desktop's `preferences.toml` is edited through them; no TOML package is
+   linked into .NET. A surface's document no longer names the runtime library,
+   since the runtime reads it (ADR-0052, amendment of this date).

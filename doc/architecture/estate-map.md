@@ -451,7 +451,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 382813 lines of production
+Where each repository mounts and what it holds: 383393 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -704,7 +704,7 @@ hold no source to count.
 │   │   │           declared, not built 5
 │   │   │           aws-s3  azure-blob  file  google-cloud-storage  sql
 │   │   ├── library/
-│   │   │   ├── net                             8240
+│   │   │   ├── net                             8311
 │   │   │   ├── codec                           5889
 │   │   │   ├── tls                             4200
 │   │   │   ├── mariadb                         1785
@@ -715,14 +715,14 @@ hold no source to count.
 │   │   │   ├── ntlm                             806
 │   │   │   └── asn1                             686
 │   │   └── operation/
-│   │       ├── operate                        41896  C# 30038 · Rust 11858
-│   │       ├── cli                            10155
+│   │       ├── operate                        42321  C# 30199 · Rust 12122
+│   │       ├── cli                            10158
 │   │       ├── observe                         7949
-│   │       │   ├── otlp                         587
+│   │       │   ├── otlp                         591
 │   │       │   └── prometheus                   332
-│   │       ├── gui                             7929
+│   │       ├── gui                             7920
 │   │       │   └── vscode                      3519
-│   │       ├── powershell                      3788  C# 3788 · PowerShell 0
+│   │       ├── powershell                      3808  C# 3808 · PowerShell 0
 │   │       ├── audit                           3674
 │   │       │   ├── file                         545
 │   │       │   ├── windows-event-log            173
@@ -745,7 +745,7 @@ hold no source to count.
 │   │           ├── postgresql                    62
 │   │           └── mssql                         59
 │   ├── foundation/
-│   │   ├── abi                                 5607  C# 2772 · Rust 2431 · PowerShell 404
+│   │   ├── abi                                 5212  Rust 2468 · C# 2340 · PowerShell 404
 │   │   ├── core                                4677
 │   │   ├── message                             2093
 │   │   │   ├── avro                             300
@@ -770,13 +770,13 @@ hold no source to count.
 │   │   ├── stream                               382
 │   │   └── party                                193
 │   └── platform/
-│       ├── runtime                            47679
+│       ├── runtime                            48030
 │       ├── persist                            21766
 │       │   ├── rocksdb                          333
 │       │   ├── sqlite                           288
 │       │       declared, not built 1
 │       │       postgresql
-│       ├── configure                           5317
+│       ├── configure                           5427
 │       └── cluster                             4958
 └── test/
     └── core/

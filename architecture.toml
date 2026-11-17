@@ -1371,7 +1371,7 @@ dependency = ["xmip-core-library-codec"]
     # writes them in its own format; neither keeps a list of its own.
     [xmip.core.observe.otlp]
     maturity = "scaffolded"
-    dependency = ["xmip-core-message", "xmip-core-library-codec", "xmip-core-library-net", "xmip-core-transport-http"]
+    dependency = ["xmip-core-message", "xmip-core-library-codec", "xmip-core-library-net", "xmip-core-transport-http", "xmip-core"]
     description = "OTLP exporter: a node's moods, severities and counted figures as OpenTelemetry metrics, protobuf over OTLP/HTTP (POST /v1/metrics) on every published change, HTTP/2 where the collector agrees it by ALPN and HTTPS through xmip-core-library-tls, from a thread of its own. A xmip-core-observe technology."
     specification = "OpenTelemetry Protocol 1.x: OTLP/HTTP, binary protobuf, opentelemetry-proto metrics v1"
     [xmip.core.observe.prometheus]
@@ -1584,7 +1584,8 @@ dependency = ["xmip-core-library-codec"]
   features = [
       "node (default): the running node — start, message path, Ledger, Xmip Storage, the service and its registration, persist, secret, the transports a program links, the node's side of the operate plane (listener and board), a person's request signed and every Report listed and a Quest probing a node's configuration (xmip-core-report), which xmip-core-operate exports; includes remote",
       "remote: a surface following nodes over their operate listener and running none, the phone's build (--no-default-features --features remote) — plane::remote with the operate plane's call, local endpoint and role, which xmip-core-operate's remote build exports",
-      "dynamic-loading: the module loader (xmip_module.h), a contract module and a Work Process unit (section 13); includes node",
+      "loader: the host opening a module's library (xmip_module.h) and the one probe of what a library declares, judged as a node judges it, which xmip-core-operate exports as xmip_module_probe_v1",
+      "dynamic-loading: a node opening the modules its configuration starts, a contract module and a Work Process unit (section 13); includes node and loader",
       "test-support: the test fixtures, Xmip Storage in memory among them; enabled only by a dev-dependency, this crate's and xmip-core-operate's",
   ]
   architecturalDomain = "Platform"
@@ -1678,7 +1679,7 @@ dependency = ["xmip-core-library-codec"]
     specification = "SQLite 3 database file, one record table"
 
   [xmip.core.configure]
-  description = "Reads and validates declared Xmip configuration — a node's configuration and the Xmip Applications it binds — and turns it into a service configuration."
+  description = "Reads and validates declared Xmip configuration — a node's configuration and the Xmip Applications it binds — and turns it into a service configuration; and every configuration document's TOML, read, written and one key set in place, once for the runtime, the surfaces and the tooling (ADR-0031, amendment 2026-11-17)."
   architecturalDomain = "Platform"
   repositoryRole = "platform-service"
   maturity = "scaffolded"
@@ -1710,8 +1711,8 @@ dependency = ["xmip-core-library-codec"]
   # What each Cargo feature carries (ADR-0014, amendment 2026-10-14: the
   # phone follows nodes remotely and runs none).
   features = [
-      "node (default): every export of xmip_operate.h — sections 1, 5, 6 and 10 to 16, section 17's serve exports, section 19's signing, sections 21 to 25 — over the runtime's node build, and the designer (design); includes remote",
-      "remote: the phone's build (--no-default-features --features remote) over the runtime's plane::remote — sections 7, 8, 9 and the four publication lists of sections 11, 14, 15 and 16, section 18, section 17's client exports and section 19's request",
+      "node (default): every export of xmip_operate.h — sections 1, 5, 6 and 10 to 16, section 17's serve exports, section 19's signing, sections 21 to 26, a module library probed through the runtime's loader among them — over the runtime's node build, and the designer (design); includes remote",
+      "remote: the phone's build (--no-default-features --features remote) over the runtime's plane::remote — sections 7, 8, 9 and the four publication lists of sections 11, 14, 15 and 16, section 18, section 17's client exports, section 19's request and section 27, a configuration document read by configure",
   ]
   architecturalDomain = "Operation"
   repositoryRole = "common-architecture"

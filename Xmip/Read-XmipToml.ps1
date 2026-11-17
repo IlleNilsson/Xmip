@@ -3,8 +3,10 @@
 
 <#
 .SYNOPSIS
-    The module's one TOML reader and writer, and the pair every document read
-    through them is read with.
+    The module's one reader and writer of the estate's own TOML — its
+    manifests (architecture.toml, allocation.toml, prerequisite.toml), its
+    run and build records, its profiles, sites and environments — and the
+    pair every document read is read with.
 
 .DESCRIPTION
     About twenty-five copies of `Import-Module PSToml; Get-Content -Raw |
@@ -12,6 +14,13 @@
     Read-XmipToml does now (2026-09-27). PSToml is loaded when a file is read
     or written, never at import, so a machine without it still imports the
     module and asks Install-XmipPrerequisite what it lacks.
+
+    These are the tooling's files, and the tool that builds the runtime reads
+    them, so it cannot need the runtime to read them (open problem 25, row
+    u). The configuration Xmip runs — a cluster's cluster.xmip, a node's
+    document — is read and written by the runtime's own reader through the
+    operator module instead (Read-XmipConfiguration; ADR-0031, amendment
+    2026-11-17).
 
     Style: doc/governance/powershell-style.md
 #>
@@ -135,8 +144,8 @@ function Import-XmipToml {
 
 function Read-XmipToml {
     <#
-        The module's one TOML file reader: every TOML document the estate
-        reads comes through here and is then read with Get-TomlKey and
+        The module's one reader of the estate's own TOML: every tooling
+        document comes through here and is then read with Get-TomlKey and
         Get-TomlValue, whichever shape PSToml returned. Throws when the file
         does not parse.
     #>
@@ -156,14 +165,9 @@ function Read-XmipToml {
 
 function Write-XmipToml {
     <#
-        The module's one TOML file writer. -NoClobber refuses a file that is
-        already there, and the refusal is an error the caller can catch.
-
-        The text is written beside the file and only then moved into place,
-        so a reader finds the file whole or not at all: written in place, a
-        reader polling for it read it empty for the instant between its
-        creation and its text (the estate suite's own test, 2026-10-22). A
-        move over a file a reader holds open for that instant is asked again.
+        The module's one TOML file writer, written whole
+        (Write-XmipWholeFile). -NoClobber refuses a file that is already
+        there, and the refusal is an error the caller can catch.
     #>
     [CmdletBinding()]
     [OutputType([void])]
@@ -180,40 +184,5 @@ function Write-XmipToml {
 
     Import-XmipToml
     [string] $text = ConvertTo-Toml -InputObject $Value -Depth 4
-    [string] $full = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($Path)
-    [string] $beside = "$full.$([System.Guid]::NewGuid().ToString('n')).new"
-
-    [hashtable] $written = @{
-        InputObject = $text
-        LiteralPath = $beside
-        Encoding    = 'utf8'
-        ErrorAction = 'Stop'
-    }
-
-    Out-File @written
-
-    try {
-        if ($NoClobber.IsPresent) {
-            [System.IO.File]::Move($beside, $full, $false)
-            return
-        }
-
-        for ([int] $attempt = 1; ; $attempt++) {
-            try {
-                [System.IO.File]::Move($beside, $full, $true)
-                return
-            }
-            catch [System.IO.IOException] {
-                if ($attempt -ge 1000) {
-                    throw
-                }
-
-                [System.Threading.Thread]::Sleep(1)
-            }
-        }
-    }
-    catch {
-        Remove-Item -LiteralPath $beside -Force -ErrorAction SilentlyContinue
-        throw
-    }
+    Write-XmipWholeFile -Path $Path -Text $text -NoClobber:$NoClobber
 }

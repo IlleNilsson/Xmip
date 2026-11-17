@@ -2408,3 +2408,47 @@ amendment of 2026-09-09) survived and the older one did not."""
 #   module/core/operation/archive/gcs
 #     -> module/core/operation/archive/google-cloud-storage,
 #     xmip-core-archive-google-cloud-storage
+
+# Moved on 2026-11-17, the module handshake judged once, by the runtime's
+# loader, and every TOML read or write the surfaces and the tooling make of
+# a configuration Xmip runs made by configure, the runtime's one reader,
+# over the C ABI (xmip_operate.h sections 26 and 27; ADR-0012, ADR-0031 and
+# ADR-0052, amendments 2026-11-17):
+#   module/foundation/abi/dotnet/Xmip.Abi/Module/ModuleProbe.cs, deleted,
+#   with XmipHost.cs, XmipModule.cs, XmipModuleDescriptor.cs and
+#   XmipLogLevel.cs, which only it crossed with
+#     -> module/platform/runtime/src/ffi/probed.rs, the probe through the
+#     loader, judged by abi::validate_module_abi; exported as
+#     xmip_module_probe_v1 by module/core/operation/operate/src/ffi/
+#     module_probe.rs and bound by .../dotnet/Xmip.Operate/RuntimeModules.cs
+#     and ModuleProbed.cs
+#   module/foundation/abi/dotnet/Xmip.Abi.Test/ModuleProbeTest.cs, deleted;
+#   its boundaries test
+#     -> module/foundation/abi/dotnet/Xmip.Abi.Test/AbiBoundariesTest.cs
+#   module/platform/runtime/src/ffi/loaded_module.rs host table
+#     -> module/platform/runtime/src/ffi/host_table.rs
+#   module/core/operation/operate/dotnet/Xmip.Surface/TomlDocument.cs Parse,
+#   KeyPath, Tables, Text, Flag, Set, Insert and Remove over Tomlyn, deleted
+#   with the package
+#     -> module/platform/configure/src/document.rs read, write and set,
+#     exported as xmip_document_read_v1, _write_v1 and _set_v1 by
+#     module/core/operation/operate/src/document.rs and src/ffi/document.rs,
+#     bound by .../dotnet/Xmip.Operate/RuntimeDocuments.cs; a host's
+#     configuration read by .../dotnet/Xmip.Surface/TomlConfigurationSource.cs
+#     and TomlConfigurationProvider.cs
+#   module/platform/configure/src/cluster.rs read
+#     -> module/platform/configure/src/document.rs read
+#   module/core/operation/operate/src/ffi/design.rs answer
+#     -> module/core/operation/operate/src/ffi/text.rs answer
+#   module/core/operation/operate/dotnet/Xmip.Operate/RuntimeRules.cs Words
+#     -> .../dotnet/Xmip.Operate/RuntimeRules.Stage.cs Words
+#   module/core/operation/operate/dotnet/Xmip.Surface/RuntimeLibrary.cs
+#   ConfigurationKey and Find, deleted: the runtime reads a surface's
+#   document, so the document names no runtime library
+#   Xmip/Write-XmipTestCluster.ps1 and
+#   Xmip/Initialize-XmipEssentialsAuthority.ps1, a cluster's and a node's
+#   file read and written with PSToml
+#     -> Xmip/Read-XmipConfiguration.ps1, Read-XmipConfiguration and
+#     Write-XmipConfiguration, through the operator module
+#   Xmip/Read-XmipToml.ps1 Write-XmipToml, the file written whole
+#     -> Xmip/Write-XmipWholeFile.ps1
