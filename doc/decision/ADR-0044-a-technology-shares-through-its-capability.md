@@ -27,7 +27,7 @@ Sixty-five technology repositories were written between 2026-09-07 and
 2026-09-09, most of them by assistants working in parallel, each inside one
 repository with no view of the others. The result was correct and duplicated.
 On 2026-09-09 a scan found: the same HTTP request-and-answer file, byte for
-byte, in the s3, azure-blob and google-cloud-storage transports, with the same
+byte, in the aws-s3, azure-blob and google-cloud-storage transports, with the same
 endpoint and percent-encoding files beside it; the same flat-XML scan in two of
 them; the same RFC 3339 clock in five archive technologies; the same object
 layout in three; the metadata pair encoding in all ten. The
@@ -57,7 +57,7 @@ already depend on:
   holds sockets, wire framing and the flat-XML scan a protocol document is.
 - **The carrier technology**, when the code is about the protocol the two
   ride on. A REST API over HTTP shares HTTP's request-and-answer, endpoint
-  and percent-encoding through `xmip-core-transport-http`, which s3,
+  and percent-encoding through `xmip-core-transport-http`, which aws-s3,
   azure-blob and google-cloud-storage already carry as their declared
   sibling dependency (ADR-0033 put TLS there for the same reason).
 
@@ -84,9 +84,9 @@ over the essentials as well.
 
 Open problem 7 leaned to *keep five modules, share a store trait* so the
 `postgres` adapter is not written five times. The archive technologies do it
-one step further: archive-postgresql, -mssql, -mariadb, -s3, -azure-blob and
--gcs each ride on the transport technology of the same name for their wire
-client, and hold only the archive's own shape. When audit, report and observe
+one step further: archive-postgresql, -mssql, -mariadb, -aws-s3, -azure-blob
+and -google-cloud-storage each ride on the transport technology of the same
+name for their wire client, and hold only the archive's own shape. When audit, report and observe
 grow technologies, they ride on the same transports.
 
 ## Consequences
@@ -114,7 +114,7 @@ hold HTTP. Two technologies were approved that day to hold them,
 2026-09-24.
 
 - **A vendor crate is a carrier technology in clause 1's sense**, one layer
-  up: it rides on http, and the vendor's technologies ride on it. s3,
+  up: it rides on http, and the vendor's technologies ride on it. aws-s3,
   aws-sqs, aws-sns and aws-kinesis depend on `aws` for Signature Version 4,
   the Query API and the JSON 1.1 protocol; azure-blob, azure-service-bus
   and azure-event-hubs depend on `azure` for the Shared Access Signature,

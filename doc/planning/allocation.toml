@@ -2397,3 +2397,14 @@ amendment of 2026-09-09) survived and the older one did not."""
 #   from a directory
 #     -> the audit the export hands in, report::Audited, made by
 #     module/core/operation/operate/src/ffi/audit.rs program
+
+# Renamed on 2026-11-17, three technologies to name their vendor, each
+# repository renamed on GitHub and its working tree remounted, the git mv
+# inside its capability (ADR-0011, amendment 2026-11-17; open problem 57):
+#   module/core/capability/transport/s3
+#     -> module/core/capability/transport/aws-s3, xmip-core-transport-aws-s3
+#   module/core/operation/archive/s3
+#     -> module/core/operation/archive/aws-s3, xmip-core-archive-aws-s3
+#   module/core/operation/archive/gcs
+#     -> module/core/operation/archive/google-cloud-storage,
+#     xmip-core-archive-google-cloud-storage

@@ -451,7 +451,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 382812 lines of production
+Where each repository mounts and what it holds: 382813 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -534,7 +534,7 @@ hold no source to count.
 │   │   │   │   ├── syslog                       741
 │   │   │   │   ├── iec-60870-5-104              733
 │   │   │   │   ├── iso-tp                       723
-│   │   │   │   ├── s3                           721
+│   │   │   │   ├── aws-s3                       721
 │   │   │   │   ├── azure-blob                   707
 │   │   │   │   ├── mdns                         699
 │   │   │   │   ├── websocket                    696
@@ -702,7 +702,7 @@ hold no source to count.
 │   │   │   ├── assign                            39
 │   │   │   └── retain                            27
 │   │   │           declared, not built 5
-│   │   │           azure-blob  file  gcs  s3  sql
+│   │   │           aws-s3  azure-blob  file  google-cloud-storage  sql
 │   │   ├── library/
 │   │   │   ├── net                             8240
 │   │   │   ├── codec                           5889
@@ -733,13 +733,13 @@ hold no source to count.
 │   │       ├── report                          2250
 │   │       │       declared, not built 6
 │   │       │       csv  html  json  pdf  prometheus  sql
-│   │       └── archive                          639
+│   │       └── archive                          640
 │   │           ├── file                         292
 │   │           ├── sql                          263
 │   │           ├── azure-blob                   165
-│   │           ├── s3                           155
+│   │           ├── aws-s3                       155
 │   │           ├── parquet                      147
-│   │           ├── gcs                          135
+│   │           ├── google-cloud-storage         135
 │   │           ├── sqlite                       125
 │   │           ├── mariadb                       87
 │   │           ├── postgresql                    62
@@ -939,7 +939,7 @@ All 6 composed in `module/core/capability/resilience`.
 Declared, and none composed: `module/core/capability/retain` has no
 `.gitmodules`.
 
-- **reserved**, 5 — azure-blob, file, gcs, s3, sql
+- **reserved**, 5 — aws-s3, azure-blob, file, google-cloud-storage, sql
 
 ### `xmip-core-route`, 7 technologies
 
@@ -968,17 +968,17 @@ Declared, and none composed: `module/core/capability/transform` has no
 
 All 88 composed in `module/core/capability/transport`.
 
-- **scaffolded**, 88 — activemq, amqp, as2, as4, aws, aws-kinesis, aws-sns,
-  aws-sqs, azure, azure-blob, azure-event-grid, azure-event-hubs,
+- **scaffolded**, 88 — activemq, amqp, as2, as4, aws, aws-kinesis, aws-s3,
+  aws-sns, aws-sqs, azure, azure-blob, azure-event-grid, azure-event-hubs,
   azure-service-bus, bacnet, bluetooth, can-bus, canopen, coap, cotp, db2,
   dds, dhcp, dicom, dnp3, dns, ethercat, ethernet, ethernet-ip, file, ftp,
   google-cloud-storage, google-pub-sub, hart, http, ibm-mq, iec-60870-5-104,
   iec-61850, imap, io-link, iso-tp, j1939, kafka, knx, lorawan, m-bus,
   mariadb, mdns, mllp, modbus, mqtt, msmq, mssql, mysql, named-pipe, nats,
   nats-jetstream, nfs, obd-ii, opc-ua, oracle, peppol, pop3, postgresql,
-  profinet, rabbitmq, redis-streams, redpanda, s3, s7comm, secs-gem, serial,
-  sftp, smb, smtp, snmp, sqlite, ssdp, syslog, tcp, thread, udp, uds,
-  unix-socket, webdav, websocket, wireless-hart, wireless-m-bus, zigbee
+  profinet, rabbitmq, redis-streams, redpanda, s7comm, secs-gem, serial, sftp,
+  smb, smtp, snmp, sqlite, ssdp, syslog, tcp, thread, udp, uds, unix-socket,
+  webdav, websocket, wireless-hart, wireless-m-bus, zigbee
 
 ---
 
@@ -1002,8 +1002,8 @@ Running and governing Xmip.
 
 All 10 composed in `module/core/operation/archive`.
 
-- **scaffolded**, 10 — azure-blob, file, gcs, mariadb, mssql, parquet,
-  postgresql, s3, sql, sqlite
+- **scaffolded**, 10 — aws-s3, azure-blob, file, google-cloud-storage,
+  mariadb, mssql, parquet, postgresql, sql, sqlite
 
 ### `xmip-core-audit`, 10 technologies
 
