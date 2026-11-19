@@ -252,18 +252,19 @@ it.
 
 You watch and operate Xmip from four surfaces, and all four read the same
 library, so they cannot disagree: the command line `xmip`, the PowerShell
-operator module, the web GUI and the desktop GUI. The command line and the
-PowerShell module talk to Xmip through the runtime library,
-xmip-core-operate's, so build that first:
+operator module, the web GUI and the desktop GUI. The PowerShell module and
+the GUIs talk to Xmip through the runtime library, xmip-core-operate's, so
+build that first:
 
 ```powershell
 cargo build --manifest-path module/core/operation/operate/Cargo.toml
 ```
 
-The command line, `xmip`, is built with .NET today:
+The command line, `xmip`, is Rust and needs no .NET: it links the runtime,
+and its build puts `cli.toml` beside it:
 
 ```powershell
-dotnet build module/core/operation/cli/src/Xmip.Cli
+cargo build --manifest-path module/core/operation/cli/Cargo.toml
 ```
 
 The PowerShell operator module, which answers the same questions as objects:
@@ -400,7 +401,7 @@ Check a file without starting anything. Both commands take a cluster's
 each problem says which node it belongs to.
 
 ```powershell
-dotnet run --project module/core/operation/cli/src/Xmip.Cli -- `
+cargo run --manifest-path module/core/operation/cli/Cargo.toml -- `
     validate .local-work/node/config/cluster.xmip
 ```
 
@@ -501,9 +502,9 @@ four times a second, and serves a local endpoint, `xmip-first`, that only this
 machine reaches. From the second Xmip PowerShell Console, watch it:
 
 ```powershell
-dotnet run --project module/core/operation/cli/src/Xmip.Cli -- `
+cargo run --manifest-path module/core/operation/cli/Cargo.toml -- `
     show xmip:///learning --local xmip-first
-dotnet run --project module/core/operation/cli/src/Xmip.Cli -- `
+cargo run --manifest-path module/core/operation/cli/Cargo.toml -- `
     measure xmip:///learning --local xmip-first
 Import-Module -Name Xmip
 $operator = 'module/core/operation/powershell/src/Xmip.PowerShell/bin/Debug/net11.0'
@@ -600,8 +601,8 @@ Watch it on each surface:
 Get-XmipTestResult -Path .local-work/essentials/CL1-snapshot.xmip -Worst
 Get-XmipHealth -Scope xmip:///CL1
 Get-XmipScope -Scope xmip:///CL1/*
-dotnet run --project module/core/operation/cli/src/Xmip.Cli -- show xmip:///CL1
-dotnet run --project module/core/operation/cli/src/Xmip.Cli -- measure xmip:///CL1
+cargo run --manifest-path module/core/operation/cli/Cargo.toml -- show xmip:///CL1
+cargo run --manifest-path module/core/operation/cli/Cargo.toml -- measure xmip:///CL1
 Start-XmipOperationWeb -Snapshot .local-work/essentials/CL1-snapshot.xmip
 ```
 

@@ -1707,7 +1707,7 @@ dependency = ["xmip-core-library-codec"]
 # a command a person types, nor .NET project names.
 
   [xmip.core.operate]
-  description = "What every operator surface calls, implemented once: the C ABI's operating exports over the runtime in the native library xmip_core_operate, the designer's view and edits of cluster.xmip, and on .NET Xmip.Surface, its Relay and the Operate model. Foundation's abi keeps the header and the binding (ADR-0058, clause 1)."
+  description = "What every operator surface calls, implemented once: operate::surface, the rules every surface shares, called Rust to Rust by the command line and by .NET through the C ABI's operating exports in xmip_core_operate; the designer's view and edits of cluster.xmip; on .NET Xmip.Surface, its Relay and the Operate model (ADR-0052, amendment 2026-11-18)."
   # What each Cargo feature carries (ADR-0014, amendment 2026-10-14: the
   # phone follows nodes remotely and runs none).
   features = [
@@ -1747,12 +1747,29 @@ dependency = ["xmip-core-library-codec"]
   ]
 
   [xmip.core.cli]
-  description = ".NET 11 xmip executable over the Xmip ABI. Every operator action, implemented once."
+  description = "The xmip command line, Rust and needing no .NET: every operator read and act over xmip-core-operate's surface and the runtime's crates, Rust to Rust through traits (ADR-0014, amendment 2026-11-17), each audited, and xmip mcp, a Model Context Protocol server over net's JSON-RPC (ADR-0071)."
   architecturalDomain = "Operation"
   repositoryRole = "common-architecture"
   maturity = "scaffolded"
-  primaryLanguage = "dotnet"
-  dependency = ["xmip-core-abi", "xmip-core-operate"]
+  primaryLanguage = "rust"
+  dependency = [
+      "xmip-core",
+      "xmip-core-abi",
+      "xmip-core-audit",
+      # The file sink and the operating system's log handed to audit, each
+      # log's crate empty off its own platform.
+      "xmip-core-audit-file",
+      "xmip-core-audit-syslog",
+      "xmip-core-audit-windows-event-log",
+      "xmip-core-library-codec",
+      # JSON-RPC 2.0 and its framing one message a line (net::rpc).
+      "xmip-core-library-net",
+      "xmip-core-node",
+      "xmip-core-observe",
+      "xmip-core-operate",
+      "xmip-core-provision",
+      "xmip-core-runtime",
+  ]
 
   [xmip.core.powershell]
   description = "PowerShell module over the Xmip ABI. Cmdlets and objects, not a subprocess."
@@ -1824,7 +1841,7 @@ dependency = ["xmip-core-library-codec"]
 
 
   [xmip.core.library.net]
-  description = "Network primitives the capabilities share, one copy of each: an address, a URI's authority, path and endpoint, a network in prefix notation, a MAC address, the one TCP connect, a line-oriented head, HTTP/1.1 and HTTP/2 with HPACK, both halves, and the named pipe the named pipe transport and the runtime's local endpoint share."
+  description = "Network primitives the capabilities share, one copy of each: an address, a URI's authority, path and endpoint, a network in prefix notation, a MAC address, the one TCP connect, a line-oriented head, HTTP/1.1 and HTTP/2 with HPACK, both halves, the named pipe the named pipe transport and the local endpoint share, and JSON-RPC 2.0, both framings."
   architecturalDomain = "Library"
   repositoryRole = "common-architecture"
   maturity = "scaffolded"

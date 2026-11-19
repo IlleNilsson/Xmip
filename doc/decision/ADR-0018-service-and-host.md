@@ -2707,3 +2707,101 @@ refusing it).
 
 Provenance: *Bind at open* is the owner's decision, 2026-11-16; the seam,
 the thirty technologies and the tests are the assistant's, the same day.
+
+## Amendment, 2026-11-17: Xmip's own share of a file is cut at its sources
+
+**Provenance.** The root's timing program (`.src/test/measured/carried.rs`)
+held a file's own share within a millisecond of a plain wake at full clock
+(520 to 590 µs) and failed when the laptop's clock fell toward its base:
+687 µs at 130 to 149 %, 870 µs under 130 % (2026-11-17, logs
+`ab-carried-2026-11-17-a.log` and `-b.log`). The owner's millisecond rule
+and *Speed it up*; the bound is never raised. The coordinator set the aim,
+350 µs at full clock, and the owner decided, asked about a faster
+allocator: *Sort it* — no allocator dependency; cut allocations and work
+where they are made.
+
+**Where the share went** (a probe build outside the tree, each thread's
+processor time by stage while it works for a Message's account, the
+probe's own cost calibrated and taken off; a counting allocator beside
+it; means over 45 files of the carried test, 2026-11-17 morning, about
+148 % clock): of some 750 µs, Xmip Storage's writer about 370 (laying
+records out 85, sealing records and index entries 45, the due places
+settled 32, what it keeps 26, each batch's begin and end 42), the
+receiving thread about 200 (the Stream into the Ledger 50, the
+Publication's audit record 20, its line-up and records 35, three wakes
+28), the send thread about 150 (the sequence's head read 50, 33 of it a
+range of the queue's index; the hand-on built and asked 45). 863 heap
+allocations a file, each some 110 to 130 ns with its free on this machine
+(a micro-benchmark, the same build flags), and some 300 SipHash lookups of
+about 90 ns: a sampled profile put the operating system's heap at a fifth
+to a quarter of the working samples.
+
+What changed, each at its source:
+
+- **A sequence's head is read where it is** (`persist::storage::queue::
+  page`). One entry asked for from the place a queue keeps as its first —
+  no entry is held before it — is read at that place; only where none is
+  held there, a place taken out ahead of the rest, is the range of the
+  index read. The same answer as the range in every state a queue is in:
+  held, waiting for a retry, failed, claimed by another node, settled in
+  turn and out of it, emptied and held again (`queue/head.rs`, which also
+  says no range is read where the first is held).
+- **The writer keys its maps by places kept inline** (`encrypted_store::
+  place::PlaceMap`): a batch's writes and reads, what it laid out, and what
+  the writer keeps, each place as made on the stack, never copied to the
+  heap, hashed a word at a time. A place is a kind and identifiers Xmip
+  drew or named, never bytes a far end chose, so no seed is kept against
+  chosen collisions. A batch and each operation's stage are made with room
+  for a Publication's records.
+- **An index entry's key is written once, in room for it**
+  (`storage::columns`), never one vector a column.
+- **A queue's due places are settled from each entry's standing alone**
+  (`Held::standing`, `storage::due`): whether it failed and when it is
+  due, read past its body without copying it; the watch reads whose claim
+  holds an entry the same way, and decodes the batch's claims only where a
+  tail moved (`storage::watch::moved`).
+- **A record is written in the room its form says** (`codec::form::Form::
+  capacity`, 64 bytes unless a form with a body says more: a Stream's
+  chunk, a Message's and a Journey's records, a held entry, an audit
+  entry), never grown from eight bytes by doubling; a queue's keys are made
+  on the stack. What the writer keeps is counted against `[tuning]
+  storage_writer_kept` as memory holds it: each place inline twice and the
+  room its value was written in (`commit::kept`), so the bound stays the
+  bytes it says.
+- **A TOML basic string is escaped by runs** (`codec::toml`): each run of
+  text that needs no escape written whole, every escaped character being
+  ASCII.
+- **A thread's processor time is read once at each change of account**
+  (`xcore::spent`): the reading that credits the account left is the mark
+  of the one entered.
+
+Not changed: what is written, read, sealed, synced or sent, in what order,
+and when anything is durable; every surface and record. Nothing reads a
+record from the writer's map that it did not read before.
+
+**Measured** (the carried program, unprobed, the service built before and
+after over the same tree and alternated round by round, ten rounds each,
+the fastest of five as the node reports it, routed by context and by its
+EDIFACT order's content; the machine shared with another worker's builds,
+its clock's % Processor Performance beside each): the head read, the
+writer's index keys and places and the due places alone, at 142 to 149 %,
+579 and 588 µs before, 551 and 582 µs after (fastest rounds 493 and 525
+before, 427 and 481 after); with the forms' room, the hasher and the
+watch, at 118 to 120 %, 990 and 955 µs before, 713 and 730 µs after;
+everything above, under the heaviest load of the day (99 to 114 %), 1,053
+and 1,165 before, 897 and 929 after. Heap allocations a file: 863 before,
+577 after. The aim of 350 µs at full clock is not reached by these cuts;
+what remains, by the probe, is the writer's sealing of each record and
+index entry (an AES-GCM seal, a keyed hash and an operating system nonce
+each, two allocations), its laying out of each searchable record (a row
+of its columns, their words copied), each batch's begin and end (a wake of
+the sync thread each), the receiving thread's Stream digest and its three
+wakes, and the send thread's call into the writer.
+
+A faster allocator for the service was measured outside the tree (a
+further 10 to 15 %) and is not adopted: the owner's decision, 2026-11-17.
+Windows' segment heap was measured too and was slower.
+
+Provenance: the profile, the cuts and their tests are the assistant's,
+2026-11-17; *Sort it*, no allocator dependency, is the owner's, the same
+day.

@@ -1837,7 +1837,10 @@ entry and taken out with it; on a database server that index is the table's
 primary key. A page of a queue is one ordered range of the index from its
 place and a read of each entry it finds, and the queue's first place is
 found by the read that asks for it, so the one writer never walks a gap
-when an entry is taken out. Until now an entry, kept under a keyed hash, was
+when an entry is taken out. A sequence's head — one entry from the place
+the queue keeps as its first, before which none is held — is read at that
+place, and the range only where none is held there (ADR-0018, amendment
+2026-11-17). Until now an entry, kept under a keyed hash, was
 found by asking each place in turn: a gap with an entry held on each side of
 it was read place by place, by a page and by the writer moving the first
 past it. Measured over a gap of a million places, in memory, a debug

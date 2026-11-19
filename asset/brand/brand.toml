@@ -33,10 +33,10 @@ names = ".src/xmip-x.res"
 
 [[surface]]
 name = "The command line executable, xmip"
-from = "xmip-x.ico"
-copy = "module/core/operation/cli/src/Xmip.Cli/xmip-x.ico"
-in = "module/core/operation/cli/src/Xmip.Cli/Xmip.Cli.csproj"
-names = "<ApplicationIcon>xmip-x.ico</ApplicationIcon>"
+from = "xmip-x.res"
+copy = "module/core/operation/cli/src/xmip-x.res"
+in = "module/core/operation/cli/build.rs"
+names = "src/xmip-x.res"
 
 [[surface]]
 name = "The PowerShell module"

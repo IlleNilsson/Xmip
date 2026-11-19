@@ -151,12 +151,12 @@ function Test-XmipDotnetModule {
             everything passed.
 
         .DESCRIPTION
-            ADR-0014 puts all four operator surfaces in .NET, and until
-            2026-09-03 this file could verify none of them: it looked for a
-            a `Cargo.toml`, found none, and said so. So `cli`, `powershell` and
+            ADR-0014 puts the PowerShell module and the GUIs in .NET, and
+            until 2026-09-03 this file could verify none of them: it looked
+            for a `Cargo.toml`, found none, and said so. So `powershell` and
             `gui` were skipped and landed only under `-All`, which means
-            unverified — a third of the surface area outside the gate, on the
-            day the PowerShell module gained eighteen tests nothing would run.
+            unverified — surface area outside the gate, on the day the
+            PowerShell module gained eighteen tests nothing would run.
 
             Two kinds of test, because the estate has both. A Pester file under
             `test/` runs over a built module, which is what a PowerShell

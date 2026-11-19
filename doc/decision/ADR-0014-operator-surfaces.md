@@ -1756,3 +1756,47 @@ runtime's library, in the surface order ABI, CLI, PowerShell, GUI:
    the Desktop's `preferences.toml` is edited through them; no TOML package is
    linked into .NET. A surface's document no longer names the runtime library,
    since the runtime reads it (ADR-0052, amendment of this date).
+
+## Amendment, 2026-11-17: the command line is Rust, and the .NET one is gone
+
+The amendment of 2026-10-12 (*CLI should be Rust*) is built. `xmip` is the
+Rust executable of `xmip-core-cli` (the package `xmip-core-cli`, its one
+binary `xmip`, ported in place at `module/core/operation/cli`), linking
+`xmip-core-operate` and the runtime's crates and calling them Rust to Rust;
+it loads no native library and crosses no C ABI, and it needs no .NET. The
+.NET 11 executable, `src/Xmip.Cli`, is deleted with every use: its projects
+and tests, the repository's `global.json`, `nuget.config` and
+`Directory.Build.props`, its workflow, and every document that named it.
+
+- **What an operator types and reads is what it was.** Every command,
+  argument, option, text and JSON output, exit code, help text and audit
+  record is the .NET one's, each held by the same test cases ported to
+  Rust. Six things differ, each decided: lines end in a line feed on every
+  system; text is written as UTF-8, where a Windows console's code page
+  once replaced `—`, `–` and `·`; a parse error's or an unreadable file's
+  words are Rust's own; three cases the .NET one ended unhandled — an act
+  naming more than one, an unreadable `validate` file, a broken MCP stream —
+  are refused in words with exit 1; MCP refuses `secret --set` as the act it
+  is; and a list sorts its text ordinally, the one order every surface sorts
+  by.
+- **`--runtime` is deleted**, with `RuntimeLibrary` in `cli.toml` and
+  `XMIP_RUNTIME_LIBRARY`, from the command line: the runtime is linked, not
+  found. The PowerShell module and the GUIs keep theirs.
+- **What every surface shares is implemented once, in Rust**:
+  `operate::surface` is the surface a command, a cmdlet and a screen read —
+  over a published snapshot or a node's operate listener, chosen by the line
+  over the host's document — and the scope tree, its rows, what a wildcard
+  selects, the six figures, the English, the run, a node's declaration, the
+  three noun queries and their order, and the words of an act's outcome.
+  The command line calls it; the .NET surfaces call it through
+  `xmip_operate.h`, and `Xmip.Surface` keeps only what is .NET's own.
+- **Of the ten choices of 2026-11-05**: the first is gone, since nothing is
+  found before it loads; the third went to `operate::surface`, which became
+  what every operator surface calls on 2026-11-16 (ADR-0058, amendment), not
+  to observe and the runtime, whose rules it calls; the seventh is the
+  runtime's own directory watch, no third party's crate; the tenth was not
+  needed, since the port was built beside the .NET one outside the tree and
+  lands whole. The ninth, a static build for a device without a dynamic
+  loader, stays open.
+- **`cli.toml`** is the repository's, copied beside the executable the build
+  makes where it is newer, its `Snapshot` relative to `target/<profile>`.

@@ -1075,6 +1075,23 @@ send thread moves the Journey out and back rather than copy it. Held
 under the millisecond on a quiet machine, as before: the owner's run
 before the landing.
 
+*Cut at its sources, 2026-11-17.* `carried.rs` held a file's own share at
+520 to 590 µs at full clock and went over the millisecond as the laptop's
+clock fell toward its base. Measured by phase, the Storage node's writer
+was about half the share and the operating system's heap a fifth to a
+quarter of it, 863 allocations a file. Each cut where the work is made,
+nothing written, read, sealed or synced otherwise: a sequence's head read
+at its place, never a range of the queue's index; the writer's maps keyed
+by places kept inline; an index entry's key written once; a queue's due
+places settled from each entry's standing; a record written in the room
+its form says; a TOML string escaped by runs; a thread's processor time
+read once at a change of account (ADR-0018, amendment 2026-11-17). After:
+577 allocations a file, the share 15 to 28 % less on a shared machine.
+Still open: the aim of 350 µs at full clock; what remains is the writer's
+sealing and laying out of each record, each batch's wake of the sync
+thread, and the receiving thread's digest and wakes. A faster allocator is
+not adopted: the owner's decision, 2026-11-17.
+
 *Repaired again 2026-10-20, under load.* The runtime's loopback node test
 (`running.rs`, `a_node_carries_every_message_…`) went 0.8 to 1.2 ms over
 its load alone and up to 2.8 ms beside the rest of the suite: each

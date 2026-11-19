@@ -154,8 +154,8 @@ function Test-XmipModule {
         if (-not (Test-Path -LiteralPath $manifest)) {
             # No Cargo.toml is not the end of the question any more.
             #
-            # ADR-0014 puts every operator surface in .NET, so this branch used
-            # to skip a third of them: cli, powershell and gui reported "nothing
+            # ADR-0014 puts the PowerShell module and the GUIs in .NET, so this
+            # branch used to skip them: powershell and gui reported "nothing
             # here can test it" and landed only under -All, unverified. It said
             # that on the day the PowerShell module gained eighteen tests.
             #

@@ -18,7 +18,7 @@
       xmip_validate_v1 — never a reading of this test's own. A block without
       the line is a fragment and is not read.
     - Every `xmip` line a document shows names a command the command
-      line's own usage (`Usage.Text` in module/core/operation/cli) lists and
+      line's own usage (`usage::text` in module/core/operation/cli) lists and
       passes only the options it lists; a line in a fenced block, which a
       reader copies whole, also gives its command the arguments it requires
       and names what an act acts on. A span in prose is a mention.
@@ -37,11 +37,15 @@ BeforeAll {
             Where-Object { Test-Path -LiteralPath (Join-Path $script:Root $_) }
     )
 
-    [string] $usage = Join-Path $script:Root 'module/core/operation/cli/src/Xmip.Cli/Usage.cs'
-    [string] $source = Get-Content -LiteralPath $usage -Raw
-    [int] $opening = $source.IndexOf('"""')
-    [int] $closing = $source.LastIndexOf('"""')
-    [string] $script:Usage = $source.Substring($opening + 3, $closing - $opening - 3)
+    # The usage text's three parts, each a raw string in its own file.
+    [string] $usage = Join-Path $script:Root 'module/core/operation/cli/src/usage'
+    [string[]] $parts = foreach ($part in 'commands', 'surfaces', 'reports') {
+        [string] $source = Get-Content -LiteralPath (Join-Path $usage "$part.rs") -Raw
+        [int] $opening = $source.IndexOf('"') + 1
+        [int] $closing = $source.LastIndexOf('"')
+        $source.Substring($opening, $closing - $opening)
+    }
+    [string] $script:Usage = $parts -join "`n`n"
 }
 
 Describe 'A complete configuration a document shows is one the runtime would start' {
