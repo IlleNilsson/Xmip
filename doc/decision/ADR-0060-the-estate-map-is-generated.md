@@ -468,3 +468,72 @@ estate or verifies anything (`Update-XmipGeneratedDocument`), and the pin no
 longer does: one place. The pin commits what was regenerated, true of the
 tree that was tested. A map that will not generate still warns rather than
 stopping the landing, and `test/` then says what is wrong with it.
+
+## Amendment, 2026-11-19: the landing commits no build output
+
+Round 12's landing of 2026-11-19 committed 483 files of .NET build output to
+`xmip-core-cli`, in its commit `38e46a4`: the C# command line's `bin` and
+`obj` folders, left on disk when its projects were deleted (ADR-0014,
+amendment 2026-11-17), in a repository whose `.gitignore` names cargo's
+`target/` and not .NET's folders. The landing had a check and it saw none of
+them. Its rule was anchored at a repository's root, so `src/Xmip.Cli/bin/`
+was not `bin/`; `Get-XmipStatus` read an untracked folder as one path; and
+the platform repository was never asked. Run in `D:\Repos\Xmip` on
+2026-11-19:
+
+```text
+PS> git -C module/core/operation/cli show --name-only --format= 38e46a4 |
+        Where-Object { $_ -match '^src/Xmip\.Cli(\.Test)?/(bin|obj)/' } |
+        Group-Object -Property { ($_ -split '/')[0..2] -join '/' } |
+        Select-Object -Property Count, Name
+Count Name
+----- ----
+  309 src/Xmip.Cli.Test/bin
+   49 src/Xmip.Cli.Test/obj
+   58 src/Xmip.Cli/bin
+   67 src/Xmip.Cli/obj
+```
+
+1. **Nothing a compiler produced is committed, in any repository.** Before
+   anything is verified or committed, `Publish-XmipChange` reads every
+   repository with a change, the platform repository among them, and is
+   REFUSED when what `git add -A` would stage there adds or changes build
+   output, naming each repository, how many such files, and the first five
+   (`Assert-XmipNoBuildOutput`). `-Pin` is refused the same way: the check
+   comes before its branch.
+2. **One rule, `Test-XmipBuildOutput`,** which `Get-XmipStatus` reads for
+   `Suspicious` and, on a summary, `BuildOutput`. At a repository's root:
+   `target/`, `bin/`, `.vs/`, `Cargo.lock` and `packages.lock.json`.
+   Anywhere: an `obj` folder, .NET's, which the source walk already skips by
+   name (`Get-XmipSourceFile`); a `bin` folder holding `Debug/` or
+   `Release/`, since Rust's `src/bin` is source; a file ending `.dll`,
+   `.exe`, `.pdb`, `.so`, `.dylib`, `.rlib` or `.nupkg`; and a `target`
+   folder holding the `CACHEDIR.TAG` cargo writes in every build directory
+   it makes. A `target` folder is cargo's by what it holds, not by its name:
+   `deploy/profile/target` holds a deployment target's profiles, and the
+   root `.gitignore` records the name match that once kept them out.
+3. **An untracked folder is read file by file**
+   (`git status --untracked-files=all`), as `git add -A` stages it.
+4. **A deletion lands.** It is how build output leaves; the 483 files leave
+   `xmip-core-cli` that way.
+
+`test/Publish-XmipChange.Test.ps1` holds it, in a throwaway estate under
+the test's drive: an added `bin/Debug/x.dll` is refused naming it, build
+output below a repository's root and in the platform repository is refused
+with the first files named, and a deleted `bin/Debug/x.dll` and a source
+change land. Run in `D:\Repos\Xmip` on 2026-11-19, before the change and
+after it:
+
+```text
+PS> Invoke-Pester -Path test/Publish-XmipChange.Test.ps1 -Output Detailed
+  [-] catches what a compiler produced, below a repository's root too
+  [-] leaves source alone, a folder named target that cargo did not make among it
+  [-] lets build output leave: a deletion commits none
+  [-] refuses an added bin/Debug/x.dll, naming the repository and the file
+  [-] refuses build output in a folder below the root, in every repository, first files named
+  [-] lets a deleted bin/Debug/x.dll land
+Tests Passed: 71, Failed: 6, Skipped: 0, Inconclusive: 0, NotRun: 0
+
+PS> Invoke-Pester -Path test/Publish-XmipChange.Test.ps1 -Output Detailed
+Tests Passed: 77, Failed: 0, Skipped: 0, Inconclusive: 0, NotRun: 0
+```

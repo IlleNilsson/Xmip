@@ -22,7 +22,9 @@ function Get-XmipStatus {
 
         .DESCRIPTION
             Every module that has something uncommitted, what it is, and whether
-            it looks like source or like build output. A module that is no
+            it would commit build output (Test-XmipBuildOutput); a summary
+            names those files in BuildOutput. An untracked folder is listed
+            file by file, as `git add -A` would stage it. A module that is no
             repository yet, a crate where architecture.toml mounts one, is
             listed by its own path with New true, branch 'new', and every file
             of it untracked; the repository around it no longer lists them.
@@ -103,18 +105,24 @@ function Get-XmipStatus {
             continue
         }
 
-        $suspicious = @($files | Where-Object { Test-XmipBuildOutput -Path $_ })
+        [string[]] $built = @(
+            $git.Entry |
+                Where-Object { Test-XmipBuildOutput -At $path -Path $_.Path -State $_.State } |
+                ForEach-Object -MemberName Path |
+                Sort-Object -Unique
+        )
 
         if ($Short) {
             [PSCustomObject]@{
-                PSTypeName = 'Xmip.StatusSummary'
-                Module     = $module
-                Branch     = $git.Branch
-                Changed    = $files.Count
-                AheadBy    = $git.AheadBy
-                BehindBy   = $git.BehindBy
-                Suspicious = $suspicious.Count -gt 0
-                New        = $isNew
+                PSTypeName  = 'Xmip.StatusSummary'
+                Module      = $module
+                Branch      = $git.Branch
+                Changed     = $files.Count
+                AheadBy     = $git.AheadBy
+                BehindBy    = $git.BehindBy
+                Suspicious  = $built.Count -gt 0
+                BuildOutput = $built
+                New         = $isNew
             }
 
             continue
@@ -127,7 +135,9 @@ function Get-XmipStatus {
                 Branch     = $git.Branch
                 State      = $entry.State
                 Path       = $entry.Path
-                Suspicious = [bool] (Test-XmipBuildOutput -Path $entry.Path)
+                Suspicious = [bool] (
+                    Test-XmipBuildOutput -At $path -Path $entry.Path -State $entry.State
+                )
                 New        = $isNew
             }
         }
@@ -190,7 +200,7 @@ function Get-XmipModuleStatus {
         }
     }
 
-    [pscustomobject] $git = Get-XmipRepositoryStatus -At $At
+    [pscustomobject] $git = Get-XmipRepositoryStatus -At $At -EveryFile
     [string] $prefix = if ($Module -eq '.') { '' } else { "$Module/" }
     [string[]] $inside = @(
         $New |
@@ -240,17 +250,28 @@ function Get-XmipRepositoryStatus {
 
         .PARAMETER At
             The repository's working tree.
+
+        .PARAMETER EveryFile
+            An untracked folder's files one by one, as `git add -A` would
+            stage them, rather than the folder.
     #>
     [CmdletBinding()]
     [OutputType([pscustomobject])]
     param(
         [Parameter(Mandatory = $true)]
-        [string] $At
+        [string] $At,
+
+        [Parameter()]
+        [switch] $EveryFile
     )
 
-    [string[]] $said = @(
-        Invoke-XmipGit -At $At -Arguments @('status', '--porcelain=v2', '--branch')
-    )
+    [string[]] $asked = @('status', '--porcelain=v2', '--branch')
+
+    if ($EveryFile) {
+        $asked += '--untracked-files=all'
+    }
+
+    [string[]] $said = @(Invoke-XmipGit -At $At -Arguments $asked)
     [hashtable] $branch = @{}
     [object[]] $entry = @(
         foreach ($line in $said) {

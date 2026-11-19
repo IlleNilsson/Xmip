@@ -2102,6 +2102,87 @@ Tests: a secure-scheme Location on a node with a `receive` certificate
 serves a TLS client and refuses a plain one; on a node without, it is
 refused at bind as now.
 
+## 72. An object store's receive is at least once, not one winner
+
+Found 2026-11-19 with the conditional get and delete (ADR-0024, amendment
+2026-11-19), which hold an object store's read and delete to the version
+listed (`If-Match`, `ifGenerationMatch`). Two races remain. An
+S3-compatible endpoint that ignores `If-Match` on DELETE deletes by the
+name, so an object written again between the read and the acceptance is
+deleted unread there; one that ignores it on GET hands over the
+replacement's bytes under the old stamp, the conditional delete then
+answers Changed, and the replacement is received again at the next
+listing: twice, never lost. And two nodes listing one bucket may both read
+one object under one stamp, the second accepted delete answering Changed,
+so it is received twice, because the object stores' exclusive step
+(ADR-0024, amendment 2026-10-13: a conditional write, `If-None-Match: *`
+or `ifGenerationMatch=0`, or an Azure Blob lease) is still not built. The
+azure-blob and google-cloud-storage receives are checked only against
+their test sessions, which honor the conditions as Microsoft and Google
+document them; whether Azurite or another compatible endpoint honors them
+is not checked yet.
+
+## 73. A start whose first write lands after its successor's registration takes the node from it
+
+Since 2026-11-19 a process's first `write_member` registers it and every
+later write updates its own row alone (ADR-0056, amendment 2026-11-19), so
+an earlier start's stop no longer takes its node from its successor. But a
+start whose first write reaches Xmip Storage only after its successor's
+registration (its earlier tries unanswered, or their answers lost) still
+registers then: its row becomes the node's latest, and once it stops the
+members say the node stopped while its successor runs. Closing it needs an
+order between one node's starts that Xmip Storage can check, not the
+order the writes arrive in.
+
+## 74. A process a script starts holds the Script runtime's standard error open past the runtime
+
+Found 2026-11-19 with the drain of Script's standard error (ADR-0066,
+amendment 2026-11-19). A process the script starts inherits the runtime's
+standard error. Killing and reaping the runtime leaves that process
+running and the pipe open, so the drain waits until it ends, and so do the
+step's last words and its drop. To do: end the runtime's process tree, not
+its process alone, so the pipe ends with the runtime.
+
+## 75. An S3-compatible endpoint that ignores `If-None-Match: *` writes an archived item over
+
+ADR-0040, amendment 2026-11-19, never writes an archived item over; the
+aws-s3 archive holds that only where the endpoint honors
+`If-None-Match: *` on PUT. An S3-compatible endpoint that ignores it
+writes an archived object over, and the archive cannot tell.
+
+## 76. An interrupted file or Parquet archive leaves its unlinked file behind
+
+A file or Parquet archive whose process dies between writing a file and
+linking it to its name (ADR-0040, amendment 2026-11-19) leaves
+`<name>.xmip-archiving.<pid>.<n>` beside it, and nothing removes it yet;
+the file transport's node start does that for its own sends.
+
+## 77. The file and Parquet archives need hard links
+
+An item is created whole by linking it to its name (`link(2)`,
+`CreateHardLinkW`; ADR-0040, amendment 2026-11-19). On FAT, exFAT or a
+share without hard links an archive is refused, not written.
+
+## 78. The Parquet archive's receipt carries no checksum
+
+Its receipt is still a bare path, unlike the file archive's `file://` URI
+and the SHA-256 its sidecar holds (ADR-0040, amendment 2026-11-19).
+
+## 79. Signing a person's certificate reads `[provision.operator]` around the trust
+
+Found 2026-11-19. `runtime::operator_certificate::sign` reads `node.xmip`
+raw, not through the signed-slice check (ADR-0031), so a hand edit changes
+the certificate's lifetime (any duration) and which kept authority signs
+(any folder, an absolute path included); the names are not affected. The
+Essentials' and the deployment environment's `operator.xmip` (ADR-0009,
+amendment 2026-10-21) are unsigned, so routing the read through the check
+changes the tester's flow. Options: (A) `[provision.operator]` becomes part
+of the node's signed slice, declared in the cluster file and written
+through `xmip_cluster_signed_slice_v1`, and the Essentials and the
+deployment environment write it so; (B) signing reads no node
+configuration, and each surface names the authority folder and the
+lifetime. Lean: A. The owner's choice, asked 2026-11-19.
+
 # Suggested order
 
 Rewritten 2026-09-23, and corrected to what is built on 2026-11-10. The

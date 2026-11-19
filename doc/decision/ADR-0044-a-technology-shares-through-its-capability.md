@@ -650,3 +650,42 @@ the `ISA`, and HL7 v2's lets the last segment end with the text.
 Provenance: the design is the owner's, 2026-11-15; the readers' names and
 results, the joined checks and their words, the `standard` key and the
 test's reach are the assistant's, for the owner to overrule.
+
+## Amendment, 2026-11-19: the sidecar, the rule of a store keyed by name, and a directory's sync move up
+
+Clause 1, three times over, on the day an archived item stopped being
+written over (ADR-0040, amendment 2026-11-19):
+
+- **The sidecar is the archive capability's** (`archive::sidecar`), moved
+  from the file archive's `meta.rs`, its `Meta` named `Sidecar` and given
+  the SHA-256 of the bytes. Every archive keyed by name — file, aws-s3,
+  azure-blob, google-cloud-storage — keeps an item's metadata as that TOML,
+  so an object's metadata reads like a file's to an operator and gives back
+  the data type and identifier its key may not. `archive::metadata`, the
+  pairs as one text, stays for the column stores: parquet, sqlite, sql,
+  postgresql, mssql, mariadb.
+- **The rule of a store keyed by name is the capability's**
+  (`archive::named`). A store implements `Named` — create an object only
+  where none is, read one, a key's location and back, and what a data type
+  or an identifier becomes in a key — and `named::archive` and
+  `named::restore` do the rest once for all four. `layout::item_key` and
+  `layout::meta_of` take the place of `layout::key`, `meta_key`,
+  `split_key` and `META_SUFFIX`, which went with every use; `named::Claim`
+  is which item a name holds, which the Parquet archive judges a file
+  already there by too. A file created whole and never over another is
+  `archive::whole`, which the file and Parquet archives call.
+- **A directory's sync is a Library's** (`file::synced::directory`, in
+  `xmip-core-library-file`, made for it on the owner's go of 2026-11-19),
+  moved from the file transport's `sending.rs`, which calls it, as
+  `archive::whole` does: the one call that puts a renamed or linked name on
+  disk — on Windows through a handle opened with
+  `FILE_FLAG_BACKUP_SEMANTICS` and flushed, on Unix by `fsync` of the
+  directory — each caller waiting on it in `xcore::spent::on_sync`, the
+  disk's time. Not `xmip-core`: a Foundation crate opens no file (ADR-0058
+  clause 1, held by `test/Foundation.Test.ps1`), and a Library, below every
+  layer, is what both callers reach.
+
+Provenance: the planner's and the coordinator's design of 2026-11-19 (an
+outside review's finding, confirmed against the source); `Named::segment`,
+the names `item_key`, `Claim` and `whole`, and the Parquet archive through
+them are the assistant's, for the owner to overrule.

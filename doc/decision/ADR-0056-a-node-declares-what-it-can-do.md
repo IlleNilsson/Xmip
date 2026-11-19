@@ -1305,3 +1305,106 @@ the second copied whole from it, and a Journey reads as none.
 `standby/tests/handed.rs` holds the Journeys written before a copy is read
 counted among its entries, never as writes; the runtime's `storage` test,
 a Journey written once the standby is ready counted as a write.
+
+## Amendment, 2026-11-19: a start registers once, then writes its own row alone
+
+**Provenance.** An outside review, confirmed against the source by the
+coordinator on 2026-11-19; the design is the planner's, the build the
+assistant's, the same day. Until this day `write_member` made every row it
+wrote its node's latest, and the node's latest before it no longer so.
+Where a node was started again while its earlier start still ran, the
+earlier start's stop in order wrote its own row, saying it stopped, as the
+node's latest once more, and its successor's row, still running, stopped
+being the latest: the members said the node had stopped while it ran.
+
+What stands now:
+
+1. **A process's first write registers it; every write after it is to its
+   own row alone.** Xmip Storage reads the process's row first, one point
+   read under the administration database's one lock. None: the start
+   registers, its row written as its node's latest and the row it replaces
+   as the latest no longer so, in one write, as before. One: the write
+   updates that row alone, whether it is its node's latest kept and no
+   other row touched, so an earlier start's stop is written to its own row
+   and its successor stays the member. Every waiter on the table is told
+   of either.
+2. **A row names one node.** A process writing its row as another node is
+   refused, `PersistError::Failed` naming both, and nothing is written.
+3. **One rule, in the embedded Storage node** (`member_written`): the
+   client over the wire, the server's answer, a standby's delegation to its
+   primary and the runtime's test wrappers all reach it. The wire is
+   unchanged.
+
+What it costs: one point read under the lock the write holds. Persist's
+timing program, run before and after this change in turn on 2026-11-19 on
+Windows (`cargo test -j 2 --config .local-work/landing/patch.toml --test
+measured --features test-support -- --test-threads=1 --show-output
+membership::` in `module/platform/persist`, the second and third of three
+rounds each), held a row's write beyond Xmip Storage's own as before:
+
+```text
+before: a node's row over 1000 starts of each of 9 nodes kept: 94.7µs, Storage's own write 23.8µs, beyond it 70.9µs, the fastest of five each
+after:  a node's row over 1000 starts of each of 9 nodes kept: 95.4µs, Storage's own write 25.3µs, beyond it 70.1µs, the fastest of five each
+before: a node's row over 1000 starts of each of 9 nodes kept: 100.1µs, Storage's own write 28.7µs, beyond it 71.4µs, the fastest of five each
+after:  a node's row over 1000 starts of each of 9 nodes kept: 93.9µs, Storage's own write 26.3µs, beyond it 67.6µs, the fastest of five each
+```
+
+**Not closed** (open problem 73): a start whose first write lands only
+after its successor's registration — its earlier tries unanswered, or
+their answer lost — registers then and takes its node from its successor.
+
+Shown by tests written first and run against the code before this change
+on 2026-11-19 on Windows. Persist's (`cargo test -j 2 --config
+.local-work/landing/patch.toml --features test-support --lib --
+--test-threads 2 embedded::membership` in `module/platform/persist`):
+
+```text
+test storage::embedded::membership::tests::a_process_rewriting_its_row_as_another_node_is_refused ... FAILED
+test storage::embedded::membership::tests::register_A_register_B_stop_A_leaves_B_the_member ... FAILED
+refused, not Ok(())
+assertion `left == right` failed: B is the member
+  left: [1]
+ right: [2]
+test result: FAILED. 3 passed; 2 failed; 0 ignored; 0 measured; 208 filtered out; finished in 0.80s
+```
+
+The runtime's, over persist as it was (`cargo test -j 2 --config <the
+local patch> --lib -- --test-threads 2 membership::` in
+`module/platform/runtime`):
+
+```text
+test membership::tests::an_earlier_process_s_stop_leaves_its_successor_the_member ... FAILED
+assertion `left == right` failed: its successor is the member
+  left: [1]
+ right: [2]
+test result: FAILED. 4 passed; 1 failed; 0 ignored; 0 measured; 311 filtered out; finished in 0.09s
+```
+
+After it, the three pass among each module's whole suite, run the same
+day on Windows (`cargo test -j 2 --config <the local patch>
+--all-features -- --test-threads 2`, persist then the runtime):
+
+```text
+test storage::embedded::membership::tests::a_process_rewriting_its_row_as_another_node_is_refused ... ok
+test storage::embedded::membership::tests::register_A_register_B_stop_A_leaves_B_the_member ... ok
+test result: ok. 213 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 20.05s
+test membership::tests::an_earlier_process_s_stop_leaves_its_successor_the_member ... ok
+test result: ok. 331 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.50s
+test result: ok. 100 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 11.71s
+test result: ok. 27 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.62s
+test result: ok. 19 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.56s
+```
+
+and in the AlmaLinux 10 guest (`cargo test -j 2 --config <the local
+patch> --all-features -- --test-threads 2` for persist, `cargo test -j 2
+--config <the local patch> --no-fail-fast -- --test-threads 2` for the
+runtime, `XMIP_RUNTIME_DIRECTORY` under the user's runtime directory):
+
+```text
+test result: ok. 213 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 19.72s
+test membership::tests::an_earlier_process_s_stop_leaves_its_successor_the_member ... ok
+test result: ok. 321 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.09s
+test result: ok. 100 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 11.24s
+test result: ok. 27 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.07s
+test result: ok. 19 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.19s
+```

@@ -720,7 +720,7 @@ dependency = ["xmip-core-library-codec"]
     dependency = ["xmip-core-sdk", "xmip-core-library-net", "xmip-core-library-codec", "xmip-core-context", "xmip-core"]
     [xmip.core.transport.file]
     maturity = "scaffolded"
-    dependency = ["xmip-core-library-net", "xmip-core-library-codec", "xmip-core-context", "xmip-core"]
+    dependency = ["xmip-core-library-net", "xmip-core-library-codec", "xmip-core-library-file", "xmip-core-context", "xmip-core"]
     specification = "Platform file-system behavior and the Rust standard library file APIs"
     [xmip.core.transport.google-cloud-storage]
     maturity = "scaffolded"
@@ -1422,23 +1422,23 @@ dependency = ["xmip-core-library-codec"]
   architecturalDomain = "Operation"
   repositoryRole = "operational-capability"
   maturity = "scaffolded"
-  dependency = ["xmip-core-library-codec", "xmip-core-library-sql", "xmip-core"]
+  dependency = ["xmip-core-library-codec", "xmip-core-library-sql", "xmip-core-library-file", "xmip-core"]
     [xmip.core.archive.aws-s3]
-    description = "S3 archive target: one item is one object in a bucket. A xmip-core-archive technology."
+    description = "S3 archive target: one item is one object in a bucket, its TOML metadata a second object under .meta, each created only where none is and never written over. A xmip-core-archive technology."
     maturity = "scaffolded"
     dependency = ["xmip-core-transport-aws-s3"]
     specification = "Amazon S3 REST API, Signature Version 4, through the aws-s3 transport client"
     [xmip.core.archive.azure-blob]
-    description = "Azure Blob Storage archive target: one item is one blob in a container. A xmip-core-archive technology."
+    description = "Azure Blob Storage archive target: one item is one blob in a container, its TOML metadata a second blob under .meta, each created only where none is and never written over. A xmip-core-archive technology."
     maturity = "scaffolded"
     dependency = ["xmip-core-transport-azure-blob"]
     specification = "Azure Blob Storage REST API, Shared Key authorization, through the azure-blob transport client"
     [xmip.core.archive.file]
-    description = "File archive target: one item is one file under a directory, its metadata beside it. A xmip-core-archive technology."
+    description = "File archive target: one item is one file under a directory, its TOML metadata in a tree beside it, each created whole and never written over. A xmip-core-archive technology."
     maturity = "scaffolded"
-    dependency = ["xmip-core-library-codec", "xmip-core-library-net"]
+    dependency = ["xmip-core-library-net"]
     [xmip.core.archive.google-cloud-storage]
-    description = "Google Cloud Storage archive target: one item is one object in a bucket. A xmip-core-archive technology."
+    description = "Google Cloud Storage archive target: one item is one object in a bucket, its TOML metadata a second object under .meta, each created only where none is and never written over. A xmip-core-archive technology."
     maturity = "scaffolded"
     dependency = ["xmip-core-transport-google-cloud-storage"]
     specification = "Google Cloud Storage JSON API, bearer token, through the google-cloud-storage transport client"
@@ -1820,6 +1820,15 @@ dependency = ["xmip-core-library-codec"]
   maturity = "scaffolded"
   dependency = []
   mount = "module/core/library/codec"
+
+
+  [xmip.core.library.file]
+  description = "File system acts every layer shares, one copy of each: a directory synced to its device, so a name made, renamed or removed in it outlives a crash (fsync of the directory on Unix; FlushFileBuffers on a handle opened with FILE_FLAG_BACKUP_SEMANTICS on Windows)."
+  architecturalDomain = "Library"
+  repositoryRole = "common-architecture"
+  maturity = "scaffolded"
+  dependency = []
+  mount = "module/core/library/file"
 
 
   [xmip.core.library.jose]

@@ -1087,3 +1087,64 @@ refactor the owner ordered on 2026-11-13 (*Do we have all code in the
 modules, repos that we should*, *Good that you found it, fix it*) and the
 millisecond rule; the walk's shape, its words and the equivalence held are
 the assistant's, for the owner to overrule.
+
+## Amendment, 2026-11-19: a script's standard error is drained while it runs
+
+The amendment of 2026-10-22 started Script's runtime with its standard
+error piped and read that pipe only once the runtime had ended. A runtime
+that said more there than the pipe holds blocked writing it, never
+answered the Message it had been handed, and its step waited for good; a
+script that failed to load and said as much hung its step's opening the
+same way, the runtime blocked before it could end. That no longer stands.
+
+- **One drain, from the start.** `script::standard_error` in
+  `xmip-core-transform`, the one implementation, Script's runtime its one
+  user: one thread per runtime, started with it, reads its standard error
+  to the end of the pipe, keeps the last 64 KiB and counts the bytes
+  before them. A runtime may say as much as it likes; what Xmip holds of
+  it is bounded.
+- **Last words, bounded.** A runtime that ends, a script that did not load
+  or a runtime that ended during a call, is killed and reaped, its drain
+  read to the end of the pipe, and the step's refusal carries the last
+  64 KiB, `(N earlier bytes dropped)` in front where there were more,
+  starting at a whole character.
+- **Plain words.** The runtime writes its standard error as plain text
+  without colors (`-OutputFormat Text` and `$PSStyle.OutputRendering =
+  'PlainText'`): started with an encoded command, PowerShell wrote it as
+  CLIXML with color codes, which no operator reads and a cut tail breaks.
+- **Dropped, ended.** A runtime whose step is dropped is killed and reaped,
+  then its drain joined once the pipe has ended. A process the script
+  started that inherited the standard error holds the pipe open past the
+  runtime, and the drop or the last words wait for it (open problem 74).
+- **Cost.** One thread per warm runtime, started with it; nothing per
+  Message, and the message path is unchanged.
+
+The failure sequences are tests in `script.rs`, each run on a thread of its
+own with a deadline, so a regression fails instead of hanging. On the
+Host before the drain, with these tests, on Windows 11 with PowerShell
+7.7.0, 2026-11-19:
+
+```text
+cargo test --lib -- a_script_writing_1_MiB non_terminating_errors a_script_failing_to_load --test-threads 2
+a script failing to load says its last words: hung past 60s
+a script writing 1 MiB to standard error completes: hung past 60s
+non-terminating errors beyond the pipe do not block: hung past 60s
+test result: FAILED. 0 passed; 3 failed; 0 ignored; 0 measured; 12 filtered out; finished in 120.63s
+```
+
+With the drain, the same day and machine, and in the AlmaLinux 10 guest
+under WSL with PowerShell 7.7.0:
+
+```text
+cargo test -- --test-threads 2
+test script::tests::a_script_writing_1_MiB_to_standard_error_completes_and_its_diagnostics_stay_within_64_KiB ... ok
+test script::tests::non_terminating_errors_beyond_the_pipe_do_not_block ... ok
+test script::tests::a_script_failing_to_load_says_its_last_words_bounded ... ok
+test script::tests::dropping_the_host_ends_its_runtime_and_joins_its_drain ... ok
+test result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+```
+
+Provenance: an outside review of 2026-11-19, confirmed against the source
+by the coordinator, whose plan named the drain, its 64 KiB and its tests;
+the plain-text rendering, found when the first last words read as CLIXML,
+is the assistant's, for the owner to overrule.

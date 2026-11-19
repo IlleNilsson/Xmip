@@ -2559,3 +2559,33 @@ amendment of 2026-09-09) survived and the older one did not."""
 #     -> module/platform/runtime/src/directory_watch.rs stamp, asked of the
 #     operating system without opening it (src/ffi/directory_watch.rs on
 #     Windows)
+
+# Code moved on 2026-11-19, an archived item never written over (ADR-0040
+# and ADR-0044, amendments 2026-11-19):
+#   module/core/operation/archive/file/src/meta.rs, Meta
+#     -> module/core/operation/archive/.src/sidecar.rs, Sidecar, given the
+#     SHA-256 of the bytes; every archive keyed by name keeps it
+#   module/core/capability/transport/file/src/sending.rs synced_directory
+#   and its test
+#     -> module/core/library/file/src/synced.rs directory, which the file
+#     transport and module/core/operation/archive/.src/whole.rs call
+#   module/core/operation/archive/file/src/lib.rs create, write_new and
+#   meta_path; the `.2`, `.3` copies, deleted
+#     -> module/core/operation/archive/.src/named.rs archive and restore
+#     over the archive's Named, and .src/whole.rs create
+#   module/core/operation/archive/.src/layout.rs key, meta_key, split_key
+#   and META_SUFFIX, deleted
+#     -> .src/layout.rs item_key, meta_of and META
+
+# Code moved on 2026-11-19, a path a listener binds on Unix claimed before
+# it is bound (ADR-0018, amendment 2026-11-19):
+#   module/core/capability/transport/unix-socket/src/lib.rs bind's removal
+#   of whatever was at the path, its Listener alias and its far end's
+#   SocketFile guard, deleted
+#     -> module/core/library/net/src/socket_file.rs SocketFile, new
+#   module/platform/runtime/src/plane/local/unix.rs Acceptor::bind's probe
+#   and removal, and Acceptor's Drop, deleted
+#     -> net::socket_file::SocketFile, which Acceptor keeps
+#   module/core/library/net/src/pipe/unix.rs Listener::bind's FIFO used
+#   where one was there, and its Drop, deleted
+#     -> net::socket_file claimed and Claim, Kind::Fifo

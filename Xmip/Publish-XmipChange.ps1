@@ -62,7 +62,11 @@ function Publish-XmipChange {
 
             **Build output is refused rather than committed.** On 2026-08-27 a
             hand-run loop pushed 105 files of `target/` to xmip-core: it checked
-            whether a module was dirty and never what was dirty.
+            whether a module was dirty and never what was dirty. On 2026-11-19
+            a landing committed 483 files of .NET build output below a
+            module's root, which the check did not see. Every repository is
+            asked, file by file, before anything is verified; a deletion
+            lands, as build output leaves (Test-XmipBuildOutput).
 
             **Generated documents first.** The estate map and the decision
             index are regenerated from the working tree before anything is
@@ -179,6 +183,9 @@ function Publish-XmipChange {
     # the first thing either path needs.
     [object[]] $estate = @(Get-XmipStatus -RepositoryRoot $RepositoryRoot -Short)
 
+    # Before anything is verified or committed, the repair path's commits too.
+    Assert-XmipNoBuildOutput -Status $estate
+
     # The platform repository is landed by the pin step rather than as a
     # module, because its commit has to be last: it records where the modules
     # ended up.
@@ -272,18 +279,6 @@ function Publish-XmipChange {
             Platform   = $true
             Verified   = -not $NoVerify
         }
-    }
-
-    [object[]] $suspect = @($status | Where-Object Suspicious)
-
-    if ($suspect.Count -gt 0) {
-        Write-Host 'REFUSED. These have changes that look like build output:' -ForegroundColor Red
-        $suspect | ForEach-Object { Write-Host "  $($_.Module)" }
-        Write-Host ''
-        Write-Host 'Get-XmipStatus | Where-Object Suspicious    shows which files.'
-        Write-Host 'Add them to .gitignore, then run again.'
-
-        return
     }
 
     # What changed lands; what consumes it, unchanged, is compiled and linted

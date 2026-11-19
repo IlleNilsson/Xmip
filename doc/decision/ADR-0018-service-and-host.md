@@ -2805,3 +2805,163 @@ Windows' segment heap was measured too and was slower.
 Provenance: the profile, the cuts and their tests are the assistant's,
 2026-11-17; *Sort it*, no allocator dependency, is the owner's, the same
 day.
+
+## Amendment, 2026-11-19: a path a listener binds is claimed before it is bound
+
+An outside review found, and the coordinator confirmed against the source
+on 2026-11-19, that a listener bound at a path on Unix took the path
+whatever was there. A Unix domain socket's Receive Location removed what
+was at its path before it bound: an ordinary file, or the socket of a
+listener still answering, which went on running and was reached by nobody.
+The named pipe's FIFO took an ordinary file at its path for itself. A
+node's local operate endpoint asked a socket there whether anything
+answered, so a node already listening was handed an empty connection by
+every start that asked, and two starts at once could each find the path
+empty and bind in turn. Each removed its path as it went, whatever had
+taken its place. Since the amendment of 2026-11-16 a taken port refuses
+the start at phase 9; a taken path now does too.
+
+- **One claim of a path, `net::socket_file`** (`xmip-core-library-net`,
+  Unix alone). `SocketFile::bind` claims the path and binds a Unix domain
+  socket there; `net::pipe` makes its FIFO through the same claim. It is a
+  listener's hold on its own path, not ADR-0024's claim of an artifact.
+  1. **The lock.** `<path>.lock` beside the path, opened without following
+     a link and held with `flock` while the listener lives. Where another
+     holds it, the start is refused (`AddrInUse`) and the holder is never
+     asked, so its listener takes no connection of a start's. Once a start
+     has the lock, it compares the file it locked (`fstat`) with the one
+     at `<path>.lock` (`lstat`), device and inode; where they differ, or
+     nothing is there, it closes the file and opens the lock anew, eight
+     times at most, and past that is refused (`AddrInUse`) in words.
+  2. **What is there**, looked at without following a link. Nothing: the
+     listener is made. A file of another kind — an ordinary file, a
+     directory, a link, a FIFO where a socket goes — is refused
+     (`AlreadyExists`) naming its kind, and kept. A socket is asked with a
+     connect: one that answers refuses (`AddrInUse`) and goes on
+     answering; one that refuses the connect (`ConnectionRefused`) is a
+     stopped listener's, stale, and is removed; any other answer refuses.
+     A FIFO has no listener to ask, so a FIFO whose lock is free is a
+     stopped one's, and is made anew, its owner's alone.
+  3. **Only its own file goes.** A listener knows its file by device and
+     inode from the moment it made it, and as it goes removes the path
+     only where that file is still there; the lock is let go after.
+  4. **Every refusal names the path**, also one in the system's own
+     words, which name none: a node's refusal said its path before, and
+     says it still.
+- **The lock file goes with its listener** (the coordinator's decision,
+  2026-11-19): after its own socket or FIFO, the listener removes
+  `<path>.lock` while it still holds the lock, where that file is still
+  its own, and only then closes it and lets the lock go. Removed without
+  the inode check, a lock file could be locked both by a start that
+  opened it before the removal and by one that made it anew after, each
+  then holding the path; a FIFO, which has no listener to ask, would be
+  taken from the one that bound first. The check closes that: the early
+  start finds that the file it locked is no longer `<path>.lock`, and
+  opens the lock anew, where it is refused by the one that holds it. A
+  claim by a hard link instead (`link(2)` of a file of the listener's own
+  to the path, which fails where anything is there) still races on a stale
+  socket: the stale one must be removed before the link, and between the
+  removal and the link another start can remove and link the same. A
+  node's lock is in its own folder (ADR-0014, amendment 2026-11-15); a
+  Location's beside its socket or FIFO. A lock file stays only after a
+  listener that was killed, and the next start takes it as it is.
+- **Every listener bound at a path claims it here.** The Unix domain
+  socket transport's Receive Location and each loopback far end, whose
+  name for the standard library's listener and own socket file guard are
+  deleted; the named pipe transport, through `net::pipe`; and the
+  runtime's local operate endpoint on Unix, whose probe and removal are
+  deleted. A Location whose path is held, answered on or taken by a file
+  of another kind is refused at phase 9 naming the path, as a Location
+  whose port is taken is.
+- **Cost**: a start's, at phase 9 — an open, a lock, two looks at the
+  lock file and one at the path and, where a socket was left, a connect;
+  a stop's, an unlink more. Nothing on the message path.
+
+Proved in the AlmaLinux-10 guest by `net::socket_file`'s
+`an_ordinary_file_at_the_path_is_refused_and_kept` (and kept by a listener
+whose socket it replaced, as that listener goes),
+`a_socket_something_answers_on_is_refused_and_still_answers`,
+`a_stale_socket_nobody_answers_is_replaced` (its lock file gone with it),
+`of_eight_simultaneous_starts_exactly_one_binds` (and the one that bound
+asked by none), `an_ordinary_file_where_a_fifo_goes_is_refused_and_kept`,
+`a_refusal_in_the_system_s_own_words_names_the_path`,
+`a_bind_and_its_release_leave_no_lock_file` (a socket's and a FIFO's) and
+`a_start_racing_a_release_never_holds_a_removed_lock` (eight rounds, a
+socket and a FIFO by turns: a start opens the lock while the first
+listener holds it, the first lets go, a second binds, and only then does
+the early start take its lock, which it must not hold, and is refused as
+it starts over);
+the Unix domain socket transport's
+`a_location_over_an_ordinary_file_is_refused_at_open_and_the_file_kept`;
+and the runtime's `a_second_node_on_the_same_endpoint_is_refused`, whose
+first node's first connection is a caller's. On the code of this morning,
+`cargo test --lib socket_file` in `xmip-core-library-net`, the tests run
+against the transport's remove-and-bind moved as it was:
+
+```text
+test socket_file::tests::a_socket_something_answers_on_is_refused_and_still_answers ... FAILED
+test socket_file::tests::an_ordinary_file_at_the_path_is_refused_and_kept ... FAILED
+test socket_file::tests::an_ordinary_file_where_a_fifo_goes_is_refused_and_kept ... FAILED
+test socket_file::tests::of_eight_simultaneous_starts_exactly_one_binds ... FAILED
+test socket_file::tests::a_stale_socket_nobody_answers_is_replaced ... ok
+  left: 3
+ right: 1
+test result: FAILED. 1 passed; 4 failed; 0 ignored; 0 measured; 134 filtered out
+```
+
+The stale socket's test passes on both, as it must: the old code removed
+whatever was at the path, a stale socket among it, and the claim still
+replaces one. On the same code the Unix domain socket transport's
+`cargo test --lib a_location_over_an_ordinary_file` bound its Location
+over the file:
+
+```text
+test tests::a_location_over_an_ordinary_file_is_refused_at_open_and_the_file_kept ... FAILED
+refused: Some("/tmp/xmip-unix-ordinary-5473-1795083017088920470.sock")
+```
+
+and the runtime's committed tree of this morning, the test added,
+`cargo test --lib -- plane::local::system`, handed the first node the
+second start's probe, which had hung up, as its first connection:
+
+```text
+test plane::local::system::tests::a_second_node_on_the_same_endpoint_is_refused ... FAILED
+the caller's byte: Error { kind: UnexpectedEof, message: "failed to fill whole buffer" }
+test result: FAILED. 3 passed; 1 failed; 0 ignored; 0 measured; 314 filtered out
+```
+
+The lock file's two tests, `cargo test --lib socket_file` in net: on the
+claim as first drafted that day, which kept the lock file,
+
+```text
+test socket_file::tests::a_bind_and_its_release_leave_no_lock_file ... FAILED
+in.sock.lock is left behind
+test result: FAILED. 6 passed; 1 failed; 0 ignored; 0 measured; 134 filtered out
+```
+
+and on one that removes it without the inode check:
+
+```text
+test socket_file::tests::a_start_racing_a_release_never_holds_a_removed_lock ... FAILED
+a lock on a removed file was held for /tmp/xmip-net-racing-78954/in.sock
+test result: FAILED. 7 passed; 1 failed; 0 ignored; 0 measured; 134 filtered out
+```
+
+`of_eight_simultaneous_starts_exactly_one_binds` passes on both, as it
+must.
+
+After the claim, in the guest, `cargo clippy --all-targets --all-features
+-- -D warnings` is clean and `cargo test --all-features` passes in net (153
+passed), the Unix domain socket transport (10) and the named pipe transport
+(11), and `ls /tmp/xmip-*.lock` finds none after them; the runtime's
+`cargo test --lib -- plane::local` passes 12, and its
+`cargo clippy --all-targets -- -D warnings` is clean. On Windows, where the
+claim is compiled out, the three crates' fmt, clippy and tests (153, 5 and
+11 passed) and the runtime's clippy and `plane::local` (5 passed) are clean
+too.
+
+Provenance: the defect is the outside review's, confirmed by the
+coordinator, 2026-11-19; the lock file removed with its listener, behind
+the inode check, is the coordinator's decision, the same day, on the
+assistant's proposal; the claim, its tests and the rewiring are the
+assistant's, the same day.

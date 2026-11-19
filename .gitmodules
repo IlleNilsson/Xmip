@@ -214,3 +214,7 @@
 [submodule "module/core/operation/operate"]
 	path = module/core/operation/operate
 	url = https://github.com/IlleNilsson/xmip-core-operate.git
+[submodule "module/core/library/file"]
+	path = module/core/library/file
+	url = https://github.com/IlleNilsson/xmip-core-library-file.git
+	branch = main
