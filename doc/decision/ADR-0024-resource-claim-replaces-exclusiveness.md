@@ -11,6 +11,8 @@
   starts
 - Amended: 2026-10-20 — a file Send Location's address names a directory; a
   drop directory tells, and a file is finished when no writer holds it
+- Amended: 2026-11-19 — an object store's read and delete hold to the
+  version listed
 - Supersedes: ADR-0017 (Exclusiveness)
 - Related: ADR-0010 (contract and transport boundaries), ADR-0012 (the module boundary),
   ADR-0018 (amendment 2026-10-01: a Host Service claims Journeys through the
@@ -806,3 +808,133 @@ under its dropped name and remembers it while it is unchanged, `Failed`, or
 an arrival let go without a verdict, returns it to be read again. The
 claim's `consume` argument, which only that setting ever made false, is
 deleted with it (`transport::claim::Claiming::told` and `acknowledgement`).
+
+## Amendment, 2026-11-19: an object store's read and delete hold to the version listed
+
+**Provenance.** An outside review of 2026-11-19 found it, and it was
+confirmed against the source the same day. `transport::listed::listed`,
+the one receive the S3, Azure Blob and Google Cloud Storage transports
+share, listed each object with its stamp but got it and deleted it by its
+name alone. So clause 7's step 3, *Consume*, deleted whatever lay under
+the name when the verdict came: an object a producer wrote again under
+that name after the cycle read it was deleted unread, against the runtime
+model's rule (section 16, *Delivery semantics*): *Where Xmip cannot
+guarantee exactly-once, it guarantees at-least-once and says so.* An
+object written again between the listing and the first read was read under
+the stamp the listing gave the one before, and an accepted object another
+client deleted meanwhile failed its acknowledgement where the store answers
+a delete of nothing with 404.
+
+**What stands.** An object store's get and delete each name the object as
+it was listed: its name and the stamp its listing gave it, sent as the
+store's precondition on the request the receive already makes — no extra
+request. S3 and Azure Blob send the `ETag` in `If-Match` on the get and the
+delete; Google Cloud Storage lists each object's generation as its stamp
+and sends it as `ifGenerationMatch`. The store's answer is
+`transport::listed::AsListed`: `Held` with what was asked, or `Changed`
+where the object was written again or deleted since — `412 Precondition
+Failed` or `404 Not Found`, and on an S3 delete `409 Conflict` too. Each
+technology's client has the conditional get and delete only; the delete by
+name alone is deleted from all three.
+
+- **A body changed since its listing is not read.** Its read fails,
+  *changed since it was listed: the next listing takes it as a new
+  arrival*; the cycle fails, nothing is deleted, and the next listing takes
+  what lies there now, under its own stamp. That failure is retryable
+  through every reader, because `transport::error::classify` keeps the
+  judgment of a `TransportError` an `io::Error` carries, where until
+  2026-11-19 it judged one by its kind, `Other`, as permanent (before the
+  fix, `cargo test --lib a_transport_failure_read_through_a_body_keeps_its_judgment`
+  in `module/core/capability/transport` answered `message: "reading what
+  arrived: changed since it was listed (retryable)", retryable: false`).
+- **An accepted object changed since is done with.** Its delete answers
+  `Changed` and the acknowledgement is OK: one written again stays for the
+  next listing, one deleted since is gone already.
+- Clause 7's step 3, for an object store, is therefore the delete of the
+  version read, never of the name.
+
+The vendors' own words, read 2026-11-19:
+
+- Amazon S3, [conditional deletes in general purpose
+  buckets](https://aws.amazon.com/about-aws/whats-new/2025/09/amazon-s3-conditional-deletes-s3-general-purpose-buckets/),
+  posted 2025-09-16: *Amazon S3 now supports conditional deletes in S3
+  general purpose buckets, which verify that an object is unchanged before
+  deleting it.*
+- Amazon S3, [DeleteObject](https://docs.aws.amazon.com/AmazonS3/latest/API/API_DeleteObject.html),
+  `If-Match`: *Deletes the object if the ETag (entity tag) value provided
+  during the delete operation matches the ETag of the object in S3. If the
+  ETag values do not match, the operation returns a `412 Precondition
+  Failed` error.* And: *The `If-Match` header is supported for both general
+  purpose and directory buckets.*
+- Amazon S3 User Guide, [conditional
+  deletes](https://docs.aws.amazon.com/AmazonS3/latest/userguide/conditional-deletes.html):
+  *You can also receive a `409 Conflict` error response in the case of
+  concurrent requests if a `DELETE` or `PUT` request to an object succeeds
+  before a conditional delete operation on that object completes.* And:
+  *To perform conditional deletes with the `If-Match` header with the
+  `ETag` value, you must have the `s3:DeleteObject` and `s3:GetObject`
+  permissions.*
+- Amazon S3, [GetObject](https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetObject.html),
+  `If-Match`: *Return the object only if its entity tag (ETag) is the same
+  as the one specified in this header; otherwise, return a `412
+  Precondition Failed` error.*
+- Azure Blob Storage, [specifying conditional headers for Blob service
+  operations](https://learn.microsoft.com/en-us/rest/api/storageservices/specifying-conditional-headers-for-blob-service-operations):
+  `If-Match`, *An ETag value. Specify this header to perform the operation
+  only if the resource's ETag matches the value specified. For versions
+  2011-08-18 and newer, the ETag can be specified in quotes.* Get Blob and
+  Delete Blob both take it, and an unmet `If-Match` answers *Precondition
+  Failed (412 (Precondition Failed))* for a read and for a write alike.
+  [Delete Blob](https://learn.microsoft.com/en-us/rest/api/storageservices/delete-blob):
+  *This operation also supports the use of conditional headers to delete
+  the blob only if a specified condition is met.*
+- Google Cloud Storage, [request
+  preconditions](https://docs.cloud.google.com/storage/docs/request-preconditions):
+  *Request proceeds if the `generation` of the target resource matches the
+  value used in the precondition.* And: *If the values don't match, the
+  request fails with a `412 Precondition Failed` response.* Its
+  [objects.get](https://docs.cloud.google.com/storage/docs/json_api/v1/objects/get)
+  and [objects.delete](https://docs.cloud.google.com/storage/docs/json_api/v1/objects/delete)
+  each take `ifGenerationMatch`: *Makes the operation conditional on
+  whether the object's current generation matches the given value.*
+
+**What it does not close**, open problem 72: an S3-compatible endpoint
+that ignores `If-Match` on a delete deletes by the name, so the race above
+stays open there; and two nodes listing one bucket may both read one
+object under one stamp, the second accepted delete answering `Changed`:
+the object is received twice, at least once, because the object stores'
+exclusive step of the amendment of 2026-10-13 is still not built.
+
+Proved by `xmip-core-transport`'s `listed` tests, over an in-memory store
+that honors the stamps as the three vendors do:
+`a_replacement_between_read_and_acceptance_stays_for_the_next_listing`,
+`a_replacement_between_listing_and_first_read_is_not_read_under_the_old_stamp`
+and `an_object_gone_before_acceptance_is_told_done`. The same three, written
+against the code before this amendment — a get and a delete by name, the
+delete of a gone object answering 404 as Azure Blob and Google Cloud
+Storage do — each fail. Run 2026-11-19 on Windows in
+`module/core/capability/transport`, `cargo test --lib listed`, before:
+
+```text
+test listed::tests::a_replacement_between_listing_and_first_read_is_not_read_under_the_old_stamp ... FAILED
+test listed::tests::a_replacement_between_read_and_acceptance_stays_for_the_next_listing ... FAILED
+test listed::tests::an_object_gone_before_acceptance_is_told_done ... FAILED
+not the object listed: Taken { origin_uri: "aws-s3://inbox/a.edi", bytes: [116, 119, 111], observed: [] }
+removal index (is 0) should be < len (is 0)
+nothing left to delete is done: TransportError { message: "404 BlobNotFound", retryable: false }
+test result: FAILED. 5 passed; 3 failed; 0 ignored; 0 measured; 155 filtered out; finished in 0.25s
+```
+
+and after:
+
+```text
+test listed::tests::a_replacement_between_listing_and_first_read_is_not_read_under_the_old_stamp ... ok
+test listed::tests::a_replacement_between_read_and_acceptance_stays_for_the_next_listing ... ok
+test listed::tests::an_object_gone_before_acceptance_is_told_done ... ok
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 155 filtered out; finished in 0.18s
+```
+
+Each technology's own tests drive the first two sequences over the wire and
+map `412`, `404` and S3's `409` to `Changed`: `xmip-core-transport-aws-s3`,
+`xmip-core-transport-azure-blob` and
+`xmip-core-transport-google-cloud-storage`.

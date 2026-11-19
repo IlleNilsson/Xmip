@@ -939,3 +939,77 @@ the phone reads its own document.
   `Read-XmipToml`. The tool that builds the runtime reads them — a site is
   `Build-XmipService`'s input — so it cannot need the runtime to read them
   (open problem 25, row u).
+
+## Amendment, 2026-11-19: the trust reads the candidate, and a missing one falls back
+
+**Provenance.** An outside review of the estate, its findings confirmed
+against the source on 2026-11-19, found that the running node read
+`node.xmip` before its trust did
+(`running::activation::started`), as did whoever reads a configuration
+without running it (`start::read`): a candidate absent or unreadable
+refused the whole start at read-configuration, though an active
+configuration was there to run, the case point 4 of the amendment of
+2026-11-12 exists for. This narrows that amendment's points 2 and 4; the
+rest stands.
+
+1. **Where each file is.** None is found from the candidate. The anchor is
+   `<config>/authority/authority.pem`, in the `authority` folder beside the
+   configuration (`runtime::signed::AUTHORITY`). The pin,
+   `<data>/<stem>.pin.toml`, and the active configuration,
+   `<data>/<stem>.active.xmip`, are in the default data directory, `../data`
+   from the configuration folder, `<stem>` the configuration file's stem
+   (`configure::signed::pin_at`, `active_at`).
+2. **The trust reads the candidate, and nothing reads it before.**
+   `runtime::signed::admitted(path)` and `checked(path)` take the
+   configuration's place alone. A candidate absent or unreadable is refused
+   there in words, `<path> is refused: it cannot be read: <why>`, as one the
+   trust refuses is, and the active configuration runs, verified against the
+   pinned anchor and node as before; with none, the start is refused at
+   read-configuration with both refusals. A refusal says whether the node
+   tries the candidate again at its next start (`signed::Refused`,
+   `again`): it does where the file could not be read, a cause that may
+   pass, and does not where the trust refused it.
+3. **What is said.** `<node>/configuration` is Stressed saying *candidate
+   refused: `<path>` is refused: it cannot be read: …; the node runs its
+   active configuration, serial M of save …, and tries the candidate again
+   when it starts again*. `start::read`, a surface's and a plan's, reads the
+   active configuration's text where the candidate cannot be read: the
+   slice the node would run.
+
+`running::activation::activation`, which `xmip-service --activation` asks,
+still reads the file at its path itself: it asks whether the slice shipped
+there is the one that runs, and with no file there it has nothing to ask
+about.
+
+Shown by `xmip-core-runtime`'s `running` tests, an unreadable candidate
+being a folder where the file goes, which no platform reads as a file, and
+an administrator's account reads past a file's permissions. Written first
+and run against the code before this change on 2026-11-19 on Windows
+(`cargo test -j 2 --config .local-work/landing/patch.toml --test running
+-- activated:: --test-threads 2` in `module/platform/runtime`):
+
+```text
+test activated::no_active_plus_missing_candidate_is_refused_at_read_configuration ... FAILED
+test activated::valid_active_plus_missing_candidate_runs_active_with_the_fallback_recorded ... FAILED
+test activated::valid_active_plus_unreadable_candidate_likewise ... FAILED
+refused at read-configuration: cannot read …\Temp\xmip-running-none-10956\config\node.xmip: The system cannot find the file specified. (os error 2)
+the active one runs: Refusal { phase: ReadConfiguration, problems: ["cannot read …\\Temp\\xmip-running-missing-10956\\config\\node.xmip: The system cannot find the file specified. (os error 2)"] }
+the active one runs: Refusal { phase: ReadConfiguration, problems: ["cannot read …\\Temp\\xmip-running-unreadable-10956\\config\\node.xmip: Access is denied. (os error 5)"] }
+test result: FAILED. 3 passed; 3 failed; 0 ignored; 0 measured; 13 filtered out; finished in 5.91s
+```
+
+and after, with the `signed` tests
+`a_missing_candidate_is_refused_by_admission_and_the_active_is_what_runs`
+and `an_unreadable_candidate_likewise`, which call `admitted(path)`, absent
+before (`cargo test -j 2 --config .local-work/landing/patch.toml --lib
+--test running -- --test-threads 2`):
+
+```text
+test signed::tests::a_missing_candidate_is_refused_by_admission_and_the_active_is_what_runs ... ok
+test signed::tests::an_unreadable_candidate_likewise ... ok
+test result: ok. 316 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.82s
+test activated::no_active_plus_missing_candidate_is_refused_at_read_configuration ... ok
+test activated::valid_active_plus_missing_candidate_runs_active_with_the_fallback_recorded ... ok
+test activated::valid_active_plus_unreadable_candidate_likewise ... ok
+test result: ok. 19 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.72s
+```

@@ -996,6 +996,17 @@ estimated from the average of the modules measured so far, or before the first
 from what the same modules took last time; the root crate and `test/` come
 from their last run. The durations are kept in `.local-work/verify-time.json`.
 
+Then, before anything is verified or committed, a landing that would commit
+build output in any repository, the platform repository's own included, is
+REFUSED, naming each repository and its first five such files; `-Pin` is
+refused the same way. Build output is `target/`, `bin/`, `.vs/`, `Cargo.lock`
+or `packages.lock.json` at a repository's root; anywhere, an `obj` folder, a
+`bin` folder holding `Debug/` or `Release/`, a `target` folder holding the
+`CACHEDIR.TAG` cargo writes, and a file ending `.dll`, `.exe`, `.pdb`, `.so`,
+`.dylib`, `.rlib` or `.nupkg`. A deletion lands: that is how such a file
+leaves. `Get-XmipStatus` says the same, in `Suspicious` and `BuildOutput`
+(ADR-0060, amendment 2026-11-19).
+
 Run `Start-XmipTest -Suite Core.Estate` and an Essentials roll yourself before
 landing anything non-trivial; `-NoVerify` skips every step above. Until the
 first Linear release, work commits directly to `main`
@@ -1128,7 +1139,7 @@ Every command that changes state accepts `-WhatIf`. Reporting is the default.
 | `Get-XmipManifest`, `Test-XmipManifest` | Read and validate `architecture.toml`. |
 | `Get-XmipEstateRepository`, `New-XmipEstateMap` | Every declared repository with where it sits and whether it is composed, and the generated [`estate-map.md`](doc/architecture/estate-map.md) over them — a tree of the whole estate with the lines each repository holds; `-Format Html` builds the same map as a page with the dependency graph the build draws. `Uses` and `Declared` on each repository say what its build uses and what the manifest says it uses; `Standard` the standard a technology declares, by which a contract technology may depend on the shape of its own (ADR-0044, amendment 2026-11-15). |
 | `Get-XmipSourceFile` | Every source file the estate holds, with production and test lines counted apart. What the map weighs its tree with and what `test/Rust.Style.Test.ps1` gates file length with, so the two cannot disagree. |
-| `Get-XmipStatus` | The whole estate at once: dirty, ahead, behind, and new modules. |
+| `Get-XmipStatus` | The whole estate at once: dirty, ahead, behind, new modules, and the build output a landing refuses. |
 | `Publish-XmipChange` | Test and land a change, dependency order, modules first. Aliased `xgit` and `xmip-git`. |
 | `Publish-XmipPin` | Move the superproject's gitlinks to where the modules now are: how a land ends, and how one that stopped halfway is finished. |
 | `Start-XmipTest`, `Get-XmipTestStatus`, `Stop-XmipTest` | A suite of Xmip's tests: `Core.Essentials`, `Core.Estate`, `Core.Demo` — a bare name is accepted and resolves to those — or a provider's `<Provider>.<Name>`. `-Suite` takes wildcards. Xmip's own start detached and are observed and stopped from outside; `-Tester` is the demo readiness check's alone. |

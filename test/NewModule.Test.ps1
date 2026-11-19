@@ -130,7 +130,9 @@ Describe 'A declared crate that is no submodule yet' {
                 ForEach-Object -MemberName Path
         )
 
-        $around | Should -Be @('Cargo.toml', 'other/', 'rust/')
+        # An untracked folder is read file by file, as `git add -A` stages it
+        # (ADR-0060, amendment 2026-11-19).
+        $around | Should -Be @('Cargo.toml', 'other/Cargo.toml', 'rust/Cargo.toml')
     }
 
     It 'is verified with the rest and refused before anything lands' {

@@ -115,36 +115,181 @@ Describe 'Every exported command' {
 }
 
 Describe 'Test-XmipBuildOutput' {
-    It 'catches what a compiler produced' {
+    It 'catches what a compiler produced, below a repository''s root too' {
         # On 2026-08-27 a hand-run loop pushed 105 files of target/ to
         # xmip-core. It asked whether a module was dirty and never what was.
-        InModuleScope Xmip {
+        # On 2026-11-19 a landing committed 483 files of .NET build output
+        # below a module's root, src/Xmip.Cli/bin and obj, which a rule
+        # anchored at the root did not see.
+        [string] $built = Join-Path -Path $TestDrive -ChildPath 'built'
+        [string] $tagged = Join-Path -Path $built -ChildPath 'sdk/target'
+        $null = New-Item -ItemType Directory -Path $tagged -Force
+        Set-Content -LiteralPath (Join-Path $tagged 'CACHEDIR.TAG') -Value 'Signature: cargo'
+
+        InModuleScope Xmip -Parameters @{ At = $built } {
+            param([string] $At)
+
             foreach ($path in @(
                     'target/debug/build/x.rs'
                     'bin/Debug/net11.0/x.dll'
                     'obj/project.assets.json'
                     'Cargo.lock'
                     'packages.lock.json'
+                    'src/Xmip.Cli/bin/Debug/net11.0/Xmip.Cli.deps.json'
+                    'src/Xmip.Cli.Test/bin/Release/net11.0/x.json'
+                    'src/Xmip.Cli/obj/project.assets.json'
+                    'sdk/target/debug/x.d'
+                    'sdk/target/'
+                    'tool/x.exe', 'lib/x.so', 'lib/x.dylib', 'x.rlib', 'x.pdb', 'x.nupkg'
                 )) {
-                Test-XmipBuildOutput -Path $path |
+                Test-XmipBuildOutput -At $At -Path $path -State '??' |
                     Should -BeTrue -Because "$path is build output"
             }
         }
     }
 
-    It 'leaves source alone' {
-        InModuleScope Xmip {
+    It 'leaves source alone, a folder named target that cargo did not make among it' {
+        # deploy/profile/target holds a deployment target's profiles: what
+        # makes a folder cargo's is the CACHEDIR.TAG cargo writes in it.
+        [string] $source = Join-Path -Path $TestDrive -ChildPath 'source'
+        $null = New-Item -ItemType Directory -Path "$source/deploy/profile/target" -Force
+
+        InModuleScope Xmip -Parameters @{ At = $source } {
+            param([string] $At)
+
             foreach ($path in @(
                     'src/lib.rs'
                     'Cargo.toml'
                     'doc/decision/ADR-0019.md'
                     'README.md'
                     'src/bin/main.rs'
+                    'src/bin/release/main.rs'
+                    'deploy/profile/target/server.toml'
                 )) {
-                Test-XmipBuildOutput -Path $path |
+                Test-XmipBuildOutput -At $At -Path $path -State ' M' |
                     Should -BeFalse -Because "$path is source"
             }
         }
+    }
+
+    It 'lets build output leave: a deletion commits none' {
+        InModuleScope Xmip -Parameters @{ At = $TestDrive } {
+            param([string] $At)
+
+            foreach ($state in ' D', 'D ', 'MD') {
+                Test-XmipBuildOutput -At $At -Path 'bin/Debug/x.dll' -State $state |
+                    Should -BeFalse -Because "'$state' deletes it"
+            }
+        }
+    }
+}
+
+Describe 'A landing commits no build output, and refuses before anything lands' {
+    # 2026-11-19: round 12's landing, 38e46a4 in module/core/operation/cli,
+    # committed 483 files of .NET build output, src/Xmip.Cli/bin and obj, left
+    # on disk after the C# command line was deleted. Get-XmipStatus read an
+    # untracked folder as one path, the rule was anchored at the root, and the
+    # platform repository was never asked.
+    BeforeAll {
+        [string[]] $script:Who = @('-c', 'user.name=x', '-c', 'user.email=x@example.com')
+
+        <#
+            .SYNOPSIS
+            An estate of one module, module/a, in the platform repository,
+            each a git repository on main with one commit.
+        #>
+        function New-XmipLandingFixture {
+            param(
+                [Parameter(Mandatory = $true)]
+                [string] $Name,
+
+                [Parameter()]
+                [string[]] $Committed = @()
+            )
+
+            [string] $root = Join-Path -Path $TestDrive -ChildPath $Name
+            [string] $module = Join-Path -Path $root -ChildPath 'module/a'
+            $null = New-Item -ItemType Directory -Path "$module/src" -Force
+            Set-Content -LiteralPath "$root/.gitignore" -Value 'module/'
+            Set-Content -LiteralPath "$module/src/lib.rs" -Value 'pub fn one() {}'
+
+            foreach ($file in $Committed) {
+                $null = New-Item -ItemType File -Path "$module/$file" -Value 'built' -Force
+            }
+
+            foreach ($repository in $root, $module) {
+                git init -q -b main $repository
+                git -C $repository add -A
+                git -C $repository @script:Who commit -q -m one
+            }
+
+            return $root
+        }
+
+        # Everything past the refusal is the landing's own business and is
+        # mocked: what is asked here is whether the landing reaches it.
+        Mock -ModuleName Xmip Update-XmipGeneratedDocument { }
+        Mock -ModuleName Xmip Get-XmipDeclaredModule { @('module/a') }
+        Mock -ModuleName Xmip Test-XmipCodeChange { $true }
+        Mock -ModuleName Xmip Get-XmipModuleConsumer { }
+        Mock -ModuleName Xmip Sort-XmipModuleDependency { $Module }
+        Mock -ModuleName Xmip Test-XmipChangeTree {
+            [pscustomobject] @{ Failed = $true; Skipped = @(); Verified = @() }
+        }
+    }
+
+    It 'refuses an added bin/Debug/x.dll, naming the repository and the file' {
+        [string] $root = New-XmipLandingFixture -Name 'added'
+        $null = New-Item -ItemType File -Path "$root/module/a/bin/Debug/x.dll" -Force
+
+        { Publish-XmipChange -RepositoryRoot $root -Message 'land' 6>$null } |
+            Should -Throw -ExpectedMessage '*REFUSED.*module/a*bin/Debug/x.dll*'
+
+        Should -Invoke -ModuleName Xmip Test-XmipChangeTree -Times 0 -Exactly
+        git -C "$root/module/a" rev-list --count HEAD | Should -Be '1'
+    }
+
+    It 'refuses build output in a folder below the root, in every repository, first files named' {
+        [string] $root = New-XmipLandingFixture -Name 'below'
+        foreach ($index in 1..7) {
+            [string] $file = "$root/module/a/src/Xmip.Cli/bin/Debug/net11.0/x$index.dll"
+            $null = New-Item -ItemType File -Path $file -Force
+        }
+        $null = New-Item -ItemType File -Path "$root/tool/obj/project.assets.json" -Force
+
+        [string] $said = ''
+        try {
+            Publish-XmipChange -RepositoryRoot $root -Message 'land' 6>$null
+        }
+        catch {
+            $said = $_.Exception.Message
+        }
+
+        $said | Should -Match 'REFUSED\.'
+        $said | Should -Match 'module/a, 7 file'
+        $said | Should -Match 'src/Xmip\.Cli/bin/Debug/net11\.0/x1\.dll'
+        $said | Should -Match 'and 2 more'
+        $said | Should -Match 'the platform repository, 1 file'
+        $said | Should -Match 'tool/obj/project\.assets\.json'
+        Should -Invoke -ModuleName Xmip Test-XmipChangeTree -Times 0 -Exactly
+    }
+
+    It 'lets a deleted bin/Debug/x.dll land' {
+        [string] $root = New-XmipLandingFixture -Name 'deleted' -Committed 'bin/Debug/x.dll'
+        Remove-Item -LiteralPath "$root/module/a/bin/Debug/x.dll"
+
+        { Publish-XmipChange -RepositoryRoot $root -Message 'land' 6>$null } | Should -Not -Throw
+
+        Should -Invoke -ModuleName Xmip Test-XmipChangeTree -Times 1 -Exactly
+    }
+
+    It 'lets a source change land' {
+        [string] $root = New-XmipLandingFixture -Name 'source'
+        Set-Content -LiteralPath "$root/module/a/src/lib.rs" -Value 'pub fn two() {}'
+
+        { Publish-XmipChange -RepositoryRoot $root -Message 'land' 6>$null } | Should -Not -Throw
+
+        Should -Invoke -ModuleName Xmip Test-XmipChangeTree -Times 1 -Exactly
     }
 }
 

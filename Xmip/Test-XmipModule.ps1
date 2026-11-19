@@ -15,22 +15,6 @@
 #>
 
 
-function Test-XmipBuildOutput {
-    <#
-        .SYNOPSIS
-            Whether a changed path is something a compiler produced.
-    #>
-    [CmdletBinding()]
-    [OutputType([bool])]
-    param(
-        [Parameter(Mandatory)]
-        [string] $Path
-    )
-
-    $Path -match '^(target/|bin/|obj/|\.vs/|Cargo\.lock$|packages\.lock\.json$)'
-}
-
-
 # Features whose code does not compile, and the module that owns each.
 #
 # A shrink-only list, the same instrument as the file-length ratchet in

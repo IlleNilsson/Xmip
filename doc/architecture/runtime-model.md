@@ -1057,7 +1057,12 @@ next listing; an object store's listing, a SQL query's rows and a kept
 subscription drained hand over no more. Until 2026-10-19 a receive took
 every arrival its transport handed over — the file transport claimed a
 whole listing at once — and queued what the pool had no thread for, so
-what waited in memory grew with the batch.
+what waited in memory grew with the batch. An object store's get and delete
+hold to the object as it was listed, its listed stamp the store's
+precondition (`If-Match`, `ifGenerationMatch`), so one written again or
+deleted after its listing is never read under the old stamp nor deleted
+unread: its read fails the cycle, or its accepted delete is done, and the
+next listing takes what lies there now (ADR-0024, amendment 2026-11-19).
 
 **A stop drains what the far end already let go of** (built 2026-10-15,
 ADR-0018, amendment 2026-10-15). A far end that keeps what it hands over
@@ -2239,7 +2244,11 @@ category, using time, size, count, state or hold rules.
 retained history. Targets may include CSV, SQL, JSON, Parquet, XML, Avro, file
 systems, object stores and custom providers. Both are
 [built, not in the assembled service](estate-map.md#retention-archiving): the
-Essentials drives them, a node does not.
+Essentials drives them, a node does not. An archived item is never written
+over: a store keyed by name creates an item's metadata first, as its claim,
+then its bytes, each only where the name is free, and gives the receipt only
+after both, so an identifier archived again with the same bytes answers the
+same receipt and with other bytes is refused (ADR-0040, amendment 2026-11-19).
 
 Audit comes first conceptually. An audit record spells out the Message it
 audits, as it was, and its Streams' bytes with their digests, so the copy is
@@ -2760,7 +2769,12 @@ at any of those steps is never made active and is tried again at the next
 start; the node lets the attempt go and runs its active configuration in
 the same process, saying so at `<node>/configuration`. Only with no active
 configuration that starts is the start refused
-(`running::activation::started`).
+(`running::activation::started`). The trust reads `node.xmip` itself and
+nothing reads it before, so a candidate absent or unreadable is refused
+there like any other, tried again at the next start, while the active
+configuration runs; the anchor, the pin and the active configuration are
+found from the configuration's place, none from the candidate (ADR-0031,
+amendment 2026-11-19).
 
 ## 22. The Work Process
 

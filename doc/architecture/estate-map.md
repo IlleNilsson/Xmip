@@ -1,6 +1,6 @@
 # The Xmip estate
 
-326 repositories are declared and 282 of them are
+327 repositories are declared and 283 of them are
 mounted in this working tree.
 
 **Generated from `architecture.toml` and from the `.gitmodules` files
@@ -35,14 +35,14 @@ the estate tree, and are counted nowhere below.
 | Capability | 23 | 23 | 0 |
 | Operation | 9 | 8 | 1 |
 | Platform | 4 | 4 | 0 |
-| Technology | 280 | 238 | 42 |
-| **Total** | 326 | 282 | 44 |
+| Technology | 281 | 239 | 42 |
+| **Total** | 327 | 283 | 44 |
 
 | Maturity | Declared | Mounted | Not mounted |
 | --- | ---: | ---: | ---: |
 | planned | 1 | 0 | 1 |
 | reserved | 43 | 0 | 43 |
-| scaffolded | 282 | 282 | 0 |
+| scaffolded | 283 | 283 | 0 |
 
 **Mounted means composed as a submodule, and composition happens at two
 levels** (ADR-0016, amended 2026-09-07). The root `.gitmodules` composes
@@ -451,7 +451,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 396553 lines of production
+Where each repository mounts and what it holds: 398412 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -476,7 +476,7 @@ hold no source to count.
 ├── module/
 │   ├── core/
 │   │   ├── capability/
-│   │   │   ├── transport                       9185
+│   │   │   ├── transport                       9235
 │   │   │   │   ├── amqp                        2732
 │   │   │   │   ├── opc-ua                      2505
 │   │   │   │   ├── db2                         2483
@@ -513,19 +513,22 @@ hold no source to count.
 │   │   │   │   ├── aws-kinesis                  905
 │   │   │   │   ├── j1939                        900
 │   │   │   │   ├── uds                          899
-│   │   │   │   ├── file                         888
 │   │   │   │   ├── bluetooth                    886
 │   │   │   │   ├── redis-streams                882
 │   │   │   │   ├── azure-event-grid             878
 │   │   │   │   ├── lorawan                      878
 │   │   │   │   ├── azure-service-bus            872
+│   │   │   │   ├── aws-s3                       871
 │   │   │   │   ├── pop3                         869
 │   │   │   │   ├── google-pub-sub               867
+│   │   │   │   ├── azure-blob                   862
+│   │   │   │   ├── file                         861
 │   │   │   │   ├── aws-sqs                      854
 │   │   │   │   ├── profinet                     838
 │   │   │   │   ├── cotp                         836
 │   │   │   │   ├── dhcp                         825
 │   │   │   │   ├── wireless-hart                821
+│   │   │   │   ├── google-cloud-storage         804
 │   │   │   │   ├── peppol                       788
 │   │   │   │   ├── thread                       787
 │   │   │   │   ├── zigbee                       783
@@ -533,11 +536,8 @@ hold no source to count.
 │   │   │   │   ├── knx                          750
 │   │   │   │   ├── syslog                       741
 │   │   │   │   ├── iec-60870-5-104              733
-│   │   │   │   ├── aws-s3                       727
 │   │   │   │   ├── iso-tp                       723
-│   │   │   │   ├── azure-blob                   707
 │   │   │   │   ├── mdns                         699
-│   │   │   │   ├── google-cloud-storage         697
 │   │   │   │   ├── websocket                    696
 │   │   │   │   ├── dds                          693
 │   │   │   │   ├── io-link                      693
@@ -559,8 +559,8 @@ hold no source to count.
 │   │   │   │   ├── bacnet                       457
 │   │   │   │   ├── azure                        451
 │   │   │   │   ├── rabbitmq                     430
-│   │   │   │   ├── unix-socket                  369
-│   │   │   │   ├── named-pipe                   333
+│   │   │   │   ├── unix-socket                  359
+│   │   │   │   ├── named-pipe                   335
 │   │   │   │   ├── mariadb                      308
 │   │   │   │   ├── tcp                          278
 │   │   │   │   ├── postgresql                   245
@@ -607,7 +607,7 @@ hold no source to count.
 │   │   │   │        hash  quoted-printable  tar
 │   │   │   ├── process                         2391
 │   │   │   │   └── bpmn                        3098
-│   │   │   ├── transform                       2018
+│   │   │   ├── transform                       2125
 │   │   │   │       declared, not built 8
 │   │   │   │       handlebars  jolt  jq  jsonata  liquid  mustache  tera
 │   │   │   │       xquery
@@ -638,11 +638,11 @@ hold no source to count.
 │   │   │   │       declared, not built 5
 │   │   │   │       aws-kms  azure-key-vault  keyring  pkcs11  vault
 │   │   │   ├── contract                         979
+│   │   │   │   ├── json-schema                 1134
 │   │   │   │   ├── graphql-schema               874
-│   │   │   │   ├── json-schema                  862
 │   │   │   │   ├── xml-schema                   830
 │   │   │   │   ├── avro                         802
-│   │   │   │   ├── toon                         716
+│   │   │   │   ├── toon                         717
 │   │   │   │   ├── protobuf                     714
 │   │   │   │   ├── edi-edifact                  632
 │   │   │   │   ├── sql                          631
@@ -704,7 +704,7 @@ hold no source to count.
 │   │   │           declared, not built 5
 │   │   │           aws-s3  azure-blob  file  google-cloud-storage  sql
 │   │   ├── library/
-│   │   │   ├── net                             8566
+│   │   │   ├── net                             8896
 │   │   │   ├── codec                           5914
 │   │   │   ├── tls                             4200
 │   │   │   ├── mariadb                         1785
@@ -713,7 +713,8 @@ hold no source to count.
 │   │   │   ├── postgresql                       963
 │   │   │   ├── jose                             881
 │   │   │   ├── ntlm                             806
-│   │   │   └── asn1                             686
+│   │   │   ├── asn1                             686
+│   │   │   └── file                              58
 │   │   └── operation/
 │   │       ├── operate                        52072  C# 32030 · Rust 20042
 │   │       ├── cli                            11964
@@ -733,13 +734,13 @@ hold no source to count.
 │   │       ├── report                          2250
 │   │       │       declared, not built 6
 │   │       │       csv  html  json  pdf  prometheus  sql
-│   │       └── archive                          640
-│   │           ├── file                         292
+│   │       └── archive                         1137
 │   │           ├── sql                          263
-│   │           ├── azure-blob                   165
-│   │           ├── aws-s3                       156
-│   │           ├── parquet                      147
-│   │           ├── google-cloud-storage         136
+│   │           ├── parquet                      177
+│   │           ├── aws-s3                       163
+│   │           ├── google-cloud-storage         150
+│   │           ├── azure-blob                   138
+│   │           ├── file                         125
 │   │           ├── sqlite                       125
 │   │           ├── mariadb                       87
 │   │           ├── postgresql                    62
@@ -770,8 +771,8 @@ hold no source to count.
 │   │   ├── stream                               382
 │   │   └── party                                193
 │   └── platform/
-│       ├── runtime                            48178
-│       ├── persist                            21820
+│       ├── runtime                            48412
+│       ├── persist                            21901
 │       │   ├── rocksdb                          333
 │       │   ├── sqlite                           288
 │       │       declared, not built 1
@@ -780,7 +781,7 @@ hold no source to count.
 │       └── cluster                             4958
 └── test/
     └── core/
-        ├── essentials                         16515
+        ├── essentials                         16516
         └── module                                83
 ```
 
@@ -818,15 +819,15 @@ What capabilities are built out of.
 
 | Repository | Maturity | Mount | Technologies |
 | --- | --- | --- | ---: |
-| `xmip-core-library` | reserved | not mounted | 10 |
+| `xmip-core-library` | reserved | not mounted | 11 |
 
-### `xmip-core-library`, 10 technologies
+### `xmip-core-library`, 11 technologies
 
 The parent is not composed here, so what it composes cannot be read; every
 technology below is declared only.
 
-- **scaffolded**, 10 — asn1, codec, jose, mariadb, net, ntlm, postgresql, sql,
-  ssh, tls
+- **scaffolded**, 11 — asn1, codec, file, jose, mariadb, net, ntlm,
+  postgresql, sql, ssh, tls
 
 ---
 

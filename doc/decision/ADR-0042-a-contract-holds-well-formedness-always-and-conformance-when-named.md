@@ -171,3 +171,84 @@ Xmip.*
   `xmip-core-test-module` at `test/core/module`, beside the Essentials.
 - Which runtimes may enter an Xmip process stays as the amendment of
   2026-10-05 and ADR-0018 say.
+
+## Amendment, 2026-11-19: a JSON Schema that never ends is refused at bind, and a check is bounded
+
+An outside review found, and the source confirmed, that `json-schema` held a
+Stream to a bound schema by recursion with nothing to stop it. Its compiler
+read each schema object once, so a schema referring to itself compiled, and
+holding a Stream to it recursed until the thread's stack was gone: a stack
+overflow is no Stream's failure, it ends the whole Xmip Host Process.
+`{"$ref": "#"}` did it, so did two schemas referring to each other and a
+`$ref` back to the root from under `allOf`, `anyOf`, `oneOf` or `not`; and
+a schema whose forty levels each held the place to the next level twice
+walked 2^40 schemas for one Stream. `toon` holds its documents to the same
+compiled schema and carried the same defect.
+
+What stands now, in `module/core/capability/contract/json-schema`:
+
+- **Refused at bind.** `$ref`, `allOf`, `anyOf`, `oneOf` and `not` hold the
+  same place in the instance to another schema. When a schema is bound,
+  those edges are ordered by Kahn's algorithm, without recursion: a cycle
+  among them is refused, the refusal naming the `$ref` that closes it (one
+  does, as only a `$ref` reaches a schema outside the one naming it), and so
+  is a chain of more than 512 schemas at one place. The compiler works from
+  a worklist, so a long schema is read in the stack a short one is. This is
+  the bind-time refusal the Consequences ask of every technology.
+- **Bounded when held.** A check goes at most 512 schemas deep, and at most
+  the schema's size, its compiled schema objects, times the Stream's bytes
+  plus one steps, a step for each schema a place is held to. Past either it
+  stops with one issue coded `bound`, where it stopped, after the issues
+  found so far. `Schema::check` takes the bytes the instance was read from,
+  and the `json-schema` and `toon` contracts pass them. The 512 is not
+  `codec::depth`'s 64: that counts the levels a reader parses from bytes,
+  this the schemas a walk holds at once over a document already parsed, two
+  or more a level. A check at its depth bound took between 256 and 512 KiB
+  of stack built optimized, and between 1 and 1.25 MiB unoptimized, within
+  the 2 MiB Rust gives a thread; the tests bind and hold on such a thread.
+- **Cost.** A comparison and a count for each schema object held to. The
+  module's timing program, one conforming order held to its schema ten
+  thousand times, alone, is unchanged under its bound of 500 µs.
+
+Evidence, 2026-11-19, on the owner's Windows computer. The six tests, run
+one at a time against the committed sources (`cargo test --lib -- --exact
+tests::<name>`, in a copy of the crate under the working area with only the
+tests added):
+
+```text
+a_schema_referring_to_itself_without_descending_is_refused_at_bind
+  thread 'bound-and-held' (56872) has overflowed its stack
+  (exit code: 0xc00000fd, STATUS_STACK_OVERFLOW)
+mutual_references_without_descending_are_refused
+  thread 'bound-and-held' (23804) has overflowed its stack
+a_cycle_through_allOf_anyOf_oneOf_or_not_is_refused
+  thread 'bound-and-held' (57228) has overflowed its stack
+a_chain_of_1000_references_is_refused_at_bind_without_overflow
+  thread 'bound-and-held' (56376) has overflowed its stack
+a_recursive_tree_that_descends_holds_100_levels_and_names_a_departure_at_depth
+  assertion `left == right` failed: []  left: []  right: ["bound"]
+a_schema_reevaluating_exponentially_stops_at_its_bound
+  bound and held within the deadline: Timeout
+  test result: FAILED. 0 passed; 1 failed; ... finished in 10.02s
+```
+
+After the change, `cargo test` in the crate, then with `--config
+profile.dev.opt-level=0`, and in `toon`; then both crates in the AlmaLinux 10
+guest:
+
+```text
+test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.16s
+test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.61s
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+Linux: test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+Linux: test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+```
+
+The timing program, `cargo test --test measured -- --test-threads=1
+--nocapture`, before and after, and after in the guest:
+
+```text
+before: a conforming order validated: the fastest of five 3µs; median 3.4µs, p99 10.6µs
+after:  a conforming order validated: the fastest of five 3.1µs; median 3.4µs, p99 7.3µs
+Linux:  a conforming order validated: the fastest of five 2.9µs; median 3.3µs, p99 9.5µs
+```
