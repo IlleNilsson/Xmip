@@ -566,7 +566,7 @@ Describe 'The environment a roll is started with' {
                 'module/core/operation/operate/dotnet/Xmip.Surface/NodeCapability.cs'
                 'module/core/operation/operate/dotnet/Xmip.Surface/ScopeIndex.cs'
                 'module/core/operation/operate/dotnet/Xmip.Surface/ScopeTree.cs'
-                'module/core/operation/cli/src/Xmip.Cli/MeasureCommand.cs'
+                'module/core/operation/cli/src/command/measure.rs'
                 'module/core/operation/gui/src/Xmip.Gui/Pages/Cluster.razor'
                 'module/core/operation/gui/src/Xmip.Gui/Pages/Configuration.razor')) {
             Get-Content -Raw -LiteralPath (Join-Path $root $copy) |

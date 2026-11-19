@@ -103,19 +103,36 @@ neither.
 
 ## Consequences
 
-- Built, 2026-10-12, in `xmip-core-cli`: `CommandRun` is the dispatch the
-  executable and every tool call share, lifted out of `Program.cs`;
-  `McpServer` answers `initialize`, `ping`, `tools/list`, `tools/call`,
-  `resources/list`, `resources/templates/list` and `resources/read`, takes
-  `notifications/initialized` and every other notification unanswered, and
-  answers any other method with JSON-RPC's *method not found*; `McpTools`
-  builds a call's line from the options each command already declares;
-  `McpResources` lists the scopes, gives the templates and reads one as
-  `show` and `list`. `McpServerTest` scripts a session over in-memory
-  streams against the test cluster's names.
+- Built, 2026-10-12, in `xmip-core-cli`, and in Rust since 2026-11-17
+  (amendment below): `run::answer` is the dispatch the executable and every
+  tool call share; `mcp::server` answers `initialize`, `ping`,
+  `tools/list`, `tools/call`, `resources/list`, `resources/templates/list`
+  and `resources/read`, takes `notifications/initialized` and every other
+  notification unanswered, and answers any other method with JSON-RPC's
+  *method not found*; `mcp::tools` builds a call's line from the options
+  each command already declares; `mcp::resources` lists the scopes, gives
+  the templates and reads one as `show` and `list`. `tests/mcp_server.rs`
+  scripts a session over in-memory streams against the test cluster's
+  names.
 - The templates follow the tree as built: a cluster, a node and the path
   beneath a node. The artifact segments of ADR-0027's amendment of
   2026-10-06 are decided and not built; the templates change when the tree
   does.
 - An MCP client sees what an Observer sees and no more, until the second
   open question is answered.
+
+## Amendment, 2026-11-17: the server is Rust, over the one JSON-RPC
+
+The command line is Rust (ADR-0014, amendment of this date), and `xmip mcp`
+moved with it, as that ADR's amendment of 2026-10-12 said it would. What a
+client sees is what it saw: the same methods, tools, resources, templates,
+documents and refusals, the session line's surface — `--remote`, `--local`
+and `--snapshot`, `--runtime` deleted with the rest of the command line's —
+and each answer audited as its command. JSON-RPC 2.0, its messages, its
+reserved codes and its framing one message a line are `xmip-core-library-net`'s
+(`net::rpc`), written once there for this server and the VS Code language
+server, which frames the same messages by a `Content-Length` header; MCP's
+own code for a resource that is not there stays this server's. A line is
+held to the most Xmip reads in one message, and a line that is not JSON is
+answered in Rust's words after `Parse error:`. `serverInfo.version` is the
+crate's version. A line naming `secret --set` is refused as the act it is.

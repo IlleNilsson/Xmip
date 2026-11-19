@@ -147,12 +147,12 @@ state.
 `xmip` finds the runtime by the one rule and takes no library path as an
 argument. It emits text for a person and, with `--json`, JSON for a program;
 `--follow` emits JSON Lines as clause 10 says. It has tests, in
-`Xmip.Cli.Test`.
+`xmip-core-cli`'s `tests/`.
 
 ### 6. Every surface is tested and verified in its own language
 
 `Xmip.Surface.Test` covers the scope tree, discovery, the snapshot surface
-and the English. `Xmip.Cli.Test` covers the commands. The extension's
+and the English. `xmip-core-cli`'s `tests/` cover the commands. The extension's
 TypeScript is compiled and linted by the landing gate, the way its Rust is
 tested. A repository's workflow runs its own language's verification.
 Template remains — platforms the project does not target, the layout and
@@ -2843,3 +2843,79 @@ things a .NET surface did itself that the runtime does:
    Complaint*) is the runtime loader's now (ADR-0012, amendment of this date):
    `ModuleProbed.Refusal`, from `xmip_module_probe_v1`, is what `xmip probe`
    exits on and the cmdlet reports.
+
+## Amendment, 2026-11-18: what every surface shares is Rust, section 28 of the header
+
+**Amends the amendment of 2026-09-24, *the command line and PowerShell
+share*, where it places a rule in `Xmip.Surface` or `Xmip.Abi` and tests it
+there, and the amendment of 2026-11-16, where it keeps `AbiBoundaries` in
+`Xmip.Abi`.** The command line is Rust (ADR-0014, amendment 2026-11-17),
+and a rule it and the .NET surfaces both apply is written once, in Rust, in
+`operate::surface` of xmip-core-operate: the command line calls it as Rust,
+and every .NET surface through `xmip_operate.h` section 28, "the surface".
+`Xmip.Surface` keeps the public shapes the pages and cmdlets read and what
+is .NET's own — `IConfiguration`, the async follow over the runtime's
+blocking wait, `ClusterSurfaces`, the role check of `GatedOperator`, the
+platform keeper's marshalling — and decides nothing it once decided:
+
+1. **28.1, a publication's scope tree.** `ScopeIndex` holds the runtime's
+   tree (`xmip_scope_index_*_v1`) and the records it was built from; the
+   tree answers each scope with its records by their place in the
+   publication, so .NET maps a place to the record it already holds and
+   copies no text. `ScopeEntry` is deleted. A scope's parent, node scope and
+   name, a row (`ScopeItem`), the sum of figures, what a wildcard selects
+   and its refusal (`ScopeSelection`, `ScopePattern`) are the runtime's
+   (`xmip_scope_relative_v1`, `xmip_figures_sum_v1`,
+   `xmip_scope_index_select_v1`).
+2. **28.2, a surface.** A snapshot and a node's operate listener, here or
+   on another machine, are one runtime handle each (`xmip_surface_*_v1`):
+   opened, read once per publication, followed — one follow a handle,
+   however many wait, and in .NET one thread waiting on it for every
+   watch, each told through a queue of its own, so no watch holds a thread
+   of the pool (`HeldSurface`) — asked to act, to list the Messages that
+   failed and the secrets, and to set one. Which surface a line and a
+   document state,
+   and which files a remote presents, are the runtime's
+   (`operate::surface::choice`, `xmip_surface_decided_v1` and
+   `_named_v1`); a host hands its environment's variables across, since a
+   variable .NET set never reaches the process's own on Unix. `ChangeFeed`,
+   `PathArrival` and the listener's own follow are deleted. A snapshot's
+   file is stamped without opening it (`runtime::directory_watch::stamp`),
+   and an unchanged reading crosses with no JSON. A follow told of a change
+   also asks which file is there (`runtime::directory_watch::identity`), so
+   a copy renamed over the last is a new publication on Windows as on
+   Linux, though Windows gives it the creation time of the file it replaced
+   and the copy keeps the write time and length. As the amendment of
+   2026-10-03 says, a followed snapshot's view after a change answers from
+   memory: before .NET tells a watch, it reads the publication and asks
+   once what every view asks of it — the run's line, the tree at the root,
+   the nodes and what each declared (`PublicationReading.AskAhead`).
+3. **28.3, what a surface says and how it orders a list.** The sentences,
+   a run's line, a node's declaration, a validation's verdict, an act's
+   outcome and its words, who acts, and the three noun queries with the one
+   order every surface sorts by — ordinal, text by its code points — are
+   the runtime's (`xmip_sentence_v1`, `xmip_list_query_v1` and the rest),
+   each asked once where its answer does not change: a `RunHeader` asks
+   once a publication, and a publication's list each question once, handed
+   across with the members the query reads (`ListQuery`).
+4. **What a status code means and the two boundaries** — this record's
+   amendments of 2026-09-24 and 2026-11-16 put `StatusMeaning` and
+   `AbiBoundaries` in `Xmip.Abi` — are abi's Rust (`status_meaning`,
+   `boundaries`), exported by operate (`xmip_status_meaning_v1`,
+   `xmip_boundaries_v1`) and bound in `Xmip.Operate` (`StatusMeaning`,
+   `AbiBoundaries`): `Xmip.Abi` loads no library, so it declares the shape,
+   `XmipStatusMeaning`, and the binding answers.
+5. **Three answers about files** the .NET surfaces wrote again are the
+   runtime's too: a person's request signed into its chain's file
+   (`xmip_operator_sign_file_v1`), an upgrade's scripts written into a
+   folder (`xmip_database_write_v1`) and the name a cluster's authority is
+   made under (`xmip_authority_name_v1`).
+
+Each rule is tested once, where it lives now — operate's and abi's Rust
+tests — and `Xmip.Operate.Test` and `Xmip.Surface.Test` test the binding
+over it; the amendment of 2026-09-24 placed those tests in
+`Xmip.Surface.Test` and `Xmip.Abi.Test`.
+
+Nothing an operator waits on got slower; on the C1 snapshot, the Monitor,
+Topology, Configuration, Subscriptions and Dead Message Queue views and
+`Get-XmipHealth` and `Get-XmipScope` answer faster than before.

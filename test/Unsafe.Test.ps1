@@ -48,6 +48,9 @@ BeforeAll {
         'module/core/capability/process/.src/export.rs'         = 'ADR-0066, amendment 2026-10-22'
         # The language server loads the runtime's library.
         'module/core/operation/gui/vscode/.src/runtime.rs'      = 'ADR-0014, amendment 2026-09-10'
+        # Ctrl+C handed to the command line, so a follow ends cleanly:
+        # SetConsoleCtrlHandler on Windows, sigaction elsewhere.
+        'module/core/operation/cli/src/system/interrupt.rs'     = 'ADR-0014, amendment 2026-11-17'
         # The Windows Event Log and the registry (ADR-0062), audit's
         # windows-event-log technology (amendment 2026-11-16).
         'module/core/operation/audit/windows-event-log/src/system.rs' =

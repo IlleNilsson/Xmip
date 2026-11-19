@@ -2452,3 +2452,110 @@ amendment of 2026-09-09) survived and the older one did not."""
 #     Write-XmipConfiguration, through the operator module
 #   Xmip/Read-XmipToml.ps1 Write-XmipToml, the file written whole
 #     -> Xmip/Write-XmipWholeFile.ps1
+
+# Moved on 2026-11-17, JSON-RPC 2.0 into the net library, written once for
+# the VS Code language server and xmip mcp (ADR-0071, amendment 2026-11-17):
+#   module/core/operation/gui/vscode/.src/rpc.rs response, error and
+#   publish_diagnostics
+#     -> module/core/library/net/src/rpc.rs response, error, notification,
+#     code, parse and incoming; publish_diagnostics stays the server's
+#     (.src/server.rs), over notification
+#   module/core/operation/gui/vscode/.src/framing.rs read_message and
+#   write_message
+#     -> module/core/library/net/src/rpc/content_length.rs read and write,
+#     held to MAX_BODY; one message a line for MCP in
+#     module/core/library/net/src/rpc/line.rs
+#   module/core/operation/gui/vscode/.src/server.rs METHOD_NOT_FOUND and
+#   INVALID_PARAMS
+#     -> module/core/library/net/src/rpc.rs code
+
+# Moved on 2026-11-17, the command line from .NET to Rust, in place, every
+# command, output, exit and audit record kept, its tests ported case by case
+# (ADR-0014 and ADR-0071, amendments 2026-11-17), and on 2026-11-18 every
+# rule it shares with the .NET surfaces once in Rust (ADR-0052, amendment
+# 2026-11-18):
+#   module/core/operation/cli/src/Xmip.Cli/*.cs, deleted with the project,
+#   its tests, global.json, nuget.config and Directory.Build.props
+#     -> module/core/operation/cli/src/, the package xmip-core-cli and its
+#     binary xmip: Program.cs -> main.rs; Invocation.cs, *Arguments.cs,
+#     CertificateQuery.cs, DatabaseQuery.cs -> invocation.rs and
+#     invocation/; Command.cs, CommandWords.cs -> command.rs; CommandRun.cs
+#     -> run.rs; *Command.cs, AuthorityAct.cs, CertificateAnswer.cs,
+#     Follow.cs, JsonSelection.cs -> command/; CommandAudit.cs ->
+#     command_audit.rs; SurfaceOpen.cs -> surface_open.rs; McpServer.cs,
+#     McpTools.cs, McpResources.cs -> mcp/; Usage*.cs -> usage.rs and usage/;
+#     TextTable.cs -> text_table.rs; EchoedWriter.cs -> main.rs Echoed;
+#     cli.toml -> cli.toml at the repository's root, copied by build.rs;
+#     xmip-x.ico -> src/xmip-x.res
+#   module/core/operation/cli/src/Xmip.Cli.Test/*Tests.cs, FakeSurface.cs
+#     -> module/core/operation/cli/tests/, one file per class, and
+#     tests/support/fake.rs
+#   module/core/operation/cli/src/Xmip.Cli --runtime, RuntimeLibrary and
+#   XMIP_RUNTIME_LIBRARY, deleted from the command line: the runtime is
+#   linked
+#   module/core/operation/operate/dotnet/Xmip.Surface, every rule the
+#   command line answers by, now once in Rust; the .NET types stay, each a
+#   view of the runtime's answer through xmip_operate.h section 28, bound by
+#   .../dotnet/Xmip.Operate/RuntimeScopeIndexes.cs (28.1),
+#   RuntimeSurfaces.cs, SurfaceCalls.cs and SurfaceNode.cs (28.2) and
+#   RuntimeWords.cs and RuntimeWords.Said.cs (28.3)
+#     -> module/core/operation/operate/src/surface.rs and src/surface/,
+#     exported by src/ffi/scope_index.rs, src/ffi/surface.rs and
+#     src/ffi/words.rs: ScopeTree.cs, ScopeIndex.cs, Branch.cs, the index
+#     built, drilled and measured -> scope_tree.rs, scope_index.rs and
+#     scope_index/; ScopeItem.cs -> scope_item.rs; ScopeSelection.cs,
+#     ScopePattern.cs -> scope_selection.rs; Figures.cs -> figures.rs;
+#     English.cs -> english.rs; RunHeader.cs -> run_header.rs;
+#     NodeCapability.cs -> node_capability.rs; ActOutcome.cs,
+#     ScopeOperation.cs, SecretRecord.cs -> acted.rs; SubscriptionQuery.cs,
+#     EventSubscriptionQuery.cs, DeadMessageQuery.cs, their filters and
+#     order -> subscription_query.rs, event_subscription_query.rs,
+#     dead_message_query.rs and list_order.rs, asked through
+#     .../Xmip.Surface/ListQuery.cs; MessageAct.cs Within, Unlisted and
+#     OnNode, PublicationReading.cs FailedMessagesWithin ->
+#     failed_message_list.rs; PublicationReading.cs -> publication_reading.rs;
+#     SnapshotOperator.cs, the file read, cached and followed -> snapshot.rs
+#     and snapshot_watch.rs; ListenerOperator*.cs, LocalOperator.cs,
+#     RemoteOperator.cs -> listener.rs; SurfaceChoice*.cs, SurfaceLine.cs,
+#     SecureSurface.cs From, Named and Pem -> choice.rs;
+#     ConfigurationVerdict.cs -> configuration_verdict.rs
+#   module/core/operation/operate/dotnet/Xmip.Surface/ScopeEntry.cs,
+#   ChangeFeed.cs, PathArrival.cs and ListenerOperator.Follow.cs, deleted:
+#   a scope's place, a snapshot's file waited for and a node's change
+#   followed, each the runtime's
+#     -> module/core/operation/operate/src/surface/scope_index/lookup.rs
+#     placed, snapshot_watch.rs arrived and listener/follow.rs, told to
+#     .NET by xmip_surface_wait_v1 and held by
+#     .../dotnet/Xmip.Surface/HeldSurface.cs and PlacedRecords.cs
+#   module/foundation/abi/dotnet/Xmip.Abi/Module/StatusMeaning.cs and
+#   Xmip.Abi/AbiBoundaries.cs, deleted
+#     -> module/foundation/abi/.src/status_meaning.rs and boundaries.rs,
+#     exported as xmip_status_meaning_v1 and xmip_boundaries_v1 and bound by
+#     .../dotnet/Xmip.Operate/StatusMeaning.cs and AbiBoundaries.cs
+#   module/foundation/abi/dotnet/Xmip.Abi.Test/StatusMeaningTest.cs and
+#   AbiBoundariesTest.cs, deleted: each case
+#     -> module/foundation/abi/.src/status_meaning.rs and boundaries.rs
+#     tests, and the binding's in
+#     .../dotnet/Xmip.Operate.Test/RuntimeWordsTest.cs
+#   module/core/operation/operate/src/ffi/audit.rs xmip_audit_read_v1's
+#   reading, ffi/authority.rs's acts, ffi/database.rs's upgrade,
+#   ffi/module_probe.rs's answer
+#     -> module/core/operation/operate/src/audit_read.rs, authority.rs,
+#     database.rs, module_probe.rs
+#   module/core/operation/operate/dotnet/Xmip.Surface/OperatorCertificate.cs
+#   Sign's file written, NodeCertificate.cs AuthorityName and
+#   DatabaseScripts.cs Write's refusals, deleted
+#     -> module/core/operation/operate/src/certificate.rs sign_request and
+#     authority_name and src/database.rs write, exported by
+#     src/ffi/written.rs as xmip_operator_sign_file_v1,
+#     xmip_authority_name_v1 and xmip_database_write_v1 and bound by
+#     .../dotnet/Xmip.Operate/RuntimeCertificates.Written.cs and
+#     RuntimeDatabases.cs
+#   module/core/operation/operate/dotnet/Xmip.Operate/RuntimeRules.cs, its
+#   sections
+#     -> .../dotnet/Xmip.Operate/RuntimeRules.Sections.cs
+#   a snapshot's file asked whether it changed, by std::fs::metadata, which
+#   opens it
+#     -> module/platform/runtime/src/directory_watch.rs stamp, asked of the
+#     operating system without opening it (src/ffi/directory_watch.rs on
+#     Windows)

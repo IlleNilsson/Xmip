@@ -46,8 +46,9 @@
       first (ADR-0056, amendment 2026-10-20, drafted);
     - the .EXAMPLE and .PARAMETER sections of a comment-based help block in a
       .ps1 or .psm1 that is not a test;
-    - a binary's usage text: a Rust `const USAGE`, and the `Text` of a C#
-      Usage.cs, to the line that closes the string;
+    - a binary's usage text: a Rust `const USAGE`, each part of `xmip`'s in
+      module/core/operation/cli/src/usage/ among them, to the line that
+      closes the string;
     - a snapshot fixture a test holds to a test cluster's cluster.xmip, which
       is configuration that test checks: $script:Held names each and the
       test that holds it, and is held to that test in turn.
@@ -263,14 +264,11 @@ BeforeAll {
             return
         }
 
-        [string] $opens = switch ($extension) {
-            '.rs' { '^\s*(pub\s+)?const\s+USAGE\s*:' }
-            '.cs' { if ($leaf -eq 'Usage.cs') { '^\s*public\s+const\s+string\s+Text\s*=' } }
-        }
-
-        if (-not $opens) {
+        if ($extension -ne '.rs') {
             return
         }
+
+        [string] $opens = '^\s*(pub\s+)?const\s+USAGE\s*:'
 
         [bool] $inUsage = $false
 
@@ -282,7 +280,8 @@ BeforeAll {
             if ($inUsage) {
                 $at
 
-                if ($Line[$at] -match '";\s*$') {
+                # A raw string closes as `"#;` too.
+                if ($Line[$at] -match '"#*;\s*$') {
                     $inUsage = $false
                 }
             }

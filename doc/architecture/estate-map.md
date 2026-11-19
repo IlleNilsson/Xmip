@@ -451,7 +451,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 383393 lines of production
+Where each repository mounts and what it holds: 396499 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -704,8 +704,8 @@ hold no source to count.
 │   │   │           declared, not built 5
 │   │   │           aws-s3  azure-blob  file  google-cloud-storage  sql
 │   │   ├── library/
-│   │   │   ├── net                             8311
-│   │   │   ├── codec                           5889
+│   │   │   ├── net                             8566
+│   │   │   ├── codec                           5914
 │   │   │   ├── tls                             4200
 │   │   │   ├── mariadb                         1785
 │   │   │   ├── ssh                             1744
@@ -715,14 +715,14 @@ hold no source to count.
 │   │   │   ├── ntlm                             806
 │   │   │   └── asn1                             686
 │   │   └── operation/
-│   │       ├── operate                        42321  C# 30199 · Rust 12122
-│   │       ├── cli                            10158
+│   │       ├── operate                        52070  C# 32069 · Rust 20001
+│   │       ├── cli                            11927
 │   │       ├── observe                         7949
 │   │       │   ├── otlp                         591
 │   │       │   └── prometheus                   332
 │   │       ├── gui                             7920
-│   │       │   └── vscode                      3519
-│   │       ├── powershell                      3808  C# 3808 · PowerShell 0
+│   │       │   └── vscode                      3429
+│   │       ├── powershell                      3806  C# 3806 · PowerShell 0
 │   │       ├── audit                           3674
 │   │       │   ├── file                         545
 │   │       │   ├── windows-event-log            173
@@ -745,8 +745,8 @@ hold no source to count.
 │   │           ├── postgresql                    62
 │   │           └── mssql                         59
 │   ├── foundation/
-│   │   ├── abi                                 5212  Rust 2468 · C# 2340 · PowerShell 404
-│   │   ├── core                                4677
+│   │   ├── abi                                 6407  Rust 3271 · C# 2732 · PowerShell 404
+│   │   ├── core                                4680
 │   │   ├── message                             2093
 │   │   │   ├── avro                             300
 │   │   │   ├── json                             257
@@ -770,8 +770,8 @@ hold no source to count.
 │   │   ├── stream                               382
 │   │   └── party                                193
 │   └── platform/
-│       ├── runtime                            48030
-│       ├── persist                            21766
+│       ├── runtime                            48178
+│       ├── persist                            21820
 │       │   ├── rocksdb                          333
 │       │   ├── sqlite                           288
 │       │       declared, not built 1
