@@ -131,9 +131,7 @@ function Get-XmipRemoteRuntimeBuild {
 
     if ($Platform -eq 'Desktop') {
         [string] $into = Join-Path -Path $Root -ChildPath '.ai-interaction/target-remote'
-        [string] $file = if ($IsWindows) { 'xmip_core_operate.dll' }
-        elseif ($IsMacOS) { 'libxmip_core_operate.dylib' }
-        else { 'libxmip_core_operate.so' }
+        [string] $file = (Get-XmipPackageProgram | Where-Object -Property Kind -EQ 'Library').File
 
         return [pscustomobject] @{
             Platform        = $Platform
@@ -361,7 +359,8 @@ function Build-XmipRemoteRuntime {
 function Invoke-XmipRemoteRuntimeBuild {
     <#
         .SYNOPSIS
-            Runs one remote build through Build-XmipRuntimeLibrary with its
+            Runs one remote build of the runtime library, in its folder
+            (Get-XmipPackageProgram), through Invoke-XmipCrateBuild with its
             environment set, and gives the session's environment back after.
     #>
     [CmdletBinding()]
@@ -382,13 +381,14 @@ function Invoke-XmipRemoteRuntimeBuild {
     }
 
     try {
-        [hashtable] $library = @{
+        $library = Get-XmipPackageProgram | Where-Object -Property Kind -EQ 'Library'
+        [hashtable] $building = @{
             Root            = $Root
+            Folder          = $library.Folder
             TargetDirectory = $Build.TargetDirectory
-            Subcommand      = $Build.Subcommand
-            CargoArgument   = $Build.CargoArgument
+            Argument        = @($Build.Subcommand) + $Build.CargoArgument
         }
-        Build-XmipRuntimeLibrary @library
+        Invoke-XmipCrateBuild @building
     }
     finally {
         foreach ($name in $was.Keys) {

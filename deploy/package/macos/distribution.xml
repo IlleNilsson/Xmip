@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  The Xmip .pkg for macOS (ADR-0015, amendment 2026-10-13): productbuild's
-  distribution file around one component package, which pkgbuild makes from
-  the two binaries under opt/xmip/bin and scripts/postinstall. The two
+  The Xmip .pkg for macOS (ADR-0015, amendments 2026-10-13 and 2026-11-19):
+  productbuild's distribution file around one component package, which
+  pkgbuild makes from the three programs under opt/xmip/bin, xmip-service,
+  the runtime library and xmip, the command line, and scripts/postinstall,
+  which also links /usr/local/bin/xmip to the command line. The two
   commands, in order, are in deploy/package/README.md (an XML comment cannot
   hold their double-hyphen options).
 

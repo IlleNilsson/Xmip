@@ -12,6 +12,15 @@
 
     The count is the estate's one, Get-XmipSourceFile's: a C# file's every
     line, a test file's included.
+
+    And one rule of C#'s own, stated here because C# has no style document:
+    a temporary folder is Directory.CreateTempSubdirectory's, which makes it
+    under the temporary path with a name nobody can guess, in one call. A
+    file that builds a name from Path.GetTempPath() and calls
+    Directory.CreateDirectory is refused, except where a stable folder is the
+    point and the reason is written beside its name below. On 2026-11-19
+    twenty files made their folders by hand, and a run that stopped early
+    left each one behind (ADR-0021, amendment 2026-11-19).
 #>
 
 . (Join-Path $PSScriptRoot 'Initialize-XmipStyleLimit.ps1')
@@ -52,5 +61,39 @@ Describe 'C# style: a file is small and its lines are short' {
         )
 
         $wide.Count | Should -Be 0 -Because "these are too wide:`n$($wide -join "`n")"
+    }
+}
+
+Describe 'C# style: a temporary folder is the platform''s' {
+    BeforeAll {
+        $script:TemporaryFolderAllowed = @(
+            # The runtime library's copies, in the one folder every process
+            # loading the library shares: each load sweeps the copies no
+            # process holds any more, which a folder of its own per process
+            # would leave behind.
+            'module/core/operation/operate/dotnet/Xmip.Operate/NativeRuntime.cs'
+        )
+    }
+
+    It 'makes no folder from a name built on Path.GetTempPath()' {
+        [string[]] $made = @(
+            foreach ($file in $script:Files) {
+                if ($file.Path -in $script:TemporaryFolderAllowed) {
+                    continue
+                }
+
+                [string] $path = Join-Path -Path $script:Root -ChildPath $file.Path
+                [string] $text = [IO.File]::ReadAllText($path)
+
+                if ($text.Contains('Path.GetTempPath()') -and
+                    $text.Contains('Directory.CreateDirectory(')) {
+                    $file.Path
+                }
+            }
+        )
+
+        $made.Count | Should -Be 0 -Because (
+            "Directory.CreateTempSubdirectory instead:`n" + ($made -join "`n")
+        )
     }
 }

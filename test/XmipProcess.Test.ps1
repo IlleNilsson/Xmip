@@ -94,8 +94,10 @@ Describe 'What a killed process left behind' {
     }
 
     It 'answers nothing, and does not fail, where no process ever declared' {
-        InModuleScope Xmip {
-            [string] $nowhere = Join-Path ([System.IO.Path]::GetTempPath()) "xmip-none-$PID"
+        InModuleScope Xmip -Parameters @{ Area = $TestDrive } {
+            param($Area)
+
+            [string] $nowhere = Join-Path $Area 'none'
             (Read-XmipProcessDeclaration -Path $nowhere).Count | Should -Be 0
         }
     }

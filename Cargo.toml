@@ -237,6 +237,10 @@ xmip-journey = { package = "xmip-core-journey", git = "https://github.com/IlleNi
 xmip-message = { package = "xmip-core-message", git = "https://github.com/IlleNilsson/xmip-core-message", branch = "main" }
 xmip-node = { package = "xmip-core-node", git = "https://github.com/IlleNilsson/xmip-core-node", branch = "main", optional = true }
 xmip-observe = { package = "xmip-core-observe", git = "https://github.com/IlleNilsson/xmip-core-observe", branch = "main", optional = true }
+# The command line's document `xmip-service --install` writes beside the
+# programs, in the words the command line reads it by
+# (`surface::choice::table`); a surface's build, which runs no node.
+xmip-operate = { package = "xmip-core-operate", git = "https://github.com/IlleNilsson/xmip-core-operate", branch = "main", default-features = false, features = ["remote"] }
 xmip-party = { package = "xmip-core-party", git = "https://github.com/IlleNilsson/xmip-core-party", branch = "main", optional = true }
 xmip-path = { package = "xmip-core-path", git = "https://github.com/IlleNilsson/xmip-core-path", branch = "main", optional = true }
 xmip-path-edi = { package = "xmip-core-path-edi", git = "https://github.com/IlleNilsson/xmip-core-path-edi", branch = "main", optional = true }

@@ -296,6 +296,28 @@ The rule above, applied that day:
 `prerequisite.toml` says the stable channel and winget's
 `Microsoft.DotNet.SDK.11`, the change it recorded for that date.
 
+## Amendment, 2026-11-19: the platform's call replaces hand-made code
+
+Once a floor has a call that does what the estate's own code does by hand,
+the call replaces that code, every use of it, and the hand-made code is
+deleted rather than kept beside it. The first two, applied that day, are
+the temporary folder's:
+
+| | The platform's call | What it replaced |
+| --- | --- | --- |
+| PowerShell | `New-TemporaryDirectory`, from 7.7.0, generally available 2026-11-10, and `$TestDrive` in a Pester test | names built under `[System.IO.Path]::GetTempPath()`, `GetTempFileName()`, and the event bindings' own wrapper of the call in `verify-event-bindings.ps1` |
+| .NET | `Directory.CreateTempSubdirectory`, in .NET since 7 | a name built under `Path.GetTempPath()` and made with `Directory.CreateDirectory`, in the operator surfaces' and the GUI's tests |
+
+The platform names the folder at random, where a name built by hand can be
+known and made first by another account (ADR-0015, amendment 2026-11-11),
+and is left behind by a run that stops before its own cleanup.
+`test/Xmip.Style.Test.ps1` refuses `GetTempPath()` and `GetTempFileName()`
+in `Xmip/` and `test/`, except in `test/XmipProcess.Test.ps1`, which asserts
+the runtime's default folder `<temp>/xmip/process`
+(`doc/governance/powershell-style.md`, sections 5 and 6), and
+`test/CSharp.Style.Test.ps1` refuses a folder made under `Path.GetTempPath()`
+in C#.
+
 ## Alternatives considered
 
 **Support the previous major of each platform.** The conventional choice, and

@@ -790,7 +790,8 @@ among them: the site chooses them (amendment 2026-10-20). macOS gets a `.pkg` wi
 launchd daemon, and every package installs by running
 `xmip-service --install`; the Windows packages are built on Windows and the
 `.rpm` on Linux, the macOS `.pkg` not yet (amendments 2026-10-13 and
-2026-11-11). Every database records its schema version, and a
+2026-11-11). Every package carries `xmip`, the command line, and puts it
+on `PATH` where it has an installer (amendment 2026-11-19). Every database records its schema version, and a
 release's upgrade scripts only add (amendment 2026-10-20). One environment
 file names the technology, Microsoft DSC v3 or Ansible, that makes an
 environment's machines and its nodes, in one command, and the environment

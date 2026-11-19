@@ -451,7 +451,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 396499 lines of production
+Where each repository mounts and what it holds: 396553 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -510,9 +510,9 @@ hold no source to count.
 │   │   │   │   ├── ethernet-ip                  941
 │   │   │   │   ├── activemq                     926
 │   │   │   │   ├── hart                         913
+│   │   │   │   ├── aws-kinesis                  905
 │   │   │   │   ├── j1939                        900
 │   │   │   │   ├── uds                          899
-│   │   │   │   ├── aws-kinesis                  898
 │   │   │   │   ├── file                         888
 │   │   │   │   ├── bluetooth                    886
 │   │   │   │   ├── redis-streams                882
@@ -520,7 +520,7 @@ hold no source to count.
 │   │   │   │   ├── lorawan                      878
 │   │   │   │   ├── azure-service-bus            872
 │   │   │   │   ├── pop3                         869
-│   │   │   │   ├── google-pub-sub               860
+│   │   │   │   ├── google-pub-sub               867
 │   │   │   │   ├── aws-sqs                      854
 │   │   │   │   ├── profinet                     838
 │   │   │   │   ├── cotp                         836
@@ -533,14 +533,14 @@ hold no source to count.
 │   │   │   │   ├── knx                          750
 │   │   │   │   ├── syslog                       741
 │   │   │   │   ├── iec-60870-5-104              733
+│   │   │   │   ├── aws-s3                       727
 │   │   │   │   ├── iso-tp                       723
-│   │   │   │   ├── aws-s3                       721
 │   │   │   │   ├── azure-blob                   707
 │   │   │   │   ├── mdns                         699
+│   │   │   │   ├── google-cloud-storage         697
 │   │   │   │   ├── websocket                    696
 │   │   │   │   ├── dds                          693
 │   │   │   │   ├── io-link                      693
-│   │   │   │   ├── google-cloud-storage         689
 │   │   │   │   ├── msmq                         680
 │   │   │   │   ├── dnp3                         678
 │   │   │   │   ├── obd-ii                       621
@@ -715,12 +715,12 @@ hold no source to count.
 │   │   │   ├── ntlm                             806
 │   │   │   └── asn1                             686
 │   │   └── operation/
-│   │       ├── operate                        52070  C# 32069 · Rust 20001
-│   │       ├── cli                            11927
+│   │       ├── operate                        52072  C# 32030 · Rust 20042
+│   │       ├── cli                            11964
 │   │       ├── observe                         7949
 │   │       │   ├── otlp                         591
 │   │       │   └── prometheus                   332
-│   │       ├── gui                             7920
+│   │       ├── gui                             7917
 │   │       │   └── vscode                      3429
 │   │       ├── powershell                      3806  C# 3806 · PowerShell 0
 │   │       ├── audit                           3674
@@ -737,15 +737,15 @@ hold no source to count.
 │   │           ├── file                         292
 │   │           ├── sql                          263
 │   │           ├── azure-blob                   165
-│   │           ├── aws-s3                       155
+│   │           ├── aws-s3                       156
 │   │           ├── parquet                      147
-│   │           ├── google-cloud-storage         135
+│   │           ├── google-cloud-storage         136
 │   │           ├── sqlite                       125
 │   │           ├── mariadb                       87
 │   │           ├── postgresql                    62
 │   │           └── mssql                         59
 │   ├── foundation/
-│   │   ├── abi                                 6407  Rust 3271 · C# 2732 · PowerShell 404
+│   │   ├── abi                                 6395  Rust 3271 · C# 2732 · PowerShell 392
 │   │   ├── core                                4680
 │   │   ├── message                             2093
 │   │   │   ├── avro                             300

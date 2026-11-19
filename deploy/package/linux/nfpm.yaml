@@ -16,15 +16,19 @@
 # Build-XmipService -Site built (ADR-0015, amendment 2026-10-01), so this
 # takes the binaries as they are. The environment names them:
 #
-#   XMIP_BINARY_DIRECTORY  where xmip-service and libxmip_core_operate.so are
+#   XMIP_BINARY_DIRECTORY  where xmip-service, libxmip_core_operate.so and
+#                          xmip are
 #   XMIP_VERSION           the root crate's version
 #   XMIP_ARCH              amd64 or arm64, nfpm's words for x86-64 and arm64
 #
-# The package owns the two files under /opt/xmip/bin and nothing else.
-# postinstall.sh runs xmip-service --install, which lays out /opt/xmip
-# (clause 10) and registers the systemd unit registration.rs writes;
-# preremove.sh runs --uninstall on removal only. Nothing removes
-# configuration, data, audit or logs (ADR-0040).
+# The package owns the three files under /opt/xmip/bin and the link
+# /usr/bin/xmip to the command line, so `xmip` runs at any prompt (ADR-0015,
+# amendment 2026-11-19; no other package's program is called xmip, ADR-0053),
+# and nothing else. postinstall.sh runs xmip-service --install, which lays
+# out /opt/xmip (clause 10), writes the command line's cli.toml beside
+# /opt/xmip/bin/xmip where there is none, and registers the systemd unit
+# registration.rs writes; preremove.sh runs --uninstall on removal only. Nothing removes
+# configuration, cli.toml, data, audit or logs (ADR-0040).
 name: xmip
 arch: ${XMIP_ARCH}
 platform: linux
@@ -52,6 +56,14 @@ contents:
     expand: true
     file_info:
       mode: 0644
+  - src: ${XMIP_BINARY_DIRECTORY}/xmip
+    dst: /opt/xmip/bin/xmip
+    expand: true
+    file_info:
+      mode: 0755
+  - src: /opt/xmip/bin/xmip
+    dst: /usr/bin/xmip
+    type: symlink
 
 scripts:
   postinstall: ./postinstall.sh

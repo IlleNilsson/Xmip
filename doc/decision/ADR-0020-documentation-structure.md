@@ -9,6 +9,8 @@
   keeps `CLAUDE.md` and adds `AGENTS.md` as pointers to it (clause 8)
 - Amended: 2026-09-20 — a document that names a thing is tested against it:
   `README.md` must name every command the module exports
+- Amended: 2026-11-19 — a record holds its own evidence: what proves a
+  claim is quoted in it, never pointed to in a folder only one machine has
 - Related: ADR-0011 (naming), ADR-0016 (composition)
 
 ## In brief
@@ -200,3 +202,26 @@ is itself questionable (`Expand-XmipEstate` takes a TOML node and a list;
 `New-XmipRepositoryEntry` beside it in ADR-0036 is not exported at all).
 Writing help for a command the owner may choose to withdraw is work spent
 twice. The test is worth having once the export list is his again.
+
+## Amendment, 2026-11-19: a record holds its own evidence
+
+The owner, 2026-11-19: *Sort the ADR problem. It has to be readable and
+handled.* The problem: records proved their claims by pointing at logs
+and research in `.ai-interaction/` and `.local-work/`, the working area and
+the device-local state CONTRIBUTING.md describes. Both are git-ignored, so
+the evidence existed on one machine, nobody else could read it, and two of
+the pointers named files already gone: ADR-0044's duplicate scan and
+ADR-0066's filter and expression research.
+
+**What proves a claim is quoted in the record that makes it**: the command,
+named in full, and the lines of its output that decide it, verbatim and
+trimmed, in a `text` block beside the claim, with when and where it ran.
+A record never points into `.ai-interaction/`, and never names a log
+under `.local-work/` as its proof; it may still say where a product writes
+its own files there. Evidence that was not kept is not cited: the claim
+stands on the record's words, or goes.
+
+Applied the same day: ADR-0015's verifications of 2026-11-03, 2026-11-11
+and 2026-11-19 quote their logs; ADR-0044 and ADR-0066 lost their pointers
+to what was gone. `test/Documentation.Test.ps1` holds every document under
+`doc/` to it.

@@ -726,6 +726,75 @@ Describe 'PowerShell style, section 2: functions' {
     }
 }
 
+Describe 'PowerShell style, section 5: a temporary folder is the platform''s' {
+    BeforeAll {
+        <#
+            2026-11-19: PowerShell 7.7.0 brought New-TemporaryDirectory, and
+            folders and files were still made by hand under the temporary
+            path, named xmip-<something>, and left there when a run stopped
+            early (ADR-0021, amendment 2026-11-19). A temporary folder is
+            New-TemporaryDirectory's, a temporary file New-TemporaryFile's,
+            and in a test either is $TestDrive.
+
+            Each entry is a file's count of calls to GetTempPath() or
+            GetTempFileName(), and why it makes them. A file not listed makes
+            none, and a listed file makes exactly its count.
+        #>
+        $script:TemporaryPathAllowed = @{
+            # Asserts the product's default folder, <temp>/xmip/process, which
+            # the runtime spells from the same path (declared.rs): the test is
+            # about that folder, so it names it.
+            'XmipProcess.Test.ps1' = 1
+        }
+    }
+
+    It 'calls GetTempPath() and GetTempFileName() nowhere but where it is allowed' {
+        [type] $callAst = [System.Management.Automation.Language.InvokeMemberExpressionAst]
+
+        [object[]] $calls = @(
+            foreach ($file in Get-MeasuredFile -At $script:Root) {
+                $errors = $null
+                $ast = Get-ParsedFile -File $file -Errors ([ref] $errors)
+
+                if ($errors) { continue }
+
+                foreach ($call in $ast.FindAll({ $args[0] -is $callAst }, $true)) {
+                    [string] $member = $call.Member.Extent.Text
+
+                    if ($call.Static -and $member -in 'GetTempPath', 'GetTempFileName') {
+                        [PSCustomObject]@{ Path = $file.Name; Line = $call.Extent.StartLineNumber }
+                    }
+                }
+            }
+        )
+
+        [string[]] $named = @(
+            @($calls.Path) + @($script:TemporaryPathAllowed.Keys) | Sort-Object -Unique
+        )
+
+        [string[]] $wrong = @(
+            foreach ($name in $named) {
+                [object[]] $made = @($calls | Where-Object { $_.Path -eq $name })
+                [int] $allowed = 0
+
+                if ($script:TemporaryPathAllowed.ContainsKey($name)) {
+                    $allowed = $script:TemporaryPathAllowed[$name]
+                }
+
+                if ($made.Count -ne $allowed) {
+                    "$name makes $($made.Count) where $allowed is allowed, at " +
+                        ($made.Line -join ', ')
+                }
+            }
+        )
+
+        $wrong.Count | Should -Be 0 -Because (
+            "New-TemporaryDirectory, New-TemporaryFile or `$TestDrive instead:`n" +
+            ($wrong -join "`n")
+        )
+    }
+}
+
 Describe 'The style document describes what is enforced' {
     It 'names this file as the thing that enforces it' {
         [string] $path = Join-Path $script:Root 'doc/governance/powershell-style.md'

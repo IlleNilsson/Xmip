@@ -271,7 +271,7 @@ Describe 'Start, Get and Stop, and nothing else' {
         $manifest = Get-Item (Join-Path $script:Root 'architecture.toml')
         [string] $expected = $manifest.Directory.FullName
 
-        Get-XmipRepositoryRoot -StartAt ([System.IO.Path]::GetTempPath()) | Should -Be $expected
+        Get-XmipRepositoryRoot -StartAt $TestDrive | Should -Be $expected
     }
 
     It 'names no automatic start anywhere in the module' {
@@ -1368,8 +1368,8 @@ Describe 'What a web host reads' {
     }
 
     It 'warns that it will not show a roll it was not pointed at, and says how to' {
-        InModuleScope Xmip -Parameters @{ Name = $script:Cluster.Name } {
-            param($Name)
+        InModuleScope Xmip -Parameters @{ Area = $TestDrive; Name = $script:Cluster.Name } {
+            param($Area, $Name)
 
             $rolling = [PSCustomObject]@{ Suite = 'Core.Essentials'; Cluster = $Name }
             Mock -CommandName Start-Process -MockWith { [PSCustomObject]@{ Id = 1 } }
@@ -1380,16 +1380,11 @@ Describe 'What a web host reads' {
             "$said" | Should -BeLike "*will not show the roll $Name*Get-XmipTestStatus |*"
 
             # A snapshot that is there: ADR-0055 refuses one that is not.
-            [string] $real = Join-Path ([System.IO.Path]::GetTempPath()) 'xmip-warn.xmip'
+            [string] $real = Join-Path $Area 'warn.xmip'
             Set-Content -LiteralPath $real -Value '' -NoNewline
 
-            try {
-                Start-XmipOperationWeb -Snapshot $real -WarningVariable quiet
-                $quiet | Should -BeNullOrEmpty -Because 'it was pointed at a snapshot'
-            }
-            finally {
-                Remove-Item -LiteralPath $real -Force -ErrorAction SilentlyContinue
-            }
+            Start-XmipOperationWeb -Snapshot $real -WarningVariable quiet
+            $quiet | Should -BeNullOrEmpty -Because 'it was pointed at a snapshot'
         }
     }
 
@@ -1397,10 +1392,12 @@ Describe 'What a web host reads' {
         # ADR-0055: the door is the parameter. A host over a path that is
         # not there answers and shows nothing, which is what the owner met
         # three times on 2026-09-19.
-        InModuleScope Xmip {
+        InModuleScope Xmip -Parameters @{ Area = $TestDrive } {
+            param($Area)
+
             Mock -CommandName Start-Process -MockWith { [PSCustomObject]@{ Id = 1 } }
 
-            [string] $gone = Join-Path ([System.IO.Path]::GetTempPath()) 'xmip-no-such.xmip'
+            [string] $gone = Join-Path $Area 'no-such.xmip'
 
             { Start-XmipOperationWeb -Snapshot $gone } |
                 Should -Throw -ExpectedMessage '*REFUSED*No snapshot*'
@@ -1416,11 +1413,10 @@ Describe 'What a web host reads' {
         # is not there yet, and being refused for it is the tool arguing with
         # what it was just told. It waits instead, and only while the run is
         # there.
-        InModuleScope Xmip -Parameters @{ Name = $script:Cluster.Name } {
-            param($Name)
+        InModuleScope Xmip -Parameters @{ Area = $TestDrive; Name = $script:Cluster.Name } {
+            param($Area, $Name)
 
-            [string] $coming = Join-Path ([System.IO.Path]::GetTempPath()) (
-                "xmip-$Name-snapshot.xmip")
+            [string] $coming = Join-Path $Area "xmip-$Name-snapshot.xmip"
             $rolling = [PSCustomObject]@{ Cluster = $Name; Snapshot = $coming }
 
             Mock -CommandName Get-XmipTestStatus -MockWith { $rolling }
@@ -1432,7 +1428,6 @@ Describe 'What a web host reads' {
 
             { Wait-XmipSnapshot -Path $coming } | Should -Not -Throw
             Should -Invoke -CommandName Start-Sleep -Times 1
-            Remove-Item -LiteralPath $coming -ErrorAction SilentlyContinue
         }
     }
 
@@ -1440,11 +1435,10 @@ Describe 'What a web host reads' {
         # 2026-11-10: a demo run's verdict and a build that FAILED stay listed
         # by Get-XmipTestStatus with the cluster's name, and counting them as
         # rolling waited out the whole bound for a roll that had died.
-        InModuleScope Xmip -Parameters @{ Name = $script:Cluster.Name } {
-            param($Name)
+        InModuleScope Xmip -Parameters @{ Area = $TestDrive; Name = $script:Cluster.Name } {
+            param($Area, $Name)
 
-            [string] $never = Join-Path ([System.IO.Path]::GetTempPath()) (
-                "xmip-$Name-never-snapshot.xmip")
+            [string] $never = Join-Path $Area "xmip-$Name-never-snapshot.xmip"
             $script:Rows = @(
                 [PSCustomObject]@{ Cluster = $Name; Snapshot = $never; Kind = 'roll' }
                 [PSCustomObject]@{ Cluster = $Name; Snapshot = $null; Kind = 'demo' }
@@ -1468,11 +1462,10 @@ Describe 'What a web host reads' {
     }
 
     It 'counts its bound from the moment it is given, the roll''s spawn' {
-        InModuleScope Xmip -Parameters @{ Name = $script:Cluster.Name } {
-            param($Name)
+        InModuleScope Xmip -Parameters @{ Area = $TestDrive; Name = $script:Cluster.Name } {
+            param($Area, $Name)
 
-            [string] $late = Join-Path ([System.IO.Path]::GetTempPath()) (
-                "xmip-$Name-late-snapshot.xmip")
+            [string] $late = Join-Path $Area "xmip-$Name-late-snapshot.xmip"
             $script:Rows = @([PSCustomObject]@{ Cluster = $Name; Snapshot = $late })
 
             Mock -CommandName Start-Sleep -MockWith { }

@@ -1508,7 +1508,8 @@ release:
   build, which waits on the owner. No Linux package is built by the CI or
   the landing, which build Windows alone.
 - **Signing**: Authenticode, Apple Developer ID with notarization, Linux
-  package signing.
+  package signing, of the package and its three programs, `xmip-service`,
+  the runtime library and `xmip` (ADR-0015, amendment 2026-11-19).
 - **The service account** (open problem 28) and whether the starter grants
   local tools more than Observer (ADR-0014, amendment 2026-10-13).
 
@@ -2870,6 +2871,7 @@ its scheme, `aws-s3://`, the archives' receipts, `aws-s3://` and
 Every crate, site, document and test naming the old words was changed with
 them. *S3* stays where it names Amazon's service or its interface, and
 Signature Version 4's `s3` service scope is unchanged.
+On 2026-11-19 the three transport schemes that still named no vendor became their technologies' names, `aws-kinesis://`, `google-cloud-storage://` and `google-pub-sub://`, and Pub/Sub's header namespace `google-pub-sub`, each with every use and no alias (ADR-0011, amendment 2026-11-19).
 
 ## 4. `assign`, `promote`, `demote` sit in Capabilities with zero implementations — **Resolved**
 

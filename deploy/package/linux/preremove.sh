@@ -2,8 +2,9 @@
 # Before the .deb or .rpm is removed (nfpm.yaml): xmip-service stops the
 # node's unit, waiting for its drain, and removes it. Only on removal — dpkg
 # says `remove`, rpm says 0 — never on an upgrade, which postinstall.sh
-# restarts. Nothing under /opt/xmip but the package's two files goes:
-# configuration, data, audit and logs stay (ADR-0040).
+# restarts. Nothing goes but the package's own: its three files under
+# /opt/xmip/bin and the link /usr/bin/xmip, which the package manager
+# removes; configuration, cli.toml, data, audit and logs stay (ADR-0040).
 #
 # Packaged in the .rpm built 2026-11-11 (nfpm.yaml); no package has been
 # removed yet, so it has not run.

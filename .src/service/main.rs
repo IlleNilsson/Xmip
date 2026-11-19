@@ -61,7 +61,9 @@
 //! `--install` lays a node out from its cluster's `cluster.xmip` — a starter
 //! where there is none, the node's slice beside it, its data and audit
 //! directories — and registers and starts the service `--definition`
-//! prints, as `--account` where it is given (`account.rs`); `--uninstall`
+//! prints, as `--account` where it is given (`account.rs`), and writes the
+//! command line's `cli.toml` beside the programs where there is none,
+//! stating that node (`command_line.rs`); `--uninstall`
 //! stops and removes the service of the node
 //! configured at `<path>` and deletes nothing
 //! (`install.rs`). Every package runs these two (ADR-0015, amendment
@@ -92,6 +94,7 @@ mod arguments;
 mod audit;
 mod authority;
 mod built;
+mod command_line;
 mod console;
 #[cfg(windows)]
 mod control_manager;

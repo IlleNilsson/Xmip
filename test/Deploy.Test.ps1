@@ -398,4 +398,241 @@ Describe 'The packages under deploy/package' {
             Join-Path $linux $entry.Groups['file'].Value | Should -Exist
         }
     }
+
+    # The command line ships in every package (ADR-0015, amendment
+    # 2026-11-19): what each declares is Get-XmipPackageProgram's list, the
+    # one list of the programs, and `xmip` is on PATH where there is an
+    # installer.
+    It 'names, in <Path>, exactly the programs every package carries' -ForEach @(
+        @{
+            Path    = 'windows/Package.wxs'
+            System  = 'windows'
+            Pattern = '\$\(var\.BinaryDirectory\)\\(?<file>[^"]+)"'
+        }
+        @{
+            Path    = 'linux/nfpm.yaml'
+            System  = 'linux'
+            Pattern = '(?m)^\s+- src: \$\{XMIP_BINARY_DIRECTORY\}/(?<file>\S+)\s*$'
+        }
+        @{
+            Path    = 'archive/README.md'
+            System  = 'windows'
+            Pattern = '(?m)^\| `bin/(?<file>[^`]+)`'
+        }
+    ) {
+        [string] $text = Get-Content -LiteralPath (Join-Path $script:Package $Path) -Raw
+        [string[]] $named = @(
+            [regex]::Matches($text, $Pattern) | ForEach-Object { $_.Groups['file'].Value })
+        [string[]] $program = @(
+            InModuleScope Xmip -Parameters @{ System = $System } {
+                param($System)
+                (Get-XmipPackageProgram -System $System).File
+            })
+
+        if ($Path -like 'archive/*') {
+            # The archive's README names a program as every system does, with
+            # its .exe said beside it.
+            $program = @($program -replace '\.exe$', '')
+        }
+
+        $named.Count | Should -Be 3
+        @($named | Sort-Object) | Should -Be @($program | Sort-Object)
+    }
+
+    It 'puts the MSI''s bin folder on the machine''s PATH with xmip.exe, while installed' {
+        [xml] $wxs = Get-Content -LiteralPath (Join-Path $script:Package 'windows/Package.wxs') -Raw
+        [hashtable] $namespace = @{ w = 'http://wixtoolset.org/schemas/v4/wxs' }
+        [object[]] $found = @(
+            Select-Xml -Xml $wxs -XPath '//w:Environment[@Name="PATH"]' -Namespace $namespace)
+
+        $found.Count | Should -Be 1
+        [Xml.XmlElement] $row = $found[0].Node
+        $row.GetAttribute('Value') | Should -Be '[BINFOLDER]'
+        $row.GetAttribute('Action') | Should -Be 'set'
+        $row.GetAttribute('Part') | Should -Be 'last'
+        $row.GetAttribute('System') | Should -Be 'yes'
+        $row.GetAttribute('Permanent') | Should -Be 'no'
+
+        # In the component that installs xmip.exe, so the two go together.
+        [Xml.XmlElement] $component = $row.ParentNode
+        $component.GetAttribute('Directory') | Should -Be 'BINFOLDER'
+        $component.GetElementsByTagName('File')[0].GetAttribute('Source') |
+            Should -BeLike '*\xmip.exe'
+    }
+
+    It 'links /usr/bin/xmip to the command line in the .deb and .rpm, run as xmip-service is' {
+        $nfpm = Read-XmipTestYaml -Path (Join-Path $script:Package 'linux/nfpm.yaml')
+        [object[]] $content = @($nfpm['contents'])
+        [object[]] $link = @($content | Where-Object { $_['type'] -eq 'symlink' })
+
+        $link.Count | Should -Be 1
+        $link[0]['src'] | Should -Be '/opt/xmip/bin/xmip'
+        $link[0]['dst'] | Should -Be '/usr/bin/xmip'
+
+        $service = $content | Where-Object { $_['dst'] -eq '/opt/xmip/bin/xmip-service' }
+        $command = $content | Where-Object { $_['dst'] -eq '/opt/xmip/bin/xmip' }
+        $command['file_info']['mode'] | Should -Be $service['file_info']['mode']
+    }
+
+    It 'links /usr/local/bin/xmip to the command line in the macOS postinstall' {
+        Get-Content -LiteralPath (Join-Path $script:Package 'macos/scripts/postinstall') -Raw |
+            Should -Match ([regex]::Escape('ln -sf /opt/xmip/bin/xmip /usr/local/bin/xmip'))
+    }
+
+    It 'names xmip among the commands of the winget manifest' {
+        [string] $msi = Join-Path $TestDrive 'xmip-0.1.1-personal-computer-x64.msi'
+        Set-Content -LiteralPath $msi -Value 'msi'
+
+        [string] $folder = InModuleScope Xmip -Parameters @{
+            Msi  = $msi
+            Into = Join-Path $TestDrive 'winget'
+        } {
+            param($Msi, $Into)
+            Mock Get-XmipMsiProperty { '{00000000-0000-0000-0000-000000000000}' }
+            New-XmipWingetManifest -Msi $Msi -Version '0.1.1' -Architecture x64 -Destination $Into
+        }
+
+        $installer = Read-XmipTestYaml -Path (Join-Path $folder 'Xmip.Xmip.installer.yaml')
+        @($installer['Commands']) | Should -Be @('xmip')
+    }
+
+    Context 'A package''s staging, with cargo mocked' {
+        BeforeAll {
+            # An estate of its own: the root crate's version and the two
+            # workspaces' folders. xmip-service is built, as Build-XmipService
+            # leaves it; cargo writes what it builds where it would, and the
+            # command line's build.rs the developer's cli.toml beside xmip.
+            [string] $script:Estate = Join-Path $TestDrive 'estate'
+            [string] $script:Target = Join-Path $TestDrive 'target'
+
+            foreach ($folder in 'module/core/operation/operate', 'module/core/operation/cli') {
+                $null = New-Item -ItemType Directory -Path (Join-Path $script:Estate $folder) -Force
+            }
+            Set-Content -LiteralPath (Join-Path $script:Estate 'Cargo.toml') -Value @(
+                '[package]', 'name = "xmip"', 'version = "0.1.1"')
+
+            [object[]] $script:Program = @(InModuleScope Xmip { Get-XmipPackageProgram })
+            $service = $script:Program | Where-Object -Property Kind -EQ 'Service'
+            [string] $release = Join-Path $script:Target 'release'
+            $null = New-Item -ItemType Directory -Path $release -Force
+            Set-Content -LiteralPath (Join-Path $release $service.File) -Value $service.Kind
+
+            [string] $script:Was = $env:CARGO_TARGET_DIR
+            [string] $script:Before = (Get-Location).Path
+            $env:CARGO_TARGET_DIR = $script:Target
+            $global:XmipTestCargo = [Collections.Generic.List[object]]::new()
+
+            try {
+                $script:Made = InModuleScope Xmip -Parameters @{ Root = $script:Estate } {
+                    param($Root)
+                    Mock Invoke-XmipTool {
+                        $global:XmipTestCargo.Add([pscustomobject] @{
+                                Argument = @($Argument)
+                                At       = (Get-Location).Path
+                                Target   = $env:CARGO_TARGET_DIR
+                            })
+                        [string] $kind = if ($Argument -contains '--lib') { 'Library' }
+                        else { 'Command' }
+                        $one = Get-XmipPackageProgram | Where-Object -Property Kind -EQ $kind
+                        [string] $into = Join-Path $env:CARGO_TARGET_DIR 'release'
+                        $null = New-Item -ItemType Directory -Path $into -Force
+                        Set-Content -LiteralPath (Join-Path $into $one.File) -Value $kind
+
+                        if ($kind -eq 'Command') {
+                            Set-Content -LiteralPath (Join-Path $into 'cli.toml') -Value '[Xmip]'
+                        }
+
+                        [pscustomobject] @{ Passed = $true; Said = @() }
+                    }
+                    Mock New-XmipArchive { 'archive.zip' }
+                    Mock Write-XmipStep { }
+
+                    [hashtable] $asked = @{
+                        Root          = $Root
+                        Site          = 'personal-computer'
+                        Package       = 'archive'
+                        CargoArgument = '--release', '--locked'
+                    }
+                    New-XmipPackage @asked
+                }
+                $script:After = $env:CARGO_TARGET_DIR
+                $script:Cargo = @($global:XmipTestCargo)
+            }
+            finally {
+                $env:CARGO_TARGET_DIR = $script:Was
+                Remove-Variable -Name XmipTestCargo -Scope Global
+            }
+
+            [object[]] $staged = @(Get-ChildItem -LiteralPath $script:Estate -Directory -Recurse)
+            $script:Bin = $staged |
+                Where-Object { $_.Name -eq 'bin' -and $_.Parent.Name -eq 'xmip' }
+        }
+
+        It 'stages the three programs, each from its own build, and never a cli.toml' {
+            $script:Made.Kind | Should -Be 'archive'
+            @($script:Bin).Count | Should -Be 1
+
+            [string[]] $staged = @(Get-ChildItem -LiteralPath $script:Bin.FullName -File).Name
+            @($staged | Sort-Object) | Should -Be @($script:Program.File | Sort-Object)
+            Join-Path $script:Target 'package-cli/release/cli.toml' | Should -Exist
+            Join-Path $script:Bin.FullName 'cli.toml' | Should -Not -Exist
+
+            foreach ($one in $script:Program) {
+                Get-Content -LiteralPath (Join-Path $script:Bin.FullName $one.File) |
+                    Should -Be $one.Kind
+            }
+        }
+
+        It 'builds <Kind> in its own workspace with the site''s arguments, into <Into>' -ForEach @(
+            @{ Kind = 'Library'; Into = 'package-operate'; Build = @('build', '--lib') }
+            @{ Kind = 'Command'; Into = 'package-cli'; Build = @('build', '--bin', 'xmip') }
+        ) {
+            $one = $script:Program | Where-Object -Property Kind -EQ $Kind
+            [string] $directory = Join-Path $script:Target $one.Target
+            [object[]] $call = @($script:Cargo | Where-Object -Property Target -EQ $directory)
+
+            $one.Target | Should -Be $Into
+            $call.Count | Should -Be 1
+            $call[0].Argument | Should -Be (@($Build) + @('--release', '--locked'))
+            [IO.Path]::GetFullPath($call[0].At) |
+                Should -Be ([IO.Path]::GetFullPath((Join-Path $script:Estate $one.Folder)))
+        }
+
+        It 'gives the session its folder and CARGO_TARGET_DIR back' {
+            $script:Cargo.Count | Should -Be 2 -Because 'xmip-service was built before'
+            $script:After | Should -Be $script:Target
+            (Get-Location).Path | Should -Be $script:Before
+        }
+    }
+
+    It 'gives both back when cargo fails, saying the command and the crate in words' {
+        [string] $before = (Get-Location).Path
+        [string] $was = $env:CARGO_TARGET_DIR
+        [string] $crate = [IO.Path]::GetFullPath($TestDrive)
+        Remove-Item -Path 'env:CARGO_TARGET_DIR' -ErrorAction SilentlyContinue
+
+        try {
+            {
+                InModuleScope Xmip -Parameters @{ Root = [string] $TestDrive } {
+                    param($Root)
+                    Mock Invoke-XmipTool { [pscustomobject] @{ Passed = $false; Said = @() } }
+                    [hashtable] $building = @{
+                        Root            = $Root
+                        Folder          = '.'
+                        TargetDirectory = Join-Path $Root 'target'
+                        Argument        = 'build', '--bin', 'xmip'
+                    }
+                    Invoke-XmipCrateBuild @building
+                }
+            } | Should -Throw "FAILED: cargo build --bin xmip, in $crate."
+
+            $env:CARGO_TARGET_DIR | Should -BeNullOrEmpty
+            (Get-Location).Path | Should -Be $before
+        }
+        finally {
+            if ($was) {
+                $env:CARGO_TARGET_DIR = $was
+            }
+        }
+    }
 }

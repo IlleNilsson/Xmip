@@ -308,18 +308,18 @@ $result = Invoke-Pester -Configuration $configuration
     Names  = @($result.Failed | ForEach-Object { $_.ExpandedPath })
 } | ConvertTo-Json -Compress
 '@
-    [string] $file = "xmip-pester-$([guid]::NewGuid()).ps1"
-    [string] $script = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath $file
-    Set-Content -LiteralPath $script -Value $run
+    [string] $folder = (New-TemporaryDirectory -Prefix 'xmip-pester-').FullName
+    [string] $script = Join-Path -Path $folder -ChildPath 'run.ps1'
     [string[]] $arguments = @(
         '-NoProfile', '-NonInteractive', '-File', $script, '-Manifest', $manifest, '-Tests', $tests
     )
 
     try {
+        Set-Content -LiteralPath $script -Value $run
         [string[]] $said = @(& pwsh @arguments 2>&1 | ForEach-Object { "$_" })
     }
     finally {
-        Remove-Item -LiteralPath $script -ErrorAction SilentlyContinue
+        Remove-Item -LiteralPath $folder -Recurse -Force -ErrorAction SilentlyContinue
     }
 
     [string] $last = $said | Where-Object { $_ -like '{*' } | Select-Object -Last 1

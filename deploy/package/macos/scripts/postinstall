@@ -12,6 +12,9 @@
 # daemon runs as, root unless set (ADR-0015 and ADR-0028, amendments
 # 2026-10-21).
 #
+# Then the command line goes on PATH: /usr/local/bin/xmip, a link to
+# /opt/xmip/bin/xmip (ADR-0015, amendment 2026-11-19).
+#
 # WRITTEN, NOT RUN: builds are Windows-only for now (distribution.xml).
 set -e
 
@@ -32,3 +35,7 @@ else
         --cluster "$cluster" \
         --install
 fi
+
+# /usr/local/bin is on the PATH /etc/paths gives; made where a Mac has none.
+mkdir -p /usr/local/bin
+ln -sf /opt/xmip/bin/xmip /usr/local/bin/xmip

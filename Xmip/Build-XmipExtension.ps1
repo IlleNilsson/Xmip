@@ -132,7 +132,7 @@ function Restore-XmipExtensionPackage {
             }
         }
 
-        [string] $tarball = [System.IO.Path]::GetTempFileName()
+        [string] $tarball = (New-TemporaryFile).FullName
 
         try {
             Invoke-WebRequest -Uri $entry['resolved'] -OutFile $tarball

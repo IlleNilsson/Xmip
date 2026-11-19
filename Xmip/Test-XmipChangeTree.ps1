@@ -103,18 +103,17 @@ function Test-XmipChangeTree {
                 return
             }
 
+            $library = Get-XmipPackageProgram | Where-Object -Property Kind -EQ 'Library'
             [hashtable] $runtimeLibrary = @{
                 RepositoryRoot = $RepositoryRoot
-                Module         = 'module/core/operation/operate'
+                Module         = $library.Folder
                 Patch          = $patch
                 Library        = $unhashed
             }
             $runtimeBuilt = Build-XmipTestLibrary @runtimeLibrary
 
-            [string] $file = if ($IsWindows) { 'xmip_core_operate.dll' }
-            else { 'libxmip_core_operate.so' }
             $env:XMIP_RUNTIME_LIBRARY =
-                Join-Path -Path $env:CARGO_TARGET_DIR -ChildPath "debug/$file"
+                Join-Path -Path $env:CARGO_TARGET_DIR -ChildPath "debug/$($library.File)"
         }
 
         # A line before each module saying where the landing is and about how

@@ -1,9 +1,11 @@
 # Packages: what puts a node on a machine
 
 What an end user installs to get Xmip started (ADR-0015, amendment
-2026-10-13). Each package carries two files, `xmip-service` and the runtime
-library, both built from a site by `Build-XmipService -Site <name>`
-(`deploy/site`), and runs one command once they are on disk:
+2026-10-13). Each package carries three programs, `xmip-service`, the
+runtime library and `xmip`, the command line, all built from a site by
+`Build-XmipService -Site <name>` (`deploy/site`), puts `xmip` on `PATH`
+where it has an installer (below), and runs one command once they are on
+disk:
 
 ```text
 xmip-service --configuration <layout>/config/cluster.xmip \
@@ -15,13 +17,14 @@ That command — written once, in `xmip-service` (`.src/service/install.rs`)
 writes a starter cluster `cluster.xmip` where there is none (one node,
 offline; its local operate endpoint, `xmip-<node>`, always starts and needs
 no line), slices the
-node's `node.xmip` from it, makes `data/audit`, and registers the Xmip
+node's `node.xmip` from it, writes the command line's `cli.toml` beside
+`xmip` where there is none, makes `data/audit`, and registers the Xmip
 Service `xmip-<node>` the way `registration.rs` defines it, to start with
 the machine, and starts it. Removal runs
 `xmip-service --configuration <layout>/config/node.xmip --uninstall`,
 which stops the service, waits for the drain and removes it; configuration,
-data, audit and logs stay (ADR-0040). No package keeps its own copy of the
-layout, the starter or the registration.
+`cli.toml`, data, audit and logs stay (ADR-0040). No package keeps its own
+copy of the layout, the starter, `cli.toml` or the registration.
 
 | folder | package | status |
 | --- | --- | --- |
@@ -43,6 +46,27 @@ role brings; every one-machine example site carries it (the owner,
 is received and sent on. The owner decides which site an end user's
 package is built from (ADR-0015, amendment 2026-10-13).
 
+## The command line
+
+`xmip`, the Rust command line (`module/core/operation/cli`), is built by
+`-Package` beside `xmip-service`, with the same cargo arguments, into
+`package-cli` under the target directory, since it is a workspace of its
+own, and goes in every package (ADR-0015, amendment 2026-11-19):
+
+| package | `xmip` is | on `PATH` as |
+| --- | --- | --- |
+| MSI | `Program Files\Xmip\bin\xmip.exe` | that folder, added to the machine's `PATH` while Xmip is installed |
+| `.deb`, `.rpm` | `/opt/xmip/bin/xmip` | `/usr/bin/xmip`, a link the package owns |
+| macOS `.pkg` | `/opt/xmip/bin/xmip` | `/usr/local/bin/xmip`, a link `postinstall` makes |
+| archive | `xmip/bin/xmip.exe` | not at all: add `bin` to `PATH` yourself, or name the program |
+
+Which node it reads is said in `cli.toml` beside it. A package ships none:
+the one a developer's build copies beside the executable follows the
+Essentials, so `New-XmipPackage` stages the three programs alone, and
+`xmip-service --install` writes the installed node's, `Surface = "local"`
+at the node's local endpoint, where there is none, and keeps it on removal.
+Until one is there, `--local xmip-<node>` on the line names the node.
+
 ## Windows
 
 ```powershell
@@ -63,8 +87,9 @@ in `-CargoArgument` makes the arm64 MSI.
 - **Install**: `msiexec /i <msi>` from an elevated prompt, optionally with
   `XMIP_NODE=<node> XMIP_CLUSTER=<cluster>`; each is the computer's name
   otherwise, and the cluster is used where the machine's `cluster.xmip` names
-  none. Binaries go to `Program Files\Xmip\bin`, the rest of the layout to
-  `ProgramData\Xmip`. The service runs as LocalSystem, the platform default,
+  none. Binaries go to `Program Files\Xmip\bin`, which goes on the
+  machine's `PATH`, the rest of the layout to `ProgramData\Xmip`. The
+  service runs as LocalSystem, the platform default,
   unless `XMIP_ACCOUNT="NT SERVICE\xmip-<node>"` names its own virtual
   account, which is given what the node reads and writes (`xmip-service
   --install --account`); which account a node should run as is the
@@ -97,14 +122,15 @@ the endpoint the node's configuration names at install, `xmip-<node>`
 unless its `[operate] local` names another (ADR-0014, amendment
 2026-11-15).
 `postinstall.sh` runs `--install`, `preremove.sh` runs `--uninstall` on
-removal only, never on an upgrade. `XMIP_NODE`, `XMIP_CLUSTER` and
+removal only, never on an upgrade; the package owns its three files under
+`/opt/xmip/bin` and the link `/usr/bin/xmip`. `XMIP_NODE`, `XMIP_CLUSTER` and
 `XMIP_ACCOUNT` in the installer's environment say the node, the cluster and
 the account its unit runs as, `User=` (root unless said), as the MSI's
 properties do; the macOS `postinstall` takes the same three.
 
 ## macOS (written, not built)
 
-Stage the two binaries under `<staging>/opt/xmip/bin`, then:
+Stage the three programs under `<staging>/opt/xmip/bin`, then:
 
 ```text
 pkgbuild --root <staging> --identifier io.github.illenilsson.xmip \
@@ -122,9 +148,10 @@ empties `/var/run` as it starts; the node's local endpoint is
 `/var/run/xmip/xmip-<node>/xmip-<node>.sock`. macOS has no removal for a
 package: `sudo /opt/xmip/bin/xmip-service --configuration
 /opt/xmip/config/node.xmip --uninstall` removes the daemon and keeps
-everything else. A `.pkg` people can open is signed with a Developer ID
-Installer certificate and notarized, which needs the owner's Apple
-Developer Program membership.
+everything else, and `sudo rm /usr/local/bin/xmip` the command line's
+link. A `.pkg` people can open is signed with a Developer ID Installer
+certificate and notarized, which needs the owner's Apple Developer Program
+membership.
 
 ## The phone app
 

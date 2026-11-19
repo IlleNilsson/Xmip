@@ -315,6 +315,27 @@ same redirect:
 & git -C $Directory @Arguments 2>&1 | ForEach-Object { Write-Host "     git| $_" }
 ```
 
+**A temporary folder is `New-TemporaryDirectory`'s, or `$TestDrive` in a
+test**, and a temporary file is `New-TemporaryFile`'s. Never a name built
+under `[System.IO.Path]::GetTempPath()` or `/tmp`, and never
+`GetTempFileName()`: the platform's call names the folder at random, where a
+name built by hand can be known and made first by another account (ADR-0015,
+amendment 2026-11-11) and is left behind when a run stops early. A folder a
+script makes it removes in a `finally`; Pester removes `$TestDrive` with its
+block. PowerShell 7.7.0 brought `New-TemporaryDirectory` (ADR-0021, amendment
+2026-11-19).
+
+```powershell
+[string] $folder = (New-TemporaryDirectory -Prefix 'xmip-pester-').FullName
+
+try {
+    Set-Content -LiteralPath (Join-Path -Path $folder -ChildPath 'run.ps1') -Value $run
+}
+finally {
+    Remove-Item -LiteralPath $folder -Recurse -Force -ErrorAction SilentlyContinue
+}
+```
+
 ## 6. What this is enforced by
 
 `test/Xmip.Style.Test.ps1`, over `Xmip/` and `test/`. It fails on:
@@ -326,6 +347,7 @@ same redirect:
 | Backtick line continuation | 3 | yes |
 | A loop variable that is a parameter | 4 | yes |
 | A local written under another spelling of a parameter | 4 | yes |
+| A call to `GetTempPath()` or `GetTempFileName()`, but in a file allowed with its reason | 5 | yes |
 | A file that does not parse | — | yes |
 | Function over 35 lines | 2 | **reported, not gated** |
 

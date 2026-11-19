@@ -130,7 +130,6 @@ function Install-XmipNativeLibrary {
     }
 
     Write-Host "INSTALL: $name, compiling RocksDB's C++ once"
-    [string] $crate = Join-Path -Path $root -ChildPath 'module/platform/persist/rocksdb'
 
     # The estate's shared build directory, unless CARGO_TARGET_DIR names
     # another: the compiler's object paths are long, and cl.exe writes none
@@ -142,20 +141,20 @@ function Install-XmipNativeLibrary {
         $build = Join-Path -Path $root -ChildPath 'target'
     }
 
-    $saved = @($env:ROCKSDB_COMPILE, $env:CARGO_TARGET_DIR)
+    [string] $wasCompile = $env:ROCKSDB_COMPILE
 
     try {
         $env:ROCKSDB_COMPILE = '1'
-        $env:CARGO_TARGET_DIR = $build
-        [string] $crateManifest = Join-Path -Path $crate -ChildPath 'Cargo.toml'
-        [string[]] $building = @('build', '--manifest-path', $crateManifest)
-
-        if (-not (Invoke-XmipTool -Tool cargo -Argument $building).Passed) {
-            throw "RocksDB did not compile: cargo build in $crate failed."
+        [hashtable] $building = @{
+            Root            = $root
+            Folder          = 'module/platform/persist/rocksdb'
+            TargetDirectory = $build
+            Argument        = @('build')
         }
+        Invoke-XmipCrateBuild @building
     }
     finally {
-        $env:ROCKSDB_COMPILE, $env:CARGO_TARGET_DIR = $saved
+        $env:ROCKSDB_COMPILE = $wasCompile
     }
 
     [hashtable] $out = @{

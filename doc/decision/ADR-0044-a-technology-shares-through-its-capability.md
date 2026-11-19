@@ -62,9 +62,8 @@ already depend on:
   sibling dependency (ADR-0033 put TLS there for the same reason).
 
 Nothing moves *down* into a technology for another to import, and nothing is
-copied. A file with the same content in two repositories is a defect, found
-by the scan in `.ai-interaction` and, from this record on, fixed by moving
-it up.
+copied. A file with the same content in two repositories is a defect, and
+from this record on it is fixed by moving it up.
 
 ### 2. What stays in the technology
 
@@ -95,9 +94,9 @@ grow technologies, they ride on the same transports.
   a `sha2` dependency; ten archive technologies lose their copies.
 - `xmip-core-transport-http` gains `message`, `endpoint`, `percent`;
   `xmip-core-transport` gains `xml`; three object-store transports lose theirs.
-- The duplicate scan (`.ai-interaction/dupscan.py`) is the assistant's tool,
-  not a gate; the gate is the reviewer reading a new technology against this
-  record. If the scan finds a second wave, it becomes a test.
+- The duplicate scan that found these was a one-off of the assistant's,
+  not kept and not a gate; the gate is the reviewer reading a new technology
+  against this record. If a second wave is found, it becomes a test.
 - A shared module changes for every technology at once. That is the point,
   and it is why the change lands capability first, technologies after — the
   order `xgit` already keeps.

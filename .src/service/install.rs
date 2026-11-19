@@ -24,13 +24,15 @@
 //! 4. registers the node's Xmip Service — `definition.rs`'s, which
 //!    `--definition` prints — to start with the machine, as the account
 //!    `--account` names where it is given, which is given what the node
-//!    reads and writes (`account.rs`), and starts it.
+//!    reads and writes (`account.rs`), and starts it;
+//! 5. writes the command line's `cli.toml` beside the programs, where there
+//!    is none, stating that node at its local endpoint (`command_line.rs`).
 //!
 //! A configuration already there is the operator's and is never written
 //! over. `--uninstall`, with the node's configuration at `--configuration`
 //! as `--definition` takes it, stops that node's service, waiting for its
-//! drain, and removes it; it deletes no configuration, no data and no audit
-//! (ADR-0040). Both
+//! drain, and removes it; it deletes no configuration, `cli.toml` among it,
+//! no data and no audit (ADR-0040). Both
 //! need the elevation registering needs (ADR-0018, Open): a package
 //! installs elevated, and a person without it is refused in the service
 //! manager's words.
@@ -46,6 +48,7 @@ use xmip_runtime::registration::{REFUSED, ServiceDefinition, node_service_name};
 use crate::account::{self, Given};
 use crate::arguments::Arguments;
 use crate::audit;
+use crate::command_line;
 use crate::definition::{self, text};
 use crate::starter::starter;
 
@@ -134,8 +137,9 @@ fn installed(audit: &ProgramAudit, arguments: &Arguments) -> Result<String, Stri
         }
     }
     register(&service, &configured, &given)?;
+    let followed = command_line::place(&service)?;
     Ok(format!(
-        "{} registered and started, configured by {}",
+        "{} registered and started, configured by {}{followed}",
         service.name,
         text(&node_file)
     ))
