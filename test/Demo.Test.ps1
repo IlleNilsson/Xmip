@@ -1165,14 +1165,16 @@ Describe 'The web host is asked over https under the Essentials'' authority' {
     }
 
     It 'takes the anchor the host was given only where it is the Essentials'' authority' {
-        InModuleScope Xmip {
+        InModuleScope Xmip -Parameters @{ Area = $TestDrive } {
+            param($Area)
+
             [string] $authority = (Get-XmipEssentialsLayout).Authority
             $script:Line = "xmip-gui-web --Xmip:TrustAnchor=$(Join-Path $authority 'a.pem')"
             Mock Get-Process { [pscustomobject]@{ CommandLine = $script:Line } }
 
             Get-XmipDemoWebAnchor -Id 5 | Should -Be (Join-Path $authority 'a.pem')
 
-            [string] $elsewhere = Join-Path ([System.IO.Path]::GetTempPath()) 'ca.pem'
+            [string] $elsewhere = Join-Path $Area 'ca.pem'
             $script:Line = "xmip-gui-web --Xmip:TrustAnchor=$elsewhere"
             { Get-XmipDemoWebAnchor -Id 5 } |
                 Should -Throw -ExpectedMessage "*not the Essentials' authority*"

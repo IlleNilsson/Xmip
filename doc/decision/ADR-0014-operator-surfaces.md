@@ -1800,3 +1800,9 @@ and tests, the repository's `global.json`, `nuget.config` and
   loader, stays open.
 - **`cli.toml`** is the repository's, copied beside the executable the build
   makes where it is newer, its `Snapshot` relative to `target/<profile>`.
+
+## Amendment, 2026-11-19: `xmip` ships in every package
+
+Every package carries `xmip` beside `xmip-service` and puts it on `PATH`
+where it has an installer, and none ships the repository's `cli.toml`:
+ADR-0015, amendment 2026-11-19.

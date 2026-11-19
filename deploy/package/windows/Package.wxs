@@ -1,16 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  The Xmip MSI (ADR-0015 clause 2, amendment 2026-10-13). It installs
-  xmip-service and the runtime library under Program Files\Xmip\bin, and then
-  runs xmip-service itself with ProgramData\Xmip as the layout (clause 10).
-  Its install switch writes the starter cluster.xmip where there is none,
-  slices the node's node.xmip, makes the modules, logs, data and audit
-  folders, and registers and starts the Xmip Service — automatic start, as
-  `registration.rs` defines it. Removing the MSI runs its uninstall switch,
-  which stops and removes the service; configuration, data, audit and logs
-  stay
-  (ADR-0040: Xmip does not delete). The layout, the starter and the
-  registration are xmip-service's, written once; nothing here copies them.
+  The Xmip MSI (ADR-0015 clause 2, amendments 2026-10-13 and 2026-11-19). It
+  installs three programs under Program Files\Xmip\bin: xmip-service, the
+  runtime library and xmip, the command line, whose folder it adds to the
+  machine's PATH so `xmip` runs at any prompt; and then runs xmip-service
+  itself with ProgramData\Xmip as the layout (clause 10). Its install switch
+  writes the starter cluster.xmip where there is none, slices the node's
+  node.xmip, writes the command line's cli.toml beside xmip where there is
+  none, makes the modules, logs, data and audit folders, and registers and
+  starts the Xmip Service — automatic start, as `registration.rs` defines
+  it. Removing the MSI runs its uninstall switch, which stops and removes
+  the service, and takes the folder off PATH; configuration, cli.toml, data,
+  audit and logs stay (ADR-0040: Xmip does not delete). The layout, the
+  starter, cli.toml and the registration are xmip-service's, written once;
+  nothing here copies them.
 
   Three public properties. The first two are the machine's name unless
   given; the cluster is used where the machine's cluster.xmip names none, the
@@ -65,6 +68,12 @@
       </Component>
       <Component Id="RuntimeLibrary" Directory="BINFOLDER">
         <File Id="RuntimeLibraryDll" Source="$(var.BinaryDirectory)\xmip_core_operate.dll" />
+      </Component>
+      <!-- The command line, on the machine's PATH while Xmip is installed. -->
+      <Component Id="XmipCommand" Directory="BINFOLDER">
+        <File Id="XmipExe" Source="$(var.BinaryDirectory)\xmip.exe" />
+        <Environment Id="XmipPath" Name="PATH" Value="[BINFOLDER]" Action="set" Part="last"
+                     System="yes" Permanent="no" />
       </Component>
     </Feature>
 

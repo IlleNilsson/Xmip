@@ -328,7 +328,47 @@ stays where it names Amazon's service or its interface — the S3 REST API, an
 S3-compatible store, `S3Transport` and `S3Archive`, Signature Version 4's
 `s3` service scope: only the technology's name changed.
 
-Two transport schemes still are not their technology's name: Google Cloud
-Storage answers Google's own `gs://`, and Kinesis `kinesis://`. Provenance:
-the rule and the go-ahead are the owner's; the schemes, the receipts' form
-and where *S3* stays are the assistant's, for the owner to overrule.
+The transport schemes that still were not their technology's name became it
+on 2026-11-19 (the amendment below). Provenance: the rule and the go-ahead
+are the owner's; the schemes, the receipts' form and where *S3* stays are
+the assistant's, for the owner to overrule.
+
+## Amendment, 2026-11-19: every cloud technology's scheme is its name
+
+The scheme a Location's address is entered with chooses the technology
+(ADR-0064, amendment 2026-10-28), and for every cloud technology it is the
+technology's name, the vendor first, as `aws-s3://` became on 2026-11-17.
+The owner's rule of 2026-10-27 is the reason: *always name the vendor*.
+Three schemes still named none and are renamed with every use, with no
+alias: `kinesis://` is `aws-kinesis://`, `gs://` is
+`google-cloud-storage://`, and `pubsub://` is `google-pub-sub://`. What
+each names a Stream's origin with follows its scheme:
+`aws-kinesis://<stream>/<shard>/<sequence>`,
+`google-cloud-storage://<bucket>/<object>` and
+`google-pub-sub://projects/<p>/subscriptions/<s>#<id>`, each written once,
+by an `origin` function beside the `SCHEMES` its crate declares, which the
+receive and the far end a test stands up both call. The Google Cloud
+Storage archive's receipt already had that form and is now the
+transport's origin for the same object. The google-cloud-storage and
+aws-s3 archives write their receipts by calling their transport's
+`origin`, public for that, never by hand, so a receipt and an origin
+cannot part. A Pub/Sub message's attributes
+arrive as headers in the `google-pub-sub` namespace, which had been the old
+word as well. `test/Scheme.Test.ps1` holds the rule: every
+transport at `module/core/capability/transport/<vendor>-*`, the vendors
+`aws`, `azure` and `google`, declares its folder name among its schemes.
+
+What stays is AWS's and Google's own, never Xmip's choice. Signature
+Version 4 signs a Kinesis request for the service AWS calls `kinesis`, as
+an S3 one is for `s3` (amendment 2026-11-17, above), and the endpoints a
+Location names are the vendors' host names, `kinesis.<region>.amazonaws.com`
+and `pubsub.googleapis.com`. The old Cloud Storage scheme is the form
+Google's own tools write an object in; Xmip does not read it, as it reads
+no `s3://`: a send target names an object under the technology's name,
+`google-cloud-storage://<bucket>/<object>`, whatever form Google's console
+copied it in.
+
+Provenance: the rule is the owner's, 2026-10-27, resolving open problem 8;
+applying it to the three schemes and to the Pub/Sub header namespace was
+decided while designing, 2026-11-18, and is the assistant's, for the owner
+to overrule.

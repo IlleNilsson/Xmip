@@ -372,7 +372,7 @@ Describe 'A Rust module that carries .NET is verified in both languages' {
     # sit beside a Cargo.toml, and only cargo ran for them.
 
     BeforeAll {
-        $script:Both = Join-Path ([System.IO.Path]::GetTempPath()) "xmip-both-$PID"
+        $script:Both = Join-Path -Path $TestDrive -ChildPath 'both'
         New-Item -ItemType Directory -Force -Path (Join-Path $script:Both 'm/dotnet/X') | Out-Null
         foreach ($crate in 'm', 'r') {
             New-Item -ItemType Directory -Force -Path (Join-Path $script:Both $crate) | Out-Null
@@ -380,10 +380,6 @@ Describe 'A Rust module that carries .NET is verified in both languages' {
             Set-Content -LiteralPath $manifest -Value "[package]`nname = `"$crate`"`n"
         }
         Set-Content -LiteralPath (Join-Path $script:Both 'm/dotnet/X/X.csproj') -Value '<Project />'
-    }
-
-    AfterAll {
-        Remove-Item -LiteralPath $script:Both -Recurse -Force -ErrorAction SilentlyContinue
     }
 
     It 'tests the .NET projects after cargo passed, and fails the module when they fail' {

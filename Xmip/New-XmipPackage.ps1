@@ -10,10 +10,12 @@
 
 .DESCRIPTION
     Build-XmipService -Package calls these after it has built xmip-service.
-    A package holds two files, xmip-service and the runtime library; the
-    layout, the starter configuration and the service's registration are
-    xmip-service's own `--install`, which every package runs, so no package
-    holds a copy of them. Everything made goes under .local-work/package.
+    A package holds three programs, Get-XmipPackageProgram's: xmip-service,
+    the runtime library and xmip, the command line, and never a cli.toml;
+    the layout, the starter configuration, the command line's cli.toml and
+    the service's registration are xmip-service's own `--install`, which
+    every package runs, so no package holds a copy of them. Everything made
+    goes under .local-work/package.
 
     Style: doc/governance/powershell-style.md
 #>
@@ -68,8 +70,9 @@ function Assert-XmipPackageBuildable {
 function New-XmipPackage {
     <#
         .SYNOPSIS
-            Builds the runtime library beside xmip-service, stages both, and
-            makes each package asked for. Returns Kind and Path for each.
+            Builds the runtime library and the command line beside
+            xmip-service, stages the three, and makes each package asked
+            for. Returns Kind and Path for each.
     #>
     [CmdletBinding()]
     [OutputType([pscustomobject[]])]
@@ -89,16 +92,19 @@ function New-XmipPackage {
     )
 
     $built = Get-XmipPackageBinary -Root $Root -CargoArgument $CargoArgument
-    # The operate library's own workspace resolves its dependencies apart from
-    # the root's, so its build keeps a target directory of its own: sharing
-    # one lets either overwrite what the other links.
-    [string] $libraryTarget = Join-Path $built.Target 'package-operate'
-    [hashtable] $library = @{
-        Root            = $Root
-        TargetDirectory = $libraryTarget
-        CargoArgument   = $CargoArgument
+    [object[]] $program = @(Get-XmipPackageProgram)
+
+    # xmip-service is built; the others, each in a target directory of its
+    # own, with the cargo arguments it was built with.
+    foreach ($one in @($program | Where-Object -Property Target)) {
+        [hashtable] $building = @{
+            Root            = $Root
+            Folder          = $one.Folder
+            TargetDirectory = Join-Path $built.Target $one.Target
+            Argument        = @($one.Build) + $CargoArgument
+        }
+        Invoke-XmipCrateBuild @building
     }
-    Build-XmipRuntimeLibrary @library
 
     $cargo = Read-XmipToml -Path (Join-Path $Root 'Cargo.toml')
     $crate = Get-TomlValue -Node $cargo -Name 'package'
@@ -113,12 +119,12 @@ function New-XmipPackage {
     }
     $null = New-Item -ItemType Directory -Path $bin -Force
 
-    # The two files each system names its own way.
-    [string[]] $file = if ($IsWindows) { 'xmip-service.exe', 'xmip_core_operate.dll' }
-    else { 'xmip-service', 'libxmip_core_operate.so' }
-    [string] $service = Join-Path $built.Target "$($built.Folder)/$($file[0])"
-    [string] $runtime = Join-Path $libraryTarget "$($built.Folder)/$($file[1])"
-    Copy-Item -LiteralPath $service, $runtime -Destination $bin
+    # The programs alone: the command line's build copies the developer's
+    # cli.toml beside it, and a package ships none.
+    foreach ($one in $program) {
+        [string] $from = Join-Path $built.Target $one.Target
+        Copy-Item -LiteralPath (Join-Path $from "$($built.Folder)/$($one.File)") -Destination $bin
+    }
 
     [hashtable] $made = @{
         Root         = $Root
@@ -187,57 +193,61 @@ function Get-XmipPackageBinary {
 }
 
 
-function Build-XmipRuntimeLibrary {
+function Get-XmipPackageProgram {
     <#
         .SYNOPSIS
-            Builds the runtime's library, the one the operator surfaces load,
-            from module/core/operation/operate into TargetDirectory, with the
-            cargo arguments xmip-service was built with.
+            The three programs every package carries, and the one list of
+            them: xmip-service, the runtime library the operator surfaces
+            load, and xmip, the command line. Each as System names its File,
+            with the Folder of the estate cargo builds it in, what cargo
+            Builds there, and the Target folder under the build's target
+            directory it is built into.
 
-        .PARAMETER Subcommand
-            The cargo subcommand and what it builds, `build --lib` unless
-            said: iOS's remote build makes a static library with `rustc
-            --lib --crate-type staticlib`, leaving the crate's own crate
-            types in Cargo.toml as they are.
+        .DESCRIPTION
+            xmip-service is built at the estate root by Build-XmipService
+            before any package, so nothing is built for it here. The runtime
+            library and the command line are each a workspace of their own,
+            and each builds into a folder of its own (Invoke-XmipCrateBuild).
+
+        .PARAMETER System
+            windows, linux or macos: this machine's unless said.
     #>
     [CmdletBinding()]
-    [OutputType([void])]
+    [OutputType([pscustomobject])]
     param(
-        [Parameter(Mandatory = $true)]
-        [string] $Root,
-
-        [Parameter(Mandatory = $true)]
-        [string] $TargetDirectory,
-
-        [Parameter(Mandatory = $true)]
-        [AllowEmptyCollection()]
-        [string[]] $CargoArgument,
-
         [Parameter(Mandatory = $false)]
-        [ValidateNotNullOrEmpty()]
-        [string[]] $Subcommand = @('build', '--lib')
+        [ValidateSet('windows', 'linux', 'macos')]
+        [string] $System = $(
+            if ($IsWindows) { 'windows' } elseif ($IsMacOS) { 'macos' } else { 'linux' })
     )
 
-    [string] $was = $env:CARGO_TARGET_DIR
-    $env:CARGO_TARGET_DIR = $TargetDirectory
-    Push-Location -LiteralPath (Join-Path $Root 'module/core/operation/operate')
-
-    try {
-        [string[]] $building = $Subcommand + $CargoArgument
-
-        if (-not (Invoke-XmipTool -Tool cargo -Argument $building -Prefix '     cargo| ').Passed) {
-            throw "FAILED: the runtime library's cargo build."
-        }
+    [string] $program = if ($System -eq 'windows') { '.exe' } else { '' }
+    [string] $library = switch ($System) {
+        'windows' { 'xmip_core_operate.dll' }
+        'macos' { 'libxmip_core_operate.dylib' }
+        default { 'libxmip_core_operate.so' }
     }
-    finally {
-        Pop-Location
 
-        if ($was) {
-            $env:CARGO_TARGET_DIR = $was
-        }
-        else {
-            Remove-Item -Path 'env:CARGO_TARGET_DIR' -ErrorAction SilentlyContinue
-        }
+    [pscustomobject] @{
+        Kind   = 'Service'
+        File   = "xmip-service$program"
+        Folder = '.'
+        Build  = @()
+        Target = ''
+    }
+    [pscustomobject] @{
+        Kind   = 'Library'
+        File   = $library
+        Folder = 'module/core/operation/operate'
+        Build  = @('build', '--lib')
+        Target = 'package-operate'
+    }
+    [pscustomobject] @{
+        Kind   = 'Command'
+        File   = "xmip$program"
+        Folder = 'module/core/operation/cli'
+        Build  = @('build', '--bin', 'xmip')
+        Target = 'package-cli'
     }
 }
 

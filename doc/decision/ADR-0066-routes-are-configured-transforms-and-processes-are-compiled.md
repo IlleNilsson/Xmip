@@ -5,8 +5,7 @@
 - Date: 2026-09-26
 - Related: ADR-0031 (configuration is TOML; amendment 2026-09-26, never a
   database), ADR-0046 (route technologies and filters), ADR-0012 (the module
-  boundary), ADR-0064 (developers design in VS Code; Xmip Application),
-  `.ai-interaction`'s filter and expression research of 2026-09-26
+  boundary), ADR-0064 (developers design in VS Code; Xmip Application)
 
 ## In brief
 

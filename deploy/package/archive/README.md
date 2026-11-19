@@ -1,12 +1,16 @@
 # Xmip, the portable archive
 
 For people who want no installer (ADR-0015 clause 5). The archive holds one
-folder, `xmip`, with two programs in `bin`:
+folder, `xmip`, with three programs in `bin`:
 
 | file | what it is |
 | --- | --- |
 | `bin/xmip-service` (`.exe` on Windows) | the Xmip Service: the one program that runs a node |
 | `bin/xmip_core_operate.dll` (`libxmip_core_operate.so` or `.dylib` elsewhere) | the runtime library the operator tools load |
+| `bin/xmip` (`.exe` on Windows) | the command line, `xmip`: operate the node from a terminal |
+
+Nothing puts `bin` on `PATH`: add it yourself, or name the program, as
+below.
 
 Unpack it where the node should live. The folder becomes the installed
 layout: `bin`, `config`, `modules`, `data` and `logs` (ADR-0015 clause 10).
@@ -27,10 +31,11 @@ This is what every Xmip package runs. It writes a starter cluster
 configuration, `config/cluster.xmip`, if there is none — one node, declaring
 the `storage` role so it keeps its own storage, offline,
 operated from this machine on its local endpoint — slices the node's own
-configuration, `config/node.xmip`, from it, makes the `modules`,
+configuration, `config/node.xmip`, from it, writes `bin/cli.toml`, which
+points the command line at the node's local endpoint, makes the `modules`,
 `logs`, `data` and `data/audit` folders, and registers and starts the Xmip
 Service, `xmip-<node>`, to start with the machine. A configuration already
-there is never written over.
+there, `bin/cli.toml` included, is never written over.
 
 To remove the service again:
 
@@ -39,7 +44,8 @@ bin/xmip-service --configuration config/node.xmip --uninstall
 ```
 
 It stops the service, waiting for the node to drain, and removes it.
-Nothing else is deleted: configuration, data, audit and logs stay (ADR-0040).
+Nothing else is deleted: configuration, `bin/cli.toml`, data, audit and
+logs stay (ADR-0040).
 Delete the folder yourself when you no longer want them.
 
 ## Run it in a terminal instead
@@ -78,6 +84,21 @@ the same in the terminal you reach it from (ADR-0014, amendment
 bin/xmip-service --configuration config/cluster.xmip --node <node> --slice > config/node.xmip
 bin/xmip-service --configuration config/node.xmip --console
 ```
+
+## Operate it
+
+`bin/xmip` reaches the node at its local endpoint, as the account you run it
+as; the node takes its calls from its operators, the account that ran
+`--install` among them. In the unpacked `xmip` folder:
+
+```powershell
+bin/xmip --local xmip-<node> list
+bin/xmip abi
+bin/xmip help
+```
+
+After `--install`, `bin/cli.toml` names the endpoint, so `bin/xmip list`
+reaches the same node; `--local` on the line wins over it.
 
 ## What to read next
 

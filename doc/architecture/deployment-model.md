@@ -511,10 +511,22 @@ start with the machine: a Windows service, a systemd unit that makes
 that makes `/var/run/xmip/xmip-<node>` at every boot.
 `--uninstall` stops and removes the service and deletes nothing else
 (ADR-0040). The packages are an MSI per architecture with its winget
-manifest, a `.deb` and an `.rpm`, a macOS `.pkg`, and the portable archive;
-builds are Windows-only for now, so the MSI and the zip are built and the
-Linux and macOS packages are written and not built. On a platform with no
-service manager `--install` is refused in words (open problem 22).
+manifest, a `.deb` and an `.rpm`, a macOS `.pkg`, and the portable archive:
+the zip is built on Windows and the `.rpm` and the `.deb` on Linux; the MSI
+waits on WiX 7's terms, the owner's decision, and the `.pkg` is written and
+not built. On a platform with no service manager `--install` is
+refused in words (open problem 22).
+
+**Every package carries the command line** (ADR-0015, amendment
+2026-11-19): three programs in `bin`, `xmip-service`, the runtime library
+the .NET surfaces load, and `xmip`, the Rust command line, which links the
+runtime and needs neither the library nor .NET. An installer puts `xmip` on
+`PATH`: the MSI adds `bin` to the machine's `PATH` while Xmip is installed,
+the `.deb` and `.rpm` own the link `/usr/bin/xmip`, the `.pkg` makes
+`/usr/local/bin/xmip`; the archive leaves `PATH` to the person. No package
+ships `cli.toml`, the command line's document beside it: `--install`
+writes one, `Surface = "local"` at the node's local endpoint, where there
+is none, and removal keeps it.
 
 **Only an embedded Storage node keeps the stores in its `data/`** (section
 7). A node without the Storage role keeps neither and reaches Xmip Storage

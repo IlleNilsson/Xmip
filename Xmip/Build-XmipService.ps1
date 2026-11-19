@@ -35,9 +35,13 @@ function Build-XmipService {
             made.
 
             -Package puts the build in the packages that carry it to a
-            machine (ADR-0015, amendment 2026-10-13): it builds the runtime
-            library beside xmip-service with the same cargo arguments, and
-            makes each package under .local-work/package/<version>. On
+            machine (ADR-0015, amendments 2026-10-13 and 2026-11-19): it
+            builds the runtime library and xmip, the command line, beside
+            xmip-service with the same cargo arguments, each in a folder of
+            its own under the target directory, package-operate and
+            package-cli, stages the three programs and never a cli.toml,
+            and makes each package under .local-work/package/<version>,
+            with xmip on PATH where the package has an installer. On
             Windows, msi builds deploy/package/windows/Xmip.wixproj with
             dotnet and WiX 7, and the winget manifest beside it; archive
             zips the portable layout. On Linux, deb and rpm are made by nfpm
@@ -121,8 +125,9 @@ function Build-XmipService {
             $release = '--release'
             Build-XmipService -Site personal-computer -CargoArgument $release -Package msi, archive
 
-            Builds a person's computer's xmip-service, optimized, and makes
-            its x64 MSI, winget manifest and zip under .local-work/package.
+            Builds a person's computer's xmip-service, optimized, with the
+            runtime library and xmip beside it, and makes its x64 MSI,
+            winget manifest and zip under .local-work/package.
 
         .EXAMPLE
             Build-XmipService -Extension VsCode
@@ -259,7 +264,15 @@ function Build-XmipService {
             Site    = $plan.Site
             Command = $plan.Command
         }
-        Invoke-XmipServiceBuild -Root $root -Argument $plan.Argument
+        # At the estate root, in CARGO_TARGET_DIR where that is set.
+        $binary = Get-XmipPackageBinary -Root $root -CargoArgument $CargoArgument
+        [hashtable] $service = @{
+            Root            = $root
+            Folder          = '.'
+            TargetDirectory = $binary.Target
+            Argument        = $plan.Argument
+        }
+        Invoke-XmipCrateBuild @service
         Write-XmipStep -Message "OK: built xmip-service for site $($plan.Site)"
 
         if ($Package.Count -gt 0) {
@@ -312,34 +325,5 @@ function Build-XmipServiceRemote {
         }
         Build-XmipRemoteRuntime -Root $Root -Platform $platform
         Write-XmipStep -Message "OK: built $what"
-    }
-}
-
-
-function Invoke-XmipServiceBuild {
-    <#
-        .SYNOPSIS
-            Runs cargo at the estate root with a resolved site's arguments;
-            FAILED in words when cargo does.
-    #>
-    [CmdletBinding()]
-    [OutputType([void])]
-    param(
-        [Parameter(Mandatory = $true)]
-        [string] $Root,
-
-        [Parameter(Mandatory = $true)]
-        [string[]] $Argument
-    )
-
-    Push-Location -LiteralPath $Root
-
-    try {
-        if (-not (Invoke-XmipTool -Tool cargo -Argument $Argument -Prefix '     cargo| ').Passed) {
-            throw "FAILED: cargo $($Argument -join ' ')."
-        }
-    }
-    finally {
-        Pop-Location
     }
 }

@@ -386,3 +386,25 @@ Describe 'A document cites what is built in the manifest''s words' {
         $uncited | Should -BeNullOrEmpty -Because 'cite each beside the promise it qualifies'
     }
 }
+
+Describe 'A record holds its own evidence' {
+    # ADR-0020, amendment 2026-11-19: records proved claims by pointing at
+    # logs and research in the git-ignored working area, which one machine
+    # had and nobody else could read; two pointers named files already gone.
+    It 'points to no file in the working area and no log in .local-work' {
+        [string] $documents = Join-Path -Path $script:Root -ChildPath 'doc'
+        [string] $pointer = '\.ai-interaction[/\\][\w.-]+|\.local-work[/\\][^\s`)]*\.log\b'
+        [string[]] $pointing = @(
+            Get-ChildItem -LiteralPath $documents -Recurse -File -Filter '*.md' |
+                Select-String -Pattern $pointer |
+                ForEach-Object {
+                    '{0}:{1}: {2}' -f [IO.Path]::GetRelativePath($script:Root, $_.Path),
+                        $_.LineNumber, $_.Matches[0].Value
+                }
+        )
+
+        $pointing | Should -BeNullOrEmpty -Because (
+            'quote the command and the lines of its output that decide the claim, ' +
+            'in a text block beside it (ADR-0020, amendment 2026-11-19)')
+    }
+}

@@ -30,8 +30,9 @@ pub const USAGE: &str = "usage: xmip-service --configuration <path> [--console] 
      beside cluster.xmip where it names none, made there where none is kept.\n\
      --install, where the node has no configuration yet, writes a starter cluster.xmip \
      where there is none and slices and signs the node's configuration beside it; it \
-     makes the node's folders, and \
-     registers and starts its service, as --account where it is given; --uninstall \
+     makes the node's folders, \
+     registers and starts its service, as --account where it is given, and writes \
+     cli.toml beside the programs where there is none, so xmip follows the node; --uninstall \
      stops and removes the service of the node configured at <path> and deletes \
      nothing. Both need elevation.\n\
      --listening prints each port the node's configuration listens on, \

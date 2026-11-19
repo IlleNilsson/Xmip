@@ -24,7 +24,8 @@ among them: the site chooses them (amendment 2026-10-20). macOS gets a `.pkg` wi
 launchd daemon, and every package installs by running
 `xmip-service --install`; the Windows packages are built on Windows and the
 `.rpm` on Linux, the macOS `.pkg` not yet (amendments 2026-10-13 and
-2026-11-11). Every database records its schema version, and a
+2026-11-11). Every package carries `xmip`, the command line, and puts it
+on `PATH` where it has an installer (amendment 2026-11-19). Every database records its schema version, and a
 release's upgrade scripts only add (amendment 2026-10-20). One environment
 file names the technology, Microsoft DSC v3 or Ansible, that makes an
 environment's machines and its nodes, in one command, and the environment
@@ -869,10 +870,16 @@ xorriso otherwise.
 
 The Hyper-V template's last real run, 2026-11-03, stopped at its first
 machine: HyperVDsc's DVD drive resource, tested before XMIP-IN01 was made,
-threw *Hyper-V was unable to find a virtual machine with name "XMIP-IN01"*
-(`.local-work/deploy/Xmip-HyperV/run.log`). A resource that throws for what
-is not there yet cannot be tested on a fresh host, and
-`Deploy-XmipEnvironment` carried an exception for it.
+threw *Hyper-V was unable to find a virtual machine with name "XMIP-IN01"*.
+A resource that throws for what is not there yet cannot be tested on a
+fresh host, and `Deploy-XmipEnvironment` carried an exception for it. The
+run's log, trimmed to the step and its error:
+
+```text
+== 2026-11-03T13:32:25.2707963Z test XMIP-IN01
+2026-11-03T13:32:44.358776Z ERROR PID 9336: Script failed with terminating error at line 0 for statement `` - System.Management.Automation.MethodInvocationException: Exception calling "Invoke" with "4" argument(s): "The running command stopped because the preference variable "ErrorActionPreference" or common parameter is set to Stop: Exception: Hyper-V was unable to find a virtual machine with name "XMIP-IN01"."
+2026-11-03T13:32:44.391706Z ERROR Failed to run process 'powershell': Command: Resource 'powershell' [exit code 1]
+```
 
 **Xmip's own, as libvirt's are.** `deploy/dsc/msdsc/hyperv` brings two
 resources in PowerShell 7 behind manifests, as `deploy/dsc/msdsc/libvirt`
@@ -1131,8 +1138,8 @@ said all of this.
 stands: before each run every machine, every volume of the pool, the ISO's
 among them, the pool, the network, the run folder and the private state
 were removed (`deploy/dsc/README.md`, *Starting again from nothing*), and
-the run went once from start to finish, its log kept beside the run
-folder, `.local-work/deploy/xmip.*.run.log`.
+the run went once from start to finish. The deciding lines of each
+technology's log follow its paragraph.
 
 - **Ansible.** `-WhatIf` against the empty host made nothing: the machines
   play would change eleven things, and XMIP-APP03 was not reached. The
@@ -1160,7 +1167,16 @@ folder, `.local-work/deploy/xmip.*.run.log`.
   `virt_pool` answer a task naming a state before they look at `autostart`
   (community.libvirt 2.4.0, `core`); starting and starting with the host
   are a task each now, with their test, and the next run set both,
-  `changed=2` on the controller alone.
+  `changed=2` on the controller alone. That run's recap:
+
+  ```text
+  PLAY RECAP *********************************************************************
+  XMIP-APP03                 : ok=24   changed=0    unreachable=0    failed=0    skipped=25   rescued=0    ignored=0
+  XMIP-APP04                 : ok=24   changed=0    unreachable=0    failed=0    skipped=25   rescued=0    ignored=0
+  XMIP-IN01                  : ok=24   changed=0    unreachable=0    failed=0    skipped=25   rescued=0    ignored=0
+  localhost                  : ok=22   changed=2    unreachable=0    failed=0    skipped=11   rescued=0    ignored=0
+  ```
+
 - **msdsc.** `-WhatIf` against the empty host: each of its eight steps not
   in its desired state, nothing made and no technology recorded. The first
   run made the network, the pool and the machines and placed every node,
@@ -1187,7 +1203,20 @@ folder, `.local-work/deploy/xmip.*.run.log`.
   signed text is the one there is kept now, with its test, and the next
   run, 7 minutes 46 seconds, every step in its desired state, restarted no
   node. `-WhatIf` with `technology = "ansible"` over it was refused by the
-  state's `technology`.
+  state's `technology`. That last run's eight steps, each with the test DSC
+  made after its set, from the log's step lines and their JSON:
+
+  ```text
+  22:57:49Z set network      test 11.6 s  inDesiredState true x2  hadErrors false
+  22:58:27Z set XMIP-APP03   test  7.7 s  inDesiredState true x1  hadErrors false
+  22:59:03Z set XMIP-APP04   test  7.1 s  inDesiredState true x1  hadErrors false
+  22:59:31Z set XMIP-IN01    test  6.9 s  inDesiredState true x1  hadErrors false
+  22:59:59Z set D1           test 24.3 s  inDesiredState true x2  hadErrors false
+  23:01:40Z set D2           test 24.2 s  inDesiredState true x2  hadErrors false
+  23:03:20Z set R1           test 24.3 s  inDesiredState true x2  hadErrors false
+  23:05:01Z set started      test  8.1 s  inDesiredState true x1  hadErrors false
+  ```
+
 - **Ansible once more from nothing**, on the code with both fixes.
   `-WhatIf` against the empty host: the controller's play would change
   thirteen things, and all three node machines were answered unreached.
@@ -1251,3 +1280,99 @@ The PostgreSQL wire protocol the 2026-10-01 amendment has Xmip Storage reuse
 2026-11-13, and the transport, the archive target and
 `xmip-core-persist-postgresql` reach it there (ADR-0011, amendment of this
 date). Still one implementation, no async runtime.
+
+## Amendment, 2026-11-19: the command line ships in every package
+
+**Provenance.** Decided while designing on 2026-11-18 and told the owner:
+`xmip`, the Rust command line, was built on 2026-11-17 (ADR-0014, amendment
+of that date), and no package carried it. It answers the Open section's
+*There is no binary to package yet*: `xmip-service` has been packaged since
+2026-10-13, and `xmip`, the command ADR-0014 clause 8 names, produced by
+`xmip-core-cli`, is packaged with it now.
+
+**Three programs in every package**, in `bin`: `xmip-service`, the runtime
+library the .NET surfaces load, and `xmip`, the command line, which links
+the runtime and needs neither the library nor .NET. `Get-XmipPackageProgram`
+is the one list of them, each as its system names its file, with the
+estate folder cargo builds it in. `Build-XmipService -Package` builds the
+library and `xmip` beside `xmip-service`, with the same cargo arguments;
+each is a workspace of its own and builds into a folder of its own under
+the target directory, `package-operate` and `package-cli`, through the one
+crate build every build of the module runs (`Invoke-XmipCrateBuild`).
+
+**`xmip` on `PATH` where there is an installer**:
+
+| package | `xmip` is | on `PATH` as |
+| --- | --- | --- |
+| MSI | `Program Files\Xmip\bin\xmip.exe` | `bin` added to the machine's `PATH` (`XmipPath`, last, not permanent), removed with Xmip |
+| `.deb`, `.rpm` | `/opt/xmip/bin/xmip`, 0755 | `/usr/bin/xmip`, a link the package owns |
+| macOS `.pkg` | `/opt/xmip/bin/xmip` | `/usr/local/bin/xmip`, a link `postinstall` makes; written, not built |
+| archive | `xmip/bin/xmip.exe` | not at all: its README says to add `bin` or name the program |
+
+`xmip` takes no other package's name (ADR-0053, amendment 2026-10-22).
+winget's installer manifest names it under `Commands`.
+
+**No package ships `cli.toml`.** The command line's build copies the
+repository's beside the executable, and that one follows the Essentials,
+so the staging copies the three programs alone. `xmip-service --install`
+writes the installed node's `<bin>/cli.toml` where there is none —
+`Surface = "local"`, `Local` the node's local endpoint, no audit directory
+— and removal keeps it (ADR-0040); the command line finds it beside its
+own path, on Linux and macOS with every link resolved, so `/usr/bin/xmip`
+reads `/opt/xmip/bin/cli.toml`; Windows puts `bin` itself on `PATH`, so
+there is no link to follow.
+
+**Signing is unchanged**: nothing is signed (amendment 2026-10-13), and
+open problem 42's signing now names the three programs.
+
+**Verified, 2026-11-19**, built from the working trees after `5cecded`
+through the local patch, on Windows 11 x64 and in the AlmaLinux 10 guest
+under WSL on the same machine. Not installed: neither the `.rpm` nor the
+`.deb`; the MSI is not built (WiX 7's terms, the owner's), and the `.pkg`
+is written, not built.
+
+The Windows archive, `Build-XmipService -Site personal-computer
+-CargoArgument '--release' -Package archive`, unpacked: `bin` holds the
+three and no `cli.toml`, though the command line's build had copied one
+beside its own executable.
+
+```text
+==> OK: archive D:\Repos\Xmip\.local-work\package\0.1.1\xmip-0.1.1-personal-computer-windows-x64.zip
+bin: xmip_core_operate.dll  xmip-service.exe  xmip.exe
+> bin\xmip.exe abi
+module version      1
+module entrypoint   xmip_create_module_v1
+module file name    xmip_core_transport_file.dll
+operate version     1
+operate entrypoint  xmip_operate_v1
+exit 0
+> bin\xmip.exe status 0
+    0  Ok
+       the call succeeded
+       retryable: no   terminal: no
+exit 0
+```
+
+The `.rpm`, the same command with `-Package rpm` in the guest, and
+`rpm -qlp` with each entry's mode; the staged `xmip abi` and
+`xmip status 0` answered with exit 0 there too:
+
+```text
+==> OK: rpm /mnt/d/Repos/Xmip/.local-work/package/0.1.1/xmip-0.1.1-personal-computer-linux-x64.rpm
+-rw-r--r-- /opt/xmip/bin/libxmip_core_operate.so
+-rwxr-xr-x /opt/xmip/bin/xmip
+-rwxr-xr-x /opt/xmip/bin/xmip-service
+l--------- /usr/bin/xmip -> /opt/xmip/bin/xmip
+```
+
+The `.deb`, `-Package deb` in the guest, its data listed with `ar` and
+`tar`. The run was made after the owner had refused the call that would
+have started it; he allowed its result the same day ("Do it").
+
+```text
+==> OK: deb /mnt/d/Repos/Xmip/.local-work/package/0.1.1/xmip-0.1.1-personal-computer-linux-x64.deb
+-rw-r--r-- root/root  14928480 ./opt/xmip/bin/libxmip_core_operate.so
+-rwxr-xr-x root/root  11141648 ./opt/xmip/bin/xmip
+-rwxr-xr-x root/root  31302328 ./opt/xmip/bin/xmip-service
+l--------- root/root         0 ./usr/bin/xmip -> /opt/xmip/bin/xmip
+```
