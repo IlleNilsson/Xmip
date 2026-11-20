@@ -2102,25 +2102,28 @@ Tests: a secure-scheme Location on a node with a `receive` certificate
 serves a TLS client and refuses a plain one; on a node without, it is
 refused at bind as now.
 
-## 72. An object store's receive is at least once, not one winner
+## 72. An S3-compatible endpoint that ignores `If-Match` receives an object twice
+
+*Narrowed 2026-11-20 (ADR-0024, amendment 2026-11-20): two nodes listing
+one bucket never both receive one object. A listing claims each object it
+hands over by writing `<name>.xmip-claim` only where none lies (S3 and
+Azure Blob `If-None-Match: *`, Google Cloud Storage `ifGenerationMatch=0`);
+a node lets go of its own claims as it starts again, and one gone for good
+leaves its objects claimed and in place, the cluster's half of the
+recovery open as for the file family.*
 
 Found 2026-11-19 with the conditional get and delete (ADR-0024, amendment
 2026-11-19), which hold an object store's read and delete to the version
-listed (`If-Match`, `ifGenerationMatch`). Two races remain. An
+listed (`If-Match`, `ifGenerationMatch`). What stays open: an
 S3-compatible endpoint that ignores `If-Match` on DELETE deletes by the
 name, so an object written again between the read and the acceptance is
 deleted unread there; one that ignores it on GET hands over the
 replacement's bytes under the old stamp, the conditional delete then
 answers Changed, and the replacement is received again at the next
-listing: twice, never lost. And two nodes listing one bucket may both read
-one object under one stamp, the second accepted delete answering Changed,
-so it is received twice, because the object stores' exclusive step
-(ADR-0024, amendment 2026-10-13: a conditional write, `If-None-Match: *`
-or `ifGenerationMatch=0`, or an Azure Blob lease) is still not built. The
-azure-blob and google-cloud-storage receives are checked only against
-their test sessions, which honor the conditions as Microsoft and Google
-document them; whether Azurite or another compatible endpoint honors them
-is not checked yet.
+listing: twice, never lost. The azure-blob and google-cloud-storage
+receives are checked only against their test sessions, which honor the
+conditions as Microsoft and Google document them; whether Azurite or
+another compatible endpoint honors them is not checked yet.
 
 ## 73. A start whose first write lands after its successor's registration takes the node from it
 
@@ -2134,28 +2137,15 @@ members say the node stopped while its successor runs. Closing it needs an
 order between one node's starts that Xmip Storage can check, not the
 order the writes arrive in.
 
-## 74. A process a script starts holds the Script runtime's standard error open past the runtime
-
-Found 2026-11-19 with the drain of Script's standard error (ADR-0066,
-amendment 2026-11-19). A process the script starts inherits the runtime's
-standard error. Killing and reaping the runtime leaves that process
-running and the pipe open, so the drain waits until it ends, and so do the
-step's last words and its drop. To do: end the runtime's process tree, not
-its process alone, so the pipe ends with the runtime.
-
 ## 75. An S3-compatible endpoint that ignores `If-None-Match: *` writes an archived item over
 
 ADR-0040, amendment 2026-11-19, never writes an archived item over; the
 aws-s3 archive holds that only where the endpoint honors
 `If-None-Match: *` on PUT. An S3-compatible endpoint that ignores it
-writes an archived object over, and the archive cannot tell.
-
-## 76. An interrupted file or Parquet archive leaves its unlinked file behind
-
-A file or Parquet archive whose process dies between writing a file and
-linking it to its name (ADR-0040, amendment 2026-11-19) leaves
-`<name>.xmip-archiving.<pid>.<n>` beside it, and nothing removes it yet;
-the file transport's node start does that for its own sends.
+writes an archived object over, and the archive cannot tell. The same
+endpoint takes every receive claim (ADR-0024, amendment 2026-11-20), one
+node's over another's, so two nodes may both receive one object there:
+twice, never lost.
 
 ## 77. The file and Parquet archives need hard links
 
@@ -2163,22 +2153,31 @@ An item is created whole by linking it to its name (`link(2)`,
 `CreateHardLinkW`; ADR-0040, amendment 2026-11-19). On FAT, exFAT or a
 share without hard links an archive is refused, not written.
 
-## 78. The Parquet archive's receipt carries no checksum
+## 81. A Listener dropped inside its own callback hands over its close record late
 
-Its receipt is still a bare path, unlike the file archive's `file://` URI
-and the SHA-256 its sidecar holds (ADR-0040, amendment 2026-11-19).
+Found 2026-11-20 with open problem 80 (ADR-0065, amendment 2026-11-20).
+Every stop hands its records over before it returns, except one: a
+`Listener` dropped inside its own callback is not joined, by design, so
+its close record is handed over only when the callback returns. A program
+that records its stop at that same moment can have the close record land
+after the stop record, or lose it at exit.
 
-## 80. An audit record written after a test's folder is dropped makes the folder again
+## 82. A carried file's own share rises with the machine's load faster than its bound
 
-Found 2026-11-19 with the one temporary folder a Rust test makes
-(`file::temporary::Folder` in `xmip-core-library-file`, under
-`test-support`; ADR-0021, amendment 2026-11-19), which is
-removed when the test drops it. A record an audit writer appends after that
-— a cluster subscription's close record, written as its thread winds down —
-creates the folder and the audit file again, so the folder outlives its test.
-The race is older than the guard; the guard only makes it visible. To do:
-a test's audit writer is closed, and its last record written, before the
-folder it writes in is dropped.
+Found 2026-11-20 when the root's `measured` program failed once at
+landing on Windows: `carried 50 files: 22.6763ms fastest of five, Xmip's
+own share 1.140289ms`, `the process's processor time for a plain wake: the
+fastest of five 123.32µs`. On a quiet machine the same test passed four
+runs at 411 to 725 µs, a carried file taking 3.5 to 5.2 ms end to end;
+the failing run was made with the machine as a whole slow (22.7 ms end to
+end). The file transport's file system time is not in the share: its
+claim runs before the Message's account opens, and its read, close,
+removal and whole send run inside `xcore::spent::on_io` (ADR-0018). The
+share still rises with load while the bound moves only with the plain
+wake. Measured per file on a quiet machine, in means: the receiving thread
+341 µs, the Storage writer 375 µs (two batches of about 188, 167 of each
+before its index write), the send thread 166 µs. Cutting the Storage
+writer's batches is where the room is.
 
 # Suggested order
 
@@ -3021,3 +3020,75 @@ a hand-edited or unsigned slice is refused or the active slice signs;
 `[nodes.OP1.provision.operator]` in the cluster file and write
 `operator.xmip` as that node's signed slice, finding the node by its table,
 never by its name.
+
+## 74. A process a script starts holds the Script runtime's standard error open past the runtime — **Resolved**
+
+*Resolved 2026-11-20 (ADR-0066, amendment 2026-11-20).*
+
+Found 2026-11-19 with the drain of Script's standard error (ADR-0066,
+amendment 2026-11-19). A process the script starts inherited the runtime's
+standard error. Killing and reaping the runtime left that process running
+and the pipe open, so the drain waited until it ended, and so did the
+step's last words and its drop.
+
+Script's runtime now runs as the root of a process tree of its own
+(`script::process_tree` in `xmip-core-transform`). On Windows it is a job
+object the runtime is placed in while still suspended, killing what is left
+when it closes and allowing no breakaway, terminated as one. On Unix it is
+a process group of its own, killed as one before the root is reaped. A test
+holds that the drop and its drain return within 5 s while the script's
+child sleeps two minutes, and that the child is gone. What stays open: on
+Unix a process that leaves the group for a session of its own (`setsid`)
+leaves the tree, and holds the standard error if it keeps it.
+
+## 76. An interrupted file or Parquet archive leaves its unlinked file behind — **Resolved**
+
+*Resolved 2026-11-20 (ADR-0040, amendment 2026-11-20).*
+
+A file or Parquet archive whose process died between writing a file and
+linking it to its name (ADR-0040, amendment 2026-11-19) left
+`<name>.xmip-archiving.<pid>.<n>` beside it, and nothing removed it.
+
+A file being written is now held by its process from its making until it
+is closed (`file::held` in `xmip-core-library-file`: `flock` on Unix,
+sharing that refuses its removal on Windows), and a process's first write
+into a directory starts a sweep of it on a thread of its own, beside the
+write, which removes every file there under the mark that no process
+holds: the operating system, not the name, says its writer is dead, so a
+file a live archive writes is never removed, and no write waits for the
+listing. The archive's `measured` program holds the first write into a
+directory of 50,000 items to the own share of any other. What stays: a
+leftover in a directory no process writes into again, or on a file system
+that takes no lock at all, stays under its mark.
+
+## 78. The Parquet archive's receipt carries no checksum — **Resolved**
+
+*Resolved 2026-11-20 (ADR-0040, amendment 2026-11-20).*
+
+Its receipt was a bare path, unlike the file archive's `file://` URI and
+the SHA-256 its sidecar holds (ADR-0040, amendment 2026-11-19). It is now
+the file archive's, `file:///<root>/<data_type>/<identifier>.parquet` and
+the SHA-256 of the bytes, through `archive::directory::Directory`, moved
+there from the file archive; its restore refuses bytes whose checksum is
+not the receipt's through `archive::checksum::verify`, which
+`named::restore` and the SQL script archive's restore call too.
+
+## 80. An audit record written after a test's folder is dropped makes the folder again — **Resolved**
+
+*Resolved 2026-11-20 (ADR-0065, amendment 2026-11-20).*
+
+Found 2026-11-19 with the one temporary folder a Rust test makes
+(`file::temporary::Folder` in `xmip-core-library-file`, under
+`test-support`; ADR-0021, amendment 2026-11-19), which is removed when the
+test drops it. A record an audit writer appended after that, a cluster
+subscription's close record, created the folder and the audit file again,
+so the folder outlived its test.
+
+It was the tests' order, not a stop that returns early: no subscription,
+listener or sync plane returns before its records are handed over, and a
+program's stop settles the keeper. A test whose audit takes records
+through the keeper makes its folder with `xmip-core-audit-file`'s
+`temporary::Folder`, which wraps the library's and is removed once the
+keeper has kept them; a node process a test kills has the cluster's folder
+as its temporary directory. The one stop that hands over late is open
+problem 81.

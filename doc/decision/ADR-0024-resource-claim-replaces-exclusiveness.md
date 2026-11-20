@@ -13,6 +13,8 @@
   drop directory tells, and a file is finished when no writer holds it
 - Amended: 2026-11-19 — an object store's read and delete hold to the
   version listed
+- Amended: 2026-11-20 — an object store's object is won by one node's claim
+  beside it
 - Supersedes: ADR-0017 (Exclusiveness)
 - Related: ADR-0010 (contract and transport boundaries), ADR-0012 (the module boundary),
   ADR-0018 (amendment 2026-10-01: a Host Service claims Journeys through the
@@ -105,6 +107,10 @@ storage rather than Xmip's, and it is already there:
 | SQL | `SELECT … FOR UPDATE SKIP LOCKED` |
 
 Every one is atomic and none is Xmip's to operate.
+
+*For S3, Azure Blob and Google Cloud Storage, superseded by the amendment
+of 2026-11-20: each claims by a claim object beside the object, written
+only where none lies, and Azure Blob takes no lease.*
 
 ### 3. It answers a question the lease could not
 
@@ -938,3 +944,175 @@ Each technology's own tests drive the first two sequences over the wire and
 map `412`, `404` and S3's `409` to `Changed`: `xmip-core-transport-aws-s3`,
 `xmip-core-transport-azure-blob` and
 `xmip-core-transport-google-cloud-storage`.
+
+## Amendment, 2026-11-20: an object store's object is won by one node's claim beside it
+
+**Provenance.** Open problem 72, found 2026-11-19 with the amendment
+above: two nodes listing one bucket could both read one object under one
+stamp, the second accepted delete answering `Changed`, so the object was
+received twice, because the object stores' exclusive step of the
+amendment of 2026-10-13 — the owner's *only one Rn should win* and *for
+any Receive Location, regardless of protocol* — was still not built. The
+coordinator's brief of 2026-11-20 asked for it built, modeled on the file
+family's claim, the shared logic once in `transport::listed` behind a
+trait each store implements.
+
+**What stands.**
+
+- **The claim is an object beside the object.** A listing claims each
+  object it hands over by writing `<name>.xmip-claim` — the file family's
+  turn name (`claim::turn_of`) — only where no object of that name lies,
+  in one request the store decides alone: S3 `PutObject` with
+  `If-None-Match: *`; Azure Blob `Put Blob` with `If-None-Match: *`;
+  Google Cloud Storage an upload with `ifGenerationMatch=0`. The claim
+  holds the claimed name the file family records,
+  `<name>.xmip-claim.<node location, percent-encoded>.<nanoseconds>`
+  (`claim::Claimant::claimed`, now the one place that name is written,
+  the file family's rename included). The node whose write the store takes
+  has the object. A node that finds a claim listed beside an object passes
+  it over without a request; one whose write the store refuses (`412`, or
+  Azure Blob's `409 BlobAlreadyExists`) passes it over. Nothing is renamed:
+  an object store has no rename, and the object is read where it lies, as
+  the amendment above reads it.
+- **The claim is let go however the cycle ends.** `Accepted` deletes the
+  object as listed, then the claim as it was written — the stamp its write
+  answered: S3's and Azure Blob's `ETag`, Cloud Storage's `generation`;
+  `Refused` and `Failed` delete the claim alone; an arrival let go without
+  a verdict lets its claim go too. The object goes first, because a claim
+  let go before the delete would let another node read it again. A claim
+  whose delete the store does not answer is kept, and let go at the node's
+  next listing before anything is claimed.
+- **A node that starts again lets go of every claim its name holds.** At
+  its first listing that reaches the store (`Configured::on_node`, as FTP
+  and SFTP return theirs) it reads each claim listed and deletes, as
+  listed, every one whose claimed name names its own location; another
+  node's is read and left.
+- **How a claim of a node that died is returned, and why so.** By its own
+  node as it starts, as the file family's claimed file is (amendment
+  2026-09-26), because only the claimant knows that a claim of its own is
+  from before it started and that nothing holds it now. Not by its age: a
+  claim ended by a time limit is a lease inside Xmip, which clause 1
+  retired, and a receive cycle that outlived the limit would let a second
+  node take an object the first still holds — the twice this amendment
+  closes. Not by an Azure blob lease either, which clause 2's table named:
+  a lease *creates and manages a lock on a blob for write and delete
+  operations*, so the Party's producer could not write the blob again
+  while Xmip held it, a lease lasts *15 to 60 seconds, or can be infinite*
+  and so needs renewing through a long cycle or breaking after a death,
+  and S3 and Cloud Storage have none: the one claim serves all three. A
+  node gone for good leaves its objects in place and claimed, never lost,
+  each claim saying who holds it and since when; returning those is the
+  cluster's half of the recovery, open for the file family since
+  2026-09-26 and now for the object stores.
+- **Written once, and open.** `transport::listed::Store` is what each
+  store implements — list, get as listed, delete as listed, create only
+  where nothing lies, and its origin — and `transport::listed::Claims` is
+  the sequence above, the claims not yet let go, the recovery and the
+  claim of one object by its address: `xmip-core-transport-aws-s3`
+  (`bucket::Bucket`), `xmip-core-transport-azure-blob`
+  (`container::Container`) and `xmip-core-transport-google-cloud-storage`
+  (`bucket::Bucket`) implement `Store` and nothing more, and each answers
+  `Transport::claims` with that claim, where `NoNativeClaim` answered
+  before. Any store whose write can be made only where nothing lies
+  implements `Store` and has the claim. Each client's `put_new` now hands
+  back the stamp it wrote, which the archives of ADR-0040 read as before:
+  written, or there already.
+- **What it costs.** Per object handed over, the claim adds one
+  conditional write at the listing — the one exclusive request — and one
+  delete at its verdict, its letting go; nothing is read before the write
+  and nothing renewed while the cycle runs, and an object another's claim
+  holds costs no request at all. Xmip's own share is writing one name.
+  A starting node reads each claim listed, once. The Location's credentials
+  must now write beside what it takes: `s3:PutObject`, which AWS asks of
+  `If-None-Match`; Azure Blob write; Cloud Storage `storage.objects.create`.
+
+**What remains.** A node whose listing came before another node took an
+object whole — the other's claim, read, delete and letting go all between
+the first node's listing and its claim — wins a claim on nothing: its read
+finds the object gone, its cycle fails retryably, its claim is let go, and
+nothing is received twice. An S3-compatible endpoint that ignores
+`If-None-Match: *` (open problem 75) stores every claim, writing over
+another node's, so two nodes may both receive one object there — twice,
+never lost, as before this amendment. And as the amendment above says, an
+endpoint that ignores `If-Match`, and whether Azurite honors the
+conditions, are not checked.
+
+The vendors' own words, read 2026-11-20:
+
+- Amazon S3, [PutObject](https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html),
+  `If-None-Match`: *Uploads the object only if the object key name does
+  not already exist in the bucket specified. Otherwise, Amazon S3 returns a
+  `412 Precondition Failed` error.* And: *If a conflicting operation occurs
+  during the upload S3 returns a `409 ConditionalRequestConflict` response.
+  On a 409 failure you should retry the upload.*
+- Amazon S3 User Guide, [conditional
+  writes](https://docs.aws.amazon.com/AmazonS3/latest/userguide/conditional-writes.html):
+  *If multiple conditional writes or copies occur for the same object name,
+  the first write operation to finish succeeds. Amazon S3 then fails
+  subsequent writes with a `412 Precondition Failed` response.* And: *To
+  perform conditional writes with the HTTP `If-None-Match` header you must
+  have the `s3:PutObject` permission.*
+- Azure Blob Storage, [specifying conditional headers for Blob service
+  operations](https://learn.microsoft.com/en-us/rest/api/storageservices/specifying-conditional-headers-for-blob-service-operations),
+  `If-None-Match`: *Specify the wildcard character (\*) to perform the
+  operation only if the resource doesn't exist, and fail the operation if
+  it does exist.* Put Blob and Delete Blob both take it, and an unmet one on
+  a write answers *Precondition Failed (412 (Precondition Failed))*.
+- Azure Blob Storage, [Lease
+  Blob](https://learn.microsoft.com/en-us/rest/api/storageservices/lease-blob):
+  *The `Lease Blob` operation creates and manages a lock on a blob for
+  write and delete operations. The lock duration can be 15 to 60 seconds,
+  or can be infinite.* And, of Put Blob and Delete Blob among others: *If
+  the lease ID isn't included, these operations fail on a leased blob, with
+  `412 – Precondition failed`.*
+- Google Cloud Storage, [request
+  preconditions](https://docs.cloud.google.com/storage/docs/request-preconditions):
+  *When a generation-match precondition with a value of `0` is included in
+  a request, the request only proceeds if no object with the specified
+  name exists in the bucket or if there are only noncurrent versions of the
+  object in the bucket. If there is a live version with the specified name,
+  the request fails with a status code of `412 Precondition Failed`.*
+
+Proved by `xmip-core-transport`'s `listed` tests, over an in-memory store
+that honors each condition as the three vendors document it
+(`listed/memory.rs`): two nodes listing one object, both reading before
+either is told, receive it once; two nodes racing over three hundred
+objects receive each exactly once; a dead node's claim is let go as that
+node starts again and by no other; every verdict, and an arrival let go
+unheard, lets its claim go; a claim the store did not let go is let go at
+the next listing; a claim another holds is passed over unasked, and one
+whose write the store refuses is passed over. The two-node test, written
+against the code before this amendment — each node a Location of its own,
+the receive as it was — fails. Run 2026-11-20 on Windows in
+`module/core/capability/transport`, `cargo test --lib listed`, before:
+
+```text
+test listed::tests::two_nodes_listing_one_object_never_both_receive_it ... FAILED
+assertion `left == right` failed: one node receives it
+  left: [[111, 110, 101], [111, 110, 101]]
+ right: [[111, 110, 101]]
+test result: FAILED. 8 passed; 1 failed; 0 ignored; 0 measured; 156 filtered out; finished in 0.01s
+```
+
+and after:
+
+```text
+test listed::claims::tests::two_nodes_listing_one_object_never_both_receive_it ... ok
+test listed::claims::tests::two_nodes_racing_over_one_store_take_every_object_exactly_once ... ok
+test listed::claims::tests::a_dead_nodes_claim_is_let_go_as_it_starts_again_and_by_no_other ... ok
+test listed::claims::tests::an_object_another_claims_is_passed_over_and_its_claim_is_never_an_arrival ... ok
+test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 156 filtered out; finished in 0.02s
+```
+
+Each technology's own tests drive two nodes over one far end
+(`two_nodes_listing_one_bucket_never_both_receive_one_object` in aws-s3
+and google-cloud-storage,
+`two_nodes_listing_one_container_never_both_receive_one_blob` in
+azure-blob): the first's claim is written, the second, starting, reads it,
+leaves it and receives nothing, and once the first accepts, the object and
+its claim are gone.
+
+Provenance: the owner's words above, and the brief's. The claim object
+beside the object, its delete as written, the claims kept and let go at the
+next listing, and putting the Azure blob lease aside are the assistant's,
+2026-11-20, for the owner to confirm or strike.

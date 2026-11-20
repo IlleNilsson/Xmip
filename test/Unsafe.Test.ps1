@@ -67,6 +67,11 @@ BeforeAll {
         # overlapped wait (src/system/overlapped.rs, in net's folder); on
         # Unix the descriptor its watch lends to poll.
         'module/core/capability/transport/serial/src/system.rs' = 'ADR-0064, amendment 2026-11-15'
+        # A Script runtime's process tree, ended as one: on Windows the job
+        # object it runs in, its first thread let run once it is in the job,
+        # and the job terminated; on Unix the kill of the group it leads.
+        'module/core/capability/transform/.src/script/process_tree.rs' =
+            'ADR-0066, amendment 2026-11-20'
         # xmip-core's calls to the operating system: the timed wait's kernel
         # event and high-resolution timer on Windows, the processor time tests
         # measure with, and the one counting allocator every test of bounded

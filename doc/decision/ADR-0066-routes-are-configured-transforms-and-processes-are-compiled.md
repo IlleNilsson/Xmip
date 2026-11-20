@@ -1148,3 +1148,91 @@ Provenance: an outside review of 2026-11-19, confirmed against the source
 by the coordinator, whose plan named the drain, its 64 KiB and its tests;
 the plain-text rendering, found when the first last words read as CLIXML,
 is the assistant's, for the owner to overrule.
+
+## Amendment, 2026-11-20: a script's runtime is ended with every process it started
+
+The amendment of 2026-11-19 killed and reaped Script's runtime alone. A
+process the script started inherited the runtime's standard error and held
+that pipe open past it, so the drain, the step's last words and its drop
+waited until that process ended on its own. That no longer stands.
+
+- **One tree, ended as one.** `script::process_tree` in
+  `xmip-core-transform`, the one implementation, Script's runtime its one
+  user: the estate starts no other process it keeps running, and a second
+  user moves it to the lowest layer both reach. The runtime is started as
+  the root of a process tree of its own; ending it kills every process in
+  the tree, then reaps the root, so the pipe ends with the runtime.
+- **Windows: a job object.** The runtime is started suspended, placed in a
+  job of its own, and only then let run, so nothing it starts runs outside
+  the job; the job allows no breaking away. Ended by terminating the job.
+  The job is set `JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE`, and the node holds
+  its only handle, so a node that ends without dropping its step ends the
+  tree too. Rust's `Child` does not hand over the first thread it must let
+  run, so the thread is read from a snapshot of that one process's threads
+  (`PssCaptureSnapshot`); a snapshot of every thread on the machine (Tool
+  Help) cost 100 ms a start on one running 6,500 threads.
+- **Unix: a process group.** The runtime leads a process group of its own,
+  made in the child before PowerShell runs (`process_group(0)`), and is
+  ended by killing the group (`kill(-group, SIGKILL)`) before the root is
+  reaped, so the group's number is still the root's. What stays open: a
+  process that leaves the group on purpose, for a session of its own
+  (`setsid`), leaves the tree, and a daemon that does so outlives the
+  runtime.
+- **Unsafe code in one file.** The crate's lint is `deny`, not `forbid`,
+  and `.src/script/process_tree.rs` is its one file allowing unsafe code
+  (ADR-0050, amendment 2026-09-25; `test/Unsafe.Test.ps1`), through
+  `windows-sys` 0.61 and `libc` 0.2, the versions `xmip-core` already
+  builds; nothing new is compiled.
+- **Cost.** Nothing per Message. Measured once with a test written for the
+  measurement and not kept: two runtimes started from one command, one in
+  its tree and one alone, called 1,000 times each, interleaved, three runs.
+  Windows 11, the warm call's median in its tree against alone: 428.6 µs
+  against 421.2 µs, 503.2 µs against 495.0 µs, 463.0 µs against 477.1 µs;
+  Linux: 32.3 µs against 32.0 µs, 56.7 µs against 57.0 µs, 32.1 µs against
+  32.3 µs. A start costs the job, its placing and the snapshot, about
+  0.4 ms on Windows: 30 starts of `cmd /c exit`, a median of 5.15 ms in a
+  tree against 4.74 ms alone; PowerShell's own start is 0.7 s to 1.5 s.
+
+The failure sequence is a test in `script.rs`,
+`dropping_the_host_ends_a_process_its_script_started_and_never_waits_for_it`:
+the script starts a PowerShell that sleeps two minutes and inherits the
+standard error, the host is dropped, and the drop and its drain must return
+within 5 s, never waiting for the child, and the child must be gone within
+5 s more. On Windows 11 with PowerShell 7.7.0, 2026-11-20, the runtime
+killed and reaped alone:
+
+```text
+cargo test --lib -- dropping_the_host --test-threads 4
+test script::tests::dropping_the_host_ends_its_runtime_and_joins_its_drain ... ok
+test script::tests::dropping_the_host_ends_a_process_its_script_started_and_never_waits_for_it ... FAILED
+dropping the host ends a process its script started: hung past 60s
+test result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured; 17 filtered out; finished in 60.04s
+```
+
+On Linux with PowerShell 7.7.0, the same day, the group and its kill taken
+out, so the runtime was killed and reaped alone:
+
+```text
+cargo test --lib -- dropping_the_host --test-threads 4
+test script::tests::dropping_the_host_ends_a_process_its_script_started_and_never_waits_for_it ... FAILED
+dropping the host ends a process its script started: hung past 60s
+test result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured; 17 filtered out; finished in 60.00s
+```
+
+With the tree, on Windows and then on Linux:
+
+```text
+cargo test -- --test-threads 4 --nocapture
+Script's host dropped while its script's child ran, in 18.6006ms
+test script::tests::dropping_the_host_ends_a_process_its_script_started_and_never_waits_for_it ... ok
+test result: ok. 19 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+Script's host dropped while its script's child ran, in 4.595473ms
+test script::tests::dropping_the_host_ends_a_process_its_script_started_and_never_waits_for_it ... ok
+test result: ok. 19 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+```
+
+Provenance: open problem 74, found with the drain on 2026-11-19; the
+coordinator's brief of 2026-11-20 named the job object, the process group
+and the test. The snapshot of one process's threads in place of Tool
+Help's, found when the first measurement cost 100 ms a start, is the
+assistant's, for the owner to overrule.

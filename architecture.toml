@@ -1338,7 +1338,9 @@ dependency = ["xmip-core-library-codec"]
     maturity = "reserved"
     [xmip.core.audit.file]
     maturity = "scaffolded"
-    dependency = ["xmip-core", "xmip-core-audit"]
+    # xmip-core-library-file for a test's audit folder, under test-support
+    # alone (ADR-0065, amendment 2026-11-20).
+    dependency = ["xmip-core", "xmip-core-audit", "xmip-core-library-file"]
     description = "Records appended as TOML tables to audit.toml in a directory, each in its writer's audit chain under audit.lock and on the disk before it is said written: every Xmip program's default sink (ADR-0062, ADR-0070 clause 5). A xmip-core-audit technology."
     [xmip.core.audit.kafka]
     maturity = "reserved"
@@ -1422,7 +1424,7 @@ dependency = ["xmip-core-library-codec"]
   architecturalDomain = "Operation"
   repositoryRole = "operational-capability"
   maturity = "scaffolded"
-  dependency = ["xmip-core-library-codec", "xmip-core-library-sql", "xmip-core-library-file", "xmip-core"]
+  dependency = ["xmip-core-library-codec", "xmip-core-library-sql", "xmip-core-library-file", "xmip-core-library-net", "xmip-core"]
     [xmip.core.archive.aws-s3]
     description = "S3 archive target: one item is one object in a bucket, its TOML metadata a second object under .meta, each created only where none is and never written over. A xmip-core-archive technology."
     maturity = "scaffolded"
@@ -1436,7 +1438,6 @@ dependency = ["xmip-core-library-codec"]
     [xmip.core.archive.file]
     description = "File archive target: one item is one file under a directory, its TOML metadata in a tree beside it, each created whole and never written over. A xmip-core-archive technology."
     maturity = "scaffolded"
-    dependency = ["xmip-core-library-net"]
     [xmip.core.archive.google-cloud-storage]
     description = "Google Cloud Storage archive target: one item is one object in a bucket, its TOML metadata a second object under .meta, each created only where none is and never written over. A xmip-core-archive technology."
     maturity = "scaffolded"
@@ -1453,7 +1454,7 @@ dependency = ["xmip-core-library-codec"]
     dependency = ["xmip-core-transport-mssql", "xmip-core-transport", "xmip-core-library-sql"]
     specification = "T-SQL over TDS 7.4, through the mssql transport client"
     [xmip.core.archive.parquet]
-    description = "Parquet archive target: retained items written as Apache Parquet files. The default archive technology (owner, 2026-09-07). A xmip-core-archive technology."
+    description = "Parquet archive target: one item is one Apache Parquet file under a directory, created whole and never written over, its receipt the file archive's file URI and SHA-256. The default archive technology (owner, 2026-09-07). A xmip-core-archive technology."
     maturity = "scaffolded"
     [xmip.core.archive.postgresql]
     description = "PostgreSQL archive target: one item is one row of an archive table. A xmip-core-archive technology."
@@ -1826,7 +1827,7 @@ dependency = ["xmip-core-library-codec"]
 
 
   [xmip.core.library.file]
-  description = "File system acts every layer shares, one copy of each: a directory synced to its device, so a name made, renamed or removed in it outlives a crash (fsync of the directory on Unix; FlushFileBuffers on a handle opened with FILE_FLAG_BACKUP_SEMANTICS on Windows)."
+  description = "File system acts every layer shares, one copy of each: a directory synced to its device, so a name made, renamed or removed in it outlives a crash; and a file held by its writer while it is open (flock on Unix, sharing that refuses its removal on Windows), so a removal takes only a file no live process writes."
   architecturalDomain = "Library"
   repositoryRole = "common-architecture"
   maturity = "scaffolded"

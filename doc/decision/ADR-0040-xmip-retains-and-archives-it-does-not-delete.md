@@ -233,3 +233,227 @@ module/core/operation/archive/parquet  test result: ok. 5 passed; 0 failed
 module/foundation/core                 test result: ok. 72 passed; 0 failed
 module/core/capability/transport/file  test result: ok. 32 passed; 0 failed
 ```
+
+## Amendment, 2026-11-20: a file left under its mark is removed, and the Parquet receipt is the file archive's
+
+**Provenance.** Open problems 76 and 78, both found with the amendment of
+2026-11-19 and taken up by the coordinator on 2026-11-20. The design is
+the assistant's, decided while designing and for the owner to overrule:
+the operating system, not a name, says which file is left.
+
+What was found. An archive on a file system writes a file beside its name
+as `<name>.xmip-archiving.<process>.<count>` and links it to its name
+(`archive::whole`). A process that died between the two left that file,
+and nothing removed it: not the archive, which has no start of its own,
+and not the file transport's sweep, which removes only the sent files its
+own node named (ADR-0024, amendment 2026-10-19). A process given a dead
+one's id again found its first such name taken, and its first write
+failed. And the Parquet archive's receipt was the file's path as the
+platform prints it, with no checksum: its restore opened whatever path a
+receipt named and gave back whatever bytes the file held.
+
+What stands now:
+
+1. **A file is held by the process writing it, from the moment it is made
+   until it is closed** (`file::held::create`, in `xmip-core-library-file`):
+   on Unix by an exclusive lock on it (`flock`), on Windows by the sharing
+   it is opened with, which lets another handle read it and never write,
+   rename or remove it. `whole` keeps it held through its link to the
+   name. A Unix removal can come only between the file's making and its
+   lock; the writer then finds its name gone and makes it again. Windows
+   takes no lock on it: a lock there is mandatory, and would refuse a
+   reader of the name the file is linked to, as a read of a file the
+   standard library's `File::lock` held was refused on 2026-11-20
+   (`ERROR_LOCK_VIOLATION`, os error 33).
+2. **A process's first write into a directory starts a sweep of it, which
+   removes every file there under the mark that no process holds**
+   (`whole`'s sweep, through `file::held::remove_unheld`): unlinked, or a
+   second name of a file linked. That is how a file is known to be left:
+   the operating system has closed everything a dead process held, and
+   holds what a live one is writing, in this process or another, which is
+   never removed. No process id, name or age is read to decide it. An
+   archive's start in a directory is its first write there, as a Send
+   Location's is its node's start. **The sweep runs beside the write**, on
+   a thread of its own (`xmip-archive-sweep`, one for each directory a
+   process writes in, started the estate's way, by the standard library's
+   `thread::Builder`): a directory holds a file for each item archived,
+   and the write waits for no listing of them. It is safe beside every
+   write, because a held file is never removed, and on Unix a writer whose
+   file a sweep took before its lock makes it again. Where no thread can
+   be started, the directory is swept from the process's next write there.
+   What cannot be listed or removed is left under its mark for the next
+   process's first write; no write needs any of it. A test waits for a
+   sweep through `whole::swept`, under `test-support`.
+3. **The Parquet archive's receipt is the file archive's**:
+   `file:///<root>/<data_type>/<identifier>.parquet` and the SHA-256 of
+   the bytes. Both come from `archive::directory::Directory`, moved there
+   from the file archive, which reads a receipt's key back only under its
+   root and only where every segment names a file there: a segment that is
+   empty, `.`, `..`, or holds a `\` or a `:`, which Windows reads as a
+   separator or a drive, is refused (the last two found while moving it).
+   A restore refuses bytes whose SHA-256 is not the receipt's, nor the
+   metadata's where a store keeps one, through `archive::checksum::verify`,
+   once for the name-keyed stores, the Parquet archive and the SQL script
+   archive, whose own comparisons are deleted.
+4. The file transport's sweep stays as it is. Its rule is the owner's of
+   2026-10-19 — a node removes the sent files its own name left, never
+   another node's — over any far end of the file family (`ClaimSite`), and
+   it shares no code with a local file held by its process.
+5. **What the file system does for a write is its time, not Xmip's.**
+   `whole` runs the file's making, its link, its close and the removal of
+   its written name each as an I/O (`xcore::spent::on_io`), as its syncs
+   are the disk's (`on_sync`); the bytes a caller writes into the file stay
+   the caller's to account. Until then the four were counted as Xmip's own
+   share of each write: about two milliseconds on Windows, where the
+   system charges what its file system filters do to the calling thread.
+
+What it costs: a process's first write into a directory starts a thread;
+the thread lists the directory once, beside the writes, in time with the
+names it holds; on Unix each write takes a lock and reads the file's
+identity once; on Windows nothing more. On Windows the writes that overlap
+the listing of their own directory wait on it by the clock — NTFS lists
+and adds to one directory in turn — though not by their own share.
+
+Shown by the tests, written first and run against the code before this
+change on 2026-11-20 on Windows (`cargo test -j 4 --config
+.local-work/landing/patch.toml --all-features -- --test-threads 4` in each
+crate):
+
+```text
+module/core/operation/archive
+test whole::tests::a_file_left_under_its_mark_is_removed_by_the_next_create_in_its_directory ... FAILED
+test result: FAILED. 33 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+module/core/operation/archive/file
+test tests::a_file_left_under_its_mark_is_removed_by_the_next_archive_into_its_directory ... FAILED
+test result: FAILED. 14 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.15s
+module/core/operation/archive/parquet
+test tests::a_receipt_from_under_another_root_is_refused ... FAILED
+test tests::a_file_left_under_its_mark_is_removed_by_the_next_archive_into_its_directory ... FAILED
+test tests::the_receipt_is_a_file_uri_under_the_root_with_the_sha256_of_the_bytes ... FAILED
+test tests::bytes_changed_since_they_were_archived_are_refused_on_restore ... FAILED
+test result: FAILED. 5 passed; 4 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s
+```
+
+`bytes_changed_since_they_were_archived_are_refused_on_restore` failed at
+its `expect_err`: the restore gave the other bytes back. The tests of a
+file a live write holds — `file::held`'s three, `whole`'s
+`a_file_a_live_write_holds_under_its_mark_is_never_removed`, the file
+archive's `a_file_another_archive_is_writing_is_never_removed` — call
+`file::held`, and the new tests of `directory` and `checksum` call
+`Directory` and `verify`: none of the three was there before. `held`'s
+`a_removal_in_the_instant_after_the_file_is_made_never_takes_it_from_its_writer`
+removes the file between its making and its hold: on Unix the removal
+succeeds and the writer makes the file again, on Windows it is refused.
+The first sweep listed its directory inline, before the write it ran in.
+`the_first_write_into_a_full_directory_waits_for_no_sweep` holds that it
+does not: in a test's folder of 50,000 empty items, synced once, the first
+write's own share — the processor time it took outside its syncs and its
+file system calls (`xcore::spent`) — must be within a millisecond of the
+slowest of the twenty writes after it. It holds a time, so it is the
+archive module's timing program, `measured` (`tests/measured/main.rs`,
+`test = false`, `required-features = ["test-support"]`; rust-style.md
+section 5c), run alone after every other test; what a sweep removes is
+held apart by `whole`'s ordinary tests, which wait for it through
+`whole::swept`. Written first in `whole`'s own tests, it ran there with the
+sweep inline, on Windows (the command above, `-- --nocapture whole::`)
+and on the Linux build machine (`cargo test -j 8 --all-features --
+--test-threads 8 --nocapture whole::`):
+
+```text
+Windows
+the first write: own 80.8786ms, clock 90.2605ms; the slowest of 20 others: own 2.489327ms, clock 5.9527ms
+test whole::tests::the_first_write_into_a_full_directory_waits_for_no_sweep ... FAILED
+test result: FAILED. 4 passed; 1 failed; 0 ignored; 0 measured; 34 filtered out; finished in 45.73s
+Linux
+the first write: own 8.832285ms, clock 23.993264ms; the slowest of 20 others: own 182.814µs, clock 19.35415ms
+test whole::tests::the_first_write_into_a_full_directory_waits_for_no_sweep ... FAILED
+test result: FAILED. 4 passed; 1 failed; 0 ignored; 0 measured; 34 filtered out; finished in 1.04s
+```
+
+With the sweep beside the write, three runs on each, still in `whole`'s
+tests, the file system calls still counted as Xmip's:
+
+```text
+Windows
+the first write: own 2.148626ms, clock 44.0863ms; the slowest of 20 others: own 2.09552ms, clock 8.5105ms
+the first write: own 2.284627ms, clock 17.302ms; the slowest of 20 others: own 2.335132ms, clock 31.2859ms
+the first write: own 3.081258ms, clock 26.4283ms; the slowest of 20 others: own 2.725427ms, clock 40.7225ms
+Linux
+the first write: own 218.008µs, clock 14.022578ms; the slowest of 20 others: own 200.081µs, clock 15.434467ms
+the first write: own 173.663µs, clock 14.12854ms; the slowest of 20 others: own 169.999µs, clock 15.321796ms
+the first write: own 172.635µs, clock 12.9271ms; the slowest of 20 others: own 164.953µs, clock 15.280856ms
+```
+
+`test/Timing.Test.ps1` had passed with it there: it held its bound beside
+the writes after it, which the check leaves to a timing program, and the
+check read no `Spent`. It now refuses `Spent::begin` in a test's module
+outside a timing program (the production code that opens an account, and
+`spent.rs`'s own arithmetic, stay out of it): with the test in `whole.rs`,
+`Invoke-Pester -Path test/Timing.Test.ps1` said
+
+```text
+Expected 0, because each belongs in its module's measured program (rust-style.md 5c):
+module/core/operation/archive/.src/whole.rs:313, but got 1.
+Passed 7 Failed 1
+```
+
+and, the test moved to the timing program, `Passed 8 Failed 0`. There,
+by the estate's command (`Test-XmipMeasuredProgram -ManifestPath
+module/core/operation/archive/Cargo.toml -Feature test-support -Through
+@('--config', '.local-work/landing/patch.toml')`, linted and run alone),
+`test result: ok. 1 passed`; by hand with `--nocapture`, on Windows before
+the file system calls ran as I/O, and after:
+
+```text
+before
+the first write: own 1.518408ms, clock 9.5755ms; the slowest of 20 others: own 1.602214ms, clock 24.7371ms
+the first write: own 1.766567ms, clock 11.2269ms; the slowest of 20 others: own 1.829666ms, clock 21.4861ms
+the first write: own 1.797202ms, clock 24.0717ms; the slowest of 20 others: own 1.734598ms, clock 74.4714ms
+after
+the first write: own 157.405µs, clock 21.9663ms; the slowest of 20 others: own 126.701µs, clock 16.063ms
+the first write: own 233.016µs, clock 38.2316ms; the slowest of 20 others: own 137.308µs, clock 93.8461ms
+the first write: own 262.024µs, clock 30.7098ms; the slowest of 20 others: own 142.612µs, clock 21.575ms
+```
+
+and on the Linux build machine after (`cargo test -j 8 --test measured
+--features test-support -- --test-threads=1 --nocapture`; one run before
+gave `own 473.534µs` and `371.093µs`):
+
+```text
+the first write: own 79.001µs, clock 19.305102ms; the slowest of 20 others: own 33.415µs, clock 20.99679ms
+the first write: own 73.921µs, clock 19.162031ms; the slowest of 20 others: own 35.849µs, clock 24.057893ms
+the first write: own 93.556µs, clock 19.609447ms; the slowest of 20 others: own 39.886µs, clock 20.721566ms
+```
+
+The first write's own share is the others' and the thread it starts.
+Its clock is mostly the disk's two syncs, which the millisecond rule does
+not hold (ADR-0018, amendment 2026-11-09); on Windows it also waits on the
+listing of the same directory, as the cost above says. The clock is
+printed, not asserted: one write against the slowest of twenty is
+outlasted by chance. The program takes 26 to 36 seconds on Windows, of
+which the 50,000 items are 18 to 23, and about a second on Linux; made on
+eight threads, the items came no faster on Windows and slower on Linux.
+
+After the change, the same command in each crate, with `cargo clippy
+--all-targets --all-features -- -D warnings` and `cargo fmt --check` clean
+in each, on Windows:
+
+```text
+module/core/library/file               test result: ok. 8 passed; 0 failed
+module/core/operation/archive          test result: ok. 38 passed; 0 failed
+module/core/operation/archive/file     test result: ok. 16 passed; 0 failed
+module/core/operation/archive/parquet  test result: ok. 9 passed; 0 failed
+module/core/operation/archive/sql      test result: ok. 15 passed; 0 failed
+```
+
+And on the Linux build machine (`cargo test -j 8 --all-features --
+--test-threads 8`, the estate patched to its working trees), clippy as
+above clean:
+
+```text
+module/core/library/file               test result: ok. 9 passed; 0 failed
+module/core/operation/archive          test result: ok. 38 passed; 0 failed
+module/core/operation/archive/file     test result: ok. 16 passed; 0 failed
+module/core/operation/archive/parquet  test result: ok. 9 passed; 0 failed
+module/core/operation/archive/sql      test result: ok. 15 passed; 0 failed
+```

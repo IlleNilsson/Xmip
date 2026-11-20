@@ -14,13 +14,18 @@
     line, a test file's included.
 
     And one rule of C#'s own, stated here because C# has no style document:
-    a temporary folder is Directory.CreateTempSubdirectory's, which makes it
-    under the temporary path with a name nobody can guess, in one call. A
-    file that builds a name from Path.GetTempPath() and calls
-    Directory.CreateDirectory is refused, except where a stable folder is the
-    point and the reason is written beside its name below. On 2026-11-19
-    twenty files made their folders by hand, and a run that stopped early
-    left each one behind (ADR-0021, amendment 2026-11-19).
+    a test's temporary folder is TestFolder's (Xmip.Surface.Test/TestFolder.cs,
+    linked into every .NET test project that makes one), as a Rust test's is
+    file::temporary::Folder's. It makes the folder with
+    Directory.CreateTempSubdirectory, under the temporary path with a name
+    nobody can guess, and disposing it removes it with everything in it, also
+    when the test fails. A call to CreateTempSubdirectory, Path.GetTempPath()
+    or Path.GetTempFileName() anywhere else is refused, except where the
+    reason is written beside the file's name below. On 2026-11-19 twenty files
+    made their folders by hand (ADR-0021, amendment 2026-11-19); on 2026-11-20
+    the GUI's tests had left about 1,267 folders per label under this
+    machine's temporary directory, and every other site made its own folder
+    and removed it its own way (ADR-0021, amendment 2026-11-20).
 #>
 
 . (Join-Path $PSScriptRoot 'Initialize-XmipStyleLimit.ps1')
@@ -64,36 +69,74 @@ Describe 'C# style: a file is small and its lines are short' {
     }
 }
 
-Describe 'C# style: a temporary folder is the platform''s' {
+Describe 'C# style: a test''s temporary folder is TestFolder' {
     BeforeAll {
-        $script:TemporaryFolderAllowed = @(
+        <#
+            Each entry is a file's count of calls to CreateTempSubdirectory,
+            GetTempPath or GetTempFileName, or reads of a variable that names
+            the temporary path, and why it makes them. A file not listed makes
+            none, and a listed file makes exactly its count.
+        #>
+        [string] $script:Helper = 'module/core/operation/operate/dotnet/Xmip.Surface.Test'
+        $script:TemporaryPathAllowed = @{
+            # The helper: its folder is made there.
+            "$script:Helper/TestFolder.cs"                                       = 1
+            # The helper's test, which asserts where the folder is made.
+            "$script:Helper/TestFolderTest.cs"                                   = 1
             # The runtime library's copies, in the one folder every process
             # loading the library shares: each load sweeps the copies no
             # process holds any more, which a folder of its own per process
             # would leave behind.
-            'module/core/operation/operate/dotnet/Xmip.Operate/NativeRuntime.cs'
+            'module/core/operation/operate/dotnet/Xmip.Operate/NativeRuntime.cs' = 1
+        }
+
+        # A call, not a word in a comment; and the variables that name the
+        # temporary path.
+        [string] $script:TemporaryPath = (
+            '\b(CreateTempSubdirectory|GetTempPath|GetTempFileName)\s*\(|' +
+            '"(TEMP|TMP|TMPDIR)"'
         )
     }
 
-    It 'makes no folder from a name built on Path.GetTempPath()' {
-        [string[]] $made = @(
+    It 'makes a temporary path nowhere but where it is allowed' {
+        [object[]] $calls = @(
             foreach ($file in $script:Files) {
-                if ($file.Path -in $script:TemporaryFolderAllowed) {
-                    continue
-                }
+                [string] $full = Join-Path -Path $script:Root -ChildPath $file.Path
+                [string[]] $line = @([IO.File]::ReadAllLines($full))
 
-                [string] $path = Join-Path -Path $script:Root -ChildPath $file.Path
-                [string] $text = [IO.File]::ReadAllText($path)
+                for ([int] $index = 0; $index -lt $line.Count; $index++) {
+                    [string] $code = $line[$index]
 
-                if ($text.Contains('Path.GetTempPath()') -and
-                    $text.Contains('Directory.CreateDirectory(')) {
-                    $file.Path
+                    if (-not $code.TrimStart().StartsWith('//') -and
+                        $code -match $script:TemporaryPath) {
+                        [PSCustomObject]@{ Path = $file.Path; Line = $index + 1 }
+                    }
                 }
             }
         )
 
-        $made.Count | Should -Be 0 -Because (
-            "Directory.CreateTempSubdirectory instead:`n" + ($made -join "`n")
+        [string[]] $named = @(
+            @($calls.Path) + @($script:TemporaryPathAllowed.Keys) | Sort-Object -Unique
+        )
+
+        [string[]] $wrong = @(
+            foreach ($name in $named) {
+                [object[]] $made = @($calls | Where-Object { $_.Path -eq $name })
+                [int] $allowed = 0
+
+                if ($script:TemporaryPathAllowed.ContainsKey($name)) {
+                    $allowed = $script:TemporaryPathAllowed[$name]
+                }
+
+                if ($made.Count -ne $allowed) {
+                    "$name makes $($made.Count) where $allowed is allowed, at " +
+                        ($made.Line -join ', ')
+                }
+            }
+        )
+
+        $wrong.Count | Should -Be 0 -Because (
+            "TestFolder instead, from $script:Helper/TestFolder.cs:`n" + ($wrong -join "`n")
         )
     }
 }
