@@ -12,6 +12,34 @@ BeforeAll {
 }
 
 Describe 'The estate layout' {
+    # Where cargo builds follows CARGO_TARGET_DIR, which this run may have
+    # inherited from the landing running it (its copy of the runtime
+    # library): saved, cleared and given back.
+    BeforeAll {
+        $script:TargetWas = $env:CARGO_TARGET_DIR
+        Remove-Item -Path 'env:CARGO_TARGET_DIR' -ErrorAction SilentlyContinue
+    }
+
+    AfterAll {
+        $env:CARGO_TARGET_DIR = $script:TargetWas
+    }
+
+    It 'answers cargo''s build directory by cargo''s rule' {
+        InModuleScope Xmip -Parameters @{ Estate = (Join-Path $TestDrive 'estate') } {
+            param([string] $Estate)
+            [string] $elsewhere = Join-Path $TestDrive 'built'
+
+            try {
+                (Get-XmipEstateLayout -Root $Estate).Build | Should -Be (Join-Path $Estate 'target')
+                $env:CARGO_TARGET_DIR = $elsewhere
+                (Get-XmipEstateLayout -Root $Estate).Build | Should -Be $elsewhere
+            }
+            finally {
+                Remove-Item -Path 'env:CARGO_TARGET_DIR' -ErrorAction SilentlyContinue
+            }
+        }
+    }
+
     It 'answers every path under the root it is given' {
         InModuleScope Xmip -Parameters @{ Estate = (Join-Path $TestDrive 'estate') } {
             param([string] $Estate)

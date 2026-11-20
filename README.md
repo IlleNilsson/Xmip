@@ -943,43 +943,44 @@ change touched them, and never the Essentials or the demo readiness check:
 | The Essentials | Xmip end to end, every transport by every contract, as a cluster you name | `Start-XmipTest -Suite Core.Essentials -Cluster <name>`, then `Get-XmipTestStatus`, `Get-XmipTestResult -Worst`, `Stop-XmipTest` |
 | The demo readiness check | what the owner's demo runs: a roll of the cluster you name, the web operations tool over it, the Desktop operations app over the same snapshot, the VS Code extension and its language server | `Start-XmipTest -Suite Core.Demo -Cluster <name> -Stress Realistic -Tester <person>`, then `Get-XmipTestStatus`, `Get-XmipTestResult -Suite Core.Demo`, `Stop-XmipTest -Suite Core.Demo` |
 
-What it runs before anything is pushed, every estate crate patched to its
-working tree and built in the one shared directory, the first failure
-stopping the run with nothing pushed:
+What it runs before anything is pushed, in the estate's one Cargo workspace,
+whose committed `[patch]` resolves every estate crate to its working tree
+(ADR-0016, amendment 2026-11-20), the first failure stopping the run with
+nothing pushed. It builds what its parts load first — the runtime's library,
+its remote build where `module/core/operation/operate` lands (`Build-XmipService
+-Remote Desktop` builds the same by hand; only Windows is built for now), the
+test module's library where the runtime lands — then runs three parts side by
+side, each in a pwsh of its own with its share of the twelve threads it may
+take (Rust 8, .NET 2, Pester 2; a part alone all twelve), the first to fail
+ending the others:
 
-- **Each changed Rust module, leaves first:** `cargo test` with its default
-  features, `cargo fmt --check`, `cargo clippy --all-targets` with its
-  default features (a warning fails every cargo build under the estate
-  root: `[build] warnings = "deny"` in `.cargo/config.toml`), then `cargo test --features` naming every
-  feature its `Cargo.toml` declares. Clippy is not run with those features.
-  Last, the module's timing program, `measured`, where it has one: linted,
-  then `cargo test --test measured --features` naming every feature, with
-  one test thread, nothing else running beside it
-  (`doc/governance/rust-style.md` section 5c).
-- **Each changed .NET module:** `dotnet build` of every project, `dotnet
-  test` of every `*.Test.csproj` and the module's Pester tests, the runtime
-  library built first. The runtime's remote build is built before the module
-  that needs it, changed or consuming: this machine's before
-  `module/core/operation/operate`, whose tests load it (`Build-XmipService -Remote
-  Desktop` builds the same by hand). Only Windows is built for now: the
-  Android build waits with every other target. Each `dotnet build` and `dotnet test` runs at most
-  four MSBuild nodes (`-m:4`).
-- **The Event bindings in other languages,** where a changed module carries
+- **Rust:** the changed crates' `cargo fmt --check`; every member linted
+  against the change at once, `cargo clippy --workspace --all-targets
+  --all-features` (a warning fails every cargo build under the estate root:
+  `[build] warnings = "deny"` in `.cargo/config.toml`), and every timing
+  program's lint, `cargo clippy --workspace --all-features --test measured`;
+  then each changed crate, leaves first, and the root crate whenever a module
+  lands, in its own folder: `cargo test` and `cargo clippy --all-targets` with
+  its default features, then `cargo test --all-features`. A change that is
+  only comments, Markdown or `doc/` lints the changed crates alone: it cannot
+  change what a consumer does.
+- **.NET:** every changed or consuming module's projects, `dotnet build` of
+  each and `dotnet test` of every `*.Test.csproj`, and its Pester tests,
+  against a copy of the runtime library; a changed crate's TypeScript shell;
+  and the Event bindings in other languages, where a changed module carries
   `verify-event-bindings.ps1` (`module/foundation/abi`): C and C++ through
   the compiler Rust requires (`cl.exe` on Windows, `cc` and `c++`
-  elsewhere), Java and Python, against the runtime library built first. Every
-  language but Rust is optional (the owner, 2026-10-20), so a binding whose
-  tool is absent, or older than its floor, is said in words — `SKIPPED: Java
-  not installed; the Java Event binding is not verified` — and fails nothing;
-  one whose tool is here and fails stops the run.
-- **Each unchanged module that consumes a changed one:** `cargo clippy
-  --all-targets --features <every declared feature>`, which
-  compiles it and its tests against the change; its tests do not run. A
-  change that is only comments, Markdown or `doc/` has no consumers
-  checked: it cannot change what they do.
-- **The root:** its crate is tested as a changed module whenever a module
-  lands, and its `test/` suite runs when the root itself changed. A change
-  to the root alone runs `test/` and not the root crate's cargo steps.
+  elsewhere), Java and Python. Every language but Rust is optional (the
+  owner, 2026-10-20), so a binding whose tool is absent, or older than its
+  floor, is said in words — `SKIPPED: Java not installed; the Java Event
+  binding is not verified` — and fails nothing; one whose tool is here and
+  fails stops the run.
+- **Pester:** the root's `test/`, when the root itself changed.
+
+Then each changed crate's timing program, `measured`, and the root's, alone,
+nothing else running: `cargo test --profile measured --all-features --test
+measured` with one test thread, in the optimized build the millisecond rule
+is measured on (`doc/governance/rust-style.md` sections 5b and 5c).
 - **A new module:** a crate where `architecture.toml` mounts a repository
   that is not a submodule yet. `Get-XmipStatus` lists it by its own path,
   `(new)`, and not among the files of the module around it; it is verified
@@ -990,11 +991,11 @@ stopping the run with nothing pushed:
 Before any of it, `Publish-XmipChange` regenerates the estate map and the
 decision index from the working tree (`New-XmipEstateMap -Save`,
 `New-XmipDecisionIndex -Save`), so `test/` holds them against the tree being
-landed and the pin commits them with it. As it verifies, it prints a line
-before each module, such as `module 76 of 205 (37 %), about 45 minutes left`,
-estimated from the average of the modules measured so far, or before the first
-from what the same modules took last time; the root crate and `test/` come
-from their last run. The durations are kept in `.local-work/verify-time.json`.
+landed and the pin commits them with it. Before its parts it says how long
+the last landing's parts and timing programs took, such as `Rust, .NET,
+Pester side by side, then the timing programs alone; about 14 minutes left,
+as the last landing took`, and while they run, each minute, which are still
+running. The durations are kept in `.local-work/verify-time.json`.
 
 Then, before anything is verified or committed, a landing that would commit
 build output in any repository, the platform repository's own included, is

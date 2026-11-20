@@ -94,13 +94,14 @@ function New-XmipPackage {
     $built = Get-XmipPackageBinary -Root $Root -CargoArgument $CargoArgument
     [object[]] $program = @(Get-XmipPackageProgram)
 
-    # xmip-service is built; the others, each in a target directory of its
-    # own, with the cargo arguments it was built with.
-    foreach ($one in @($program | Where-Object -Property Target)) {
+    # xmip-service is built; the others in their folders, into its target
+    # directory, with the cargo arguments it was built with: every crate is
+    # a member of the estate's one workspace (ADR-0015, amendment 2026-11-20).
+    foreach ($one in @($program | Where-Object { $_.Build.Count -gt 0 })) {
         [hashtable] $building = @{
             Root            = $Root
             Folder          = $one.Folder
-            TargetDirectory = Join-Path $built.Target $one.Target
+            TargetDirectory = $built.Target
             Argument        = @($one.Build) + $CargoArgument
         }
         Invoke-XmipCrateBuild @building
@@ -121,9 +122,10 @@ function New-XmipPackage {
 
     # The programs alone: the command line's build copies the developer's
     # cli.toml beside it, and a package ships none.
+    [string] $from = Join-Path $built.Target $built.Folder
+
     foreach ($one in $program) {
-        [string] $from = Join-Path $built.Target $one.Target
-        Copy-Item -LiteralPath (Join-Path $from "$($built.Folder)/$($one.File)") -Destination $bin
+        Copy-Item -LiteralPath (Join-Path $from $one.File) -Destination $bin
     }
 
     [hashtable] $made = @{
@@ -147,67 +149,21 @@ function New-XmipPackage {
 }
 
 
-function Get-XmipPackageBinary {
-    <#
-        .SYNOPSIS
-            Where cargo puts the build its arguments ask for — the target
-            directory, and under it the triple's folder with --target and the
-            profile's — and the architecture it is for.
-    #>
-    [CmdletBinding()]
-    [OutputType([pscustomobject])]
-    param(
-        [Parameter(Mandatory = $true)]
-        [string] $Root,
-
-        [Parameter(Mandatory = $true)]
-        [AllowEmptyCollection()]
-        [string[]] $CargoArgument
-    )
-
-    [string] $triple = ''
-    [int] $at = [Array]::IndexOf($CargoArgument, '--target')
-
-    if ($at -ge 0 -and $at + 1 -lt $CargoArgument.Count) {
-        $triple = $CargoArgument[$at + 1]
-    }
-
-    [string] $architecture = if ($triple) {
-        if ($triple -like 'aarch64-*') { 'arm64' } else { 'x64' }
-    }
-    else {
-        [string] $os = [Runtime.InteropServices.RuntimeInformation]::OSArchitecture
-        if ($os -eq 'Arm64') { 'arm64' } else { 'x64' }
-    }
-
-    [string] $profileName = if ($CargoArgument -contains '--release') { 'release' } else { 'debug' }
-    [string] $target = if ($env:CARGO_TARGET_DIR) { $env:CARGO_TARGET_DIR }
-    else { Join-Path $Root 'target' }
-    [string] $folder = if ($triple) { "$triple/$profileName" } else { $profileName }
-
-    [pscustomobject] @{
-        Target       = $target
-        Folder       = $folder
-        Architecture = $architecture
-    }
-}
-
-
 function Get-XmipPackageProgram {
     <#
         .SYNOPSIS
             The three programs every package carries, and the one list of
             them: xmip-service, the runtime library the operator surfaces
             load, and xmip, the command line. Each as System names its File,
-            with the Folder of the estate cargo builds it in, what cargo
-            Builds there, and the Target folder under the build's target
-            directory it is built into.
+            with the Folder of the estate cargo builds it in and what cargo
+            Builds there.
 
         .DESCRIPTION
             xmip-service is built at the estate root by Build-XmipService
             before any package, so nothing is built for it here. The runtime
-            library and the command line are each a workspace of their own,
-            and each builds into a folder of its own (Invoke-XmipCrateBuild).
+            library and the command line are members of the estate's one
+            workspace and build in their folders into the same target
+            directory (Invoke-XmipCrateBuild).
 
         .PARAMETER System
             windows, linux or macos: this machine's unless said.
@@ -233,21 +189,18 @@ function Get-XmipPackageProgram {
         File   = "xmip-service$program"
         Folder = '.'
         Build  = @()
-        Target = ''
     }
     [pscustomobject] @{
         Kind   = 'Library'
         File   = $library
         Folder = 'module/core/operation/operate'
         Build  = @('build', '--lib')
-        Target = 'package-operate'
     }
     [pscustomobject] @{
         Kind   = 'Command'
         File   = "xmip$program"
         Folder = 'module/core/operation/cli'
         Build  = @('build', '--bin', 'xmip')
-        Target = 'package-cli'
     }
 }
 

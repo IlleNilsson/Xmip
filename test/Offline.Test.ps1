@@ -14,49 +14,43 @@ using namespace System.Collections.Generic
     failed gate, never a setting to turn off: a crate that can reach a
     network is out even where a setting could disable it.
 
-    The packages are the ones `cargo metadata` resolves, offline, with every
-    estate crate patched to its working tree as a landing builds them
-    (New-XmipLocalPatch).
+    The packages are the ones `cargo metadata` resolves, offline, in the
+    estate's one workspace, every estate crate its working tree (ADR-0016,
+    amendment 2026-11-20).
 #>
 
 BeforeAll {
     . (Join-Path $PSScriptRoot 'Initialize-XmipTest.ps1')
 
     [string] $manifest = Join-Path $script:Root 'module/core/capability/unit/Cargo.toml'
-    [string] $patch = & (Get-Module -Name Xmip) {
-        param([string] $Root)
-        New-XmipLocalPatch -RepositoryRoot $Root
-    } $script:Root
-
     [string[]] $arguments = @(
-        'metadata', '--offline', '--format-version', '1', '--manifest-path', $manifest,
-        '--config', $patch
+        'metadata', '--offline', '--format-version', '1', '--manifest-path', $manifest
     )
-    $metadata = & cargo @arguments 2>$null | ConvertFrom-Json -Depth 64
+    # As a hashtable: the workspace's metadata holds a crate whose features
+    # differ by case alone (`Default` and `default`).
+    $metadata = & cargo @arguments 2>$null | ConvertFrom-Json -Depth 64 -AsHashtable
     $script:Resolved = $LASTEXITCODE -eq 0 -and $null -ne $metadata
 
     # The packages the module's own build compiles: its normal dependencies,
-    # followed from the module down, never a test's or a build script's.
+    # followed from the module down, never a test's or a build script's, with
+    # the features the module alone turns on. The workspace's metadata
+    # resolves every member at once, so the module's own tree says which.
     $script:Packages = @()
     if ($script:Resolved) {
-        [hashtable] $byId = @{}
-        foreach ($package in $metadata.packages) { $byId[$package.id] = $package }
-        [hashtable] $nodes = @{}
-        foreach ($node in $metadata.resolve.nodes) { $nodes[$node.id] = $node }
-        [HashSet[string]] $seen = [HashSet[string]]::new()
-        [Queue[string]] $next = [Queue[string]]::new()
-        $next.Enqueue($metadata.resolve.root)
-        while ($next.Count -gt 0) {
-            [string] $id = $next.Dequeue()
-            if (-not $seen.Add($id)) { continue }
-            foreach ($dependency in $nodes[$id].deps) {
-                [bool] $normal = @(
-                    $dependency.dep_kinds | Where-Object { $null -eq $_.kind }
-                ).Count -gt 0
-                if ($normal) { $next.Enqueue($dependency.pkg) }
+        [string[]] $asked = @(
+            'tree', '--offline', '--manifest-path', $manifest, '-p', 'xmip-core-unit',
+            '-e', 'normal', '--prefix', 'none', '--format', '{p}'
+        )
+        [string[]] $tree = @(& cargo @asked 2>$null)
+        [HashSet[string]] $built = [HashSet[string]]::new()
+        foreach ($line in $tree) {
+            if ($line -match '^(\S+) v(\S+)') {
+                $null = $built.Add("$($Matches[1]) $($Matches[2])")
             }
         }
-        $script:Packages = @($seen | ForEach-Object { $byId[$_] })
+        $script:Packages = @(
+            $metadata.packages | Where-Object { $built.Contains("$($_.name) $($_.version)") }
+        )
     }
 
     # What reaches a network: the standard library's sockets, and the crates

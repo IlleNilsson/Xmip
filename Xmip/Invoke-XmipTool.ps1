@@ -21,8 +21,14 @@
 
 # How much of the machine one build or test takes: twelve, the 75 percent
 # ceiling (the owner, 2026-11-02). cargo's jobs, libtest's threads and
-# MSBuild's nodes all read it.
-[int] $script:XmipParallel = 12
+# MSBuild's nodes all read it. A landing part beside others takes its share
+# of the twelve (Get-XmipToolShare), told by XMIP_TOOL_SHARE
+# (Get-XmipToolParallel).
+[int] $script:XmipCeiling = 12
+
+# The landing's parts side by side (Invoke-XmipLandingPart): the Rust part
+# compiles and takes most; .NET and Pester build little and mostly wait.
+[hashtable] $script:XmipShare = @{ Rust = 8; '.NET' = 2; Pester = 2 }
 
 # What libtest prints, once, of a test that has run for a minute.
 [string] $script:XmipHungTest = '^test (\S+) has been running for over 60 seconds'
@@ -68,10 +74,11 @@ function Invoke-XmipTool {
     [string] $subcommand = if ($given.Count -gt 0) { $given[0] } else { '' }
 
     [string[]] $parallel = @('build', 'test', 'publish', 'pack', 'restore')
+    [int] $jobs = Get-XmipToolParallel
 
     if ($Tool -eq 'dotnet' -and $subcommand -in $parallel -and
         -not @($given | Where-Object { $_ -like '-m:*' })) {
-        $given += "-m:$script:XmipParallel"
+        $given += "-m:$jobs"
     }
 
     [hashtable] $before = @{
@@ -80,8 +87,8 @@ function Invoke-XmipTool {
     }
 
     if ($Tool -eq 'cargo') {
-        $env:CARGO_BUILD_JOBS = "$script:XmipParallel"
-        $env:RUST_TEST_THREADS = "$script:XmipParallel"
+        $env:CARGO_BUILD_JOBS = "$jobs"
+        $env:RUST_TEST_THREADS = "$jobs"
     }
 
     # A test serves and reaches nodes' local endpoints, outside any service
@@ -161,4 +168,61 @@ function Stop-XmipToolRun {
             $process.Kill($true)
         }
     }
+}
+
+
+function Get-XmipToolParallel {
+    <#
+        .SYNOPSIS
+            How much of the machine this call takes: the share a landing
+            part was given in XMIP_TOOL_SHARE, read when asked, at most the
+            ceiling; the ceiling where none was given.
+    #>
+    [CmdletBinding()]
+    [OutputType([int])]
+    param()
+
+    [int] $share = $env:XMIP_TOOL_SHARE -as [int]
+
+    if ($share -gt 0) {
+        return [Math]::Min($script:XmipCeiling, $share)
+    }
+
+    $script:XmipCeiling
+}
+
+
+function Get-XmipToolShare {
+    <#
+        .SYNOPSIS
+            Each part's share of the twelve: the whole ceiling for a part
+            alone; beside others, its share, and what an absent part would
+            have had goes to Rust.
+    #>
+    [CmdletBinding()]
+    [OutputType([hashtable])]
+    param(
+        [Parameter(Mandatory)]
+        [string[]] $Part
+    )
+
+    [hashtable] $share = @{}
+
+    if ($Part.Count -eq 1) {
+        $share[$Part[0]] = $script:XmipCeiling
+        return $share
+    }
+
+    [int] $given = 0
+
+    foreach ($name in @($Part | Where-Object { $_ -ne 'Rust' })) {
+        $share[$name] = $script:XmipShare[$name]
+        $given += $share[$name]
+    }
+
+    if ($Part -contains 'Rust') {
+        $share['Rust'] = $script:XmipCeiling - $given
+    }
+
+    $share
 }

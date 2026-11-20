@@ -289,35 +289,48 @@ Describe 'ADR-0021: one edition, and the manifest knows which' {
         $wrong.Count | Should -Be 0 -Because $because
     }
 
-    It 'builds dependencies optimized in every workspace root' {
-        # rust-style.md section 5b (the owner, 2026-09-26): a debug build of
-        # the codec's base64 took seconds where a release build took
-        # milliseconds, and tests timed out for it. A workspace root is the
-        # only place a profile is read, so every one carries it.
-        [string[]] $missing = @()
+    It 'keeps every profile in the root manifest, and no workspace or profile in a member' {
+        # One workspace (ADR-0016, amendment 2026-11-20): cargo reads a
+        # profile in the workspace root alone and warns of one anywhere else,
+        # and a member with a [workspace] of its own is no member.
+        [string[]] $stray = @()
 
         foreach ($file in $script:Crate) {
-            [string] $text = Get-Content -LiteralPath $file.FullName -Raw
+            # The root's own, and a tool's folder at the root (a dot folder).
+            [string] $relative = [IO.Path]::GetRelativePath($script:Root, $file.FullName)
 
-            if ($text -notmatch '(?m)^\[workspace\]' -or $text -notmatch '(?m)^\[package\]') {
+            if ($relative -eq 'Cargo.toml' -or $relative.StartsWith('.')) {
                 continue
             }
 
-            if ($text -notmatch '(?m)^\[profile\.dev\.package\."\*"\]\s*\r?\nopt-level\s*=\s*3') {
-                $missing += $file.FullName.Replace($script:Root, '').TrimStart('\', '/')
+            [string] $text = Get-Content -LiteralPath $file.FullName -Raw
+
+            if ($text -match '(?m)^\[workspace\]' -or $text -match '(?m)^\[profile') {
+                $stray += $file.FullName.Replace($script:Root, '').TrimStart('\', '/')
             }
         }
 
-        $missing.Count | Should -Be 0 -Because ($missing -join "`n")
+        $stray.Count | Should -Be 0 -Because ($stray -join "`n")
+        Get-Content -LiteralPath (Join-Path $script:Root '.cargo/config.toml') -Raw |
+            Should -Not -Match '(?m)^\[profile'
     }
 
-    It 'builds the estate''s own crates optimized in every build under its root' {
-        # rust-style.md section 5b (the owner, 2026-11-01): the millisecond
-        # rule is measured on the optimized build, so a crate's own tests run
-        # optimized code. Set once, in the configuration every cargo build
-        # under the estate root reads.
-        [string] $text = Get-Content -LiteralPath (Join-Path $script:Root '.cargo/config.toml') -Raw
+    It 'builds the estate at opt-level 1 with line tables, and measures in the optimized build' {
+        # rust-style.md section 5b; ADR-0018, amendment 2026-11-20, amending
+        # the owner's rule of 2026-11-01: the millisecond rule is measured on
+        # the optimized build, `measured`; every other build compiles the
+        # estate's own crates at 1 and every third party at 3.
+        [string] $root = Get-Content -LiteralPath (Join-Path $script:Root 'Cargo.toml') -Raw
 
-        $text | Should -Match '(?m)^\[profile\.dev\]\s*\r?\nopt-level\s*=\s*3'
+        $root | Should -Match (
+            '(?m)^\[profile\.dev\]\s*\r?\nopt-level = 1\s*\r?\ndebug = "line-tables-only"')
+        $root | Should -Match '(?m)^\[profile\.dev\.package\."\*"\]\s*\r?\nopt-level = 3'
+        $root | Should -Match (
+            '(?m)^\[profile\.measured\]\s*\r?\ninherits = "release"\s*\r?\nopt-level = 3')
+        $root | Should -Match '(?ms)^\[profile\.measured\][^\[]*^debug-assertions = true'
+
+        [string] $runner = Get-Content -LiteralPath (
+            Join-Path $script:Root 'Xmip/Test-XmipMeasuredProgram.ps1') -Raw
+        $runner | Should -Match "\`$script:XmipMeasuredProfile = 'measured'"
     }
 }

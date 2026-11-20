@@ -43,13 +43,13 @@ BeforeAll {
     }
 
     function Get-XmipTestBuild {
-        param([string] $Platform, [string] $Ndk = '', [string] $Patch = '')
+        param([string] $Platform, [string] $Ndk = '')
 
         InModuleScope Xmip -Parameters @{
-            Root = $script:Root; Platform = $Platform; Ndk = $Ndk; Patch = $Patch
+            Root = $script:Root; Platform = $Platform; Ndk = $Ndk
         } {
-            param($Root, $Platform, $Ndk, $Patch)
-            @(Get-XmipRemoteRuntimeBuild -Root $Root -Platform $Platform -Ndk $Ndk -Patch $Patch)
+            param($Root, $Platform, $Ndk)
+            @(Get-XmipRemoteRuntimeBuild -Root $Root -Platform $Platform -Ndk $Ndk)
         }
     }
 }
@@ -140,11 +140,6 @@ Describe 'Each remote build is one cargo command' {
         $build[0].Library | Should -BeLike (Join-Path $into 'debug/*xmip_core_operate.*')
     }
 
-    It 'reads the working trees in a landing, through its patch' {
-        [object[]] $build = Get-XmipTestBuild -Platform Desktop -Patch 'patch.toml'
-
-        ($build[0].CargoArgument -join ' ') | Should -BeLike '* --config patch.toml'
-    }
 }
 
 Describe 'iOS is built on macOS, and refused in words elsewhere' {
@@ -260,11 +255,14 @@ Describe 'The phone host reads what the build writes' {
 Describe 'A landing builds the remote build before the module that needs it' {
     BeforeEach {
         InModuleScope Xmip {
-            Mock New-XmipLocalPatch { 'patch.toml' }
             Mock Get-XmipVerifyTime { @{} }
             Mock Set-XmipVerifyTime { }
             Mock Build-XmipTestLibrary { $true }
-            Mock Test-XmipModule { }
+            Mock Copy-Item { }
+            Mock Invoke-XmipLandingPart {
+                [pscustomobject]@{ Name = 'Rust'; Passed = $true; Took = [timespan]::Zero }
+            }
+            Mock Test-XmipMeasuredProgram { $true }
             Mock Build-XmipRemoteRuntime { }
             Mock Write-Host { }
         }
@@ -284,7 +282,7 @@ Describe 'A landing builds the remote build before the module that needs it' {
             $tree.Skipped | Should -BeNullOrEmpty
             Should -Invoke Build-XmipRemoteRuntime -Times 1 -Exactly
             Should -Invoke Build-XmipRemoteRuntime -Times 1 -Exactly -ParameterFilter {
-                $Platform -eq 'Desktop' -and $Patch -eq 'patch.toml'
+                $Platform -eq 'Desktop'
             }
         }
     }
@@ -299,7 +297,7 @@ Describe 'A landing builds the remote build before the module that needs it' {
                 'module/core/operation/operate') 2>$null
 
             $tree.Failed | Should -Be 'module/core/operation/operate'
-            Should -Invoke Test-XmipModule -Times 0
+            Should -Invoke Invoke-XmipLandingPart -Times 0
         }
     }
 }

@@ -451,7 +451,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 400809 lines of production
+Where each repository mounts and what it holds: 400917 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -476,7 +476,7 @@ hold no source to count.
 ├── module/
 │   ├── core/
 │   │   ├── capability/
-│   │   │   ├── transport                       9674
+│   │   │   ├── transport                       9683
 │   │   │   │   ├── amqp                        2733
 │   │   │   │   ├── opc-ua                      2505
 │   │   │   │   ├── db2                         2481
@@ -498,7 +498,7 @@ hold no source to count.
 │   │   │   │   ├── secs-gem                    1215
 │   │   │   │   ├── imap                        1198
 │   │   │   │   ├── mqtt                        1189
-│   │   │   │   ├── canopen                     1146
+│   │   │   │   ├── canopen                     1155
 │   │   │   │   ├── webdav                      1137
 │   │   │   │   ├── dicom                       1122
 │   │   │   │   ├── iec-61850                   1105
@@ -512,13 +512,13 @@ hold no source to count.
 │   │   │   │   ├── ethernet-ip                  941
 │   │   │   │   ├── activemq                     926
 │   │   │   │   ├── hart                         913
+│   │   │   │   ├── uds                          910
 │   │   │   │   ├── aws-kinesis                  905
-│   │   │   │   ├── j1939                        900
-│   │   │   │   ├── uds                          899
+│   │   │   │   ├── j1939                        898
 │   │   │   │   ├── google-cloud-storage         894
 │   │   │   │   ├── bluetooth                    886
+│   │   │   │   ├── azure-event-grid             880
 │   │   │   │   ├── redis-streams                880
-│   │   │   │   ├── azure-event-grid             878
 │   │   │   │   ├── lorawan                      878
 │   │   │   │   ├── azure-service-bus            872
 │   │   │   │   ├── pop3                         869
@@ -536,14 +536,14 @@ hold no source to count.
 │   │   │   │   ├── knx                          750
 │   │   │   │   ├── syslog                       741
 │   │   │   │   ├── iec-60870-5-104              733
-│   │   │   │   ├── iso-tp                       723
+│   │   │   │   ├── iso-tp                       721
 │   │   │   │   ├── mdns                         698
 │   │   │   │   ├── websocket                    696
 │   │   │   │   ├── dds                          693
 │   │   │   │   ├── io-link                      693
 │   │   │   │   ├── msmq                         680
 │   │   │   │   ├── dnp3                         678
-│   │   │   │   ├── obd-ii                       621
+│   │   │   │   ├── obd-ii                       626
 │   │   │   │   ├── ssdp                         619
 │   │   │   │   ├── redpanda                     598
 │   │   │   │   ├── modbus                       595
@@ -551,10 +551,10 @@ hold no source to count.
 │   │   │   │   ├── azure-event-hubs             544
 │   │   │   │   ├── wireless-m-bus               532
 │   │   │   │   ├── aws                          510
+│   │   │   │   ├── can-bus                      488
 │   │   │   │   ├── ethernet                     485
 │   │   │   │   ├── mysql                        483
 │   │   │   │   ├── sqlite                       471
-│   │   │   │   ├── can-bus                      470
 │   │   │   │   ├── mllp                         461
 │   │   │   │   ├── bacnet                       457
 │   │   │   │   ├── azure                        451
@@ -714,15 +714,15 @@ hold no source to count.
 │   │   │   ├── jose                             881
 │   │   │   ├── ntlm                             806
 │   │   │   ├── asn1                             686
-│   │   │   └── file                             286
+│   │   │   └── file                             318
 │   │   └── operation/
-│   │       ├── operate                        52118  C# 32069 · Rust 20049
+│   │       ├── operate                        52133  C# 32076 · Rust 20057
 │   │       ├── cli                            11898
 │   │       ├── observe                         7949
 │   │       │   ├── otlp                         591
 │   │       │   └── prometheus                   332
 │   │       ├── gui                             7921
-│   │       │   └── vscode                      3423
+│   │       │   └── vscode                      3424
 │   │       ├── powershell                      3806  C# 3806 · PowerShell 0
 │   │       ├── audit                           3670
 │   │       │   ├── file                         685
@@ -746,7 +746,7 @@ hold no source to count.
 │   │           ├── postgresql                    62
 │   │           └── mssql                         59
 │   ├── foundation/
-│   │   ├── abi                                 6398  Rust 3273 · C# 2733 · PowerShell 392
+│   │   ├── abi                                 6386  Rust 3273 · C# 2733 · PowerShell 380
 │   │   ├── core                                4694
 │   │   ├── message                             2093
 │   │   │   ├── avro                             300
@@ -771,7 +771,7 @@ hold no source to count.
 │   │   ├── stream                               382
 │   │   └── party                                193
 │   └── platform/
-│       ├── runtime                            48782
+│       ├── runtime                            48804
 │       ├── persist                            22389
 │       │   ├── rocksdb                          323
 │       │   ├── sqlite                           288

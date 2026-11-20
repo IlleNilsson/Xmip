@@ -60,10 +60,9 @@ function Get-XmipOperatorModuleInput {
             beside them.
 
         .DESCRIPTION
-            Xmip.Operate.csproj chooses the runtime among CARGO_TARGET_DIR's
-            debug, the estate's shared build directory and xmip-core-operate's
-            own target. All three are returned rather than the choice repeated
-            here: a change to any of them rebuilds, and MSBuild still chooses.
+            Xmip.Operate.csproj reads the runtime where cargo builds, by
+            cargo's own rule, which Get-XmipEstateLayout's Build is: its
+            files are counted, so a new runtime rebuilds the module.
 
             In the order the file system lists them, which is the same for a
             directory that has not changed; one that has changes the key
@@ -109,22 +108,12 @@ function Get-XmipOperatorModuleInput {
 
     # Every file cargo links beside the library is counted too, without the
     # project's exclusions: they are written with it, so they change with it.
-    [string[]] $target = @($Root, $Root, $env:CARGO_TARGET_DIR)
-    [string[]] $under = @(
-        '.ai-interaction/target-windows', 'module/core/operation/operate/target', ''
-    )
+    # Where cargo builds is the estate's one rule (Get-XmipEstateLayout, Build).
+    [string] $runtime = [System.IO.Path]::Combine((Get-XmipEstateLayout -Root $Root).Build, 'debug')
 
-    for ([int] $at = 0; $at -lt $target.Length; $at++) {
-        if ([string]::IsNullOrEmpty($target[$at])) {
-            continue
-        }
-
-        [string] $runtime = [System.IO.Path]::Combine($target[$at], $under[$at], 'debug')
-
-        if ([System.IO.Directory]::Exists($runtime)) {
-            [System.IO.DirectoryInfo] $built = [System.IO.DirectoryInfo]::new($runtime)
-            $found.AddRange($built.GetFiles('*xmip_core_operate.*'))
-        }
+    if ([System.IO.Directory]::Exists($runtime)) {
+        [System.IO.DirectoryInfo] $built = [System.IO.DirectoryInfo]::new($runtime)
+        $found.AddRange($built.GetFiles('*xmip_core_operate.*'))
     }
 
     return [System.IO.FileInfo[]] $found
@@ -172,15 +161,16 @@ function Import-XmipOperatorModule {
             build (Test-XmipDotnetModule's reason, 2026-09-03): a change makes
             a new key and the next build a new directory, so no build ever
             writes where a session has loaded. The prompt integration is not
-            loaded: only the assemblies are wanted here. Nothing is loaded
-            before a command needs it, so a bare machine still imports this
-            module and asks what it is missing.
+            loaded: only the assemblies are wanted, each loaded with it
+            (Import-XmipOperatorAssembly). Nothing is loaded before a command
+            needs it, so a bare machine still imports this module and asks
+            what it is missing.
     #>
     [CmdletBinding()]
     [OutputType([void])]
     param()
 
-    if ($null -ne $script:XmipOperatorModule -or $null -ne (Get-Module -Name 'Xmip.PowerShell')) {
+    if ($null -ne $script:XmipOperatorModule) {
         return
     }
 
@@ -192,20 +182,25 @@ function Import-XmipOperatorModule {
     foreach ($loaded in [System.AppDomain]::CurrentDomain.GetAssemblies()) {
         if ($loaded.GetName().Name -eq 'Xmip.PowerShell') {
             $script:XmipOperatorModule = Import-Module -Assembly $loaded -PassThru -ErrorAction Stop
-            return
+            break
         }
     }
 
-    [string] $root = Get-XmipRepositoryRoot
-    [string] $built = (Get-XmipEstateLayout -Root $root).Operator
-    [string] $output = Join-Path -Path $built -ChildPath (Get-XmipOperatorModuleKey -Root $root)
+    if ($null -eq $script:XmipOperatorModule) {
+        [string] $root = Get-XmipRepositoryRoot
+        [string] $built = (Get-XmipEstateLayout -Root $root).Operator
+        [string] $output = Join-Path -Path $built -ChildPath (
+            Get-XmipOperatorModuleKey -Root $root)
 
-    if (-not (Test-XmipOperatorModuleBuild -Directory $output)) {
-        Build-XmipOperatorModule -Root $root -Output $output
+        if (-not (Test-XmipOperatorModuleBuild -Directory $output)) {
+            Build-XmipOperatorModule -Root $root -Output $output
+        }
+
+        [string] $binary = Join-Path -Path $output -ChildPath 'Xmip.PowerShell.dll'
+        $script:XmipOperatorModule = Import-Module -Name $binary -PassThru -ErrorAction Stop
     }
 
-    [string] $binary = Join-Path -Path $output -ChildPath 'Xmip.PowerShell.dll'
-    $script:XmipOperatorModule = Import-Module -Name $binary -PassThru -ErrorAction Stop
+    Import-XmipOperatorAssembly -Module $script:XmipOperatorModule
 }
 
 function Set-XmipOperatorModuleRoot {

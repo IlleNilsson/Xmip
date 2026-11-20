@@ -8,7 +8,8 @@
   ADR-0015 (amendment 2026-10-01: Xmip Storage; RocksDB always the embedded
   runtime engine),
   ADR-0052 (the operator surfaces read what `xmip-service` publishes; amendment 2026-09-30),
-  ADR-0056 (amendment 2026-10-01: clause 10a's combination is the executing role)
+  ADR-0056 (amendment 2026-10-01: clause 10a's combination is the executing role),
+  ADR-0016 (amendment 2026-11-20: the one workspace whose root holds the two build profiles)
 - Read by: ADR-0027 clause 4, which makes the execution tree this record builds
   the one scope tree everything observable is addressed against
 
@@ -3224,3 +3225,69 @@ hold what was added.
 
 Provenance: the probe, the cuts and their tests are the assistant's,
 2026-11-20, for the owner to confirm or strike.
+
+## Amendment, 2026-11-20: the millisecond rule is measured in `measured`; every other build compiles the estate at opt-level 1, with line tables
+
+**Provenance.** The owner's rule of 2026-11-01, *the millisecond rule is
+measured on the optimized build*, set every debug build of the estate to
+`opt-level = 3` (`.cargo/config.toml`; rust-style.md section 5b; the
+amendment of 2026-10-20 above, *on the optimized build*). On 2026-11-20 the
+owner approved the recommendations that lowered it for every build that
+does not measure — *Go with recommendations* — and then: *I need the faster
+compiles with Rust then!* The rule stands: what is measured against the
+millisecond is built optimized; only the builds that measure pay for it.
+
+**Two builds**, both in the root `Cargo.toml`, the estate's one workspace's
+(ADR-0016, amendment 2026-11-20):
+
+- `dev`, every correctness build — a landing's tests and lints, a worker's,
+  a person's `cargo test`: the estate's own crates, every member of the
+  workspace, at `opt-level = 1`; every third party at 3, as since
+  2026-09-26 (`[profile.dev.package."*"]`). Level 1, not 0: unoptimized, the
+  codec's base64 took seconds where it takes milliseconds (2026-09-26), and
+  the estate's tests run its codec, its Storage writer and its parsers.
+- `measured`, the millisecond rule's build: every crate at `opt-level = 3`,
+  debug assertions and overflow checks kept as rust-style.md section 5c asks.
+  Every timing program runs in it (`Test-XmipMeasuredProgram`, `cargo test
+  --profile measured --all-features --test measured -- --test-threads=1`),
+  and so do the Essentials' roll, cluster and node and the `xmip-service` a
+  roll starts, whose latency the board and the demo read
+  (`Get-XmipEssentialsLayout`; the roll, cluster and node in a build
+  directory of their own, ADR-0028, amendment 2026-11-20). It is built on
+  `release`, not on `dev`: a profile that inherits `dev` inherits its
+  package overrides too, and would build a crate `dev` lowers at the lower
+  level. Proved on a scratch pair of crates with cargo 1.100, `cargo build
+  -v`, the dependency's flags:
+
+```text
+profile inherits = "dev", opt-level = 3      xmip_dep : opt-level=1 debuginfo=line-tables-only
+profile inherits = "release", opt-level = 3  xmip_dep : opt-level=3 codegen-units=256 debuginfo=line-tables-only debug-assertions=on incremental
+```
+
+**Line tables only**, `debug = "line-tables-only"`, in both: a panic's file
+and line are compiled in whatever the debug level, and every backtrace frame
+keeps its file and line. A debugger loses its locals; a person who needs
+them builds once with `--config 'profile.dev.debug="full"'`. Nothing in the
+estate reads debug information.
+
+**Measured** on the Linux build machine (20 hardware threads, Rust 1.100),
+each build in a fresh build directory, `-j 8`, before the estate was one
+workspace, the estate's crates lowered one by one for the measurement:
+
+```text
+                                         today's profile   opt-level 1, lines   opt-level 0, lines
+cargo test --no-run --all-features
+  (the root, cold)                       215.9 s           (machine shared)     151.7 s
+  the same after one line in persist       5.7 s             4.5 s                5.4 s
+cargo test --no-run (the runtime, after
+  the root, same directory)              156.5 s            96.8 s               -
+build directory after the root            13 GB              5.1 GB               4.9 GB
+xmip-service                             767 MB             527 MB               534 MB
+```
+
+The opt-level 1 cold build ran while another build used the machine and is
+not compared. `xmip-service` keeps 527 MB: the rest is the prebuilt RocksDB
+library's own code and debug information, which no Rust profile touches.
+In the one workspace, the whole estate linted again after a change: 43 s on
+the Linux build machine, 14 s on Windows (`cargo clippy --workspace
+--all-targets --all-features`).

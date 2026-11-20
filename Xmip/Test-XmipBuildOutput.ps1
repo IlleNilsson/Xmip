@@ -6,7 +6,7 @@
     What a compiler produced, and the landing's refusal to commit it.
 
 .DESCRIPTION
-    Apart from Test-XmipModule.ps1 since 2026-11-19, when round 12's landing
+    Apart from the landing's verification since 2026-11-19, when round 12's landing
     committed 483 files of .NET build output to xmip-core-cli,
     src/Xmip.Cli/bin and obj and src/Xmip.Cli.Test/bin and obj (38e46a4): the
     rule was anchored at a repository's root, an untracked folder was read as

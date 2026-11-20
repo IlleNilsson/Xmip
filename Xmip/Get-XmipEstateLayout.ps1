@@ -45,6 +45,11 @@ function Get-XmipEstateLayout {
 
     [pscustomobject]@{
         Root         = $Root
+        # Where cargo builds, by its own rule: CARGO_TARGET_DIR, else the
+        # workspace root's target (ADR-0016, amendment 2026-11-20). Every
+        # command that reads or builds the estate's Rust reads it here.
+        Build        = if ($env:CARGO_TARGET_DIR) { $env:CARGO_TARGET_DIR }
+        else { Join-Path -Path $Root -ChildPath 'target' }
         Manifest     = Join-Path -Path $Root -ChildPath $script:XmipManifestName
         Prerequisite = Join-Path -Path $Root -ChildPath $script:XmipPrerequisiteName
         Work         = $work

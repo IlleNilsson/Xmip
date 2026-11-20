@@ -699,3 +699,18 @@ from it.
 This replaces the owner's word of 2026-10-22, *Core is Rust, Operation is
 .NET*, which would have moved every Rust module out of `operation`; it was
 never built and never recorded here.
+
+## Amendment, 2026-11-20: the root's workspace, not a local patch, reads where a crate is mounted
+
+**Provenance.** The owner, 2026-11-20: *Go with recommendations*, the first
+of which was one Cargo workspace for the estate, its patch committed in
+place of the one written for every landing (ADR-0016, amendment
+2026-11-20). This record's consequence was written by the assistant while
+building, told to the owner.
+
+The amendment above says the local patch read the cluster crate's new path
+from `.gitmodules` (`New-XmipLocalPatch`). Since 2026-11-20 the estate is one
+Cargo workspace whose root lists every crate as a member and patches each
+to its folder, written by `Sync-XmipEstate -Compose` as it mounts a crate
+(ADR-0016, amendment 2026-11-20); the local patch is gone. A move is still
+no caller's change: callers depend on a crate by its URL.

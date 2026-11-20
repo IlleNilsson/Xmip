@@ -93,7 +93,7 @@ BeforeAll {
 # node's technologies are its user's choice, so every built technology is
 # one a user may choose, and each is built and tested. The landing builds
 # every declared module with every feature it declares and runs its tests
-# (Publish-XmipChange, Test-XmipModule); this holds each built technology to
+# (Publish-XmipChange, Test-XmipRustChange); this holds each built technology to
 # being such a module, with tests of its own.
 Describe 'Every built technology is built and tested' {
     It 'finds something built' {
@@ -498,10 +498,11 @@ Describe 'The packages under deploy/package' {
 
     Context 'A package''s staging, with cargo mocked' {
         BeforeAll {
-            # An estate of its own: the root crate's version and the two
-            # workspaces' folders. xmip-service is built, as Build-XmipService
-            # leaves it; cargo writes what it builds where it would, and the
-            # command line's build.rs the developer's cli.toml beside xmip.
+            # An estate of its own: the root crate's version and the folders
+            # of the library and the command line, members of its one
+            # workspace. xmip-service is built, as Build-XmipService leaves
+            # it; cargo writes what it builds where it would, and the command
+            # line's build.rs the developer's cli.toml beside xmip.
             [string] $script:Estate = Join-Path $TestDrive 'estate'
             [string] $script:Target = Join-Path $TestDrive 'target'
 
@@ -563,7 +564,14 @@ Describe 'The packages under deploy/package' {
                 Remove-Variable -Name XmipTestCargo -Scope Global
             }
 
-            [object[]] $staged = @(Get-ChildItem -LiteralPath $script:Estate -Directory -Recurse)
+            # -Force: off Windows, .local-work is hidden by its leading dot.
+            [hashtable] $listing = @{
+                LiteralPath = $script:Estate
+                Directory   = $true
+                Recurse     = $true
+                Force       = $true
+            }
+            [object[]] $staged = @(Get-ChildItem @listing)
             $script:Bin = $staged |
                 Where-Object { $_.Name -eq 'bin' -and $_.Parent.Name -eq 'xmip' }
         }
@@ -574,7 +582,7 @@ Describe 'The packages under deploy/package' {
 
             [string[]] $staged = @(Get-ChildItem -LiteralPath $script:Bin.FullName -File).Name
             @($staged | Sort-Object) | Should -Be @($script:Program.File | Sort-Object)
-            Join-Path $script:Target 'package-cli/release/cli.toml' | Should -Exist
+            Join-Path $script:Target 'release/cli.toml' | Should -Exist
             Join-Path $script:Bin.FullName 'cli.toml' | Should -Not -Exist
 
             foreach ($one in $script:Program) {
@@ -583,19 +591,18 @@ Describe 'The packages under deploy/package' {
             }
         }
 
-        It 'builds <Kind> in its own workspace with the site''s arguments, into <Into>' -ForEach @(
-            @{ Kind = 'Library'; Into = 'package-operate'; Build = @('build', '--lib') }
-            @{ Kind = 'Command'; Into = 'package-cli'; Build = @('build', '--bin', 'xmip') }
+        It 'builds <Kind> in its folder with the site''s arguments, beside the service' -ForEach @(
+            @{ Kind = 'Library'; Build = @('build', '--lib') }
+            @{ Kind = 'Command'; Build = @('build', '--bin', 'xmip') }
         ) {
             $one = $script:Program | Where-Object -Property Kind -EQ $Kind
-            [string] $directory = Join-Path $script:Target $one.Target
-            [object[]] $call = @($script:Cargo | Where-Object -Property Target -EQ $directory)
+            [string] $folder = [IO.Path]::GetFullPath((Join-Path $script:Estate $one.Folder))
+            [object[]] $call = @($script:Cargo |
+                    Where-Object { [IO.Path]::GetFullPath($_.At) -eq $folder })
 
-            $one.Target | Should -Be $Into
             $call.Count | Should -Be 1
             $call[0].Argument | Should -Be (@($Build) + @('--release', '--locked'))
-            [IO.Path]::GetFullPath($call[0].At) |
-                Should -Be ([IO.Path]::GetFullPath((Join-Path $script:Estate $one.Folder)))
+            $call[0].Target | Should -Be $script:Target
         }
 
         It 'gives the session its folder and CARGO_TARGET_DIR back' {

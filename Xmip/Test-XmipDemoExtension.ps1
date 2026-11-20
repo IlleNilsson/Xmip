@@ -10,9 +10,9 @@
 .DESCRIPTION
     The VSIX is Build-XmipService -Extension VsCode's. The server is built as
     the getting-started guide builds it, cargo in the extension's own crate,
-    by the one patched build a roll's binaries are built by
-    (Invoke-XmipPatchedBuild: every estate crate patched to its working
-    tree), and found where cargo says it wrote it, so CARGO_TARGET_DIR moves it and nothing
+    by the one build a roll's binaries are built by (Invoke-XmipCargoBuild,
+    in the estate's one workspace, every estate crate its working tree), and
+    found where cargo says it wrote it, so CARGO_TARGET_DIR moves it and nothing
     here guesses. Then the server is started as the extension starts it
     (Start-XmipLanguageServer, audited) and asked what the Language Server
     Protocol asks first; it answers with its capabilities, and is shut down
@@ -72,7 +72,7 @@ function Build-XmipDemoServer {
         Directory = (Get-XmipEssentialsLayout).Extension
         Argument  = @('--bin', 'xmip-lsp', '--message-format=json-render-diagnostics')
     }
-    [pscustomobject] $built = Invoke-XmipPatchedBuild @building
+    [pscustomobject] $built = Invoke-XmipCargoBuild @building
 
     if (-not $built.Passed) {
         [string] $first = @($built.Said | Where-Object { $_ -match '^error' }) +

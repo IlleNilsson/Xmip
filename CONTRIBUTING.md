@@ -188,17 +188,22 @@ Import-Module ./Xmip/Xmip.psd1 -Force
 xgit -m 'short precise message'    # alias for Publish-XmipChange
 ```
 
-Dependencies track `branch = "main"` (ADR-0005). Before anything is pushed,
-the tool verifies against the estate's working trees — every estate crate
-patched to its local path, in the one shared build directory: each changed
-module is tested, leaves first; every unchanged module that consumes one is
-compiled and linted with its tests against it; the root crate is tested
-whenever a module lands; and a changed root runs its own `test/`. A changed
-module is linted with its default features and tested with every feature it
-declares; the Essentials is never run. `README.md`, *Build, test, land*,
-lists the commands. The first failure stops the run with nothing pushed. Only then
-does it push what an interrupted run left committed, land each changed
-module, dependencies first, and the root last.
+Dependencies track `branch = "main"` (ADR-0005), and the estate is one
+Cargo workspace whose committed `[patch]` resolves every estate crate to its
+working tree (ADR-0016, amendment 2026-11-20). Before anything is pushed, the
+tool builds what its parts load — the runtime's library, the test module's —
+and then runs its independent parts side by side, each with its share of the
+machine: Rust, each changed crate tested and linted alone with its default
+features, leaves first, and tested with every feature it declares, every
+unchanged consumer linted at once in one workspace-wide `cargo clippy
+--all-features`, and the root crate whenever a module lands; .NET, every
+changed or consuming project; Pester, the root's `test/` when the root
+changed. Then each changed crate's timing program runs alone in the
+optimized `measured` build (ADR-0018, amendment 2026-11-20); the Essentials
+is never run. `README.md`, *Build, test, land*, lists the commands. The first
+failure stops the run with nothing pushed. Only then does it push what an
+interrupted run left committed, land each changed module, dependencies
+first, and the root last.
 Run `Start-XmipTest -Suite Core.Estate` before landing anything non-trivial, and
 land when `Get-XmipTestStatus` says OK; the suite is around two hundred tests
 and is the estate's memory of every past defect. It runs detached, so the

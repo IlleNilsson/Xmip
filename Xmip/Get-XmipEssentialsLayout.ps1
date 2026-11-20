@@ -9,8 +9,14 @@ function Get-XmipEssentialsLayout {
             run output live. One answer for every essentials cmdlet.
 
         .DESCRIPTION
-            The roll, cluster and node binaries are cargo's debug build under
-            test/core/essentials; the web host is the GUI's debug build. Everything
+            The roll, cluster and node binaries are cargo's `measured` build of
+            test/core/essentials, in the estate's one workspace: the board and
+            the demo read latency from them, and the millisecond rule is
+            measured on the optimized build (ADR-0018, amendment 2026-11-20).
+            They build in Target, .local-work/essentials/target, a build
+            directory of their own, so a running roll never holds a file a
+            landing builds.
+            The web host is the GUI's debug build. Everything
             a run writes on this machine — snapshots, run records, node logs —
             goes under .local-work/essentials, the device-local folder the
             estate reserves for running Xmip here (CONTRIBUTING.md:
@@ -54,19 +60,13 @@ function Get-XmipEssentialsLayout {
     [string] $root = $estate.Root
     [string] $essentials = Join-Path -Path $root -ChildPath 'test/core/essentials'
 
-    # Where cargo builds is cargo's own answer, not an assumption:
-    # CARGO_TARGET_DIR moves it, and this follows, so the cmdlets link and run
-    # what was just built rather than what is beside the crate. CONTRIBUTING.md
-    # reserves .local-work for device-local state, naming a target choice as
-    # the first of them; a session whose ordinary target directory is held open
-    # by another session's roll sets it there and builds without touching it.
-    [string] $chosen = $env:CARGO_TARGET_DIR
-    [string] $target = if ([string]::IsNullOrWhiteSpace($chosen)) {
-        Join-Path -Path $essentials -ChildPath 'target/debug'
-    }
-    else {
-        Join-Path -Path $chosen -ChildPath 'debug'
-    }
+    # The roll, cluster and node build in a build directory of their own,
+    # under the Essentials' area, in its `measured` folder: a running roll
+    # holds its binaries open (its images are hard links to them), and on
+    # Windows a landing's timing runs, which build in the estate's
+    # (Get-XmipEstateLayout, Build), would fail on a file held there.
+    [string] $built = Join-Path -Path $estate.Essentials -ChildPath 'target'
+    [string] $target = Join-Path -Path $built -ChildPath $script:XmipMeasuredProfile
 
     [string] $suffix = if ($IsWindows) { '.exe' } else { '' }
     [string] $web = 'module/core/operation/gui/src/Xmip.Gui.Web/bin/Debug/net11.0/xmip-gui-web'
@@ -76,6 +76,7 @@ function Get-XmipEssentialsLayout {
         Root       = $root
         Essentials = $essentials
         Configuration = Join-Path -Path $essentials -ChildPath 'configuration/cluster.xmip'
+        Target     = $built
         Roll       = Join-Path -Path $target -ChildPath "xmip-essentials-roll$suffix"
         Cluster    = Join-Path -Path $target -ChildPath "xmip-essentials-cluster$suffix"
         Node       = Join-Path -Path $target -ChildPath "xmip-essentials-node$suffix"
@@ -133,7 +134,17 @@ function Invoke-XmipEssentialsBuild {
 
     # Cargo's first error is kept, so a failed build says why in its own
     # words and not only its exit code (Get-XmipTestStatus shows it).
-    [pscustomobject] $built = Invoke-XmipPatchedBuild -Directory $layout.Essentials -Argument $bins
+    [string[]] $measured = @('--profile', $script:XmipMeasuredProfile) + $bins
+    [hashtable] $building = @{ Directory = $layout.Essentials; Argument = $measured }
+    [string] $was = $env:CARGO_TARGET_DIR
+    $env:CARGO_TARGET_DIR = $layout.Target
+
+    try {
+        [pscustomobject] $built = Invoke-XmipCargoBuild @building
+    }
+    finally {
+        $env:CARGO_TARGET_DIR = $was
+    }
     $built.Said | ForEach-Object { Write-Verbose $_ }
     [string] $first = @($built.Said | Where-Object { $_ -match '^error' } |
         Select-Object -First 1) -join ''
@@ -146,24 +157,24 @@ function Invoke-XmipEssentialsBuild {
     return $path
 }
 
-function Invoke-XmipPatchedBuild {
+function Invoke-XmipCargoBuild {
     <#
         .SYNOPSIS
-            cargo build in a crate's directory against the estate as it is on
-            disk, and what Invoke-XmipTool says of it, cargo's lines kept.
+            cargo build in a crate's directory, and what Invoke-XmipTool says
+            of it, cargo's lines kept.
 
         .DESCRIPTION
-            Every estate crate is patched to its working tree as a landing
-            verifies (New-XmipLocalPatch), so a build tests what is here and
-            never only what was pushed. The one patched build of the tooling:
-            the Essentials' binaries and the demo readiness check's language
-            server both run it (2026-11-10).
+            The estate is one workspace whose [patch] resolves every estate
+            crate to its working tree (ADR-0016, amendment 2026-11-20), so a
+            build tests what is here and never only what was pushed. The
+            Essentials' binaries and the demo readiness check's language
+            server are built by it.
 
         .PARAMETER Directory
             The crate's directory.
 
         .PARAMETER Argument
-            What follows `cargo build --config <patch>`: the targets, and any
+            What follows `cargo build`: the profile, the targets, and any
             message format.
     #>
     [CmdletBinding()]
@@ -176,9 +187,7 @@ function Invoke-XmipPatchedBuild {
         [string[]] $Argument
     )
 
-    $layout = Get-XmipEssentialsLayout
-    [string] $patch = New-XmipLocalPatch -RepositoryRoot $layout.Root
-    [string[]] $building = @('build', '--config', $patch) + $Argument
+    [string[]] $building = @('build') + $Argument
     Push-Location -LiteralPath $Directory
 
     try {
@@ -197,13 +206,12 @@ function Invoke-XmipEssentialsService {
 
         .DESCRIPTION
             Built as the personal-computer site builds it (Build-XmipService):
-            every stage, Xmip Storage and the file transport, against the
-            estate as it is on disk (New-XmipLocalPatch), in a build
-            directory of its own, .local-work/essentials/service/target. The
-            binary is copied
-            to .local-work/essentials/service/<cluster>, so a later build never
-            changes what a running roll's nodes run (ADR-0028, amendment
-            2026-10-22).
+            every stage, Xmip Storage and the file transport, in the estate's
+            one workspace and its `measured` build, the one the millisecond
+            rule is measured on (ADR-0018, amendment 2026-11-20). The binary
+            is copied to .local-work/essentials/service/<cluster>, so a later
+            build never changes what a running roll's nodes run (ADR-0028,
+            amendment 2026-10-22).
 
         .PARAMETER Cluster
             The run's cluster.
@@ -216,23 +224,12 @@ function Invoke-XmipEssentialsService {
     )
 
     $layout = Get-XmipEssentialsLayout
-    [string] $patch = New-XmipLocalPatch -RepositoryRoot $layout.Root
+    [string[]] $measured = @('--profile', $script:XmipMeasuredProfile)
+    $null = Build-XmipService -Site personal-computer -CargoArgument $measured
 
-    # A build directory of its own: one shared with the Essentials' own
-    # build, a workspace whose lock pins other revisions, left rustc finding
-    # two builds of one estate crate and refusing the service (2026-10-22).
-    [string] $target = Join-Path -Path $layout.Area -ChildPath 'service/target'
-    [string] $previous = $env:CARGO_TARGET_DIR
-    $env:CARGO_TARGET_DIR = $target
-
-    try {
-        $null = Build-XmipService -Site personal-computer -CargoArgument @('--config', $patch)
-    }
-    finally {
-        $env:CARGO_TARGET_DIR = $previous
-    }
-
-    [string] $built = Join-Path -Path $target -ChildPath "debug/xmip-service$($layout.Suffix)"
+    $binary = Get-XmipPackageBinary -Root $layout.Root -CargoArgument $measured
+    [string] $built = Join-Path -Path $binary.Target -ChildPath (
+        "$($binary.Folder)/xmip-service$($layout.Suffix)")
     [string] $folder = Join-Path -Path $layout.Area -ChildPath "service/$Cluster"
     $null = New-Item -ItemType Directory -Path $folder -Force
     [string] $kept = Join-Path -Path $folder -ChildPath "xmip-service$($layout.Suffix)"

@@ -1,10 +1,296 @@
 [workspace]
-# Nothing but the root. Every module is its own repository and its own workspace
-# root; `exclude` keeps cargo inside module/ from walking up, finding this file
-# and absorbing a crate into a workspace it has no relationship with. That is
-# exactly the coupling separate repositories exist to avoid. Open problem 19.
-members = ["."]
-exclude = ["module", "template"]
+# The estate is one workspace (ADR-0016, amendment 2026-11-20): every crate
+# below is a member, built with one resolution, one lock and one build
+# directory; the root package is a member without being listed, and
+# listing "." would make cargo ignore `exclude`. A member keeps its git
+# dependencies and no [workspace] of its own, so its repository, checked
+# out alone, is its own root and builds from git; [patch] at the end of
+# this file resolves each of them here to its working tree.
+members = [
+    "module/core/capability/assign",
+    "module/core/capability/authenticate",
+    "module/core/capability/authenticate/api-key",
+    "module/core/capability/authenticate/basic",
+    "module/core/capability/authenticate/bearer",
+    "module/core/capability/authenticate/certificate",
+    "module/core/capability/authenticate/digest",
+    "module/core/capability/authenticate/jwt",
+    "module/core/capability/authenticate/kerberos",
+    "module/core/capability/authenticate/ldap",
+    "module/core/capability/authenticate/mutual-tls",
+    "module/core/capability/authenticate/ntlm",
+    "module/core/capability/authenticate/oauth2",
+    "module/core/capability/authenticate/oidc",
+    "module/core/capability/authenticate/pam",
+    "module/core/capability/authenticate/password",
+    "module/core/capability/authenticate/saml",
+    "module/core/capability/authenticate/scram",
+    "module/core/capability/authenticate/ssh-key",
+    "module/core/capability/authenticate/windows",
+    "module/core/capability/authorize",
+    "module/core/capability/authorize/abac",
+    "module/core/capability/authorize/acl",
+    "module/core/capability/authorize/artifact",
+    "module/core/capability/authorize/cedar",
+    "module/core/capability/authorize/claim",
+    "module/core/capability/authorize/contract",
+    "module/core/capability/authorize/location",
+    "module/core/capability/authorize/opa",
+    "module/core/capability/authorize/party",
+    "module/core/capability/authorize/policy",
+    "module/core/capability/authorize/rbac",
+    "module/core/capability/authorize/role",
+    "module/core/capability/authorize/scope",
+    "module/core/capability/authorize/transport",
+    "module/core/capability/contract",
+    "module/core/capability/contract/asyncapi",
+    "module/core/capability/contract/avro",
+    "module/core/capability/contract/csv",
+    "module/core/capability/contract/edi-edifact",
+    "module/core/capability/contract/edi-x12",
+    "module/core/capability/contract/fhir",
+    "module/core/capability/contract/fixed-width",
+    "module/core/capability/contract/graphql-schema",
+    "module/core/capability/contract/hl7-v2",
+    "module/core/capability/contract/json-schema",
+    "module/core/capability/contract/openapi",
+    "module/core/capability/contract/protobuf",
+    "module/core/capability/contract/regex",
+    "module/core/capability/contract/schematron",
+    "module/core/capability/contract/sql",
+    "module/core/capability/contract/toml",
+    "module/core/capability/contract/toon",
+    "module/core/capability/contract/wsdl",
+    "module/core/capability/contract/xml-schema",
+    "module/core/capability/contract/yaml",
+    "module/core/capability/demote",
+    "module/core/capability/identify",
+    "module/core/capability/identify/api-key",
+    "module/core/capability/identify/certificate",
+    "module/core/capability/identify/contract",
+    "module/core/capability/identify/cookie",
+    "module/core/capability/identify/dns",
+    "module/core/capability/identify/endpoint",
+    "module/core/capability/identify/header",
+    "module/core/capability/identify/ip",
+    "module/core/capability/identify/jwt",
+    "module/core/capability/identify/kerberos",
+    "module/core/capability/identify/mac",
+    "module/core/capability/identify/message",
+    "module/core/capability/identify/ntlm",
+    "module/core/capability/identify/oidc",
+    "module/core/capability/identify/party",
+    "module/core/capability/identify/saml",
+    "module/core/capability/identify/ssh-key",
+    "module/core/capability/identify/transport",
+    "module/core/capability/identify/username",
+    "module/core/capability/logic",
+    "module/core/capability/logic/grpc",
+    "module/core/capability/logic/http-api",
+    "module/core/capability/logic/matter",
+    "module/core/capability/logic/soap",
+    "module/core/capability/path",
+    "module/core/capability/path/dot",
+    "module/core/capability/path/edi",
+    "module/core/capability/path/fhirpath",
+    "module/core/capability/path/hl7-v2",
+    "module/core/capability/path/index",
+    "module/core/capability/path/json-pointer",
+    "module/core/capability/path/jsonpath",
+    "module/core/capability/path/regex",
+    "module/core/capability/path/xpath",
+    "module/core/capability/prepare",
+    "module/core/capability/prepare/rpgp",
+    "module/core/capability/process",
+    "module/core/capability/process/bpmn",
+    "module/core/capability/promote",
+    "module/core/capability/provision",
+    "module/core/capability/provision/acme",
+    "module/core/capability/provision/internal-ca",
+    "module/core/capability/provision/self-signed",
+    "module/core/capability/receive",
+    "module/core/capability/resilience",
+    "module/core/capability/resilience/bulkhead",
+    "module/core/capability/resilience/circuit-breaker",
+    "module/core/capability/resilience/fallback",
+    "module/core/capability/resilience/rate-limit",
+    "module/core/capability/resilience/retry",
+    "module/core/capability/resilience/timeout",
+    "module/core/capability/retain",
+    "module/core/capability/route",
+    "module/core/capability/route/content",
+    "module/core/capability/route/context",
+    "module/core/capability/route/contract",
+    "module/core/capability/route/header",
+    "module/core/capability/route/metadata",
+    "module/core/capability/route/party",
+    "module/core/capability/route/regex",
+    "module/core/capability/schedule",
+    "module/core/capability/secret",
+    "module/core/capability/secret/dpapi",
+    "module/core/capability/secret/file",
+    "module/core/capability/secret/keychain",
+    "module/core/capability/send",
+    "module/core/capability/transform",
+    "module/core/capability/transport",
+    "module/core/capability/transport/activemq",
+    "module/core/capability/transport/amqp",
+    "module/core/capability/transport/as2",
+    "module/core/capability/transport/as4",
+    "module/core/capability/transport/aws",
+    "module/core/capability/transport/aws-kinesis",
+    "module/core/capability/transport/aws-s3",
+    "module/core/capability/transport/aws-sns",
+    "module/core/capability/transport/aws-sqs",
+    "module/core/capability/transport/azure",
+    "module/core/capability/transport/azure-blob",
+    "module/core/capability/transport/azure-event-grid",
+    "module/core/capability/transport/azure-event-hubs",
+    "module/core/capability/transport/azure-service-bus",
+    "module/core/capability/transport/bacnet",
+    "module/core/capability/transport/bluetooth",
+    "module/core/capability/transport/can-bus",
+    "module/core/capability/transport/canopen",
+    "module/core/capability/transport/coap",
+    "module/core/capability/transport/cotp",
+    "module/core/capability/transport/db2",
+    "module/core/capability/transport/dds",
+    "module/core/capability/transport/dhcp",
+    "module/core/capability/transport/dicom",
+    "module/core/capability/transport/dnp3",
+    "module/core/capability/transport/dns",
+    "module/core/capability/transport/ethercat",
+    "module/core/capability/transport/ethernet",
+    "module/core/capability/transport/ethernet-ip",
+    "module/core/capability/transport/file",
+    "module/core/capability/transport/ftp",
+    "module/core/capability/transport/google-cloud-storage",
+    "module/core/capability/transport/google-pub-sub",
+    "module/core/capability/transport/hart",
+    "module/core/capability/transport/http",
+    "module/core/capability/transport/ibm-mq",
+    "module/core/capability/transport/iec-60870-5-104",
+    "module/core/capability/transport/iec-61850",
+    "module/core/capability/transport/imap",
+    "module/core/capability/transport/io-link",
+    "module/core/capability/transport/iso-tp",
+    "module/core/capability/transport/j1939",
+    "module/core/capability/transport/kafka",
+    "module/core/capability/transport/knx",
+    "module/core/capability/transport/lorawan",
+    "module/core/capability/transport/m-bus",
+    "module/core/capability/transport/mariadb",
+    "module/core/capability/transport/mdns",
+    "module/core/capability/transport/mllp",
+    "module/core/capability/transport/modbus",
+    "module/core/capability/transport/mqtt",
+    "module/core/capability/transport/msmq",
+    "module/core/capability/transport/mssql",
+    "module/core/capability/transport/mysql",
+    "module/core/capability/transport/named-pipe",
+    "module/core/capability/transport/nats",
+    "module/core/capability/transport/nats-jetstream",
+    "module/core/capability/transport/nfs",
+    "module/core/capability/transport/obd-ii",
+    "module/core/capability/transport/opc-ua",
+    "module/core/capability/transport/oracle",
+    "module/core/capability/transport/peppol",
+    "module/core/capability/transport/pop3",
+    "module/core/capability/transport/postgresql",
+    "module/core/capability/transport/profinet",
+    "module/core/capability/transport/rabbitmq",
+    "module/core/capability/transport/redis-streams",
+    "module/core/capability/transport/redpanda",
+    "module/core/capability/transport/s7comm",
+    "module/core/capability/transport/secs-gem",
+    "module/core/capability/transport/serial",
+    "module/core/capability/transport/sftp",
+    "module/core/capability/transport/smb",
+    "module/core/capability/transport/smtp",
+    "module/core/capability/transport/snmp",
+    "module/core/capability/transport/sqlite",
+    "module/core/capability/transport/ssdp",
+    "module/core/capability/transport/syslog",
+    "module/core/capability/transport/tcp",
+    "module/core/capability/transport/thread",
+    "module/core/capability/transport/udp",
+    "module/core/capability/transport/uds",
+    "module/core/capability/transport/unix-socket",
+    "module/core/capability/transport/webdav",
+    "module/core/capability/transport/websocket",
+    "module/core/capability/transport/wireless-hart",
+    "module/core/capability/transport/wireless-m-bus",
+    "module/core/capability/transport/zigbee",
+    "module/core/capability/unit",
+    "module/core/library/asn1",
+    "module/core/library/codec",
+    "module/core/library/file",
+    "module/core/library/jose",
+    "module/core/library/mariadb",
+    "module/core/library/net",
+    "module/core/library/ntlm",
+    "module/core/library/postgresql",
+    "module/core/library/sql",
+    "module/core/library/ssh",
+    "module/core/library/tls",
+    "module/core/operation/archive",
+    "module/core/operation/archive/aws-s3",
+    "module/core/operation/archive/azure-blob",
+    "module/core/operation/archive/file",
+    "module/core/operation/archive/google-cloud-storage",
+    "module/core/operation/archive/mariadb",
+    "module/core/operation/archive/mssql",
+    "module/core/operation/archive/parquet",
+    "module/core/operation/archive/postgresql",
+    "module/core/operation/archive/sql",
+    "module/core/operation/archive/sqlite",
+    "module/core/operation/audit",
+    "module/core/operation/audit/file",
+    "module/core/operation/audit/syslog",
+    "module/core/operation/audit/windows-event-log",
+    "module/core/operation/cli",
+    "module/core/operation/gui/vscode",
+    "module/core/operation/observe",
+    "module/core/operation/observe/otlp",
+    "module/core/operation/observe/prometheus",
+    "module/core/operation/operate",
+    "module/core/operation/report",
+    "module/foundation/abi",
+    "module/foundation/context",
+    "module/foundation/core",
+    "module/foundation/event",
+    "module/foundation/journey",
+    "module/foundation/message",
+    "module/foundation/message/avro",
+    "module/foundation/message/binary",
+    "module/foundation/message/csv",
+    "module/foundation/message/edi-edifact",
+    "module/foundation/message/edi-tradacoms",
+    "module/foundation/message/edi-x12",
+    "module/foundation/message/fixed-width",
+    "module/foundation/message/form-urlencoded",
+    "module/foundation/message/hl7-er7",
+    "module/foundation/message/json",
+    "module/foundation/message/multipart",
+    "module/foundation/message/protobuf",
+    "module/foundation/message/text",
+    "module/foundation/message/ubl",
+    "module/foundation/message/xml",
+    "module/foundation/node",
+    "module/foundation/party",
+    "module/foundation/stream",
+    "module/platform/cluster",
+    "module/platform/configure",
+    "module/platform/persist",
+    "module/platform/persist/rocksdb",
+    "module/platform/persist/sqlite",
+    "module/platform/runtime",
+    "sdk",
+    "test/core/essentials",
+    "test/core/module",
+]
+# The template is a repository of its own, never a member.
+exclude = ["template"]
 resolver = "2"
 
 [package]
@@ -339,5 +625,463 @@ unsafe_code = "forbid"
 [lints.clippy]
 pedantic = { level = "warn", priority = -1 }
 
+# The estate's builds (ADR-0018, amendment 2026-11-20, amending the owner's
+# rule of 2026-11-01; rust-style.md section 5b). `dev`, every correctness
+# build, compiles the estate's own crates, every member here, at opt-level
+# 1, which a test of the codec or Storage still runs at a useful speed
+# (unoptimized, the codec's base64 took seconds, 2026-09-26), and every
+# third party at 3. Its debug information is line tables, which keep a
+# panic's and every backtrace frame's file and line.
+[profile.dev]
+opt-level = 1
+debug = "line-tables-only"
+
 [profile.dev.package."*"]
 opt-level = 3
+
+# Built whole, never incrementally: rebuilt incrementally after the runtime
+# changes under it, this crate's binaries failed to link on Windows, its own
+# library naming symbols (core's precondition_check, its own constants) that
+# none of its codegen units held (2026-11-02), and the same build linked with
+# CARGO_INCREMENTAL=0. A compiler defect, not this crate's.
+[profile.dev.package.xmip-core-test-essentials]
+incremental = false
+
+# The millisecond rule is measured on the optimized build: `measured`,
+# every crate at opt-level 3, debug assertions and overflow checks kept
+# as the estate tests with them (rust-style.md section 5c). Every timing
+# program runs in it (Test-XmipMeasuredProgram), and so do the binaries
+# the Essentials and the demo time. Built on `release`, not `dev`: a
+# profile that inherits `dev` inherits its package overrides too.
+[profile.measured]
+inherits = "release"
+opt-level = 3
+debug = "line-tables-only"
+debug-assertions = true
+overflow-checks = true
+incremental = true
+codegen-units = 256
+
+# The Essentials build whole here too, for the reason above.
+[profile.measured.package.xmip-core-test-essentials]
+incremental = false
+
+# Every estate crate a member names by its git URL, resolved to its
+# working tree. Written with the members; a repository checked out alone
+# has no parent and resolves the same dependencies from GitHub.
+[patch."https://github.com/IlleNilsson/xmip-core"]
+xmip-core = { path = "module/foundation/core" }
+[patch."https://github.com/IlleNilsson/xmip-core-abi"]
+xmip-core-abi = { path = "module/foundation/abi" }
+[patch."https://github.com/IlleNilsson/xmip-core-archive"]
+xmip-core-archive = { path = "module/core/operation/archive" }
+[patch."https://github.com/IlleNilsson/xmip-core-archive-aws-s3"]
+xmip-core-archive-aws-s3 = { path = "module/core/operation/archive/aws-s3" }
+[patch."https://github.com/IlleNilsson/xmip-core-archive-azure-blob"]
+xmip-core-archive-azure-blob = { path = "module/core/operation/archive/azure-blob" }
+[patch."https://github.com/IlleNilsson/xmip-core-archive-file"]
+xmip-core-archive-file = { path = "module/core/operation/archive/file" }
+[patch."https://github.com/IlleNilsson/xmip-core-archive-google-cloud-storage"]
+xmip-core-archive-google-cloud-storage = { path = "module/core/operation/archive/google-cloud-storage" }
+[patch."https://github.com/IlleNilsson/xmip-core-archive-mariadb"]
+xmip-core-archive-mariadb = { path = "module/core/operation/archive/mariadb" }
+[patch."https://github.com/IlleNilsson/xmip-core-archive-mssql"]
+xmip-core-archive-mssql = { path = "module/core/operation/archive/mssql" }
+[patch."https://github.com/IlleNilsson/xmip-core-archive-parquet"]
+xmip-core-archive-parquet = { path = "module/core/operation/archive/parquet" }
+[patch."https://github.com/IlleNilsson/xmip-core-archive-postgresql"]
+xmip-core-archive-postgresql = { path = "module/core/operation/archive/postgresql" }
+[patch."https://github.com/IlleNilsson/xmip-core-archive-sql"]
+xmip-core-archive-sql = { path = "module/core/operation/archive/sql" }
+[patch."https://github.com/IlleNilsson/xmip-core-archive-sqlite"]
+xmip-core-archive-sqlite = { path = "module/core/operation/archive/sqlite" }
+[patch."https://github.com/IlleNilsson/xmip-core-assign"]
+xmip-core-assign = { path = "module/core/capability/assign" }
+[patch."https://github.com/IlleNilsson/xmip-core-audit"]
+xmip-core-audit = { path = "module/core/operation/audit" }
+[patch."https://github.com/IlleNilsson/xmip-core-audit-file"]
+xmip-core-audit-file = { path = "module/core/operation/audit/file" }
+[patch."https://github.com/IlleNilsson/xmip-core-audit-syslog"]
+xmip-core-audit-syslog = { path = "module/core/operation/audit/syslog" }
+[patch."https://github.com/IlleNilsson/xmip-core-audit-windows-event-log"]
+xmip-core-audit-windows-event-log = { path = "module/core/operation/audit/windows-event-log" }
+[patch."https://github.com/IlleNilsson/xmip-core-authenticate"]
+xmip-core-authenticate = { path = "module/core/capability/authenticate" }
+[patch."https://github.com/IlleNilsson/xmip-core-authenticate-mutual-tls"]
+xmip-core-authenticate-mutual-tls = { path = "module/core/capability/authenticate/mutual-tls" }
+[patch."https://github.com/IlleNilsson/xmip-core-authenticate-password"]
+xmip-core-authenticate-password = { path = "module/core/capability/authenticate/password" }
+[patch."https://github.com/IlleNilsson/xmip-core-authenticate-ssh-key"]
+xmip-core-authenticate-ssh-key = { path = "module/core/capability/authenticate/ssh-key" }
+[patch."https://github.com/IlleNilsson/xmip-core-authorize"]
+xmip-core-authorize = { path = "module/core/capability/authorize" }
+[patch."https://github.com/IlleNilsson/xmip-core-authorize-location"]
+xmip-core-authorize-location = { path = "module/core/capability/authorize/location" }
+[patch."https://github.com/IlleNilsson/xmip-core-authorize-party"]
+xmip-core-authorize-party = { path = "module/core/capability/authorize/party" }
+[patch."https://github.com/IlleNilsson/xmip-core-cluster"]
+xmip-core-cluster = { path = "module/platform/cluster" }
+[patch."https://github.com/IlleNilsson/xmip-core-configure"]
+xmip-core-configure = { path = "module/platform/configure" }
+[patch."https://github.com/IlleNilsson/xmip-core-context"]
+xmip-core-context = { path = "module/foundation/context" }
+[patch."https://github.com/IlleNilsson/xmip-core-contract"]
+xmip-core-contract = { path = "module/core/capability/contract" }
+[patch."https://github.com/IlleNilsson/xmip-core-contract-asyncapi"]
+xmip-core-contract-asyncapi = { path = "module/core/capability/contract/asyncapi" }
+[patch."https://github.com/IlleNilsson/xmip-core-contract-avro"]
+xmip-core-contract-avro = { path = "module/core/capability/contract/avro" }
+[patch."https://github.com/IlleNilsson/xmip-core-contract-csv"]
+xmip-core-contract-csv = { path = "module/core/capability/contract/csv" }
+[patch."https://github.com/IlleNilsson/xmip-core-contract-edi-edifact"]
+xmip-core-contract-edi-edifact = { path = "module/core/capability/contract/edi-edifact" }
+[patch."https://github.com/IlleNilsson/xmip-core-contract-edi-x12"]
+xmip-core-contract-edi-x12 = { path = "module/core/capability/contract/edi-x12" }
+[patch."https://github.com/IlleNilsson/xmip-core-contract-fhir"]
+xmip-core-contract-fhir = { path = "module/core/capability/contract/fhir" }
+[patch."https://github.com/IlleNilsson/xmip-core-contract-fixed-width"]
+xmip-core-contract-fixed-width = { path = "module/core/capability/contract/fixed-width" }
+[patch."https://github.com/IlleNilsson/xmip-core-contract-graphql-schema"]
+xmip-core-contract-graphql-schema = { path = "module/core/capability/contract/graphql-schema" }
+[patch."https://github.com/IlleNilsson/xmip-core-contract-hl7-v2"]
+xmip-core-contract-hl7-v2 = { path = "module/core/capability/contract/hl7-v2" }
+[patch."https://github.com/IlleNilsson/xmip-core-contract-json-schema"]
+xmip-core-contract-json-schema = { path = "module/core/capability/contract/json-schema" }
+[patch."https://github.com/IlleNilsson/xmip-core-contract-openapi"]
+xmip-core-contract-openapi = { path = "module/core/capability/contract/openapi" }
+[patch."https://github.com/IlleNilsson/xmip-core-contract-protobuf"]
+xmip-core-contract-protobuf = { path = "module/core/capability/contract/protobuf" }
+[patch."https://github.com/IlleNilsson/xmip-core-contract-regex"]
+xmip-core-contract-regex = { path = "module/core/capability/contract/regex" }
+[patch."https://github.com/IlleNilsson/xmip-core-contract-schematron"]
+xmip-core-contract-schematron = { path = "module/core/capability/contract/schematron" }
+[patch."https://github.com/IlleNilsson/xmip-core-contract-sql"]
+xmip-core-contract-sql = { path = "module/core/capability/contract/sql" }
+[patch."https://github.com/IlleNilsson/xmip-core-contract-toml"]
+xmip-core-contract-toml = { path = "module/core/capability/contract/toml" }
+[patch."https://github.com/IlleNilsson/xmip-core-contract-toon"]
+xmip-core-contract-toon = { path = "module/core/capability/contract/toon" }
+[patch."https://github.com/IlleNilsson/xmip-core-contract-wsdl"]
+xmip-core-contract-wsdl = { path = "module/core/capability/contract/wsdl" }
+[patch."https://github.com/IlleNilsson/xmip-core-contract-xml-schema"]
+xmip-core-contract-xml-schema = { path = "module/core/capability/contract/xml-schema" }
+[patch."https://github.com/IlleNilsson/xmip-core-contract-yaml"]
+xmip-core-contract-yaml = { path = "module/core/capability/contract/yaml" }
+[patch."https://github.com/IlleNilsson/xmip-core-demote"]
+xmip-core-demote = { path = "module/core/capability/demote" }
+[patch."https://github.com/IlleNilsson/xmip-core-event"]
+xmip-core-event = { path = "module/foundation/event" }
+[patch."https://github.com/IlleNilsson/xmip-core-identify"]
+xmip-core-identify = { path = "module/core/capability/identify" }
+[patch."https://github.com/IlleNilsson/xmip-core-identify-api-key"]
+xmip-core-identify-api-key = { path = "module/core/capability/identify/api-key" }
+[patch."https://github.com/IlleNilsson/xmip-core-identify-certificate"]
+xmip-core-identify-certificate = { path = "module/core/capability/identify/certificate" }
+[patch."https://github.com/IlleNilsson/xmip-core-identify-ip"]
+xmip-core-identify-ip = { path = "module/core/capability/identify/ip" }
+[patch."https://github.com/IlleNilsson/xmip-core-identify-jwt"]
+xmip-core-identify-jwt = { path = "module/core/capability/identify/jwt" }
+[patch."https://github.com/IlleNilsson/xmip-core-identify-username"]
+xmip-core-identify-username = { path = "module/core/capability/identify/username" }
+[patch."https://github.com/IlleNilsson/xmip-core-journey"]
+xmip-core-journey = { path = "module/foundation/journey" }
+[patch."https://github.com/IlleNilsson/xmip-core-library-asn1"]
+xmip-core-library-asn1 = { path = "module/core/library/asn1" }
+[patch."https://github.com/IlleNilsson/xmip-core-library-codec"]
+xmip-core-library-codec = { path = "module/core/library/codec" }
+[patch."https://github.com/IlleNilsson/xmip-core-library-file"]
+xmip-core-library-file = { path = "module/core/library/file" }
+[patch."https://github.com/IlleNilsson/xmip-core-library-jose"]
+xmip-core-library-jose = { path = "module/core/library/jose" }
+[patch."https://github.com/IlleNilsson/xmip-core-library-mariadb"]
+xmip-core-library-mariadb = { path = "module/core/library/mariadb" }
+[patch."https://github.com/IlleNilsson/xmip-core-library-net"]
+xmip-core-library-net = { path = "module/core/library/net" }
+[patch."https://github.com/IlleNilsson/xmip-core-library-ntlm"]
+xmip-core-library-ntlm = { path = "module/core/library/ntlm" }
+[patch."https://github.com/IlleNilsson/xmip-core-library-postgresql"]
+xmip-core-library-postgresql = { path = "module/core/library/postgresql" }
+[patch."https://github.com/IlleNilsson/xmip-core-library-sql"]
+xmip-core-library-sql = { path = "module/core/library/sql" }
+[patch."https://github.com/IlleNilsson/xmip-core-library-ssh"]
+xmip-core-library-ssh = { path = "module/core/library/ssh" }
+[patch."https://github.com/IlleNilsson/xmip-core-library-tls"]
+xmip-core-library-tls = { path = "module/core/library/tls" }
+[patch."https://github.com/IlleNilsson/xmip-core-logic"]
+xmip-core-logic = { path = "module/core/capability/logic" }
+[patch."https://github.com/IlleNilsson/xmip-core-message"]
+xmip-core-message = { path = "module/foundation/message" }
+[patch."https://github.com/IlleNilsson/xmip-core-message-edi-edifact"]
+xmip-core-message-edi-edifact = { path = "module/foundation/message/edi-edifact" }
+[patch."https://github.com/IlleNilsson/xmip-core-message-edi-x12"]
+xmip-core-message-edi-x12 = { path = "module/foundation/message/edi-x12" }
+[patch."https://github.com/IlleNilsson/xmip-core-message-hl7-er7"]
+xmip-core-message-hl7-er7 = { path = "module/foundation/message/hl7-er7" }
+[patch."https://github.com/IlleNilsson/xmip-core-message-xml"]
+xmip-core-message-xml = { path = "module/foundation/message/xml" }
+[patch."https://github.com/IlleNilsson/xmip-core-node"]
+xmip-core-node = { path = "module/foundation/node" }
+[patch."https://github.com/IlleNilsson/xmip-core-observe"]
+xmip-core-observe = { path = "module/core/operation/observe" }
+[patch."https://github.com/IlleNilsson/xmip-core-operate"]
+xmip-core-operate = { path = "module/core/operation/operate" }
+[patch."https://github.com/IlleNilsson/xmip-core-party"]
+xmip-core-party = { path = "module/foundation/party" }
+[patch."https://github.com/IlleNilsson/xmip-core-path"]
+xmip-core-path = { path = "module/core/capability/path" }
+[patch."https://github.com/IlleNilsson/xmip-core-path-dot"]
+xmip-core-path-dot = { path = "module/core/capability/path/dot" }
+[patch."https://github.com/IlleNilsson/xmip-core-path-edi"]
+xmip-core-path-edi = { path = "module/core/capability/path/edi" }
+[patch."https://github.com/IlleNilsson/xmip-core-path-fhirpath"]
+xmip-core-path-fhirpath = { path = "module/core/capability/path/fhirpath" }
+[patch."https://github.com/IlleNilsson/xmip-core-path-hl7-v2"]
+xmip-core-path-hl7-v2 = { path = "module/core/capability/path/hl7-v2" }
+[patch."https://github.com/IlleNilsson/xmip-core-path-index"]
+xmip-core-path-index = { path = "module/core/capability/path/index" }
+[patch."https://github.com/IlleNilsson/xmip-core-path-json-pointer"]
+xmip-core-path-json-pointer = { path = "module/core/capability/path/json-pointer" }
+[patch."https://github.com/IlleNilsson/xmip-core-path-jsonpath"]
+xmip-core-path-jsonpath = { path = "module/core/capability/path/jsonpath" }
+[patch."https://github.com/IlleNilsson/xmip-core-path-regex"]
+xmip-core-path-regex = { path = "module/core/capability/path/regex" }
+[patch."https://github.com/IlleNilsson/xmip-core-path-xpath"]
+xmip-core-path-xpath = { path = "module/core/capability/path/xpath" }
+[patch."https://github.com/IlleNilsson/xmip-core-persist"]
+xmip-core-persist = { path = "module/platform/persist" }
+[patch."https://github.com/IlleNilsson/xmip-core-persist-rocksdb"]
+xmip-core-persist-rocksdb = { path = "module/platform/persist/rocksdb" }
+[patch."https://github.com/IlleNilsson/xmip-core-persist-sqlite"]
+xmip-core-persist-sqlite = { path = "module/platform/persist/sqlite" }
+[patch."https://github.com/IlleNilsson/xmip-core-prepare"]
+xmip-core-prepare = { path = "module/core/capability/prepare" }
+[patch."https://github.com/IlleNilsson/xmip-core-prepare-rpgp"]
+xmip-core-prepare-rpgp = { path = "module/core/capability/prepare/rpgp" }
+[patch."https://github.com/IlleNilsson/xmip-core-process"]
+xmip-core-process = { path = "module/core/capability/process" }
+[patch."https://github.com/IlleNilsson/xmip-core-process-bpmn"]
+xmip-core-process-bpmn = { path = "module/core/capability/process/bpmn" }
+[patch."https://github.com/IlleNilsson/xmip-core-promote"]
+xmip-core-promote = { path = "module/core/capability/promote" }
+[patch."https://github.com/IlleNilsson/xmip-core-provision"]
+xmip-core-provision = { path = "module/core/capability/provision" }
+[patch."https://github.com/IlleNilsson/xmip-core-provision-acme"]
+xmip-core-provision-acme = { path = "module/core/capability/provision/acme" }
+[patch."https://github.com/IlleNilsson/xmip-core-provision-internal-ca"]
+xmip-core-provision-internal-ca = { path = "module/core/capability/provision/internal-ca" }
+[patch."https://github.com/IlleNilsson/xmip-core-provision-self-signed"]
+xmip-core-provision-self-signed = { path = "module/core/capability/provision/self-signed" }
+[patch."https://github.com/IlleNilsson/xmip-core-receive"]
+xmip-core-receive = { path = "module/core/capability/receive" }
+[patch."https://github.com/IlleNilsson/xmip-core-report"]
+xmip-core-report = { path = "module/core/operation/report" }
+[patch."https://github.com/IlleNilsson/xmip-core-resilience"]
+xmip-core-resilience = { path = "module/core/capability/resilience" }
+[patch."https://github.com/IlleNilsson/xmip-core-resilience-retry"]
+xmip-core-resilience-retry = { path = "module/core/capability/resilience/retry" }
+[patch."https://github.com/IlleNilsson/xmip-core-retain"]
+xmip-core-retain = { path = "module/core/capability/retain" }
+[patch."https://github.com/IlleNilsson/xmip-core-route"]
+xmip-core-route = { path = "module/core/capability/route" }
+[patch."https://github.com/IlleNilsson/xmip-core-route-content"]
+xmip-core-route-content = { path = "module/core/capability/route/content" }
+[patch."https://github.com/IlleNilsson/xmip-core-route-party"]
+xmip-core-route-party = { path = "module/core/capability/route/party" }
+[patch."https://github.com/IlleNilsson/xmip-core-runtime"]
+xmip-core-runtime = { path = "module/platform/runtime" }
+[patch."https://github.com/IlleNilsson/xmip-core-schedule"]
+xmip-core-schedule = { path = "module/core/capability/schedule" }
+[patch."https://github.com/IlleNilsson/xmip-core-sdk"]
+xmip-core-sdk = { path = "sdk" }
+[patch."https://github.com/IlleNilsson/xmip-core-secret"]
+xmip-core-secret = { path = "module/core/capability/secret" }
+[patch."https://github.com/IlleNilsson/xmip-core-secret-dpapi"]
+xmip-core-secret-dpapi = { path = "module/core/capability/secret/dpapi" }
+[patch."https://github.com/IlleNilsson/xmip-core-secret-file"]
+xmip-core-secret-file = { path = "module/core/capability/secret/file" }
+[patch."https://github.com/IlleNilsson/xmip-core-secret-keychain"]
+xmip-core-secret-keychain = { path = "module/core/capability/secret/keychain" }
+[patch."https://github.com/IlleNilsson/xmip-core-send"]
+xmip-core-send = { path = "module/core/capability/send" }
+[patch."https://github.com/IlleNilsson/xmip-core-stream"]
+xmip-core-stream = { path = "module/foundation/stream" }
+[patch."https://github.com/IlleNilsson/xmip-core-transform"]
+xmip-core-transform = { path = "module/core/capability/transform" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport"]
+xmip-core-transport = { path = "module/core/capability/transport" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-activemq"]
+xmip-core-transport-activemq = { path = "module/core/capability/transport/activemq" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-amqp"]
+xmip-core-transport-amqp = { path = "module/core/capability/transport/amqp" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-as2"]
+xmip-core-transport-as2 = { path = "module/core/capability/transport/as2" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-as4"]
+xmip-core-transport-as4 = { path = "module/core/capability/transport/as4" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-aws"]
+xmip-core-transport-aws = { path = "module/core/capability/transport/aws" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-aws-kinesis"]
+xmip-core-transport-aws-kinesis = { path = "module/core/capability/transport/aws-kinesis" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-aws-s3"]
+xmip-core-transport-aws-s3 = { path = "module/core/capability/transport/aws-s3" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-aws-sns"]
+xmip-core-transport-aws-sns = { path = "module/core/capability/transport/aws-sns" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-aws-sqs"]
+xmip-core-transport-aws-sqs = { path = "module/core/capability/transport/aws-sqs" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-azure"]
+xmip-core-transport-azure = { path = "module/core/capability/transport/azure" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-azure-blob"]
+xmip-core-transport-azure-blob = { path = "module/core/capability/transport/azure-blob" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-azure-event-grid"]
+xmip-core-transport-azure-event-grid = { path = "module/core/capability/transport/azure-event-grid" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-azure-event-hubs"]
+xmip-core-transport-azure-event-hubs = { path = "module/core/capability/transport/azure-event-hubs" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-azure-service-bus"]
+xmip-core-transport-azure-service-bus = { path = "module/core/capability/transport/azure-service-bus" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-bacnet"]
+xmip-core-transport-bacnet = { path = "module/core/capability/transport/bacnet" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-bluetooth"]
+xmip-core-transport-bluetooth = { path = "module/core/capability/transport/bluetooth" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-can-bus"]
+xmip-core-transport-can-bus = { path = "module/core/capability/transport/can-bus" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-canopen"]
+xmip-core-transport-canopen = { path = "module/core/capability/transport/canopen" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-coap"]
+xmip-core-transport-coap = { path = "module/core/capability/transport/coap" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-cotp"]
+xmip-core-transport-cotp = { path = "module/core/capability/transport/cotp" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-db2"]
+xmip-core-transport-db2 = { path = "module/core/capability/transport/db2" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-dds"]
+xmip-core-transport-dds = { path = "module/core/capability/transport/dds" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-dhcp"]
+xmip-core-transport-dhcp = { path = "module/core/capability/transport/dhcp" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-dicom"]
+xmip-core-transport-dicom = { path = "module/core/capability/transport/dicom" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-dnp3"]
+xmip-core-transport-dnp3 = { path = "module/core/capability/transport/dnp3" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-dns"]
+xmip-core-transport-dns = { path = "module/core/capability/transport/dns" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-ethercat"]
+xmip-core-transport-ethercat = { path = "module/core/capability/transport/ethercat" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-ethernet"]
+xmip-core-transport-ethernet = { path = "module/core/capability/transport/ethernet" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-ethernet-ip"]
+xmip-core-transport-ethernet-ip = { path = "module/core/capability/transport/ethernet-ip" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-file"]
+xmip-core-transport-file = { path = "module/core/capability/transport/file" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-ftp"]
+xmip-core-transport-ftp = { path = "module/core/capability/transport/ftp" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-google-cloud-storage"]
+xmip-core-transport-google-cloud-storage = { path = "module/core/capability/transport/google-cloud-storage" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-google-pub-sub"]
+xmip-core-transport-google-pub-sub = { path = "module/core/capability/transport/google-pub-sub" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-hart"]
+xmip-core-transport-hart = { path = "module/core/capability/transport/hart" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-http"]
+xmip-core-transport-http = { path = "module/core/capability/transport/http" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-ibm-mq"]
+xmip-core-transport-ibm-mq = { path = "module/core/capability/transport/ibm-mq" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-iec-60870-5-104"]
+xmip-core-transport-iec-60870-5-104 = { path = "module/core/capability/transport/iec-60870-5-104" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-iec-61850"]
+xmip-core-transport-iec-61850 = { path = "module/core/capability/transport/iec-61850" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-imap"]
+xmip-core-transport-imap = { path = "module/core/capability/transport/imap" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-io-link"]
+xmip-core-transport-io-link = { path = "module/core/capability/transport/io-link" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-iso-tp"]
+xmip-core-transport-iso-tp = { path = "module/core/capability/transport/iso-tp" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-j1939"]
+xmip-core-transport-j1939 = { path = "module/core/capability/transport/j1939" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-kafka"]
+xmip-core-transport-kafka = { path = "module/core/capability/transport/kafka" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-knx"]
+xmip-core-transport-knx = { path = "module/core/capability/transport/knx" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-lorawan"]
+xmip-core-transport-lorawan = { path = "module/core/capability/transport/lorawan" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-m-bus"]
+xmip-core-transport-m-bus = { path = "module/core/capability/transport/m-bus" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-mariadb"]
+xmip-core-transport-mariadb = { path = "module/core/capability/transport/mariadb" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-mdns"]
+xmip-core-transport-mdns = { path = "module/core/capability/transport/mdns" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-mllp"]
+xmip-core-transport-mllp = { path = "module/core/capability/transport/mllp" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-modbus"]
+xmip-core-transport-modbus = { path = "module/core/capability/transport/modbus" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-mqtt"]
+xmip-core-transport-mqtt = { path = "module/core/capability/transport/mqtt" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-msmq"]
+xmip-core-transport-msmq = { path = "module/core/capability/transport/msmq" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-mssql"]
+xmip-core-transport-mssql = { path = "module/core/capability/transport/mssql" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-mysql"]
+xmip-core-transport-mysql = { path = "module/core/capability/transport/mysql" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-named-pipe"]
+xmip-core-transport-named-pipe = { path = "module/core/capability/transport/named-pipe" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-nats"]
+xmip-core-transport-nats = { path = "module/core/capability/transport/nats" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-nats-jetstream"]
+xmip-core-transport-nats-jetstream = { path = "module/core/capability/transport/nats-jetstream" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-nfs"]
+xmip-core-transport-nfs = { path = "module/core/capability/transport/nfs" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-obd-ii"]
+xmip-core-transport-obd-ii = { path = "module/core/capability/transport/obd-ii" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-opc-ua"]
+xmip-core-transport-opc-ua = { path = "module/core/capability/transport/opc-ua" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-oracle"]
+xmip-core-transport-oracle = { path = "module/core/capability/transport/oracle" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-peppol"]
+xmip-core-transport-peppol = { path = "module/core/capability/transport/peppol" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-pop3"]
+xmip-core-transport-pop3 = { path = "module/core/capability/transport/pop3" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-postgresql"]
+xmip-core-transport-postgresql = { path = "module/core/capability/transport/postgresql" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-profinet"]
+xmip-core-transport-profinet = { path = "module/core/capability/transport/profinet" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-rabbitmq"]
+xmip-core-transport-rabbitmq = { path = "module/core/capability/transport/rabbitmq" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-redis-streams"]
+xmip-core-transport-redis-streams = { path = "module/core/capability/transport/redis-streams" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-redpanda"]
+xmip-core-transport-redpanda = { path = "module/core/capability/transport/redpanda" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-s7comm"]
+xmip-core-transport-s7comm = { path = "module/core/capability/transport/s7comm" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-secs-gem"]
+xmip-core-transport-secs-gem = { path = "module/core/capability/transport/secs-gem" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-serial"]
+xmip-core-transport-serial = { path = "module/core/capability/transport/serial" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-sftp"]
+xmip-core-transport-sftp = { path = "module/core/capability/transport/sftp" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-smb"]
+xmip-core-transport-smb = { path = "module/core/capability/transport/smb" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-smtp"]
+xmip-core-transport-smtp = { path = "module/core/capability/transport/smtp" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-snmp"]
+xmip-core-transport-snmp = { path = "module/core/capability/transport/snmp" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-sqlite"]
+xmip-core-transport-sqlite = { path = "module/core/capability/transport/sqlite" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-ssdp"]
+xmip-core-transport-ssdp = { path = "module/core/capability/transport/ssdp" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-syslog"]
+xmip-core-transport-syslog = { path = "module/core/capability/transport/syslog" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-tcp"]
+xmip-core-transport-tcp = { path = "module/core/capability/transport/tcp" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-thread"]
+xmip-core-transport-thread = { path = "module/core/capability/transport/thread" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-udp"]
+xmip-core-transport-udp = { path = "module/core/capability/transport/udp" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-uds"]
+xmip-core-transport-uds = { path = "module/core/capability/transport/uds" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-unix-socket"]
+xmip-core-transport-unix-socket = { path = "module/core/capability/transport/unix-socket" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-webdav"]
+xmip-core-transport-webdav = { path = "module/core/capability/transport/webdav" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-websocket"]
+xmip-core-transport-websocket = { path = "module/core/capability/transport/websocket" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-wireless-hart"]
+xmip-core-transport-wireless-hart = { path = "module/core/capability/transport/wireless-hart" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-wireless-m-bus"]
+xmip-core-transport-wireless-m-bus = { path = "module/core/capability/transport/wireless-m-bus" }
+[patch."https://github.com/IlleNilsson/xmip-core-transport-zigbee"]
+xmip-core-transport-zigbee = { path = "module/core/capability/transport/zigbee" }

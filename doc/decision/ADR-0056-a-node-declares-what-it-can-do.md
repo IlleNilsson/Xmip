@@ -1526,6 +1526,53 @@ test membership::a_stop_with_its_storage_gone_adds_no_more_than_a_millisecond ..
 test result: ok. 19 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 16.25s
 ```
 
+**A test that read its node's membership once waits for it.** The
+runtime's stop test, `a_node_stops_cleanly_and_lets_its_listener_go`, read
+its node's membership once, just after the node's first delivery, and
+asked for Fine. Since point 1 a node serves before its start is a member,
+the start's number kept and its row written after serving begins, so under
+load the test found the start still Working: in round 18's first landing on
+Windows, 2026-11-20 at about 16:58 (`cargo test --test running` in
+`module/platform/runtime`):
+
+```text
+a_node_stops_cleanly_and_lets_its_listener_go ... FAILED
+panicked at tests\running\main.rs:126:5
+[HealthRecord { scope: "xmip:///CL1/node/DS1/membership", health: Working, severity: 20, evidence: "not a member yet: its row is not in Xmip Storage: writing it", ... }]
+test result: FAILED. 17 passed; 1 failed
+```
+
+The test now reads the membership until it says Fine, for at most five
+seconds, where it read once: a check that the start becomes a member, an
+upper bound of a second or more, so no timing test, and it stays among the
+running tests (rust-style.md section 5c). Decided by the assistant on
+2026-11-20 at about 17:00, while landing, told to the owner. How long a
+start takes to become a member is not measured, and nothing holds that
+delay to the millisecond rule: open problem 83. After it, on Windows,
+`cargo test -j 12 --all-features --test running` in `module/platform/runtime`,
+then five runs of the test alone, `--test running a_node_stops_cleanly`,
+each saying the second line (all before the round's later edit to that
+file's imports):
+
+```text
+test result: ok. 18 passed; 0 failed
+test result: ok. 1 passed; 0 failed; 17 filtered out
+```
+
+The test now prints how long it waited, held to nothing (open problem 83).
+After the imports' edit, on the Linux build machine, with the `node`
+feature and no dynamic loading (`cargo test -p xmip-core-runtime --features
+node --test running -- --nocapture a_node_stops_cleanly`), and on Windows,
+the line the test printed:
+
+```text
+the membership read Fine after 225.694µs
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 17 filtered out
+the membership read Fine after 2.9951ms
+```
+
+the first two lines on Linux, the third on Windows.
+
 **Not closed.** Two machines running one node at once, each with a data
 directory of its own: their clocks decide which start is the member, and
 nothing refuses the second process. A registration lost with a killed

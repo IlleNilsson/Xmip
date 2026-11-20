@@ -73,7 +73,7 @@ breaking.
 | Rule | Section | Enforced |
 | --- | --- | --- |
 | Formatting | — | yes, by `Publish-XmipChange` at landing |
-| Clippy, warnings denied | — | yes, by `Publish-XmipChange` at landing: a changed module with its default features, a consumer with every feature it declares; a warning fails every cargo build under the estate root (`[build] warnings = "deny"`, `.cargo/config.toml`), and a module repository alone denies them in the shared `rust-verify.yml` |
+| Clippy, warnings denied | — | yes, by `Publish-XmipChange` at landing: a changed module with its default features, every consumer at once, the whole workspace with every feature; a warning fails every cargo build under the estate root (`[build] warnings = "deny"`, `.cargo/config.toml`), and a module repository alone denies them in the shared `rust-verify.yml` |
 | File over 400 lines before `#[cfg(test)]` | 1, 2 | yes |
 | Function length | 3 | **warned by clippy, never gated** |
 | A filename repeating its crate | 5 | yes |
@@ -173,40 +173,53 @@ the list of those files, one per crate, fails on any other file that allows
 unsafe code or crate that lowers the lint without one, and fails on a block without its `SAFETY`
 comment.
 
-## 5b. Dependencies build optimized, even in a debug build
+## 5b. Two builds: correctness at opt-level 1, timing optimized
 
-Every crate that is its own workspace root carries
-
-```toml
-[profile.dev.package."*"]
-opt-level = 3
-```
-
-so what a crate depends on runs at near release speed in a debug build,
-while the crate's own code stays debuggable. Unoptimized, a parser such as
-`toml` runs about twenty times slower; that, not Xmip, was behind a week of
-tests failing on time and a cluster that judged healthy nodes hung
-(2026-09-25). The owner, 2026-09-26, chose it for every crate over the
-Essentials alone, under the rule that anything over a millisecond apart from
-load is a defect (`CONTRIBUTING.md`). The first build after a dependency
-changes takes longer; every build after it is cached. `test/Rust.Style.Test.ps1`
-holds every workspace root to it.
-
-**The estate's own crates build optimized too** (the owner, 2026-11-01: the
-millisecond rule is measured on the optimized build). Set once, in the
-configuration every cargo build under the estate root reads,
-`.cargo/config.toml`:
+The estate is one Cargo workspace (ADR-0016, amendment 2026-11-20), and its
+root `Cargo.toml` is the one place a profile is written; no member carries
+one, and `.cargo/config.toml` holds none:
 
 ```toml
 [profile.dev]
+opt-level = 1
+debug = "line-tables-only"
+
+[profile.dev.package."*"]
 opt-level = 3
+
+[profile.measured]
+inherits = "release"
+opt-level = 3
+debug = "line-tables-only"
+debug-assertions = true
+overflow-checks = true
+incremental = true
+codegen-units = 256
 ```
 
-so a crate's own tests — the runtime's, the root's measured service tests —
-run its code as it ships, with debug assertions and debug information kept.
-A workspace root built alone, outside the estate, keeps only its
-dependencies optimized. `test/Rust.Style.Test.ps1` holds the configuration
-to it.
+**What the estate depends on builds optimized, even in a debug build**
+(`[profile.dev.package."*"]`, the owner, 2026-09-26): unoptimized, a parser
+such as `toml` runs about twenty times slower; that, not Xmip, was behind a
+week of tests failing on time and a cluster that judged healthy nodes hung
+(2026-09-25).
+
+**The estate's own crates build at opt-level 1 in every correctness
+build** — a landing's tests and lints, a worker's, a person's — and with line
+tables for debug information, which keep a panic's and every backtrace
+frame's file and line. Level 1, not 0: unoptimized, the codec's base64 took
+seconds where it takes milliseconds (2026-09-26). A debugger's locals need
+`--config 'profile.dev.debug="full"'` for that one build.
+
+**The millisecond rule is measured on the optimized build** (the owner,
+2026-11-01): `measured`, every crate at opt-level 3, debug assertions kept
+(section 5c). Every timing program runs in it, and so do the Essentials'
+binaries and the service a roll starts. It is built on `release`, not
+`dev`, since a profile inheriting `dev` would inherit its package overrides.
+Until 2026-11-20 every debug build was at opt-level 3 (`.cargo/config.toml`);
+the owner, 2026-11-20: *I need the faster compiles with Rust then!* (ADR-0018,
+amendment 2026-11-20, which holds the numbers). A crate's repository built
+alone, outside the estate, has cargo's own profiles. `test/Rust.Style.Test.ps1`
+holds all of it.
 
 ## 5c. A timing test runs alone, in its module's `measured` program
 
@@ -228,14 +241,16 @@ path = "tests/measured/main.rs"
 test = false
 ```
 
-The landing runs it after every other test of the module has passed, with
-every feature the module declares and one test thread
-(`Test-XmipMeasuredProgram`, the rule's one implementation), and lints it
-apart, since `--all-targets` leaves it out too. Modules verify one after
-another, so nothing else runs beside it. By hand, the same:
+The landing runs it after every other part of the landing has passed, in
+the `measured` build (section 5b), with every feature the module declares
+and one test thread (`Test-XmipMeasuredProgram`, the rule's one
+implementation), nothing else running beside it, and lints every timing
+program of the workspace in one command, since `--all-targets` leaves it
+out (`cargo clippy --workspace --all-features --test measured`). By hand,
+the same:
 
 ```powershell
-cargo test --test measured --all-features -- --test-threads=1
+cargo test --profile measured --all-features --test measured -- --test-threads=1
 ```
 
 The owner, 2026-11-01, after landings failed at random on timing tests run
@@ -323,7 +338,7 @@ another measured figure — or the bound is measured beside it
 (2026-11-15).
 
 **A timing test runs in the build the estate tests with** (2026-11-15).
-That build keeps debug assertions on (section 5b), so a hold only a build
+That build, `measured`, keeps debug assertions on (section 5b), so a hold only a build
 without them runs — `if !cfg!(debug_assertions)`, `cfg!(not(...))`, `if
 cfg!(debug_assertions) { return; }`, `#[cfg(not(debug_assertions))]`,
 `#[cfg_attr(debug_assertions, ignore)]` — never runs, and holds nothing.

@@ -2919,3 +2919,138 @@ over it; the amendment of 2026-09-24 placed those tests in
 Nothing an operator waits on got slower; on the C1 snapshot, the Monitor,
 Topology, Configuration, Subscriptions and Dead Message Queue views and
 `Get-XmipHealth` and `Get-XmipScope` answer faster than before.
+
+## Amendment, 2026-11-20: the surfaces' .NET tests hold on Linux
+
+**Provenance.** The owner, 2026-11-20, once the Linux build machine had the
+.NET 11 SDK: *So where are we at? [It] got .NET 11. So maybe use that
+feature if you can.* The four causes below, their fixes and their tests were decided by
+the assistant while building, told to the owner.
+
+**Amends the amendment of 2026-09-19, *a reader keeps what it read*, and the
+note of 2026-10-13, *the operator module is built once per change*.** The
+Linux build machine got the .NET 11 SDK on 2026-11-20, and the first .NET
+run there, of the tree landed at 5a7043e, passed 806 of the 816 tests of
+`Xmip.Operate.Test`, `Xmip.Surface.Test`, `Xmip.Abi.Test`, `Xmip.Gui.Test`
+and `Xmip.Operations.Test`. The ten failures were four defects, each found
+at its cause:
+
+1. **A folder made tells the directory watch on Linux too.** A snapshot
+   follow begun before its publication's folder is made waits on the
+   nearest folder above it for the folder to be made
+   (`operate::surface::snapshot_watch`). Windows's change notification tells
+   of a folder's name and kqueue of a write to the directory, but inotify
+   was asked only for a file closed after writing and anything renamed in,
+   so on Linux the follow never heard the folder and waited until it was
+   stopped. `runtime::directory_watch` on Linux and Android now asks for
+   what is made in the directory too and tells of a folder made; a file
+   only made still tells once it is written and closed, so a drop directory
+   is woken no earlier for a file begun. Every reader of a followed
+   snapshot follows through that one watch: the command line in Rust, the
+   PowerShell module and both GUIs through section 28.2.
+2. **A collision with the publisher is each system's own.** The amendment
+   of 2026-09-19 found Windows's: a file being renamed over answers a
+   reader with a sharing violation or *access denied*, and the reader keeps
+   what it read last. Linux has neither. No open is refused for sharing
+   there — .NET's `FileShare.None` is an advisory lock that no reader takes
+   — and the publisher renames a whole file over the last
+   (`observe::publication::write_atomic`), so a reader holding the last
+   file reads it whole and the name is the next one's, whole.
+   `SnapshotOperatorTest.AReadThatCollidesWithThePublisherKeepsWhatWasReadLast`
+   made Windows's moment with a handle sharing nothing and a byte added in
+   place; on Linux the handle refused nothing and the surface read the
+   test's own half-written file, a write no publisher makes. It runs on
+   Windows alone: elsewhere it is skipped with its reason
+   (`Assert.SkipUnless`), so a run there reports it Skipped and says why,
+   not Passed (the Linux run quoted below was made while it still returned
+   early there, and counted it among the passed);
+   operate's
+   `a_publication_renamed_over_a_file_being_read_is_read_whole_on_every_system`
+   holds the publisher's real collision on every system: the next
+   publication renamed over a file a reader holds open, the surface
+   answering the next whole and the reader reading the last whole. Nothing
+   in the reader changed.
+3. **The operator module's assemblies load with it.** The estate module
+   names types of the operator module's assemblies itself —
+   `[Xmip.Surface.ProgramAudit]` in `Write-XmipAudit`,
+   `[Xmip.Surface.ScopeTree]`, `[Xmip.Abi.Operate.Counted]` and the rest —
+   and PowerShell finds a type only among the assemblies loaded. Importing
+   `Xmip.PowerShell` loaded `Xmip.Surface` on Windows as it read the
+   cmdlets, and on Linux not until a cmdlet ran, so on Linux
+   `Build-XmipService`, whose first act is its audit, failed at once, as
+   every command that audits did. `Import-XmipOperatorModule` loads the
+   assembly of each project the operator module is built from, from the
+   folder it imported it from (`Import-XmipOperatorAssembly`), and
+   `test/OperatorModule.Test.ps1` holds, in a session of its own, that every
+   type the module names is found.
+4. **The remote build is found at the estate's root by the estate's
+   rule.** `Xmip.Operate.Test`'s `RemoteBuildTest` looked for the folder
+   `.ai-interaction` above its assembly, which a copy of the estate without
+   its working area lacks, and so looked in its own `bin`. It finds the
+   root as every .NET host and test does, the directory holding
+   `architecture.toml` (`TomlDocument.BasePath`), the rule
+   `Get-XmipRepositoryRoot` follows. With 3, `Build-XmipService -Remote
+   Desktop` builds the remote build on Linux, and its eight tests run there.
+
+Before, on Linux, `dotnet test Xmip.Surface.Test` and `dotnet test
+Xmip.Operate.Test` in `module/core/operation/operate/dotnet`, with
+`XMIP_RUNTIME_LIBRARY` naming operate's Linux build (paths from the copy's
+root):
+
+```text
+Failed Xmip.Surface.Test.SnapshotOperatorTest.AReadThatCollidesWithThePublisherKeepsWhatWasReadLast [10 ms]
+  Assert.Equal() Failure: Values differ
+  at ... SnapshotOperatorTest.cs:line 54
+Failed Xmip.Surface.Test.SurfaceArrivalTest.ASnapshotWatchBegunBeforeItsDirectoryFollowsOnceItIsMade [30 s]
+  Assert.True() Failure
+  at ... SurfaceArrivalTest.cs:line 42
+Failed!  - Failed:     2, Passed:    11, Skipped:     0, Total:    13, Duration: 30 s - Xmip.Surface.Test.dll (net11.0)
+no remote build at module/core/operation/operate/dotnet/Xmip.Operate.Test/bin/Debug/net11.0/<the working area>/target-remote/debug/libxmip_core_operate.so: at the estate's root in PowerShell, Import-Module -Name ./Xmip/Xmip.psd1; Build-XmipService -Remote Desktop
+```
+
+(the working area's own name left out, as a record names no file in it).
+
+`Build-XmipService -Remote Desktop` at the copy's root, in PowerShell 7.7.0
+on .NET 11.0.0:
+
+```text
+Write-XmipAudit: Xmip/Build-XmipService.ps1:191
+     | Unable to find type [Xmip.Surface.ProgramAudit].
+```
+
+and the runtime's new test, run against the watch before this change
+(`cargo test -j 8 --lib directory_watch -- --test-threads 4` in
+`module/platform/runtime`, the landing's patch given):
+
+```text
+directory_watch::tests::a_folder_made_in_the_directory_tells_the_watch --- FAILED
+told of the folder made: Timeout
+test result: FAILED. 4 passed; 1 failed; 0 ignored; 0 measured; 327 filtered out; finished in 5.00s
+```
+
+After, on Linux: every type the module names found once the operator module
+is imported, in a session of its own (what `test/OperatorModule.Test.ps1`
+holds; Pester is not on that machine), `Build-XmipService -Remote Desktop`,
+then the five projects with `dotnet test`, and the two new Rust tests:
+
+```text
+Xmip.Abi.Operate.Counted found: True
+Xmip.Surface.ProgramAudit found: True
+Xmip.Surface.ScopeTree found: True
+==> OK: built the runtime's remote build, Desktop
+Passed!  - Failed:     0, Passed:   110, Skipped:     0, Total:   110, Duration: 2 s - Xmip.Operate.Test.dll (net11.0)
+Passed!  - Failed:     0, Passed:   320, Skipped:     0, Total:   320, Duration: 8 s - Xmip.Surface.Test.dll (net11.0)
+Passed!  - Failed:     0, Passed:   220, Skipped:     0, Total:   220, Duration: 1 s - Xmip.Abi.Test.dll (net11.0)
+Passed!  - Failed:     0, Passed:   155, Skipped:     0, Total:   155, Duration: 9 s - Xmip.Gui.Test.dll (net11.0)
+Passed!  - Failed:     0, Passed:    11, Skipped:     0, Total:    11, Duration: 5 s - Xmip.Operations.Test.dll (net11.0)
+  Passed Xmip.Surface.Test.SurfaceArrivalTest.ASnapshotWatchBegunBeforeItsDirectoryFollowsOnceItIsMade [875 ms]
+  Passed Xmip.Operate.Test.RemoteBuildTest.TheRemoteBuildLoadsAndItsRulesAnswer [15 ms]
+test directory_watch::tests::a_folder_made_in_the_directory_tells_the_watch ... ok
+test surface::snapshot::tests::a_publication_renamed_over_a_file_being_read_is_read_whole_on_every_system ... ok
+```
+
+On Windows the record has the round-18 worker's report of 2026-11-20 and no
+output lines: its table gave the same five projects 110, 320, 220, 155 and
+11 passed, none failing, the two Rust tests passing with them, and
+`test/OperatorModule.Test.ps1` 14 passed. The landing's own .NET part runs
+the five projects again on Windows before anything is pushed.

@@ -11,11 +11,10 @@
     xmip-service at the estate root (Build-XmipService), the runtime library
     and the command line a package carries (New-XmipPackage), the runtime
     library's remote builds (Build-XmipRemoteRuntime) and RocksDB's one
-    compile (Install-XmipNativeLibrary) all build through it. The runtime
-    library and the command line are each a workspace of their own,
-    resolving their dependencies apart from the root's, so each builds into
-    a target directory of its own: sharing one lets either overwrite what
-    the other links.
+    compile (Install-XmipNativeLibrary) all build through it. Every crate is
+    a member of the estate's one workspace, resolved once (ADR-0016,
+    amendment 2026-11-20): the folder chooses the crate cargo builds, and
+    the caller the target directory.
 
     Style: doc/governance/powershell-style.md
 #>
