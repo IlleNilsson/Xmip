@@ -3062,3 +3062,165 @@ finds nothing in the library or its own tests on Windows (1.99.1) or Linux
 
 Provenance: the hang is the coordinator's report, 2026-11-19; the cause,
 the test's rewrite and the measurements are the assistant's, the same day.
+
+## Amendment, 2026-11-20: nothing a Message's batches write is copied or grown to be written
+
+**Provenance.** Open problem 82: the root's timing program failed once at
+landing on Windows, `carried 50 files: 22.6763ms fastest of five, Xmip's
+own share 1.140289ms`, the plain wake at 123.32 µs, the machine as a whole
+slow; on a quiet machine the same test had passed at 411 to 725 µs. The
+coordinator's brief of the same day: cut Xmip's own work per Message, the
+Storage writer's batches first, so the share keeps room under load; no
+bound raised, `xcore::latency`'s rule and what each test measures kept,
+and none of Xmip's own computation moved into `xcore::spent::on_io`, which
+covers the payload's own I/O alone.
+
+**Where a batch's time went.** A probe build outside the tree, deleted
+after: a copy of `xmip-core-persist` patched into the root's timing
+program, each phase of the writer's batch timed on the thread deciding it,
+a counting allocator beside it, and one batch of each kind's allocations
+traced by size; the carried test's 50 files, the first ten batches of each
+kind left out, medians, the machine 18 % busy. A Publication's batch was
+157 µs and 192 allocations, a hand-on's 122 µs and 145; the engine's own
+write, 74 and 86 µs, is I/O and in neither:
+
+| Phase of the batch | Publication | Hand-on |
+| --- | --- | --- |
+| its account, its stage, the stage taken | 10.8 µs, 7 allocations | 12.4 µs, 7 |
+| deciding and laying out its records | 57.3 µs, 106 | 39.0 µs, 63 |
+| its own Publication record read (a miss) | 9.3 µs, 1 | — |
+| due places settled, what moved collected | 16.9 µs, 20 | 14.5 µs, 23 |
+| the rest laid out (`Columns::written_over`) | 7.2 µs, 6 | 13.7 µs, 19 |
+| sealing | 26.2 µs, 52 | 20.7 µs, 33 |
+| what the writer keeps, the sealed batch freed | 12.1 µs | 11.6 µs |
+
+What the traces found, beside the work itself:
+
+- **Every varint took a `Vec` from the heap.** `codec`'s
+  `ByteWriter::varint` wrote `varint::encode(value)`, ten bytes allocated
+  and freed, for every counted field and text: 24 of a Publication's
+  batch's allocations, ten of them its audit record's alone, and the same
+  for every record any thread writes — a Stream's chunks, its Message and
+  Journeys, an audit record.
+- **Records grew from too little room.** A Message's record and a
+  Journey's said 64 bytes for their facts and grew once (507 to 1,014
+  bytes); a boxed audit record grew from 64 bytes three times, `Form` for
+  `Box<T>` saying no room of its own; a claim's stored form from one byte
+  four times; the Publication's identity from 128 bytes once.
+- **Each record and index entry was sealed into allocations of its own**:
+  its keyed hash and its sealed value two, an index entry's key copied
+  behind the index mark a third — 52 of the Publication's 192, 33 of the
+  hand-on's 145, each freed again once the engine had copied it into its
+  own write.
+- **A lone operation's stage was moved into its batch one place at a
+  time** (5.7 µs), into maps made with room they never used; three of a
+  Message's five index keys were made and dropped, its record lacking their
+  column; a queue's hold was copied, body and all, to be kept, and a claim
+  to be written; a batch's reads and its laid-out records grew a step at a
+  time, and `written_over` moved every change to a list of its own.
+
+**What changed**, each in the lowest layer that owns it:
+
+1. **A varint is written from the stack** (`codec::varint::encoded`): one
+   loop, which `encode`, `encode_into` and `ByteWriter::varint` each write
+   from; only `encode`, which answers a `Vec`, allocates.
+2. **A boxed value's room is the value's**, and a run's its count's and
+   each value's (`codec::form`, `Form` for `Box<T>` and `Vec<T>`).
+3. **Each record says its room** (`Form::capacity`): a Message's and a
+   Journey's record their identifier, their body and their facts, their
+   words counted at their longest (`persist::storage::facts::word`); an
+   audit record its body, the Message it carries with its Streams and its
+   facts; a claim its holder. A claim's stored form is written in that
+   room, from the claim, never a copy of it (`claim::hold`); the
+   Publication's identity in the room it takes.
+4. **A batch that wrote nothing takes its first stage's writes as they
+   are** (`Batch::taken`), and is made with no room of its own; its reads
+   and its laid-out records are made with room for a Publication's at the
+   first.
+5. **No index key is made for an index whose column the record lacks**,
+   and a record replaced is laid out taking the keys it takes out, never a
+   copy (`Columns::laid`); the rest are stamped where they lie, the entries
+   made with room (`Columns::written_over`).
+6. **A queue's hold is kept as it came** (`hold::keep` takes it).
+7. **A batch is sealed into one buffer of engine keys and one of sealed
+   values**, each made once with the room the batch takes
+   (`persist::encrypted_store::sealed`, `secret::DataKey::seal_into`), and
+   an engine is handed each change borrowed where it lies
+   (`persist::BorrowedChange`, `Engine::apply` and `apply_deferred`, in
+   `xmip-core-persist-rocksdb` and `-sqlite`, the fixtures and a standby's
+   `Copied`); what a standby is shipped stays owned (`persist::Change`,
+   `persist::owned`). An index entry is sealed with its whole key as
+   associated data, read from that buffer.
+8. **What the writer keeps is found once** a place (`Kept::keep`).
+
+Not changed: what is written, read, sealed, synced or sent, and in what
+order; when anything is durable; a store stopped refusing each seal; every
+surface; what any timing test measures and holds; what `on_io` covers.
+
+**Measured after**, the same probe, the machine 6 to 15 % busy: a
+Publication's batch 132 µs (157 before; 140 in a second run before, 57 %
+busy) and 92 allocations, a hand-on's 115 µs (122 and 129) and 95; 187
+allocations a file where there were 337. By phase, before and after:
+the account, stage and take 10.8 → 6.5 µs (hand-on 12.4 → 8.3); laying
+out the Publication's records 57.3 → 47.1 µs, 106 → 62 allocations; the
+rest laid out 7.2 → 4.0 (13.7 → 11.0); sealing 26.2 → 19.6 µs, 52 → 4
+allocations (20.7 → 19.3, 33 → 4); what the writer keeps 12.1 → 9.9
+(11.6 → 9.8). What stays is the work itself: about 25 seals and keyed
+hashes a Publication, its one read of its own record from `RocksDB`, a
+hand-on's Journey decoded, counted and laid out (31 µs, 36 allocations),
+and the wake of the sync thread after each batch (9 µs).
+
+Xmip's own share of a carried file as the node reports it, the build
+before (cfa167a) and after, alternated forty rounds, each order in turn,
+every run alone with the machine under 40 % busy (the carried tests of
+`cargo test --test measured --features node,audit,observe,authenticate,transport-tcp,transport-file,identify-ip,identify-certificate,authenticate-mutual-tls,authorize-location,persist-rocksdb,persist-sqlite,provision-internal-ca,route-content,path-edi -- carried --test-threads=1 --nocapture`):
+
+```text
+routed by its context:          before median 535 µs (356 to 825), after 487 µs (348 to 598)
+routed by its EDIFACT content:  before median 553 µs (355 to 724), after 525 µs (349 to 716)
+```
+
+One build's own runs spread over 350 to 650 µs on a quiet machine, more
+than the cut. Three rounds run first, the build after always in the wake
+of the one before, read it 30 % worse; alternating the order took that
+away.
+
+Through the estate's command, the whole timing program three times after,
+each alone with the machine under 40 % busy, from the estate's root:
+`& (Import-Module ./Xmip/Xmip.psd1 -PassThru -Force) { Test-XmipMeasuredProgram -ManifestPath Cargo.toml -Feature @('node','audit','observe','authenticate','transport-tcp','transport-file','identify-ip','identify-certificate','authenticate-mutual-tls','authorize-location','persist-rocksdb','persist-sqlite','provision-internal-ca','route-content','path-edi') -Through @('--config','.local-work/landing/patch.toml') }`
+said `test result: ok. 6 passed; 0 failed` and `True` each time. The
+command builds what the tree holds, so the build before ran as its
+executable, as the command runs it (`--test-threads=1`), three times
+alternated with those; each with `--show-output` for its figures, Xmip's
+own share of a carried file routed by its context and by its content:
+
+```text
+before: 484 and 556 µs, 720 and 668, 626 and 786
+after:  552 and 796 µs, 502 and 624, 480 and 503
+```
+
+Xmip Storage's own timing program and the runtime's, through the same
+command from each module's root (`-Feature @('test-support')`, and
+`-Feature @('node','remote','loader','dynamic-loading','test-support')`),
+three runs each alone after: `test result: ok. 6 passed; 0 failed` and
+`test result: ok. 19 passed; 0 failed`, `True` each time.
+
+Verified: `xmip-core-library-codec` 108 tests, `xmip-core-secret` 26 on
+Windows and 24 on Linux, `xmip-core-persist` 221, `-rocksdb` 3, `-sqlite`
+5, each passing on Windows and on the Linux build machine (Rust 1.100.0),
+and `cargo clippy --all-targets --all-features -- -D warnings` finding
+nothing in any of them on either. New tests, each run failing against the
+code before it:
+`codec::form::tests::a_boxed_value_and_a_run_are_written_in_the_room_their_values_say`
+(`left: 64`, `right: 310`), `persist`'s
+`record::tests::each_record_of_a_message_is_written_in_the_room_its_form_says`
+(`record 0: 486 in 364`) and
+`commit::batch::tests::a_first_stage_is_taken_whole_and_the_next_after_it`
+(`left: 0x80004fd890`, `right: 0x8000506110`), and passing after;
+`varint::tests::a_varint_written_from_the_stack_is_the_one_encode_writes`,
+`secret`'s `values_sealed_into_one_buffer_each_open_where_they_lie` and
+`encrypted_store::tests::a_batch_is_sealed_into_room_made_for_it_once`
+hold what was added.
+
+Provenance: the probe, the cuts and their tests are the assistant's,
+2026-11-20, for the owner to confirm or strike.

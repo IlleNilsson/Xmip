@@ -72,6 +72,7 @@ CREATE INDEX operator_act_open ON xmip.operator_act (node_id, place) WHERE open;
 -- each start of each node of the cluster, kept, never deleted: its scope, the roles it declares and its capability's evidence, where its operate and sync listeners answer, its place among the Storage nodes, the signed save it runs, its process, when it started and when it stopped in order, the table's write count at its last write and whether it is its node's latest row.
 CREATE TABLE xmip.membership (
     process uuid NOT NULL,
+    start bigint NOT NULL,
     node text NOT NULL,
     roles text NOT NULL,
     evidence text NOT NULL,

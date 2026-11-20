@@ -1352,6 +1352,8 @@ after:  a node's row over 1000 starts of each of 9 nodes kept: 93.9µs, Storage'
 **Not closed** (open problem 73): a start whose first write lands only
 after its successor's registration — its earlier tries unanswered, or
 their answer lost — registers then and takes its node from its successor.
+*Closed by the amendment of 2026-11-20: a node numbers its starts, and
+Xmip Storage registers only a later one.*
 
 Shown by tests written first and run against the code before this change
 on 2026-11-19 on Windows. Persist's (`cargo test -j 2 --config
@@ -1407,4 +1409,218 @@ test result: ok. 321 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fi
 test result: ok. 100 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 11.24s
 test result: ok. 27 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.07s
 test result: ok. 19 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.19s
+```
+
+## Amendment, 2026-11-20: a node numbers its starts, and Xmip Storage registers only a later one
+
+**Provenance.** Open problem 73, which the amendment of 2026-11-19 left
+open; the design is the assistant's, accepted by the coordinator on
+2026-11-20 with the one choice it marked for the owner decided as drafted
+(point 5); the build is the assistant's, the same day. Until this day a
+start whose first write reached Xmip Storage only after its successor's
+registration — its earlier tries unanswered, or their answers lost —
+registered then: its row became its node's latest, and once it stopped the
+members said the node had stopped while its successor ran. Xmip Storage
+cannot tell such a write from a new start's, since any order it hands out
+is the order writes arrive in; only the node's own machine sees its starts
+in the order they happened.
+
+1. **A node numbers each start itself.** As its process is drawn
+   (`Running::join`), a start takes `xcore::clock::serial(last, now)`: the
+   node's Clock in nanoseconds, or one above the number its start file
+   keeps where the clock is not above it. It is the rule a slice's serial
+   (ADR-0031, amendment 2026-11-07: *the signer's clock in nanoseconds, one
+   above the last it gave where the clock has not moved*) and a revocation
+   list's number each kept a copy of until this day; it is placed once in
+   `xcore::clock` now, and `runtime::signed` and `provision::register`
+   call it. The number is kept in `<stem>.start.toml`, beside the pin in
+   the default data directory and found from the configuration's place
+   alone (`configure::start`: `start_at`, `Start`; `configure::service`'s
+   `kept_at`, which places the pin and the active configuration too) — a
+   record, so `.toml`, as the pin is (ADR-0031, amendment 2026-11-10) — a
+   private file written beside, synced, renamed and its directory synced
+   (`runtime::kept`, which keeps the pin and the active configuration too),
+   before the start's row is first tried (`runtime::membership::numbering`),
+   as *each epoch is written, durable, before a role is taken in it*
+   (`runtime-model.md`). A start that cannot be numbered writes no row,
+   said as the node's failure, and is never numbered later, which could
+   rank it above a start after it.
+   - **Across a crash** the number kept survives, so the next start is
+     above it even where the clock was set back since; a start that crashed
+     before keeping its number sent nothing under it.
+   - **A store lost or restored from a backup** keeps an older number or
+     none: the clock puts the next start above every start before it while
+     the clock is right. A file that does not read is taken as lost.
+   - **The clock behind too**: the start is numbered below its node's
+     latest and refused (point 2), and floors its start file at the later
+     start's number, so the node's next start registers whatever its clock
+     says; that start comes after the refusal, which came after the start it
+     is above. A refused start never registers itself again: asked again,
+     it would be the late write this refuses. It is the trade ADR-0031,
+     amendment 2026-11-07, made for a signer whose clock is set back.
+2. **Xmip Storage registers a start only above its node's latest**, in
+   `member_written`, the one rule the client over the wire, the server's
+   answer, a standby's delegation to its primary and the runtime's test
+   wrappers reach. At registration the node's latest row is read already,
+   to replace it; where its start is not below the writer's, the write is
+   refused, `PersistError::Superseded` carrying the latest's number (answer
+   32 over the wire), in words naming both starts, the later start's
+   process and when it registered; nothing is written and no waiter told.
+   Only a start above the latest registers, so the latest row holds the
+   highest start ever registered for its node, and one row decides. A row's
+   start never changes: a process writing its row under another start is
+   refused, `Failed`, naming both, as one writing it as another node is.
+   Every write after a registration is to its own row alone, as since
+   2026-11-19, so an earlier start's stop is still written.
+3. **A start refused so tries nothing more.** It floors its node's start
+   file (`numbering::floored`), follows nothing, writes no stop, and says
+   Done at `<node>/membership` in Xmip Storage's words, what its node's
+   start file came to with them. A start registered before a successor
+   that runs beside it says Done too, naming that start, read from the
+   members it follows.
+4. **The table.** `membership` gains `start`, a number every row holds:
+   `MemberRecord::start`, its form on the wire, its column, the schema's
+   `MEMBERSHIP` and the three `03-administration-schema.sql`. No table and
+   no index more: the check reads the row `membership_latest` finds
+   already.
+5. **A start refused, or one whose successor registered, keeps serving and
+   says Done** (the coordinator, 2026-11-20, deciding as drafted the choice
+   the design marked for the owner). With one data directory the node's
+   store keeps a second process off it, so a live refused start means two
+   data directories, the two-machines-one-node case this does not close;
+   stepping down would add a stop for a case that barely exists, and would
+   leave a node restored with its clock behind running nothing.
+
+**Every surface** reads the words from `<node>/membership` in the snapshot,
+none keeping words of its own, and the ABI is unchanged; the command line's
+usage for `xmip health ".../membership"`, the PowerShell module's README and
+the GUI's README say Done where a later start of the node is its member.
+
+**What it costs.** A membership write reads nothing more — registration
+reads the node's latest row to replace it, a later write its own row — and
+compares one number, eight bytes more in the row and on the wire. A start
+keeps one small private file, synced, as the pin does when it rises, after
+the node began serving and before its membership's thread starts, so no
+Message waits on it. Persist's timing program
+(`tests/measured/membership.rs`), run alone through
+`Test-XmipMeasuredProgram` with the machine's load under 40 percent, before
+the change — the module as committed — and after it in turn on 2026-11-20
+on Windows, three rounds each, held a row's write within the millisecond
+beyond Xmip Storage's own as before:
+
+```text
+before: a node's row over 1000 starts of each of 9 nodes kept: 84.3µs, Storage's own write 21.2µs, beyond it 63.1µs, the fastest of five each
+after:  a node's row over 1000 starts of each of 9 nodes kept: 60.3µs, Storage's own write 13.5µs, beyond it 46.8µs, the fastest of five each
+before: a node's row over 1000 starts of each of 9 nodes kept: 33.7µs, Storage's own write 8.7µs, beyond it 25µs, the fastest of five each
+after:  a node's row over 1000 starts of each of 9 nodes kept: 48.7µs, Storage's own write 12.6µs, beyond it 36.1µs, the fastest of five each
+before: a node's row over 1000 starts of each of 9 nodes kept: 34µs, Storage's own write 9µs, beyond it 25µs, the fastest of five each
+after:  a node's row over 1000 starts of each of 9 nodes kept: 39.8µs, Storage's own write 10.4µs, beyond it 29.4µs, the fastest of five each
+```
+
+The after rounds ran over the working tree, where another change to Xmip
+Storage's writer was under way beside this one. The runtime's timing
+program after it, the same way, every one of its tests passing:
+
+```text
+test membership::a_stop_with_its_storage_gone_adds_no_more_than_a_millisecond ... a node's membership stopped with its Storage gone: the fastest of five 6.7µs; median 9.9µs, p99 118.4µs, worst 150.1µs over 20
+test result: ok. 19 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 16.25s
+```
+
+**Not closed.** Two machines running one node at once, each with a data
+directory of its own: their clocks decide which start is the member, and
+nothing refuses the second process. A registration lost with a killed
+primary's writes not yet handed on, or with Xmip Storage restored from a
+backup (open problem 45): that start is a member again only at its next
+write. A start refused for a clock behind runs unlisted until its node's
+next start. A database server behind the Storage nodes (option A) is not
+built; its transaction takes the same check when it is. A killed start's
+row still says it runs (ADR-0040).
+
+Shown by tests written first and run against the code before the rule on
+2026-11-20 on Windows: the field, its form, its column and the refusal's
+answer in place, Xmip Storage registering every first write as before, and
+a start numbered by its clock alone, kept nowhere. Persist's (`cargo test
+-j 4 --config <the local patch> --features test-support --lib --
+--test-threads 4 membership` in `module/platform/persist`):
+
+```text
+test storage::embedded::membership::tests::a_process_rewriting_its_row_under_another_start_is_refused ... FAILED
+test storage::embedded::membership::tests::a_start_equal_to_its_node_s_latest_is_refused ... FAILED
+test storage::embedded::membership::tests::register_B_then_A_s_late_first_write_is_refused_and_B_stays_the_member ... FAILED
+test storage::embedded::membership::tests::a_late_first_write_is_refused_over_the_wire_as_superseded ... FAILED
+test storage::standby::tests::membership::a_standby_hands_back_its_primary_s_refusal_of_a_late_start ... FAILED
+superseded, not Ok(())
+superseded over the wire, not Ok(())
+test result: FAILED. 8 passed; 5 failed; 0 ignored; 0 measured; 206 filtered out; finished in 0.20s
+```
+
+The runtime's (`cargo test -j 4 --config <the local patch> --lib --
+--test-threads 4 membership::` in `module/platform/runtime`; the first
+test named so then, renamed after the runs below to keep its line within
+100 columns,
+`a_first_write_landing_after_its_successor_s_registration_leaves_its_successor_the_member`):
+
+```text
+test membership::numbering::tests::a_start_after_its_store_is_restored_or_lost_is_numbered_above_every_start_before ... FAILED
+test membership::numbering::tests::a_start_is_numbered_above_the_last_kept_whatever_the_clock_says ... FAILED
+test membership::tests::a_start_whose_first_write_lands_after_its_successor_s_registration_leaves_its_successor_the_member ... FAILED
+test membership::tests::an_earlier_start_still_running_says_it_is_not_its_node_s_member ... FAILED
+assertion `left == right` failed: above the last kept, the clock set back
+  left: Ok(10)
+ right: Ok(1001)
+  left: Fine
+ right: Done
+test result: FAILED. 5 passed; 4 failed; 0 ignored; 0 measured; 317 filtered out; finished in 0.06s
+```
+
+After the rule, the same runs:
+
+```text
+test storage::embedded::membership::tests::register_B_then_A_s_late_first_write_is_refused_and_B_stays_the_member ... ok
+test storage::embedded::membership::tests::a_late_first_write_is_refused_over_the_wire_as_superseded ... ok
+test storage::standby::tests::membership::a_standby_hands_back_its_primary_s_refusal_of_a_late_start ... ok
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 206 filtered out; finished in 0.35s
+test membership::tests::a_start_whose_first_write_lands_after_its_successor_s_registration_leaves_its_successor_the_member ... ok
+test membership::tests::an_earlier_start_still_running_says_it_is_not_its_node_s_member ... ok
+test membership::numbering::tests::a_start_is_numbered_above_the_last_kept_whatever_the_clock_says ... ok
+test membership::numbering::tests::a_start_after_its_store_is_restored_or_lost_is_numbered_above_every_start_before ... ok
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 317 filtered out; finished in 0.16s
+```
+
+Every suite of the crates this touches, the same day on Windows (`cargo
+test -j 4 --config <the local patch> --all-features -- --test-threads 4` in
+`module/foundation/core`, `module/platform/configure`,
+`module/core/capability/provision`, `module/platform/persist`,
+`module/platform/runtime` and `module/core/operation/cli`, each beside
+`cargo clippy --all-targets --all-features`, which found nothing):
+
+```text
+test clock::tests::a_serial_is_the_clock_above_the_last_and_one_above_it_otherwise ... ok
+test result: ok. 73 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.26s
+test start::tests::a_start_comes_back_from_its_text_and_is_kept_beside_the_pin ... ok
+test result: ok. 116 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.17s
+test result: ok. 41 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.39s
+test result: ok. 221 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.97s
+test membership::tests::a_first_write_landing_after_its_successor_s_registration_leaves_its_successor_the_member ... ok
+test result: ok. 341 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.72s
+test result: ok. 100 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.70s
+test result: ok. 27 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.16s
+test result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.57s
+```
+
+The command line's 27 test programs passed 130, none failing. On the Linux
+build machine (`cargo test -j 8 --config <the local patch> --all-features
+-- --test-threads 8` in the first five, and the root's `cargo test --test
+database --features persist`, the scripts held to the schema):
+
+```text
+test result: ok. 72 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+test result: ok. 116 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+test result: ok. 41 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.37s
+test result: ok. 219 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 12.70s
+test result: ok. 346 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.70s
+test result: ok. 100 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.96s
+test result: ok. 27 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.98s
+test result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.92s
+test the_scripts_are_what_the_schema_writes ... ok
 ```
