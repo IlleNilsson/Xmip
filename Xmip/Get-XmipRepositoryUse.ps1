@@ -103,18 +103,9 @@ function Get-XmipCargoUse {
     }
 
     $toml = Read-XmipToml -Path $cargo
-    $platforms = Get-TomlValue -Node $toml -Name 'target' -Default $null
-    [object[]] $tables = @(
-        Get-TomlValue -Node $toml -Name 'dependencies' -Default $null
-
-        foreach ($platform in @(Get-TomlKey -Node $platforms)) {
-            $own = Get-TomlValue -Node $platforms -Name $platform
-            Get-TomlValue -Node $own -Name 'dependencies' -Default $null
-        }
-    )
 
     [string[]] $named = @(
-        foreach ($table in $tables) {
+        foreach ($table in @(Get-XmipCargoDependencyTable -Cargo $toml)) {
             foreach ($key in @(Get-TomlKey -Node $table)) {
                 $entry = Get-TomlValue -Node $table -Name $key
                 $renamed = Get-TomlValue -Node $entry -Name 'package' -Default $key
@@ -128,6 +119,41 @@ function Get-XmipCargoUse {
     )
 
     return [string[]] @($named | Sort-Object -Unique)
+}
+
+
+function Get-XmipCargoDependencyTable {
+    <#
+        .SYNOPSIS
+            A read Cargo manifest's `[dependencies]` and each platform's own
+            `[target.'cfg(...)'.dependencies]`, the tables a build links.
+
+        .DESCRIPTION
+            A crate empty off its own platform is a dependency of that
+            platform alone, since cargo refuses one a build does not use
+            (unused_dependencies, Cargo 1.100; ADR-0062, amendment
+            2026-11-19), so what a crate links is read from both.
+
+        .PARAMETER Cargo
+            The manifest, as Read-XmipToml returns it.
+    #>
+    [CmdletBinding()]
+    [OutputType([object[]])]
+    param(
+        [Parameter(Mandatory = $true)]
+        $Cargo
+    )
+
+    $platforms = Get-TomlValue -Node $Cargo -Name 'target' -Default $null
+
+    return [object[]] @(
+        Get-TomlValue -Node $Cargo -Name 'dependencies' -Default $null
+
+        foreach ($platform in @(Get-TomlKey -Node $platforms)) {
+            $own = Get-TomlValue -Node $platforms -Name $platform
+            Get-TomlValue -Node $own -Name 'dependencies' -Default $null
+        }
+    )
 }
 
 

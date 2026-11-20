@@ -261,10 +261,8 @@ Describe 'A landing builds the remote build before the module that needs it' {
     BeforeEach {
         InModuleScope Xmip {
             Mock New-XmipLocalPatch { 'patch.toml' }
-            Mock Get-XmipEstateCrate { }
             Mock Get-XmipVerifyTime { @{} }
             Mock Set-XmipVerifyTime { }
-            Mock Clear-XmipUnhashedLibrary { }
             Mock Build-XmipTestLibrary { $true }
             Mock Test-XmipModule { }
             Mock Build-XmipRemoteRuntime { }

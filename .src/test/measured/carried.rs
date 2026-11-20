@@ -160,9 +160,7 @@ fn an_edifact_order_routed_by_its_content_keeps_xmip_s_own_share_under_its_bound
 /// own share held within a millisecond of a plain wake's processor time
 /// measured in the same rounds, and the claim under its bound.
 fn carried(name: &str, filter: &str, made: impl Fn(usize) -> Vec<u8>) {
-    let directory =
-        std::env::temp_dir().join(format!("xmip-service-{name}-{}", std::process::id()));
-    let _ = std::fs::remove_dir_all(&directory);
+    let directory = xmip_file::temporary::Folder::new(&format!("service-{name}"));
     let configuration = file_node(&directory, filter);
     let (drop, out) = (directory.join("in"), directory.join("out"));
     std::fs::create_dir_all(&drop).expect("the drop directory");
@@ -263,7 +261,6 @@ fn carried(name: &str, filter: &str, made: impl Fn(usize) -> Vec<u8>) {
         "a dropped file waited {:?} for its claim",
         waited.fastest_of_five
     );
-    let _ = std::fs::remove_dir_all(&directory);
 }
 
 /// A figure of a carried file's time, the fastest of five, as the node

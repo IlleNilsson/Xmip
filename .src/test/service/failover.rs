@@ -17,7 +17,7 @@ use std::time::{Duration, Instant};
 
 use std::sync::mpsc::Receiver;
 
-use super::{Ending, exited, heard, lines, spawned, stop, test_cluster, told, watched};
+use super::{Ending, endpoint, exited, heard, lines, spawned, stop, test_cluster, told, watched};
 
 /// The files dropped before the primary stops, and as many after.
 const HALF: usize = 20;
@@ -58,10 +58,7 @@ pub(super) fn named(path: &Path) -> String {
 /// called: named by the test's own directory, so two tests starting the
 /// same node at once never share one.
 pub(super) fn local_of(directory: &Path, node: &str) -> String {
-    let test = directory
-        .file_name()
-        .map_or_else(String::new, |name| name.to_string_lossy().into_owned());
-    format!("{test}-{node}")
+    format!("{}-{node}", endpoint(directory))
 }
 
 /// The cluster's nodes declaring `role`, by name.
@@ -88,9 +85,7 @@ pub(super) fn configured(
     std::fs::create_dir_all(&own).expect("a folder");
     let tls = named(&directory.join("tls"));
     let quoted: Vec<String> = addresses.iter().map(|at| format!("\"{at}\"")).collect();
-    let listen_line = served
-        .map(|at| format!("listen = \"{at}\"\n"))
-        .unwrap_or_default();
+    let listen_line = served.map_or_default(|at| format!("listen = \"{at}\"\n"));
     let local = local_of(directory, node);
     let text = format!(
         "roles = \"{roles}\"\n\n[service]\nname = \"xmip-{node}\"\ncluster_name = \"{cluster}\"\n\
@@ -142,19 +137,17 @@ fn content(number: usize) -> Vec<u8> {
 
 /// The names of the files sent whole in `out`, sorted: none being written.
 fn names(out: &Path) -> Vec<String> {
-    let mut names: Vec<String> = std::fs::read_dir(out)
-        .map(|entries| {
-            entries
-                .filter_map(Result::ok)
-                .map(|entry| entry.file_name().to_string_lossy().into_owned())
-                .filter(|name| {
-                    Path::new(name)
-                        .extension()
-                        .is_some_and(|extension| extension.eq_ignore_ascii_case("edi"))
-                })
-                .collect()
-        })
-        .unwrap_or_default();
+    let mut names: Vec<String> = std::fs::read_dir(out).map_or_default(|entries| {
+        entries
+            .filter_map(Result::ok)
+            .map(|entry| entry.file_name().to_string_lossy().into_owned())
+            .filter(|name| {
+                Path::new(name)
+                    .extension()
+                    .is_some_and(|extension| extension.eq_ignore_ascii_case("edi"))
+            })
+            .collect()
+    });
     names.sort();
     names
 }
@@ -283,9 +276,7 @@ fn all_arrived_whole(arrived: &[String], out: &Path) {
 
 #[test]
 fn every_file_dropped_arrives_once_when_the_primary_storage_node_stops_mid_run_and_returns() {
-    let directory =
-        std::env::temp_dir().join(format!("xmip-service-failover-{}", std::process::id()));
-    let _ = std::fs::remove_dir_all(&directory);
+    let directory = xmip_file::temporary::Folder::new("service-failover");
     certified(&directory);
     let (drop, out) = (directory.join("in"), directory.join("out"));
     std::fs::create_dir_all(&drop).expect("the drop directory");
@@ -336,5 +327,4 @@ fn every_file_dropped_arrives_once_when_the_primary_storage_node_stops_mid_run_a
     stopped(receiving);
     stopped(standby);
     stopped(primary);
-    let _ = std::fs::remove_dir_all(&directory);
 }

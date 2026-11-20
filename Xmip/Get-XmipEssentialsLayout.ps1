@@ -155,12 +155,9 @@ function Invoke-XmipPatchedBuild {
         .DESCRIPTION
             Every estate crate is patched to its working tree as a landing
             verifies (New-XmipLocalPatch), so a build tests what is here and
-            never only what was pushed. In a build directory other workspaces
-            share, a library cargo names without a hash may be another
-            workspace's, and it is removed first, as a landing does
-            (Clear-XmipUnhashedLibrary says why). The one patched build of the
-            tooling: the Essentials' binaries and the demo readiness check's
-            language server both run it (2026-11-10).
+            never only what was pushed. The one patched build of the tooling:
+            the Essentials' binaries and the demo readiness check's language
+            server both run it (2026-11-10).
 
         .PARAMETER Directory
             The crate's directory.
@@ -181,16 +178,6 @@ function Invoke-XmipPatchedBuild {
 
     $layout = Get-XmipEssentialsLayout
     [string] $patch = New-XmipLocalPatch -RepositoryRoot $layout.Root
-
-    if ($env:CARGO_TARGET_DIR) {
-        [string[]] $unhashed = @(
-            Get-XmipEstateCrate -RepositoryRoot $layout.Root |
-                Where-Object -Property Unhashed |
-                ForEach-Object -MemberName Unhashed
-        )
-        Clear-XmipUnhashedLibrary -TargetDirectory $env:CARGO_TARGET_DIR -Library $unhashed
-    }
-
     [string[]] $building = @('build', '--config', $patch) + $Argument
     Push-Location -LiteralPath $Directory
 

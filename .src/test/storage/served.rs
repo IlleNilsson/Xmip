@@ -81,7 +81,6 @@ fn a_node_reaches_storage_over_tls_and_carries_on_past_a_killed_storage_node() {
         two.wait().expect("stopped").success(),
         "the Storage node stopped cleanly"
     );
-    let _ = std::fs::remove_dir_all(&test);
 }
 
 #[test]
@@ -130,7 +129,6 @@ fn the_audit_keeper_moves_each_record_once_over_the_real_engines() {
         assert_eq!(there, None, "nothing audit in the administration database");
     }
     drop(administration);
-    let _ = std::fs::remove_dir_all(&place);
 }
 
 /// The body of the kept audit record `id`, read back from its chunks and
@@ -204,7 +202,6 @@ fn an_audited_stream_is_kept_beside_its_record_over_the_real_engines() {
     .expect("verified");
     assert!(read == content, "the bytes as written");
     drop(node);
-    let _ = std::fs::remove_dir_all(&place);
 }
 
 /// The latency of a write measured idle — one write after another, nothing
@@ -251,5 +248,4 @@ fn the_latency_of_a_write_is_measured_and_reported() {
     eprintln!("LATENCY embedded, over TLS: median {median:?}, 99th percentile {slowest:?}");
     drop(child.stdin.take());
     let _ = child.wait();
-    let _ = std::fs::remove_dir_all(&test);
 }

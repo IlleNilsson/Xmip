@@ -166,7 +166,7 @@ fn the_controller_slices_and_signs_and_a_node_never_slices() {
 
 #[test]
 fn every_node_configuration_deploy_writes_is_the_one_the_runtime_reads() {
-    let directory = std::env::temp_dir().join(format!("xmip-deploy-{}", std::process::id()));
+    let directory = xmip_file::temporary::Folder::new("deploy");
 
     // The Essentials' file is the one a test runs whether its nodes are
     // simulated or on machines of their own (ADR-0028, amendment
@@ -241,6 +241,4 @@ fn every_node_configuration_deploy_writes_is_the_one_the_runtime_reads() {
         placed, designed,
         "every Location is placed on a mapped node"
     );
-
-    std::fs::remove_dir_all(&directory).expect("removes what it wrote");
 }

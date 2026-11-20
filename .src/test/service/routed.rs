@@ -112,15 +112,13 @@ local = "{local}"
 
 /// The files whole in `folder`, by name: none a send is still writing.
 fn sent(folder: &Path) -> Vec<String> {
-    let mut names: Vec<String> = std::fs::read_dir(folder)
-        .map(|entries| {
-            entries
-                .filter_map(Result::ok)
-                .map(|entry| entry.file_name().to_string_lossy().into_owned())
-                .filter(|name| !name.contains(".xmip-"))
-                .collect()
-        })
-        .unwrap_or_default();
+    let mut names: Vec<String> = std::fs::read_dir(folder).map_or_default(|entries| {
+        entries
+            .filter_map(Result::ok)
+            .map(|entry| entry.file_name().to_string_lossy().into_owned())
+            .filter(|name| !name.contains(".xmip-"))
+            .collect()
+    });
     names.sort();
     names
 }
@@ -134,9 +132,7 @@ fn dropped(directory: &Path, drop: &Path, name: &str, text: &str) {
 
 #[test]
 fn an_edifact_document_goes_to_the_send_port_its_message_type_and_recipient_name() {
-    let directory =
-        std::env::temp_dir().join(format!("xmip-service-routed-{}", std::process::id()));
-    let _ = std::fs::remove_dir_all(&directory);
+    let directory = xmip_file::temporary::Folder::new("service-routed");
     let (drop, orders, invoices) = (
         directory.join("in"),
         directory.join("orders"),
@@ -181,5 +177,4 @@ fn an_edifact_document_goes_to_the_send_port_its_message_type_and_recipient_name
     heard(&said, "stopped by the console", Duration::from_secs(10));
     assert!(exited(child, Duration::from_secs(10)).success());
     ending.0 = None;
-    let _ = std::fs::remove_dir_all(&directory);
 }

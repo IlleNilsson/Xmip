@@ -2965,3 +2965,100 @@ coordinator, 2026-11-19; the lock file removed with its listener, behind
 the inode check, is the coordinator's decision, the same day, on the
 assistant's proposal; the claim, its tests and the rewiring are the
 assistant's, the same day.
+
+## Amendment, 2026-11-19: a test steps the Stream share's Clock without the read's lock
+
+`stream_share`'s
+`one_that_stops_taking_holds_the_one_ahead_back_until_its_stall_passed_on_the_clock`
+(the amendment of 2026-10-27; ADR-0068, amendment 2026-11-16) hung on the
+Linux build machine: over an hour in a full `cargo test --all-features`
+under heavy load, and once in five runs alone. It was neither a lost wake
+nor a race in the Stream share. The test waited, without a bound, for the
+lock that the departure it held back keeps.
+
+- **How it hung.** The test parks the share's Clock,
+  `xcore::clock::Stepped`, a nanosecond short of the stall. The one
+  ahead, held back for the one stopped, waits what is left of the stall
+  on the operating system's time (`Wake::wait_timeout`; a wait the
+  operating system makes reads std's `Instant`, ADR-0068, amendment
+  2026-11-15) and looks at the Clock again. On Linux, where `Instant`
+  counts nanoseconds, a wait due in one nanosecond is past before it
+  begins, and `Wake` returns at once with the lock still held, as
+  `Wake::wait_until` says it does: "Past already, it does not wait." The
+  stepped Clock never moves by itself, so the one ahead looked again and
+  again, holding the read's lock throughout. The test's own thread looked at the read's
+  window under that same lock, in an unbounded loop, to know when to step
+  the Clock: where the one ahead was held back before that thread looked,
+  the thread never had the lock again, never stepped the Clock, and
+  neither went on. Caught on the build machine three seconds into a hung
+  run: the test's thread asleep on the lock (`futex_do_wait`), the one
+  ahead running, 3.04 s of processor time in those 3 s. On Windows, `Instant`
+  counts in the performance counter's 100 ns steps (10 MHz on the machine
+  measured), so a wait due in a nanosecond usually begins, and lets go of
+  the lock; the test never hung there.
+- **Not a defect of the Stream share; no production code changed.** On a
+  node's Clock, `SystemClock`, whose monotonic reading is that same
+  `Instant`, a wait past at once is followed by a look that finds the
+  stall passed: the lock is held for one look more, as it is for any. A
+  Clock that lags the operating system's leaves more than a reading to
+  wait, and `Wake` waits it with the lock let go of.
+- **The test steps the Clock without the read's lock, and every wait in it
+  is bounded.** The share's Clock is a stepped one that tells the test of
+  each reading (`Told`, the test's own). The one ahead first takes, on the
+  test's thread, all the read keeps and the next chunk, which lets go only
+  of the chunk the one stopped took; it goes on in a thread of its own,
+  which hands it back over a channel. Held back, it looks at the Clock
+  twice and asks Xmip Storage for no chunk more; one that went on would
+  ask before its second look, so the order is the test's, never its luck.
+  The test then steps the Clock the last nanosecond and checks every
+  byte, in its place, and the one stopped still on the read, left behind.
+  Each wait is a `recv_timeout` within five seconds (`BOUND`), so a
+  defect fails rather than hangs; it holds no figure.
+
+Before, on the Linux build machine, Rust 1.99.1, the binary of
+`cargo test --lib --no-run` in `module/platform/runtime` run with
+`--exact stream_share::tests::one_that_stops_taking_holds_the_one_ahead_back_until_its_stall_passed_on_the_clock`,
+each run stopped after 20 s by `timeout 20`, 30 runs one at a time and 40
+runs eight at once:
+
+```text
+alone: 24 passed, 6 failed or hung
+before, 8 at once: 24 passed, 16 failed or hung
+```
+
+On Windows the same test, the same way, through a PowerShell 7 loop that
+kills a run after 20 s: 200 runs one at a time and 100 eight at once,
+`passed=200 failed=0 hung=0` and `passed=100 failed=0 hung=0`. The
+sequence, made deterministic by a test written for the purpose and
+deleted after: the old test's look at the window, made once the one ahead
+was held back (two readings of `Told`), with `try_lock` for at most five
+seconds. On Linux, three runs of three:
+
+```text
+test stream_share::tests::demonstration_the_original_look_once_the_one_ahead_is_held_back ... FAILED
+assertion `left == right` failed: the original look had the read's lock within 5s
+  left: None
+ right: Some(5)
+```
+
+and on Windows, three of three, `... ok`.
+
+After, the same runs of the new test. On Linux, Rust 1.99.1, `stream_share`
+whole (`9 passed; 0 failed`), then:
+
+```text
+after, alone: 200 passed, 0 failed or hung
+after, 8 at once: 104 passed, 0 failed or hung
+```
+
+and the same on Rust 1.100.0 (`after 1.100, alone: 200 passed, 0 failed or
+hung`; `after 1.100, 8 at once: 104 passed, 0 failed or hung`). On
+Windows, Rust 1.99.1, `stream_share` whole (`9 passed; 0 failed`),
+`passed=200 failed=0 hung=0` alone and `passed=104 failed=0 hung=0` eight
+at once. Clippy over every target,
+`cargo clippy --keep-going --all-targets --all-features -- -D warnings`,
+finds nothing in the library or its own tests on Windows (1.99.1) or Linux
+(1.99.1 and 1.100.0), and `cargo fmt --check` is clean.
+
+Provenance: the hang is the coordinator's report, 2026-11-19; the cause,
+the test's rewrite and the measurements are the assistant's, the same day.

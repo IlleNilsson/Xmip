@@ -438,3 +438,43 @@ ordered by the owner ("Good that you found it, fix it"; "Go ahead",
 2026-11-16). The seams and the hand-in at start are the coordinator's
 brief; that the file's place stays with the reader is the assistant's,
 because a Platform reader may not depend on a technology.
+
+## Amendment, 2026-11-19: each log's crate is a dependency of its own platform alone
+
+Rust 1.100 (ADR-0021, amendment 2026-11-19) brings Cargo's
+`unused_dependencies` lint, a warning by default, and the estate's
+`.cargo/config.toml` denies every warning (`[build] warnings = "deny"`). A
+crate empty off its own platform is a dependency its build there does not
+use, so the amendment of 2026-11-16's "both are linked and each builds
+where it works" no longer builds. On Linux, in `module/core/operation/operate`:
+
+```text
+$ cargo clippy --all-targets --all-features -- -D warnings
+warning: unused dependency `audit-windows-event-log`
+  --> Cargo.toml:51:1
+   = note: `cargo::unused_dependencies` is set to `warn` by default
+error: warnings are denied by `build.warnings` configuration
+```
+
+What stands:
+
+- **Each log's crate is a dependency of its own platform alone**:
+  `xmip-core-audit-windows-event-log` in `[target.'cfg(windows)'.dependencies]`,
+  `xmip-core-audit-syslog` in `[target.'cfg(unix)'.dependencies]`, under the
+  `cfg` the program's hand-in is written under, in the root crate,
+  `xmip-core-operate`, `xmip-core-cli`, the language server and the
+  Essentials. The key stores of ADR-0063 clause 4 follow the same rule:
+  `xmip-core-secret-dpapi` on Windows, `xmip-core-secret-file` on Unix,
+  `xmip-core-secret-keychain` on macOS.
+- **The five crates' own dependencies are their platform's too.** Off it
+  each is still the empty crate it was, and a dependency it would not use
+  is refused there as well.
+- **What a program writes to is still what it links.** Nothing chooses a
+  log by name; a build no longer carries the other platform's empty crate.
+  `Get-XmipCargoDependencyTable` reads both tables for the dependency check
+  and for the site build (`Get-XmipRootCargo`), so `architecture.toml` is
+  unchanged.
+
+**Provenance.** Found by the move to Rust 1.100, the floor the owner's rule
+sets (ADR-0021, amendment 2026-11-02). The target tables are the
+assistant's: Cargo's own form for a dependency of one platform.

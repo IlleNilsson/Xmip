@@ -103,9 +103,7 @@ fn send(address: &str, client: xmip_tls::ClientConfig) {
 
 #[test]
 fn a_configured_party_is_accepted_over_tls_and_another_refused_and_audited() {
-    let directory =
-        std::env::temp_dir().join(format!("xmip-service-accepted-{}", std::process::id()));
-    let _ = std::fs::remove_dir_all(&directory);
+    let directory = xmip_file::temporary::Folder::new("service-accepted");
     let authority = Authority::new();
     let receive = unheld().to_string();
     let configuration = guarded(&directory, &authority, &receive);
@@ -146,5 +144,4 @@ fn a_configured_party_is_accepted_over_tls_and_another_refused_and_audited() {
     ] {
         assert!(audit.contains(said), "{said} in {audit}");
     }
-    let _ = std::fs::remove_dir_all(&directory);
 }

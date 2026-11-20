@@ -51,8 +51,7 @@ mod tests {
 
     #[test]
     fn systemd_hears_each_state_on_the_socket_it_named() {
-        let directory = std::env::temp_dir().join(format!("xmip-notify-{}", std::process::id()));
-        std::fs::create_dir_all(&directory).expect("a directory");
+        let directory = xmip_file::temporary::Folder::new("service-notify");
         let path = directory.join("notify");
         let systemd = UnixDatagram::bind(&path).expect("binds");
 
@@ -62,6 +61,5 @@ mod tests {
             let length = systemd.recv(&mut heard).expect("hears");
             assert_eq!(&heard[..length], state.as_bytes());
         }
-        std::fs::remove_dir_all(&directory).ok();
     }
 }

@@ -258,16 +258,11 @@ fn drained_record(
     record(audit, "stop", ExecutionPhase::Finished, &properties);
     let share = outcomes
         .own_share
-        .map(|own| format!("; Xmip's own share per Message {own:?}"))
-        .unwrap_or_default();
+        .map_or_default(|own| format!("; Xmip's own share per Message {own:?}"));
     let disk = outcomes
         .disk_sync
-        .map(|disk| format!(", the disk's sync beside it {disk:?}"))
-        .unwrap_or_default();
-    let membership = outcomes
-        .membership
-        .map(|why| format!("; {why}"))
-        .unwrap_or_default();
+        .map_or_default(|disk| format!(", the disk's sync beside it {disk:?}"));
+    let membership = outcomes.membership.map_or_default(|why| format!("; {why}"));
     format!(
         "stopped by {by}, drained in {drained} ms: {}{share}{disk}{membership}",
         counts

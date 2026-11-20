@@ -13,9 +13,7 @@ use super::*;
 
 #[test]
 fn a_node_is_read_and_acted_on_over_its_operate_listener() {
-    let directory =
-        std::env::temp_dir().join(format!("xmip-service-operate-{}", std::process::id()));
-    let _ = std::fs::remove_dir_all(&directory);
+    let directory = xmip_file::temporary::Folder::new("service-operate");
     let receive = unheld().to_string();
     let configuration = written(&directory, &receive);
     let authority = Authority::new();
@@ -74,7 +72,6 @@ fn a_node_is_read_and_acted_on_over_its_operate_listener() {
     stop(&child);
     assert!(exited(child, Duration::from_secs(10)).success());
     ending.0 = None;
-    let _ = std::fs::remove_dir_all(&directory);
 }
 
 /// The same node on its own machine (ADR-0014, amendment 2026-10-13): on
@@ -82,12 +79,10 @@ fn a_node_is_read_and_acted_on_over_its_operate_listener() {
 /// system user this test runs as.
 #[test]
 fn a_node_is_read_and_acted_on_over_its_local_endpoint() {
-    let directory = std::env::temp_dir().join(format!("xmip-service-local-{}", std::process::id()));
-    let _ = std::fs::remove_dir_all(&directory);
+    let directory = xmip_file::temporary::Folder::new("service-local");
     let configuration = written(&directory, &unheld().to_string());
     operated(&configuration);
     operated_locally(&directory, &configuration, &endpoint(&directory));
-    let _ = std::fs::remove_dir_all(&directory);
 }
 
 /// A node whose configuration names no local endpoint serves one all the
@@ -96,9 +91,7 @@ fn a_node_is_read_and_acted_on_over_its_local_endpoint() {
 /// configuration names it* — and declares how long a call there waits.
 #[test]
 fn a_node_naming_no_endpoint_is_operated_at_its_service_name() {
-    let directory =
-        std::env::temp_dir().join(format!("xmip-service-unnamed-{}", std::process::id()));
-    let _ = std::fs::remove_dir_all(&directory);
+    let directory = xmip_file::temporary::Folder::new("service-unnamed");
     // In its configuration folder, as `written` puts one (`written` says why).
     let configuration = xmip_runtime::fixture::configuration_folder(&directory).join("node.xmip");
     let text = format!(
@@ -108,7 +101,6 @@ fn a_node_naming_no_endpoint_is_operated_at_its_service_name() {
     );
     xmip_runtime::fixture::write_signed(&configuration, &text);
     operated_locally(&directory, &configuration, &format!("xmip-{}", node_name()));
-    let _ = std::fs::remove_dir_all(&directory);
 }
 
 /// Start the node configured at `configuration`, read and act on it at its

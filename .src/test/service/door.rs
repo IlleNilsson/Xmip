@@ -65,8 +65,7 @@ fn receiving(directory: &Path, addresses: &[String], drop: &Path) -> (String, st
 
 #[test]
 fn an_act_asked_at_the_operational_door_is_taken_by_its_node_and_asked_while_it_is_down() {
-    let directory = std::env::temp_dir().join(format!("xmip-service-door-{}", std::process::id()));
-    let _ = std::fs::remove_dir_all(&directory);
+    let directory = xmip_file::temporary::Folder::new("service-door");
     certified(&directory);
     let dropped_in = directory.join("in");
     std::fs::create_dir_all(&dropped_in).expect("the drop directory");
@@ -137,5 +136,4 @@ fn an_act_asked_at_the_operational_door_is_taken_by_its_node_and_asked_while_it_
     stopped(door);
     stopped(receiving_node);
     stopped(storage);
-    let _ = std::fs::remove_dir_all(&directory);
 }

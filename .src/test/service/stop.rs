@@ -7,8 +7,7 @@ use super::*;
 
 #[test]
 fn a_stop_drains_the_node_and_the_service_exits_zero() {
-    let directory = std::env::temp_dir().join(format!("xmip-service-stop-{}", std::process::id()));
-    let _ = std::fs::remove_dir_all(&directory);
+    let directory = xmip_file::temporary::Folder::new("service-stop");
     let receive = unheld().to_string();
     let configuration = written(&directory, &receive);
 
@@ -75,14 +74,11 @@ fn a_stop_drains_the_node_and_the_service_exits_zero() {
     ] {
         assert!(audit.contains(said), "{said} in {audit}");
     }
-    let _ = std::fs::remove_dir_all(&directory);
 }
 
 #[test]
 fn a_node_it_cannot_start_is_refused_with_exit_code_two() {
-    let directory =
-        std::env::temp_dir().join(format!("xmip-service-refused-{}", std::process::id()));
-    let _ = std::fs::remove_dir_all(&directory);
+    let directory = xmip_file::temporary::Folder::new("service-refused");
     let configuration = written(&directory, &unheld().to_string());
     let text = xmip_runtime::fixture::unsigned(&configuration);
     // A transport no build of xmip-service links: a feature of its own for
@@ -99,7 +95,6 @@ fn a_node_it_cannot_start_is_refused_with_exit_code_two() {
         "{said}"
     );
     assert_eq!(declarations(&directory), Vec::<String>::new());
-    let _ = std::fs::remove_dir_all(&directory);
 }
 
 /// Start the service at `configuration`, act on its Subscription at its
@@ -132,8 +127,7 @@ fn served(configuration: &Path, directory: &Path, acts: &[(Act, &str)]) {
 
 #[test]
 fn a_paused_subscription_is_paused_still_after_the_service_restarts() {
-    let directory = std::env::temp_dir().join(format!("xmip-service-store-{}", std::process::id()));
-    let _ = std::fs::remove_dir_all(&directory);
+    let directory = xmip_file::temporary::Folder::new("service-store");
     let configuration = written(&directory, &unheld().to_string());
     operated(&configuration);
     let operator = operator();
@@ -171,14 +165,11 @@ fn a_paused_subscription_is_paused_still_after_the_service_restarts() {
     ] {
         assert!(audit.contains(said), "{said} in {audit}");
     }
-    let _ = std::fs::remove_dir_all(&directory);
 }
 
 #[test]
 fn a_storage_node_the_build_did_not_link_or_that_does_not_open_is_refused() {
-    let directory =
-        std::env::temp_dir().join(format!("xmip-service-unstored-{}", std::process::id()));
-    let _ = std::fs::remove_dir_all(&directory);
+    let directory = xmip_file::temporary::Folder::new("service-unstored");
     let configuration = written(&directory, &unheld().to_string());
     let text = xmip_runtime::fixture::unsigned(&configuration);
 
@@ -239,5 +230,4 @@ place = \"taken\"
     let audit =
         std::fs::read_to_string(directory.join("audit").join("audit.toml")).expect("it audited");
     assert!(audit.contains("xmip-core-secret-vault"), "{audit}");
-    let _ = std::fs::remove_dir_all(&directory);
 }

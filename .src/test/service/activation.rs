@@ -73,9 +73,7 @@ fn activation(configuration: &Path, directory: &Path) -> (Option<i32>, String) {
 
 #[test]
 fn a_signed_slice_the_node_cannot_start_leaves_its_active_configuration_running_and_recoverable() {
-    let directory =
-        std::env::temp_dir().join(format!("xmip-service-activation-{}", std::process::id()));
-    let _ = std::fs::remove_dir_all(&directory);
+    let directory = xmip_file::temporary::Folder::new("service-activation");
     let receive = unheld().to_string();
 
     // 1. The first start: the slice runs, and is pinned and active.
@@ -171,5 +169,4 @@ fn a_signed_slice_the_node_cannot_start_leaves_its_active_configuration_running_
     ] {
         assert!(audit.contains(words), "{words} in {audit}");
     }
-    let _ = std::fs::remove_dir_all(&directory);
 }

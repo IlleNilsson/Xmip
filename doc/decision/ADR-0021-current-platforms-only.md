@@ -318,6 +318,128 @@ the runtime's default folder `<temp>/xmip/process`
 `test/CSharp.Style.Test.ps1` refuses a folder made under `Path.GetTempPath()`
 in C#.
 
+## Amendment, 2026-11-19: Rust's temporary folder is one guard, as Rust has no call
+
+Rust's standard library has no call that makes a temporary folder:
+`std::env::temp_dir()` names the directory and nothing more. So each Rust
+test built a name under it, from the process id, a counter, a clock reading
+or nothing at all: 179 calls in 143 files that day. A test that removed its
+folder as its last line left it behind when it failed, and the factory tests
+of nine contract crates never removed theirs.
+
+What stands now:
+
+- A test's folder is `file::temporary::Folder`, from the `test-support`
+  feature of the Library `xmip-core-library-file`, taken as a dev-dependency
+  (`module/core/library/file/src/temporary.rs`): it acts on a file, which
+  is not Foundation's (ADR-0058 clause 1), as the directory sync moved there
+  the same day. It is `xmip-<label>-<UUIDv7>` under the system's temporary
+  directory, the UUIDv7 the `uuid` crate's `v7`, the crate xmip-core names
+  its identifiers by, an optional dependency of the Library under
+  `test-support` alone, its random bits the operating system's (through
+  `getrandom`); it is made with `create_dir`, which refuses a folder
+  already there rather than taking it over; on Unix only its owner may enter
+  it; and dropping it removes it with everything in it, also when the test
+  panics. A test makes its folder first, so that it outlives every file,
+  database or socket the test opened in it; where something must not exist
+  yet, the test names a path inside its folder.
+- Another Library takes it as a dev-dependency, as `net` and `tls` take
+  `xcore::latency`: what a Library is built from stays Library
+  (`test/Layer.Test.ps1` reads `[dependencies]`). The Essentials, a test
+  never in a node, takes it among its dependencies, and the runtime under
+  its own `test-support`, for its test authority.
+- `test/Rust.Style.Test.ps1` refuses `temp_dir()` in any Rust file but the
+  guard and six that name a place a program itself uses, each with its
+  reason (`doc/governance/rust-style.md` section 5f): a named endpoint's path
+  on Unix, the runtime's default `<temp>/xmip/process`, the language
+  server's copies of the runtime it loads, the runtime fixture that names
+  the shared place a test must not write in, a Unix socket's far end, whose
+  address is its path as a network transport's is a port (ADR-0051), and
+  the Essentials roll's working folder, named for its cluster.
+
+Evidence, 2026-11-19. `git grep --recurse-submodules -n 'temp_dir()' -- '*.rs'`
+before and after, and the guard's own tests, `cargo test --lib temporary` in
+`module/core/library/file`, on Windows and on Linux (the owner-only test is
+Unix's):
+
+```text
+before: 179 lines
+after:   11 lines: the guard's 2, and 9 in the six files the style test allows
+Windows: test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out
+Linux:   test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out
+```
+
+## Amendment, 2026-11-19: Rust 1.100
+
+Rust 1.100.0, released 2026-11-12 (the Cargo changelog), is the floor by the
+rule of 2026-11-02; `rust-toolchain.toml` follows `stable` and needs no
+change. The code builds on 1.99.1 as well, clippy's warnings denied: every
+form below is in 1.99.1's standard library too. Three of its changes reach the
+estate, each found by a full pass over every workspace on Linux:
+
+```text
+$ cargo clippy -j 8 --all-targets --all-features -- -D warnings
+error: called `map(_).unwrap_or_default()` on an `Option` value
+103 +             .map_or_default(|contract| format!(" carrying {contract}"));
+error: the loop variable `at` is used to index `figures.values`
+warning: unused dependency `secret`
+   = note: `cargo::unused_dependencies` is set to `warn` by default
+error: warnings are denied by `build.warnings` configuration
+```
+
+- **Clippy's `map_unwrap_or`** (pedantic, which every crate warns) now
+  reads `map(f).unwrap_or_default()` on an `Option` or a `Result` and asks
+  for `map_or_default(f)`, the same value: 63 sites on an `Option` and 12 on
+  a `Result` in 36 workspaces are written so, and one loop in
+  `xmip-core-operate` walks `figures.values` rather than indexing it
+  (`needless_range_loop`).
+- **Cargo's own lints**, `unused_dependencies` among them, a warning by
+  default and an error under the estate's `[build] warnings = "deny"`
+  (`.cargo/config.toml`, Cargo 1.97). A crate empty off its own platform is
+  a dependency of that platform alone (ADR-0062, amendment 2026-11-19); a
+  dependency only tests use is a dev-dependency (`xmip-core-resilience` in
+  the HTTP, Kafka and AMQP transports); and what `xmip-service` alone uses
+  — `ctrlc`, `windows-service`, `xmip-core-operate` — comes with `node`,
+  which the program requires, so a build that leaves the program out does
+  not link them.
+- **The build directory's new layout.** Final artifacts stay where they
+  were: `<target>/debug/` holds the binaries, the cdylibs and `examples/`,
+  so `Get-XmipEssentialsLayout` and `Test-XmipEssentialsBinary` find the
+  Essentials as before. A test program moved, from `<target>/debug/deps/`
+  to a unit's own `<target>/debug/build/<package>/<hash>/out/`, so a test
+  that found an example one folder above itself found none; the runtime's
+  test of a generated unit's library now looks up every folder above it,
+  and the Essentials' binary lookup no longer looks one folder above
+  itself, which only a test program in `deps/` ever needed. A cdylib
+  crate's rlib is written in its unit's own folder too
+  (`build/xmip-core-operate/<hash>/out/libxmip_core_operate.rlib`), so
+  workspaces no longer share one unhashed file: the layout ended the
+  collision of 2026-10-06, two `xmip_core_configure` in one graph after
+  one workspace's unhashed rlib was linked by another. Every machine builds
+  with 1.100, so what removed that file from `deps/` before each workspace
+  is deleted: `Clear-XmipUnhashedLibrary`, `Unhashed` in
+  `Get-XmipEstateCrate`, its calls in `Test-XmipChangeTree` and
+  `Invoke-XmipPatchedBuild`, and its two tests. Two toolchains never share
+  one build directory: 1.99.1 after 1.100 in the same one stopped with
+  "could not parse/generate dep info".
+
+```text
+$ cargo test --test gathered_cluster        (module/core/operation/cli, 1.100)
+     Running tests/gathered_cluster.rs (<target>/debug/build/xmip-core-cli/<hash>/out/gathered_cluster-<hash>)
+the full 1.100 test pass, module/platform/runtime, before the change:
+library::tests::a_unit_generated_from_a_design_opens_from_beside_its_configuration_and_turns --- FAILED
+panicked at src/library.rs:381:9
+$ cargo test --features dynamic-loading --lib -- library::tests::a_unit_generated_from_a_design
+test library::tests::a_unit_generated_from_a_design_opens_from_beside_its_configuration_and_turns ... ok
+```
+
+The last line is the same on 1.100 and on 1.99.1, where the test program is
+still in `deps/`.
+
+**Provenance.** The owner's rule that the latest is the floor (amendment
+2026-11-02); the pass over every workspace and the fixes are the
+assistant's, at the coordinator's order.
+
 ## Alternatives considered
 
 **Support the previous major of each platform.** The conventional choice, and

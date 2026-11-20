@@ -145,9 +145,7 @@ fn count(publication: &Publication, scope: &str, counted: Counted) -> u64 {
 
 #[test]
 fn the_node_publishes_its_snapshot_and_a_pause_asked_at_its_door_shows_in_the_next() {
-    let directory =
-        std::env::temp_dir().join(format!("xmip-service-publication-{}", std::process::id()));
-    let _ = std::fs::remove_dir_all(&directory);
+    let directory = xmip_file::temporary::Folder::new("service-publication");
     let receive = unheld().to_string();
     let configuration = written(&directory, &receive);
     operated(&configuration);
@@ -244,5 +242,4 @@ fn the_node_publishes_its_snapshot_and_a_pause_asked_at_its_door_shows_in_the_ne
                 .all(|node| node.activity.abs() < f64::EPSILON),
         "{still:?}"
     );
-    let _ = std::fs::remove_dir_all(&directory);
 }

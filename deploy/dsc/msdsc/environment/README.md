@@ -270,18 +270,25 @@ none. `-WhatIf` says what differs and changes nothing.
 
 Then the Essentials runs against the machines: the names typed resolve and
 answer, and the run says which nodes are real. The tester's operator
-certificate is signed by the same authority — a file naming it,
-`D:\Repos\Xmip\.local-work\environment\authority\operator.xmip`, holds
-`[service]` with `name`, `cluster_name = "CL1"` and `node_name`, and
-`[provision.operator] authority = "."`. Type exactly the nodes the
-environment file maps, which the Essentials places the Locations over as
-the machines did:
+certificate is signed by the same authority, the one `[provision.operator]`
+names in the slice of the node the cluster's file declares that table for,
+OP1: sliced and signed as every node's slice is, by the environment file's
+`slicer` with the same `--cluster` and `--authority`, and kept as
+`operator.xmip` beside the `authority` folder, where its trust reads it, so
+one edited by hand is refused (ADR-0031, amendment 2026-11-19). Type
+exactly the nodes the environment file maps, which the Essentials places
+the Locations over as the machines did:
 
 ```powershell
 [string] $local = 'D:\Repos\Xmip\.local-work\environment'
 [string] $tester = "$local\tester"
+[string] $slicer = '<the environment file''s slicer>'
+[string] $cluster = 'D:\Repos\Xmip\test\core\essentials\configuration\cluster.xmip'
+[string[]] $printed = & $slicer --configuration $cluster --node OP1 --cluster CL1 `
+    --authority "$local\authority" --slice
+Set-Content -LiteralPath "$local\operator.xmip" -Value (($printed -join "`n") + "`n") -NoNewline
 New-XmipCertificate -Operator 'tester@xmip.test' -Path $tester |
-    New-XmipCertificate -Configuration "$local\authority\operator.xmip" -Path "$tester\operator.pem"
+    New-XmipCertificate -Configuration "$local\operator.xmip" -Path "$tester\operator.pem"
 Copy-Item -LiteralPath "$local\authority\authority.pem" -Destination "$tester\anchors.pem"
 Start-XmipTest -Suite Core.Essentials -Cluster CL1 -Nodes RX1, TX1, PX1, EX1, DS1 -Certificate $tester
 Get-XmipTestStatus

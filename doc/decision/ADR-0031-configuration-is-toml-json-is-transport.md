@@ -981,6 +981,14 @@ still reads the file at its path itself: it asks whether the slice shipped
 there is the one that runs, and with no file there it has nothing to ask
 about.
 
+Signing a person's request reads `[provision.operator]` the same way
+(`runtime::operator_certificate::sign` through `start::read`): the table is
+part of the node's signed slice, declared for a node in the cluster's file
+as `[nodes.<name>.provision.operator]`, so a slice edited by hand or
+unsigned is refused, or the active configuration's table is read (open
+problem 79, the owner's choice A, 2026-11-19; ADR-0009, amendment
+2026-11-19).
+
 Shown by `xmip-core-runtime`'s `running` tests, an unreadable candidate
 being a folder where the file goes, which no platform reads as a file, and
 an administrator's account reads past a file's permissions. Written first

@@ -349,6 +349,33 @@ clock. `test/Clock.Test.ps1` holds it over every production line
 `Get-XmipSourceFile` counts; a test's own file is not held. It holds the
 wall clock alone; the monotonic clock, `Instant::now()`, is not held.
 
+## 5f. A test's temporary folder is `file::temporary::Folder`
+
+A test that needs a folder makes it with `file::temporary::Folder::new`,
+from the `test-support` feature of the Library `xmip-core-library-file`,
+taken as a dev-dependency (`module/core/library/file/src/temporary.rs`): a
+Foundation crate opens no file (ADR-0058 clause 1). The folder is named
+`xmip-<label>-<UUIDv7>` under the system's temporary directory, so nobody
+knows the name before it exists; it is made with `create_dir`, which refuses
+a folder already there; on Unix only its owner may enter it; and dropping it
+removes it with everything in it, also when the test fails. A test makes its
+folder first, so that it is dropped after every file, database or socket the
+test opened in it. Where something must not exist yet, the test names a path
+inside its folder. Rust's standard library has no call that makes such a
+folder, so the estate has this one (ADR-0021, amendment 2026-11-19).
+
+`test/Rust.Style.Test.ps1` refuses a call to `temp_dir()` in any Rust file
+but these, each with its reason: the guard itself; a named endpoint's path on
+Unix (`net/src/pipe.rs`); the runtime's default folder for declarations,
+`<temp>/xmip/process` (`runtime/src/declared.rs`); the language server's
+copies of the runtime it loads (`gui/vscode/.src/runtime.rs`); the runtime
+fixture that names the shared place a test must not write in
+(`runtime/src/fixture/signed.rs`); a Unix socket's far end, whose address is
+its path as a network transport's is a port (ADR-0051,
+`transport/unix-socket/src/lib.rs`); and the Essentials roll's own working
+folder, named for its cluster, a program built without `test-support`
+(`test/core/essentials/src/bin/roll.rs`).
+
 ## 6. What this does not enforce
 
 Module layout beyond file length, whether a `struct` should have been three, and
