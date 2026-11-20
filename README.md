@@ -767,8 +767,8 @@ client authentication alone, its subject the person — is made and signed by
 `xmip certificate --operator <person>` and `xmip certificate
 <request> --sign <file>`, and by the PowerShell module's certificate cmdlet
 with the same two parameter sets: the surface makes its own key
-and request, and the cluster's authority, named by the node configuration's
-`[provision.operator]`, signs it after an approval out of band
+and request, and the cluster's authority, named by `[provision.operator]` in
+the node's signed slice, signs it after an approval out of band
 ([ADR-0034](doc/decision/ADR-0034-certificate-provisioning-versus-usage.md),
 amendment 2026-10-15). On the phone and the desktop the key is made in the
 platform's keeper and never leaves it — the Android Keystore, the iOS

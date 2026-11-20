@@ -136,6 +136,92 @@ Describe 'Rust style, section 2: tests are measured separately' {
     }
 }
 
+Describe 'Rust style, section 5f: a test''s temporary folder is file::temporary::Folder' {
+    BeforeAll {
+        <#
+            2026-11-19: 179 calls to std::env::temp_dir() in 143 files built a
+            test's folder by hand, named by the process, left behind when a
+            test failed, and nine contract crates never removed theirs (ADR-0021,
+            amendment 2026-11-19). A test's folder is file::temporary::Folder's,
+            in the Library xmip-core-library-file, as a Foundation crate opens no
+            file (ADR-0058 clause 1): named at random, made only where nothing
+            is, removed when dropped.
+
+            Each entry is a file's count of calls to temp_dir(), and why it
+            makes them. A file not listed makes none, and a listed file makes
+            exactly its count.
+        #>
+        $script:TemporaryDirectoryAllowed = @{
+            # The guard: its folder is made there, and its test asserts where.
+            'module/core/library/file/src/temporary.rs'               = 2
+            # A named endpoint's path on Unix, and the test that asserts it.
+            'module/core/library/net/src/pipe.rs'                     = 2
+            # The runtime's default folder for declarations, <temp>/xmip/process,
+            # which test/XmipProcess.Test.ps1 asserts.
+            'module/platform/runtime/src/declared.rs'                 = 1
+            # The language server's copies of the runtime it loads, their sweep,
+            # and the test that plants one where the sweep looks.
+            'module/core/operation/gui/vscode/.src/runtime.rs'        = 3
+            # Names the shared place a test must not write its configuration
+            # in; it makes nothing there.
+            'module/platform/runtime/src/fixture/signed.rs'           = 1
+            # The far end's address (ADR-0051), as a port is for a network
+            # transport.
+            'module/core/capability/transport/unix-socket/src/lib.rs' = 1
+            # The Essentials roll's own working folder, named for its cluster
+            # so a second cluster beside it neither wipes nor shares it: a
+            # program, not a test, built without test-support.
+            'test/core/essentials/src/bin/roll.rs'                    = 1
+        }
+
+        # A call, not a word in a comment.
+        [string] $script:TemporaryDirectory = '\btemp_dir\s*\('
+    }
+
+    It 'calls temp_dir() nowhere but where it is allowed' {
+        [object[]] $calls = @(
+            foreach ($file in $script:Files) {
+                [string] $full = Join-Path $script:Root $file.Path
+                [string[]] $line = @(Get-Content -LiteralPath $full)
+
+                for ([int] $index = 0; $index -lt $line.Count; $index++) {
+                    [string] $code = $line[$index]
+
+                    if (-not $code.TrimStart().StartsWith('//') -and
+                        $code -match $script:TemporaryDirectory) {
+                        [PSCustomObject]@{ Path = $file.Path; Line = $index + 1 }
+                    }
+                }
+            }
+        )
+
+        [string[]] $named = @(
+            @($calls.Path) + @($script:TemporaryDirectoryAllowed.Keys) | Sort-Object -Unique
+        )
+
+        [string[]] $wrong = @(
+            foreach ($name in $named) {
+                [object[]] $made = @($calls | Where-Object { $_.Path -eq $name })
+                [int] $allowed = 0
+
+                if ($script:TemporaryDirectoryAllowed.ContainsKey($name)) {
+                    $allowed = $script:TemporaryDirectoryAllowed[$name]
+                }
+
+                if ($made.Count -ne $allowed) {
+                    "$name makes $($made.Count) where $allowed is allowed, at " +
+                        ($made.Line -join ', ')
+                }
+            }
+        )
+
+        $wrong.Count | Should -Be 0 -Because (
+            "file::temporary::Folder instead, from xmip-core-library-file's test-support:`n" +
+            ($wrong -join "`n")
+        )
+    }
+}
+
 Describe 'The style document describes what is enforced' {
     BeforeAll {
         $script:Document = Get-Content (Join-Path $script:Root 'doc/governance/rust-style.md') -Raw

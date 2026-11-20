@@ -79,7 +79,6 @@ fn a_write_acknowledged_before_the_kill_is_there_after_it() {
         assert_eq!(body.body, format!("written {number}").into_bytes());
     }
     drop(node);
-    let _ = std::fs::remove_dir_all(&place);
 }
 
 #[test]
@@ -131,5 +130,4 @@ fn a_hand_on_killed_at_any_moment_is_all_there_or_not_at_all() {
         "the numbers past the kill are not there: {absent}"
     );
     drop(node);
-    let _ = std::fs::remove_dir_all(&place);
 }

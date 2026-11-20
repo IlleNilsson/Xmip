@@ -447,7 +447,7 @@ dependency = ["xmip-core-library-codec"]
   dependency = ["xmip-core-library-asn1", "xmip-core-library-codec", "xmip-core-library-tls", "xmip-core-library-net", "xmip-core-library-sql", "xmip-core-context", "xmip-core"]
     [xmip.core.transport.amqp]
     maturity = "scaffolded"
-    dependency = ["xmip-core-library-codec", "xmip-core-event", "xmip-core-resilience", "xmip-core-library-net", "xmip-core-context", "xmip-core"]
+    dependency = ["xmip-core-library-codec", "xmip-core-event", "xmip-core-library-net", "xmip-core-context", "xmip-core"]
     specification = "AMQP 0-9-1 with PLAIN, one channel, publish with content-type and a headers table, publisher confirms, consume and acknowledge; the event capability's wire events and the event binding, the AMQP binding's rules (cloudEvents_ attributes in the 0-9-1 headers table)"
     [xmip.core.transport.as2]
     maturity = "scaffolded"
@@ -465,7 +465,7 @@ dependency = ["xmip-core-library-codec"]
     [xmip.core.transport.http]
     maturity = "scaffolded"
     description = "HTTP transport: one request body is one Stream, with a reply channel. HTTP/2 or HTTP/1.1 per connection, agreed by ALPN over TLS or known beforehand (h2c) where configured; a Receive Location serves either. HTTPS behind the tls feature. The event capability's wire event webhook and the event binding. A xmip-core-transport technology."
-    dependency = ["xmip-core-library-tls", "xmip-core-library-net", "xmip-core-library-codec", "xmip-core-event", "xmip-core-resilience", "xmip-core-context", "xmip-core"]
+    dependency = ["xmip-core-library-tls", "xmip-core-library-net", "xmip-core-library-codec", "xmip-core-event", "xmip-core-context", "xmip-core"]
     specification = "IETF RFC 9110; HTTP/1.1 (RFC 9112) and HTTP/2 (RFC 9113, HPACK RFC 7541) built, HTTP/3 (RFC 9114) open problem 30"
     [xmip.core.transport.imap]
       dependency = ["xmip-core-library-net", "xmip-core"]
@@ -736,7 +736,7 @@ dependency = ["xmip-core-library-codec"]
     description = "IBM MQ transport: one message on a queue is one Stream — MQCONN, MQOPEN, MQPUT and MQGET on the MQ wire over TCP, against a queue manager or the in-process one this crate carries. A xmip-core-transport technology."
     [xmip.core.transport.kafka]
     maturity = "scaffolded"
-    dependency = ["xmip-core-library-codec", "xmip-core-event", "xmip-core-resilience", "xmip-core-library-net", "xmip-core"]
+    dependency = ["xmip-core-library-codec", "xmip-core-event", "xmip-core-library-net", "xmip-core"]
     specification = "Apache Kafka protocol: Metadata v1, Produce v3, Fetch v4, record batches with CRC-32C and record headers; the event capability's wire events and the event binding, the Kafka binding's rules (ce_ record headers)"
     [xmip.core.transport.mariadb]
     maturity = "scaffolded"
@@ -1608,6 +1608,9 @@ dependency = ["xmip-core-library-codec"]
       "xmip-core-identify",
       "xmip-core-journey",
       "xmip-core-library-codec",
+      # A test's own temporary folder for the test authority, under
+      # test-support alone (ADR-0021, amendment 2026-11-19).
+      "xmip-core-library-file",
       # The operate plane (ADR-0067; ADR-0014, amendment 2026-10-12): gRPC on
       # the estate's own HTTP/2 inside Xmip's own mutual TLS.
       "xmip-core-library-net",
@@ -1975,6 +1978,7 @@ dependency = ["xmip-core-library-codec"]
       "xmip-core-identify",
       "xmip-core-journey",
       "xmip-core-library-codec",
+      "xmip-core-library-file",
       "xmip-core-library-mariadb",
       "xmip-core-library-net",
       "xmip-core-library-postgresql",

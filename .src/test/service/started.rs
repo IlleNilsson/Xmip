@@ -245,10 +245,14 @@ pub(crate) fn written(directory: &Path, receive: &str) -> PathBuf {
     path
 }
 
-/// The local endpoint the node configured in `directory` is called.
+/// The local endpoint the node configured in `directory` is called: the
+/// random end of the name `xmip_file::temporary::Folder` gave the
+/// directory, the test's own and short enough for a Unix socket's path,
+/// which holds the name twice.
 pub(crate) fn endpoint(directory: &Path) -> String {
     let name = directory.file_name().and_then(|name| name.to_str());
-    name.expect("a directory of its own").to_string()
+    let name = name.expect("a directory of its own");
+    name.rsplit('-').next().unwrap_or(name).to_string()
 }
 
 /// Ask `act` of the Subscription `onward` at the node configured in
@@ -311,12 +315,10 @@ pub(crate) fn deliver(address: &str, payload: &[u8]) {
 }
 
 pub(crate) fn declarations(directory: &Path) -> Vec<String> {
-    std::fs::read_dir(directory.join("process"))
-        .map(|entries| {
-            entries
-                .flatten()
-                .filter_map(|entry| std::fs::read_to_string(entry.path()).ok())
-                .collect()
-        })
-        .unwrap_or_default()
+    std::fs::read_dir(directory.join("process")).map_or_default(|entries| {
+        entries
+            .flatten()
+            .filter_map(|entry| std::fs::read_to_string(entry.path()).ok())
+            .collect()
+    })
 }

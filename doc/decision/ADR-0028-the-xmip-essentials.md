@@ -1029,9 +1029,9 @@ parameter).
      `xmip-lsp` is built by cargo in the extension's crate through the one
      patched build the Essentials' binaries are built by
      (`Invoke-XmipPatchedBuild`: every estate crate patched to its working
-     tree, a shared build directory's unhashed libraries cleared first),
-     found where cargo says it wrote it, started over stdio, asked
-     `initialize`, answering with its capabilities, then shut down and told
+     tree; ADR-0021, amendment 2026-11-19, ended its clearing of a shared
+     build directory's unhashed libraries), found where cargo says it
+     wrote it, started over stdio, asked `initialize`, answering with its capabilities, then shut down and told
      to exit.
   5. *stop* — what the run started and nothing else, each only where it is
      still what the run started: its roll by `Stop-XmipTest`, where a pid

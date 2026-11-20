@@ -4,10 +4,11 @@
 //! tests and the root's timing program (`.src/test/measured/wire.rs`) both
 //! open and write. Shared, not copied.
 
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::time::Duration;
 
 use xmip_core::JourneyId;
+use xmip_file::temporary::Folder;
 use xmip_persist::storage::{Embedded, JourneyRecord, XmipStorage};
 use xmip_persist_rocksdb::RocksDb;
 use xmip_persist_sqlite::Sqlite;
@@ -16,12 +17,9 @@ use xmip_secret::{Held, KekName, KeyStore};
 /// The test Storage node.
 pub type TestNode = Embedded<RocksDb, Sqlite>;
 
-/// A directory of a test's own, empty.
-pub fn directory(test: &str) -> PathBuf {
-    let path = std::env::temp_dir().join(format!("xmip-storage-{test}-{}", std::process::id()));
-    let _ = std::fs::remove_dir_all(&path);
-    std::fs::create_dir_all(&path).expect("directory");
-    path
+/// A directory of a test's own, empty, removed when dropped.
+pub fn directory(test: &str) -> Folder {
+    Folder::new(&format!("storage-{test}"))
 }
 
 /// The platform's key store over `keys` (ADR-0063 clause 4), so a child

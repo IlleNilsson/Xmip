@@ -24,8 +24,13 @@ AfterAll {
 
 Describe "The Essentials' authority" {
     It 'is made once, keeps its anchor, issues the host anew and names itself to sign by' {
-        InModuleScope Xmip -Parameters @{ Folder = (Join-Path $TestDrive 'authority') } {
-            param($Folder)
+        [string] $area = Join-Path -Path $TestDrive -ChildPath 'essentials'
+        InModuleScope Xmip -Parameters @{
+            Folder = (Join-Path -Path $area -ChildPath 'authority')
+            Area   = $area
+            Phone  = (Join-Path -Path $TestDrive -ChildPath 'phone')
+        } {
+            param($Folder, $Area, $Phone)
 
             $first = Initialize-XmipEssentialsAuthority -Folder $Folder -Confirm:$false
             [string] $anchor = Get-Content -Raw -LiteralPath $first.TrustAnchor
@@ -40,14 +45,47 @@ Describe "The Essentials' authority" {
             $leaf.Dispose()
             $again.PrivateKey | Should -Exist
 
+            # The slice of the node the cluster's file declares the table for,
+            # signed by this authority, beside its folder (ADR-0031, amendment
+            # 2026-11-19).
+            $again.Configuration | Should -Be (Join-Path -Path $Area -ChildPath 'operator.xmip')
             [string] $signing = Get-Content -Raw -LiteralPath $again.Configuration
-            $signing | Should -Match '\[provision\.operator\]\s+authority = "\."'
-            $signing | Should -Match '\[service\]'
+            $signing | Should -Match '\[provision\.operator\]\s+authority = "authority"'
+            $signing | Should -Match '\[signature\]'
+
+            # A tester's request is signed by it, and by nothing edited by hand.
+            $certificates = [Xmip.Surface.RuntimeLibrary]::Rules.Certificates
+            [string] $key = ''
+            [string] $request = ''
+            [string] $chain = ''
+            [string] $refused = ''
+            $certificates.Request('alice@example.org', $Phone, [ref] $key, [ref] $request,
+                [ref] $refused) | Should -BeTrue -Because $refused
+            [string] $asked = Get-Content -Raw -LiteralPath $request
+            $certificates.Sign($again.Configuration, $asked, [ref] $chain, [ref] $refused) |
+                Should -BeTrue -Because $refused
+            Set-Content -LiteralPath $again.Configuration -NoNewline -Value $signing.Replace(
+                'authority = "authority"', "authority = `"authority`"`nlifetime = `"876000h`"")
+            $certificates.Sign($again.Configuration, $asked, [ref] $chain, [ref] $refused) |
+                Should -BeFalse
+            $refused | Should -BeLike '*changed after it was signed*'
+        }
+    }
+
+    It 'refuses a folder the trust does not read beside a slice' {
+        [string] $folder = Join-Path -Path $TestDrive -ChildPath 'kept'
+        InModuleScope Xmip -Parameters @{ Folder = $folder } {
+            param($Folder)
+
+            { Initialize-XmipEssentialsAuthority -Folder $Folder -Confirm:$false } |
+                Should -Throw -ExpectedMessage '*not named authority*'
+            $Folder | Should -Not -Exist
         }
     }
 
     It 'writes nothing under -WhatIf' {
-        InModuleScope Xmip -Parameters @{ Folder = (Join-Path $TestDrive 'whatif') } {
+        [string] $folder = Join-Path -Path $TestDrive -ChildPath 'whatif/authority'
+        InModuleScope Xmip -Parameters @{ Folder = $folder } {
             param($Folder)
 
             Initialize-XmipEssentialsAuthority -Folder $Folder -WhatIf | Should -BeNullOrEmpty

@@ -892,3 +892,92 @@ by role when the environment is written, not granted at run time.*
 Built 2026-11-13, the assistant's; held by configure's tests (the nodes
 declaring monitoring listed whatever they are called, their roles swapped
 swapping what is listed, and a name granted more keeping its role).
+
+## Amendment, 2026-11-19: a tester's request is signed by a node's signed slice
+
+The owner, 2026-11-19, on open problem 79, signing a person's request read
+`[provision.operator]` around the trust: *Go with that*, the assistant's
+option A. Until then `runtime::operator_certificate::sign` read the file it
+was given as it was, and the Essentials' and the deployment environment's
+`operator.xmip` of the amendment of 2026-10-21 were written unsigned beside
+the authority. A hand edit of the table was honored: its `lifetime`, any
+length, and its `authority`, any folder an authority is kept in. The names
+were never the table's: the subject is the request's person.
+
+- **The table is part of a node's slice**, declared for the node in the
+  cluster's file as `[nodes.<name>.provision.operator]`. The Essentials'
+  `cluster.xmip` declares it for OP1, `authority = "authority"`: the folder
+  beside the slice, where the trust reads its anchor and, where the
+  authority is kept, its key.
+- **Signing reads the slice as its trust admits it** (`start::read`,
+  ADR-0031, amendment 2026-11-19): a slice edited by hand or unsigned is
+  refused, and where the node has an active configuration, that slice's
+  table is read.
+- **The Essentials writes `operator.xmip` anew at each start**
+  (`Initialize-XmipEssentialsAuthority`), beside its authority's folder,
+  `.local-work/essentials/operator.xmip`: the slice of the node the cluster's
+  file declares the table for, found by the table and never by its name,
+  sliced as the run names the cluster and signed by the Essentials'
+  authority through `xmip_cluster_signed_slice_v1`, whose argument may now
+  name the cluster and the folder the authority is kept in. A folder not
+  named `authority` is refused, since the trust reads no other.
+- **The deployment environment** slices it with its `slicer`,
+  `xmip-service --slice` with the same `--cluster` and `--authority` as
+  every node's slice, beside its `authority` folder
+  (`deploy/dsc/msdsc/environment/README.md`). Both ways are the runtime's
+  one slicing and signing, `signed::sliced_signed`.
+- **The tester's way**: `New-XmipCertificate -Request
+  <folder>/operator.csr -Configuration .local-work/essentials/operator.xmip
+  -Path <folder>/operator.pem`.
+- **The GUI** signs nothing and shows no lifetime or authority: the
+  Desktop's certificate page makes the request and keeps the chain and the
+  anchor. It changes nothing.
+
+Shown by `xmip-core-runtime`'s `operator_certificate` tests, written first
+and run against the code before this change on 2026-11-19 on Windows
+(`cargo test -j 4 --config .local-work/landing/patch.toml --lib
+operator_certificate -- --test-threads 4` in `module/platform/runtime`),
+each chain trimmed:
+
+```text
+test operator_certificate::tests::a_hand_edited_lifetime_is_refused_where_no_slice_ran ... FAILED
+test operator_certificate::tests::a_hand_edited_authority_signs_by_no_other ... FAILED
+test operator_certificate::tests::a_hand_edited_lifetime_signs_by_the_active_slice ... FAILED
+test operator_certificate::tests::an_unsigned_operator_table_is_refused ... FAILED
+a hand edit: "-----BEGIN CERTIFICATE-----\nMIIBrTCCAVOgAwIBAgIQaWywqgAPwg9PlVWWk91thzAKBggqhkjOPQQDAjAcMRow…
+signed, by the other: true
+  left: 3153600000
+ right: 3600
+unsigned: "-----BEGIN CERTIFICATE-----\nMIIBqzCCAVGgAwIBAgIQQ93auIG0Wj/vf99TNL0aqzAKBggqhkjOPQQDAjAcMRow…
+test result: FAILED. 2 passed; 4 failed; 0 ignored; 0 measured; 315 filtered out; finished in 0.30s
+```
+
+and after (`--lib`, every test of the library):
+
+```text
+test operator_certificate::tests::a_hand_edited_lifetime_is_refused_where_no_slice_ran ... ok
+test operator_certificate::tests::a_hand_edited_lifetime_signs_by_the_active_slice ... ok
+test operator_certificate::tests::a_hand_edited_authority_signs_by_no_other ... ok
+test operator_certificate::tests::an_unsigned_operator_table_is_refused ... ok
+test signed::tests::a_slice_signed_by_a_kept_authority_is_named_for_the_environments_cluster ... ok
+test result: ok. 322 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.50s
+```
+
+`xmip-core-operate`'s `design::tests::a_signed_slice_takes_the_cluster_and_authority_its_argument_names`,
+run against the export's code before this change (`cargo test -j 4
+--config .local-work/landing/patch.toml --lib design::tests::a_signed_slice
+-- --test-threads 4` in `module/core/operation/operate`), signed beside the
+cluster's file and left the cluster's name out:
+
+```text
+test design::tests::a_signed_slice_takes_the_cluster_and_authority_its_argument_names ... FAILED
+# The node DS1's configuration, sliced from its cluster's cluster.xmip.
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 210 filtered out; finished in 0.15s
+```
+
+and after (`--lib`, every test of the library):
+
+```text
+test design::tests::a_signed_slice_takes_the_cluster_and_authority_its_argument_names ... ok
+test result: ok. 211 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.35s
+```

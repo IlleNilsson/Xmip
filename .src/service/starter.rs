@@ -65,14 +65,13 @@ mod tests {
         let source = starter(&cluster.name, &node, r"HOST\installer");
 
         let sliced = xmip_configure::slice(&source, &node).expect("slices");
-        let directory = std::env::temp_dir().join(format!("xmip-starter-{}", std::process::id()));
-        std::fs::create_dir_all(&directory).expect("a directory");
+        let directory = xmip_file::temporary::Folder::new("service-starter");
         let file = directory.join(NODE_FILE);
         let signed = xmip_runtime::signed::signed_beside(&file, &cluster.name, &source, &sliced)
             .expect("signed");
         std::fs::write(&file, signed).expect("written");
         let read = xmip_runtime::start::read(&text(&file));
-        std::fs::remove_dir_all(&directory).expect("removed");
+        drop(directory);
 
         let (document, _, _) = read.expect("reads");
         assert_eq!(document.service.node_name, node);

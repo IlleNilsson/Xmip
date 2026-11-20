@@ -2168,20 +2168,17 @@ share without hard links an archive is refused, not written.
 Its receipt is still a bare path, unlike the file archive's `file://` URI
 and the SHA-256 its sidecar holds (ADR-0040, amendment 2026-11-19).
 
-## 79. Signing a person's certificate reads `[provision.operator]` around the trust
+## 80. An audit record written after a test's folder is dropped makes the folder again
 
-Found 2026-11-19. `runtime::operator_certificate::sign` reads `node.xmip`
-raw, not through the signed-slice check (ADR-0031), so a hand edit changes
-the certificate's lifetime (any duration) and which kept authority signs
-(any folder, an absolute path included); the names are not affected. The
-Essentials' and the deployment environment's `operator.xmip` (ADR-0009,
-amendment 2026-10-21) are unsigned, so routing the read through the check
-changes the tester's flow. Options: (A) `[provision.operator]` becomes part
-of the node's signed slice, declared in the cluster file and written
-through `xmip_cluster_signed_slice_v1`, and the Essentials and the
-deployment environment write it so; (B) signing reads no node
-configuration, and each surface names the authority folder and the
-lifetime. Lean: A. The owner's choice, asked 2026-11-19.
+Found 2026-11-19 with the one temporary folder a Rust test makes
+(`file::temporary::Folder` in `xmip-core-library-file`, under
+`test-support`; ADR-0021, amendment 2026-11-19), which is
+removed when the test drops it. A record an audit writer appends after that
+— a cluster subscription's close record, written as its thread winds down —
+creates the folder and the audit file again, so the folder outlives its test.
+The race is older than the guard; the guard only makes it visible. To do:
+a test's audit writer is closed, and its last record written, before the
+folder it writes in is dropped.
 
 # Suggested order
 
@@ -2999,3 +2996,28 @@ building them is open problem 58.
 
 Stale, the owner, 2026-10-27: `xmip-core-abi` and `xmip-core-transport` have
 their repositories, and `logic` was resolved under problem 6.
+
+## 79. Signing a person's certificate reads `[provision.operator]` around the trust — **Resolved**
+
+*Resolved 2026-11-19 by the owner's decision of the same day, option A,
+"Go with that", built the same day (ADR-0009 and ADR-0031, amendments
+2026-11-19).*
+
+Found 2026-11-19. `runtime::operator_certificate::sign` read `node.xmip`
+raw, not through the signed-slice check (ADR-0031), so a hand edit changed
+the certificate's lifetime (any duration) and which kept authority signed
+(any folder, an absolute path included); the names were not affected. The
+Essentials' and the deployment environment's `operator.xmip` (ADR-0009,
+amendment 2026-10-21) were unsigned. The options were (A)
+`[provision.operator]` becomes part of the node's signed slice, or (B)
+signing reads no node configuration and each surface names the authority
+folder and the lifetime.
+
+Decided by the owner: A, on the reasons that every setting a node acts on
+is signed and that the limit stays with the node rather than with each
+surface that asks for a certificate. `sign` reads through `start::read`, so
+a hand-edited or unsigned slice is refused or the active slice signs;
+`signed::sliced_signed` is the one slice-and-sign; the Essentials declare
+`[nodes.OP1.provision.operator]` in the cluster file and write
+`operator.xmip` as that node's signed slice, finding the node by its table,
+never by its name.

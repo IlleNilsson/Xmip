@@ -6,8 +6,9 @@
 //! (`deployment-model.md` section 8). What it prints is signed by the
 //! cluster's authority kept in `--authority`, the machine deploying the
 //! environment's, or beside the cluster's file where it names none, made there
-//! where none is (`signed`; ADR-0031, amendment 2026-11-06); nothing else is
-//! written. With
+//! where none is (`signed::sliced_signed`, the one slicing and signing
+//! `xmip_cluster_signed_slice_v1` asks too; ADR-0031, amendments 2026-11-06
+//! and 2026-11-19); nothing else is written. With
 //! `--cluster`, a cluster's file that names no cluster is sliced as that
 //! one, and one naming another is refused (`slice_named`; ADR-0028,
 //! amendment 2026-10-21). With `--bind`, each Receive Location and Send
@@ -49,24 +50,11 @@ fn sliced(arguments: &Arguments) -> Result<String, String> {
     if let Some(host) = arguments.bind.as_deref() {
         cluster = xmip_configure::placed::at_far_end(&cluster, &arguments.nodes, host)?;
     }
-    let (sliced, name) = match arguments.cluster.as_deref() {
-        Some(name) => (
-            xmip_configure::slice_named(&cluster, node, name)?,
-            name.to_string(),
-        ),
-        None => (
-            xmip_configure::slice(&cluster, node)?,
-            xmip_configure::cluster::cluster_name(&cluster)?.unwrap_or_default(),
-        ),
-    };
-    let configuration = std::path::Path::new(&arguments.configuration);
-    match arguments.authority.as_deref() {
-        Some(place) => xmip_runtime::signed::signed_by_kept(
-            std::path::Path::new(place),
-            &name,
-            &cluster,
-            &sliced,
-        ),
-        None => xmip_runtime::signed::signed_beside(configuration, &name, &cluster, &sliced),
-    }
+    xmip_runtime::signed::sliced_signed(
+        &cluster,
+        std::path::Path::new(&arguments.configuration),
+        node,
+        arguments.cluster.as_deref(),
+        arguments.authority.as_deref().map(std::path::Path::new),
+    )
 }

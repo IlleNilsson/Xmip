@@ -31,9 +31,7 @@ fn serving(directory: &Path, serve: &str, publish: &str, challenge: u16) -> Path
 
 #[test]
 fn the_service_answers_acme_for_the_premises_and_publishes_its_list() {
-    let directory =
-        std::env::temp_dir().join(format!("xmip-service-authority-{}", std::process::id()));
-    let _ = std::fs::remove_dir_all(&directory);
+    let directory = xmip_file::temporary::Folder::new("service-authority");
     // Where `localhost` resolves first, which every connection to it tries
     // first: listening there, nothing waits on the refusal of another.
     let first = std::net::ToSocketAddrs::to_socket_addrs(&("localhost", 0))
@@ -107,5 +105,4 @@ fn the_service_answers_acme_for_the_premises_and_publishes_its_list() {
     assert!(exited(child, Duration::from_secs(30)).success());
     // Exited: its number may be another process's by now, never ended here.
     ending.0 = None;
-    let _ = std::fs::remove_dir_all(&directory);
 }

@@ -6,18 +6,12 @@ using namespace System.Collections.Generic
 function Get-XmipEstateCrate {
     <#
         .SYNOPSIS
-            Every estate crate in the working trees: its package name, its
-            folder, and the name of the library cargo writes without a hash.
+            Every estate crate in the working trees: its package name and its
+            folder.
 
         .DESCRIPTION
             Read once for a landing: New-XmipLocalPatch patches each crate to
-            its folder, and Clear-XmipUnhashedLibrary removes the libraries
-            one workspace left for another.
-
-            Cargo names a path crate's library without its hash when the crate
-            builds a cdylib or dylib, so the rlib beside it is one file, shared
-            by every workspace in the one build directory. Unhashed is that
-            library's name (`xmip_core_operate`), empty for any other crate.
+            its folder.
     #>
     [CmdletBinding()]
     [OutputType([pscustomobject])]
@@ -60,21 +54,9 @@ function Get-XmipEstateCrate {
                 return
             }
 
-            [string] $unhashed = ''
-            [string] $library = '(?ms)^\[lib\][^\[]*?^crate-type\s*=\s*\[[^\]]*"c?dylib"'
-
-            if ($text -match $library) {
-                $unhashed = $crate -replace '-', '_'
-
-                if ($text -match '(?ms)^\[lib\][^\[]*?^name\s*=\s*"([^"]+)"') {
-                    $unhashed = $Matches[1]
-                }
-            }
-
             [pscustomobject]@{
                 Name      = $crate
                 Directory = $_.DirectoryName -replace '\\', '/'
-                Unhashed  = $unhashed
             }
         }
 }

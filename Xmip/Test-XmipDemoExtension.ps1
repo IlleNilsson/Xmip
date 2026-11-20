@@ -11,9 +11,8 @@
     The VSIX is Build-XmipService -Extension VsCode's. The server is built as
     the getting-started guide builds it, cargo in the extension's own crate,
     by the one patched build a roll's binaries are built by
-    (Invoke-XmipPatchedBuild: every estate crate patched to its working tree,
-    a shared build directory's unhashed libraries cleared first), and found
-    where cargo says it wrote it, so CARGO_TARGET_DIR moves it and nothing
+    (Invoke-XmipPatchedBuild: every estate crate patched to its working
+    tree), and found where cargo says it wrote it, so CARGO_TARGET_DIR moves it and nothing
     here guesses. Then the server is started as the extension starts it
     (Start-XmipLanguageServer, audited) and asked what the Language Server
     Protocol asks first; it answers with its capabilities, and is shut down

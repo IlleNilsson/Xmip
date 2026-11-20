@@ -8,6 +8,7 @@
 
 use xmip_core::fastest::FIVE;
 use xmip_core::latency::spread;
+use xmip_file::temporary::Folder;
 
 use super::*;
 
@@ -22,10 +23,8 @@ const IDLE: Duration = Duration::from_millis(100);
 
 /// Start the service in a directory named for `name`, its Locations
 /// started where `starts` says, and wait until it accepts work.
-fn started(name: &str, starts: bool) -> (PathBuf, Child, Ending, Receiver<String>) {
-    let directory =
-        std::env::temp_dir().join(format!("xmip-service-{name}-{}", std::process::id()));
-    let _ = std::fs::remove_dir_all(&directory);
+fn started(name: &str, starts: bool) -> (Folder, Child, Ending, Receiver<String>) {
+    let directory = Folder::new(&format!("service-{name}"));
     let configuration = written(&directory, &unheld().to_string());
     if !starts {
         let text = xmip_runtime::fixture::unsigned(&configuration);
@@ -45,20 +44,19 @@ fn started(name: &str, starts: bool) -> (PathBuf, Child, Ending, Receiver<String
     (directory, child, ending, said)
 }
 
-/// Stop the service, and remove what it left.
-fn ended(directory: &Path, child: Child, mut ending: Ending, said: &Receiver<String>) {
+/// Stop the service.
+fn ended(child: Child, mut ending: Ending, said: &Receiver<String>) {
     stop(&child);
     heard(said, "stopped by the console", Duration::from_secs(5));
     assert!(exited(child, Duration::from_secs(5)).success());
     ending.0 = None;
-    let _ = std::fs::remove_dir_all(directory);
 }
 
 #[test]
 fn a_service_nothing_tells_uses_next_to_no_processor() {
     // Nothing started, so what is measured is the service's own: a
     // Receive Location's transport waits on its own terms.
-    let (directory, child, ending, said) = started("idle", false);
+    let (_directory, child, ending, said) = started("idle", false);
 
     // What its start set going — its Storage node's own work — settles.
     std::thread::sleep(Duration::from_secs(1));
@@ -79,7 +77,7 @@ fn a_service_nothing_tells_uses_next_to_no_processor() {
         })
         .collect();
     let used = spread("an idle service's processor time, a second", used);
-    ended(&directory, child, ending, &said);
+    ended(child, ending, &said);
     assert!(
         used.fastest_of_five < IDLE,
         "an idle service used {:?} of processor time a second, the fastest of five",

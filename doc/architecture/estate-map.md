@@ -451,7 +451,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 398412 lines of production
+Where each repository mounts and what it holds: 398316 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -476,23 +476,23 @@ hold no source to count.
 ├── module/
 │   ├── core/
 │   │   ├── capability/
-│   │   │   ├── transport                       9235
+│   │   │   ├── transport                       9234
 │   │   │   │   ├── amqp                        2732
 │   │   │   │   ├── opc-ua                      2505
-│   │   │   │   ├── db2                         2483
+│   │   │   │   ├── db2                         2481
 │   │   │   │   ├── http                        2240
 │   │   │   │   ├── nfs                         2170
-│   │   │   │   ├── kafka                       2055
+│   │   │   │   ├── kafka                       2054
 │   │   │   │   ├── smb                         2019
-│   │   │   │   ├── ibm-mq                      1959
+│   │   │   │   ├── ibm-mq                      1958
 │   │   │   │   ├── ftp                         1839
-│   │   │   │   ├── sftp                        1834
+│   │   │   │   ├── sftp                        1830
 │   │   │   │   ├── serial                      1736
 │   │   │   │   ├── mssql                       1653
 │   │   │   │   ├── snmp                        1446
-│   │   │   │   ├── nats-jetstream              1395
+│   │   │   │   ├── nats-jetstream              1390
 │   │   │   │   ├── oracle                      1360
-│   │   │   │   ├── as4                         1352
+│   │   │   │   ├── as4                         1348
 │   │   │   │   ├── dns                         1268
 │   │   │   │   ├── s7comm                      1238
 │   │   │   │   ├── secs-gem                    1215
@@ -514,19 +514,19 @@ hold no source to count.
 │   │   │   │   ├── j1939                        900
 │   │   │   │   ├── uds                          899
 │   │   │   │   ├── bluetooth                    886
-│   │   │   │   ├── redis-streams                882
+│   │   │   │   ├── redis-streams                880
 │   │   │   │   ├── azure-event-grid             878
 │   │   │   │   ├── lorawan                      878
 │   │   │   │   ├── azure-service-bus            872
 │   │   │   │   ├── aws-s3                       871
 │   │   │   │   ├── pop3                         869
-│   │   │   │   ├── google-pub-sub               867
+│   │   │   │   ├── google-pub-sub               863
 │   │   │   │   ├── azure-blob                   862
 │   │   │   │   ├── file                         861
 │   │   │   │   ├── aws-sqs                      854
 │   │   │   │   ├── profinet                     838
 │   │   │   │   ├── cotp                         836
-│   │   │   │   ├── dhcp                         825
+│   │   │   │   ├── dhcp                         824
 │   │   │   │   ├── wireless-hart                821
 │   │   │   │   ├── google-cloud-storage         804
 │   │   │   │   ├── peppol                       788
@@ -537,7 +537,7 @@ hold no source to count.
 │   │   │   │   ├── syslog                       741
 │   │   │   │   ├── iec-60870-5-104              733
 │   │   │   │   ├── iso-tp                       723
-│   │   │   │   ├── mdns                         699
+│   │   │   │   ├── mdns                         698
 │   │   │   │   ├── websocket                    696
 │   │   │   │   ├── dds                          693
 │   │   │   │   ├── io-link                      693
@@ -565,14 +565,14 @@ hold no source to count.
 │   │   │   │   ├── tcp                          278
 │   │   │   │   ├── postgresql                   245
 │   │   │   │   └── udp                          214
-│   │   │   ├── provision                       3838
-│   │   │   │   ├── internal-ca                 2563
+│   │   │   ├── provision                       3831
+│   │   │   │   ├── internal-ca                 2554
 │   │   │   │   ├── acme                        1152
 │   │   │   │   ├── self-signed                   81
 │   │   │   │       declared, not built 1
 │   │   │   │       platform
 │   │   │   ├── authenticate                    2973
-│   │   │   │   ├── saml                         983
+│   │   │   │   ├── saml                         982
 │   │   │   │   ├── kerberos                     796
 │   │   │   │   ├── ldap                         781
 │   │   │   │   ├── oauth2                       597
@@ -591,7 +591,7 @@ hold no source to count.
 │   │   │   │   ├── basic                         76
 │   │   │   │   └── mutual-tls                    74
 │   │   │   ├── path                            2694
-│   │   │   │   ├── jsonpath                     665
+│   │   │   │   ├── jsonpath                     663
 │   │   │   │   ├── fhirpath                     619
 │   │   │   │   ├── edi                          402
 │   │   │   │   ├── hl7-v2                       372
@@ -600,14 +600,14 @@ hold no source to count.
 │   │   │   │   ├── regex                        163
 │   │   │   │   ├── index                        161
 │   │   │   │   └── json-pointer                  65
-│   │   │   ├── prepare                         2423
+│   │   │   ├── prepare                         2422
 │   │   │   │   ├── rpgp                         255
 │   │   │   │       declared, not built 9
 │   │   │   │       bzip2  canonicalize  checksum  chunking  envelope  framing
 │   │   │   │        hash  quoted-printable  tar
 │   │   │   ├── process                         2391
 │   │   │   │   └── bpmn                        3098
-│   │   │   ├── transform                       2125
+│   │   │   ├── transform                       2124
 │   │   │   │       declared, not built 8
 │   │   │   │       handlebars  jolt  jq  jsonata  liquid  mustache  tera
 │   │   │   │       xquery
@@ -615,7 +615,7 @@ hold no source to count.
 │   │   │   │   ├── saml                         395
 │   │   │   │   ├── ip                           231
 │   │   │   │   ├── api-key                      226
-│   │   │   │   ├── dns                          195
+│   │   │   │   ├── dns                          194
 │   │   │   │   ├── username                     169
 │   │   │   │   ├── jwt                          166
 │   │   │   │   ├── ntlm                         155
@@ -632,21 +632,21 @@ hold no source to count.
 │   │   │   │   ├── ssh-key                       63
 │   │   │   │   └── contract                      52
 │   │   │   ├── secret                          1273
-│   │   │   │   ├── dpapi                        317
-│   │   │   │   ├── file                         197
+│   │   │   │   ├── dpapi                        314
+│   │   │   │   ├── file                         198
 │   │   │   │   ├── keychain                     107
 │   │   │   │       declared, not built 5
 │   │   │   │       aws-kms  azure-key-vault  keyring  pkcs11  vault
 │   │   │   ├── contract                         979
-│   │   │   │   ├── json-schema                 1134
+│   │   │   │   ├── json-schema                 1133
 │   │   │   │   ├── graphql-schema               874
 │   │   │   │   ├── xml-schema                   830
 │   │   │   │   ├── avro                         802
 │   │   │   │   ├── toon                         717
 │   │   │   │   ├── protobuf                     714
-│   │   │   │   ├── edi-edifact                  632
 │   │   │   │   ├── sql                          631
 │   │   │   │   ├── edi-x12                      629
+│   │   │   │   ├── edi-edifact                  628
 │   │   │   │   ├── hl7-v2                       515
 │   │   │   │   ├── fixed-width                  512
 │   │   │   │   ├── yaml                         504
@@ -667,12 +667,12 @@ hold no source to count.
 │   │   │   │   ├── header                        68
 │   │   │   │   └── context                       47
 │   │   │   ├── authorize                        552
-│   │   │   │   ├── location                     397
+│   │   │   │   ├── location                     396
 │   │   │   │   ├── abac                         364
 │   │   │   │   ├── opa                          289
 │   │   │   │   ├── cedar                        282
 │   │   │   │   ├── policy                       249
-│   │   │   │   ├── transport                    206
+│   │   │   │   ├── transport                    204
 │   │   │   │   ├── role                         200
 │   │   │   │   ├── contract                     189
 │   │   │   │   ├── artifact                     178
@@ -680,8 +680,8 @@ hold no source to count.
 │   │   │   │   ├── claim                        168
 │   │   │   │   ├── rbac                         163
 │   │   │   │   ├── acl                          147
-│   │   │   │   └── party                        131
-│   │   │   ├── unit                             431
+│   │   │   │   └── party                        130
+│   │   │   ├── unit                             430
 │   │   │   ├── schedule                         264
 │   │   │   ├── receive                          178
 │   │   │   ├── demote                           175
@@ -706,7 +706,7 @@ hold no source to count.
 │   │   ├── library/
 │   │   │   ├── net                             8896
 │   │   │   ├── codec                           5914
-│   │   │   ├── tls                             4200
+│   │   │   ├── tls                             4181
 │   │   │   ├── mariadb                         1785
 │   │   │   ├── ssh                             1744
 │   │   │   ├── sql                             1304
@@ -714,18 +714,18 @@ hold no source to count.
 │   │   │   ├── jose                             881
 │   │   │   ├── ntlm                             806
 │   │   │   ├── asn1                             686
-│   │   │   └── file                              58
+│   │   │   └── file                             145
 │   │   └── operation/
-│   │       ├── operate                        52072  C# 32030 · Rust 20042
-│   │       ├── cli                            11964
+│   │       ├── operate                        52140  C# 32091 · Rust 20049
+│   │       ├── cli                            11896
 │   │       ├── observe                         7949
 │   │       │   ├── otlp                         591
 │   │       │   └── prometheus                   332
 │   │       ├── gui                             7917
-│   │       │   └── vscode                      3429
+│   │       │   └── vscode                      3423
 │   │       ├── powershell                      3806  C# 3806 · PowerShell 0
-│   │       ├── audit                           3674
-│   │       │   ├── file                         545
+│   │       ├── audit                           3670
+│   │       │   ├── file                         540
 │   │       │   ├── windows-event-log            173
 │   │       │   ├── syslog                        78
 │   │       │       declared, not built 7
@@ -746,7 +746,7 @@ hold no source to count.
 │   │           ├── postgresql                    62
 │   │           └── mssql                         59
 │   ├── foundation/
-│   │   ├── abi                                 6395  Rust 3271 · C# 2732 · PowerShell 392
+│   │   ├── abi                                 6398  Rust 3273 · C# 2733 · PowerShell 392
 │   │   ├── core                                4680
 │   │   ├── message                             2093
 │   │   │   ├── avro                             300
@@ -771,17 +771,17 @@ hold no source to count.
 │   │   ├── stream                               382
 │   │   └── party                                193
 │   └── platform/
-│       ├── runtime                            48412
-│       ├── persist                            21901
-│       │   ├── rocksdb                          333
+│       ├── runtime                            48421
+│       ├── persist                            21900
+│       │   ├── rocksdb                          323
 │       │   ├── sqlite                           288
 │       │       declared, not built 1
 │       │       postgresql
 │       ├── configure                           5427
-│       └── cluster                             4958
+│       └── cluster                             4909
 └── test/
     └── core/
-        ├── essentials                         16516
+        ├── essentials                         16475
         └── module                                83
 ```
 

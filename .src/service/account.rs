@@ -107,7 +107,7 @@ mod tests {
     #[test]
     fn the_account_reads_the_configuration_and_its_key_and_writes_data_and_logs() {
         let node = xmip_configure::fixture::test_cluster().node(0).name.clone();
-        let base = std::env::temp_dir().join(format!("xmip-account-{}", std::process::id()));
+        let base = xmip_file::temporary::Folder::new("service-account");
         let config = xmip_runtime::fixture::configuration_folder(&base);
         let file = config.join("node.xmip");
         let cluster = format!(
@@ -127,6 +127,5 @@ mod tests {
         assert_eq!(folders[1], (config.join("tls"), Access::Keeps));
         assert_eq!(folders[2].1, Access::Writes, "the data is written");
         assert_eq!(folders[3], (base.join("logs"), Access::Writes));
-        std::fs::remove_dir_all(&base).expect("removes what it wrote");
     }
 }

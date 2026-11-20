@@ -207,7 +207,7 @@ failed.
 
 **The toolchain**, as of 2026-10-19 (ADR-0021, amendment 2026-10-19).
 PowerShell Core 7.7.0 or newer, with PSToml, powershell-yaml and posh-git, and Pester 6, each at its latest release.
-Rust builds with stable cargo, 1.99.1, edition 2024; C# builds with the
+Rust builds with stable cargo, 1.100.0 (ADR-0021, amendment 2026-11-19), edition 2024; C# builds with the
 .NET 11 SDK, 11.0.100, generally available since 2026-11-10 (ADR-0014,
 amendment 2026-11-12), and every project targets net11.0, the PowerShell binary module
 included, which pwsh 7.7 hosts on .NET 11 (ADR-0014, amendment 2026-11-02). The event bindings build with Java 27, Python 3.15 and,

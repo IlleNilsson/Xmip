@@ -65,10 +65,8 @@ mod tests {
     use xmip_operate::surface::choice::{Asked, Choice, Document, SurfaceLine, decided};
     use xmip_runtime::registration::local_endpoint;
 
-    fn bin(name: &str) -> std::path::PathBuf {
-        let bin = std::env::temp_dir().join(format!("xmip-cli-{name}-{}", std::process::id()));
-        std::fs::create_dir_all(&bin).expect("bin");
-        bin
+    fn bin(name: &str) -> xmip_file::temporary::Folder {
+        xmip_file::temporary::Folder::new(&format!("service-cli-{name}"))
     }
 
     fn endpoint() -> String {
@@ -87,7 +85,6 @@ mod tests {
             Ok(Choice::Local(Some(endpoint())))
         );
         assert_eq!(document.value("AuditDirectory"), None);
-        let _ = std::fs::remove_dir_all(&bin);
     }
 
     #[test]
@@ -99,7 +96,6 @@ mod tests {
 
         assert_eq!(placed(&path, &endpoint()), Ok(false));
         assert_eq!(std::fs::read_to_string(&path).expect("read"), operator_s);
-        let _ = std::fs::remove_dir_all(&bin);
     }
 
     #[test]
@@ -123,6 +119,5 @@ mod tests {
                 .expect("kept")
                 .contains("was there and is kept")
         );
-        let _ = std::fs::remove_dir_all(&bin);
     }
 }

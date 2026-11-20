@@ -20,21 +20,24 @@ function Initialize-XmipEssentialsAuthority {
             of it is the runtime's (xmip_operate.h section 21, through
             Xmip.Surface's RuntimeLibrary); nothing here writes a key.
 
-            Beside them, operator.xmip names the folder in
-            [provision.operator], so the tester has their request signed by
-            the same authority with the operator module's own cmdlet:
+            Beside the folder, operator.xmip is the slice of the node the
+            Essentials' cluster.xmip declares [provision.operator] for, found
+            by that table and never by its name, sliced as the run names the
+            cluster (Get-XmipTestClusterPath) and signed by this authority
+            through xmip_cluster_signed_slice_v1, written anew at each call
+            (ADR-0031, amendment 2026-11-19). The tester has their request
+            signed by it with the operator module's own cmdlet:
             New-XmipCertificate -Request <operator.csr> -Configuration
-            <Authority>/operator.xmip. The runtime reads that file as a node
-            configuration, so it carries a [service] table: the cluster the
-            Essentials rolls, as its cluster.xmip names it (Get-XmipTestClusterPath),
-            and the folder's name as the node's, which no node runs as.
+            <Area>/operator.xmip. The runtime reads it as its trust admits a
+            slice, so one edited by hand is refused.
 
             Returns the host's Certificate, PrivateKey and TrustAnchor, and the
             Configuration a tester signs by.
 
         .PARAMETER Folder
             Where the authority is kept. Get-XmipEssentialsLayout's Authority
-            unless given.
+            unless given. Its name is authority, the folder the trust reads
+            beside a slice.
 
         .PARAMETER HostName
             The name a browser reaches the host by, and its certificate names:
@@ -53,6 +56,10 @@ function Initialize-XmipEssentialsAuthority {
     $ErrorActionPreference = 'Stop'
     [string] $full = [System.IO.Path]::GetFullPath($Folder)
 
+    if ((Split-Path -Path $full -Leaf) -cne 'authority') {
+        throw "REFUSED. $full is not named authority, the folder the trust reads beside a slice."
+    }
+
     [string] $act = "Keep the Essentials' authority and issue $HostName"
 
     if (-not $PSCmdlet.ShouldProcess($full, $act)) {
@@ -69,28 +76,32 @@ function Initialize-XmipEssentialsAuthority {
         throw "REFUSED. The Essentials' authority at ${full}: $refused"
     }
 
-    [string] $configuration = Join-Path -Path $full -ChildPath 'operator.xmip'
+    # Names are configuration (ADR-0056, amendment 2026-10-03): the cluster
+    # the run names, and the node the cluster's file declares the table for.
+    [string] $file = (Get-XmipEssentialsLayout).Configuration
+    [string] $cluster = (Read-XmipTestCluster -Path (Get-XmipTestClusterPath)).Name
+    $nodes = Get-TomlValue -Node (Read-XmipConfiguration -Path $file) -Name 'nodes'
+    [string[]] $signing = @(Get-TomlKey -Node $nodes | Where-Object {
+            $provision = Get-TomlValue -Node (Get-TomlValue -Node $nodes -Name $_) -Name 'provision'
+            $null -ne (Get-TomlValue -Node $provision -Name 'operator')
+        })
 
-    if (-not (Test-Path -LiteralPath $configuration)) {
-        # Names are configuration (ADR-0056, amendment 2026-10-03): the
-        # cluster the Essentials rolls, from its cluster.xmip, and the folder's.
-        [string] $cluster = (Read-XmipTestCluster -Path (Get-XmipTestClusterPath)).Name
-        [string] $place = Split-Path -Path $full -Leaf
-        [string[]] $said = @(
-            "What signs an Essentials tester's operator request (ADR-0009, amendment"
-            '2026-10-21): New-XmipCertificate -Request <operator.csr> -Configuration'
-            'this file. The runtime reads it as a node configuration; no node runs as it.'
-        )
-        $document = [ordered]@{
-            service   = [ordered]@{
-                name         = 'xmip-essentials-authority'
-                cluster_name = $cluster
-                node_name    = $place
-            }
-            provision = [ordered]@{ operator = [ordered]@{ authority = '.' } }
-        }
-        Write-XmipConfiguration -Path $configuration -Value $document -Comment $said
+    if ($signing.Count -ne 1) {
+        throw ("REFUSED. $file declares [provision.operator] for $($signing.Count) nodes " +
+            "($($signing -join ', ')); one node's slice signs a tester's request.")
     }
+
+    [string] $answer = ''
+    $design = [Xmip.Surface.RuntimeLibrary]::Rules.Design
+    [string] $text = Get-Content -LiteralPath $file -Raw -Encoding utf8
+
+    if (-not $design.TrySignedSlice($text, $file, $signing[0], $cluster, $full, [ref] $answer)) {
+        throw "REFUSED. The slice of $($signing[0]) from ${file}: $answer"
+    }
+
+    [string] $beside = Split-Path -Path $full -Parent
+    [string] $configuration = Join-Path -Path $beside -ChildPath 'operator.xmip'
+    Write-XmipWholeFile -Path $configuration -Text (ConvertFrom-Json -InputObject $answer).text
 
     return [PSCustomObject]@{
         Certificate   = $issued.Certificate

@@ -29,7 +29,7 @@
 //! copied: the service's `started.rs`, and the Storage tests' `node.rs`
 //! and `authority.rs`.
 
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::process::Child;
 use std::sync::mpsc::Receiver;
 use std::time::{Duration, Instant};

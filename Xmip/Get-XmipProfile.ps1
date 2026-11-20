@@ -135,8 +135,10 @@ function Get-XmipRootCargo {
         .DESCRIPTION
             Features is every name in [features] but default. Linked maps a
             technology to the feature that links it: a feature listing
-            `dep:<alias>` where [dependencies] <alias> has package =
-            "<technology>" (transport-tcp links xmip-core-transport-tcp).
+            `dep:<alias>` where [dependencies], or a platform's own
+            dependencies table, <alias> has package = "<technology>"
+            (transport-tcp links xmip-core-transport-tcp; audit links
+            xmip-core-audit-syslog on Unix).
             Required is xmip-service's [[bin]] required-features, the one
             place that says what the program cannot be built without.
     #>
@@ -149,13 +151,17 @@ function Get-XmipRootCargo {
 
     $cargo = Read-XmipToml -Path (Join-Path $Root 'Cargo.toml')
     $features = Get-TomlValue -Node $cargo -Name 'features' -Default @{}
-    $dependencies = Get-TomlValue -Node $cargo -Name 'dependencies' -Default @{}
+    [object[]] $tables = @(Get-XmipCargoDependencyTable -Cargo $cargo)
     [hashtable] $linked = @{}
 
     foreach ($feature in @(Get-TomlKey -Node $features)) {
         foreach ($item in @(Get-TomlValue -Node $features -Name $feature -Default @())) {
             if ([string] $item -match '^dep:(.+)$') {
-                $dependency = Get-TomlValue -Node $dependencies -Name $Matches[1]
+                [string] $alias = $Matches[1]
+                $dependency = $tables |
+                    ForEach-Object { Get-TomlValue -Node $_ -Name $alias } |
+                    Where-Object { $null -ne $_ } |
+                    Select-Object -First 1
                 [string] $package = Get-TomlValue -Node $dependency -Name 'package' -Default ''
 
                 if ('' -ne $package) {
