@@ -95,12 +95,9 @@ Describe 'A complete configuration a document shows is one the runtime would sta
 
         # The runtime this estate built, in the one shared build directory
         # (Test-XmipChangeTree); landing builds it before anything is tested.
-        [string] $target = if ($env:CARGO_TARGET_DIR) {
-            $env:CARGO_TARGET_DIR
-        }
-        else {
-            Join-Path -Path $script:Root -ChildPath '.ai-interaction/target-windows'
-        }
+        [string] $target = & (Get-Module -Name Xmip) {
+            param([string] $Root) (Get-XmipEstateLayout -Root $Root).Build
+        } $script:Root
         [string] $name = if ($IsWindows) {
             'xmip_core_operate.dll'
         }

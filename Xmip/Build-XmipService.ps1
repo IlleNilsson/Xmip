@@ -35,11 +35,11 @@ function Build-XmipService {
             made.
 
             -Package puts the build in the packages that carry it to a
-            machine (ADR-0015, amendments 2026-10-13 and 2026-11-19): it
-            builds the runtime library and xmip, the command line, beside
-            xmip-service with the same cargo arguments, each in a folder of
-            its own under the target directory, package-operate and
-            package-cli, stages the three programs and never a cli.toml,
+            machine (ADR-0015, amendments 2026-10-13, 2026-11-19 and
+            2026-11-20): it builds the runtime library and xmip, the command
+            line, beside xmip-service with the same cargo arguments, into
+            the same target directory, stages the three programs and never
+            a cli.toml,
             and makes each package under .local-work/package/<version>,
             with xmip on PATH where the package has an installer. On
             Windows, msi builds deploy/package/windows/Xmip.wixproj with

@@ -10,8 +10,8 @@ function Get-XmipEstateCrate {
             folder.
 
         .DESCRIPTION
-            Read once for a landing: New-XmipLocalPatch patches each crate to
-            its folder.
+            The estate's one workspace lists each as a member and patches each
+            to its folder (Update-XmipWorkspace).
     #>
     [CmdletBinding()]
     [OutputType([pscustomobject])]
@@ -22,25 +22,18 @@ function Get-XmipEstateCrate {
 
     [HashSet[string]] $seen = [HashSet[string]]::new()
 
-    # Build output, the assistant's working area and run output hold copies of
-    # manifests; only a module's own Cargo.toml names a crate. Build output is
-    # skipped at any depth, the working area and run output at the estate's
-    # root alone, matched on the path below it: an estate cloned under another
-    # one's .local-work finds its own crates.
-    [string] $skip = "^(\.ai-interaction|$([regex]::Escape($script:XmipWorkName)))[\\/]|" +
-        '(^|[\\/])(target|target-[^\\/]+|\.git|node_modules)[\\/]'
+    # Build output, the working areas and run output hold copies of
+    # manifests; only a module's own Cargo.toml names a crate. The estate's
+    # one walk prunes them before it enters them (Find-XmipFile), so an
+    # estate cloned under another one's .local-work finds its own crates; a
+    # folder at the root whose name starts with a dot is a tool's (an
+    # editor's, an assistant's worktree) and holds none of the estate's.
     [string] $root = [System.IO.Path]::GetFullPath($RepositoryRoot)
 
-    [hashtable] $manifests = @{
-        LiteralPath = $RepositoryRoot
-        Filter      = 'Cargo.toml'
-        File        = $true
-        Recurse     = $true
-        ErrorAction = 'SilentlyContinue'
-    }
-
-    Get-ChildItem @manifests |
-        Where-Object { [System.IO.Path]::GetRelativePath($root, $_.FullName) -notmatch $skip } |
+    Find-XmipFile -Path $root -Filter 'Cargo.toml' |
+        Where-Object {
+            -not [System.IO.Path]::GetRelativePath($root, $_.FullName).StartsWith('.')
+        } |
         ForEach-Object {
             [string] $text = Get-Content -LiteralPath $_.FullName -Raw
 

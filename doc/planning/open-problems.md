@@ -2172,6 +2172,35 @@ thread (about 341 µs a file) and the send thread (about 166 µs) are not
 yet probed; each Publication still reads its own record from RocksDB
 (9 µs) and each batch wakes the sync thread (9 µs).
 
+## 83. How long a start takes to become a member is not measured
+
+Found 2026-11-20 when the runtime's stop test failed at a landing on
+Windows under load: `a_node_stops_cleanly_and_lets_its_listener_go`
+panicked at `tests/running/main.rs` reading the node's membership record
+as `Working`, "not a member yet: its row is not in Xmip Storage: writing
+it". Since ADR-0056, amendment 2026-11-20, a start's number is kept and its
+membership row written after serving begins, so a node serves before its
+start is a member. The test now waits for the outcome, as rust-style.md 5c
+allows a test that is not a timing program, but nothing holds the delay
+itself to the millisecond rule: `Running` exposes no signal for the
+membership, only its published health. To do: a wait on the membership's
+own revision (no poll), and the runtime's timing program holding the delay
+from serving to member, fastest of five.
+
+## 84. Two root service tests fail when the machine is heavily loaded
+
+Found 2026-11-20 on the Linux build machine, the whole workspace's tests
+run with 20 threads beside two other test runs (load average 30 on 20
+hardware threads): `routed::an_edifact_document_goes_to_the_send_port_its_message_type_and_recipient_name`
+(`.src/test/service/started.rs:283`) and
+`failover::every_file_dropped_arrives_once_when_the_primary_storage_node_stops_mid_run_and_returns`
+(`.src/test/service/failover.rs:270`) failed. Run alone on the same tree
+they passed three times in three, the failover test taking 12 to 39 s. The
+failover test had failed the same way on Windows a week earlier, while an
+Essentials cluster ran beside it, and passed alone. Whether a node's own
+deadline or the test's bound gives way under load is not yet known; the
+millisecond rule says which must not.
+
 # Suggested order
 
 Rewritten 2026-09-23, and corrected to what is built on 2026-11-10. The

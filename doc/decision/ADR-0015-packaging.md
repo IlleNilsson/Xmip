@@ -1376,3 +1376,22 @@ have started it; he allowed its result the same day ("Do it").
 -rwxr-xr-x root/root  31302328 ./opt/xmip/bin/xmip-service
 l--------- root/root         0 ./usr/bin/xmip -> /opt/xmip/bin/xmip
 ```
+
+## Amendment, 2026-11-20: the library and the command line are members of the estate's one workspace
+
+**Provenance.** The owner, 2026-11-20: *Go with recommendations*, the first
+of which was one Cargo workspace for the estate (ADR-0016, amendment
+2026-11-20). What it means for the package's build was decided by the
+assistant while building, told to the owner.
+
+The amendment of 2026-11-19 says the runtime library and `xmip` are each a
+workspace of their own. Since 2026-11-20 every crate of the estate is a
+member of one workspace, resolved once (ADR-0016, amendment 2026-11-20), so
+`xmip-core-operate` and `xmip-core-cli` build with the root's resolution.
+Each now builds in its folder into the same target directory as
+`xmip-service`. The separate folders `package-operate` and `package-cli`
+were there so builds with different resolutions could not overwrite each
+other, and one resolution has nothing to overwrite: they are gone, with
+`Get-XmipPackageProgram`'s `Target`. The dependencies the three programs
+share compile once, and nothing else of the package build changes
+(decided by the assistant while building, told to the owner).

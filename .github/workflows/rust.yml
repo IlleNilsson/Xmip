@@ -26,8 +26,12 @@ jobs:
     name: Workspace build and tests
     runs-on: windows-latest
     steps:
+      # The estate is one Cargo workspace whose members are its submodules
+      # (ADR-0016, amendment 2026-11-20): the root builds only with them.
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          submodules: recursive
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -45,18 +49,20 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Formatting
-        run: cargo fmt --all -- --check
+        run: cargo fmt -p xmip --check
 
       # Every feature, because nothing is on by default: xmip-service and its
-      # tests are built from a site, and here from all of them at once.
+      # tests are built from a site, and here from all of them at once. The
+      # root crate, as before the estate became one workspace; the landing
+      # verifies the members.
       - name: Clippy
-        run: cargo clippy --workspace --all-targets --all-features --locked
+        run: cargo clippy -p xmip --all-targets --all-features --locked
 
       - name: Check
-        run: cargo check --workspace --all-targets --all-features --locked
+        run: cargo check -p xmip --all-targets --all-features --locked
 
       - name: Test
-        run: cargo test --workspace --all-features --locked
+        run: cargo test -p xmip --all-features --locked
 
   sites:
     name: Site builds
@@ -64,6 +70,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          submodules: recursive
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable

@@ -131,15 +131,11 @@ function Install-XmipNativeLibrary {
 
     Write-Host "INSTALL: $name, compiling RocksDB's C++ once"
 
-    # The estate's shared build directory, unless CARGO_TARGET_DIR names
-    # another: the compiler's object paths are long, and cl.exe writes none
-    # past 260 characters (C1083, a build directory under .local-work/native
-    # in a deep clone, 2026-10-20).
-    [string] $build = $env:CARGO_TARGET_DIR
-
-    if ([string]::IsNullOrWhiteSpace($build)) {
-        $build = Join-Path -Path $root -ChildPath 'target'
-    }
+    # Where cargo builds, the estate's one rule (Get-XmipEstateLayout, Build),
+    # never a folder of its own: the compiler's object paths are long, and
+    # cl.exe writes none past 260 characters (C1083, a build directory under
+    # .local-work/native in a deep clone, 2026-10-20).
+    [string] $build = (Get-XmipEstateLayout -Root $root).Build
 
     [string] $wasCompile = $env:ROCKSDB_COMPILE
 

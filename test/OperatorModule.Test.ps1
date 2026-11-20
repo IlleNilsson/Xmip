@@ -4,8 +4,9 @@
 # (Import-XmipOperatorModule): into .local-work/operator/<key>, the key naming
 # what it is built from. Until 2026-10-13 every session built it again, and the
 # first Write-XmipAudit of Start-XmipTest spent 8.5 of its 9.3 seconds there.
-# This holds the key and the reuse decision over a tree of its own; dotnet is
-# never run.
+# This holds the key and the reuse decision over a tree of its own, dotnet never
+# run, and that the types this module names are found once the operator module
+# the estate built is imported (Import-XmipOperatorAssembly).
 
 BeforeAll {
     . (Join-Path $PSScriptRoot 'Initialize-XmipTest.ps1')
@@ -30,7 +31,7 @@ BeforeAll {
             'module/core/operation/operate/dotnet/Directory.Build.props'
             'module/core/operation/operate/dotnet/Xmip.Operate/RuntimeRules.cs'
             'module/core/operation/operate/dotnet/Xmip.Surface/RuntimeLibrary.cs'
-            '.ai-interaction/target-windows/debug/xmip_core_operate.dll'
+            'target/debug/xmip_core_operate.dll'
         )
 
         foreach ($relative in $file) {
@@ -45,6 +46,16 @@ BeforeAll {
 }
 
 Describe 'The key of the operator module build' {
+    # Where cargo builds is CARGO_TARGET_DIR, else the workspace root's
+    # target (Get-XmipEstateLayout, Build): each tree here is its own root.
+    BeforeAll {
+        $script:TargetBefore = $env:CARGO_TARGET_DIR
+        $env:CARGO_TARGET_DIR = $null
+    }
+
+    AfterAll {
+        $env:CARGO_TARGET_DIR = $script:TargetBefore
+    }
     It 'is the same for an unchanged tree' {
         [string] $tree = New-OperatorTree -Name 'unchanged'
 
@@ -64,7 +75,7 @@ Describe 'The key of the operator module build' {
         @{ Changed = 'module/core/operation/operate/dotnet/Directory.Build.props' }
         @{ Changed = 'module/core/operation/operate/dotnet/Xmip.Operate/RuntimeRules.cs' }
         @{ Changed = 'module/core/operation/operate/dotnet/Xmip.Surface/RuntimeLibrary.cs' }
-        @{ Changed = '.ai-interaction/target-windows/debug/xmip_core_operate.dll' }
+        @{ Changed = 'target/debug/xmip_core_operate.dll' }
     ) {
         [string] $tree = New-OperatorTree -Name "changed-$([guid]::NewGuid().ToString('n'))"
 
@@ -187,5 +198,39 @@ Describe 'The built operator module reads the snapshot under the estate root' {
                     Where-Object { $_ -match '^Snapshot\s*=' })[0]
             $line | Should -Be "Snapshot = `"../../../.local-work/essentials/$leaf`""
         }
+    }
+}
+
+Describe 'The types this module names' {
+    It 'are found once the operator module is imported, in a session of its own' {
+        # PowerShell finds a type only among the assemblies loaded, and the
+        # import loaded Xmip.Surface on Windows alone, as it read the cmdlets:
+        # on Linux [Xmip.Surface.ProgramAudit] was unknown and
+        # Build-XmipService failed at its first audit (2026-11-20). A session
+        # of its own, since this one may have loaded them already.
+        [string] $module = Join-Path -Path $script:Root -ChildPath 'Xmip'
+        [string[]] $named = @(
+            Get-ChildItem -LiteralPath $module -File -Include '*.ps1', '*.psm1' -Recurse |
+                Select-String -Pattern '\[(Xmip\.(?:Abi|Operate|Surface)\.[\w.]+)\]' -AllMatches |
+                ForEach-Object -MemberName Matches |
+                ForEach-Object { $_.Groups[1].Value } |
+                Sort-Object -Unique)
+        $named | Should -Contain 'Xmip.Surface.ProgramAudit'
+
+        [scriptblock] $asked = {
+            param([string] $Manifest, [string[]] $Named)
+
+            Import-Module -Name $Manifest
+            & (Get-Module -Name 'Xmip') { Import-XmipOperatorModule }
+            foreach ($type in $Named) {
+                "$type found: $($null -ne ($type -as [type]))"
+            }
+        }
+        [string] $manifest = Join-Path -Path $module -ChildPath 'Xmip.psd1'
+        [string[]] $said = @(
+            pwsh -NoProfile -NonInteractive -Command $asked -args $manifest, $named)
+
+        [string[]] $expected = @($named | ForEach-Object { "$_ found: True" })
+        @($said | Where-Object { $_ -match ' found: ' }) | Should -Be $expected
     }
 }

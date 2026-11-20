@@ -521,3 +521,38 @@ Describe 'Configuring repositories' {
         }
     }
 }
+
+Describe 'The estate is one Cargo workspace, its root holding every crate' {
+    # ADR-0016, amendment 2026-11-20: a crate on disk the root does not list
+    # builds in no workspace, and a git dependency the root does not patch
+    # resolves from GitHub, silently, where the estate means its working tree.
+    BeforeAll {
+        $script:Plan = InModuleScope Xmip -Parameters @{ Root = $script:Root } {
+            param($Root)
+            Get-XmipWorkspacePlan -RepositoryRoot $Root
+        }
+        [string] $text = Get-Content -LiteralPath (Join-Path $script:Root 'Cargo.toml') -Raw
+        [string] $members = [regex]::Match($text, '(?ms)^members = \[\s*$(.*?)^\]').Groups[1].Value
+        $script:Members = @([regex]::Matches($members, '"([^"]+)"') | ForEach-Object {
+                $_.Groups[1].Value
+            })
+        [string] $patch = '(?m)^\[patch\."https://github\.com/IlleNilsson/([^"]+)"\]\s*\r?\n' +
+            '\1 = \{ path = "([^"]+)" \}'
+        $script:Patched = @([regex]::Matches($text, $patch) | ForEach-Object {
+                "$($_.Groups[1].Value)=$($_.Groups[2].Value)"
+            })
+    }
+
+    It 'lists every crate on disk as a member, and nothing else' {
+        $script:Plan.Member.Count | Should -BeGreaterThan 200
+        $script:Members | Should -Be @($script:Plan.Member) -Because (
+            'Sync-XmipEstate -Compose writes them (Update-XmipWorkspace); run it')
+    }
+
+    It 'patches every estate crate a manifest names by its git URL to its folder' {
+        [string[]] $planned = @($script:Plan.Patched | ForEach-Object { "$($_.Name)=$($_.Folder)" })
+        $planned.Count | Should -BeGreaterThan 100
+        $script:Patched | Should -Be $planned -Because (
+            'Sync-XmipEstate -Compose writes them (Update-XmipWorkspace); run it')
+    }
+}

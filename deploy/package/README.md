@@ -49,9 +49,10 @@ package is built from (ADR-0015, amendment 2026-10-13).
 ## The command line
 
 `xmip`, the Rust command line (`module/core/operation/cli`), is built by
-`-Package` beside `xmip-service`, with the same cargo arguments, into
-`package-cli` under the target directory, since it is a workspace of its
-own, and goes in every package (ADR-0015, amendment 2026-11-19):
+`-Package` beside `xmip-service`, with the same cargo arguments, into the
+same target directory, since every crate is a member of the estate's one
+workspace, and goes in every package (ADR-0015, amendments 2026-11-19 and
+2026-11-20):
 
 | package | `xmip` is | on `PATH` as |
 | --- | --- | --- |

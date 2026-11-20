@@ -361,86 +361,6 @@ Describe 'Resolve-XmipCommitSubject' {
     }
 }
 
-Describe 'Get-XmipBuildableFeature' {
-    BeforeAll {
-        $script:Fixture = Join-Path -Path $TestDrive -ChildPath 'feat'
-        New-Item -Path $script:Fixture -ItemType Directory -Force | Out-Null
-
-        $script:Manifest = Join-Path $script:Fixture 'Cargo.toml'
-        Set-Content -LiteralPath $script:Manifest -Value @'
-[package]
-name = "xmip-core-example"
-
-[features]
-default = ["server"]
-server = []
-tls = ["dep:rustls"]
-uuid-v7 = ["dep:uuid"]
-
-[dependencies]
-rustls = { version = "0.23", optional = true }
-'@
-    }
-
-    It 'names every declared feature except default' {
-        # default is what cargo build already does.
-        InModuleScope Xmip -Parameters @{ Manifest = $script:Manifest } {
-            $features = Get-XmipBuildableFeature -ManifestPath $Manifest -Module 'module/nowhere'
-
-            $features | Should -Contain 'server'
-            $features | Should -Contain 'tls'
-            $features | Should -Contain 'uuid-v7' -Because 'a hyphenated feature is still a feature'
-            $features | Should -Not -Contain 'default'
-        }
-    }
-
-    It 'leaves out a feature known not to build' {
-        # The list is shrink-only. An entry here is why a feature is unchecked,
-        # and removing it is what fixing the feature looks like.
-        InModuleScope Xmip -Parameters @{ Manifest = $script:Manifest } {
-            $script:XmipUnbuildableFeature['module/nowhere'] = @('tls')
-
-            try {
-                $features =
-                    Get-XmipBuildableFeature -ManifestPath $Manifest -Module 'module/nowhere'
-
-                $features | Should -Not -Contain 'tls'
-                $features |
-                    Should -Contain 'server' -Because 'one broken feature must not stop the rest'
-            }
-            finally {
-                $script:XmipUnbuildableFeature.Remove('module/nowhere')
-            }
-        }
-    }
-
-    It 'says nothing for a manifest with no features table' {
-        InModuleScope Xmip -Parameters @{ Fixture = $script:Fixture } {
-            $bare = Join-Path $Fixture 'bare.toml'
-            Set-Content -LiteralPath $bare -Value "[package]`nname = `"x`"`n"
-
-            @(Get-XmipBuildableFeature -ManifestPath $bare -Module 'module/nowhere').Count |
-                Should -Be 0
-        }
-    }
-
-    It 'has an empty exception list, which is the intended state' {
-        # The list began with tls and dynamic-loading on 2026-08-29, the day
-        # declared features were first built, and both came off on 2026-08-30 —
-        # tls by enabling rustls's ring feature, dynamic-loading by ADR-0025
-        # clause 5 giving xmip-core-abi the surface its header always defined.
-        #
-        # This asserts the emptiness deliberately. A new entry fails here, and
-        # it should: the entry needs the owner's agreement and a written reason,
-        # and editing this test alongside it is where the second half is proven.
-        InModuleScope Xmip {
-            [string] $because = 'an unbuildable feature needs the owner''s agreement, recorded'
-
-            @($script:XmipUnbuildableFeature.Keys).Count | Should -Be 0 -Because $because
-        }
-    }
-}
-
 Describe 'A module''s timing program runs last, alone' {
     # rust-style.md section 5c: landings failed at random on timing tests run
     # inside a module's parallel suite (2026-11-01).
@@ -495,63 +415,129 @@ path = "tests/measured/main.rs"
         }
     }
 
-    It 'is run by the module''s verification after its feature tests, one test at a time' {
-        [string] $module = Get-Content -Raw -LiteralPath (
-            Join-Path $script:ModuleRoot 'Test-XmipModule.ps1')
-        [string] $program = Get-Content -Raw -LiteralPath (
-            Join-Path $script:ModuleRoot 'Test-XmipMeasuredProgram.ps1')
+    It 'runs it in the measured build, one test at a time' {
+        # ADR-0018, amendment 2026-11-20: the millisecond rule is measured on
+        # the optimized build, `measured`; every other build is at opt-level 1.
+        InModuleScope Xmip -Parameters @{ Declared = $script:Declared } {
+            Mock Write-Host { }
+            Mock Invoke-XmipTool { [pscustomobject]@{ Passed = $true; Said = @() } }
 
-        [int] $features = $module.IndexOf('Invoke-XmipTool -Tool cargo -Argument $withFeatures')
-        [int] $measured = $module.IndexOf('$passed = Test-XmipMeasuredProgram @measured')
+            Test-XmipMeasuredProgram -ManifestPath $Declared | Should -BeTrue
+            Should -Invoke Invoke-XmipTool -Times 1 -Exactly -ParameterFilter {
+                ($Argument -join ' ') -eq
+                'test --profile measured --all-features --test measured -- --test-threads=1'
+            }
+        }
+    }
 
-        $features | Should -BeGreaterThan 0
-        $measured | Should -BeGreaterThan $features
-        $module | Should -Match 'CheckOnly    = \$true'
-        $program | Should -Match '--test-threads=1'
-        $program | Should -Match 'Invoke-XmipTool -Tool cargo -Argument \$linting'
+    It 'is run by the landing after every part has passed, and linted in the workspace' {
+        [string] $tree = Get-Content -Raw -LiteralPath (
+            Join-Path $script:ModuleRoot 'Test-XmipChangeTree.ps1')
+        [string] $rust = Get-Content -Raw -LiteralPath (
+            Join-Path $script:ModuleRoot 'Test-XmipRustChange.ps1')
+
+        [int] $parts = $tree.IndexOf('Invoke-XmipLandingPart -RepositoryRoot')
+        [int] $measured = $tree.IndexOf('Test-XmipMeasuredProgram -ManifestPath')
+
+        $parts | Should -BeGreaterThan 0
+        $measured | Should -BeGreaterThan $parts
+        $rust | Should -Match "'--test', 'measured'"
     }
 }
 
-Describe 'A Rust module that carries .NET is verified in both languages' {
-    # 2026-11-16: operate's Xmip.Surface and Xmip.Operate, and abi's Xmip.Abi,
-    # sit beside a Cargo.toml, and only cargo ran for them.
-
+Describe 'The landing''s Rust part verifies in the one workspace' {
+    # ADR-0016, amendment 2026-11-20: one workspace; every consumer is linted
+    # at once against a change, each changed crate alone with its defaults.
     BeforeAll {
         $script:Both = Join-Path -Path $TestDrive -ChildPath 'both'
         New-Item -ItemType Directory -Force -Path (Join-Path $script:Both 'm/dotnet/X') | Out-Null
-        foreach ($crate in 'm', 'r') {
+        foreach ($crate in '.', 'm', 'r') {
             New-Item -ItemType Directory -Force -Path (Join-Path $script:Both $crate) | Out-Null
             [string] $manifest = Join-Path $script:Both "$crate/Cargo.toml"
-            Set-Content -LiteralPath $manifest -Value "[package]`nname = `"$crate`"`n"
+            [string] $name = if ($crate -eq '.') { 'xmip' } else { "xmip-$crate" }
+            Set-Content -LiteralPath $manifest -Value "[package]`nname = `"$name`"`n"
         }
         Set-Content -LiteralPath (Join-Path $script:Both 'm/dotnet/X/X.csproj') -Value '<Project />'
     }
 
-    It 'tests the .NET projects after cargo passed, and fails the module when they fail' {
+    It 'lints every member against a change with consumers, each crate alone with its defaults' {
         InModuleScope Xmip -Parameters @{ Root = $script:Both } {
             Mock Write-Host { }
-            Mock Invoke-XmipTool { [pscustomobject]@{ Passed = $true } }
-            Mock Get-XmipBuildableFeature { }
-            Mock Test-XmipMeasuredProgram { $true }
-            Mock Test-XmipDotnetModule { $false }
+            Mock Invoke-XmipTool { [pscustomobject]@{ Passed = $true; Said = @() } }
 
-            @(Test-XmipModule -RepositoryRoot $Root -Module @('m') -Patch 'p.toml') |
-                Should -Be @('m')
-            Should -Invoke Test-XmipDotnetModule -Times 1 -Exactly
+            Test-XmipRustChange -RepositoryRoot $Root -Module @('m') -Consumer |
+                Should -BeNullOrEmpty
+            Should -Invoke Invoke-XmipTool -Times 1 -Exactly -ParameterFilter {
+                ($Argument -join ' ') -eq 'clippy --all-targets --all-features --workspace'
+            }
+            Should -Invoke Invoke-XmipTool -Times 2 -Exactly -ParameterFilter {
+                ($Argument -join ' ') -eq 'test'
+            }
+            Should -Invoke Invoke-XmipTool -Times 1 -Exactly -ParameterFilter {
+                ($Argument -join ' ') -eq 'fmt --check -p xmip-m -p xmip'
+            }
         }
     }
 
-    It 'runs no .NET for a Rust module without a project' {
+    It 'names the step that failed' {
         InModuleScope Xmip -Parameters @{ Root = $script:Both } {
             Mock Write-Host { }
-            Mock Invoke-XmipTool { [pscustomobject]@{ Passed = $true } }
-            Mock Get-XmipBuildableFeature { }
-            Mock Test-XmipMeasuredProgram { $true }
+            Mock Invoke-XmipTool {
+                [bool] $passed = ($Argument -join ' ') -ne 'clippy --all-targets'
+                [pscustomobject]@{ Passed = $passed; Said = @() }
+            }
+
+            Test-XmipRustChange -RepositoryRoot $Root -Module @('r') |
+                Should -Be 'r, its lints'
+            # A crate declaring no feature was tested whole by its default run.
+            Should -Invoke Invoke-XmipTool -Times 0 -Exactly -ParameterFilter {
+                ($Argument -join ' ') -eq 'test --all-features'
+            }
+        }
+    }
+
+    It 'verifies a changed crate the workspace''s plan does not hold through its own manifest' {
+        # 2026-11-20: a landing stopped at its first step, `cargo fmt --check
+        # -p xmip-template-rust`, a crate the workspace leaves out. Here `r` is
+        # left out by the plan alone, never by its folder's name.
+        InModuleScope Xmip -Parameters @{ Root = $script:Both } {
+            Mock Write-Host { }
+            Mock Invoke-XmipTool { [pscustomobject]@{ Passed = $true; Said = @() } }
+            Mock Get-XmipWorkspacePlan { [pscustomobject]@{ Member = @('m'); Patched = @() } }
+
+            Test-XmipRustChange -RepositoryRoot $Root -Module @('m', 'r') |
+                Should -BeNullOrEmpty
+
+            [string] $own = '--manifest-path ' + (Join-Path (Join-Path $Root 'r') 'Cargo.toml')
+            [string[]] $once = @(
+                'fmt --check -p xmip-m -p xmip'
+                'clippy --all-targets --all-features -p xmip-m -p xmip'
+                "fmt --check $own"
+                "clippy --all-targets --all-features $own"
+                "test $own"
+                "clippy --all-targets $own"
+            )
+
+            foreach ($command in $once) {
+                Should -Invoke Invoke-XmipTool -Times 1 -Exactly -ParameterFilter {
+                    ($Argument -join ' ') -eq $command
+                }
+            }
+            Should -Invoke Invoke-XmipTool -Times 0 -Exactly -ParameterFilter {
+                $Argument -contains 'xmip-r'
+            }
+        }
+    }
+
+    It 'verifies a Rust module''s .NET projects in the .NET part, failing the module with them' {
+        # 2026-11-16: operate's Xmip.Surface and Xmip.Operate, and abi's Xmip.Abi,
+        # sit beside a Cargo.toml, and only cargo ran for them.
+        InModuleScope Xmip -Parameters @{ Root = $script:Both } {
+            Mock Write-Host { }
             Mock Test-XmipDotnetModule { $false }
 
-            @(Test-XmipModule -RepositoryRoot $Root -Module @('r') -Patch 'p.toml') |
-                Should -BeNullOrEmpty
-            Should -Invoke Test-XmipDotnetModule -Times 0 -Exactly
+            Test-XmipDotnetChange -RepositoryRoot $Root -Module @('m', 'r') | Should -Be 'm'
+            Should -Invoke Test-XmipDotnetModule -Times 1 -Exactly
         }
     }
 }
@@ -596,6 +582,31 @@ Describe 'A test that never ends fails the landing in a minute' {
 
 Describe 'Every cargo and dotnet the module runs takes twelve of the machine, set in one place' {
     # The owner, 2026-11-02: cargo -j 12, test threads 12, dotnet -m:12.
+    # A landing's part is given its share in XMIP_TOOL_SHARE, which this
+    # run may have inherited from the landing running it: saved, cleared and
+    # given back.
+    BeforeAll {
+        $script:ShareWas = $env:XMIP_TOOL_SHARE
+        Remove-Item -Path 'env:XMIP_TOOL_SHARE' -ErrorAction SilentlyContinue
+    }
+
+    AfterAll {
+        $env:XMIP_TOOL_SHARE = $script:ShareWas
+    }
+
+    It 'takes the share a landing''s part is given, at most twelve' {
+        InModuleScope Xmip {
+            try {
+                $env:XMIP_TOOL_SHARE = '2'
+                Get-XmipToolParallel | Should -Be 2
+                $env:XMIP_TOOL_SHARE = '40'
+                Get-XmipToolParallel | Should -Be 12
+            }
+            finally {
+                Remove-Item -Path 'env:XMIP_TOOL_SHARE' -ErrorAction SilentlyContinue
+            }
+        }
+    }
 
     It 'gives cargo twelve jobs and twelve test threads for the call, and puts them back after' {
         InModuleScope Xmip {
@@ -674,7 +685,8 @@ Describe 'Publish-XmipPin is given what it needs' {
         $calls.Count | Should -BeGreaterThan 0 -Because 'the pin is called from somewhere'
 
         foreach ($call in $calls) {
-            $call | Should -Match '-Message' -Because "this call drops the operator's message: $call"
+            [string] $because = "this call drops the operator's message: $call"
+            $call | Should -Match '-Message' -Because $because
         }
     }
 }
@@ -984,16 +996,27 @@ Describe 'The dependency tree verifies whole before anything lands' {
         )
     }
 
-    It 'patches every estate crate to its working tree and nothing in build output' {
+    It 'makes every estate crate a member, patched by its folder, and nothing in build output' {
+        # ADR-0016, amendment 2026-11-20: one workspace, its [patch] committed.
+        [string] $b = Join-Path $script:Estate 'module/foundation/b/Cargo.toml'
+        Set-Content -LiteralPath $b -Value @(
+            '[package]', 'name = "xmip-core-b"', 'version = "0.1.0"', '[dependencies]',
+            ('a = { package = "xmip-core-a", ' +
+                'git = "https://github.com/IlleNilsson/xmip-core-a", branch = "main" }'),
+            '# x = { git = "https://github.com/IlleNilsson/xmip-core-copy" }'
+        )
+        Set-Content -LiteralPath (Join-Path $script:Estate 'Cargo.toml') -Value @(
+            '[package]', 'name = "xmip"'
+        )
+
         InModuleScope Xmip -Parameters @{ Root = $script:Estate } {
             param($Root)
 
-            [string] $patch = New-XmipLocalPatch -RepositoryRoot $Root
-            [string] $text = Get-Content -LiteralPath $patch -Raw
+            $plan = Get-XmipWorkspacePlan -RepositoryRoot $Root
 
-            $text | Should -Match '\[patch\."https://github\.com/IlleNilsson/xmip-core-a"\]'
-            $text | Should -Match 'xmip-core-b = \{ path = ".+/module/foundation/b" \}'
-            $text | Should -Not -Match 'xmip-core-copy'
+            $plan.Member | Should -Be @('module/foundation/a', 'module/foundation/b')
+            @($plan.Patched | ForEach-Object { "$($_.Name)=$($_.Folder)" }) |
+                Should -Be @('xmip-core-a=module/foundation/a')
         }
     }
 
@@ -1018,11 +1041,6 @@ Describe 'The dependency tree verifies whole before anything lands' {
             [string[]] $names = @(Get-XmipEstateCrate -RepositoryRoot $Root |
                     ForEach-Object -MemberName Name)
             $names | Should -Be @('xmip-core-c')
-
-            [string] $patch = New-XmipLocalPatch -RepositoryRoot $Root
-            [string] $text = Get-Content -LiteralPath $patch -Raw
-            $text | Should -Match 'xmip-core-c = \{ path = ".+/\.local-work/clone/module/'
-            $text | Should -Not -Match 'xmip-core-run'
         }
     }
 
@@ -1048,24 +1066,17 @@ Describe 'The dependency tree verifies whole before anything lands' {
         }
     }
 
-    It 'patches every crate one way: the absolute path of its own folder' {
+    It 'patches every crate one way: its folder relative to the root, slashes forward' {
+        # One committed manifest serves every machine.
         InModuleScope Xmip -Parameters @{ Root = $script:Estate } {
             param($Root)
 
-            [string] $patch = New-XmipLocalPatch -RepositoryRoot $Root
-            [string[]] $paths = @(
-                [regex]::Matches((Get-Content -LiteralPath $patch -Raw), 'path = "([^"]+)"') |
-                    ForEach-Object { $_.Groups[1].Value }
-            )
-
-            $paths.Count | Should -Be 2
-            foreach ($path in $paths) {
-                [System.IO.Path]::IsPathFullyQualified($path) | Should -BeTrue
-                $path | Should -Not -Match '\\'
+            foreach ($patched in @((Get-XmipWorkspacePlan -RepositoryRoot $Root).Patched)) {
+                [System.IO.Path]::IsPathFullyQualified($patched.Folder) | Should -BeFalse
+                $patched.Folder | Should -Not -Match '\\'
             }
         }
     }
-
     It 'lands only after the verification loop, so a failure pushes nothing' {
         # 2026-10-05, the owner: *Do dependency tree build and stop when a leaf
         # fails*. Before, each module was pushed as soon as it verified, and a
@@ -1080,7 +1091,8 @@ Describe 'The dependency tree verifies whole before anything lands' {
     }
 
     It 'builds in the estate''s one shared build directory' {
-        $script:Source | Should -Match "\.ai-interaction/target-windows"
+        [string] $read = '\$sharedTarget = \(Get-XmipEstateLayout -Root \$RepositoryRoot\)\.Build'
+        $script:Source | Should -Match $read
         $script:Source | Should -Match '\$env:CARGO_TARGET_DIR = \$sharedTarget'
     }
 }
@@ -1172,7 +1184,9 @@ Describe 'A change is checked against what consumes it, and nothing is pushed fi
     }
 
     It 'fails the module whose runtime build failed rather than testing a stale library' {
-        $script:Source | Should -Match 'if \(-not \$runtimeBuilt\) \{\s+\$failed = @\(\$module\)'
+        [string] $library = 'Build-XmipTestLibrary -RepositoryRoot \$RepositoryRoot ' +
+            '-Module \$library\.Folder\)\) \{\s+return \$library\.Folder'
+        $script:Source | Should -Match $library
     }
 
     It 'verifies the platform repository before it pins, a root-only change too' {
@@ -1187,7 +1201,7 @@ Describe 'A change is checked against what consumes it, and nothing is pushed fi
         $branch | Should -BeGreaterThan 0
         $rootOnly | Should -BeGreaterThan $branch
         $rootOnly | Should -BeLessThan $pin
-        $script:Source | Should -Match '\$platformBroken = -not \$NoVerify -and \$Platform -and'
+        $script:Source | Should -Match "Name        = 'Pester'\s+Command     = 'Test-XmipPlatform'"
     }
 }
 
@@ -1195,94 +1209,33 @@ Describe 'A landing says how long it has left' {
     # The owner, 2026-10-13, during a landing that took over an hour: *A
     # timer, letting one know how long it is going to take.*
 
-    It 'estimates from the average of the modules measured so far' {
-        InModuleScope Xmip {
-            [timespan[]] $measured = @([timespan]::FromSeconds(10), [timespan]::FromSeconds(20))
-            [hashtable] $at = @{
-                Index    = 3
-                Total    = 102
-                Measured = $measured
-                Recorded = @([timespan]::FromHours(1))
-                Final    = [timespan]::FromMinutes(5)
-            }
-
-            # 100 modules left at 15 seconds is 25 minutes, and 5 for the root.
-            Get-XmipRemainingTime @at | Should -Be 'module 3 of 102 (1 %), about 30 minutes left'
-        }
-    }
-
-    It 'uses the last landing''s times before a module of this one is measured' {
-        InModuleScope Xmip {
-            [hashtable] $at = @{
-                Index    = 1
-                Total    = 4
-                Recorded = @([timespan]::FromMinutes(30), [timespan]::FromMinutes(40))
-                Final    = [timespan]::FromMinutes(20)
-            }
-
-            Get-XmipRemainingTime @at |
-                Should -Be 'module 1 of 4 (0 %), about 2 hours and 40 minutes left'
-        }
-    }
-
-    It 'says what it does not know' {
-        InModuleScope Xmip {
-            Get-XmipRemainingTime -Index 1 -Total 205 |
-                Should -Be 'module 1 of 205 (0 %), time left unknown until a module has been timed'
-
-            [timespan[]] $one = @([timespan]::FromMinutes(1))
-            Get-XmipRemainingTime -Index 2 -Total 3 -Measured $one |
-                Should -Be ('module 2 of 3 (33 %), about 2 minutes left, ' +
-                    'and the root crate and test/ not yet timed')
-        }
-    }
-
-    It 'names the root crate and test/ once the modules are done' {
-        InModuleScope Xmip {
-            [hashtable] $done = @{
-                Index    = 3
-                Total    = 2
-                Measured = @([timespan]::FromMinutes(1))
-                Final    = [timespan]::FromSeconds(20)
-            }
-            Get-XmipRemainingTime @done |
-                Should -Be 'all 2 modules done; the root crate and test/ next, under a minute left'
-
-            Get-XmipRemainingTime -Index 1 -Total 0 |
-                Should -Be 'the root crate and test/ next, time left unknown: not yet timed'
-        }
-    }
-
     It 'records each duration and reads it back for the next landing' {
         InModuleScope Xmip -Parameters @{ Root = $TestDrive } {
             param($Root)
 
             (Get-XmipVerifyTime -RepositoryRoot $Root).Count | Should -Be 0
-            Set-XmipVerifyTime -RepositoryRoot $Root -Name 'module/a' -Duration '00:01:30'
-            Set-XmipVerifyTime -RepositoryRoot $Root -Name '.' -Duration '00:04:00'
+            Set-XmipVerifyTime -RepositoryRoot $Root -Name 'Rust' -Duration '00:01:30'
+            Set-XmipVerifyTime -RepositoryRoot $Root -Name 'measured' -Duration '00:04:00'
 
             [hashtable] $read = Get-XmipVerifyTime -RepositoryRoot $Root
-            $read['module/a'] | Should -Be ([timespan]::FromSeconds(90))
-            $read['.'] | Should -Be ([timespan]::FromMinutes(4))
+            $read['Rust'] | Should -Be ([timespan]::FromSeconds(90))
+            $read['measured'] | Should -Be ([timespan]::FromMinutes(4))
         }
     }
 
-    It 'prints the line before each module and the root steps it verifies' {
+    It 'says before the parts how long they and the timing programs took last time' {
         [string] $tree = Get-Content -Raw -LiteralPath (
             Join-Path $script:ModuleRoot 'Test-XmipChangeTree.ps1')
 
-        [int] $line = $tree.IndexOf('Get-XmipRemainingTime -Index $position')
-        [int] $verify = $tree.IndexOf('Test-XmipModule @verify')
-        [int] $root = $tree.IndexOf('Get-XmipRemainingTime -Index ($Ordered.Count + 1)')
-        [int] $service = $tree.IndexOf('Test-XmipModule @service')
+        [int] $read = $tree.IndexOf('Get-XmipVerifyTime -RepositoryRoot $RepositoryRoot')
+        [int] $parts = $tree.IndexOf('Invoke-XmipLandingPart -RepositoryRoot')
 
-        $line | Should -BeGreaterThan 0
-        $line | Should -BeLessThan $verify
-        $root | Should -BeGreaterThan $verify
-        $root | Should -BeLessThan $service
+        $read | Should -BeGreaterThan 0
+        $read | Should -BeLessThan $parts
+        $tree | Should -Match 'time left unknown: not yet timed'
+        $tree | Should -Match "Name = 'measured'; Duration = \`$clock\.Elapsed"
     }
 }
-
 Describe 'A landing regenerates the generated documents before it verifies' {
     BeforeAll {
         [string] $script:Change = Get-Content -Raw -LiteralPath (

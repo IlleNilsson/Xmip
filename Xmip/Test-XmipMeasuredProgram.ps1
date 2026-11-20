@@ -3,17 +3,24 @@
 
 <#
 .SYNOPSIS
-    A module's timing program, `measured`: linted, and run after the module's
-    other tests, alone, one test at a time.
+    A module's timing program, `measured`: run in the optimized build after
+    every other part of the landing, alone, one test at a time.
 
 .DESCRIPTION
     The estate's one implementation of the rule in rust-style.md section 5c:
     a test that holds Xmip to a time is in its module's `measured` program,
     which a plain `cargo test` leaves out (`test = false`), and which runs
-    here once everything else of the module has passed, with nothing beside
+    here once everything else of the landing has passed, with nothing beside
     it. Until 2026-11-01 those tests ran inside each module's parallel suite,
     whose other tests slowed the measured work 1.5 to 3 times, and landings
     failed at random on them.
+
+    It runs in the `measured` profile, every crate at opt-level 3 with debug
+    assertions kept: the millisecond rule is measured on the optimized build
+    (the owner, 2026-11-01; ADR-0018, amendment 2026-11-20), while every
+    other build of the estate compiles its own crates at opt-level 1. The
+    workspace's lint of every timing program is the Rust part's
+    (Test-XmipRustChange).
 
     Style: doc/governance/powershell-style.md
 #>
@@ -23,41 +30,26 @@
 # landing finds it in any module without being told.
 $script:XmipMeasuredProgram = 'measured'
 
+# The cargo profile every timing program runs in (the root's Cargo.toml).
+$script:XmipMeasuredProfile = 'measured'
+
 
 function Test-XmipMeasuredProgram {
     <#
         .SYNOPSIS
-            Lints a module's `measured` program and, unless only checking, runs
-            it with one test thread. Whether it passed; true where the module
-            has none.
+            Runs a module's `measured` program with every feature it
+            declares, one test thread, in the `measured` profile. Whether it
+            passed; true where the module has none.
 
         .DESCRIPTION
-            Run from the module's directory, after its other tests passed.
-            Modules verify one after another, so nothing else runs then.
-            Linted apart from `--all-targets`, which leaves out a target cargo
-            does not test by default; `--test` beside `--all-targets` is
-            ignored, so it is a call of its own.
+            Run from the module's directory, after every other part of the
+            landing passed, so nothing else runs beside it.
     #>
     [CmdletBinding()]
     [OutputType([bool])]
     param(
         [Parameter(Mandatory)]
-        [string] $ManifestPath,
-
-        # The features the module's tests run with: the program names the
-        # ones it needs in `required-features`.
-        [Parameter()]
-        [AllowEmptyCollection()]
-        [string[]] $Feature = @(),
-
-        # The cargo configuration from New-XmipLocalPatch, as `--config`.
-        [Parameter()]
-        [AllowEmptyCollection()]
-        [string[]] $Through = @(),
-
-        # Lint only: for a consumer of a changed module, which is not landed.
-        [Parameter()]
-        [switch] $CheckOnly
+        [string] $ManifestPath
     )
 
     [string] $program = $script:XmipMeasuredProgram
@@ -72,27 +64,10 @@ function Test-XmipMeasuredProgram {
         Write-Host "   FAILED. $program is declared without test = false." -ForegroundColor Red
         return $false
     }
-    [string[]] $withFeatures = @()
-
-    if ($Feature.Count -gt 0) {
-        $withFeatures = @('--features', ($Feature -join ','))
-    }
-
-    Write-Host "   checking lints of $program..." -ForegroundColor DarkGray
-    [string[]] $linting = @('clippy') + $Through + '--test' + $program + $withFeatures
-
-    if (-not (Invoke-XmipTool -Tool cargo -Argument $linting).Passed) {
-        Write-Host "   FAILED lints. Run: cargo clippy --test $program" -ForegroundColor Red
-        return $false
-    }
-
-    if ($CheckOnly) {
-        return $true
-    }
 
     Write-Host "   timing, $program alone, one test at a time..." -ForegroundColor DarkGray
-    [string[]] $alone = @('test') + $Through + '--test' + $program + $withFeatures + '--' +
-        '--test-threads=1'
+    [string[]] $alone = @('test', '--profile', $script:XmipMeasuredProfile, '--all-features',
+        '--test', $program, '--', '--test-threads=1')
 
     (Invoke-XmipTool -Tool cargo -Argument $alone).Passed
 }

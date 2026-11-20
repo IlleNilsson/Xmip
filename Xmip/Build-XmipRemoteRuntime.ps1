@@ -97,10 +97,6 @@ function Get-XmipRemoteRuntimeBuild {
         .PARAMETER Ndk
             The NDK's toolchain bin directory (Find-XmipAndroidNdk), for
             Android.
-
-        .PARAMETER Patch
-            The landing's patch file, so the build reads the estate's working
-            trees; empty outside a landing.
     #>
     [CmdletBinding()]
     [OutputType([pscustomobject])]
@@ -114,19 +110,10 @@ function Get-XmipRemoteRuntimeBuild {
 
         [Parameter(Mandatory = $false)]
         [AllowEmptyString()]
-        [string] $Ndk = '',
-
-        [Parameter(Mandatory = $false)]
-        [AllowEmptyString()]
-        [string] $Patch = ''
+        [string] $Ndk = ''
     )
 
     [string[]] $common = @('--no-default-features', '--features', 'remote')
-
-    if ($Patch) {
-        $common += @('--config', $Patch)
-    }
-
     [string[]] $library = @('build', '--lib')
 
     if ($Platform -eq 'Desktop') {
@@ -299,11 +286,7 @@ function Build-XmipRemoteRuntime {
 
         [Parameter(Mandatory = $true)]
         [ValidateSet('Desktop', 'Android', 'iOS')]
-        [string] $Platform,
-
-        [Parameter(Mandatory = $false)]
-        [AllowEmptyString()]
-        [string] $Patch = ''
+        [string] $Platform
     )
 
     [string] $ndk = ''
@@ -317,7 +300,7 @@ function Build-XmipRemoteRuntime {
         }
     }
 
-    [hashtable] $asked = @{ Root = $Root; Platform = $Platform; Ndk = $ndk; Patch = $Patch }
+    [hashtable] $asked = @{ Root = $Root; Platform = $Platform; Ndk = $ndk }
 
     [object[]] $builds = @(Get-XmipRemoteRuntimeBuild @asked)
 

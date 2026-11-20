@@ -1487,3 +1487,33 @@ the gatherer heard at its own round's time rather than taking the
 gatherer's assembled view, so the board and the Monitor read exactly as
 before; the reach said *real, at* by the roster's members, and a node
 stopped in order said Paused at the severity a pause publishes.
+
+## Amendment, 2026-11-20: the Essentials build in the estate's one workspace, in `measured`
+
+**Provenance.** The owner, 2026-11-20: *Go with recommendations*, among
+them one Cargo workspace for the estate (ADR-0016, amendment 2026-11-20) and
+two builds, an optimized one for what the millisecond rule measures and a
+lighter one for the rest (ADR-0018, amendment 2026-11-20); then *I need the
+faster compiles with Rust then!* That the roll, cluster, node and the
+service a roll starts build in `measured`, and the first three in a build
+directory of their own, was decided by the assistant while building, told
+to the owner.
+
+The amendments above build the Essentials and the service a roll starts
+against the estate as it is on disk through a patch written for the build
+(`New-XmipLocalPatch`, `Invoke-XmipPatchedBuild`), the service in a build
+directory of its own. Since 2026-11-20 the estate is one workspace whose
+committed `[patch]` does that for every build (ADR-0016, amendment
+2026-11-20): the patch and its writer are gone, `Invoke-XmipCargoBuild` is
+the plain build, and the service builds where every build does. The roll,
+cluster and node and that service build in the `measured` profile, the
+optimized build the millisecond rule is measured on (ADR-0018, amendment
+2026-11-20), since the board's latency and the demo read them. The service
+is found in the estate's build directory, `<build>/measured`
+(`Get-XmipEstateLayout`'s `Build`), and copied for a roll as before. The
+roll, cluster and node build in a build directory of their own,
+`.local-work/essentials/target`, and are found in its `measured` folder
+(`Get-XmipEssentialsLayout`'s `Target`): a running roll holds its binaries
+open, its images being hard links to them, and on Windows a landing's
+timing runs, which build in the estate's build directory, would fail on a
+file held there.

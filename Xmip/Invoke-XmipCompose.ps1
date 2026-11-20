@@ -131,50 +131,10 @@ function Invoke-XmipCargo {
         Set-Content -LiteralPath $file -Value $lines -Encoding utf8NoBOM
     }
 
-    [int] $rooted = 0
-
-    foreach ($name in $mountOf.Keys) {
-        [string] $file = Join-Path $root (Join-Path $mountOf[$name] 'Cargo.toml')
-
-        if (-not (Test-Path -LiteralPath $file)) {
-            continue
-        }
-
-        [string] $text = Get-Content -LiteralPath $file -Raw
-
-        if ($text -match '(?m)^\s*\[workspace\]') {
-            continue
-        }
-
-        if (-not $PSCmdlet.ShouldProcess($name, 'Make its own workspace root')) {
-            continue
-        }
-
-        # Cargo walks up from a package looking for a workspace, finds
-        # Xmip/Cargo.toml and refuses to build. exclude in the parent is not
-        # enough and does not travel: a standalone clone has no parent to
-        # read it from. An empty [workspace] here stops the walk.
-        [string[]] $header = @(
-            '# Its own workspace root, so this repository builds on its own.',
-            '[workspace]',
-            ''
-        )
-
-        [hashtable] $write = @{
-            LiteralPath = $file
-            Value       = $header + @(Get-Content -LiteralPath $file)
-            Encoding    = 'utf8NoBOM'
-        }
-
-        Set-Content @write
-
-        Write-Host "  ROOTED: $name"
-        $rooted++
-    }
-
-    if (0 -lt $rooted) {
-        Write-XmipStep -Message "Cargo: $rooted modules made their own workspace root"
-    }
+    # Every crate mounted is a member of the estate's one workspace, patched
+    # to its folder; a crate keeps no [workspace] of its own, so its
+    # repository alone is its own root (ADR-0016, amendment 2026-11-20).
+    Update-XmipWorkspace -RepositoryRoot $root
 
     Write-XmipStep -Message "Cargo: $revs dependency revs in $($edits.Count) files"
 

@@ -437,12 +437,14 @@ TypeScript's native compiler and writes its VSIX, with no Node.js.
 
 ```json
 {
-  "xmip.server.path": "<estate>/module/core/operation/gui/vscode/target/debug/xmip-lsp.exe",
-  "xmip.runtime.library": "<estate>/module/core/operation/operate/target/debug/xmip_core_operate.dll"
+  "xmip.server.path": "<estate>/target/debug/xmip-lsp.exe",
+  "xmip.runtime.library": "<estate>/target/debug/xmip_core_operate.dll"
 }
 ```
 
-`<estate>` is the full path of your clone. On Linux the library is
+`<estate>` is the full path of your clone: the estate is one Cargo
+workspace and builds into `target` at its root, or where `CARGO_TARGET_DIR`
+names (ADR-0016, amendment 2026-11-20). On Linux the library is
 `libxmip_core_operate.so` and the server `xmip-lsp`, on macOS
 `libxmip_core_operate.dylib`. Left out, every validation says where to
 point it.

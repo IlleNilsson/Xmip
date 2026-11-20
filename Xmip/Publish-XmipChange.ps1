@@ -18,8 +18,9 @@ using namespace System.Collections.Generic
 
     This file holds the second; since 2026-09-22 the parts it is made of are
     files of their own, each named for what it defines — Get-XmipStatus,
-    Get-XmipDeclaredModule (what lands, in what order), Test-XmipModule and
-    Test-XmipDotnetModule (verifying one), Submit-XmipModule (landing one) and
+    Get-XmipDeclaredModule (what lands, in what order), Test-XmipChangeTree
+    (verifying the tree: Test-XmipRustChange, Test-XmipDotnetChange and the
+    root's test/, side by side), Submit-XmipModule (landing one) and
     Publish-XmipPin.
 
     `xmip-git` and `xgit` are aliases for the second. The estate talks about
@@ -47,18 +48,19 @@ function Publish-XmipChange {
             dependency order, having tested first.
 
         .DESCRIPTION
-            **Order is read, not asked for.** Dependencies track `branch =
-            "main"` under ADR-0005, so a module has to be on origin before
-            anything that depends on it is tested — otherwise the test resolves
-            the previous version and passes or fails for the wrong reason. Every
-            manifest already declares its dependencies, so the order comes from
-            there.
+            **Order is read, not asked for.** Every manifest already declares
+            its dependencies, so the order modules land in, dependencies first,
+            comes from there.
 
-            **Each module is tested and landed before the next is tested.**
-            Dependencies resolve against `main`, so a module cannot be verified
-            against a sibling that is still only local. A failure halfway leaves
-            the earlier ones landed and says so; that is recoverable, and no
-            other order works at all.
+            **The whole tree verifies before anything lands.** The estate is one
+            Cargo workspace whose committed [patch] resolves every estate crate
+            to its working tree (ADR-0016, amendment 2026-11-20), so every
+            module verifies against its siblings as they are on disk, pushed or
+            not. Test-XmipChangeTree runs its parts side by side, Rust
+            (Test-XmipRustChange), .NET (Test-XmipDotnetChange) and the root's
+            test/, then the timing programs alone; the first failure stops the
+            run with nothing pushed, and only then is each module landed,
+            dependencies first, the root last.
 
             **Build output is refused rather than committed.** On 2026-08-27 a
             hand-run loop pushed 105 files of `target/` to xmip-core: it checked
@@ -73,12 +75,12 @@ function Publish-XmipChange {
             read or verified, so test/ holds them against the tree being
             landed and the pin commits them with it.
 
-            **Progress as it goes.** Before each module it prints a line such
-            as `module 76 of 205 (37 %), about 45 minutes left`: the average
-            of the modules measured so far, or, before the first, what the
-            same modules took when last verified, plus the root crate and
-            test/ from their last run. The durations are kept on this machine
-            in .local-work/verify-time.json.
+            **Progress as it goes.** Before its parts it says how long the last
+            landing's parts and timing programs took, such as `Rust, .NET,
+            Pester side by side, then the timing programs alone; about 14
+            minutes left, as the last landing took`, and each minute while they
+            run, which are still running. The durations are kept on this
+            machine in .local-work/verify-time.json.
 
             Redirect to capture, per the style document:
 
@@ -107,10 +109,11 @@ function Publish-XmipChange {
 
             There is deliberately no `-Commit` without `-Push`. Dependencies
             track `branch = "main"` under ADR-0005, so a module that is committed
-            and not pushed is a module the next one in the order will test
-            against the *previous* published version — passing or failing for a
-            reason that is not in the working tree. git can separate the two
-            because git has no such rule; here the pair is one operation.
+            and not pushed is one every repository built alone, as its own CI
+            builds it, resolves at its *previous* published version — passing
+            or failing for a reason that is not in the working tree. git can
+            separate the two because git has no such rule; here the pair is one
+            operation.
 
         .PARAMETER RepositoryRoot
             The Xmip working tree.
