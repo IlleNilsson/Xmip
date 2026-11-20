@@ -84,6 +84,7 @@ GO
 -- each start of each node of the cluster, kept, never deleted: its scope, the roles it declares and its capability's evidence, where its operate and sync listeners answer, its place among the Storage nodes, the signed save it runs, its process, when it started and when it stopped in order, the table's write count at its last write and whether it is its node's latest row.
 CREATE TABLE xmip.membership (
     process binary(16) NOT NULL,
+    start bigint NOT NULL,
     node nvarchar(400) NOT NULL,
     roles nvarchar(400) NOT NULL,
     evidence nvarchar(max) NOT NULL,

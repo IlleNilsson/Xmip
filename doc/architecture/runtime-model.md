@@ -299,7 +299,15 @@ same day): each node writes its row once it reaches Xmip Storage — its
 roles and their evidence, where its operate and sync listeners answer, its
 place among the Storage nodes, the save and serial of the slice it runs —
 and again as it stops in order, Xmip Storage setting when. The members now
-are each node's latest row. A node follows them through the same wait the
+are each node's latest row. **One node's starts are ordered by the node,
+and Xmip Storage checks the order** (ADR-0056, amendments 2026-11-19 and
+2026-11-20): a process's first write registers it and every later write
+updates its own row alone; each start is numbered by its node above the
+number it kept last and never below its clock, kept in `<stem>.start.toml`
+beside its pin before its first write, and a process registers only above
+its node's latest start, so one whose first write lands after a later
+start registered is refused as superseded and says so, and the later start
+stays the member. A node follows them through the same wait the
 send step takes (`XmipStorage::wait_queues`), which names the table by its
 latest write and answers as a row is written, and says at
 `<node>/membership` whether the save it runs is its peers'

@@ -2125,18 +2125,6 @@ receives are checked only against their test sessions, which honor the
 conditions as Microsoft and Google document them; whether Azurite or
 another compatible endpoint honors them is not checked yet.
 
-## 73. A start whose first write lands after its successor's registration takes the node from it
-
-Since 2026-11-19 a process's first `write_member` registers it and every
-later write updates its own row alone (ADR-0056, amendment 2026-11-19), so
-an earlier start's stop no longer takes its node from its successor. But a
-start whose first write reaches Xmip Storage only after its successor's
-registration (its earlier tries unanswered, or their answers lost) still
-registers then: its row becomes the node's latest, and once it stops the
-members say the node stopped while its successor runs. Closing it needs an
-order between one node's starts that Xmip Storage can check, not the
-order the writes arrive in.
-
 ## 75. An S3-compatible endpoint that ignores `If-None-Match: *` writes an archived item over
 
 ADR-0040, amendment 2026-11-19, never writes an archived item over; the
@@ -2152,15 +2140,6 @@ twice, never lost.
 An item is created whole by linking it to its name (`link(2)`,
 `CreateHardLinkW`; ADR-0040, amendment 2026-11-19). On FAT, exFAT or a
 share without hard links an archive is refused, not written.
-
-## 81. A Listener dropped inside its own callback hands over its close record late
-
-Found 2026-11-20 with open problem 80 (ADR-0065, amendment 2026-11-20).
-Every stop hands its records over before it returns, except one: a
-`Listener` dropped inside its own callback is not joined, by design, so
-its close record is handed over only when the callback returns. A program
-that records its stop at that same moment can have the close record land
-after the stop record, or lose it at exit.
 
 ## 82. A carried file's own share rises with the machine's load faster than its bound
 
@@ -2178,6 +2157,20 @@ wake. Measured per file on a quiet machine, in means: the receiving thread
 341 µs, the Storage writer 375 µs (two batches of about 188, 167 of each
 before its index write), the send thread 166 µs. Cutting the Storage
 writer's batches is where the room is.
+
+*Cut at the writer, 2026-11-20 (ADR-0018, amendment 2026-11-20).* A
+varint is written from the stack, every record and boxed value in the room
+its form says, a claim from itself, a lone stage taken whole into its
+batch, a queue's hold as it came, and a batch is sealed into one buffer of
+keys and one of values, handed to the engine borrowed. A file's two
+batches take 187 allocations where they took 337 and about 248 µs where
+they took 270 to 280; Xmip's own share of a carried file reads 487 µs at
+the median where it read 535 (525 where 553 routed by content; forty
+alternated rounds, a quiet machine). Still open: one build's own runs
+spread 350 to 650 µs on a quiet machine, wider than the cut; the receiving
+thread (about 341 µs a file) and the send thread (about 166 µs) are not
+yet probed; each Publication still reads its own record from RocksDB
+(9 µs) and each batch wakes the sync thread (9 µs).
 
 # Suggested order
 
@@ -3092,3 +3085,48 @@ through the keeper makes its folder with `xmip-core-audit-file`'s
 keeper has kept them; a node process a test kills has the cluster's folder
 as its temporary directory. The one stop that hands over late is open
 problem 81.
+
+## 81. A Listener dropped inside its own callback hands over its close record late — **Resolved**
+
+*Resolved 2026-11-20 (ADR-0065, amendment 2026-11-20, a listener closed in
+its own callback).*
+
+Found 2026-11-20 with open problem 80. Every stop handed its records over
+before it returned, except one: a `Listener` dropped inside its own
+callback is not joined, by design, so its close record was handed over
+only when the callback returned, and a program recording its stop at that
+moment had the close record land after the stop record.
+
+`Slot::unsubscribe` in `xmip-core-cluster` is now the one place a
+subscription is closed and its close record handed to audit's keeper, once,
+by whichever drop comes first; a `Listener` dropped inside its own callback
+calls it on that thread, so the close record is kept before the drop
+returns, a program's stop is kept after it and an exit loses nothing. The
+thread calls back nothing more and ends once the callback returns, so no
+binding is called through a callback it has released.
+
+## 73. A start whose first write lands after its successor's registration takes the node from it — **Resolved**
+
+*Resolved 2026-11-20 (ADR-0056, amendment 2026-11-20).*
+
+Since 2026-11-19 a process's first `write_member` registers it and every
+later write updates its own row alone (ADR-0056, amendment 2026-11-19), so
+an earlier start's stop no longer takes its node from its successor. But a
+start whose first write reached Xmip Storage only after its successor's
+registration (its earlier tries unanswered, or their answers lost) still
+registered then: its row became the node's latest, and once it stopped the
+members said the node stopped while its successor ran.
+
+Each start of a node is now numbered by the node, above the number it kept
+last in `<stem>.start.toml` and never below its clock
+(`xcore::clock::serial`, the one rule the slice serial and the revocation
+list's number also follow), kept before its first write. Xmip Storage
+registers a start only above its node's latest, so a start whose first
+write lands after its successor's registration is refused as superseded,
+says so at `<node>/membership`, keeps serving and leaves its successor the
+member.
+
+Still open: two machines running one node at once with data directories of
+their own are ordered by their clocks, and a registration lost with a
+killed primary's writes (open problem 45) is a member again only at its
+next write.

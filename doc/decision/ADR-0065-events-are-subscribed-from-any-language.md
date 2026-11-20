@@ -783,3 +783,92 @@ before, one run: 22 (act-listened 1, act-pause 1, hub-empty 1, hub-listen 1,
 after, Windows:  0 in each of four runs
 after, Linux:    0
 ```
+
+## Amendment, 2026-11-20: a listener closed in its own callback hands its close record over at the drop
+
+**Provenance.** Open problem 81, found 2026-11-20 with open problem 80
+(the amendment above), and the coordinator's brief of 2026-11-20: the
+close record handed to the keeper on the thread that drops the
+`Listener`, at the drop, also inside its own callback, which is never
+blocked on itself. That nothing more is called back after it is the
+assistant's, for the owner to overrule.
+
+The amendment above says nothing a subscription stops returns before its
+records are handed over, a `Listener`'s drop joining its thread. One did
+return first: a `Listener` dropped inside its own callback, whose thread
+cannot join itself, left the unsubscribe to that thread, which made it
+only once the callback had returned. A program that recorded its stop meanwhile kept
+the stop first and the close record after it, and one that exited then
+could lose the close record. Across the C boundary,
+`xmip_event_unsubscribe_v1` called from the callback settled the keeper
+before the record was handed to it, so it returned with the record not
+kept, which `xmip_operate.h` section 11 promises it is. And the thread
+went on calling back the rest of the drain it was in for a program that
+had unsubscribed, where the header says the thread ends after the
+callback does; a binding that lets go of its callback as it unsubscribes,
+as the Python one does, would have been called through what it let go.
+
+What stands:
+
+- **A close record is handed over once, before the drop that closes it
+  returns, by whichever drops first.** `Slot::unsubscribe`
+  (`delivery/hub.rs`) is the one place a subscription is closed, taken
+  out of the hub and its close record handed to audit's keeper. The
+  `EventSubscription`'s drop calls it, as before. A `Listener` dropped
+  inside its own callback calls it there, on the callback's thread, so the
+  record is the keeper's before the drop returns, and the thread's own
+  drop of the subscription afterwards hands nothing again. A `Listener`
+  dropped on any other thread closes the queue and joins its thread as
+  before, which drops the subscription, so the close record follows the
+  last delivery noted, as it always did.
+- **Nothing waits that did not.** The record is handed over, never waited
+  for (amendment 2026-09-27); handing over waits only for room in a full
+  inbox, and the keeper never waits on a listener's thread, so the
+  callback is never blocked on itself. A direct record settles the keeper
+  first, as before: a program's stop is kept after the close record, and
+  across the C boundary the unsubscribe's own settle waits for it.
+- **A listener dropped in its own callback calls back nothing more.** Its
+  thread stops before the next Event of the drain it is in and ends once
+  the callback returns. Those Events were recorded as delivered at the
+  drain, as a drained batch a program lets go of unread is.
+
+Evidence, 2026-11-20. `tests/hub.rs` in `module/platform/cluster`: a
+callback drops its listener and waits while the test records the
+program's stop; and a callback drops it on the first of two Events one
+drain hands over. `cargo test --test hub`, before and after:
+
+```text
+Windows, before, each of 11 runs:
+  a_listener_dropped_in_its_own_callback_is_closed_before_the_program_stops
+    the close record is kept before the stop record; kept:
+    ["event.subscribe", "event.deliver", "stop", "event.unsubscribe"]
+  a_listener_dropped_in_its_own_callback_is_called_back_no_more
+    called back once, and the listener's thread ended
+      left: Ok(EventId(2170201426878056538083679213933286108))
+     right: Err(Disconnected)
+  test result: FAILED. 5 passed; 2 failed
+Linux, before, each of 3 runs: the same two failures, the records kept
+  in the same order; test result: FAILED. 5 passed; 2 failed
+Windows, after: test result: ok. 7 passed; 0 failed
+                the two alone, 50 runs: 50 ok, 0 failed
+Linux, after:   test result: ok. 7 passed; 0 failed
+                the two alone, 50 runs: 50 ok, 0 failed
+```
+
+And across the C boundary, `src/ffi/event/hub.rs` in
+`module/core/operation/operate`: a C callback unsubscribes its own handle
+and reads the audit file the moment that returns (`cargo test --lib
+ffi::event::hub`):
+
+```text
+Linux, before:
+  a_listener_unsubscribed_in_its_own_callback_returns_with_its_records_kept
+    panicked at its assertion that the audit file holds
+    action = "event.unsubscribe"
+  test result: FAILED. 5 passed; 1 failed
+Windows, after: test result: ok. 6 passed; 0 failed
+                the test alone, 20 runs: 20 ok, 0 failed
+Linux, after:   test result: ok. 9 passed; 0 failed (--lib ffi::event,
+                the six here among them)
+                the test alone, 20 runs: 20 ok, 0 failed
+```
