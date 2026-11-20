@@ -30,7 +30,11 @@
     and any call of `xcore::latency::at_once`, whose answer is only ever
     held to such a bound, or of `xcore::latency::Rounds::crossing`, whose
     rounds are held to one, or of `worked_beside_a_plain_wake` or
-    `woke_beside_a_plain_wake`, which each hold a figure to one. A lower
+    `woke_beside_a_plain_wake`, which each hold a figure to one, or of
+    `xcore::spent::Spent::begin`, an account a test opens only to hold an
+    own share to a time, whatever it is held beside (2026-11-20: the
+    archive's first write was held so in its crate's parallel suite, within
+    a millisecond of the writes after it, and nothing here read it). A lower
     bound alone, or a bound of a second or more — its value worked out as
     above, at least a million microseconds — proves a wait or a give-up and
     stays where it is, an outcome check. A bound that names anything else —
@@ -46,7 +50,7 @@
     fails naming it. A single sample, a batch timed together, a mean or a
     median under a constant bound fails it.
     `module/foundation/core/src/latency.rs` is the instrument itself, its
-    tests its own arithmetic; so are its timing program's
+    tests its own arithmetic, and so is `spent.rs` beside it; so are its timing program's
     `processor_time.rs` and `spent.rs`, which hold a spin counted by its own
     processor time to
     what it counts, which no load reaches.
@@ -65,6 +69,7 @@ BeforeAll {
     # The instruments' own tests: their arithmetic, not a time held.
     [string[]] $script:Instrument = @(
         'module/foundation/core/src/latency.rs'
+        'module/foundation/core/src/spent.rs'
         'module/foundation/core/tests/measured/processor_time.rs'
         'module/foundation/core/tests/measured/spent.rs'
     )
@@ -105,15 +110,29 @@ BeforeAll {
     <#
         .SYNOPSIS
             Where in `Line` a file's tests begin: its first `#[cfg(test)]`, or
-            the top of a file that is all test.
+            the top of a file that is all test. With `Module`, the first
+            `#[cfg(test)]` that opens a module, past any attribute after it:
+            production code opens an account (`Spent::begin`), and a test
+            item's own `#[cfg(test)]` above it does not make it a test's.
     #>
-    function Get-TestStart([string] $Path, [string[]] $Line) {
+    function Get-TestStart([string] $Path, [string[]] $Line, [switch] $Module) {
         if ($Path -match '(^|/)(tests|test)/') {
             return 0
         }
 
         for ([int] $index = 0; $index -lt $Line.Count; $index++) {
-            if ($Line[$index] -match '^\s*#\[cfg\(test\)\]') {
+            if ($Line[$index] -notmatch '^\s*#\[cfg\(test\)\]') {
+                continue
+            }
+
+            [int] $next = $index + 1
+            while ($Module -and $next -lt $Line.Count -and $Line[$next] -match '^\s*#\[') {
+                $next++
+            }
+
+            [bool] $opens = $next -lt $Line.Count -and
+                $Line[$next] -match '^\s*(pub(\([\w:]+\))?\s+)?mod\s'
+            if (-not $Module -or $opens) {
                 return $index
             }
         }
@@ -292,12 +311,16 @@ BeforeAll {
     #>
     function Find-TimingAssertion([string] $Path, [string[]] $Line) {
         [int] $start = Get-TestStart -Path $Path -Line $Line
+        [int] $module = Get-TestStart -Path $Path -Line $Line -Module
         [hashtable] $local = Get-Constant -Line $Line
         [string] $holding = '\bat_once\(|\bRounds::crossing\(|\b(worked|woke)_beside_a_plain_wake\('
+        # An account opened in a test's module is only ever held to a time.
+        [string] $account = '\bSpent::begin\('
 
         [int[]] $found = @(
             for ([int] $index = $start; $index -lt $Line.Count; $index++) {
-                if (($Line[$index] -replace '//.*$', '') -match $holding) {
+                [string] $code = $Line[$index] -replace '//.*$', ''
+                if ($code -match $holding -or ($index -ge $module -and $code -match $account)) {
                     $index
                 }
             }
@@ -606,6 +629,8 @@ Describe 'A timing test runs alone, in its module''s measured program' {
             '        let mut rounds = Rounds::crossing(WAKES);'
             '        worked_beside_a_plain_wake("a share", own, idle);'
             '        woke_beside_a_plain_wake("told", took, usual, WAKES);'
+            '        let spent = Spent::begin();'
+            '        assert!(first <= slowest + BEYOND, "beside the writes after it");'
             '    }'
             '}'
         )
@@ -613,8 +638,29 @@ Describe 'A timing test runs alone, in its module''s measured program' {
         @(Find-TimingAssertion -Path 'module/x/src/lib.rs' -Line $test) |
             Should -Be @(
                 'module/x/src/lib.rs:4', 'module/x/src/lib.rs:8', 'module/x/src/lib.rs:11',
-                'module/x/src/lib.rs:12', 'module/x/src/lib.rs:13', 'module/x/src/lib.rs:14'
+                'module/x/src/lib.rs:12', 'module/x/src/lib.rs:13', 'module/x/src/lib.rs:14',
+                'module/x/src/lib.rs:15'
             )
+    }
+
+    It 'finds an account a test opens, and leaves the one production code opens' {
+        [string[]] $test = @(
+            '#[cfg(test)]'
+            'fn helper() {}'
+            'fn committed() {'
+            '    let spent = Spent::begin();'
+            '}'
+            '#[cfg(test)]'
+            '#[allow(clippy::too_many_lines)]'
+            'mod tests {'
+            '    fn one() {'
+            '        let spent = xcore::spent::Spent::begin();'
+            '    }'
+            '}'
+        )
+
+        @(Find-TimingAssertion -Path 'module/x/src/lib.rs' -Line $test) |
+            Should -Be @('module/x/src/lib.rs:10')
     }
 
     It 'declares every measured program with test = false' {

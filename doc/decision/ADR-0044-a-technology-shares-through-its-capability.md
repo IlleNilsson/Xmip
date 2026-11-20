@@ -689,3 +689,32 @@ Provenance: the planner's and the coordinator's design of 2026-11-19 (an
 outside review's finding, confirmed against the source); `Named::segment`,
 the names `item_key`, `Claim` and `whole`, and the Parquet archive through
 them are the assistant's, for the owner to overrule.
+
+## Amendment, 2026-11-20: a directory's receipt, a receipt's check and a held file move down
+
+Clause 1 again, on the day a file a dead process left was removed and the
+Parquet archive's receipt became the file archive's (ADR-0040, amendment
+2026-11-20, which holds the evidence):
+
+- **The `file://` receipt of a directory is the archive capability's**
+  (`archive::directory::Directory`), moved from the file archive's
+  `prefix`, `path_of` and `key`: the file a key names under a root, the
+  location a receipt carries for it, and the key read back under that root
+  alone. The file and Parquet archives each keep one; `location.rs` keeps
+  the row and object shapes.
+- **A receipt's check is the capability's** (`archive::checksum::verify`):
+  the SHA-256 of the bytes against the receipt's and the metadata's, where
+  either is kept. `named::restore` and the SQL script archive's restore
+  each compared them themselves until then; both call it, and so does the
+  Parquet archive's.
+- **A file held by its writer is a Library's** (`file::held`, in
+  `xmip-core-library-file`): made held, and removed only where no process
+  holds it. `archive::whole` writes and sweeps with it; it is a file system
+  act any layer that links a file into place may need, and Foundation opens
+  no file (ADR-0058 clause 1). The file transport's removal of its sent
+  files stays its own: it reads the node from the name, over any far end
+  of the file family.
+
+Provenance: open problems 76 and 78, taken up by the coordinator on
+2026-11-20; the names `Directory`, `verify` and `held` are the assistant's,
+for the owner to overrule.

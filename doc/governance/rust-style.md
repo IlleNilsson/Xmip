@@ -212,8 +212,11 @@ to it.
 
 A test that holds Xmip to a time — the millisecond rule's fastest of five
 (`xcore::latency`'s `spread` and `at_once`), a wait that works as it wakes
-held beside a plain wake measured in the same rounds (`Rounds`), a Message's
-own share (`xcore::spent`), a budget of milliseconds an operation — is in
+held beside a plain wake measured in the same rounds (`Rounds`), an own
+share an account counts (`xcore::spent`: a Message's, or one write's, held
+beside the writes after it, as the archive's first write is since
+2026-11-20, and refused by `test/Timing.Test.ps1` wherever a test opens one
+outside the program), a budget of milliseconds an operation — is in
 its module's
 timing program and nowhere else: the cargo test target `measured`, declared
 with `test = false` so a plain `cargo test` leaves it out:
@@ -363,6 +366,14 @@ folder first, so that it is dropped after every file, database or socket the
 test opened in it. Where something must not exist yet, the test names a path
 inside its folder. Rust's standard library has no call that makes such a
 folder, so the estate has this one (ADR-0021, amendment 2026-11-19).
+
+A test whose audit takes records through audit's keeper — an Event
+subscription's, a sync plane's — makes its folder with
+`xmip-core-audit-file`'s `temporary::Folder` instead, from that crate's
+`test-support`: the same folder, removed only once the keeper kept every
+record handed to it before. A record the keeper kept after the folder was
+removed made it again, and the folder outlived its test (ADR-0065,
+amendment 2026-11-20).
 
 `test/Rust.Style.Test.ps1` refuses a call to `temp_dir()` in any Rust file
 but these, each with its reason: the guard itself; a named endpoint's path on

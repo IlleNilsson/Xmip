@@ -710,3 +710,76 @@ What stands for *Near real time* (clause 4) and the crossing's figures:
 
 The crossing to another node (`tests/measured/latency.rs`) was held so
 already (2026-11-14).
+
+## Amendment, 2026-11-20: a test's audit is kept before its folder is removed
+
+**Provenance.** Open problem 80, found 2026-11-19 with the one temporary
+folder a Rust test makes (ADR-0021, amendment 2026-11-19), and the
+coordinator's brief of 2026-11-20. The fixture, its home and the node
+processes' temporary directory are the assistant's, for the owner to
+overrule.
+
+A record a test's audit took through the keeper — an Event subscription's
+close record, its deliveries, a sync link's — was written after the test
+had dropped its folder: it made the folder and its audit file again, and
+the folder outlived its test. On Windows a folder whose audit file the
+keeper held open as it was removed was left whole instead.
+
+**It was the tests' order, not a stop that returns early.** Nothing a
+subscription or a node stops returns before its records are handed over:
+an `EventSubscription`'s drop hands its close record to the keeper on the
+dropping thread; a `Listener`'s drop joins its thread, which drops the
+subscription; a sync `Plane`'s stop joins every thread but one still in a
+connect, which records nothing after the stop. What comes later is the
+keeping, as the amendment of 2026-09-27 decided: the dropping thread is
+the program's, and a disk is not its business. A program's stop is a
+direct record, which settles the keeper first, and across the C boundary
+`xmip_event_unsubscribe_v1` settles it itself; so a program loses no close
+record at its exit. A test records no stop. Nothing on the message path
+waits that did not wait before.
+
+What stands:
+
+- **A test's audit folder is `xmip-core-audit-file`'s `temporary::Folder`**,
+  behind its `test-support` feature, which only a dev-dependency turns on:
+  a `file::temporary::Folder` whose drop first waits until the keeper kept
+  everything handed to it before (`audit::keeper::settle`), then removes
+  the folder. A test whose audit takes records through the keeper makes
+  its folder with it, first, so that it is dropped after every
+  subscription, listener and node that audits in it: the tests of
+  `xmip-core-cluster`, the Event exports' tests in `xmip-core-operate`, the
+  event-wire tests of the HTTP, Kafka and AMQP transports, and the
+  Essentials' Eventing test. The settle one test made before its folder
+  was dropped (`delivery/gate.rs`) is gone with it.
+- **A node process a test kills drops nothing**, so `tests/sync_process.rs`
+  gives each node process the cluster's folder as its temporary directory
+  (`TMP`, the first Windows reads; `TMPDIR`, the one Unix reads): the
+  folder its audit is written in is removed with the test's.
+
+Evidence, 2026-11-20. `tests/temporary.rs` in
+`module/core/operation/audit/file`, a test binary of its own so the
+keeper's inbox is its alone, holds the keeper busy, hands it a close
+record and drops the folder. Before, with the test's folder a
+`file::temporary::Folder`, and after, with `temporary::Folder`
+(`cargo test --test temporary`; the temporary directory written `<temp>`):
+
+```text
+Windows, before: <temp>\xmip-audit-file-temporary-01a1f65bddce77799f042cd38f3b9466
+                 was made again by the record kept after it was dropped
+                 test result: FAILED. 0 passed; 1 failed
+Linux, before:   <temp>/xmip-audit-file-temporary-01a1f6658d4a76c4b7d93f03abe8501c
+                 was made again by the record kept after it was dropped
+                 test result: FAILED. 0 passed; 1 failed
+Windows, after:  test result: ok. 1 passed; 0 failed
+Linux, after:    test result: ok. 1 passed; 0 failed
+```
+
+And the folders `cargo test` in `module/platform/cluster` left under the
+temporary directory, counted by label:
+
+```text
+before, one run: 22 (act-listened 1, act-pause 1, hub-empty 1, hub-listen 1,
+                 sync-DS1 9, sync-DS2 7, sync-EX1 2)
+after, Windows:  0 in each of four runs
+after, Linux:    0
+```

@@ -2589,3 +2589,35 @@ amendment of 2026-09-09) survived and the older one did not."""
 #   module/core/library/net/src/pipe/unix.rs Listener::bind's FIFO used
 #   where one was there, and its Drop, deleted
 #     -> net::socket_file claimed and Claim, Kind::Fifo
+
+# Code moved on 2026-11-20, a file left under its mark removed and the
+# Parquet archive's receipt the file archive's (ADR-0040, amendment
+# 2026-11-20):
+#   module/core/operation/archive/file/src/lib.rs FileArchive's prefix,
+#   path_of and key, deleted
+#     -> module/core/operation/archive/.src/directory.rs Directory, which
+#     the file and Parquet archives keep
+#   module/core/operation/archive/.src/named.rs restore's comparison of the
+#   receipt's, the metadata's and the bytes' checksums, and
+#   module/core/operation/archive/sql/src/lib.rs restore's of the
+#   receipt's and the script's, deleted
+#     -> module/core/operation/archive/.src/checksum.rs verify, which the
+#     Parquet archive's restore calls too
+#   module/core/operation/archive/.src/whole.rs opened's File::create_new
+#     -> module/core/library/file/src/held.rs create, new, and
+#     remove_unheld, which whole's sweep calls
+
+# Code moved on 2026-11-20, an object store's object won by one node's
+# claim beside it (ADR-0024, amendment 2026-11-20):
+#   module/core/capability/transport/.src/listed.rs listed and its tests
+#     -> .src/listed/claims.rs Claims::listed, with the claim, and its
+#     tests over .src/listed/memory.rs; .src/listed/hold.rs the claim let go
+#   the list, get and delete closures each of transport/aws-s3,
+#   transport/azure-blob and transport/google-cloud-storage handed it, and
+#   their Refused fields
+#     -> aws-s3/src/bucket.rs, azure-blob/src/container.rs and
+#     google-cloud-storage/src/bucket.rs, each a listed::Store; the
+#     memory in listed::Claims
+#   module/core/capability/transport/.src/claim/claimant.rs claim's
+#   claimed name
+#     -> Claimant::claimed, which an object's claim writes too

@@ -451,7 +451,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 398316 lines of production
+Where each repository mounts and what it holds: 399673 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -476,13 +476,13 @@ hold no source to count.
 ├── module/
 │   ├── core/
 │   │   ├── capability/
-│   │   │   ├── transport                       9234
-│   │   │   │   ├── amqp                        2732
+│   │   │   ├── transport                       9674
+│   │   │   │   ├── amqp                        2733
 │   │   │   │   ├── opc-ua                      2505
 │   │   │   │   ├── db2                         2481
-│   │   │   │   ├── http                        2240
+│   │   │   │   ├── http                        2241
 │   │   │   │   ├── nfs                         2170
-│   │   │   │   ├── kafka                       2054
+│   │   │   │   ├── kafka                       2055
 │   │   │   │   ├── smb                         2019
 │   │   │   │   ├── ibm-mq                      1958
 │   │   │   │   ├── ftp                         1839
@@ -507,28 +507,28 @@ hold no source to count.
 │   │   │   │   ├── ethercat                     987
 │   │   │   │   ├── as2                          984
 │   │   │   │   ├── aws-sns                      959
+│   │   │   │   ├── aws-s3                       956
+│   │   │   │   ├── azure-blob                   949
 │   │   │   │   ├── ethernet-ip                  941
 │   │   │   │   ├── activemq                     926
 │   │   │   │   ├── hart                         913
 │   │   │   │   ├── aws-kinesis                  905
 │   │   │   │   ├── j1939                        900
 │   │   │   │   ├── uds                          899
+│   │   │   │   ├── google-cloud-storage         894
 │   │   │   │   ├── bluetooth                    886
 │   │   │   │   ├── redis-streams                880
 │   │   │   │   ├── azure-event-grid             878
 │   │   │   │   ├── lorawan                      878
 │   │   │   │   ├── azure-service-bus            872
-│   │   │   │   ├── aws-s3                       871
 │   │   │   │   ├── pop3                         869
 │   │   │   │   ├── google-pub-sub               863
-│   │   │   │   ├── azure-blob                   862
 │   │   │   │   ├── file                         861
 │   │   │   │   ├── aws-sqs                      854
 │   │   │   │   ├── profinet                     838
 │   │   │   │   ├── cotp                         836
 │   │   │   │   ├── dhcp                         824
 │   │   │   │   ├── wireless-hart                821
-│   │   │   │   ├── google-cloud-storage         804
 │   │   │   │   ├── peppol                       788
 │   │   │   │   ├── thread                       787
 │   │   │   │   ├── zigbee                       783
@@ -607,7 +607,7 @@ hold no source to count.
 │   │   │   │        hash  quoted-printable  tar
 │   │   │   ├── process                         2391
 │   │   │   │   └── bpmn                        3098
-│   │   │   ├── transform                       2124
+│   │   │   ├── transform                       2206
 │   │   │   │       declared, not built 8
 │   │   │   │       handlebars  jolt  jq  jsonata  liquid  mustache  tera
 │   │   │   │       xquery
@@ -714,18 +714,18 @@ hold no source to count.
 │   │   │   ├── jose                             881
 │   │   │   ├── ntlm                             806
 │   │   │   ├── asn1                             686
-│   │   │   └── file                             145
+│   │   │   └── file                             286
 │   │   └── operation/
-│   │       ├── operate                        52140  C# 32091 · Rust 20049
+│   │       ├── operate                        52118  C# 32069 · Rust 20049
 │   │       ├── cli                            11896
 │   │       ├── observe                         7949
 │   │       │   ├── otlp                         591
 │   │       │   └── prometheus                   332
-│   │       ├── gui                             7917
+│   │       ├── gui                             7921
 │   │       │   └── vscode                      3423
 │   │       ├── powershell                      3806  C# 3806 · PowerShell 0
 │   │       ├── audit                           3670
-│   │       │   ├── file                         540
+│   │       │   ├── file                         685
 │   │       │   ├── windows-event-log            173
 │   │       │   ├── syslog                        78
 │   │       │       declared, not built 7
@@ -734,14 +734,14 @@ hold no source to count.
 │   │       ├── report                          2250
 │   │       │       declared, not built 6
 │   │       │       csv  html  json  pdf  prometheus  sql
-│   │       └── archive                         1137
-│   │           ├── sql                          263
-│   │           ├── parquet                      177
+│   │       └── archive                         1435
+│   │           ├── sql                          253
+│   │           ├── parquet                      204
 │   │           ├── aws-s3                       163
 │   │           ├── google-cloud-storage         150
 │   │           ├── azure-blob                   138
-│   │           ├── file                         125
 │   │           ├── sqlite                       125
+│   │           ├── file                         105
 │   │           ├── mariadb                       87
 │   │           ├── postgresql                    62
 │   │           └── mssql                         59
@@ -778,7 +778,7 @@ hold no source to count.
 │       │       declared, not built 1
 │       │       postgresql
 │       ├── configure                           5427
-│       └── cluster                             4909
+│       └── cluster                             4916
 └── test/
     └── core/
         ├── essentials                         16475

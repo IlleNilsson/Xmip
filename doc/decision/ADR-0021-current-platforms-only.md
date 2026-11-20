@@ -440,6 +440,112 @@ still in `deps/`.
 2026-11-02); the pass over every workspace and the fixes are the
 assistant's, at the coordinator's order.
 
+## Amendment, 2026-11-20: a .NET test's temporary folder is one helper, `TestFolder`
+
+`Directory.CreateTempSubdirectory` (amendment 2026-11-19) makes a folder and
+does not remove it. On 2026-11-20 the GUI's tests had left about 1,267
+folders per label under the system's temporary directory, 12,307 in all,
+the newest from 2026-11-19 at 08:08. Until that day the page tests removed
+their folder in their own `IDisposable.Dispose`, and xUnit v3 never calls it
+on a bUnit page test: it disposes a test class through `IAsyncDisposable`
+where the class has it and through `IDisposable` only where it has not, and
+`BunitContext` has both. Its source, `TestRunner.DisposeTestClassInstance`:
+
+```text
+if (testClassInstance is IAsyncDisposable asyncDisposable)
+    await asyncDisposable.DisposeAsync();
+else if (testClassInstance is IDisposable disposable)
+    disposable.Dispose();
+```
+
+The change of 2026-11-19 moved that removal into `DisposeAsyncCore`, and the
+page tests have left nothing since. But each of the other sites still made
+its own temporary path and removed it its own way: by `try` and `finally`, by
+`File.Delete`, by a `catch` that kept what it could not remove, or not at all
+where the path was only to be absent. That was 77 calls in 54 files.
+
+What stands now:
+
+- A .NET test's folder is `TestFolder`, in
+  `module/core/operation/operate/dotnet/Xmip.Surface.Test/TestFolder.cs`,
+  linked into every .NET test project that makes one, as `TestCluster` is:
+  `Xmip.Operate.Test`, `Xmip.Gui.Test` and `Xmip.Operations.Test`. That is
+  where the estate's shared .NET test code already is. The one lower .NET
+  project, xmip-core-abi's `Xmip.Abi`, is a Foundation definition that opens
+  no file (ADR-0058 clause 1), and its test makes no folder.
+- `Directory.CreateTempSubdirectory` makes it, `xmip-<label>-<random>`, the
+  random part from the operating system. On Windows that is eight random
+  bytes as an 8.3 name, made with `CreateDirectory`, which takes another name
+  where one is already there. On Unix it is `mkdtemp`, with entry for the
+  owner only. Disposing it removes it with everything in it, also when the
+  test throws, and never throws itself: a folder that cannot be removed is
+  named on standard error. A test makes its folder first, so that it is
+  disposed after every file, host or watcher opened in it. A path that must
+  not exist is named inside it (`TestFolder.Inside`).
+- A bUnit page test disposes its folder in `DisposeAsyncCore`, after the
+  base. `AsyncDisposalTest` is linked beside `TestFolder` and refuses a test
+  class that xUnit disposes asynchronously and that has its own
+  `IDisposable.Dispose`. In the GUI's tests, `Unacted` is an assembly
+  fixture. It names the audit no Observer's act writes, and its folder is
+  removed after the last test.
+- `test/CSharp.Style.Test.ps1` refuses `CreateTempSubdirectory(`,
+  `GetTempPath(`, `GetTempFileName(` and `"TEMP"`, `"TMP"` and `"TMPDIR"`
+  in any C# file, comments aside, except three. Each is listed with its count
+  and its reason: the helper (1); its test, which asserts where the folder is
+  made (1); and the runtime library's copies in `NativeRuntime.cs` (1), the
+  one folder every process loading the library shares. This replaces the
+  check of 2026-11-19, a `GetTempPath()` beside a `CreateDirectory(` in one
+  file. C# has no style document, so the test's header states the rule.
+- The folders already left were removed after a check of their content as
+  well as their names. A folder was removed only where its name was in the
+  shape its test made, `xmip-<label>-` and then a GUID's 32 digits or
+  `CreateTempSubdirectory`'s 8.3 name; where every file in it was one that
+  test writes; and where every audit record in it was written under a
+  program that test writes as. That is the test assembly's own
+  (`Xmip.Gui.Test`, `Xmip.Surface.Test`, `Xmip.Abi.Test`,
+  `xmip-operations`), or the one its fixture names: the Audit view's
+  cluster records, the hidden run's `probe`, the web host's `xmip-gui-web`.
+  12,395 folders were removed and none was refused. They were the GUI's
+  12,307, 20 of `Xmip.Surface.Test`'s, and 66 of `Xmip.Abi.Test`'s Event
+  tests from before those tests moved to `Xmip.Operate.Test` (2026-11-17).
+  One more was a Reports test's of 2026-11-10, and one was left by the
+  guard's failing run below.
+
+Evidence, 2026-11-20, on Windows; nothing touched is Unix-only:
+
+```text
+$ dotnet test src/Xmip.Gui.Test    (before this change, the code of 2026-11-19)
+Passed!  - Failed:     0, Passed:   154, Skipped:     0, Total:   154
+xmip-gui-* folders made by this run: 0
+$ Invoke-Pester -Path test/CSharp.Style.Test.ps1            (before)
+makes a temporary path nowhere but where it is allowed      FAILED: 54 files, 77 calls
+module/core/operation/gui/src/Xmip.Gui.Test/SubscriptionsViewTest.cs makes 1 where 0 is allowed, at 36
+module/core/operation/operate/dotnet/Xmip.Operate.Test/RuntimeCertificatesTest.cs makes 6 where 0 is allowed, at 25, 55, 108, 142, 179, 211
+$ Invoke-Pester -Path test/CSharp.Style.Test.ps1            (after)
+Passed makes a temporary path nowhere but where it is allowed
+Passed keeps every line at or under 100 columns
+$ dotnet test src/Xmip.Gui.Test    (TopologySelectionTest given back its own IDisposable.Dispose)
+Failed Xmip.Surface.Test.AsyncDisposalTest.NoTestClassXunitDisposesAsynchronouslyCleansUpInItsOwnDispose
+Collection: ["Xmip.Gui.Test.TopologySelectionTest"]
+gui-topology folders left by this run: 1
+$ dotnet test src/Xmip.Gui.Test    (DisposeAsyncCore, as it stands)
+Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2
+gui-topology folders left by this run: 0
+$ dotnet test, each project, then the folders made under <temp> since the first began
+Passed!  - Failed:     0, Passed:   320, Skipped:     0, Total:   320 - Xmip.Surface.Test.dll
+Passed!  - Failed:     0, Passed:   110, Skipped:     0, Total:   110 - Xmip.Operate.Test.dll
+Passed!  - Failed:     0, Passed:   155, Skipped:     0, Total:   155 - Xmip.Gui.Test.dll
+Passed!  - Failed:     0, Passed:    11, Skipped:     0, Total:    11 - Xmip.Operations.Test.dll
+xmip-* made under <temp> since the first began: 0
+the scan of <temp> by name, files and audit programs above, then the removal:
+theirs: 12395      not theirs or too recent: 0      removed: 12395
+```
+
+**Provenance.** The leftovers were found by the coordinator on 2026-11-20,
+and the Rust rule is this record's amendment of 2026-11-19. The helper, the
+guard, the style test and the removal are the assistant's, at the
+coordinator's order.
+
 ## Alternatives considered
 
 **Support the previous major of each platform.** The conventional choice, and
