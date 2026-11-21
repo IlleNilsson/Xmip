@@ -161,10 +161,13 @@
   register: xmip_shipped
   become: true
 
+# Every repository off: the package needs systemd alone, which every machine
+# has, so a machine with no network installs it as one that has.
 - name: The package installed, which runs xmip-service --install
   ansible.builtin.dnf:
     name: "{{ xmip_staging }}/xmip.rpm"
     disable_gpg_check: true
+    disablerepo: "*"
     state: present
   environment:
     XMIP_NODE: "{{ xmip_node_name }}"

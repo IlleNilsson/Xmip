@@ -672,6 +672,20 @@ Describe 'The Xmip resources'' own steps' {
         $script:Reached | Should -BeFalse -Because 'nothing is sent before the check'
     }
 
+    It 'unpacks the module libraries into the configuration folder, again over what is there' {
+        [string] $from = Join-Path $TestDrive 'libraries'
+        [string] $configuration = Join-Path $TestDrive 'config'
+        [string] $zip = Join-Path $TestDrive 'modules.zip'
+        $null = New-Item -ItemType Directory -Path $from -Force
+        Set-Content -LiteralPath (Join-Path $from 'liborder_approval.so') -Value 'unit'
+        [System.IO.Compression.ZipFile]::CreateFromDirectory($from, $zip)
+        [hashtable] $instance = @{ modules = $zip; configuration = $configuration }
+        Test-NodeModules -Instance $instance | Should -BeFalse
+        Install-NodeModules -Instance $instance
+        Install-NodeModules -Instance $instance
+        Test-NodeModules -Instance $instance | Should -BeTrue
+    }
+
     It 'answers a restarting domain machine absent, never refused, and sets nothing on it' {
         function New-EnvironmentSession { throw 'The machine does not answer.' }
         function Read-MachineSecret { throw 'No secret is read for a machine that does not answer.' }
@@ -726,7 +740,7 @@ Describe 'The Xmip resources'' own steps' {
         $script:Installed = 'aa'
         Install-NodePackage -Instance $package -Confirm:$false
         @($script:Ran | Where-Object { $_ -notlike 'rpm -q *' }) |
-            Should -Be @('dnf install --assumeyes xmip.rpm',
+            Should -Be @('dnf install --assumeyes --disablerepo=* xmip.rpm',
                 'rpm --upgrade --replacepkgs --replacefiles xmip.rpm')
     }
 

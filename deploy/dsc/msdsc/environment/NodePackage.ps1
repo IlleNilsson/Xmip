@@ -115,6 +115,11 @@ function Test-NodeModules {
                 (Get-Item -LiteralPath $placed).Length -ne $entry.Length) {
                 return $false
             }
+            # On Windows the node's account reads a library by its folder's
+            # grant alone, which one inheriting nothing never has.
+            if ($IsWindows -and (Get-Acl -LiteralPath $placed).AreAccessRulesProtected) {
+                return $false
+            }
         }
     }
     finally {
@@ -219,13 +224,48 @@ function Install-NodeModules {
         [hashtable] $Instance
     )
 
-    if ($Instance['modules'] -and (Test-Path -LiteralPath $Instance['modules'])) {
-        $null = New-Item -ItemType Directory -Path $Instance['configuration'] -Force
-        [hashtable] $unpacking = @{
-            LiteralPath = $Instance['modules']; DestinationPath = $Instance['configuration']
-        }
-        Expand-Archive @unpacking -Force
+    if (-not $Instance['modules'] -or -not (Test-Path -LiteralPath $Instance['modules'])) {
+        return
     }
+    $null = New-Item -ItemType Directory -Path $Instance['configuration'] -Force
+    Expand-NodeZip -Path $Instance['modules'] -Destination $Instance['configuration']
+    if (-not $IsWindows) {
+        return
+    }
+    # Each library inherits its folder's access, to which xmip-service
+    # --install --account adds the node's account: one unpacked inheriting
+    # nothing was read by the administrators alone, and the node could not
+    # open its unit (2026-11-21, the Hyper-V environment's EX1).
+    $zip = [System.IO.Compression.ZipFile]::OpenRead($Instance['modules'])
+    try {
+        foreach ($entry in $zip.Entries) {
+            [string] $placed = Join-Path -Path $Instance['configuration'] -ChildPath $entry.Name
+            Invoke-DscProgram -Program 'icacls.exe' -Argument @($placed, '/reset') | Out-Null
+        }
+    }
+    finally {
+        $zip.Dispose()
+    }
+}
+
+function Expand-NodeZip {
+    <#
+    .SYNOPSIS
+    A zip unpacked into a folder, each file there replaced, by .NET's own
+    ZipFile: the PowerShell 7 brought to an AlmaLinux machine could not load
+    Microsoft.PowerShell.Archive, so Expand-Archive was not there
+    (2026-11-21, the Hyper-V environment's first Storage node).
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $Path,
+
+        [Parameter(Mandatory = $true)]
+        [string] $Destination
+    )
+
+    [System.IO.Compression.ZipFile]::ExtractToDirectory($Path, $Destination, $true)
 }
 
 function Install-NodePackage {
@@ -250,7 +290,9 @@ function Install-NodePackage {
     }
 
     # Before the install, which starts the node: it opens its units and
-    # reaches its Storage nodes by name as it starts.
+    # reaches its Storage nodes by name as it starts. A node running holds
+    # its units open, so it is stopped first (2026-11-21, EX1 on Windows).
+    Stop-NodeService -Name "xmip-$($Instance.node)" -Confirm:$false
     Install-NodeModules -Instance $Instance
     Set-NodeNamesBlock -Instance $Instance
 
@@ -260,7 +302,7 @@ function Install-NodePackage {
         # programs, Program Files\Xmip\bin, and installed by the one command
         # every package runs, over the configuration folder the MSI uses.
         [string] $root = Join-Path -Path $env:ProgramFiles -ChildPath 'Xmip'
-        Expand-Archive -LiteralPath $Instance.path -DestinationPath $env:TEMP -Force
+        Expand-NodeZip -Path $Instance.path -Destination $env:TEMP
         [string] $unpacked = Join-Path -Path $env:TEMP -ChildPath 'xmip\bin'
         $null = New-Item -ItemType Directory -Path (Join-Path $root 'bin') -Force
         Copy-Item -Path (Join-Path $unpacked '*') -Destination (Join-Path $root 'bin') -Force
@@ -286,6 +328,10 @@ function Install-NodePackage {
         Invoke-DscProgram -Program 'rpm' -Argument $upgrade | Out-Null
         return
     }
-    Invoke-DscProgram -Program 'dnf' -Argument @('install', '--assumeyes', $Instance.path) |
-        Out-Null
+    # Every repository off: the package needs systemd alone, which every
+    # machine has, and a machine with no network, or no name server that
+    # reaches the mirrors, installs it as one that has (2026-11-21, the
+    # Hyper-V environment's AlmaLinux machines).
+    [string[]] $install = @('install', '--assumeyes', '--disablerepo=*', $Instance.path)
+    Invoke-DscProgram -Program 'dnf' -Argument $install | Out-Null
 }

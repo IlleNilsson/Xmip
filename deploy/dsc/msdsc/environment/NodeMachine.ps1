@@ -358,3 +358,34 @@ function Start-NodeService {
     Invoke-DscProgram -Program 'systemctl' -Argument @('enable', $Name) | Out-Null
     Invoke-DscProgram -Program 'systemctl' -Argument @('start', '--no-block', $Name) | Out-Null
 }
+
+function Stop-NodeService {
+    <#
+    .SYNOPSIS
+    Stop the node's service where it runs, so what it holds open, its
+    module libraries, can be replaced; nothing where it is not registered
+    or not running. The install that follows starts it again.
+    #>
+    [CmdletBinding(SupportsShouldProcess = $true)]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $Name
+    )
+
+    if (-not $PSCmdlet.ShouldProcess($Name, 'Stop')) {
+        return
+    }
+
+    if ($IsWindows) {
+        $service = Get-Service -Name $Name -ErrorAction SilentlyContinue
+        if ($null -ne $service -and $service.Status -ne 'Stopped') {
+            Stop-Service -Name $Name -Force
+        }
+        return
+    }
+
+    & systemctl is-active --quiet $Name
+    if ($LASTEXITCODE -eq 0) {
+        Invoke-DscProgram -Program 'systemctl' -Argument @('stop', $Name) | Out-Null
+    }
+}

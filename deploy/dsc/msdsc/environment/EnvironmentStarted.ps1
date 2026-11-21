@@ -62,22 +62,29 @@ function Get-EnvironmentNodeService {
         [string] $Node
     )
 
-    [int] $port = if ($Reach.family -eq 'Windows') { 5985 } else { 22 }
-    [hashtable] $answer = @{ TargetName = $Reach.address; TcpPort = $port; TimeoutSeconds = 1 }
-    if (-not (Test-Connection @answer -Quiet)) {
-        return 'unreachable'
-    }
+    # A Windows machine is asked over the session itself, PowerShell Direct
+    # needing no WinRM port; its status is made words there, since it
+    # arrives here as the enumeration's number, 4 for Running (2026-11-21).
     if ($Reach.family -eq 'Windows') {
-        $session = New-EnvironmentSession -Instance $Reach
         try {
-            return "$(Invoke-Command -Session $session -ArgumentList "xmip-$Node" -ScriptBlock {
+            $session = New-EnvironmentSession -Instance $Reach -ErrorAction Stop
+        }
+        catch {
+            return 'unreachable'
+        }
+        try {
+            return [string] (Invoke-Command -Session $session -ArgumentList "xmip-$Node" -ScriptBlock {
                     param($Name)
-                    (Get-Service -Name $Name -ErrorAction SilentlyContinue).Status
-                })"
+                    [string] (Get-Service -Name $Name -ErrorAction SilentlyContinue).Status
+                })
         }
         finally {
             Remove-PSSession -Session $session
         }
+    }
+    [hashtable] $answer = @{ TargetName = $Reach.address; TcpPort = 22; TimeoutSeconds = 1 }
+    if (-not (Test-Connection @answer -Quiet)) {
+        return 'unreachable'
     }
     [string] $unit = ConvertTo-EnvironmentShellWord -Value "xmip-$Node"
     return (@(Invoke-EnvironmentSsh -Instance $Reach -Command (
