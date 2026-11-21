@@ -18,6 +18,9 @@
     - Name, on the environment's DNS server: an A record for the cluster
       and for each node, in the environment's zone, holding exactly the
       addresses given.
+    - Domain, on the machine DSC is run on: the environment's Active
+      Directory domain, its controller the first domain controller of a new
+      forest, every other Windows machine joined (EnvironmentDomain.ps1).
     - Started, on the machine DSC is run on: every node of the environment
       running, started together, since none of a cluster's nodes accepts
       work until its Xmip Storage does (EnvironmentStarted.ps1).
@@ -32,7 +35,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet('Machine', 'Slice', 'Name', 'Started')]
+    [ValidateSet('Machine', 'Slice', 'Name', 'Domain', 'Started')]
     [string] $Kind,
 
     [Parameter(Mandatory = $true)]
@@ -46,7 +49,7 @@ Set-StrictMode -Version Latest
 # The Windows machines' secret is read as every template reads it: deploy/dsc/machine.
 foreach ($part in '../../machine/MachineSecret.ps1', 'Program.ps1', 'EnvironmentSsh.ps1',
     'EnvironmentMachine.ps1', 'EnvironmentSlice.ps1', 'EnvironmentName.ps1',
-    'EnvironmentStarted.ps1') {
+    'EnvironmentDomain.ps1', 'EnvironmentStarted.ps1') {
     . (Join-Path -Path $PSScriptRoot -ChildPath $part)
 }
 
@@ -71,6 +74,12 @@ foreach ($part in '../../machine/MachineSecret.ps1', 'Program.ps1', 'Environment
             Set-EnvironmentName -Instance $instance
         }
         Get-EnvironmentName -Instance $instance
+    }
+    'Domain' {
+        if ($Operation -eq 'set') {
+            Set-EnvironmentDomain -Instance $instance -Confirm:$false
+        }
+        Get-EnvironmentDomain -Instance $instance
     }
     'Started' {
         if ($Operation -eq 'set') {

@@ -294,7 +294,7 @@ Describe 'msdsc' {
         $environment = Read-XmipTestEnvironment -Path (
             Join-Path $script:Root "deploy/dsc/$_") -Folder $folder
         [hashtable[]] $machines = @(Get-XmipTestDeployStep -Environment $environment -Run (
-                [string] $TestDrive) | Where-Object { $_.ContainsKey('Install') })
+                [string] $TestDrive) | Where-Object { $_.Value.ContainsKey('image') })
         @($machines | Where-Object { $_.Value['image'].family -eq 'Linux' }).Count |
             Should -BeGreaterThan 0
         $document = Read-XmipTestYaml -Path $machines[0].Document
@@ -304,6 +304,42 @@ Describe 'msdsc' {
             $passed[$name] | Should -Be "[parameters('$name')]" -Because "it passes $name"
             $machines[0].Value.ContainsKey($name) | Should -BeTrue -Because "the step gives $name"
         }
+    }
+
+    It 'promotes the domain''s controller before the names and joins each other Windows machine after' {
+        [string] $folder = Join-Path $TestDrive ([guid]::NewGuid().ToString('n'))
+        $environment = Read-XmipTestEnvironment -Path (
+            Join-Path $script:Root 'deploy/dsc/hyperv.example.toml') -Folder $folder
+        [hashtable[]] $steps = @(Get-XmipTestDeployStep -Environment $environment -Run (
+                [string] $TestDrive))
+        [string[]] $names = @($steps | ForEach-Object { $_.Name })
+        [string] $controller = $environment['domain_controller']
+        [string[]] $members = @($environment['machines'] | Where-Object {
+                $_['name'] -ne $controller -and
+                $environment['images'][$_['image']]['family'] -eq 'Windows' } |
+            ForEach-Object { "domain-$($_['name'])" })
+        [int] $promoted = [array]::IndexOf($names, "domain-$controller")
+        [int] $named = [array]::IndexOf($names, 'names')
+        $promoted | Should -BeGreaterThan ([array]::IndexOf($names, $controller))
+        $named | Should -BeGreaterThan $promoted
+        $members | Should -Not -BeNullOrEmpty
+        foreach ($member in $members) {
+            [array]::IndexOf($names, $member) | Should -BeGreaterThan $named
+            $step = $steps | Where-Object { $_.Name -eq $member }
+            $step.Value.controller | Should -BeFalse
+            $step.ContainsKey('Install') | Should -BeTrue -Because 'a join restarts the machine'
+        }
+        ($steps | Where-Object { $_.Name -eq 'names' }).Value.tools.Windows.Keys |
+            Sort-Object | Should -Be @('dsc', 'pwsh')
+    }
+
+    It 'refuses a domain controller that is not the network''s DNS server' {
+        [string] $folder = Join-Path $TestDrive ([guid]::NewGuid().ToString('n'))
+        $environment = Read-XmipTestEnvironment -Path (
+            Join-Path $script:Root 'deploy/dsc/hyperv.example.toml') -Folder $folder
+        $environment['network']['dns_server'] = '10.77.0.1'
+        { Read-Environment -Environment $environment } |
+            Should -Throw '*its members find the domain through its DNS server*'
     }
 
     It 'gives the names to a DNS server only where one of the machines is it' {

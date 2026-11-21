@@ -1,0 +1,33 @@
+# The environment's Active Directory domain, from the machine DSC runs on, one
+# Windows machine at a time: the controller the domain_controller line names
+# made the first domain controller of a new forest of the environment's
+# domain, then every other Windows machine joined to it, each restarted.
+# Deploy-XmipEnvironment applies it where the environment file names a
+# controller: the controller before the names, which go into its zone, and
+# each member after (deploy/dsc/README.md).
+$schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
+directives:
+  version: ^3.4.0-preview.3
+parameters:
+  common:
+    type: object
+    description: How the machine is reached, secretPath among it.
+  machine:
+    type: object
+    description: The Windows machine, its name, address and family.
+  domain:
+    type: string
+    description: The domain, the environment's DNS domain.
+  controller:
+    type: bool
+    description: Whether the machine is the forest's controller; a member joins.
+resources:
+  - name: Domain
+    type: Xmip.Environment/Domain
+    requireVersion: ^0.1
+    properties:
+      name: "[parameters('machine').name]"
+      address: "[parameters('machine').address]"
+      domain: "[parameters('domain')]"
+      controller: "[parameters('controller')]"
+      secretPath: "[parameters('common').secretPath]"

@@ -50,6 +50,13 @@ function Get-XmipNativeLibrary {
     [string] $directory = Join-Path -Path $Root -ChildPath $kept
     [string] $file = if ($IsWindows) { 'rocksdb.lib' } else { 'librocksdb.a' }
     [string] $library = Join-Path -Path $directory -ChildPath $file
+    # On Windows the library is the one compiled with the C runtime linked
+    # in (.cargo/config.toml, crt-static), which Install-XmipNativeLibrary
+    # marks beside it; one compiled before, against the runtime's DLLs, is
+    # compiled again.
+    [string] $marked = Join-Path -Path $directory -ChildPath 'rocksdb.crt-static'
+    [bool] $present = [System.IO.File]::Exists($library) -and (
+        -not $IsWindows -or [System.IO.File]::Exists($marked))
 
     return [pscustomobject]@{
         Kept      = $kept
@@ -57,7 +64,8 @@ function Get-XmipNativeLibrary {
         Directory = $directory
         File      = $file
         Library   = $library
-        Present   = [System.IO.File]::Exists($library)
+        Marked    = $marked
+        Present   = $present
     }
 }
 
@@ -168,6 +176,9 @@ function Install-XmipNativeLibrary {
     }
 
     New-Item -ItemType Directory -Path $native.Directory -Force | Out-Null
-    Copy-Item -LiteralPath $compiled.FullName -Destination $native.Library
+    Copy-Item -LiteralPath $compiled.FullName -Destination $native.Library -Force
+    if ($IsWindows) {
+        Set-Content -LiteralPath $native.Marked -Value 'compiled with crt-static'
+    }
     return New-XmipPrerequisiteResult -Name $name -Status 'installed' -Detail $native.Library
 }

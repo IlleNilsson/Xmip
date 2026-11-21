@@ -142,6 +142,7 @@ alike. The Windows PowerShell adapter is used nowhere here.
 | the firewall | `Xmip.Node/Opening` |
 | the service | `Xmip.Node/Service` |
 | the names | `Xmip.Environment/Name` |
+| the Active Directory domain, its controller promoted and each other Windows machine joined | `Xmip.Environment/Domain` |
 | a document applied on another machine | `Xmip.Environment/Machine` |
 | every node started together | `Xmip.Environment/Started` |
 
@@ -181,8 +182,20 @@ administrator rights — every method of `Xmip.Environment/Name`,
 `Xmip.Node/File`, `Xmip.Node/Opening` and `Xmip.Node/Slice`, which read
 what only an administrator may, and the set of `Xmip.Node/Account`,
 `Xmip.Node/Package` and `Xmip.Node/Service`; `Xmip.Environment/Machine`,
-`Xmip.Environment/Slice` and `Xmip.Environment/Started` run unelevated on
-this machine. `Xmip.Node/Package` compares an installed `.rpm` with the
+`Xmip.Environment/Slice`, `Xmip.Environment/Domain` and
+`Xmip.Environment/Started` run unelevated on this machine.
+
+`Xmip.Environment/Domain` is no document applied on the machine but works
+from this one, inside the session `Xmip.Environment/Machine` opens: the
+Administrator's secret is the forest's Directory Services Restore Mode
+password and the account a member joins with, `Administrator@<domain>`,
+and so goes to the machine inside that session alone, never in a staged
+parameters file. Microsoft's own resources for it, ActiveDirectoryDsc and
+ComputerManagementDsc, are Windows PowerShell DSC resources, which DSC v3
+runs only through its Windows PowerShell adapter, which no document here
+uses. Promoting and joining each restart the machine; one that does not
+answer while it restarts is not yet in its desired state, never an error,
+so the run sets it again until it is. `Xmip.Node/Package` compares an installed `.rpm` with the
 shipped one by its header's SHA-256, so a build made again under the same
 version reaches the machine too, installed over the one there by rpm's own
 upgrade.
@@ -191,6 +204,7 @@ upgrade.
 | --- | --- |
 | `machine.dsc.yaml` | one node machine, from the host: its slice made, then `node.dsc.yaml` applied there |
 | `names.dsc.yaml` | the names, from the host: `name.dsc.yaml` applied on the DNS server |
+| `domain.dsc.yaml` | the domain, from the host: one Windows machine promoted or joined (`EnvironmentDomain.ps1`) |
 | `node.dsc.yaml` | one node, on its machine |
 | `name.dsc.yaml` | the names, on the DNS server |
 | `started.dsc.yaml` | every node started together, from the host |
@@ -260,8 +274,10 @@ The environment file names each, `deploy/dsc/README.md`.
 ## Running it
 
 `Deploy-XmipEnvironment -Path <environment file>`, with `technology =
-"msdsc"`: after the machines, it applies `names.dsc.yaml` where one of the
-machines is the DNS server, then `machine.dsc.yaml` once for each node in
+"msdsc"`: after the machines, it applies `domain.dsc.yaml` to the
+`domain_controller` where the file names one, `names.dsc.yaml` where one of
+the machines is the DNS server, `domain.dsc.yaml` to each other Windows
+machine where there is a domain, then `machine.dsc.yaml` once for each node in
 the order the file lists the machines, and last `started.dsc.yaml`, with
 this folder on `PATH` so DSC finds its resources. A node refuses to accept
 work until its cluster's Xmip Storage answers, and a Storage node until

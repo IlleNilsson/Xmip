@@ -21,6 +21,11 @@ parameters:
   records:
     type: array
     description: Each name, the cluster's and each node's, with its addresses.
+  tools:
+    type: object
+    description: >-
+      Per family, each tool DSC is brought to the server with, its file's path
+      and SHA-256: a fresh machine has neither PowerShell 7 nor DSC.
 resources:
   - name: Names
     type: Xmip.Environment/Machine
@@ -33,7 +38,7 @@ resources:
       secretPath: "[parameters('common').secretPath]"
       keyPath: "[parameters('common').keyPath]"
       knownHosts: "[parameters('common').knownHosts]"
-      tools: "[createObject()]"
+      tools: "[parameters('tools')[parameters('server').family]]"
       document: name.dsc.yaml
       files: "[createObject()]"
       parameters: "[createObject('zone', parameters('zone'), 'records', parameters('records'))]"

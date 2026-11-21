@@ -35,5 +35,13 @@ rustflags = ["-l", "rpcrt4", "-l", "shlwapi"]
 # rebuild of the service, the roll and every test binary is mostly linking
 # (the owner, 2026-11-10: "Go ahead, lets get the faster linker"). Nothing to
 # install; rustc finds it in its own sysroot.
+#
+# The C and C++ runtime linked in, never Microsoft's Visual C++
+# Redistributable: a fresh Windows Server has no VCRUNTIME140.dll,
+# VCRUNTIME140_1.dll or MSVCP140.dll, and xmip-service there exited
+# 0xC0000135, a DLL not found (2026-11-21, the Hyper-V environment's first
+# Windows node). cc and cmake compile C and C++ with /MT by this flag, and
+# the kept RocksDB library too (Install-XmipNativeLibrary.ps1).
 [target.x86_64-pc-windows-msvc]
 linker = "rust-lld"
+rustflags = ["-C", "target-feature=+crt-static"]
