@@ -2249,6 +2249,35 @@ unit, and the runtime's `approval_unit` waits for a second Message of its
 Instance, which no Correlation keys. Which test it is, and where its unit
 comes from, is open.
 
+## 92. Two Storage nodes restarted one after the other end as standbys of each other
+
+Found 2026-11-21 on the Hyper-V environment, its two AlmaLinux Storage
+nodes upgraded by the deploy one after the other (rpm's upgrade restarts
+the node). DS1 restarted first and came back "a standby Storage node of the
+primary at DS2:7443, epoch 4, copying, not promoted until ready"; DS2
+restarted a minute later and came back "a standby Storage node of the
+primary at DS1:7443, epoch 5". Neither was primary, and every node's
+writes failed: "no Storage node answered". Stopping DS2, restarting DS1
+alone and then starting DS2 settled it, DS2 the primary at epoch 6. A
+rolling restart, the way every upgrade goes, must never leave a cluster
+without its primary; how the two decide while one of them restarts is not
+looked into, and whether the deploy should restart Storage nodes one at a
+time and wait for each to settle is a question for the cluster design
+(ADR-0056, amendment 2026-10-22).
+
+## 91. Windows blocks a program the Essentials starts, its firewall prompt unanswered
+
+Found 2026-11-21 driving the Hyper-V environment's real nodes: the roll's
+Parties' far end listened on `0.0.0.0:7422`, the machines timed out
+reaching it (os error 10060), and Windows Firewall held inbound *block*
+rules for `xmip-essentials-c1-roll` and `Xmip.Gui.Web` on the Public
+profile, which Windows makes itself when a new program listens and its
+prompt is not answered. A block rule wins over the port rule that allows
+7422, and every new name a build gives the roll, one per cluster, is a new
+program to Windows. Removing them takes an elevated console; how the
+Essentials should stand with Windows Firewall on one computer, a rule of
+its own made once by the elevated install or none needed, is open.
+
 ## 90. On Linux the Essentials' roll ends as it starts, saying nothing
 
 Found 2026-11-21, once the roll could be started on Linux at all (problem 88):
