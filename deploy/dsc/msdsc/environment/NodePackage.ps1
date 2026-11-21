@@ -5,9 +5,9 @@
     The estate's package on a node machine (node.resource.ps1, kind
     Package): the one shipped, installed, which registers the node's
     service. On AlmaLinux the installed .rpm is compared with the shipped one
-    by its header's SHA-256, so a build made again under the same version
-    reaches the machine too; on Windows the node is found by its service
-    alone.
+    by its header's SHA-256, and on Windows the installed xmip-service.exe
+    with the portable archive's, so a build made again under the same
+    version reaches the machine too.
     Dot-sourced by node.resource.ps1 and by test/MsdscEnvironment.Test.ps1.
 
     Style: doc/governance/powershell-style.md
@@ -83,10 +83,51 @@ function Test-NodePackage {
     }
 
     if ($IsWindows) {
-        return $true
+        return Test-NodeArchiveInstalled -Path $Instance.path
     }
 
     return (Get-NodePackageDigest) -eq (Get-NodePackageDigest -Path $Instance.path)
+}
+
+function Test-NodeArchiveInstalled {
+    <#
+    .SYNOPSIS
+    Whether the portable archive at -Path is the one installed: its
+    xmip-service.exe, by SHA-256, the one in Program Files\Xmip\bin, so a
+    build made again under the same version reaches the machine, as an .rpm
+    is compared by its header (2026-11-21: a node was found by its service
+    alone, and a new build never replaced the one there).
+    #>
+    [CmdletBinding()]
+    [OutputType([bool])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $Path
+    )
+
+    [string] $installed = Join-Path -Path $env:ProgramFiles -ChildPath 'Xmip\bin\xmip-service.exe'
+    if (-not (Test-Path -LiteralPath $installed)) {
+        return $false
+    }
+    $zip = [System.IO.Compression.ZipFile]::OpenRead($Path)
+    try {
+        $entry = $zip.Entries | Where-Object { $_.FullName -eq 'xmip/bin/xmip-service.exe' } |
+            Select-Object -First 1
+        if ($null -eq $entry) {
+            return $false
+        }
+        $stream = $entry.Open()
+        try {
+            [string] $shipped = (Get-FileHash -InputStream $stream -Algorithm SHA256).Hash
+        }
+        finally {
+            $stream.Dispose()
+        }
+    }
+    finally {
+        $zip.Dispose()
+    }
+    return $shipped -eq (Get-FileHash -LiteralPath $installed -Algorithm SHA256).Hash
 }
 
 function Test-NodeModules {
