@@ -132,11 +132,111 @@ function Get-XmipDeployEnvironment {
         throw ('REFUSED: ansible makes Hyper-V machines from its controller: host names ' +
             'the Windows host''s address as the controller reaches it.')
     }
+    Add-XmipDeployDomain -Environment $Environment -Read $read
     if ($nodes.Count -gt 0) {
         $read['Node'] = Get-XmipDeployNodeValue -Environment $Environment -Estate $Estate -Run (
             $Run) -Read $read
     }
+    # The tools DSC is brought with, for each family a document is applied
+    # on: the nodes' machines, the DNS server and the domain's machines.
+    [string[]] $families = @(@($nodes | ForEach-Object { $_.machine.family }) + @(
+            $read.NameServer | Where-Object { $_ } | ForEach-Object { $_.family }) + @(
+            $read.Domain | Where-Object { $_ } | ForEach-Object { 'Windows' }) |
+            Sort-Object -Unique)
+    $read['Tools'] = if ($technology -eq 'msdsc') {
+        Get-XmipDeployTool -Environment $Environment -Estate $Estate -Family $families
+    }
+    else { @{ Linux = @{}; Windows = @{} } }
     return $read
+}
+
+function Add-XmipDeployDomain {
+    <#
+        .SYNOPSIS
+            The environment's Active Directory domain, where its file names
+            domain_controller: Domain, the domain with its controller and
+            every other Windows machine, its members, each a name, address
+            and family; nothing where it names none.
+
+        .DESCRIPTION
+            The controller is a Windows machine of the environment and the
+            network's DNS server, since every member finds the domain
+            through it; anything else is refused.
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)]
+        [AllowNull()]
+        $Environment,
+
+        [Parameter(Mandatory)]
+        [hashtable] $Read
+    )
+
+    [string] $named = Get-TomlValue -Node $Environment -Name 'domain_controller' -Default ''
+    $Read['Domain'] = $null
+    if (-not $named) {
+        return
+    }
+    [hashtable[]] $windows = @($Read.Machines | Where-Object { $_['image'].family -eq 'Windows' } |
+            ForEach-Object { @{ name = $_['name']; address = $_['address']; family = 'Windows' } })
+    $controller = $windows | Where-Object { $_.name -eq $named } | Select-Object -First 1
+    if ($null -eq $controller) {
+        throw "REFUSED: domain_controller names $named, no Windows machine of the environment."
+    }
+    if ($controller.address -ne $Read.Common.network.dnsServer) {
+        throw ("REFUSED: domain_controller $named is at $($controller.address), and the " +
+            "network's dns_server is $($Read.Common.network.dnsServer): its members find the " +
+            'domain through its DNS server.')
+    }
+    $Read['Domain'] = @{
+        name = $Read.Common.domainName
+        controller = $controller
+        members = @($windows | Where-Object { $_.name -ne $named })
+    }
+}
+
+function Get-XmipDeployTool {
+    <#
+        .SYNOPSIS
+            msdsc's tools for each family -Family names, pwsh and dsc, each
+            a path that is there and its SHA-256: a fresh machine of either
+            family has neither PowerShell 7 nor DSC, Windows Server shipping
+            Windows PowerShell alone.
+    #>
+    [CmdletBinding()]
+    [OutputType([hashtable])]
+    param(
+        [Parameter(Mandatory)]
+        [AllowNull()]
+        $Environment,
+
+        [Parameter(Mandatory)]
+        [string] $Estate,
+
+        [Parameter(Mandatory)]
+        [AllowEmptyCollection()]
+        [string[]] $Family
+    )
+
+    [hashtable] $tools = @{ Linux = @{}; Windows = @{} }
+    $carried = Get-TomlValue -Node $Environment -Name 'tools' -Default $null
+    foreach ($each in $Family) {
+        $tool = Get-TomlValue -Node $carried -Name $each -Default $null
+        foreach ($name in 'pwsh', 'dsc') {
+            $entry = Get-TomlValue -Node $tool -Name $name -Default $null
+            [string] $file = Resolve-XmipDeployPath -Estate $Estate -Path (
+                Get-TomlValue -Node $entry -Name 'path' -Default '')
+            [string] $sha256 = Get-TomlValue -Node $entry -Name 'sha256' -Default ''
+            [bool] $there = $file -and (Test-Path -LiteralPath $file -PathType Leaf)
+            if (-not $there -or -not $sha256) {
+                throw ("REFUSED: msdsc brings DSC to each $each machine it applies a document " +
+                    "on: [tools.$each] $name needs path and sha256: '$file'.")
+            }
+            $tools[$each][$name] = @{ path = $file; sha256 = $sha256.ToLowerInvariant() }
+        }
+    }
+    return $tools
 }
 
 function Get-XmipDeployNodeValue {
@@ -145,9 +245,8 @@ function Get-XmipDeployNodeValue {
             What every node of the environment is given, each value checked:
             the cluster's file, this machine's xmip-service that slices and
             signs it, the authority that signs and the folder of each node's
-            certificate, the Parties' far end, the package for each family a
-            node runs on and, for msdsc, the tools DSC is brought to each
-            node machine with, Windows and AlmaLinux alike.
+            certificate, the Parties' far end and the package for each family
+            a node runs on.
     #>
     [CmdletBinding()]
     [OutputType([hashtable])]
@@ -181,9 +280,7 @@ function Get-XmipDeployNodeValue {
     $given['farEnd'] = Get-TomlValue -Node $Environment -Name 'far_end' -Default ''
     $given['slices'] = Join-Path $Run 'slice'
     [hashtable] $packages = @{ Linux = @{}; Windows = @{} }
-    [hashtable] $tools = @{ Linux = @{}; Windows = @{} }
     $packaged = Get-TomlValue -Node $Environment -Name 'packages' -Default $null
-    $carried = Get-TomlValue -Node $Environment -Name 'tools' -Default $null
     foreach ($family in @($Read.Nodes | ForEach-Object { $_.machine.family } |
             Sort-Object -Unique)) {
         $package = Get-TomlValue -Node $packaged -Name $family -Default $null
@@ -209,27 +306,8 @@ function Get-XmipDeployNodeValue {
         # the run holds its lock (Invoke-XmipDeployStep).
         $packages[$family].archive = Join-Path -Path $Run -ChildPath (
             "modules-$($family.ToLowerInvariant()).zip")
-        # A fresh machine of either family has neither PowerShell 7 nor DSC:
-        # Windows Server ships Windows PowerShell alone.
-        if ($Read.Technology -ne 'msdsc') {
-            continue
-        }
-        $tool = Get-TomlValue -Node $carried -Name $family -Default $null
-        foreach ($each in 'pwsh', 'dsc') {
-            $entry = Get-TomlValue -Node $tool -Name $each -Default $null
-            [string] $file = Resolve-XmipDeployPath -Estate $Estate -Path (
-                Get-TomlValue -Node $entry -Name 'path' -Default '')
-            [string] $sha256 = Get-TomlValue -Node $entry -Name 'sha256' -Default ''
-            [bool] $there = $file -and (Test-Path -LiteralPath $file -PathType Leaf)
-            if (-not $there -or -not $sha256) {
-                throw ("REFUSED: msdsc brings DSC to each $family node machine: " +
-                    "[tools.$family] $each needs path and sha256: '$file'.")
-            }
-            $tools[$family][$each] = @{ path = $file; sha256 = $sha256.ToLowerInvariant() }
-        }
     }
     $given['packages'] = $packages
-    $given['tools'] = $tools
     return $given
 }
 

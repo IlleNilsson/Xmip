@@ -1,0 +1,89 @@
+$schema: https://aka.ms/dsc/schemas/v3/bundled/resource/manifest.json
+type: Xmip.Environment/Domain
+version: '0.1.0'
+description: >-
+  The environment's Active Directory domain: its controller the first domain
+  controller of a new forest, or a Windows machine joined to it, each
+  machine reached as Xmip.Environment/Machine reaches it and restarted.
+tags:
+  - Xmip
+get:
+  executable: pwsh
+  args:
+    - -NoLogo
+    - -NonInteractive
+    - -NoProfile
+    - -File
+    - ./environment.resource.ps1
+    - -Kind
+    - Domain
+    - -Operation
+    - get
+  input: stdin
+test:
+  executable: pwsh
+  args:
+    - -NoLogo
+    - -NonInteractive
+    - -NoProfile
+    - -File
+    - ./environment.resource.ps1
+    - -Kind
+    - Domain
+    - -Operation
+    - test
+  input: stdin
+  return: state
+set:
+  executable: pwsh
+  args:
+    - -NoLogo
+    - -NonInteractive
+    - -NoProfile
+    - -File
+    - ./environment.resource.ps1
+    - -Kind
+    - Domain
+    - -Operation
+    - set
+  input: stdin
+  implementsPretest: true
+  return: state
+exitCodes:
+  '0': Success
+  '1': Error
+schema: !embedded
+    $schema: https://json-schema.org/draft/2020-12/schema
+    type: object
+    required:
+      - name
+      - address
+      - domain
+      - controller
+      - secretPath
+    properties:
+      name:
+        type: string
+        description: 'The Windows machine, as the hypervisor names it.'
+      address:
+        type: string
+        description: 'Its address, where it is reached over WinRM.'
+      domain:
+        type: string
+        description: 'The domain, the environment''s DNS domain.'
+      controller:
+        type: boolean
+        description: 'Whether the machine is the forest''s controller; a member joins.'
+      secretPath:
+        type: string
+        description: 'The Administrator''s secret, Export-Clixml.'
+      answering:
+        type: boolean
+        readOnly: true
+        description: 'Whether the machine answered; not while it restarts.'
+      _exist:
+        type: boolean
+        readOnly: true
+      _inDesiredState:
+        type: boolean
+        readOnly: true

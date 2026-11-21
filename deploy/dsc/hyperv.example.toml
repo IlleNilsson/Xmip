@@ -17,6 +17,10 @@ hypervisor = "hyperv"
 # The folder that holds a folder per machine.
 root = 'D:\HyperV\Xmip'
 domain = "xmip.test"
+# msdsc only: the machine made the first domain controller of a new Active
+# Directory forest of the domain, at the network's DNS server; every other
+# Windows machine joins it. Leave it out for no domain.
+domain_controller = "XMIP-DC01"
 cluster = "CL1"
 # The account each AlmaLinux machine's kickstart makes; it is given the
 # environment's own SSH key, which Deploy-XmipEnvironment makes.
@@ -84,7 +88,9 @@ nat = true
 path = 'D:\Downloads\OS\Images\Microsoft\WindowsServer2025-Eval-26100.1742-en-us.iso'
 sha256 = "d0ef4502e350e3c6c53c15b1b3020d38a5ded011bf04998e950720ac8579b23d"
 family = "Windows"
-edition = "Windows Server 2025 SERVERDATACENTER"
+# Server Core: a node needs no Desktop Experience, which takes memory and
+# disk the machines do not have (the owner, 2026-11-21).
+edition = "Windows Server 2025 SERVERDATACENTERCORE"
 secureBootTemplate = "MicrosoftWindows"
 tpm = false
 

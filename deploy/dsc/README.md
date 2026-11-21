@@ -28,6 +28,7 @@ empty.
 | `technology` | `msdsc` or `ansible`: the template set that makes all of it. Required; a file without it is refused |
 | `hypervisor` | `libvirt` or `hyperv`, whose machines the technology makes |
 | `root`, `domain`, `cluster` | where the machines' disks are, their DNS domain, and the cluster's name |
+| `domain_controller` | msdsc only, optional: the Windows machine made the first domain controller of a new Active Directory forest of `domain`, at the network's `dns_server`; every other Windows machine is joined to it, each restarted, the Administrator's `secret` serving both. AlmaLinux machines are not joined |
 | `linux_account` | the account each AlmaLinux machine is installed with, which is given the environment's own SSH key |
 | `secret` | the Windows machines' Administrator password, `Export-Clixml` on Windows by the account that deploys, which encrypts it for that account. Off Windows `Export-Clixml` keeps a password as plain text ([Microsoft's documentation](https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/export-clixml)), so a file whose password is not encrypted is refused wherever it is read, and an encrypted one is read on Windows alone |
 | `configuration` | the cluster's file, each node's configuration sliced from it |
@@ -35,7 +36,7 @@ empty.
 | `authority`, `identity` | the cluster's authority, which signs each slice and issued each node's certificate, and a folder per node of that certificate (`New-XmipCertificate -Node`) |
 | `far_end` | where the machines reach the Parties' far end the Essentials serves |
 | `[packages.<family>]` | the package a node is installed from, `path`: the `.rpm` for Linux, the MSI for Windows; and `modules`, a folder of the module libraries the cluster's file names, built for that system, carried beside every node's configuration |
-| `[tools.<family>]` | msdsc only: what DSC is brought to each node machine of the family with, `pwsh` and `dsc`, each `path` and `sha256`: tarballs for Linux, zips for Windows |
+| `[tools.<family>]` | msdsc only: what DSC is brought to each machine of the family it applies a document on, the nodes' and the DNS server, with, `pwsh` and `dsc`, each `path` and `sha256`: tarballs for Linux, zips for Windows |
 | `[network]`, `[images.<name>]`, `[[machines]]` | the network, the installation images, and each machine with the `nodes` it runs: one at most, since a package lays one node out in one folder; every Storage node the cluster's file lists on a machine of its own |
 
 A path not rooted is the estate's. The YAML each tool reads is written

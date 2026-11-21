@@ -7,10 +7,11 @@ function Get-XmipDeployStep {
         .SYNOPSIS
             Microsoft DSC's documents to apply, in order, each with the
             values of the parameters it declares: the network, each machine,
-            the names where one of the machines is the environment's DNS
-            server, then each node on its machine, in the order the
-            environment file lists the machines, and last every node
-            started together.
+            the domain's controller where the file names one, the names
+            where one of the machines is the environment's DNS server, each
+            other Windows machine joined to the domain, then each node on
+            its machine, in the order the environment file lists the
+            machines, and last every node started together.
 
         .DESCRIPTION
             A machine's step is marked Install: the command applies it until
@@ -59,12 +60,34 @@ function Get-XmipDeployStep {
         keyPath = $State.Key
         knownHosts = $State.KnownHosts
     }
+    # The domain's controller before the names, which go into the zone its
+    # DNS server holds, and each member after; each restarts, so it is set
+    # again until it answers as asked.
+    [string] $domain = Join-Path $environment 'domain.dsc.yaml'
+    if ($null -ne $Read.Domain) {
+        @{
+            Name = "domain-$($Read.Domain.controller.name)"
+            Document = $domain
+            Value = @{ common = $reach; machine = $Read.Domain.controller
+                domain = $Read.Domain.name; controller = $true }
+            Install = $true
+        }
+    }
     if ($null -ne $Read.NameServer -and $Read.Names.Count -gt 0) {
         @{
             Name = 'names'
             Document = Join-Path $environment 'names.dsc.yaml'
             Value = @{ common = $reach; server = $Read.NameServer
-                zone = $Read.Common.domainName; records = $Read.Names }
+                zone = $Read.Common.domainName; records = $Read.Names; tools = $Read.Tools }
+        }
+    }
+    foreach ($member in @($Read.Domain | Where-Object { $_ } | ForEach-Object { $_.members })) {
+        @{
+            Name = "domain-$($member.name)"
+            Document = $domain
+            Value = @{ common = $reach; machine = $member; domain = $Read.Domain.name
+                controller = $false }
+            Install = $true
         }
     }
     if ($Read.Nodes.Count -eq 0) {
@@ -72,7 +95,6 @@ function Get-XmipDeployStep {
     }
     [hashtable] $given = $Read.Node.Clone()
     $given.Remove('packages')
-    $given.Remove('tools')
     $given['cluster'] = $Read.Cluster
     # Every node by its name at its machine's address, which each machine
     # keeps in its hosts file (NodePackage.ps1).
@@ -90,7 +112,7 @@ function Get-XmipDeployStep {
             Value = @{
                 common = $given
                 packages = $Read.Node.packages
-                tools = $Read.Node.tools
+                tools = $Read.Tools
                 placed = $Read.Placed
                 node = $node.node
                 machine = $node.machine

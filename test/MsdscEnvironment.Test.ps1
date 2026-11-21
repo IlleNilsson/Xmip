@@ -43,13 +43,13 @@ BeforeAll {
     [string] $script:Template = Join-Path $script:Root 'deploy/dsc/msdsc/environment'
     foreach ($part in 'Program.ps1', 'NodeMachine.ps1', 'NodeFile.ps1', 'NodeOpening.ps1',
         'NodeAccess.ps1', 'NodePackage.ps1', 'EnvironmentSsh.ps1', 'EnvironmentMachine.ps1',
-        'EnvironmentSlice.ps1') {
+        'EnvironmentSlice.ps1', 'EnvironmentDomain.ps1') {
         . (Join-Path $script:Template $part)
     }
     [bool] $script:HasDsc = $null -ne (Get-Command -Name dsc -ErrorAction SilentlyContinue)
     [string] $script:NoDsc = 'dsc (Microsoft DSC v3) is not on PATH; README.md installs it'
     [string[]] $script:Document = @('machine.dsc.yaml', 'names.dsc.yaml', 'node.dsc.yaml',
-        'name.dsc.yaml', 'started.dsc.yaml')
+        'name.dsc.yaml', 'domain.dsc.yaml', 'started.dsc.yaml')
 
     # A copy of a document, in YAML, whose every instance is an Echo of its
     # type and properties, its condition kept, so evaluating it changes
@@ -140,13 +140,13 @@ Describe 'The documents' {
     }
 
     It 'parses <_> as YAML' -ForEach @('machine.dsc.yaml', 'names.dsc.yaml', 'node.dsc.yaml',
-        'name.dsc.yaml', 'started.dsc.yaml') {
+        'name.dsc.yaml', 'domain.dsc.yaml', 'started.dsc.yaml') {
         $script:Parsed[$_] | Should -Not -BeNullOrEmpty
     }
 
     It 'declares in <_> every parameter it uses, and uses every one' -ForEach @(
         'machine.dsc.yaml', 'names.dsc.yaml', 'node.dsc.yaml', 'name.dsc.yaml',
-        'started.dsc.yaml') {
+        'domain.dsc.yaml', 'started.dsc.yaml') {
         [string] $text = Get-Content -LiteralPath (Join-Path $script:Template $_) -Raw
         [string[]] $used = @(@([regex]::Matches($text, "parameters\('(\w+)'\)") |
             ForEach-Object { $_.Groups[1].Value }) + 'staging' | Sort-Object -Unique)
@@ -156,13 +156,14 @@ Describe 'The documents' {
     }
 
     It 'requires DSC''s floor or newer in <_>' -ForEach @('machine.dsc.yaml',
-        'names.dsc.yaml', 'node.dsc.yaml', 'name.dsc.yaml', 'started.dsc.yaml') {
+        'names.dsc.yaml', 'node.dsc.yaml', 'name.dsc.yaml', 'domain.dsc.yaml',
+        'started.dsc.yaml') {
         $script:Parsed[$_].directives.version | Should -Be "^$(Get-XmipTestFloor -Name 'dsc')"
     }
 
     It 'leaves elevation in <_> to each resource, never the whole document' -ForEach @(
         'machine.dsc.yaml', 'names.dsc.yaml', 'node.dsc.yaml', 'name.dsc.yaml',
-        'started.dsc.yaml') {
+        'domain.dsc.yaml', 'started.dsc.yaml') {
         $script:Parsed[$_].directives.Contains('securityContext') | Should -BeFalse
     }
 
@@ -170,6 +171,7 @@ Describe 'The documents' {
         @{ Type = 'Xmip.Environment/Machine'; Elevated = @() }
         @{ Type = 'Xmip.Environment/Slice'; Elevated = @() }
         @{ Type = 'Xmip.Environment/Started'; Elevated = @() }
+        @{ Type = 'Xmip.Environment/Domain'; Elevated = @() }
         @{ Type = 'Xmip.Environment/Name'; Elevated = @('get', 'set', 'test') }
         @{ Type = 'Xmip.Node/Account'; Elevated = @('set') }
         @{ Type = 'Xmip.Node/File'; Elevated = @('get', 'set', 'test') }
@@ -207,7 +209,8 @@ Describe 'The documents' {
             $env:PATH = $path
         }
 
-        $found | Should -Be @('Xmip.Environment/Machine', 'Xmip.Environment/Name',
+        $found | Should -Be @('Xmip.Environment/Domain', 'Xmip.Environment/Machine',
+            'Xmip.Environment/Name',
             'Xmip.Environment/Slice', 'Xmip.Environment/Started',
             'Xmip.Node/Account', 'Xmip.Node/File', 'Xmip.Node/Opening', 'Xmip.Node/Package',
             'Xmip.Node/Service', 'Xmip.Node/Slice')
@@ -667,6 +670,17 @@ Describe 'The Xmip resources'' own steps' {
         { Install-EnvironmentTool -Instance $instance -Staging '/var/tmp/xmip-environment' } |
             Should -Throw "REFUSED: $tarball has SHA-256 *, not $('0' * 64)."
         $script:Reached | Should -BeFalse -Because 'nothing is sent before the check'
+    }
+
+    It 'answers a restarting domain machine absent, never refused, and sets nothing on it' {
+        function New-EnvironmentSession { throw 'The machine does not answer.' }
+        function Read-MachineSecret { throw 'No secret is read for a machine that does not answer.' }
+        [hashtable] $instance = @{ name = 'XMIP-DC01'; address = '10.77.0.10'
+            domain = 'xmip.test'; controller = $true; secretPath = 'secret.xml' }
+        [hashtable] $state = Get-EnvironmentDomain -Instance $instance
+        $state._exist | Should -BeFalse
+        $state.answering | Should -BeFalse
+        { Set-EnvironmentDomain -Instance $instance -Confirm:$false } | Should -Not -Throw
     }
 
     It 'names in node.dsc.yaml no resource one family lacks, so DSC runs it on both' {
