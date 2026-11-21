@@ -83,6 +83,11 @@ schema: !embedded
       configuration:
         description: 'The node''s configuration folder.'
         type: string
+      names:
+        description: >-
+          Every node of the cluster by its name at its machine's address, a
+          line each, kept as a marked block of the machine's hosts file.
+        type: string
       _exist:
         type: boolean
         readOnly: true

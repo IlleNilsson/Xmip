@@ -61,6 +61,20 @@
   notify: Restart the Xmip node
   become: true
 
+# Every node of the cluster by its name, at its machine's address: the
+# cluster's file names Storage nodes by name (`[storage] nodes`), and an
+# environment's network may have no name server that knows them.
+- name: The cluster's nodes, each by its name at its machine's address
+  ansible.builtin.blockinfile:
+    path: /etc/hosts
+    marker: "# {mark} Xmip: the cluster's nodes"
+    block: |
+      {% for machine in groups['xmip_nodes'] %}
+      {{ hostvars[machine].ansible_host }} {{ hostvars[machine].xmip_node_name }}
+      {% endfor %}
+  notify: Restart the Xmip node
+  become: true
+
 # The module libraries the cluster's file names, beside the configuration,
 # where each `library_path` is read (ADR-0066, amendment 2026-11-21).
 - name: The module libraries the cluster names, beside the configuration

@@ -74,6 +74,10 @@ function Get-XmipDeployStep {
     $given.Remove('packages')
     $given.Remove('tools')
     $given['cluster'] = $Read.Cluster
+    # Every node by its name at its machine's address, which each machine
+    # keeps in its hosts file (NodePackage.ps1).
+    $given['names'] = (@($Read.Nodes | ForEach-Object {
+                "$($_.machine.address) $($_.node)" }) -join "`n")
     $given['program'] = $given['slicer']
     $given.Remove('slicer')
     foreach ($key in $reach.Keys) {

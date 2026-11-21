@@ -108,4 +108,5 @@ resources:
         'account', concat(parameters('accounts')[parameters('machine').family].name,
         if(parameters('accounts')[parameters('machine').family].ofNode, parameters('node'), '')),
         'package', parameters('packages')[parameters('machine').family].file,
+        'names', parameters('common').names,
         'layout', parameters('layout')[parameters('machine').family])]
