@@ -1,6 +1,6 @@
 # What Xmip has decided
 
-Seventy-three decisions, read as one document.
+Seventy-four decisions, read as one document.
 
 **Generated from the records by `New-XmipDecisionIndex`.** Every summary
 below is the `## In brief` section of the record it links to, so the two
@@ -727,6 +727,15 @@ own.**
 
 → [Every dependency is a trait, handed in, in full](ADR-0068-every-dependency-is-a-trait-handed-in.md)
 
+### Whether Xmip's runtime moves from Rust to .NET to save build and landing time
+
+**The runtime, the command line and every rule the surfaces share stay in
+Rust. .NET keeps what it has: the PowerShell module, the GUI and the
+management tooling. Build time and landing time are won in how the work is
+done, never by changing the runtime's language.**
+
+→ [The runtime stays in Rust, in full](ADR-0074-the-runtime-stays-in-rust.md)
+
 ---
 
 ## 5. Operating Xmip
@@ -1091,6 +1100,7 @@ You have a word. This gives you the decision that governs it.
 
 | Concept | Decided by |
 | --- | --- |
+| .NET | [The runtime stays in Rust](ADR-0074-the-runtime-stays-in-rust.md) |
 | `.src` | [A crate that hosts technologies keeps its source in `.src`](ADR-0049-a-crate-that-hosts-technologies-keeps-its-source-in-dot-src.md) |
 | `xmip mcp` | [Xmip is reached over MCP through the command line](ADR-0071-xmip-is-reached-over-mcp-through-the-command-line.md) |
 | a bound schema | [A contract holds well-formedness always and conformance when named](ADR-0042-a-contract-holds-well-formedness-always-and-conformance-when-named.md) |
@@ -1121,6 +1131,7 @@ You have a word. This gives you the decision that governs it.
 | binding | [Developers design in VS Code](ADR-0064-developers-design-in-vs-code.md) |
 | Blazor, .NET, the GUI | [The operator surfaces](ADR-0014-operator-surfaces.md) |
 | Budget, what a node holds beside its pools | [The Service and the Host Services](ADR-0018-service-and-host.md) |
+| build time | [The runtime stays in Rust](ADR-0074-the-runtime-stays-in-rust.md) |
 | Certificates, mutual-TLS | [Certificates on Receive and Send](ADR-0033-certificates-on-receive-and-send.md) |
 | Change notification, a drop directory told | [A claim at the endpoint](ADR-0024-resource-claim-replaces-exclusiveness.md) |
 | Claim, claimable | [A claim at the endpoint](ADR-0024-resource-claim-replaces-exclusiveness.md) |
@@ -1170,6 +1181,7 @@ You have a word. This gives you the decision that governs it.
 | feature capability | [A node declares what it can do](ADR-0056-a-node-declares-what-it-can-do.md) |
 | Fine, Paused, Working, Stressed, Exhausted, Done | [Health is a mood and does not propagate](ADR-0041-health-is-a-mood-and-does-not-propagate.md) |
 | gap | [A Quest probes, and the regulation is a parameter](ADR-0072-a-quest-probes-and-the-regulation-is-a-parameter.md) |
+| garbage collection | [The runtime stays in Rust](ADR-0074-the-runtime-stays-in-rust.md) |
 | GDPR | [A Quest probes, and the regulation is a parameter](ADR-0072-a-quest-probes-and-the-regulation-is-a-parameter.md) |
 | globalization | [Languages beyond American English are an opportunity](ADR-0073-languages-beyond-american-english-are-an-opportunity.md) |
 | Globalization, scope | [Locale-neutral internally](ADR-0038-locale-neutral-internally.md) |
@@ -1189,6 +1201,7 @@ You have a word. This gives you the decision that governs it.
 | invocation | [Logic is the method](ADR-0043-logic-is-the-method.md) |
 | Journey, Journey states | [The Journey model](ADR-0013-journey-model.md) |
 | Kerberos | [Identity, Parties and direction](ADR-0019-identity-parties-and-direction.md), [Identity classes and runtime isolation](ADR-0022-identity-classes-and-runtime-isolation.md) |
+| landing time | [The runtime stays in Rust](ADR-0074-the-runtime-stays-in-rust.md) |
 | language | [Languages beyond American English are an opportunity](ADR-0073-languages-beyond-american-english-are-an-opportunity.md) |
 | language binding | [Events are subscribed from any language](ADR-0065-events-are-subscribed-from-any-language.md) |
 | Language runtime | [A Module may bring a versioned runtime](ADR-0039-a-module-may-bring-a-versioned-runtime.md) |
@@ -1207,6 +1220,7 @@ You have a word. This gives you the decision that governs it.
 | message catalog | [Languages beyond American English are an opportunity](ADR-0073-languages-beyond-american-english-are-an-opportunity.md) |
 | message technology | [A message technology is the shape of content](ADR-0047-a-message-technology-is-the-shape-of-content.md) |
 | message type | [A message technology is the shape of content](ADR-0047-a-message-technology-is-the-shape-of-content.md) |
+| millisecond rule | [The runtime stays in Rust](ADR-0074-the-runtime-stays-in-rust.md) |
 | Mount, declared versus computed | [The Essentials is optional scaffolding](ADR-0036-essentials-is-optional-scaffolding.md) |
 | mounted repository | [The estate map is generated](ADR-0060-the-estate-map-is-generated.md) |
 | MSI, winget, deb, rpm, OCI, pkg, launchd | [Packaging and distribution](ADR-0015-packaging.md) |
@@ -1270,6 +1284,7 @@ You have a word. This gives you the decision that governs it.
 | Retry | [A Journey whose circumstances changed is a Dead Message](ADR-0069-a-journey-whose-circumstances-changed-is-dead.md) |
 | route technology | [A route technology is a source the filter reads](ADR-0046-a-route-technology-is-a-source-the-filter-reads.md) |
 | runtime version | [A Module may bring a versioned runtime](ADR-0039-a-module-may-bring-a-versioned-runtime.md) |
+| Rust | [The runtime stays in Rust](ADR-0074-the-runtime-stays-in-rust.md) |
 | schema version, upgrade | [Packaging and distribution](ADR-0015-packaging.md) |
 | SDK | [A provider builds against the capabilities; the SDK simulates](ADR-0061-a-provider-builds-against-the-sdk.md) |
 | second link | [A node has one address](ADR-0067-a-node-has-one-address.md) |
@@ -1433,3 +1448,4 @@ is nowhere else.
 | [0071](ADR-0071-xmip-is-reached-over-mcp-through-the-command-line.md) | Xmip is reached over MCP through the command line | |
 | [0072](ADR-0072-a-quest-probes-and-the-regulation-is-a-parameter.md) | A Quest probes, and the regulation is a parameter | |
 | [0073](ADR-0073-languages-beyond-american-english-are-an-opportunity.md) | Languages beyond American English are an opportunity | **Proposed** |
+| [0074](ADR-0074-the-runtime-stays-in-rust.md) | The runtime stays in Rust | |

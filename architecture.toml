@@ -213,14 +213,14 @@ record = ["ADR-0018", "ADR-0064"]
 [implementation.process-execution]
 name = "Compiling a Work Process at design time, and running it"
 state = "built"
-note = "A BPMN 2.0 design compiles to a Work Process program and a unit crate exporting it through `xmip_module.h` section 13 (`xmip-core-process`, `xmip-core-process-bpmn`); the runtime's Work Process step takes a turn of each Instance from the Ledger, held by `tests/ledger/work_process.rs` (a Batch in the order received, two clients at once never overtaking, a node killed mid-process finishing from the Ledger) and the two crates' tests. A unit is opened from its library behind the runtime's `dynamic-loading` feature, which `xmip-service` is not built with; a unit's settings and calls through the standard units are decided, not built."
+note = "A BPMN 2.0 design compiles to a Work Process program and a unit crate exporting it through `xmip_module.h` section 13 (`xmip-core-process`, `xmip-core-process-bpmn`); the runtime's Work Process step takes a turn of each Instance from the Ledger, held by `tests/ledger/work_process.rs` (a Batch in the order received, two clients at once never overtaking, a node killed mid-process finishing from the Ledger) and the two crates' tests. A unit is opened from its library as the node starts, through the runtime's `dynamic-loading` feature, which `xmip-service` is built with; a unit's settings and calls through the standard units are decided, not built."
 record = ["ADR-0066 (amendment 2026-10-22)", "runtime-model.md section 22"]
 
 [implementation.module-loading]
 name = "Opening a Module at run time"
 state = "built"
-note = "The loader opens a shared library, resolves `xmip_create_module_v1`, checks its trait version and configures, starts and stops its contract table, and opens a work process table as the flow of the Work Processes naming its units (section 13); the work process table is the one the message path calls. It is behind the runtime's `dynamic-loading` feature, which `xmip-service` is not built with; every other technology is linked by feature, so adding one means running `Build-XmipService` again."
-record = ["ADR-0025", "ADR-0057"]
+note = "The loader opens a shared library, resolves `xmip_create_module_v1`, checks its trait version and configures, starts and stops its contract table, and opens a work process table as the flow of the Work Processes naming its units (section 13); the work process table is the one the message path calls. It is the runtime's `dynamic-loading` feature, which `xmip-service` is built with: a node opens the libraries its configuration names as it starts; every other technology is linked by feature, so adding one means running `Build-XmipService` again."
+record = ["ADR-0025", "ADR-0057", "ADR-0066 (amendment 2026-10-22)"]
 
 [implementation.other-runtime-module]
 name = "A Module on another runtime"

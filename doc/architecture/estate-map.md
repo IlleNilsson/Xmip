@@ -275,10 +275,11 @@ due. Open problem 27. Records: ADR-0034 (amendments 2026-10-15 and
 `xmip_create_module_v1`, checks its trait version and configures, starts and
 stops its contract table, and opens a work process table as the flow of the
 Work Processes naming its units (section 13); the work process table is the
-one the message path calls. It is behind the runtime's `dynamic-loading`
-feature, which `xmip-service` is not built with; every other technology is
-linked by feature, so adding one means running `Build-XmipService` again.
-Records: ADR-0025, ADR-0057.
+one the message path calls. It is the runtime's `dynamic-loading` feature,
+which `xmip-service` is built with: a node opens the libraries its
+configuration names as it starts; every other technology is linked by feature,
+so adding one means running `Build-XmipService` again. Records: ADR-0025,
+ADR-0057, ADR-0066 (amendment 2026-10-22).
 
 #### `process-execution`
 
@@ -288,10 +289,11 @@ compiles to a Work Process program and a unit crate exporting it through
 the runtime's Work Process step takes a turn of each Instance from the Ledger,
 held by `tests/ledger/work_process.rs` (a Batch in the order received, two
 clients at once never overtaking, a node killed mid-process finishing from the
-Ledger) and the two crates' tests. A unit is opened from its library behind
-the runtime's `dynamic-loading` feature, which `xmip-service` is not built
-with; a unit's settings and calls through the standard units are decided, not
-built. Records: ADR-0066 (amendment 2026-10-22), runtime-model.md section 22.
+Ledger) and the two crates' tests. A unit is opened from its library as the
+node starts, through the runtime's `dynamic-loading` feature, which
+`xmip-service` is built with; a unit's settings and calls through the standard
+units are decided, not built. Records: ADR-0066 (amendment 2026-10-22),
+runtime-model.md section 22.
 
 #### `regulation-quest`
 

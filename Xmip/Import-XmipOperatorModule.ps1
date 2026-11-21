@@ -254,6 +254,9 @@ function Build-XmipOperatorModule {
             Built into a directory of its own beside Output and moved into
             place when done, so a build stopped half way is never taken for a
             finished one, and two sessions building at once both end with one.
+            The runtime library it copies is built first where none is
+            (Build-XmipRuntimeLibrary); one built then is a new input, so the
+            next session builds the operator module once more.
     #>
     [CmdletBinding()]
     [OutputType([void])]
@@ -273,7 +276,10 @@ function Build-XmipOperatorModule {
             'needs dotnet to build: Install-XmipPrerequisite -Role developer -Install.')
     }
 
-    [string] $id = [System.Guid]::NewGuid().ToString('n').Substring(0, 8)
+    # The runtime library it copies, built first where no landing built one.
+    $null = Build-XmipRuntimeLibrary -Root $Root
+
+    [string] $id =[System.Guid]::NewGuid().ToString('n').Substring(0, 8)
     [string] $staging = "$Output.build-$id"
     [string[]] $building = @(
         'build', $project, '--output', $staging, '--verbosity', 'quiet', '--nologo'

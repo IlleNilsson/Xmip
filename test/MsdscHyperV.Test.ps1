@@ -717,6 +717,12 @@ Describe 'The machine, every Hyper-V command a stub' {
     }
 
     It 'gives a Windows 11 machine its TPM before its media, then presses Space as it starts' {
+        if (-not $IsWindows) {
+            # Its answer carries the Administrator secret, which Export-Clixml
+            # encrypts only on Windows and only Windows reads: off Windows it
+            # is refused, as DeployMachine.Test.ps1 holds.
+            Set-ItResult -Skipped -Because 'a Windows machine''s secret is Windows''s alone'
+        }
         [hashtable] $windows = New-FakeInstance -Family 'Windows'
         function Get-CimInstance {
             param([string] $Namespace, [string] $ClassName, [string] $Filter)

@@ -2201,6 +2201,39 @@ Essentials cluster ran beside it, and passed alone. Whether a node's own
 deadline or the test's bound gives way under load is not yet known; the
 millisecond rule says which must not.
 
+## 85. On Linux a dropped file is claimed by the receive poll, never by the directory's notice
+
+Found 2026-11-20 on the Linux build machine in the root's `measured`
+program, and measured again on 2026-11-21 in three runs of three:
+`carried::a_file_dropped_in_arrives_whole_in_the_send_directory_under_its_name`
+and
+`carried::an_edifact_order_routed_by_its_content_keeps_xmip_s_own_share_under_its_bound`
+(`.src/test/measured/carried.rs:259`) fail their claim bound of 10 ms:
+`a dropped file to its claim, told by the file system: the fastest of five
+1.000669357s; median 1.000885423s, p99 1.00106294s, worst 1.001083894s over
+50`. One second is the runtime's `receive_poll` (`tuning.rs`, `"1s"`): the
+file is claimed when the Receive Location next lists its folder, so on Linux
+the directory watch's notice of the drop never reaches the receive. Xmip's
+own share of the same files holds its bound (313.938µs and 345.261µs), and
+on Windows both tests pass.
+
+## 86. A post among eight senders is answered in 14 ms on Linux, beside a bound of 5 ms
+
+Found 2026-11-20 on the Linux build machine in the runtime's `measured`
+program, and measured again on 2026-11-21 in two runs of two:
+`side_by_side::eight_senders_at_once_are_carried_side_by_side`
+(`module/platform/runtime/tests/measured/side_by_side.rs:237`) fails
+`answered.fastest_of_five < 5 ms`: `a Message of eight senders at once, its
+post answered: the fastest of five 13.919526ms; median 14.535945ms, p99
+15.34154ms, worst 22.031374ms over 400` (14.349411ms in the other run). On
+Windows the same test passed the same day with 4.8023ms, a thin margin. A
+post is answered once its Message is durable, so the bound holds the disk's
+sync as well as Xmip's work: that machine's disk took 7.5 ms for each
+synced write of 4 KiB (200 written with `dd oflag=dsync` in 1.504 s). The
+disk's time is never Xmip's and never held to a bound (ADR-0018, amendment
+2026-11-09); whether this bound measures Xmip's share apart from the disk's,
+as the carried file's does, is open.
+
 # Suggested order
 
 Rewritten 2026-09-23, and corrected to what is built on 2026-11-10. The

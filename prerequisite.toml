@@ -46,6 +46,11 @@ by name and version. If Install-XmipPrerequisite is running at all, this is alre
 satisfied, so it is reported rather than installed.
 
 Windows PowerShell 5.1 and PowerShell 6 are not supported. ADR-0021.
+
+On Linux, Microsoft's package (the .deb, the .rpm or the tar.gz), never the
+snap: the snap runs pwsh on its base's C library, core22's glibc 2.35, and
+cannot load the runtime library cargo builds against the machine's own, which
+needs glibc 2.38 (2026-11-20: "version `GLIBC_2.38' not found").
 """
 
 [prerequisite.powershell.windows]
