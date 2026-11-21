@@ -1018,7 +1018,8 @@ parameter).
      `gui.toml` beside its executable, never the source, rewritten through
      the TOML reader's own pair (`ConvertTo-XmipTomlTable`) to
      `Surface = "snapshot"` and `Snapshot =` the roll's; the app started and
-     up for a minute. **Only that it stays up is proved:** the app records
+     up for a minute. **Only that it stays up was proved** (until the amendment
+     of 2026-11-21, which proves what it opened): the app records
      no surface or snapshot it opened — its process declaration names the
      runtime library and its audit its start — and with a path it cannot
      read it says so on its page and stays up, so its reason says it stayed
@@ -1547,3 +1548,27 @@ file says so beside the Subscriptions). What the rig does with it:
   image carries every library built as an example in an `examples` folder
   beside the roll's (`New-XmipEssentialsImage`), where the roll finds what
   was built (`file::built`); none is named in the tooling.
+
+## Amendment, 2026-11-21: the demo check proves what the Desktop opened
+
+**Provenance.** The owner, 2026-11-21, on the finish list of rounds to the
+demo: *Use pluto and get done.* Decided by the assistant while building.
+
+The demo check's *desktop* part proved only that the app stayed up: the app
+declared the scope tree's root as its location and recorded no surface it
+opened, so whether it read the roll's snapshot was not seen from outside it.
+Now:
+
+- **One rule for what a host declares it reads.** `SurfaceChoice.Declared`
+  in `Xmip.Surface`: each place `SurfaceChoice.Places` finds, joined; else
+  the surface word; else the scope tree's root. The web host declared by a
+  rule of its own, written twice in `Program.cs`, and now declares, and
+  audits its start, by this one; the Desktop declares by it too, where it
+  declared the root.
+- **The check reads the declaration.** Once the app has stayed up its
+  minute, `Get-XmipDemoDesktopRead` takes the location of the app's own
+  process declaration (`Get-XmipProcess`, ADR-0053), and the part passes
+  only where it is the roll's snapshot that the deployed `gui.toml` names;
+  another is refused, naming both. With a path it cannot read the app still
+  says so on its page and stays up, so the declaration says what it opened,
+  not that every read of it succeeded.

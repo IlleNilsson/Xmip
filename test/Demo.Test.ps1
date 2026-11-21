@@ -839,16 +839,21 @@ Describe 'The desktop app is the program dotnet names, and is said only to have 
         }
     }
 
-    It 'says the app stayed up, and never that it read the snapshot' -Skip:(-not $IsWindows) {
+    It 'says the app stayed up and reads the snapshot it declares, and refuses another' -Skip:(
+        -not $IsWindows) {
         InModuleScope Xmip -Parameters $script:Given {
             param($Area, $Dll, $Exe, $Cluster)
 
             $script:Program = $Exe
+            $script:Reads = "$Cluster-snapshot.xmip"
             Mock Get-XmipEssentialsLayout { [pscustomobject]@{ Desktop = 'project' } }
             Mock Build-XmipDemoDesktop { $script:Program }
             Mock Set-XmipDemoDocument { }
             Mock Write-XmipDemoRecord { }
             Mock Start-XmipDemoDesktop { Get-Process -Id $PID }
+            Mock Get-XmipProcess {
+                [pscustomobject]@{ Id = $PID; Location = $script:Reads }
+            }
 
             [timespan] $before = $script:XmipDemoDesktopUp
             $script:XmipDemoDesktopUp = [timespan]::FromMilliseconds(600)
@@ -860,12 +865,15 @@ Describe 'The desktop app is the program dotnet names, and is said only to have 
                 $run = New-XmipDemoState @began
                 $run['snapshot'] = "$Cluster-snapshot.xmip"
                 [string] $said = Test-XmipDemoDesktop -Run $run
+                $script:Reads = 'elsewhere.xmip'
+                { Test-XmipDemoDesktop -Run $run } |
+                    Should -Throw "*declares it reads 'elsewhere.xmip', not the roll's snapshot*"
             }
             finally {
                 $script:XmipDemoDesktopUp = $before
             }
 
-            $said | Should -BeLike '*stayed up for*that it read the snapshot is not proved*'
+            $said | Should -BeLike '*stayed up for*declares it reads that snapshot'
             $run['launched']['desktop'] | Should -Be $PID
             $run['launched']['desktop_program'] | Should -Be $Exe
             $run['launched']['desktop_started'] | Should -Not -BeNullOrEmpty

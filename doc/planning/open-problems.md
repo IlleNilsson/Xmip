@@ -2267,7 +2267,12 @@ twelve rounds carry file, TCP and UDP at sizes up to 65,537 bytes, the UDP
 round trip declares the datagram ceiling but does not pass the refusal it
 gives above it on, and the file transport claims at its receive poll on
 Linux (problem 85). A test that waits measures nothing it asserts and is the
-first to fail under load.
+first to fail under load. A second landing the same day stopped on it in
+another way: its TCP rounds connected fast enough beside the landing's
+other parts to exhaust Windows's ports (*Only one usage of each socket
+address*, os error 10048). It now runs for the runner, `#[ignore]` as the
+brutal sizes are, and `Start-XmipTest -Stress Harsh` drives the same sizes;
+what it waits on and why it exhausts ports are still open.
 
 # Suggested order
 
