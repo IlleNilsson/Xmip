@@ -14,11 +14,12 @@
     amendment 2026-11-10). The app is the Windows build alone, as every
     build is for now (ADR-0014, amendment 2026-11-02).
 
-    What is proved is that the app starts over that document and stays up,
-    nothing more: the app records no surface or snapshot it opened — its
-    process declaration names the runtime library, and its audit its start —
-    and with a path it cannot read it says so on its page and stays up
-    (gui.toml), so whether it read the snapshot is not seen from outside it.
+    What is proved is that the app starts over that document, stays up, and
+    declares it reads that snapshot: its process declaration's location is
+    what it reads, by the one rule both hosts declare by
+    (SurfaceChoice.Declared; ADR-0028, amendment 2026-11-21). With a path it
+    cannot read it says so on its page and stays up (gui.toml), so the
+    declaration says what it opened, not that every read of it succeeded.
 
     Style: doc/governance/powershell-style.md
 #>
@@ -82,9 +83,40 @@ function Test-XmipDemoDesktop {
         throw
     }
 
+    [string] $read = Get-XmipDemoDesktopRead -Process $process
+
+    if ($read -ne $Run['snapshot']) {
+        throw ("the app, pid $($process.Id), declares it reads '$read', not the roll's " +
+            "snapshot $($Run['snapshot']) that $deployed names")
+    }
+
     return ("built, started as pid $($process.Id) with $deployed naming " +
-        "$($Run['snapshot']), and stayed up for $($script:XmipDemoDesktopUp); that it read " +
-        'the snapshot is not proved, since the app records no surface it opened')
+        "$($Run['snapshot']), stayed up for $($script:XmipDemoDesktopUp), and declares it " +
+        'reads that snapshot')
+}
+
+
+function Get-XmipDemoDesktopRead {
+    <#
+        .SYNOPSIS
+            What the started app declares it reads: the location of its own
+            process declaration (ADR-0053), which the app writes by the one
+            rule both hosts declare by (SurfaceChoice.Declared); empty where
+            it declared none.
+
+        .PARAMETER Process
+            The app, as Start-XmipDemoDesktop returned it.
+    #>
+    [CmdletBinding()]
+    [OutputType([string])]
+    param(
+        [Parameter(Mandatory)]
+        [System.Diagnostics.Process] $Process
+    )
+
+    $declared = @(Get-XmipProcess | Where-Object -Property Id -EQ $Process.Id)
+
+    return [string] ($declared | Select-Object -First 1 -ExpandProperty Location)
 }
 
 
