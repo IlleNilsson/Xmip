@@ -62,6 +62,11 @@ function Get-EnvironmentSliced {
         $argument += @('--bind', $Instance.bind, '--nodes', $Instance.nodes)
     }
 
+    # Who operates the nodes, listed among each slice's [operate] operators.
+    if ($Instance.Contains('operators') -and $Instance.operators) {
+        $argument += @('--operators', $Instance.operators)
+    }
+
     $argument += '--slice'
 
     return ((Invoke-DscProgram -Program $Instance.program -Argument $argument) -join "`n") + "`n"

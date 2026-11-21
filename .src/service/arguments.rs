@@ -6,7 +6,8 @@ pub const USAGE: &str = "usage: xmip-service --configuration <path> [--console] 
      [--purpose test|runtime]\n       \
      xmip-service --configuration <path> --definition\n       \
      xmip-service --configuration <cluster cluster.xmip> --node <name> [--cluster <name>] \
-     [--bind <host[:port]> --nodes <name,...>] [--authority <folder>] --slice\n       \
+     [--bind <host[:port]> --nodes <name,...>] [--operators <name,...>] \
+     [--authority <folder>] --slice\n       \
      xmip-service --configuration <cluster cluster.xmip> --node <name> --cluster <name> \
      [--account <account>] --install\n       \
      xmip-service --configuration <path> --listening\n       \
@@ -25,7 +26,8 @@ pub const USAGE: &str = "usage: xmip-service --configuration <path> [--console] 
      Receive Location and Send Port the file designs on one of the environment's \
      --nodes and each Work Process on every one serving its stage, refusing work no \
      node satisfies, the Locations over SFTP on the Parties' far end at <host>, port \
-     7422 where it names none; \
+     7422 where it names none; --operators lists each name, a certificate's subject \
+     CN=<person> or an account, among the node's [operate] operators; \
      what --slice prints is signed by the cluster's authority kept in --authority, \
      beside cluster.xmip where it names none, made there where none is kept.\n\
      --install, where the node has no configuration yet, writes a starter cluster.xmip \
@@ -94,6 +96,10 @@ pub struct Arguments {
     pub bind: Option<String>,
     /// The nodes the environment has, with `--bind`.
     pub nodes: Vec<String>,
+    /// Who operates the environment's nodes, with `--slice`: each listed
+    /// among the node's `[operate] operators` (ADR-0009, amendment
+    /// 2026-11-07).
+    pub operators: Vec<String>,
     /// The folder the cluster's authority is kept in, with `--slice`: the
     /// machine deploying the environment's, never a node's (ADR-0031,
     /// amendment 2026-11-06); the `authority` folder beside the cluster's
@@ -113,7 +119,7 @@ impl Arguments {
         let mut configuration = None;
         let mut switches = Vec::new();
         let (mut node, mut cluster, mut account) = (None, None, None);
-        let (mut bind, mut nodes) = (None, Vec::new());
+        let (mut bind, mut nodes, mut operators) = (None, Vec::new(), Vec::new());
         let mut authority = None;
         let mut purpose = Purpose::Runtime;
 
@@ -131,14 +137,8 @@ impl Arguments {
                 "--account" => account = Some(value()?),
                 "--bind" => bind = Some(value()?),
                 "--authority" => authority = Some(value()?),
-                "--nodes" => {
-                    nodes = value()?
-                        .split(',')
-                        .map(str::trim)
-                        .filter(|name| !name.is_empty())
-                        .map(String::from)
-                        .collect();
-                }
+                "--nodes" => nodes = listed(&value()?),
+                "--operators" => operators = listed(&value()?),
                 "--console" => switches.push(Mode::Console),
                 "--definition" => switches.push(Mode::Definition),
                 "--slice" => switches.push(Mode::Slice),
@@ -171,6 +171,9 @@ impl Arguments {
                 "--authority is the folder --slice signs with the cluster's authority from".into(),
             );
         }
+        if !operators.is_empty() && mode != Mode::Slice {
+            return Err("--operators are listed in the node's configuration --slice prints".into());
+        }
         Ok(Self {
             configuration: configuration.ok_or("--configuration names no node configuration")?,
             mode,
@@ -180,9 +183,20 @@ impl Arguments {
             account,
             bind,
             nodes,
+            operators,
             authority,
         })
     }
+}
+
+/// The names of a comma-separated list, each trimmed, none empty.
+fn listed(value: &str) -> Vec<String> {
+    value
+        .split(',')
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
+        .map(String::from)
+        .collect()
 }
 
 /// Whether `mode` was given the names it needs and no other.
@@ -246,6 +260,9 @@ mod tests {
             (slice.mode, slice.node.as_deref()),
             (Mode::Slice, Some("n"))
         );
+        let operated = parsed("--slice --node n --operators CN=a,,CN=b --configuration c.xmip")
+            .expect("reads");
+        assert_eq!(operated.operators, ["CN=a", "CN=b"]);
 
         let install =
             parsed("--install --node n --cluster c --configuration cluster.xmip").expect("reads");
@@ -347,6 +364,10 @@ mod tests {
             (
                 "--configuration a --install --node n --cluster c --authority k",
                 "--authority is the folder --slice signs",
+            ),
+            (
+                "--configuration a --install --node n --cluster c --operators CN=o",
+                "--operators are listed in the node's configuration --slice prints",
             ),
             ("--configuration a --purpose Test", "test"),
         ] {

@@ -148,6 +148,7 @@ function Write-XmipDeployInventory {
             xmip_slicer = $Read.Node.slicer
             xmip_authority = $Read.Node.authority
             xmip_far_end = $Read.Node.farEnd
+            xmip_operators = $Read.Node.operators
         }
     }
     $children['xmip_name_server'] = @{

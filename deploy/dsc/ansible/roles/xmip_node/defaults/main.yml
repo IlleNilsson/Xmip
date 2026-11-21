@@ -37,6 +37,11 @@ xmip_placed: >-
   {{ groups['xmip_nodes'] | default([])
   | map('extract', hostvars, 'xmip_node_name') | join(',') }}
 xmip_bound: "{{ ['--bind', xmip_far_end, '--nodes', xmip_placed] if xmip_far_end else [] }}"
+# Who operates the nodes, comma separated, each a certificate's subject,
+# CN=<person>, or an account: listed among every slice's [operate] operators
+# by `xmip-service --slice --operators`. Left empty, no one operates them.
+xmip_operators: ""
+xmip_operated: "{{ ['--operators', xmip_operators] if xmip_operators else [] }}"
 # The estate's package on the controller (deploy/package): the MSI for a
 # Windows machine, the .rpm for an AlmaLinux one.
 xmip_package: ""

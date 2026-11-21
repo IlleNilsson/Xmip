@@ -278,6 +278,11 @@ function Get-XmipDeployNodeValue {
         throw 'REFUSED: the environment''s nodes need cluster, the cluster''s name.'
     }
     $given['farEnd'] = Get-TomlValue -Node $Environment -Name 'far_end' -Default ''
+    # Who operates the nodes, each listed among every slice's [operate]
+    # operators (xmip-service --slice --operators): a certificate's subject,
+    # CN=<person>, or an account. None given, no one operates them.
+    $given['operators'] = (@(Get-TomlValue -Node $Environment -Name 'operators' -Default @()) |
+            ForEach-Object { ([string] $_).Trim() } | Where-Object { $_ }) -join ','
     $given['slices'] = Join-Path $Run 'slice'
     [hashtable] $packages = @{ Linux = @{}; Windows = @{} }
     $packaged = Get-TomlValue -Node $Environment -Name 'packages' -Default $null

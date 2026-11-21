@@ -38,6 +38,10 @@ identity = ".local-work/environment/identity"
 # every Receive Location and Send Port is bound there over SFTP, port 7422
 # (ADR-0028, amendment 2026-10-22).
 far_end = "10.77.0.1"
+# Who operates the nodes: each listed among every node's [operate] operators,
+# a certificate's subject as New-XmipCertificate -Operator names it, or an
+# account. Left out, no one operates them.
+operators = ["CN=operator"]
 
 # The package each AlmaLinux machine's node is installed from:
 # Build-XmipService -Site personal-computer -CargoArgument '--release'

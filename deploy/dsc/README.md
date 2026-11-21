@@ -35,6 +35,7 @@ empty.
 | `slicer` | this machine's `xmip-service`, which slices each node's configuration and signs it |
 | `authority`, `identity` | the cluster's authority, which signs each slice and issued each node's certificate, and a folder per node of that certificate (`New-XmipCertificate -Node`) |
 | `far_end` | where the machines reach the Parties' far end the Essentials serves |
+| `operators` | who operates the nodes, a list, each a certificate's subject, `CN=<person>`, as `New-XmipCertificate -Operator` names it, or an account: listed among every node's `[operate] operators` (`xmip-service --slice --operators`). Left out, no one operates them, since a node's operate listener grants no one by default (ADR-0009) |
 | `[packages.<family>]` | the package a node is installed from, `path`: the `.rpm` for Linux, the MSI for Windows; and `modules`, a folder of the module libraries the cluster's file names, built for that system, carried beside every node's configuration |
 | `[tools.<family>]` | msdsc only: what DSC is brought to each machine of the family it applies a document on, the nodes' and the DNS server, with, `pwsh` and `dsc`, each `path` and `sha256`: tarballs for Linux, zips for Windows |
 | `[network]`, `[images.<name>]`, `[[machines]]` | the network, the installation images, and each machine with the `nodes` it runs: one at most, since a package lays one node out in one folder; every Storage node the cluster's file lists on a machine of its own |

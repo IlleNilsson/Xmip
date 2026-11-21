@@ -12,7 +12,7 @@
     argv: >-
       {{ [xmip_slicer, '--configuration', xmip_cluster_configuration,
       '--node', xmip_node_name, '--cluster', xmip_cluster_name,
-      '--authority', xmip_authority] + xmip_bound + ['--slice'] }}
+      '--authority', xmip_authority] + xmip_bound + xmip_operated + ['--slice'] }}
   delegate_to: localhost
   register: xmip_slice
   changed_when: false

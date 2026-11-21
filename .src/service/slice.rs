@@ -17,6 +17,9 @@
 //! node satisfies, the Locations over SFTP on the Parties' far end first
 //! (`placed::at_far_end`; ADR-0028, amendment 2026-10-22; ADR-0056,
 //! amendment 2026-11-13), and the node's own placements are in its slice.
+//! With `--operators`, each name is listed among the node's `[operate]
+//! operators`: on machines of their own the environment names who operates
+//! its nodes (`observers::operated_by`).
 
 use std::process::ExitCode;
 
@@ -50,6 +53,7 @@ fn sliced(arguments: &Arguments) -> Result<String, String> {
     if let Some(host) = arguments.bind.as_deref() {
         cluster = xmip_configure::placed::at_far_end(&cluster, &arguments.nodes, host)?;
     }
+    cluster = xmip_configure::observers::operated_by(&cluster, &arguments.operators)?;
     xmip_runtime::signed::sliced_signed(
         &cluster,
         std::path::Path::new(&arguments.configuration),
