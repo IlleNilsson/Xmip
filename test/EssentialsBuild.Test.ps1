@@ -234,11 +234,7 @@ Describe 'Stop-XmipTest stops a build' {
                 PassThru     = $true
             }
 
-            if ($IsWindows) {
-                $sleeping.WindowStyle = 'Hidden'
-            }
-
-            $process = Start-Process @sleeping
+            $process = Start-XmipHiddenProcess -Launch $sleeping
             [string] $log = Join-Path $Area 'build-5.log'
             Set-Content -LiteralPath $log -Value '   Compiling only-crate v0.1.0'
             [hashtable] $start = @{ Suite = 'Core.Essentials'; Cluster = $Cluster; Log = $log }

@@ -13,8 +13,48 @@
     and nothing holds the console). The launch was written out in the first
     two until 2026-11-10, when the third would have been a third copy.
 
+    Every process the tooling starts in the background starts through
+    Start-XmipHiddenProcess: the roll, a test's nodes, the web host and these
+    shells. Each had asked for a hidden window on every system, which
+    PowerShell refuses off Windows, so no Essentials run started on Linux
+    (2026-11-21).
+
     Style: doc/governance/powershell-style.md
 #>
+
+
+function Start-XmipHiddenProcess {
+    <#
+        .SYNOPSIS
+            Start-Process with -Launch, with no window where the system has
+            windows to hide, and the process returned: the one way the
+            tooling starts a process in the background.
+
+        .DESCRIPTION
+            A hidden window is Windows's: elsewhere a process started without
+            a terminal has no window, and Start-Process refuses -WindowStyle
+            there ("not supported for the cmdlet 'Start-Process' on this
+            edition of PowerShell").
+
+        .PARAMETER Launch
+            Start-Process's parameters, splatted; PassThru among them where
+            the process is wanted back.
+    #>
+    [CmdletBinding()]
+    [OutputType([System.Diagnostics.Process])]
+    param(
+        [Parameter(Mandatory)]
+        [hashtable] $Launch
+    )
+
+    [hashtable] $starting = $Launch.Clone()
+
+    if ($IsWindows) {
+        $starting.WindowStyle = 'Hidden'
+    }
+
+    return Start-Process @starting
+}
 
 
 function Start-XmipDetachedShell {
@@ -61,14 +101,10 @@ function Start-XmipDetachedShell {
         PassThru               = $true
     }
 
-    if ($IsWindows) {
-        $launch.WindowStyle = 'Hidden'
-    }
-
     Initialize-XmipAudit
     Initialize-XmipRuntimeDirectory
 
-    return Start-Process @launch
+    return Start-XmipHiddenProcess -Launch $launch
 }
 
 

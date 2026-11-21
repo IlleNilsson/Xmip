@@ -366,7 +366,6 @@ function Start-XmipOperationWeb {
             FilePath         = $layout.Web
             ArgumentList     = $arguments
             WorkingDirectory = Split-Path -Parent $layout.Web
-            WindowStyle      = 'Hidden'
             PassThru         = $true
         }
 
@@ -382,7 +381,7 @@ function Start-XmipOperationWeb {
         $launch.RedirectStandardOutput = Join-Path -Path $area -ChildPath "web-$stamp.log"
         $launch.RedirectStandardError = Join-Path -Path $area -ChildPath "web-$stamp.err"
 
-        $process = Start-Process @launch
+        $process = Start-XmipHiddenProcess -Launch $launch
         Write-Verbose "web monitor starting at $Url as pid $($process.Id)"
         Write-XmipAudit -Action 'Start-XmipOperationWeb' -Phase Begin -Property @{
             Id       = $process.Id

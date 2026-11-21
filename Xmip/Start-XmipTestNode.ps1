@@ -129,7 +129,6 @@ function Start-XmipTestNode {
         $launch = @{
             FilePath               = $binary
             WorkingDirectory       = $Path
-            WindowStyle            = 'Hidden'
             PassThru               = $true
             RedirectStandardOutput = Join-Path -Path $Path -ChildPath "$nodeName.log"
             RedirectStandardError  = Join-Path -Path $Path -ChildPath "$nodeName.err"
@@ -147,7 +146,7 @@ function Start-XmipTestNode {
         # What it starts audits where the tooling does (ADR-0062).
         Initialize-XmipAudit
         Initialize-XmipRuntimeDirectory
-        $process = Start-Process @launch
+        $process = Start-XmipHiddenProcess -Launch $launch
         Write-Verbose "started node $nodeName as pid $($process.Id)"
 
         if ($PassThru) {

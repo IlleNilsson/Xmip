@@ -296,11 +296,9 @@ Describe 'Which processes are Xmip''s' {
             PassThru     = $true
         }
 
-        if ($IsWindows) {
-            $start['WindowStyle'] = 'Hidden'
-        }
-
-        $forgotten = Start-Process @start
+        $forgotten = & (Get-Module -Name Xmip) {
+            param([hashtable] $Launch) Start-XmipHiddenProcess -Launch $Launch
+        } $start
 
         try {
             $found = @(Get-XmipProcess -Name 'xmip' | Where-Object -Property Id -EQ $forgotten.Id)

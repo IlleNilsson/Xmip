@@ -634,11 +634,7 @@ Describe 'Stop-XmipDemoStarted ends what a run launched, and only that' {
                 PassThru     = $true
             }
 
-            if ($IsWindows) {
-                $sleeping.WindowStyle = 'Hidden'
-            }
-
-            $process = Start-Process @sleeping
+            $process = Start-XmipHiddenProcess -Launch $sleeping
 
             # Ended whatever fails below: a test never leaves a process behind.
             try {
@@ -890,10 +886,9 @@ Describe 'The desktop app is the program dotnet names, and is said only to have 
                 [hashtable] $ending = @{
                     FilePath     = $script:Shell
                     ArgumentList = @('-NoProfile', '-Command', 'exit 3')
-                    WindowStyle  = 'Hidden'
                     PassThru     = $true
                 }
-                $ended = Start-Process @ending
+                $ended = Start-XmipHiddenProcess -Launch $ending
                 $ended.WaitForExit()
                 $ended
             }

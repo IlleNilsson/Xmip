@@ -69,7 +69,7 @@ function Start-XmipEssentialsRollProcess {
     # What it starts audits where the tooling does (ADR-0062).
     Initialize-XmipAudit
     Initialize-XmipRuntimeDirectory
-    $process = Start-Process @launch
+    $process = Start-XmipHiddenProcess -Launch $launch
 
     # The nodes are the cluster file's either way: an operator who named none
     # can read what they got, node_names says which of the two it was, and
@@ -150,7 +150,6 @@ function New-XmipEssentialsRollLaunch {
         FilePath               = $image
         WorkingDirectory       = $layout.Essentials
         Environment            = $environment
-        WindowStyle            = 'Hidden'
         PassThru               = $true
         RedirectStandardOutput = Join-Path -Path $Start.Path -ChildPath "roll-$stamp.log"
         RedirectStandardError  = Join-Path -Path $Start.Path -ChildPath "roll-$stamp.err"
