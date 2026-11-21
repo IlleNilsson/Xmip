@@ -132,7 +132,12 @@ On the Linux host, the WSL AlmaLinux guest included, KVM and libvirt as
   certificate: `New-XmipCertificate -Node RX1 -Cluster CL1 -Authority
   D:\Repos\Xmip\.local-work\environment\authority -Path
   D:\Repos\Xmip\.local-work\environment\identity\RX1`, and the same for
-  every node the file maps.
+  every node the file maps;
+- on Windows, for Hyper-V, once and elevated: the Hyper-V switch's NAT,
+  which the first run makes, and the environment's Windows machines in
+  WinRM's `TrustedHosts`, since msdsc reaches them over HTTP with the
+  Administrator's secret: `Set-Item WSMan:\localhost\Client\TrustedHosts
+  -Value '10.77.0.*' -Concatenate -Force`, the network's prefix.
 
 ## Starting again from nothing
 

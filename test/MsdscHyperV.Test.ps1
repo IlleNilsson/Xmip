@@ -546,14 +546,26 @@ Describe 'The example environment' {
 }
 
 Describe 'The install answers' {
-    It 'gives each Windows machine an autounattend.xml that names it and hides its password' {
+    It 'gives each Windows machine an answer that names and addresses it, its password hidden' {
         [securestring] $password = ConvertTo-SecureString -String 'Pa55word' -AsPlainText -Force
         foreach ($machine in @($script:Machine | Where-Object { $_.image.family -eq 'Windows' })) {
-            [string] $text = Get-MachineWindowsAnswer -Machine $machine -AdministratorPassword (
-                $password)
+            [string] $raw = Get-MachineMacAddress -Address $machine.address -Prefix (
+                $script:HyperVMacPrefix)
+            [hashtable] $asked = @{
+                Machine = $machine; MacAddress = $raw; AdministratorPassword = $password
+            }
+            [string] $text = Get-MachineWindowsAnswer @asked
             [xml] $answer = $text
             $answer.unattend | Should -Not -BeNullOrEmpty
             $text | Should -Match "<ComputerName>$($machine.name)</ComputerName>"
+            # The static address on the adapter with its MAC: an environment's
+            # own network has no DHCP server (2026-11-21).
+            [string] $dashed = $raw -replace '(..)(?!$)', '$1-'
+            $text | Should -Match "<Identifier>$dashed</Identifier>"
+            $text | Should -Match (
+                "<IpAddress wcm:action=`"add`" wcm:keyValue=`"1`">$([regex]::Escape(
+                $machine.address))/$($machine.network.prefixLength)</IpAddress>")
+            $text | Should -Match "<NextHopAddress>$([regex]::Escape($machine.network.gateway))<"
             $text | Should -Match "<Value>$([regex]::Escape($machine.image.edition))</Value>"
             $text | Should -Not -Match 'Pa55word'
             $text | Should -Match '<PlainText>false</PlainText>'
