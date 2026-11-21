@@ -65,9 +65,10 @@ function Get-MachineWindowsAnswer {
     The autounattend.xml that installs one Windows machine from its ISO.
     .DESCRIPTION
     A GPT layout on the first disk (EFI, MSR, Windows), the image the
-    machine's image names as its edition, the computer name, the built-in
-    Administrator enabled with the given password, and the out-of-box
-    experience skipped. LF line endings.
+    machine's image names as its edition, the computer name, the static
+    address, gateway and DNS server on the adapter with the machine's static
+    MAC, the built-in Administrator enabled with the given password, and the
+    out-of-box experience skipped. LF line endings.
     #>
     [CmdletBinding()]
     [OutputType([string])]
@@ -76,12 +77,20 @@ function Get-MachineWindowsAnswer {
         [object] $Machine,
 
         [Parameter(Mandatory = $true)]
+        [string] $MacAddress,
+
+        [Parameter(Mandatory = $true)]
         [securestring] $AdministratorPassword
     )
 
+    [object] $network = $Machine.network
     [hashtable] $value = @{
         EDITION = $Machine.image.edition
         COMPUTERNAME = $Machine.name
+        MACADDRESS = $MacAddress -replace '(..)(?!$)', '$1-'
+        IPADDRESS = "$($Machine.address)/$($network.prefixLength)"
+        GATEWAY = $network.gateway
+        DNSSERVER = $network.dnsServer
         PASSWORD = ConvertTo-UnattendPassword -Password $AdministratorPassword -Element (
             'AdministratorPassword')
     }
@@ -269,6 +278,7 @@ function Get-MachineAnswerMedium {
         [pscredential] $administrator = Read-MachineSecret -Path $Machine.secretPath
         [hashtable] $windows = @{
             Machine = $Machine
+            MacAddress = $MacAddress
             AdministratorPassword = $administrator.Password
         }
         return @{

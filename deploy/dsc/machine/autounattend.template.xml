@@ -63,6 +63,37 @@
       <ComputerName>COMPUTERNAME</ComputerName>
       <TimeZone>UTC</TimeZone>
     </component>
+    <!-- The static address, gateway and DNS server on the adapter with the
+         machine's static MAC, as the kickstart sets them on AlmaLinux: a
+         network of the environment's own has no DHCP server. -->
+    <component name="Microsoft-Windows-TCPIP" COMPONENT>
+      <Interfaces>
+        <Interface wcm:action="add">
+          <Identifier>MACADDRESS</Identifier>
+          <Ipv4Settings><DhcpEnabled>false</DhcpEnabled></Ipv4Settings>
+          <UnicastIpAddresses>
+            <IpAddress wcm:action="add" wcm:keyValue="1">IPADDRESS</IpAddress>
+          </UnicastIpAddresses>
+          <Routes>
+            <Route wcm:action="add">
+              <Identifier>0</Identifier>
+              <Prefix>0.0.0.0/0</Prefix>
+              <NextHopAddress>GATEWAY</NextHopAddress>
+            </Route>
+          </Routes>
+        </Interface>
+      </Interfaces>
+    </component>
+    <component name="Microsoft-Windows-DNS-Client" COMPONENT>
+      <Interfaces>
+        <Interface wcm:action="add">
+          <Identifier>MACADDRESS</Identifier>
+          <DNSServerSearchOrder>
+            <IpAddress wcm:action="add" wcm:keyValue="1">DNSSERVER</IpAddress>
+          </DNSServerSearchOrder>
+        </Interface>
+      </Interfaces>
+    </component>
     <component name="Microsoft-Windows-Deployment" COMPONENT>
       <RunSynchronous>
         <RunSynchronousCommand wcm:action="add">
