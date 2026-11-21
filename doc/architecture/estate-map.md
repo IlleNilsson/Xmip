@@ -291,9 +291,15 @@ held by `tests/ledger/work_process.rs` (a Batch in the order received, two
 clients at once never overtaking, a node killed mid-process finishing from the
 Ledger) and the two crates' tests. A unit is opened from its library as the
 node starts, through the runtime's `dynamic-loading` feature, which
-`xmip-service` is built with; a unit's settings and calls through the standard
-units are decided, not built. Records: ADR-0066 (amendment 2026-10-22),
-runtime-model.md section 22.
+`xmip-service` is built with, its library named as the node's own system names
+it (`xmip_module.h` section 1). The Essentials runs one: every sales order
+passes the Work Process *Order approval*
+(`test/core/essentials/configuration/order-approval.bpmn`, its unit the
+Essentials' example `order_approval`) on its way to the ERP. A unit's settings
+and calls through the standard units are decided, not built; no test a landing
+runs carries a Message through a loaded unit in a running node (open problem
+87). Records: ADR-0066 (amendments 2026-10-22, 2026-11-21), ADR-0025
+(amendment 2026-11-21), runtime-model.md section 22.
 
 #### `regulation-quest`
 
@@ -453,7 +459,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 400917 lines of production
+Where each repository mounts and what it holds: 401164 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -607,7 +613,7 @@ hold no source to count.
 │   │   │   │       declared, not built 9
 │   │   │   │       bzip2  canonicalize  checksum  chunking  envelope  framing
 │   │   │   │        hash  quoted-printable  tar
-│   │   │   ├── process                         2391
+│   │   │   ├── process                         2396
 │   │   │   │   └── bpmn                        3098
 │   │   │   ├── transform                       2206
 │   │   │   │       declared, not built 8
@@ -773,7 +779,7 @@ hold no source to count.
 │   │   ├── stream                               382
 │   │   └── party                                193
 │   └── platform/
-│       ├── runtime                            48804
+│       ├── runtime                            48828
 │       ├── persist                            22389
 │       │   ├── rocksdb                          323
 │       │   ├── sqlite                           288
@@ -783,7 +789,7 @@ hold no source to count.
 │       └── cluster                             5067
 └── test/
     └── core/
-        ├── essentials                         16475
+        ├── essentials                         16693
         └── module                                83
 ```
 

@@ -134,11 +134,11 @@ Describe 'The domain' {
 }
 
 Describe 'The documents and the resources' {
-    It 'requires DSC 3.4.0-preview.2 or newer in <_>, never elevated' -ForEach @(
+    It 'requires DSC''s floor or newer in <_>, never elevated' -ForEach @(
         'network.dsc.yaml', 'machine.dsc.yaml') {
         [hashtable] $document = Read-XmipTestYaml -Path (Join-Path $script:Template $_)
 
-        $document.directives.version | Should -Be '^3.4.0-preview.2'
+        $document.directives.version | Should -Be "^$(Get-XmipTestFloor -Name 'dsc')"
         $document.directives.Contains('securityContext') | Should -BeFalse
     }
 

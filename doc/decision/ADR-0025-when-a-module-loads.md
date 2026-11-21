@@ -201,3 +201,39 @@ feature, `loader`, which the operator library's node build takes to probe;
 (`library.rs`, the contract and Work Process tables), includes it. The table
 a module is created with is kept beside the instance until after `destroy`,
 as the header's section 7 has always required.
+
+## Amendment, 2026-11-21: the host names a module's library, as the header says
+
+**Provenance.** Found by the assistant while a Work Process was made to run
+in the Essentials (ADR-0066, amendment 2026-11-21), and decided while
+building, told to the owner the same day: one `cluster.xmip` serves the
+Essentials' Windows and Linux nodes alike (the owner's rule that one TOML
+runs on one computer and on machines of their own), and a `[[modules]]`
+entry named its library by one system's file.
+
+`xmip_module.h` section 1 has said since the header was written: *Naming is
+a platform convention, not an Xmip decision, and the host applies it
+rather than the module author* — `libxmip_core_transport_http.so` on Linux,
+`.dylib` on macOS, `xmip_core_transport_http.dll` on Windows. The loader
+did not apply it: `runtime::library::located` read `library_path` as
+written, and `process::generate` wrote the generating machine's file into
+the entry (`order_approval.dll`), so an entry generated on Windows named
+nothing a Linux node could open.
+
+- **The host names the file.** A `library_path` whose last part names the
+  module rather than a file — no `.dll`, `.so`, a versioned `.so.`, or
+  `.dylib` — is the library this system names for it,
+  `abi::boundaries::library_file_name`, the header's rule written once;
+  one written as a file is that file, on every system, and an absolute one
+  stays as written. `runtime::library::located` is the one reader.
+- **The generator names the module.** `process::generate::library_name`
+  is what the entry writes (`library_path = "order_approval"`), and
+  `library_file`, the file cargo builds, is the header's rule over it
+  rather than a second copy of it.
+- **Held by** `library::tests::a_library_is_read_against_the_configurations_folder_an_absolute_one_as_written`
+  in `xmip-core-runtime`: the generated entry names the module, a name in
+  a folder is the folder's file as this system names it, the four file
+  forms are kept as written, and the unit generated from the runtime's
+  example design still opens from beside a node's configuration and turns
+  (`a_unit_generated_from_a_design_opens_from_beside_its_configuration_and_turns`),
+  on Windows and on Linux.

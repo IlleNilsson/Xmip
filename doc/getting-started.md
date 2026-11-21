@@ -727,7 +727,7 @@ one. Each README says each step in full.
 4. The packages, the cluster's authority and each node's certificate,
    written into the environment file (the same section).
 5. **E** On each Windows machine once, as its Administrator: PowerShell 7.7
-   and DSC 3.4.0-preview.2 (the same section). An AlmaLinux machine needs
+   and DSC 3.4.0-preview.3 (the same section). An AlmaLinux machine needs
    nothing: DSC is brought to it.
 6. **E** The machines and the nodes, in one command: `Deploy-XmipEnvironment
    -Path D:\Repos\Xmip\.local-work\deploy\hyperv.toml`, one machine

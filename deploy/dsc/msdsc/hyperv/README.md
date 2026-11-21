@@ -112,7 +112,7 @@ lets it manage VMs unelevated:
 
 ```powershell
 Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V -All
-Add-AppxPackage -Path https://github.com/PowerShell/DSC/releases/download/v3.4.0-preview.2/DSC-3.4.0-preview.2-Win.msixbundle
+Add-AppxPackage -Path https://github.com/PowerShell/DSC/releases/download/v3.4.0-preview.3/DSC-3.4.0-preview.3-Win.msixbundle
 [string] $account = [Security.Principal.WindowsIdentity]::GetCurrent().User.Value
 Add-LocalGroupMember -SID 'S-1-5-32-578' -Member $account
 ```
@@ -180,7 +180,7 @@ controller.
 | `../../machine/MachineAnswer.ps1` | the install answers and the answer medium, shared with the libvirt template |
 | `../../machine/autounattend.template.xml` | the Windows answer `MachineAnswer.ps1` fills in |
 
-Each document requires DSC `^3.4.0-preview.2`, the latest release.
+Each document requires DSC `^3.4.0-preview.3`, the latest release.
 
 `test/MsdscHyperV.Test.ps1` holds what can be held without Hyper-V: the
 documents read as YAML by DSC, their parameters and elevation, the

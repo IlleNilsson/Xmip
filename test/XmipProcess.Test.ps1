@@ -216,6 +216,41 @@ Describe 'What an Essentials process is called' {
                 Should -Be (Join-Path $layout.Image $Name)
         }
     }
+
+    It 'carries the Work Process units built as examples beside the roll, and nothing else built' {
+        # The roll finds a unit above its own image (`file::built`), and runs
+        # from the image, not from the build directory: so the image carries
+        # every library built as an example, named nowhere here.
+        [string] $tree = Join-Path -Path $TestDrive -ChildPath 'images'
+        InModuleScope Xmip -Parameters @{ Tree = $tree; Name = $script:Named.Name } {
+            param([string] $Tree, [string] $Name)
+
+            [string] $built = Join-Path -Path $Tree -ChildPath 'measured'
+            [string] $examples = Join-Path -Path $built -ChildPath 'examples'
+            $null = New-Item -ItemType Directory -Path $examples -Force
+            foreach ($file in 'roll', 'cluster', 'node') {
+                Set-Content -LiteralPath (Join-Path $built $file) -Value $file
+            }
+            foreach ($file in 'unit.dll', 'libunit.so', 'libunit.dylib', 'unit.pdb', 'unit.d') {
+                Set-Content -LiteralPath (Join-Path $examples $file) -Value $file
+            }
+            Mock Get-XmipEssentialsLayout {
+                [pscustomobject] @{
+                    Roll     = Join-Path $built 'roll'
+                    Cluster  = Join-Path $built 'cluster'
+                    Node     = Join-Path $built 'node'
+                    Examples = $examples
+                    Image    = Join-Path $Tree 'image'
+                    Suffix   = ''
+                }
+            }
+
+            $null = New-XmipEssentialsImage -Cluster $Name -Confirm:$false
+            [string] $units = Join-Path (Get-XmipEssentialsImageArea -Cluster $Name) 'examples'
+            @(Get-ChildItem -LiteralPath $units -File).Name | Sort-Object |
+                Should -Be @('libunit.dylib', 'libunit.so', 'unit.dll')
+        }
+    }
 }
 
 Describe 'Which processes are Xmip''s' {

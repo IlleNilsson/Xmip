@@ -10,9 +10,9 @@
       YAML reader and evaluated by DSC below; each document declares every
       parameter it uses and uses every one it declares — but staging, which
       Xmip.Environment/Machine gives every document it applies.
-    - Every document requires DSC 3.4.0-preview.2 and none asks for
-      elevation whole; each resource manifest elevates exactly the methods
-      that need administrator rights.
+    - Every document requires DSC's floor, prerequisite.toml's, and none
+      asks for elevation whole; each resource manifest elevates exactly the
+      methods that need administrator rights.
     - The resource manifests of the folder are found by DSC.
     - The Ansible role makes node.xmip the node's alone to write, and masks
       the node's key, never logging or diffing it; ansible-playbook
@@ -155,9 +155,9 @@ Describe 'The documents' {
         ($used -join ',') | Should -Be ($declared -join ',')
     }
 
-    It 'requires DSC 3.4.0-preview.2 or newer in <_>' -ForEach @('machine.dsc.yaml',
+    It 'requires DSC''s floor or newer in <_>' -ForEach @('machine.dsc.yaml',
         'names.dsc.yaml', 'node.dsc.yaml', 'name.dsc.yaml', 'started.dsc.yaml') {
-        $script:Parsed[$_].directives.version | Should -Be '^3.4.0-preview.2'
+        $script:Parsed[$_].directives.version | Should -Be "^$(Get-XmipTestFloor -Name 'dsc')"
     }
 
     It 'leaves elevation in <_> to each resource, never the whole document' -ForEach @(

@@ -1021,3 +1021,38 @@ test activated::valid_active_plus_missing_candidate_runs_active_with_the_fallbac
 test activated::valid_active_plus_unreadable_candidate_likewise ... ok
 test result: ok. 19 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.72s
 ```
+
+## Amendment, 2026-11-21: DSC's ACL resource ships, and the slice still sets its own permissions
+
+The amendment of 2026-11-06 gave two reasons Microsoft DSC's own
+`Microsoft.Filesystem/ACL` is not used for `node.xmip`: it takes the whole
+access list as SDDL, and 3.4.0-preview.2 shipped it in none of its
+packages. The second no longer holds. The absence was a packaging defect,
+PowerShell/DSC#1793, filed by Xmip: preview.2's binaries were built before
+the commit its tag points to. The maintainer closed it on 2026-11-09, *"I
+believe we should be back in sync with next preview planned this week"*,
+and 3.4.0-preview.3, released 2026-11-11 and the floor since (ADR-0021,
+amendment 2026-11-21), ships it on Windows and on Linux, in
+`file_dsc.dsc.manifests.json`:
+
+```text
+$ dsc resource list 'Microsoft.Filesystem*'      (3.4.0-preview.3, Windows and Linux)
+Microsoft.Filesystem.File/Content 0.1.0
+Microsoft.Filesystem/ACL          0.1.0
+```
+
+The first reason still decides it, and the decision stands:
+`Xmip.Node/Slice` sets the slice's permissions as it places the slice.
+The resource's one property beside the path is the whole list; its
+manifest says *"The complete discretionary access control list in SDDL
+form. Setting this property replaces the existing DACL, including its
+protection state."* A document would carry the node's virtual account's
+SID typed into that string, where `Xmip.Node/Slice` computes it as Windows
+does, the account existing only once the package has registered the
+service. The manifest tags the resource `windows`, and it sets no owner,
+group or mode, so the AlmaLinux machines would still need the Xmip
+resource, while one document serves both families (`node.dsc.yaml`).
+
+**Provenance.** PowerShell/DSC#1793 and its closing comment, the
+v3.4.0-preview.3 release, and `dsc resource list` on both systems,
+2026-11-21; the reading is the assistant's, at the coordinator's order.

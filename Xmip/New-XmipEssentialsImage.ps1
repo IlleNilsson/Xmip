@@ -71,7 +71,8 @@ function New-XmipEssentialsImage {
             xmip-essentials-<cluster>-roll.
 
         .DESCRIPTION
-            Three files are laid down here. The roll's carries the cluster's
+            Three files are laid down here, and the Work Process units beside
+            them in an examples folder. The roll's carries the cluster's
             name, because Start-XmipTest starts it. The cluster and node
             binaries are laid down under their own names beside it, because the
             roll looks for its cluster beside its own image and the cluster
@@ -115,6 +116,24 @@ function New-XmipEssentialsImage {
         Join-Path -Path $area -ChildPath (Split-Path -Leaf $layout.Cluster))
     Copy-XmipEssentialsImage -Source $layout.Node -Image (
         Join-Path -Path $area -ChildPath (Split-Path -Leaf $layout.Node))
+
+    # The libraries built as the crate's examples, the Work Process units the
+    # run places beside each node that opens one, in an examples folder beside
+    # the roll's image, where the roll finds what was built (`file::built`,
+    # `src/served/given.rs`). None is named here: what the cluster's file
+    # names, the run takes.
+    [string] $units = Join-Path -Path $area -ChildPath 'examples'
+    New-Item -ItemType Directory -Path $units -Force | Out-Null
+    [hashtable] $examples = @{
+        LiteralPath = $layout.Examples; File = $true; ErrorAction = 'SilentlyContinue'
+    }
+    [object[]] $built = @(Get-ChildItem @examples |
+            Where-Object { $_.Extension -in '.dll', '.so', '.dylib' })
+
+    foreach ($library in $built) {
+        [string] $image = Join-Path -Path $units -ChildPath $library.Name
+        Copy-XmipEssentialsImage -Source $library.FullName -Image $image
+    }
 
     return $roll
 }

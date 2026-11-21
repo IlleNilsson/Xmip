@@ -1236,3 +1236,68 @@ coordinator's brief of 2026-11-20 named the job object, the process group
 and the test. The snapshot of one process's threads in place of Tool
 Help's, found when the first measurement cost 100 ms a start, is the
 assistant's, for the owner to overrule.
+
+## Amendment, 2026-11-21: a Work Process runs in the Essentials
+
+**Provenance.** The owner, 2026-11-21, on the plan of rounds to the demo
+whose second round this is (*a Work Process runs in the Essentials*):
+*Go ahead.* The design, where its unit lives and how it reaches a node
+were decided by the assistant while building, told to the owner.
+
+Until this amendment a node could open a unit and no configuration of the
+estate named one: the runtime's example unit was turned in its own test,
+and the Essentials, which the demo runs, routed every document straight to
+a Send Port. Now the Essentials' cluster runs one.
+
+- **The design** is `test/core/essentials/configuration/order-approval.bpmn`,
+  beside the cluster's file: an Instance per sales order, a task that
+  assigns `'approved'` to `Approval` (a new Message generation), a
+  `sendTask` that publishes it back through routing, and an end. It calls
+  no unit and gives none settings, the two things still decided, not
+  built.
+- **The unit** is the Essentials' example `order_approval`, a `cdylib`
+  against this build's own `xmip-core-process`, so it builds offline from
+  the working tree in the estate's one workspace; a test holds it to what
+  `process::generate` makes of the design now, as the runtime's
+  `approval_unit` is held. The Essentials' build builds it beside the roll
+  (`Invoke-XmipEssentialsBuild`).
+- **The configuration** is the generator's `[[modules]]` entry, its library
+  named by the module (ADR-0025, amendment 2026-11-21), the Application's
+  `[[xmip_applications.work_processes]]` *Order approval* naming its module
+  and unit, the Subscription *Sales orders* to it on the order's message
+  type and recipient and `not exists Approval`, and *Approved sales orders*
+  from it to the ERP's Send Port on `Approval = 'approved'`.
+- **The library reaches the node** as an environment carries a module's:
+  the run copies it beside each node's configuration where the node opens
+  it, by the node's own rule (`runtime::library::to_open`), so the nodes
+  serving the process stage, processing and executing, have it and no
+  other does (`served::given`). Carrying it to machines of their own is
+  the deployment's (deploy/dsc), not yet done.
+
+Served, the run's nodes are `xmip-service` and run the unit. The
+Essentials' own simulated node runs no Work Process step, so it publishes
+the Message the Work Process would, carrying what the design assigns
+(ADR-0028, amendment 2026-11-21).
+
+A served run on Windows, `Start-XmipTest -Suite Core.Essentials -Cluster
+CL1 -Stress Realistic`, the nodes as `xmip-service`, about two minutes in:
+the unit beside EX1 and PX1 alone, both accepting work; on EX1 the
+Subscription *Sales orders* to the Work Process `picked_up = 21`; and every
+Receive Location Fine, its documents where the judge expects them. The two
+whose orders pass the Work Process take about 5 ms more from drop to arrival
+than the routes it is not on, its turn and its publication one more round
+through the Ledger:
+
+```text
+Sales orders from Party-A        28 document(s) delivered whole to Sales orders to ERP, 0 on their way; from its drop to its arrival 15.0117ms the fastest, 21.655ms the median
+Sales orders from Party-C        27 document(s) delivered whole to Sales orders to ERP, 1 on their way; from its drop to its arrival 15.7536ms the fastest, 24.5381ms the median
+Remittance advices from Party-E  27 document(s) delivered whole to Remittance advices to ERP, 1 on their way; from its drop to its arrival 9.6293ms the fastest, 15.525ms the median
+Inventory reports from Party-D   27 document(s) delivered whole to Inventory reports to ERP, 1 on their way; from its drop to its arrival 9.5977ms the fastest, 15.6643ms the median
+```
+
+The first two served runs were refused at their start, each for a cause
+the change now holds: the run read only a slice's own `[[work_processes]]`
+and placed no unit where the bindings gave a node its Work Process, and the
+roll, running from its image, did not find the unit built beside the
+binaries the image links. On Linux no Essentials run starts yet (open
+problem 88).

@@ -5,7 +5,7 @@
 # machine; README.md says how.
 $schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
 directives:
-  version: ^3.4.0-preview.2
+  version: ^3.4.0-preview.3
 parameters:
   environment:
     type: string
