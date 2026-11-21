@@ -307,7 +307,8 @@ function Build-XmipLandingLibrary {
             return $library.Folder
         }
 
-        $env:XMIP_RUNTIME_LIBRARY = Join-Path -Path $built -ChildPath $library.File
+        # Just built where cargo builds, so it is found and named, not built again.
+        $env:XMIP_RUNTIME_LIBRARY = Build-XmipRuntimeLibrary -Root $RepositoryRoot
         [string] $landing = (Get-XmipEstateLayout -Root $RepositoryRoot).Landing
         [string] $copy = Join-Path -Path $landing -ChildPath 'runtime/debug'
         $null = New-Item -ItemType Directory -Path $copy -Force

@@ -93,21 +93,12 @@ Describe 'A complete configuration a document shows is one the runtime would sta
 
         [PSCustomObject[]] $script:Marked = $marked.ToArray()
 
-        # The runtime this estate built, in the one shared build directory
-        # (Test-XmipChangeTree); landing builds it before anything is tested.
-        [string] $target = & (Get-Module -Name Xmip) {
-            param([string] $Root) (Get-XmipEstateLayout -Root $Root).Build
+        # The runtime this estate built, where cargo builds: a landing builds
+        # it before anything is tested, and a machine none built it on builds
+        # it here (Build-XmipRuntimeLibrary).
+        [string] $script:Runtime = & (Get-Module -Name Xmip) {
+            param([string] $Root) Build-XmipRuntimeLibrary -Root $Root
         } $script:Root
-        [string] $name = if ($IsWindows) {
-            'xmip_core_operate.dll'
-        }
-        elseif ($IsMacOS) {
-            'libxmip_core_operate.dylib'
-        }
-        else {
-            'libxmip_core_operate.so'
-        }
-        [string] $script:Runtime = Join-Path -Path $target -ChildPath "debug/$name"
     }
 
     It 'marks some, so the rule has something to hold' {

@@ -3054,3 +3054,79 @@ output lines: its table gave the same five projects 110, 320, 220, 155 and
 11 passed, none failing, the two Rust tests passing with them, and
 `test/OperatorModule.Test.ps1` 14 passed. The landing's own .NET part runs
 the five projects again on Windows before anything is pushed.
+
+## Amendment, 2026-11-21: the estate's tooling builds the runtime library it reads, where none is
+
+**Provenance.** The owner, 2026-11-21, on the plan whose first round this
+is: *Go ahead.* The causes, the fixes and their tests below were decided by
+the assistant while building, told to the owner.
+
+**Amends the note of 2026-10-13, *the operator module is built once per
+change*.** The estate's Pester suite, run on the Linux build machine in a
+copy of the tree landed at c7161e3 with an empty build directory, failed
+215 of its tests, nearly all in a test file's setup at the first rule read
+through `Xmip.Surface`: *The runtime's rules are not loaded: no runtime
+library at* `.local-work/operator/<key>/libxmip_core_operate.so`. Three
+causes, none of them a rule's:
+
+1. **The operator module had no runtime library beside it.** `Xmip.Operate`
+   copies `xmip-core-operate`'s library beside whatever references it from
+   the directory cargo builds in, and a landing builds it there before
+   anything is tested. A machine no landing had built it on gave the
+   operator module none, and every rule read through it failed; Windows
+   passed only because a landing had once built one.
+   `Build-XmipRuntimeLibrary` answers the library where cargo builds
+   (`Get-XmipEstateLayout`'s `Build`: `CARGO_TARGET_DIR` where it is set,
+   else the workspace root's `target`, ADR-0016, amendment 2026-11-20),
+   built there first from the working tree (`cargo build --lib` in
+   `module/core/operation/operate`) where it is not there yet; one already
+   there is used as it is. `Build-XmipOperatorModule` calls it before
+   `dotnet build`, so a build of the operator module always has the library
+   to copy; the library built is one more input of the build's key, so the
+   next session builds the operator module once more, and never again for
+   it. `test/Example.Test.ps1` takes the library it judges configurations
+   with from it rather than spelling the directory and the file name again,
+   and the landing names the library it built (`XMIP_RUNTIME_LIBRARY`) by
+   it, so where the library lies is said once.
+2. **The Linux machine's PowerShell was the snap**, found the day before:
+   it runs `pwsh` on its base's C library, core22's glibc 2.35, and the
+   library cargo builds against the machine's own needs glibc 2.38
+   (``version `GLIBC_2.38' not found``), so no rule loaded however the
+   library was found. `prerequisite.toml` says so under PowerShell; the
+   owner replaced the snap with Microsoft's 7.7.0 package.
+3. **Two tests held Windows's ways rather than the rule**, and now hold the
+   rule on both systems: the forgotten-process test took
+   `Get-Command sleep` as one command where `/bin` and `/usr/bin` both
+   name one, and takes the first on `PATH`, as a shell runs it; the Windows 11 machine's
+   test of the Hyper-V template builds an answer holding the Administrator
+   secret, which only Windows encrypts and reads, so it is skipped
+   elsewhere and says why, `DeployMachine.Test.ps1` holding the refusal off
+   Windows.
+
+Six tests read `git ls-files --recurse-submodules`, and the copy on the
+build machine carries no git metadata, so each run there first gives its
+copy a git index of its own. The 54 tests skipped on Linux are 45 that need
+Microsoft DSC v3 or Ansible, which that machine does not have, and nine that
+hold another system's way or need root.
+
+Before, on Linux (PowerShell 7.7.0, Pester 6.2.0), the tree landed at
+c7161e3, nothing built:
+
+```text
+   MESSAGE: The runtime's rules are not loaded: no runtime library at <estate>/.local-work/operator/C60959EBA3564151/libxmip_core_operate.so. Build it (cargo build in module/core/operation/operate), or set XMIP_RUNTIME_LIBRARY.
+PESTER passed 450 failed 215 skipped 9 in 117 s
+```
+
+After, on Linux, the change, nothing built (the runtime library built by
+the suite's first session):
+
+```text
+     cargo|    Compiling xmip-core-operate v0.1.0 (<estate>/module/core/operation/operate)
+     cargo|     Finished `dev` profile [optimized + debuginfo] target(s) in 1m 26s
+PESTER passed 622 failed 0 skipped 54 in 247 s
+```
+
+On Windows, the landing's verification run in full before the landing,
+since the change reaches the landing's own tooling: Pester passed 669,
+failed none and skipped 7; the root crate's lints and its 52 Rust tests
+passed; and its six timing tests, run alone, held their bounds.

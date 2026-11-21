@@ -5,8 +5,10 @@
 # what it is built from. Until 2026-10-13 every session built it again, and the
 # first Write-XmipAudit of Start-XmipTest spent 8.5 of its 9.3 seconds there.
 # This holds the key and the reuse decision over a tree of its own, dotnet never
-# run, and that the types this module names are found once the operator module
-# the estate built is imported (Import-XmipOperatorAssembly).
+# run, that the types this module names are found once the operator module
+# the estate built is imported (Import-XmipOperatorAssembly), and that the
+# runtime library it copies is built first where none is
+# (Build-XmipRuntimeLibrary).
 
 BeforeAll {
     . (Join-Path $PSScriptRoot 'Initialize-XmipTest.ps1')
@@ -232,5 +234,91 @@ Describe 'The types this module names' {
 
         [string[]] $expected = @($named | ForEach-Object { "$_ found: True" })
         @($said | Where-Object { $_ -match ' found: ' }) | Should -Be $expected
+    }
+}
+
+Describe 'The runtime library the operator module copies' {
+    # Xmip.Operate copies it beside the operator module as it is built, and a
+    # machine no landing had built it on gave the module none: every rule the
+    # estate's tooling reads through Xmip.Surface failed, the estate's Pester
+    # suite on Linux first among them (2026-11-20).
+    BeforeAll {
+        $script:TargetBefore = $env:CARGO_TARGET_DIR
+    }
+
+    AfterAll {
+        $env:CARGO_TARGET_DIR = $script:TargetBefore
+    }
+
+    It 'is built where cargo builds, where it is not, and found there after' {
+        [string] $tree = Join-Path -Path $TestDrive -ChildPath 'runtime'
+        $global:XmipTestCrateBuild = [System.Collections.Generic.List[object]]::new()
+
+        try {
+            [string[]] $said = InModuleScope Xmip -Parameters @{ Tree = $tree } {
+                param([string] $Tree)
+
+                Mock Invoke-XmipCrateBuild {
+                    $global:XmipTestCrateBuild.Add([pscustomobject] @{
+                            Folder   = $Folder
+                            Target   = $TargetDirectory
+                            Argument = $Argument -join ' '
+                        })
+                    $library = Get-XmipPackageProgram | Where-Object -Property Kind -EQ 'Library'
+                    [string] $debug = Join-Path -Path $TargetDirectory -ChildPath 'debug'
+                    $null = New-Item -ItemType Directory -Path $debug -Force
+                    Set-Content -LiteralPath (Join-Path $debug $library.File) -Value 'library'
+                }
+
+                $env:CARGO_TARGET_DIR = Join-Path -Path $Tree -ChildPath 'shared'
+                Build-XmipRuntimeLibrary -Root $Tree
+                Build-XmipRuntimeLibrary -Root $Tree
+                Remove-Item -Path 'env:CARGO_TARGET_DIR'
+                Build-XmipRuntimeLibrary -Root $Tree
+            }
+            [object[]] $built = @($global:XmipTestCrateBuild)
+        }
+        finally {
+            Remove-Variable -Name XmipTestCrateBuild -Scope Global
+        }
+
+        [string] $file = (InModuleScope Xmip {
+                Get-XmipPackageProgram | Where-Object -Property Kind -EQ 'Library'
+            }).File
+        [string] $shared = Join-Path -Path $tree -ChildPath 'shared'
+        [string] $workspace = Join-Path -Path $tree -ChildPath 'target'
+        $said | Should -Be @(
+            (Join-Path $shared "debug/$file"), (Join-Path $shared "debug/$file"),
+            (Join-Path $workspace "debug/$file"))
+        @($built.Target) | Should -Be @($shared, $workspace)
+        @($built.Folder | Sort-Object -Unique) | Should -Be 'module/core/operation/operate'
+        @($built.Argument | Sort-Object -Unique) | Should -Be 'build --lib'
+    }
+
+    It 'is built before the operator module, which copies it' {
+        [string] $tree = Join-Path -Path $TestDrive -ChildPath 'order'
+        $global:XmipTestOrder = [System.Collections.Generic.List[string]]::new()
+
+        try {
+            InModuleScope Xmip -Parameters @{ Tree = $tree } {
+                param([string] $Tree)
+
+                Mock Build-XmipRuntimeLibrary { $global:XmipTestOrder.Add('runtime'); 'runtime' }
+                Mock Invoke-XmipTool {
+                    $global:XmipTestOrder.Add($Tool)
+                    [pscustomobject] @{ Passed = $false; Said = @() }
+                }
+                [string] $output = Join-Path -Path $Tree -ChildPath 'operator/0123456789ABCDEF'
+
+                { Build-XmipOperatorModule -Root $Tree -Output $output } |
+                    Should -Throw 'The operator module did not build*'
+            }
+            [string[]] $order = @($global:XmipTestOrder)
+        }
+        finally {
+            Remove-Variable -Name XmipTestOrder -Scope Global
+        }
+
+        $order | Should -Be @('runtime', 'dotnet')
     }
 }

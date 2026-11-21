@@ -248,7 +248,9 @@ Describe 'Which processes are Xmip''s' {
             Join-Path -Path $env:SystemRoot -ChildPath 'System32\PING.EXE'
         }
         else {
-            (Get-Command -Name 'sleep' -CommandType Application).Source
+            # The first on PATH, as a shell runs it: where /bin is /usr/bin,
+            # both are on PATH and each names its own sleep.
+            (Get-Command -Name 'sleep' -CommandType Application | Select-Object -First 1).Source
         }
         [string] $xmip = Join-Path -Path $folder -ChildPath ($IsWindows ? 'xmip.exe' : 'xmip')
         Copy-Item -LiteralPath $waiting -Destination $xmip
