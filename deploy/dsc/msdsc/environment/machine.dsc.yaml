@@ -98,7 +98,8 @@ resources:
         'node.key', path(parameters('common').identity, parameters('node'), 'node.key'),
         'anchors.pem', path(parameters('common').identity, parameters('node'), 'anchors.pem'),
         parameters('packages')[parameters('machine').family].file,
-        parameters('packages')[parameters('machine').family].path)]
+        parameters('packages')[parameters('machine').family].path,
+        'modules.zip', parameters('packages')[parameters('machine').family].archive)]
       parameters: >-
         [createObject(
         'family', parameters('machine').family,

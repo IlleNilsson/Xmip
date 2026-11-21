@@ -204,6 +204,11 @@ function Get-XmipDeployNodeValue {
             }
             $packages[$family].modules = $modules
         }
+        # The same libraries as one file, which msdsc sends beside the
+        # package: a zip, empty where the cluster names none, written once
+        # the run holds its lock (Invoke-XmipDeployStep).
+        $packages[$family].archive = Join-Path -Path $Run -ChildPath (
+            "modules-$($family.ToLowerInvariant()).zip")
         if ($Read.Technology -ne 'msdsc' -or $family -ne 'Linux') {
             continue
         }
@@ -224,6 +229,48 @@ function Get-XmipDeployNodeValue {
     $given['packages'] = $packages
     $given['tools'] = $tools
     return $given
+}
+
+function New-XmipDeployModuleArchive {
+    <#
+        .SYNOPSIS
+            The module libraries of each family's [packages.<family>]
+            modules folder as the one zip its archive names, which msdsc
+            sends beside the package and the node unpacks into its
+            configuration folder; an empty zip where it names none. Written
+            over what is there.
+
+        .PARAMETER Packages
+            The environment's packages, by family, as
+            Get-XmipDeployEnvironment reads them.
+    #>
+    [CmdletBinding()]
+    [OutputType([void])]
+    param(
+        [Parameter(Mandatory)]
+        [hashtable] $Packages
+    )
+
+    foreach ($package in @($Packages.Values | Where-Object { $_['archive'] })) {
+        [object[]] $libraries = @()
+        if ($package['modules']) {
+            $libraries = @(Get-ChildItem -LiteralPath $package['modules'] -File)
+        }
+        $null = New-Item -ItemType Directory -Path (Split-Path $package['archive']) -Force
+        $file = [System.IO.File]::Open($package['archive'], [System.IO.FileMode]::Create)
+        $zip = [System.IO.Compression.ZipArchive]::new(
+            $file, [System.IO.Compression.ZipArchiveMode]::Create)
+        try {
+            foreach ($library in $libraries) {
+                $null = [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile(
+                    $zip, $library.FullName, $library.Name)
+            }
+        }
+        finally {
+            $zip.Dispose()
+            $file.Dispose()
+        }
+    }
 }
 
 function Resolve-XmipDeployPath {

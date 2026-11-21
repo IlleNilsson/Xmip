@@ -103,6 +103,8 @@ resources:
       node: "[parameters('node')]"
       cluster: "[parameters('cluster')]"
       account: "[parameters('account')]"
+      modules: "[path(parameters('staging'), 'files', 'modules.zip')]"
+      configuration: "[parameters('layout').configuration]"
 
   - name: Opening
     type: Xmip.Node/Opening

@@ -74,11 +74,71 @@ function Test-NodePackage {
         return $false
     }
 
+    if (-not (Test-NodeModules -Instance $Instance)) {
+        return $false
+    }
+
     if ($IsWindows) {
         return $true
     }
 
     return (Get-NodePackageDigest) -eq (Get-NodePackageDigest -Path $Instance.path)
+}
+
+function Test-NodeModules {
+    <#
+    .SYNOPSIS
+    Whether every module library the zip -Instance.modules holds lies in the
+    configuration folder as it is in the zip, by its length; true where the
+    zip holds none or the instance names none.
+    #>
+    [CmdletBinding()]
+    [OutputType([bool])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [hashtable] $Instance
+    )
+
+    if (-not $Instance['modules'] -or -not (Test-Path -LiteralPath $Instance['modules'])) {
+        return $true
+    }
+
+    $zip = [System.IO.Compression.ZipFile]::OpenRead($Instance['modules'])
+    try {
+        foreach ($entry in $zip.Entries) {
+            [string] $placed = Join-Path -Path $Instance['configuration'] -ChildPath $entry.Name
+            if (-not (Test-Path -LiteralPath $placed) -or
+                (Get-Item -LiteralPath $placed).Length -ne $entry.Length) {
+                return $false
+            }
+        }
+    }
+    finally {
+        $zip.Dispose()
+    }
+    return $true
+}
+
+function Install-NodeModules {
+    <#
+    .SYNOPSIS
+    The module libraries of the zip -Instance.modules unpacked into the
+    node's configuration folder, where each library_path is read (ADR-0066,
+    amendment 2026-11-21); nothing where it names none.
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [hashtable] $Instance
+    )
+
+    if ($Instance['modules'] -and (Test-Path -LiteralPath $Instance['modules'])) {
+        $null = New-Item -ItemType Directory -Path $Instance['configuration'] -Force
+        [hashtable] $unpacking = @{
+            LiteralPath = $Instance['modules']; DestinationPath = $Instance['configuration']
+        }
+        Expand-Archive @unpacking -Force
+    }
 }
 
 function Install-NodePackage {
@@ -101,6 +161,10 @@ function Install-NodePackage {
     if (-not $PSCmdlet.ShouldProcess($Instance.path, "Install node $($Instance.node)")) {
         return
     }
+
+    # Before the install, which starts the node: it opens its units as it
+    # starts.
+    Install-NodeModules -Instance $Instance
 
     if ($IsWindows) {
         # The portable archive, Windows's package until the MSI is built (the

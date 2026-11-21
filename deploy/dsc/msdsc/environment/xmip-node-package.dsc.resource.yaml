@@ -74,6 +74,15 @@ schema: !embedded
       account:
         description: 'The account the node''s service runs as.'
         type: string
+      modules:
+        description: >-
+          The module libraries the cluster's file names, built for this
+          family: a zip, empty where it names none, unpacked into the
+          configuration folder, where each library_path is read.
+        type: string
+      configuration:
+        description: 'The node''s configuration folder.'
+        type: string
       _exist:
         type: boolean
         readOnly: true
