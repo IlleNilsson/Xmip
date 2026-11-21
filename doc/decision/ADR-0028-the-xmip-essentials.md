@@ -1517,3 +1517,33 @@ roll, cluster and node build in a build directory of their own,
 open, its images being hard links to them, and on Windows a landing's
 timing runs, which build in the estate's build directory, would fail on a
 file held there.
+
+## Amendment, 2026-11-21: the Essentials' sales orders pass a Work Process
+
+**Provenance.** As ADR-0066's amendment of the same day.
+
+Every sales order a Party sends is handed to the Work Process *Order
+approval* and reaches the ERP's Send Port as the Message it publishes,
+marked `Approval = 'approved'` (ADR-0066, amendment 2026-11-21; the cluster's
+file says so beside the Subscriptions). What the rig does with it:
+
+- **The judge follows the route through it.** `Documents::routed` reads a
+  document's route as a node does, and where a Subscription hands it to a
+  Work Process whose design the rig knows, the Essentials' own, it applies
+  what the design assigns before it publishes (`assign::apply`, as the node
+  applies it) and routes that Message again, as the node routes what a
+  Work Process publishes; the chain is followed no deeper than a node's chain
+  limit lets a Journey. A sales order is expected at *Sales orders to ERP*,
+  as before; nothing else changes route.
+- **The simulated node publishes what the Work Process would.** It runs no
+  Work Process step of its own, so it publishes the document with the
+  context the Work Process would give it (`Documents::processed`), and its
+  Subscriptions route it on to the ERP. A served run runs the unit itself.
+- **The unit is placed with its node.** The run copies the Essentials'
+  example `order_approval` beside each served node that opens it, read as
+  the node reads its slice (`runtime::start::read`, the execution tree's
+  `modules_to_start`; `served::given`); a run whose unit was not built is
+  refused, saying how to build it. The roll runs from its image, so the
+  image carries every library built as an example in an `examples` folder
+  beside the roll's (`New-XmipEssentialsImage`), where the roll finds what
+  was built (`file::built`); none is named in the tooling.

@@ -132,7 +132,7 @@ function Test-XmipFloor {
     [string] $floor = $Minimum.Trim()
 
     # A preview floor, while Xmip adopts previews (CONTRIBUTING): DSC's is
-    # 3.4.0-preview.2, and its preview.1 is below it, which the numbers
+    # 3.4.0-preview.3, and its preview.2 is below it, which the numbers
     # alone cannot tell. Such a floor is compared as a semantic version, and
     # a release is above every preview of it.
     if ($floor -match '^\d+\.\d+\.\d+-') {
@@ -166,7 +166,7 @@ function Test-XmipFloor {
 
 function Test-XmipPreviewFloor {
     <#
-        Test-XmipFloor for a floor with a preview label, 3.4.0-preview.2,
+        Test-XmipFloor for a floor with a preview label, 3.4.0-preview.3,
         and for a release floor a version meets in numbers alone: the
         version a tool reports, its label included, compared as a semantic
         version. Returns $true where none can be read, as Test-XmipFloor

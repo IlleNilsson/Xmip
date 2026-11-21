@@ -252,10 +252,10 @@ elevation = true
 role = "operator"
 optional = true
 probe = "dsc --version"
-minimum = "3.4.0-preview.2"
+minimum = "3.4.0-preview.3"
 channel = "preview"
 note = """
-Microsoft DSC v3, the standalone dsc command: 3.4.0-preview.2 of 2026-10-28,
+Microsoft DSC v3, the standalone dsc command: 3.4.0-preview.3 of 2026-11-11,
 the latest release and the floor, since Xmip adopts previews until its first
 Linear release (CONTRIBUTING; 3.3.0 the latest stable). The host that runs
 deploy/dsc/msdsc and every machine an environment document is applied on
@@ -271,7 +271,7 @@ Remove-AppxPackage, also without elevation.
 """
 
 [prerequisite.dsc.windows]
-command = "Add-AppxPackage -Path https://github.com/PowerShell/DSC/releases/download/v3.4.0-preview.2/DSC-3.4.0-preview.2-Win.msixbundle"
+command = "Add-AppxPackage -Path https://github.com/PowerShell/DSC/releases/download/v3.4.0-preview.3/DSC-3.4.0-preview.3-Win.msixbundle"
 
 [prerequisite.dsc.linux]
 dnf = "dsc-preview"

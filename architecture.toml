@@ -213,8 +213,8 @@ record = ["ADR-0018", "ADR-0064"]
 [implementation.process-execution]
 name = "Compiling a Work Process at design time, and running it"
 state = "built"
-note = "A BPMN 2.0 design compiles to a Work Process program and a unit crate exporting it through `xmip_module.h` section 13 (`xmip-core-process`, `xmip-core-process-bpmn`); the runtime's Work Process step takes a turn of each Instance from the Ledger, held by `tests/ledger/work_process.rs` (a Batch in the order received, two clients at once never overtaking, a node killed mid-process finishing from the Ledger) and the two crates' tests. A unit is opened from its library as the node starts, through the runtime's `dynamic-loading` feature, which `xmip-service` is built with; a unit's settings and calls through the standard units are decided, not built."
-record = ["ADR-0066 (amendment 2026-10-22)", "runtime-model.md section 22"]
+note = "A BPMN 2.0 design compiles to a Work Process program and a unit crate exporting it through `xmip_module.h` section 13 (`xmip-core-process`, `xmip-core-process-bpmn`); the runtime's Work Process step takes a turn of each Instance from the Ledger, held by `tests/ledger/work_process.rs` (a Batch in the order received, two clients at once never overtaking, a node killed mid-process finishing from the Ledger) and the two crates' tests. A unit is opened from its library as the node starts, through the runtime's `dynamic-loading` feature, which `xmip-service` is built with, its library named as the node's own system names it (`xmip_module.h` section 1). The Essentials runs one: every sales order passes the Work Process *Order approval* (`test/core/essentials/configuration/order-approval.bpmn`, its unit the Essentials' example `order_approval`) on its way to the ERP. A unit's settings and calls through the standard units are decided, not built; no test a landing runs carries a Message through a loaded unit in a running node (open problem 87)."
+record = ["ADR-0066 (amendments 2026-10-22, 2026-11-21)", "ADR-0025 (amendment 2026-11-21)", "runtime-model.md section 22"]
 
 [implementation.module-loading]
 name = "Opening a Module at run time"
@@ -1943,6 +1943,7 @@ dependency = ["xmip-core-library-codec"]
       "xmip-core-archive-postgresql",
       "xmip-core-archive-sql",
       "xmip-core-archive-sqlite",
+      "xmip-core-assign",
       "xmip-core-audit",
       "xmip-core-audit-file",
       "xmip-core-audit-syslog",
@@ -1992,6 +1993,8 @@ dependency = ["xmip-core-library-codec"]
       "xmip-core-persist",
       "xmip-core-persist-rocksdb",
       "xmip-core-persist-sqlite",
+      "xmip-core-process",
+      "xmip-core-process-bpmn",
       "xmip-core-provision",
       "xmip-core-provision-self-signed",
       "xmip-core-retain",

@@ -510,3 +510,29 @@ workspace's root holds (`dev` at opt-level 1 with line tables, `measured`
 optimized for the millisecond rule); ADR-0015's, the package's library and
 command line as members; ADR-0028's, the Essentials built in the workspace
 and in `measured`; ADR-0058's, the workspace in place of the local patch.
+
+## Amendment, 2026-11-21: a test holds its promise, never its crate's feature name
+
+**Provenance.** Found by the assistant on the Linux build machine on
+2026-11-21, three rounds of three of a plain `cargo test --workspace`; the
+fix was decided while building, told to the owner (the owner's rule that
+nothing reads meaning from a name, capability decides).
+
+A plain `cargo test --workspace` builds every member with its default
+features unified across the workspace (amendment 2026-11-20). There, msmq's
+`a_guarded_queue_is_carried_to_the_endpoint_rather_than_sent_in_the_clear`
+failed every time: another member turns `http/tls` on while msmq's own
+`tls` stays off, so http made a TLS handshake that the silent listener
+never answered, the send timed out after its second, and the test, which
+asked msmq's own feature, expected the refusal a build without TLS gives.
+Every-feature runs and `-p` runs passed; no gate ran that build.
+
+The test now holds what its name says whatever the build unified: the
+listener reads what reached it, and neither the order's bytes nor a plain
+HTTP request line may be there, only a TLS handshake (its first byte, 22)
+or nothing; the send fails either way, and only where msmq's own `tls` is
+on, so http's is too, may it not be the refusal. Measured as it was
+written: with TLS 1,444 bytes arrived, starting with 22; without, nothing,
+and the send was refused. On Linux the workspace's 625 other test programs
+passed in the same three rounds; msmq's 18 pass with default and every
+feature on Windows and on Linux.

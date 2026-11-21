@@ -20,7 +20,8 @@
     It also defines Get-XmipTestCluster, the one place a PowerShell test
     takes a cluster's or a node's name from (ADR-0056, amendment 2026-10-03),
     and Read-XmipTestYaml and Write-XmipTestYaml, the module's YAML reader
-    and writer for a test. Read-XmipTestEnvironment and
+    and writer for a test. Get-XmipTestFloor is a prerequisite's floor as
+    prerequisite.toml declares it. Read-XmipTestEnvironment and
     Get-XmipTestDeployStep are an environment file's example with what its
     nodes need given, and Microsoft DSC's steps for it, as
     Deploy-XmipEnvironment reads and applies it.
@@ -100,6 +101,32 @@ function Get-XmipTestCluster {
     }
 
     return $read
+}
+
+function Get-XmipTestFloor {
+    <#
+        .SYNOPSIS
+        A prerequisite's floor, the minimum prerequisite.toml declares for
+        it, read by the module's TOML reader: what a test holds a file's
+        stated requirement to, so a raise is written in the manifest alone.
+    #>
+    [CmdletBinding()]
+    [OutputType([string])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $Name
+    )
+
+    $prerequisite = & (Get-Module -Name Xmip) {
+        Read-XmipToml -Path (Join-Path (Get-XmipRepositoryRoot) 'prerequisite.toml')
+    }
+    [string] $floor = [string] $prerequisite.prerequisite.$Name.minimum
+
+    if ([string]::IsNullOrEmpty($floor)) {
+        throw "prerequisite.toml declares no minimum for $Name"
+    }
+
+    return $floor
 }
 
 function Read-XmipTestEnvironment {

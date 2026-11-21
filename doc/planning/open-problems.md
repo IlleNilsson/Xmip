@@ -2234,6 +2234,46 @@ disk's time is never Xmip's and never held to a bound (ADR-0018, amendment
 2026-11-09); whether this bound measures Xmip's share apart from the disk's,
 as the carried file's does, is open.
 
+## 87. No test a landing runs carries a Message through a loaded unit in a running node
+
+Found 2026-11-21, making a Work Process run in the Essentials (ADR-0066,
+amendment 2026-11-21). A unit generated from a design is opened through the
+C ABI and turned in the runtime's own test, and the Ledger's tests run a
+Work Process compiled in memory, but no test a landing runs starts a node,
+gives it a Receive Location, a Work Process whose unit is a library, and a
+Send Port, and sees a Message through all three. The Essentials does so in
+a served run (`Start-XmipTest -Suite Core.Essentials`), which a landing
+does not run. The root's service tests start `xmip-service` but have no unit
+library to give it: a root example would be a second copy of a generated
+unit, and the runtime's `approval_unit` waits for a second Message of its
+Instance, which no Correlation keys. Which test it is, and where its unit
+comes from, is open.
+
+## 88. The Essentials does not start on Linux: a hidden window is asked for everywhere
+
+Found 2026-11-21, the first served Essentials run on the Linux build
+machine: `Start-XmipTest -Suite Core.Essentials` built for eight minutes and
+then FAILED, *The parameter '-WindowStyle' is not supported for the cmdlet
+'Start-Process' on this edition of PowerShell.* Where a process is started
+detached, one rule says a hidden window is asked for on Windows alone, and
+it is written four times: `Start-XmipDetachedShell` asks only on Windows,
+while `Start-XmipEssentialsRollProcess` (the roll), `Start-XmipTestNode` and
+`Start-XmipOperationWeb` ask on every system. One way to start a detached
+process, used by all four, is the fix; until it is made, no Essentials run,
+served or simulated, starts off Windows.
+
+## 89. A unit test of the Essentials waits twenty seconds for timeouts
+
+Found 2026-11-21, when it stopped a landing: the Essentials'
+`round_trip::tests::harsh_sizes_are_carried_or_refused_with_a_reason` ran
+past the minute a landing gives one test, beside the landing's other parts.
+Alone it passes in 25.4 s on Windows and 22.5 s on Linux, of which 0.3 s is
+the processor's: every UDP round above the datagram ceiling is *refused
+after its timeout*, and the test waits each one out. A test that waits on
+timeouts measures nothing a test asserts and is the first to fail under
+load; whether the refusal is told at once, or the harsh sizes belong to the
+runner as the brutal ones do, is open.
+
 # Suggested order
 
 Rewritten 2026-09-23, and corrected to what is built on 2026-11-10. The

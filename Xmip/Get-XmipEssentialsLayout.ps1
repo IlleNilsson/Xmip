@@ -80,6 +80,9 @@ function Get-XmipEssentialsLayout {
         Roll       = Join-Path -Path $target -ChildPath "xmip-essentials-roll$suffix"
         Cluster    = Join-Path -Path $target -ChildPath "xmip-essentials-cluster$suffix"
         Node       = Join-Path -Path $target -ChildPath "xmip-essentials-node$suffix"
+        # The Work Process units the run places beside its nodes, built as
+        # the crate's examples (Invoke-XmipEssentialsBuild).
+        Examples   = Join-Path -Path $target -ChildPath 'examples'
         Web        = Join-Path -Path $root -ChildPath "$web$suffix"
         Desktop    = Join-Path -Path $root -ChildPath $desktop
         Extension  = Join-Path -Path $root -ChildPath 'module/core/operation/gui/vscode'
@@ -104,7 +107,7 @@ function Invoke-XmipEssentialsBuild {
             `roll`, `cluster` or `node`. The roll spawns the cluster and the
             cluster spawns the nodes (the owner, 2026-09-19), so building the
             roll builds all three and building the cluster builds it and the
-            node.
+            node. Each builds the Essentials' Work Process unit with it.
     #>
     [CmdletBinding()]
     [OutputType([string])]
@@ -131,6 +134,11 @@ function Invoke-XmipEssentialsBuild {
     if ($Binary -eq 'roll') {
         $bins += @('--bin', 'xmip-essentials-roll')
     }
+
+    # The Work Process unit the cluster's file names, built beside them: the
+    # run copies it from there beside each node that serves the process
+    # stage (configuration/order-approval.bpmn; ADR-0066 clause 4).
+    $bins += @('--example', 'order_approval')
 
     # Cargo's first error is kept, so a failed build says why in its own
     # words and not only its exit code (Get-XmipTestStatus shows it).

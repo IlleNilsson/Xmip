@@ -18,7 +18,7 @@
 # 3.4.0-preview.2: "Resource not found" on AlmaLinux).
 $schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
 directives:
-  version: ^3.4.0-preview.2
+  version: ^3.4.0-preview.3
 parameters:
   staging:
     type: string

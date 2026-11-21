@@ -2930,8 +2930,22 @@ node running one declares processing. A module holding only Work Process
 units is opened where a Work Process the node starts names it and nowhere
 else, and a module's `library_path` is read against the folder of the
 node's configuration, as every other path it names is
-(`runtime::library`). A unit generated from a design is loaded through the
-C ABI and turned in the runtime's own test.
+(`runtime::library`). A `library_path` whose last part names the module
+rather than a file — no `.dll`, `.so` or `.dylib` — is the library the
+node's own system names for it, as `xmip_module.h` section 1 has the host
+name it, so one `cluster.xmip` names a unit for Windows and Linux nodes
+alike; `process::generate` writes it so (ADR-0025, amendment 2026-11-21). A
+unit generated from a design is loaded through the C ABI and turned in the
+runtime's own test.
+
+**Built 2026-11-21: a Work Process runs in the Essentials** (ADR-0028 and
+ADR-0066, amendments 2026-11-21). The Essentials' cluster hands every sales
+order to the Work Process *Order approval*, a design beside its
+configuration (`order-approval.bpmn`) that marks the order
+`Approval = 'approved'` and publishes it, and a second Subscription takes
+it to the ERP. Its unit is the Essentials' example `order_approval`, which
+the Essentials' build builds and the run copies beside each node that
+opens it.
 
 **Decided, not built:** the `settings` a Work Process gives its unit; unit
 calls through the standard units' registry (a node calls none yet, and a call

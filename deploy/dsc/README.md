@@ -121,7 +121,7 @@ On the Linux host, the WSL AlmaLinux guest included, KVM and libvirt as
 `msdsc/libvirt/README.md` says, then, with no sudo:
 
 - PowerShell 7.7 and the Xmip module's prerequisites;
-- for msdsc, Microsoft DSC 3.4.0-preview.2 on `PATH`, and the two tarballs
+- for msdsc, Microsoft DSC 3.4.0-preview.3 on `PATH`, and the two tarballs
   the file's `[tools.Linux]` names, from their GitHub releases;
 - for ansible, `prerequisite.toml`'s `[prerequisite.ansible]`, with its bin
   on `PATH`;

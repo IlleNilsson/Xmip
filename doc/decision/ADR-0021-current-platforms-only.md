@@ -272,7 +272,7 @@ either technology (ADR-0015, amendment 2026-11-11):
 | | Xmip requires | Source |
 | --- | --- | --- |
 | PowerShell | 7.7.0, out 2026-11-10; the release candidate rc.1 before it | GitHub releases, PowerShell/PowerShell |
-| Microsoft DSC | 3.4.0-preview.2, still the latest; the Linux tarball a node machine is brought | GitHub releases, PowerShell/DSC |
+| Microsoft DSC | 3.4.0-preview.3, out 2026-11-11; preview.2 before it; the Linux tarball a node machine is brought | GitHub releases, PowerShell/DSC |
 | ansible-core | 2.22, which needs Python 3.13: on AlmaLinux 10.2, whose python3 is 3.12, pip stops at 2.21.6 until python3.13 is installed from EPEL | pypi.org, 2026-11-02 |
 | community.libvirt | 2.4.0, of 2026-10-09, with libvirt's Python binding and lxml from the distribution | Ansible Galaxy |
 | microsoft.hyperv | 1.1.0, of 2026-05-19 | Ansible Galaxy |
@@ -545,6 +545,57 @@ theirs: 12395      not theirs or too recent: 0      removed: 12395
 and the Rust rule is this record's amendment of 2026-11-19. The helper, the
 guard, the style test and the removal are the assistant's, at the
 coordinator's order.
+
+## Amendment, 2026-11-21: Microsoft DSC 3.4.0-preview.3
+
+Microsoft DSC 3.4.0-preview.3, released 2026-11-11 (GitHub releases,
+PowerShell/DSC), is the latest release, and so the floor by the rule of
+2026-11-07: `prerequisite.toml`'s `minimum` and its Windows command, every
+document's `directives.version` under `deploy/dsc/msdsc`
+(`^3.4.0-preview.3`), the templates' READMEs and the getting-started
+guide; the row of the amendment of 2026-11-11 is edited to match. 3.3.0 is
+still the latest stable, and winget's `Microsoft.DSC.Preview` still carries
+only 3.2's previews, so Windows takes the release's own MSIX bundle as
+before.
+
+It settles PowerShell/DSC#1793, which Xmip filed: preview.2's binaries were
+older than its tag, so `Microsoft.Filesystem/ACL` was missing and the
+`version` directive was checked against the library's crate version, never
+the running one. The maintainer closed it on 2026-11-09, *"I believe we
+should be back in sync with next preview planned this week"*, and
+preview.3 is its tag's: `dsc --version` answers `dsc 3.4.0-preview.3` on
+Windows and on Linux, `Microsoft.Filesystem/ACL` is listed on both
+(ADR-0031, amendment 2026-11-21), and the version check reads the running
+version:
+
+```text
+$ dsc config get --file version.dsc.yaml        (directives.version ^3.4.0-preview.4, Windows)
+ERROR Error: Validation: Configuration requires DSC version '^3.4.0-preview.4', but the current version is '3.4.0-preview.3'
+```
+
+None of the release's changes reaches what the estate relies on: resources
+in PowerShell 7 behind manifests, the JSON they speak, the first line a
+resource answers with, the `version` directive. A manifest that fails to
+load is now a warning (PowerShell/DSC#1772). A document naming a resource
+its machine has none of is still refused, a condition notwithstanding:
+`Resource not found: Microsoft.Windows/Service` on Linux, as
+`node.dsc.yaml` records.
+
+The tests hold the documents to the manifest's floor rather than to a copy
+of it (`Get-XmipTestFloor` in `test/Initialize-XmipTest.ps1`), so a raise
+is written in `prerequisite.toml` and the documents alone:
+
+```text
+$ Invoke-Pester   (Windows: Msdsc*, Deploy, DeployEnvironment, DeployMachine, Sync-XmipEstate, Documentation)
+PESTER passed=239 failed=0 skipped=7 notrun=0 total=246
+$ Invoke-Pester   (Linux: MsdscEnvironment, MsdscHyperV, MsdscLibvirt, DeployEnvironment, DeployMachine)
+PESTER passed 146 failed 0 skipped 9 in 155 s
+```
+
+**Provenance.** The owner's rule that every minimum is the latest release,
+previews included, until Xmip's first release (amendment 2026-11-07); the
+raise, the check of PowerShell/DSC#1793 and the tests are the assistant's,
+at the coordinator's order.
 
 ## Alternatives considered
 

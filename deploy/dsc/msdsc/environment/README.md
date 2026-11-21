@@ -126,7 +126,7 @@ slices it or knows a port.
 ## The resources
 
 DSC v3 is a standalone command, and its resources are executables that
-speak JSON (checked 2026-11-07: 3.4.0-preview.2 the latest release, adopted as
+speak JSON (checked 2026-11-21: 3.4.0-preview.3 the latest release, adopted as
 Xmip adopts previews; 3.3.0 the latest stable). The documents use a built-in
 resource wherever one fits and an Xmip resource of this folder for the rest:
 PowerShell 7 scripts behind resource manifests, on Windows and AlmaLinux
@@ -169,7 +169,7 @@ Ansible stages in a folder of its own. A
 machine that does not answer yet is answered absent, so a fresh host is
 tested too. The Windows machines' secret is read as every template reads
 it (`deploy/dsc/machine/MachineSecret.ps1`): encrypted, on Windows. Every document
-requires DSC `^3.4.0-preview.2`, the latest release, and each resource `^0.1`.
+requires DSC `^3.4.0-preview.3`, the latest release, and each resource `^0.1`.
 No document asks for elevation as a whole: each resource's manifest states
 `requireSecurityContext: elevated` on exactly the methods that need
 administrator rights — every method of `Xmip.Environment/Name`,
@@ -201,9 +201,9 @@ Server role; the domain controller's own template is not written. An
 AlmaLinux machine needs nothing more: DSC is brought to it.
 
 **On each Windows machine**, once, as its Administrator: PowerShell 7.7
-and Microsoft DSC 3.4.0-preview.2 or newer — `winget install --id
+and Microsoft DSC 3.4.0-preview.3 or newer — `winget install --id
 Microsoft.PowerShell --exact` and `Add-AppxPackage -Path
-https://github.com/PowerShell/DSC/releases/download/v3.4.0-preview.2/DSC-3.4.0-preview.2-Win.msixbundle`
+https://github.com/PowerShell/DSC/releases/download/v3.4.0-preview.3/DSC-3.4.0-preview.3-Win.msixbundle`
 (winget carries no 3.4 preview). Bringing them as the AlmaLinux machines
 are brought theirs waits on the owner's Hyper-V run.
 

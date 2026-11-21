@@ -400,14 +400,14 @@ Describe 'The documents and the resources' {
         ($used -join ',') | Should -Be ($declared -join ',')
     }
 
-    It 'requires DSC 3.4.0-preview.2 or newer in <Name>, elevated whole: <Elevated>' -ForEach @(
+    It 'requires DSC''s floor or newer in <Name>, elevated whole: <Elevated>' -ForEach @(
         @{ Name = 'network.dsc.yaml'; Elevated = $true }
         @{ Name = 'machine.dsc.yaml'; Elevated = $false }
     ) {
         # A switch's host address and NAT are an administrator's to set; a
         # member of Hyper-V Administrators manages VMs unelevated.
         [Collections.IDictionary] $directives = $script:Parsed[$Name].directives
-        $directives.version | Should -Be '^3.4.0-preview.2'
+        $directives.version | Should -Be "^$(Get-XmipTestFloor -Name 'dsc')"
         $directives.Contains('securityContext') | Should -Be $Elevated
         if ($Elevated) {
             $directives.securityContext | Should -Be 'elevated'

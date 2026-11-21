@@ -10,7 +10,7 @@
 # the parameters it writes from the environment file (deploy/dsc/README.md).
 $schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
 directives:
-  version: ^3.4.0-preview.2
+  version: ^3.4.0-preview.3
 parameters:
   common:
     type: object
