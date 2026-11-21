@@ -134,10 +134,8 @@ On the Linux host, the WSL AlmaLinux guest included, KVM and libvirt as
   D:\Repos\Xmip\.local-work\environment\identity\RX1`, and the same for
   every node the file maps;
 - on Windows, for Hyper-V, once and elevated: the Hyper-V switch's NAT,
-  which the first run makes, and the environment's Windows machines in
-  WinRM's `TrustedHosts`, since msdsc reaches them over HTTP with the
-  Administrator's secret: `Set-Item WSMan:\localhost\Client\TrustedHosts
-  -Value '10.77.0.*' -Concatenate -Force`, the network's prefix.
+  which the first run makes. The Windows machines are reached through
+  PowerShell Direct, which the Hyper-V Administrators group allows.
 
 ## Starting again from nothing
 
