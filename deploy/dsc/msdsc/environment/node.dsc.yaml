@@ -44,7 +44,14 @@ parameters:
       Windows, a system account on Linux.
   package:
     type: string
-    description: The package's file name among the files, the MSI or the .rpm.
+    description: The package's file name among the files, the archive or the .rpm.
+  names:
+    type: string
+    description: >-
+      Every node of the cluster by its name at its machine's address, a line
+      each, kept in the machine's hosts file: the cluster's file names
+      Storage nodes by name, and the environment's network may have no name
+      server that knows them.
   layout:
     type: object
     description: >-
@@ -105,6 +112,7 @@ resources:
       account: "[parameters('account')]"
       modules: "[path(parameters('staging'), 'files', 'modules.zip')]"
       configuration: "[parameters('layout').configuration]"
+      names: "[parameters('names')]"
 
   - name: Opening
     type: Xmip.Node/Opening

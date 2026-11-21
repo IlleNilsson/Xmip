@@ -78,6 +78,10 @@ function Test-NodePackage {
         return $false
     }
 
+    if ((Get-NodeNamesBlock) -ne (Get-NodeNamesWanted -Instance $Instance)) {
+        return $false
+    }
+
     if ($IsWindows) {
         return $true
     }
@@ -117,6 +121,89 @@ function Test-NodeModules {
         $zip.Dispose()
     }
     return $true
+}
+
+$script:NodeNamesBegin = "# BEGIN Xmip: the cluster's nodes"
+$script:NodeNamesEnd = "# END Xmip: the cluster's nodes"
+
+function Get-NodeHostsPath {
+    <#
+    .SYNOPSIS
+    The machine's hosts file.
+    #>
+    [CmdletBinding()]
+    [OutputType([string])]
+    param()
+
+    if ($IsWindows) {
+        return Join-Path -Path $env:SystemRoot -ChildPath 'System32\drivers\etc\hosts'
+    }
+    return '/etc/hosts'
+}
+
+function Get-NodeNamesWanted {
+    <#
+    .SYNOPSIS
+    The lines -Instance.names asks the hosts file's Xmip block to hold.
+    #>
+    [CmdletBinding()]
+    [OutputType([string])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [hashtable] $Instance
+    )
+
+    return (@(([string] $Instance['names']) -split "`r?`n" | Where-Object { $_.Trim() }) -join "`n")
+}
+
+function Get-NodeNamesBlock {
+    <#
+    .SYNOPSIS
+    The lines the hosts file's Xmip block holds now; empty where it has none.
+    #>
+    [CmdletBinding()]
+    [OutputType([string])]
+    param()
+
+    [string] $path = Get-NodeHostsPath
+    [string[]] $lines = @(Get-Content -LiteralPath $path -ErrorAction SilentlyContinue)
+    [int] $begin = [array]::IndexOf($lines, $script:NodeNamesBegin)
+    [int] $end = [array]::IndexOf($lines, $script:NodeNamesEnd)
+    if ($begin -lt 0 -or $end -le $begin) {
+        return ''
+    }
+    return (@($lines[($begin + 1)..($end - 1)] | Where-Object { $_.Trim() }) -join "`n")
+}
+
+function Set-NodeNamesBlock {
+    <#
+    .SYNOPSIS
+    The hosts file's Xmip block written to hold -Instance.names, every other
+    line of the file kept as it is; nothing where it names none.
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [hashtable] $Instance
+    )
+
+    [string] $wanted = Get-NodeNamesWanted -Instance $Instance
+    if (-not $wanted) {
+        return
+    }
+    [string] $path = Get-NodeHostsPath
+    [string[]] $lines = @(Get-Content -LiteralPath $path -ErrorAction SilentlyContinue)
+    [int] $begin = [array]::IndexOf($lines, $script:NodeNamesBegin)
+    [int] $end = [array]::IndexOf($lines, $script:NodeNamesEnd)
+    [bool] $held = $begin -ge 0 -and $end -gt $begin
+    [string[]] $kept = @(for ($at = 0; $at -lt $lines.Count; $at++) {
+            if (-not ($held -and $at -ge $begin -and $at -le $end)) {
+                $lines[$at]
+            }
+        })
+    [string[]] $written = $kept + $script:NodeNamesBegin + ($wanted -split "`n") +
+        $script:NodeNamesEnd
+    Set-Content -LiteralPath $path -Value $written
 }
 
 function Install-NodeModules {
@@ -162,9 +249,10 @@ function Install-NodePackage {
         return
     }
 
-    # Before the install, which starts the node: it opens its units as it
-    # starts.
+    # Before the install, which starts the node: it opens its units and
+    # reaches its Storage nodes by name as it starts.
     Install-NodeModules -Instance $Instance
+    Set-NodeNamesBlock -Instance $Instance
 
     if ($IsWindows) {
         # The portable archive, Windows's package until the MSI is built (the
