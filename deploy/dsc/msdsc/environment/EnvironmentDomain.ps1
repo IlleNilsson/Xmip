@@ -76,7 +76,9 @@ function Get-EnvironmentDomain {
     try {
         $state.answering = $true
         [object[]] $argument = @($Instance.domain, [bool] $Instance.controller)
-        $state._exist = [bool] (Invoke-Command -Session $session -ArgumentList $argument -ScriptBlock {
+        # A session that breaks as the machine restarts is a machine not
+        # answering yet, never an error.
+        $state._exist = [bool] (Invoke-Command -Session $session -ArgumentList $argument -ErrorAction Stop -ScriptBlock {
                 param($Domain, $Controller)
                 $system = Get-CimInstance -ClassName Win32_ComputerSystem
                 if (-not $Controller) {
@@ -89,6 +91,10 @@ function Get-EnvironmentDomain {
                 return $system.DomainRole -ge 4 -and $null -ne $zone -and
                 $null -ne (Get-DnsServerZone -Name $Domain -ErrorAction SilentlyContinue)
             })
+    }
+    catch {
+        $state.answering = $false
+        $state._exist = $false
     }
     finally {
         Remove-PSSession -Session $session
@@ -124,9 +130,12 @@ function Set-EnvironmentDomain {
     [pscredential] $administrator = Read-MachineSecret -Path $Instance.secretPath
     [object[]] $argument = @($Instance.domain, [bool] $Instance.controller, $administrator)
     try {
+        # What the promotion warns of reaches standard error through
+        # environment.resource.ps1, which keeps standard output the JSON.
         Invoke-Command -Session $session -ArgumentList $argument -ScriptBlock {
             param($Domain, $Controller, $Administrator)
             $ErrorActionPreference = 'Stop'
+            $ProgressPreference = 'SilentlyContinue'
             $system = Get-CimInstance -ClassName Win32_ComputerSystem
             # A controller already promoted, its zone not loaded yet, is left
             # to finish starting: only a change is followed by a restart.

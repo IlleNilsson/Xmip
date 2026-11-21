@@ -80,6 +80,12 @@ schema: !embedded
       secretPath:
         type: string
         description: 'Windows: the Administrator''s secret, Export-Clixml.'
+      domain:
+        type: string
+        description: >-
+          Windows: the environment's Active Directory domain, whose
+          Administrator a domain controller is logged on to as, once its own
+          Administrator is the domain's.
       keyPath:
         type: string
         description: 'Linux: the private SSH key, readable by its owner alone.'

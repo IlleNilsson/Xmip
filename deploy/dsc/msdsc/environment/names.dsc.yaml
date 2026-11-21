@@ -36,6 +36,7 @@ resources:
       family: "[parameters('server').family]"
       login: "[parameters('common').linuxAccount]"
       secretPath: "[parameters('common').secretPath]"
+      domain: "[parameters('zone')]"
       keyPath: "[parameters('common').keyPath]"
       knownHosts: "[parameters('common').knownHosts]"
       tools: "[parameters('tools')[parameters('server').family]]"

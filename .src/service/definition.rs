@@ -154,7 +154,7 @@ mod tests {
         assert!(plist.contains(&format!("<string>xmip-{node}</string>")));
         let scm = render(ServiceManager::WindowsScm, &service).expect("arguments");
         assert!(
-            scm.starts_with(&format!("create\nxmip-{node}\nbinPath= ")),
+            scm.starts_with(&format!("create\nxmip-{node}\nbinPath=\n")),
             "{scm}"
         );
         assert!(scm.contains("\n\nsc.exe\ndescription\n"), "{scm}");

@@ -46,15 +46,26 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
-# The Windows machines' secret is read as every template reads it: deploy/dsc/machine.
-foreach ($part in '../../machine/MachineSecret.ps1', 'Program.ps1', 'EnvironmentSsh.ps1',
-    'EnvironmentMachine.ps1', 'EnvironmentSlice.ps1', 'EnvironmentName.ps1',
-    'EnvironmentDomain.ps1', 'EnvironmentStarted.ps1') {
+# Name runs on the DNS server, where Machine copied this folder alone, so it
+# reads its own part and nothing of deploy/dsc/machine; every other kind
+# runs on the deploying machine, which reads the Windows machines' secret as
+# every template reads it: deploy/dsc/machine.
+[string[]] $parts = if ($Kind -eq 'Name') { @('EnvironmentName.ps1') }
+else {
+    @('../../machine/MachineSecret.ps1', 'Program.ps1', 'EnvironmentSsh.ps1',
+        'EnvironmentMachine.ps1', 'EnvironmentSlice.ps1', 'EnvironmentName.ps1',
+        'EnvironmentDomain.ps1', 'EnvironmentStarted.ps1')
+}
+foreach ($part in $parts) {
     . (Join-Path -Path $PSScriptRoot -ChildPath $part)
 }
 
 [hashtable] $instance = [Console]::In.ReadToEnd() | ConvertFrom-Json -AsHashtable
-[hashtable] $state = switch ($Kind) {
+# Standard output is the instance's JSON alone, which DSC reads: every
+# warning, message and stray line goes to standard error, DSC's trace. A
+# restarting machine's "attempting to reconnect" warning and the domain
+# promotion's warnings made it no JSON (2026-11-21).
+[hashtable] $state = & { switch ($Kind) {
     'Machine' {
         if ($Operation -eq 'set') {
             Set-EnvironmentMachine -Instance $instance
@@ -89,6 +100,8 @@ foreach ($part in '../../machine/MachineSecret.ps1', 'Program.ps1', 'Environment
             Get-EnvironmentStarted -Instance $instance
         }
     }
+} } 3>&1 4>&1 5>&1 6>&1 | ForEach-Object {
+    if ($_ -is [hashtable]) { $_ } else { [Console]::Error.WriteLine([string] $_) }
 }
 
 if ($Operation -eq 'test') {

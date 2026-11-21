@@ -68,7 +68,9 @@ function New-EnvironmentSession {
     the secret file holding its password: PowerShell Direct where this host
     runs the machine on Hyper-V, which needs no network, no WinRM listener
     and no TrustedHosts entry, only the Hyper-V Administrators group; WinRM
-    to its address otherwise.
+    to its address otherwise. Where the instance names the environment's
+    domain, a machine the plain name is refused on is logged on to as
+    Administrator@<domain>, as a domain controller is.
     #>
     [CmdletBinding()]
     [OutputType([System.Management.Automation.Runspaces.PSSession])]
@@ -79,11 +81,24 @@ function New-EnvironmentSession {
 
     [pscredential] $administrator = Read-MachineSecret -Path $Instance.secretPath
     [string] $name = [string] $Instance['name']
-    if ($name -and (Get-Command -Name Get-VM -ErrorAction SilentlyContinue) -and
-        (Get-VM -Name $name -ErrorAction SilentlyContinue)) {
-        return New-PSSession -VMName $name -Credential $administrator
+    [hashtable] $reach = if ($name -and (Get-Command -Name Get-VM -ErrorAction SilentlyContinue) -and
+        (Get-VM -Name $name -ErrorAction SilentlyContinue)) { @{ VMName = $name } }
+    else { @{ ComputerName = $Instance.address } }
+    [string] $domain = [string] $Instance['domain']
+    if (-not $domain) {
+        return New-PSSession @reach -Credential $administrator
     }
-    return New-PSSession -ComputerName $Instance.address -Credential $administrator
+    # A domain controller has no Administrator of its own: promoting it made
+    # its Administrator the domain's, the same secret, which the plain name
+    # no longer logs on as (2026-11-21, the Hyper-V environment's XMIP-DC01).
+    try {
+        return New-PSSession @reach -Credential $administrator -ErrorAction Stop
+    }
+    catch {
+        [pscredential] $domainAdministrator = [pscredential]::new(
+            "$($administrator.UserName)@$domain", $administrator.Password)
+        return New-PSSession @reach -Credential $domainAdministrator
+    }
 }
 
 function Assert-EnvironmentToolDigest {
