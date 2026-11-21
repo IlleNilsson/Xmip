@@ -49,6 +49,8 @@ far_end = "10.77.0.1"
 # (deploy/package/README.md).
 [packages.Windows]
 path = ""
+# The module libraries the cluster's file names, built for Windows: a folder.
+modules = ""
 
 [packages.Linux]
 path = ""

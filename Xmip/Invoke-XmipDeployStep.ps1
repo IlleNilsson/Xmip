@@ -33,6 +33,11 @@ function Invoke-XmipDeployStep {
     }
     [string] $parameters = Join-Path $Log "$($Step.Name).parameters.yaml"
     Write-XmipYaml -Path $parameters -Value @{ parameters = $value }
+    # A node's step sends its family's module libraries as one zip, written
+    # here, once the run holds its lock.
+    if ($Step.Value.ContainsKey('packages')) {
+        New-XmipDeployModuleArchive -Packages $Step.Value['packages']
+    }
     [string] $trace = Join-Path $Log 'run.log'
     [datetime] $begun = [datetime]::UtcNow
     "== $($begun.ToString('o')) $Operation $($Step.Name)" | Add-Content -LiteralPath $trace
