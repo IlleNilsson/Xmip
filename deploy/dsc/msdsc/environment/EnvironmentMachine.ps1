@@ -212,8 +212,9 @@ function Invoke-EnvironmentWinRmDocument {
         Copy-Item -Path $Parameters -Destination "$Staging\parameters.yaml" -ToSession $session
         [string[]] $tools = @(Install-EnvironmentWindowsTool -Instance $Instance -Session (
                 $session) -Staging $Staging)
-        [object[]] $argument = @((@($tools) + $template) -join ';', $template,
-            $Instance.document, "$Staging\parameters.yaml", $Operation)
+        [string] $path = (@($tools) + $template) -join ';'
+        [object[]] $argument = @($path, $template, $Instance.document,
+            "$Staging\parameters.yaml", $Operation)
         # Windows PowerShell may answer at the far end, so the block asks
         # nothing PowerShell 7 alone has; dsc and PowerShell 7 are found in the
         # tools, this folder's resources in the template, on the PATH given.
