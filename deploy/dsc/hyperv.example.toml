@@ -57,10 +57,18 @@ path = ""
 # The module libraries the cluster's file names, built for Linux: a folder.
 modules = ""
 
-# msdsc only: what DSC is brought to each AlmaLinux machine with, each
-# tarball checked against its SHA-256 and unpacked in the machine's staging
-# folder, never installed for the machine.
+# msdsc only: what DSC is brought to each node machine with, each file
+# checked against its SHA-256 and unpacked in the machine's staging folder,
+# never installed for the machine. For Linux, PowerShell 7's
+# powershell-<version>-linux-x64.tar.gz and DSC's
+# DSC-<version>-x86_64-linux.tar.gz; for Windows, which ships Windows
+# PowerShell alone, PowerShell-<version>-win-x64.zip and
+# DSC-<version>-x86_64-pc-windows-msvc.zip; all from their GitHub releases.
 [tools.Linux]
+pwsh = { path = "", sha256 = "" }
+dsc = { path = "", sha256 = "" }
+
+[tools.Windows]
 pwsh = { path = "", sha256 = "" }
 dsc = { path = "", sha256 = "" }
 

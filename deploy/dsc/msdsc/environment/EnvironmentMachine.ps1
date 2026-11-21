@@ -3,9 +3,9 @@
 
 <#
     The Machine kind of environment.resource.ps1: a document of this folder
-    applied on another machine. A Windows machine is reached over PowerShell
-    Remoting, WinRM as its Administrator; an AlmaLinux one over OpenSSH with
-    the environment's key and known_hosts, DSC brought to it first
+    applied on another machine, DSC brought to it first. A Windows machine
+    is reached over PowerShell Remoting as its Administrator; an AlmaLinux
+    one over OpenSSH with the environment's key and known_hosts
     (EnvironmentSsh.ps1). Dot-sourced by environment.resource.ps1 and by
     test/MsdscEnvironment.Test.ps1.
 
@@ -86,6 +86,84 @@ function New-EnvironmentSession {
     return New-PSSession -ComputerName $Instance.address -Credential $administrator
 }
 
+function Assert-EnvironmentToolDigest {
+    <#
+    .SYNOPSIS
+    A tool DSC is brought to a machine with, refused where its file's
+    SHA-256 is not the one the environment names, before anything is sent;
+    answers that SHA-256, lower case. Both families' installs ask it.
+    #>
+    [CmdletBinding()]
+    [OutputType([string])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [System.Collections.IDictionary] $Tool
+    )
+
+    [string] $sha256 = ([string] $Tool.sha256).ToLowerInvariant()
+    [string] $have = (Get-FileHash -LiteralPath $Tool.path -Algorithm SHA256).Hash.ToLowerInvariant()
+    if ($have -ne $sha256) {
+        throw "REFUSED: $($Tool.path) has SHA-256 $have, not $sha256."
+    }
+    return $sha256
+}
+
+function Install-EnvironmentWindowsTool {
+    <#
+    .SYNOPSIS
+    Bring DSC to a Windows machine, as EnvironmentSsh.ps1 brings it to an
+    AlmaLinux one: each tool's zip, refused where its SHA-256 is not the one
+    the environment names, sent to the staging folder's tools and unpacked
+    there in a folder of its name, only where the folder holds another.
+    Answers the folders, for the PATH dsc runs with.
+    #>
+    [CmdletBinding()]
+    [OutputType([string[]])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [hashtable] $Instance,
+
+        [Parameter(Mandatory = $true)]
+        [System.Management.Automation.Runspaces.PSSession] $Session,
+
+        [Parameter(Mandatory = $true)]
+        [string] $Staging
+    )
+
+    [System.Collections.IDictionary] $tool = $Instance['tools']
+    if ($null -eq $tool) {
+        return @()
+    }
+    [string[]] $folders = @()
+    foreach ($name in @($tool.Keys | Sort-Object)) {
+        [string] $path = $tool[$name].path
+        [string] $sha256 = Assert-EnvironmentToolDigest -Tool $tool[$name]
+        [string] $into = "$Staging\tools\$name"
+        [string] $mark = "$into\.sha256"
+        [string] $held = Invoke-Command -Session $Session -ArgumentList $mark -ScriptBlock {
+            param($Mark)
+            if (Test-Path -LiteralPath $Mark) { (Get-Content -LiteralPath $Mark -Raw).Trim() }
+        }
+        if ($held -ne $sha256) {
+            [string] $zip = "$Staging\tools\$name.zip"
+            Invoke-Command -Session $Session -ArgumentList $into -ScriptBlock {
+                param($Into)
+                Remove-Item -LiteralPath $Into -Recurse -Force -ErrorAction SilentlyContinue
+                New-Item -ItemType Directory -Force -Path $Into | Out-Null
+            }
+            Copy-Item -Path $path -Destination $zip -ToSession $Session -Force
+            Invoke-Command -Session $Session -ArgumentList $zip, $into, $mark, $sha256 -ScriptBlock {
+                param($Zip, $Into, $Mark, $Sha256)
+                Expand-Archive -LiteralPath $Zip -DestinationPath $Into -Force
+                Remove-Item -LiteralPath $Zip -Force
+                Set-Content -LiteralPath $Mark -Value $Sha256
+            }
+        }
+        $folders += $into
+    }
+    return $folders
+}
+
 function Invoke-EnvironmentWinRmDocument {
     <#
     .SYNOPSIS
@@ -132,14 +210,16 @@ function Invoke-EnvironmentWinRmDocument {
                 $session) -Force
         }
         Copy-Item -Path $Parameters -Destination "$Staging\parameters.yaml" -ToSession $session
-        [object[]] $argument = @($template, $Instance.document, "$Staging\parameters.yaml",
-            $Operation)
+        [string[]] $tools = @(Install-EnvironmentWindowsTool -Instance $Instance -Session (
+                $session) -Staging $Staging)
+        [object[]] $argument = @((@($tools) + $template) -join ';', $template,
+            $Instance.document, "$Staging\parameters.yaml", $Operation)
         # Windows PowerShell may answer at the far end, so the block asks
-        # nothing PowerShell 7 alone has; dsc finds this folder's resources on
-        # the PATH it is given.
+        # nothing PowerShell 7 alone has; dsc and PowerShell 7 are found in the
+        # tools, this folder's resources in the template, on the PATH given.
         return Invoke-Command -Session $session -ArgumentList $argument -ScriptBlock {
-            param($Template, $Document, $Parameters, $Operation)
-            $env:PATH = "$Template;$env:PATH"
+            param($Path, $Template, $Document, $Parameters, $Operation)
+            $env:PATH = "$Path;$env:PATH"
             $config = @('config', '--parameters-file', $Parameters, $Operation, '--file',
                 "$Template\$Document")
             return (& dsc @config) -join "`n"

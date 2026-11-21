@@ -150,8 +150,13 @@ The firewall is an Xmip resource rather than the built-in
 configuration listens on, which the built-in would take typed. DSC applies
 a document on the machine it runs on, so `Xmip.Environment/Machine` copies
 this folder, a node's files and its parameters to the machine's staging
-folder and runs `dsc` there, elevated: over PowerShell Remoting, WinRM, to
-a Windows machine as its Administrator; over OpenSSH to an AlmaLinux one,
+folder and runs `dsc` there, elevated: over PowerShell Remoting to a
+Windows machine as its Administrator, PowerShell Direct where this host
+runs it on Hyper-V and WinRM otherwise, DSC brought to it as to an
+AlmaLinux one, the `pwsh` and `dsc` zips the environment file's
+`[tools.Windows]` names, each checked against its SHA-256 and unpacked
+under `C:\ProgramData\Xmip\environment\tools`, since Windows Server ships
+Windows PowerShell alone; over OpenSSH to an AlmaLinux one,
 with the environment's key and its `known_hosts`, checked strictly, so a
 machine whose host key is not the one its kickstart was given is refused
 (`EnvironmentSsh.ps1`). An AlmaLinux machine needs nothing but its sshd:

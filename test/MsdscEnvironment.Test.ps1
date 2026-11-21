@@ -254,8 +254,9 @@ Describe 'The example environment' {
             $machine.files['node.xmip'] | Should -BeLike "**node.xmip"
             $machine.files['node.key'] | Should -BeLike "*$node*node.key"
             $machine.knownHosts | Should -Be 'known_hosts'
-            [string] $tool = if ($machine.family -eq 'Linux') { 'dsc,pwsh' } else { '' }
-            (@($machine.tools.Keys | Sort-Object) -join ',') | Should -Be $tool
+            # Either family is brought PowerShell 7 and DSC: Windows Server
+            # ships Windows PowerShell alone.
+            (@($machine.tools.Keys | Sort-Object) -join ',') | Should -Be 'dsc,pwsh'
             [string] $account = if ($machine.parameters.family -eq 'Windows') {
                 "NT SERVICE\xmip-$node"
             }

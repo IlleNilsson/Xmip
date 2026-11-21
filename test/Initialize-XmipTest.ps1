@@ -155,7 +155,7 @@ function Read-XmipTestEnvironment {
         New-Item -Path (Join-Path $Folder $each) -ItemType Directory -Force | Out-Null
     }
     foreach ($each in 'slicer', 'xmip.rpm', 'xmip.msi', 'pwsh.tar.gz', 'dsc.tar.gz',
-        'secret.xml') {
+        'pwsh.zip', 'dsc.zip', 'secret.xml') {
         Set-Content -LiteralPath (Join-Path $Folder $each) -Value $each
     }
     $environment = & (Get-Module -Name Xmip) { param($Path) Read-XmipToml -Path $Path } $Path
@@ -173,6 +173,10 @@ function Read-XmipTestEnvironment {
         Linux = @{
             pwsh = @{ path = Join-Path $Folder 'pwsh.tar.gz'; sha256 = 'AB' }
             dsc = @{ path = Join-Path $Folder 'dsc.tar.gz'; sha256 = 'CD' }
+        }
+        Windows = @{
+            pwsh = @{ path = Join-Path $Folder 'pwsh.zip'; sha256 = 'EF' }
+            dsc = @{ path = Join-Path $Folder 'dsc.zip'; sha256 = '01' }
         }
     }
     if ($Technology) {
