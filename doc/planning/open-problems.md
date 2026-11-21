@@ -2249,18 +2249,12 @@ unit, and the runtime's `approval_unit` waits for a second Message of its
 Instance, which no Correlation keys. Which test it is, and where its unit
 comes from, is open.
 
-## 88. The Essentials does not start on Linux: a hidden window is asked for everywhere
+## 90. On Linux the Essentials' roll ends as it starts, saying nothing
 
-Found 2026-11-21, the first served Essentials run on the Linux build
-machine: `Start-XmipTest -Suite Core.Essentials` built for eight minutes and
-then FAILED, *The parameter '-WindowStyle' is not supported for the cmdlet
-'Start-Process' on this edition of PowerShell.* Where a process is started
-detached, one rule says a hidden window is asked for on Windows alone, and
-it is written four times: `Start-XmipDetachedShell` asks only on Windows,
-while `Start-XmipEssentialsRollProcess` (the roll), `Start-XmipTestNode` and
-`Start-XmipOperationWeb` ask on every system. One way to start a detached
-process, used by all four, is the fix; until it is made, no Essentials run,
-served or simulated, starts off Windows.
+Found 2026-11-21, once the roll could be started on Linux at all (problem 88):
+`Start-XmipTest -Suite Core.Essentials` built, started the roll,
+and the roll ended within its first second, its standard output and error
+empty and its run record unchanged. Not looked into.
 
 ## 89. A unit test of the Essentials waits twenty seconds for timeouts
 
@@ -2268,11 +2262,12 @@ Found 2026-11-21, when it stopped a landing: the Essentials'
 `round_trip::tests::harsh_sizes_are_carried_or_refused_with_a_reason` ran
 past the minute a landing gives one test, beside the landing's other parts.
 Alone it passes in 25.4 s on Windows and 22.5 s on Linux, of which 0.3 s is
-the processor's: every UDP round above the datagram ceiling is *refused
-after its timeout*, and the test waits each one out. A test that waits on
-timeouts measures nothing a test asserts and is the first to fail under
-load; whether the refusal is told at once, or the harsh sizes belong to the
-runner as the brutal ones do, is open.
+the processor's: it waits, not works. Not yet measured is on what: its
+twelve rounds carry file, TCP and UDP at sizes up to 65,537 bytes, the UDP
+round trip declares the datagram ceiling but does not pass the refusal it
+gives above it on, and the file transport claims at its receive poll on
+Linux (problem 85). A test that waits measures nothing it asserts and is the
+first to fail under load.
 
 # Suggested order
 
@@ -3232,3 +3227,21 @@ Still open: two machines running one node at once with data directories of
 their own are ordered by their clocks, and a registration lost with a
 killed primary's writes (open problem 45) is a member again only at its
 next write.
+
+## 88. The Essentials does not start on Linux: a hidden window is asked for everywhere — **Resolved**
+
+*Resolved 2026-11-21:* `Start-XmipHiddenProcess` is the one way the tooling
+starts a process in the background, a hidden window on Windows alone; the
+roll, a test's nodes, the web host, the detached shells and the tests that
+start a process of their own call it, and nothing else asks for a window.
+
+Found 2026-11-21, the first served Essentials run on the Linux build
+machine: `Start-XmipTest -Suite Core.Essentials` built for eight minutes and
+then FAILED, *The parameter '-WindowStyle' is not supported for the cmdlet
+'Start-Process' on this edition of PowerShell.* Where a process is started
+detached, one rule says a hidden window is asked for on Windows alone, and
+it is written four times: `Start-XmipDetachedShell` asks only on Windows,
+while `Start-XmipEssentialsRollProcess` (the roll), `Start-XmipTestNode` and
+`Start-XmipOperationWeb` ask on every system. One way to start a detached
+process, used by all four, is the fix; until it is made, no Essentials run,
+served or simulated, starts off Windows.

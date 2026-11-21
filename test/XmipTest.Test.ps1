@@ -1989,11 +1989,7 @@ Describe 'A run of the estate suite is started, observed and stopped like a roll
                 PassThru     = $true
             }
 
-            if ($IsWindows) {
-                $sleeping.WindowStyle = 'Hidden'
-            }
-
-            $process = Start-Process @sleeping
+            $process = Start-XmipHiddenProcess -Launch $sleeping
             [hashtable] $start = @{
                 Record  = Join-Path $Area 'estate-20260925-120000-001.toml'
                 Suite   = 'Core.Estate'
