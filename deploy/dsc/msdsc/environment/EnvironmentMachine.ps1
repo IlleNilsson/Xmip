@@ -64,8 +64,11 @@ function Write-EnvironmentParameter {
 function New-EnvironmentSession {
     <#
     .SYNOPSIS
-    A PowerShell Remoting session on a Windows machine: WinRM as its
-    Administrator, the secret file holding its password.
+    A PowerShell Remoting session on a Windows machine as its Administrator,
+    the secret file holding its password: PowerShell Direct where this host
+    runs the machine on Hyper-V, which needs no network, no WinRM listener
+    and no TrustedHosts entry, only the Hyper-V Administrators group; WinRM
+    to its address otherwise.
     #>
     [CmdletBinding()]
     [OutputType([System.Management.Automation.Runspaces.PSSession])]
@@ -74,11 +77,13 @@ function New-EnvironmentSession {
         [hashtable] $Instance
     )
 
-    [hashtable] $winrm = @{
-        ComputerName = $Instance.address
-        Credential   = Read-MachineSecret -Path $Instance.secretPath
+    [pscredential] $administrator = Read-MachineSecret -Path $Instance.secretPath
+    [string] $name = [string] $Instance['name']
+    if ($name -and (Get-Command -Name Get-VM -ErrorAction SilentlyContinue) -and
+        (Get-VM -Name $name -ErrorAction SilentlyContinue)) {
+        return New-PSSession -VMName $name -Credential $administrator
     }
-    return New-PSSession @winrm
+    return New-PSSession -ComputerName $Instance.address -Credential $administrator
 }
 
 function Invoke-EnvironmentWinRmDocument {
