@@ -147,7 +147,7 @@ function Get-XmipDeployNodeValue {
             signs it, the authority that signs and the folder of each node's
             certificate, the Parties' far end, the package for each family a
             node runs on and, for msdsc, the tools DSC is brought to each
-            AlmaLinux machine with.
+            node machine with, Windows and AlmaLinux alike.
     #>
     [CmdletBinding()]
     [OutputType([hashtable])]
@@ -209,7 +209,9 @@ function Get-XmipDeployNodeValue {
         # the run holds its lock (Invoke-XmipDeployStep).
         $packages[$family].archive = Join-Path -Path $Run -ChildPath (
             "modules-$($family.ToLowerInvariant()).zip")
-        if ($Read.Technology -ne 'msdsc' -or $family -ne 'Linux') {
+        # A fresh machine of either family has neither PowerShell 7 nor DSC:
+        # Windows Server ships Windows PowerShell alone.
+        if ($Read.Technology -ne 'msdsc') {
             continue
         }
         $tool = Get-TomlValue -Node $carried -Name $family -Default $null

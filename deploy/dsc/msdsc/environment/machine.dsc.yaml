@@ -3,8 +3,8 @@
 # environment's authority (Xmip.Environment/Slice), then node.dsc.yaml
 # applied there by Xmip.Environment/Machine, given that slice and the
 # authority's certificate, the node's certificate, key and anchors from the
-# cluster's own authority, and the estate's package for its family; on an
-# AlmaLinux machine DSC is brought there first from the tools. A node never
+# cluster's own authority, and the estate's package for its family; DSC is
+# brought there first from the tools, on either family. A node never
 # slices and never holds the authority's key (ADR-0031, amendment
 # 2026-11-06). Deploy-XmipEnvironment applies it once for each node, with
 # the parameters it writes from the environment file (deploy/dsc/README.md).
@@ -28,7 +28,7 @@ parameters:
     type: object
     description: >-
       Per family, each tool DSC is brought to the machine with, its tarball's
-      path and SHA-256: pwsh and dsc for Linux.
+      path and SHA-256: pwsh and dsc, tarballs for Linux, zips for Windows.
   layout:
     type: object
     description: Per family, where the package puts the node.

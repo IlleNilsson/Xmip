@@ -35,7 +35,7 @@ empty.
 | `authority`, `identity` | the cluster's authority, which signs each slice and issued each node's certificate, and a folder per node of that certificate (`New-XmipCertificate -Node`) |
 | `far_end` | where the machines reach the Parties' far end the Essentials serves |
 | `[packages.<family>]` | the package a node is installed from, `path`: the `.rpm` for Linux, the MSI for Windows; and `modules`, a folder of the module libraries the cluster's file names, built for that system, carried beside every node's configuration |
-| `[tools.<family>]` | msdsc only: the tarballs DSC is brought to each AlmaLinux machine with, `pwsh` and `dsc`, each `path` and `sha256` |
+| `[tools.<family>]` | msdsc only: what DSC is brought to each node machine of the family with, `pwsh` and `dsc`, each `path` and `sha256`: tarballs for Linux, zips for Windows |
 | `[network]`, `[images.<name>]`, `[[machines]]` | the network, the installation images, and each machine with the `nodes` it runs: one at most, since a package lays one node out in one folder; every Storage node the cluster's file lists on a machine of its own |
 
 A path not rooted is the estate's. The YAML each tool reads is written
@@ -122,7 +122,8 @@ On the Linux host, the WSL AlmaLinux guest included, KVM and libvirt as
 
 - PowerShell 7.7 and the Xmip module's prerequisites;
 - for msdsc, Microsoft DSC 3.4.0-preview.3 on `PATH`, and the two tarballs
-  the file's `[tools.Linux]` names, from their GitHub releases;
+  the file's `[tools.Linux]` names, from their GitHub releases, and the
+  two zips its `[tools.Windows]` names where a node runs on Windows;
 - for ansible, `prerequisite.toml`'s `[prerequisite.ansible]`, with its bin
   on `PATH`;
 - `nfpm` and a Linux build of `xmip-service`: `Build-XmipService -Site

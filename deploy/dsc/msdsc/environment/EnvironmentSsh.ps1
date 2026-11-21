@@ -165,11 +165,7 @@ function Install-EnvironmentTool {
     [string[]] $unpack = @()
     foreach ($name in @($tool.Keys | Sort-Object)) {
         [string] $path = $tool[$name].path
-        [string] $sha256 = $tool[$name].sha256.ToLowerInvariant()
-        [string] $have = (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant()
-        if ($have -ne $sha256) {
-            throw "REFUSED: $path has SHA-256 $have, not $sha256."
-        }
+        [string] $sha256 = Assert-EnvironmentToolDigest -Tool $tool[$name]
         $tarball["$name.tar.gz"] = $path
         [string] $into = ConvertTo-EnvironmentShellWord -Value "$Staging/tools/$name"
         [string] $from = ConvertTo-EnvironmentShellWord -Value "$Staging/tools/$name.tar.gz"
