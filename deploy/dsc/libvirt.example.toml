@@ -44,6 +44,8 @@ far_end = "10.77.0.1"
 # -Package rpm on a Linux machine (deploy/package/README.md).
 [packages.Linux]
 path = ""
+# The module libraries the cluster's file names, built for Linux: a folder.
+modules = ""
 
 # msdsc only: what DSC is brought to each AlmaLinux machine with, each
 # tarball checked against its SHA-256 and unpacked in the machine's staging

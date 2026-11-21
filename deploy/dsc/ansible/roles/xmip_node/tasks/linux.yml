@@ -61,6 +61,20 @@
   notify: Restart the Xmip node
   become: true
 
+# The module libraries the cluster's file names, beside the configuration,
+# where each `library_path` is read (ADR-0066, amendment 2026-11-21).
+- name: The module libraries the cluster names, beside the configuration
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "{{ xmip_configuration }}/"
+    owner: root
+    group: root
+    mode: '0644'
+  with_fileglob: "{{ xmip_modules }}/*"
+  when: xmip_modules is defined and xmip_slice is not skipped
+  notify: Restart the Xmip node
+  become: true
+
 # A slice the node holds and does not run, refused as it started while the
 # node runs its active configuration, is tried again by a restart, so a run
 # again makes it take once what refused it has gone (ADR-0031, amendment

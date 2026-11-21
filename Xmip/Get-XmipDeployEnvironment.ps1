@@ -193,6 +193,17 @@ function Get-XmipDeployNodeValue {
             throw "REFUSED: a $family node needs [packages.$family] path, the package: '$path'."
         }
         $packages[$family] = @{ path = $path; file = 'xmip' + [IO.Path]::GetExtension($path) }
+        # The module libraries the cluster's file names, built for this
+        # system: each is carried beside every node's configuration, where
+        # its `library_path` is read (ADR-0066, amendment 2026-11-21).
+        [string] $modules = Get-TomlValue -Node $package -Name 'modules' -Default ''
+        if ($modules) {
+            $modules = Resolve-XmipDeployPath -Estate $Estate -Path $modules
+            if (-not (Test-Path -LiteralPath $modules -PathType Container)) {
+                throw "REFUSED: [packages.$family] modules names no folder: '$modules'."
+            }
+            $packages[$family].modules = $modules
+        }
         if ($Read.Technology -ne 'msdsc' -or $family -ne 'Linux') {
             continue
         }

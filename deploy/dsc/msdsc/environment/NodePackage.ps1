@@ -6,7 +6,8 @@
     Package): the one shipped, installed, which registers the node's
     service. On AlmaLinux the installed .rpm is compared with the shipped one
     by its header's SHA-256, so a build made again under the same version
-    reaches the machine too; the MSI is found by its service alone.
+    reaches the machine too; on Windows the node is found by its service
+    alone.
     Dot-sourced by node.resource.ps1 and by test/MsdscEnvironment.Test.ps1.
 
     Style: doc/governance/powershell-style.md
@@ -84,8 +85,9 @@ function Install-NodePackage {
     <#
     .SYNOPSIS
     Install the estate's package, telling it the node, the cluster and the
-    account: the MSI's XMIP_NODE, XMIP_CLUSTER and XMIP_ACCOUNT, the .rpm's
-    variables of the same names. Either runs xmip-service --install, which
+    account: on Windows the portable archive's xmip-service, given them as
+    arguments, on AlmaLinux the .rpm's XMIP_NODE, XMIP_CLUSTER and
+    XMIP_ACCOUNT. Either runs xmip-service --install, which
     lays the node out by the slice already in place, and registers and
     starts the node's service as that account. An .rpm of another build is
     installed over the one there, an upgrade or the same version again.
@@ -101,23 +103,23 @@ function Install-NodePackage {
     }
 
     if ($IsWindows) {
+        # The portable archive, Windows's package until the MSI is built (the
+        # owner, 2026-11-21, archive now): unpacked where the MSI lays its
+        # programs, Program Files\Xmip\bin, and installed by the one command
+        # every package runs, over the configuration folder the MSI uses.
+        [string] $root = Join-Path -Path $env:ProgramFiles -ChildPath 'Xmip'
+        Expand-Archive -LiteralPath $Instance.path -DestinationPath $env:TEMP -Force
+        [string] $unpacked = Join-Path -Path $env:TEMP -ChildPath 'xmip\bin'
+        $null = New-Item -ItemType Directory -Path (Join-Path $root 'bin') -Force
+        Copy-Item -Path (Join-Path $unpacked '*') -Destination (Join-Path $root 'bin') -Force
+        [string] $configuration = Join-Path -Path $env:ProgramData -ChildPath (
+            'Xmip\config\cluster.xmip')
         [string[]] $argument = @(
-            '/i', "`"$($Instance.path)`"", '/qn', '/norestart',
-            "XMIP_NODE=$($Instance.node)", "XMIP_CLUSTER=$($Instance.cluster)",
-            "XMIP_ACCOUNT=`"$($Instance.account)`""
+            '--configuration', $configuration, '--node', $Instance.node,
+            '--cluster', $Instance.cluster, '--account', $Instance.account, '--install'
         )
-        [hashtable] $msiexec = @{
-            FilePath     = 'msiexec.exe'
-            ArgumentList = $argument
-            Wait         = $true
-            PassThru     = $true
-        }
-        $installed = Start-Process @msiexec
-
-        # 3010: installed, a restart pending.
-        if ($installed.ExitCode -notin 0, 3010) {
-            throw "msiexec installing $($Instance.path) exited $($installed.ExitCode)"
-        }
+        [string] $service = Join-Path -Path $root -ChildPath 'bin\xmip-service.exe'
+        Invoke-DscProgram -Program $service -Argument $argument | Out-Null
 
         return
     }
