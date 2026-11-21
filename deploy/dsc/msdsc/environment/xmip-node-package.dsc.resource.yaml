@@ -62,7 +62,7 @@ schema: !embedded
       - account
     properties:
       path:
-        description: 'The package: the MSI on Windows, the .rpm on Linux.'
+        description: 'The package: the portable archive on Windows, the .rpm on Linux.'
         type: string
       node:
         description: >-

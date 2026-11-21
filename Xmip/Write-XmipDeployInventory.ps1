@@ -135,6 +135,11 @@ function Write-XmipDeployInventory {
             xmip_identity = Join-Path $Read.Node.identity $node.node
             xmip_package = $Read.Node.packages[$node.machine.family].path
         }
+        $package = $Read.Node.packages[$node.machine.family]
+        [string] $modules = Get-TomlValue -Node $package -Name 'modules' -Default ''
+        if ($modules) {
+            $nodes[$node.machine.name].xmip_modules = $modules
+        }
     }
     $children['xmip_nodes'] = @{ hosts = $nodes }
     if ($nodes.Count -gt 0) {
