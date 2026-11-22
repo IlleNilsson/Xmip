@@ -14,17 +14,33 @@ function Get-XmipDeployDynamicMemory {
             dynamic_memory = { minimum_gb = 0.5, maximum_gb = 3 } on a
             machine (deploy/dsc/README.md). Hyper-V takes each in steps of
             2 MiB, and the least at most the start and the start at most the
-            most; any other is refused in words before anything is made.
+            most; any other is refused in words before anything is made. On
+            libvirt a guest is given its memory back from a virtio balloon,
+            and Windows has no balloon driver of its own, so a Windows
+            machine there is refused it: its memory is static.
 
         .PARAMETER Machine
             One [[machines]] table of the environment file.
+
+        .PARAMETER Hypervisor
+            The environment's hypervisor, libvirt or hyperv.
+
+        .PARAMETER Family
+            The machine's system, its image's family: Windows or Linux.
     #>
     [CmdletBinding()]
     [OutputType([hashtable])]
     param(
         [Parameter(Mandatory)]
         [AllowNull()]
-        $Machine
+        $Machine,
+
+        [Parameter(Mandatory)]
+        [string] $Hypervisor,
+
+        [Parameter(Mandatory)]
+        [AllowEmptyString()]
+        [string] $Family
     )
 
     $dynamic = Get-TomlValue -Node $Machine -Name 'dynamic_memory' -Default $null
@@ -32,6 +48,11 @@ function Get-XmipDeployDynamicMemory {
         return @{}
     }
     [string] $name = Get-TomlValue -Node $Machine -Name 'name'
+    if ($Hypervisor -eq 'libvirt' -and $Family -eq 'Windows') {
+        throw ("REFUSED: $name runs Windows on libvirt, whose dynamic memory is a virtio " +
+            'balloon, and Windows has no balloon driver of its own: leave its ' +
+            'dynamic_memory out, and its memory_gb is static (deploy/dsc/README.md).')
+    }
     [hashtable] $mib = @{ startup = [double] (Get-TomlValue -Node $Machine -Name 'memory_gb') }
     foreach ($key in 'minimum', 'maximum') {
         $mib[$key] = [double] (Get-TomlValue -Node $dynamic -Name "${key}_gb")

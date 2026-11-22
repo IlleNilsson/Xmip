@@ -11,7 +11,7 @@ DSC V3 or Ansible, not a mix*):
 | --- | --- |
 | `msdsc/` | Microsoft DSC v3, the standalone `dsc`: `libvirt` and `hyperv` make the machines, `environment` what runs inside them, PowerShell 7 resources behind manifests |
 | `ansible/` | ansible-core: the role `xmip_machine` makes the machines, `xmip_name` the names, `xmip_node` each node |
-| `machine/` | what a machine is, for both: the network, pool and domain definitions, the kickstart, the Windows answer file and the answer medium, each step of a libvirt machine's installation and how the Windows machines' secret is read, plain PowerShell 7 that DSC's resources dot-source and Ansible's role asks through `machine.ps1` |
+| `machine/` | what a machine is, for both: the network, pool and domain definitions, the kickstart, the Windows answer file and the answer medium, what the hypervisor gives its guest (its memory and chrony's clock), each step of a libvirt machine's installation and how the Windows machines' secret is read, plain PowerShell 7 that DSC's resources dot-source and Ansible's role asks through `machine.ps1` |
 
 ## The environment file
 
@@ -19,8 +19,9 @@ One TOML file says what an environment is, and nothing else does: which
 node runs on which machine is here, never in the cluster's file
 (ADR-0028, amendment 2026-10-21). The examples are `libvirt.example.toml`,
 for a Linux host's KVM, and `hyperv.example.toml`, for a Windows host's
-Hyper-V; copy one to `.local-work/deploy/` and write in what it leaves
-empty.
+Hyper-V, each the owner's node plan of 2026-11-22, the same 21 machines
+(ADR-0015, amendments 2026-11-22); copy one to `.local-work/deploy/` and
+write in what it leaves empty.
 
 | Key | Is |
 | --- | --- |
@@ -43,8 +44,9 @@ empty.
 | `[tools.<family>]` | msdsc only: what DSC is brought to each machine of the family it applies a document on, the nodes' and the DNS server, with, `pwsh` and `dsc`, each `path` and `sha256`: tarballs for Linux, zips for Windows |
 | `[network]`, `[images.<name>]`, `[[machines]]` | the network, the installation images, and each machine with the `nodes` it runs: one at most, since a package lays one node out in one folder; every Storage node the cluster's file lists on a machine of its own |
 | `internet` | in `[network]`, whether its machines reach past it, through the gateway and its NAT, every one where it is left out; on a machine, its own. A machine that does not is installed with no gateway and reaches the network alone, the host on it included |
-| `memory_gb`, `dynamic_memory` | on a machine: the memory it starts with and installs with, in GiB, static; and on Hyper-V, `{ minimum_gb, maximum_gb }`, the least and the most it is given as it uses it, in steps of 2 MiB, `minimum_gb <= memory_gb <= maximum_gb` |
+| `memory_gb`, `dynamic_memory` | on a machine: the memory it starts with and installs with, in GiB, static; and `{ minimum_gb, maximum_gb }`, in steps of 2 MiB, `minimum_gb <= memory_gb <= maximum_gb`: on Hyper-V the least and the most it is given as it uses it; on libvirt `maximum_gb` is the domain's memory, of which its virtio balloon starts with `memory_gb` and gives back up to the most as the machine runs short, the host given back every page it frees; libvirt has no least. Windows has no balloon driver of its own, so on libvirt a Windows machine's `dynamic_memory` is refused and its memory is static |
 | `environment` | on a Linux image: the kickstart's environment group, `minimal-environment` where it names none; one with a desktop starts to its graphical target |
+| `tpm` | on an image: `true` gives its machines a virtual TPM 2.0, as Windows 11's Setup asks; on libvirt swtpm's, refused where the host has no `swtpm`. Left out, none. `secureBootTemplate` is Hyper-V's: libvirt's firmware enrolls both of Microsoft's certificate authorities |
 
 A path not rooted is the estate's. The YAML each tool reads is written
 from this file into the run folder, `.local-work/deploy/<name>/`: DSC's

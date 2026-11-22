@@ -24,7 +24,7 @@ function Get-HyperVMachineSetting {
         [hashtable] $Instance
     )
 
-    [Collections.IDictionary] $dynamic = Get-HyperVDynamicMemory -Instance $Instance
+    [Collections.IDictionary] $dynamic = Get-MachineDynamicMemory -Instance $Instance
     [Collections.Specialized.OrderedDictionary] $setting = [ordered] @{
         ProcessorCount = [long] $Instance['cpu']
         MemoryStartup = [long] $Instance['memoryGB'] * 1GB
@@ -37,26 +37,6 @@ function Get-HyperVMachineSetting {
     $setting['AutomaticCheckpointsEnabled'] = $false
     $setting['Notes'] = [string] $Instance['environment']
     return $setting
-}
-
-function Get-HyperVDynamicMemory {
-    <#
-    .SYNOPSIS
-    The machine's dynamic memory, minimumMB and maximumMB; empty where its
-    memory is static, as it is where the instance says none.
-    #>
-    [CmdletBinding()]
-    [OutputType([Collections.IDictionary])]
-    param(
-        [Parameter(Mandatory = $true)]
-        [hashtable] $Instance
-    )
-
-    [object] $dynamic = $Instance['dynamicMemory']
-    if ($dynamic -is [Collections.IDictionary] -and $dynamic.Contains('maximumMB')) {
-        return $dynamic
-    }
-    return @{}
 }
 
 function Get-HyperVHardwareFinding {

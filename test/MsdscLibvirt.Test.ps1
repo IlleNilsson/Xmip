@@ -10,10 +10,19 @@
       every name it answers; its summary ignores what libvirt adds.
     - The domain's definition: UEFI with Secure Boot, the disk first, the
       DVD drives on SATA, virtio for AlmaLinux and SATA and e1000e for
-      Windows, a TPM only where the host has swtpm.
+      Windows; its memory, the most of a dynamic one with memory_gb its
+      balloon's start, static where it says no more; the balloon for
+      AlmaLinux and none for Windows, which gets Hyper-V's interface and
+      clock; a TPM where its image asks, refused where the host has no
+      swtpm.
+    - The answer: an AlmaLinux machine's kickstart keeps KVM's clock,
+      ptp_kvm loaded at every start.
     - The example, deploy/dsc/libvirt.example.toml, as
       Deploy-XmipEnvironment reads it: the network, then each machine, each
-      with every parameter its document declares.
+      with every parameter its document declares; the Hyper-V example's
+      node plan, machine for machine, a Windows machine's memory static; a
+      gateway on XMIP-RX01 alone and a desktop on XMIP-DEV02; dynamic
+      memory on a Windows machine refused.
     - The machine's set while it installs, virsh a stub: it is left to
       install and nothing is written, since DSC reads what the resource
       writes as its answer.
@@ -37,7 +46,8 @@ BeforeAll {
     $script:Example = Read-XmipTestEnvironment -Path (
         Join-Path $script:Root 'deploy/dsc/libvirt.example.toml') -Folder (
         Join-Path $TestDrive 'environment')
-    [string] $script:Node = @($script:Example['machines'])[0]['nodes'][0]
+    [string] $script:Node = @($script:Example['machines'] | ForEach-Object { @($_['nodes']) } |
+        Where-Object { $_ })[0]
     [string] $script:Cluster = $script:Example['cluster']
 
     $script:Network = @{
@@ -123,13 +133,65 @@ Describe 'The domain' {
         $domain.SelectSingleNode('//interface/model').type | Should -Be 'e1000e'
     }
 
-    It 'gives a TPM only where the host has swtpm' {
-        function Get-Command { param($Name, $ErrorAction) $null }
-        [xml] $without = Get-LibvirtMachineDefinition -Instance (New-Machine -Family 'Linux')
-        $without.SelectSingleNode('//tpm') | Should -BeNullOrEmpty
+    It 'gives a TPM where the image asks for one, refused where the host has no swtpm' {
+        [hashtable] $machine = New-Machine -Family 'Windows'
         function Get-Command { param($Name, $ErrorAction) [pscustomobject] @{ Name = $Name } }
-        [xml] $with = Get-LibvirtMachineDefinition -Instance (New-Machine -Family 'Linux')
+        [xml] $none = Get-LibvirtMachineDefinition -Instance $machine
+        $none.SelectSingleNode('//tpm') | Should -BeNullOrEmpty -Because 'its image asks for none'
+        $machine['image']['tpm'] = $true
+        [xml] $with = Get-LibvirtMachineDefinition -Instance $machine
         $with.SelectSingleNode('//tpm').model | Should -Be 'tpm-crb'
+        function Get-Command { param($Name, $ErrorAction) $null }
+        { Get-LibvirtMachineDefinition -Instance $machine } | Should -Throw '*has no swtpm*'
+    }
+
+    It 'gives a dynamic machine its most, its balloon starting with memory_gb' {
+        [hashtable] $machine = New-Machine -Family 'Linux'
+        $machine['memoryGB'] = 2
+        $machine['dynamicMemory'] = @{ minimumMB = 512; maximumMB = 3072 }
+        [xml] $domain = Get-LibvirtMachineDefinition -Instance $machine
+        $domain.SelectSingleNode('/domain/memory[@unit="MiB"]').InnerText | Should -Be '3072'
+        $domain.SelectSingleNode('/domain/currentMemory[@unit="MiB"]').InnerText |
+            Should -Be '2048'
+        [Xml.XmlElement] $balloon = $domain.SelectSingleNode('//devices/memballoon')
+        @($balloon.model, $balloon.autodeflate, $balloon.freePageReporting) |
+            Should -Be @('virtio', 'on', 'on')
+        # Static: the memory it starts with is all it has.
+        $machine['dynamicMemory'] = @{}
+        [xml] $static = Get-LibvirtMachineDefinition -Instance $machine
+        $static.SelectSingleNode('/domain/memory[@unit="MiB"]').InnerText | Should -Be '2048'
+        $static.SelectSingleNode('/domain/currentMemory[@unit="MiB"]').InnerText |
+            Should -Be '2048'
+    }
+
+    It 'gives a Windows machine Hyper-V''s interface and clock, and no balloon' {
+        # Windows has no virtio balloon driver of its own; KVM gives the rest.
+        [xml] $windows = Get-LibvirtMachineDefinition -Instance (New-Machine -Family 'Windows')
+        $windows.SelectSingleNode('//devices/memballoon').model | Should -Be 'none'
+        $windows.SelectSingleNode('//features/hyperv/relaxed').state | Should -Be 'on'
+        $windows.SelectSingleNode("//clock/timer[@name='hypervclock']").present |
+            Should -Be 'yes'
+        $windows.SelectSingleNode('//clock').offset | Should -Be 'utc'
+        [xml] $linux = Get-LibvirtMachineDefinition -Instance (New-Machine -Family 'Linux')
+        $linux.SelectSingleNode('//features/hyperv') | Should -BeNullOrEmpty
+        $linux.SelectSingleNode("//clock/timer[@name='hypervclock']") | Should -BeNullOrEmpty
+    }
+}
+
+Describe 'The answer' {
+    It 'gives an AlmaLinux machine''s kickstart KVM''s clock, its module loaded at every start' {
+        $script:Clock = $null
+        function Get-MachineAnswerMedium {
+            param($Machine, $MacAddress, $GuestPackage, $Clock)
+            $script:Clock = $Clock
+            return @{ Label = 'OEMDRV'; File = @{} }
+        }
+        function New-MachineAnswerMedium { param($Path, $Medium, [switch] $Confirm) }
+        [hashtable] $asked = @{ Instance = New-Machine -Family 'Linux'; Path = 'answer.iso' }
+        New-LibvirtAnswerMedium @asked -Confirm:$false
+        [string] $refclock = "echo 'refclock PHC /dev/ptp_kvm poll 3 dpoll -2 offset 0 " +
+            "stratum 2' >> /etc/chrony.conf"
+        $script:Clock | Should -Be @('echo ptp_kvm > /etc/modules-load.d/ptp_kvm.conf', $refclock)
     }
 }
 
@@ -158,8 +220,10 @@ Describe 'The example, as Deploy-XmipEnvironment reads it' {
                 [IO.Path]::GetFullPath((Split-Path -Path $_.Document -Parent)) -eq
                     [IO.Path]::GetFullPath($script:Template) })
         $steps[0].Name | Should -Be 'network'
+        # The owner's node plan of 2026-11-22: 21 machines, the Mac aside.
         @($steps | Select-Object -Skip 1 | ForEach-Object { $_.Name }) |
-            Should -Be @('XMIP-APP03', 'XMIP-APP04', 'XMIP-IN01')
+            Should -Be @($script:Example['machines'] | ForEach-Object { $_['name'] })
+        $steps.Count | Should -Be 22
         foreach ($step in $steps) {
             [Collections.IDictionary] $declared = (
                 Read-XmipTestYaml -Path $step.Document).parameters
@@ -167,9 +231,97 @@ Describe 'The example, as Deploy-XmipEnvironment reads it' {
                 $step.Value.ContainsKey($name) | Should -BeTrue -Because "$($step.Name) $name"
             }
         }
-        [string[]] $nodes = @($script:Example['machines'] | ForEach-Object { @($_['nodes']) })
+        # Each far end and each node by its name, then the cluster.
+        [string[]] $named = @($script:Example['machines'] | ForEach-Object {
+                @($_['external']) + @($_['nodes']) } | Where-Object { $_ })
         @($steps[0].Value['names'] | ForEach-Object { $_.name }) |
-            Should -Be @($nodes + $script:Cluster)
+            Should -Be @($named + $script:Cluster)
+    }
+
+    It 'is the Hyper-V example''s node plan under KVM, machine for machine' {
+        $hyperv = Read-XmipTestEnvironment -Path (
+            Join-Path $script:Root 'deploy/dsc/hyperv.example.toml') -Folder (
+            Join-Path $TestDrive 'hyperv')
+        foreach ($key in 'domain', 'domain_controller', 'cluster', 'far_end', 'listen',
+            'operators') {
+            "$($script:Example[$key])" | Should -Be "$($hyperv[$key])" -Because $key
+        }
+        foreach ($key in 'prefix', 'gateway', 'dns_server', 'nat', 'internet') {
+            "$($script:Example['network'][$key])" | Should -Be "$($hyperv['network'][$key])"
+        }
+        [object[]] $kvm = @($script:Example['machines'])
+        [object[]] $plan = @($hyperv['machines'])
+        $kvm.Count | Should -Be $plan.Count
+        foreach ($index in 0..($plan.Count - 1)) {
+            [Collections.IDictionary] $one = $kvm[$index]
+            [Collections.IDictionary] $other = $plan[$index]
+            foreach ($key in 'name', 'address', 'cpu', 'disk_gb', 'nodes', 'external',
+                'internet') {
+                "$($one[$key])" | Should -Be "$($other[$key])" -Because "$($other['name']) $key"
+            }
+            [Collections.IDictionary] $image = $script:Example['images'][$one['image']]
+            [Collections.IDictionary] $planned = $hyperv['images'][$other['image']]
+            foreach ($key in 'sha256', 'family', 'edition', 'environment', 'tpm') {
+                "$($image[$key])" | Should -Be "$($planned[$key])" -Because "$($one['name']) $key"
+            }
+            if ($image['family'] -eq 'Windows') {
+                # Windows has no balloon driver of its own: its memory is static.
+                $one.Contains('dynamic_memory') | Should -BeFalse -Because $one['name']
+                $one['memory_gb'] | Should -BeGreaterOrEqual $other['memory_gb']
+                continue
+            }
+            $one['memory_gb'] | Should -Be $other['memory_gb']
+            $one['dynamic_memory']['maximum_gb'] |
+                Should -Be $other['dynamic_memory']['maximum_gb'] -Because $one['name']
+        }
+    }
+
+    It 'gives the one machine whose internet says so a gateway, and the developer a desktop' {
+        [hashtable[]] $machines = @(Get-XmipTestDeployStep -Environment $script:Example -Run (
+                [string] $TestDrive) | Where-Object { $_.Value.ContainsKey('memoryGB') } |
+            ForEach-Object { $_.Value })
+        @($machines | Where-Object { $_.network.gateway } | ForEach-Object { $_.name }) |
+            Should -Be @('XMIP-RX01')
+        @($machines | Where-Object { $_.image['environment'] } | ForEach-Object { $_.name }) |
+            Should -Be @('XMIP-DEV02')
+        foreach ($machine in $machines) {
+            [Collections.IDictionary] $dynamic = $machine.dynamicMemory
+            if ($machine.image.family -eq 'Linux') {
+                $dynamic.maximumMB | Should -BeGreaterOrEqual ($machine.memoryGB * 1024)
+            }
+            else {
+                $dynamic.Count | Should -Be 0 -Because $machine.name
+            }
+        }
+    }
+
+    It 'defines every machine''s domain, a TPM for Windows 11 alone' {
+        function Get-Command { param($Name, $ErrorAction) [pscustomobject] @{ Name = $Name } }
+        [hashtable[]] $machines = @(Get-XmipTestDeployStep -Environment $script:Example -Run (
+                [string] $TestDrive) | Where-Object { $_.Value.ContainsKey('memoryGB') } |
+            ForEach-Object { $_.Value })
+        foreach ($machine in $machines) {
+            [xml] $domain = Get-LibvirtMachineDefinition -Instance $machine
+            [long] $start = $machine.memoryGB * 1024
+            [long] $most = if ($machine.dynamicMemory.Count) { $machine.dynamicMemory.maximumMB }
+            else { $start }
+            $domain.SelectSingleNode('/domain/memory').InnerText | Should -Be "$most"
+            $domain.SelectSingleNode('/domain/currentMemory').InnerText | Should -Be "$start"
+            [bool] $tpm = $null -ne $domain.SelectSingleNode('//tpm')
+            $tpm | Should -Be ("$($machine.image['edition'])" -like 'Windows 11*') -Because (
+                $machine.name)
+        }
+    }
+
+    It 'refuses dynamic memory on a Windows machine, which has no balloon driver of its own' {
+        $environment = Read-XmipTestEnvironment -Path (
+            Join-Path $script:Root 'deploy/dsc/libvirt.example.toml') -Folder (
+            Join-Path $TestDrive 'windows')
+        [Collections.IDictionary] $windows = @($environment['machines'] | Where-Object {
+                $environment['images'][$_['image']]['family'] -eq 'Windows' })[0]
+        $windows['dynamic_memory'] = @{ minimum_gb = 1; maximum_gb = 4 }
+        { Get-XmipTestDeployStep -Environment $environment -Run ([string] $TestDrive) } |
+            Should -Throw "*$($windows['name']) runs Windows on libvirt*no balloon driver*"
     }
 }
 

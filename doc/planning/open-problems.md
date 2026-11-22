@@ -2543,6 +2543,35 @@ drop since the same day, which ended the 0 ns an earlier roll showed when
 it timed a drop on hearing of it; what gives 0 ns under load is not
 diagnosed.
 
+## 111. From a Linux host no Windows machine is made
+
+Found 2026-11-22, bringing the libvirt example to the owner's node plan:
+from a Linux host neither technology makes a Windows machine yet. Its
+Administrator secret is read on Windows alone (`MachineSecret.ps1`),
+PowerShell on Linux has no WinRM client for msdsc's session, and Ansible
+writes no domain controller and no far end. The plan's Windows machines,
+the standby Storage node among them, therefore wait. How a Linux host holds
+the secret (suggested: `systemd-creds`, the platform's own encryption) and
+reaches Windows (suggested: PowerShell remoting over SSH to Windows' own
+OpenSSH server, where the alternative is a third party's WinRM library) is
+the owner's choice.
+
+## 112. On libvirt a Windows 11 machine's installation is never seen done
+
+Found 2026-11-22, bringing the libvirt example to the owner's node plan: on
+libvirt a machine counts as installed once WinRM answers on port 5985.
+Windows Server runs WinRM; Windows 11 does not by default, so the
+developer's and operator's Windows 11 machines would never be seen
+installed.
+
+## 113. A libvirt machine is never compared with its environment file once made
+
+Found 2026-11-22, bringing the libvirt example to the owner's node plan: a
+libvirt machine's domain is defined once, at installation, and never
+compared with the environment file afterwards, so a changed memory,
+processor count or TPM does not reach a machine already made, where the
+Hyper-V machine resource finds and fixes a machine that differs.
+
 # Suggested order
 
 Rewritten 2026-09-23, and corrected to what is built on 2026-11-10. The

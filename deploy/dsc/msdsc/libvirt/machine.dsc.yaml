@@ -36,7 +36,9 @@ parameters:
     description: name, gateway, prefixLength and dnsServer.
   image:
     type: object
-    description: The ISO the machine installs from, path, sha256, family and edition.
+    description: >-
+      The ISO the machine installs from: path, sha256, family, edition,
+      environment and tpm.
   name:
     type: string
     description: The machine's name, its domain's and its computer's.
@@ -45,6 +47,15 @@ parameters:
     description: The machine's IPv4 address on the network.
   memoryGB:
     type: int
+    description: >-
+      The domain's memory, in GiB; where it is dynamic, the memory it
+      starts with, its balloon's.
+  dynamicMemory:
+    type: object
+    description: >-
+      minimumMB and maximumMB, as the Hyper-V template takes them: the
+      domain's memory is maximumMB, which its balloon gives back; empty
+      where its memory is static.
   cpu:
     type: int
   diskGB:
@@ -58,6 +69,7 @@ resources:
       environment: "[parameters('environment')]"
       address: "[parameters('address')]"
       memoryGB: "[parameters('memoryGB')]"
+      dynamicMemory: "[parameters('dynamicMemory')]"
       cpu: "[parameters('cpu')]"
       diskGB: "[parameters('diskGB')]"
       pool: "[parameters('environment')]"

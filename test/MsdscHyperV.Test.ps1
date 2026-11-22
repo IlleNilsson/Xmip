@@ -205,7 +205,7 @@ BeforeAll {
         New-Item -Path (Split-Path -Path $disk -Parent) -ItemType Directory -Force | Out-Null
         [string] $mac = Get-MachineMacAddress -Address $Instance['address'] -Prefix (
             $script:HyperVMacPrefix)
-        [Collections.IDictionary] $dynamic = Get-HyperVDynamicMemory -Instance $Instance
+        [Collections.IDictionary] $dynamic = Get-MachineDynamicMemory -Instance $Instance
         [bool] $on = $dynamic.Count -gt 0
         $script:Fake.Vm += [pscustomobject] @{
             Name = $Instance['name']; State = $State; ProcessorCount = [long] $Instance['cpu']
@@ -641,7 +641,8 @@ Describe 'The install answers' {
             # chrony keeps Hyper-V's clock: no machine but one reaches a pool.
             $kickstart | Should -Match '(?m)^chrony$'
             $kickstart | Should -Match 'refclock PHC /dev/ptp_hyperv '
-            $kickstart | Should -Match 'ATTR\{clock_name\}=="hyperv", SYMLINK \+= "ptp_hyperv"'
+            # systemd's own udev rules link the clock (50-udev-default.rules).
+            $kickstart | Should -Not -Match 'udev'
             $kickstart | Should -Not -Match "`r"
         }
     }

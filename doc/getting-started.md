@@ -734,7 +734,10 @@ one. Each README says each step in full.
    -Path D:\Repos\Xmip\.local-work\deploy\hyperv.toml`, one machine
    installed at a time, then each node on its machine
    (`deploy/dsc/README.md`). On a Linux host the libvirt template does the
-   same from `deploy/dsc/libvirt.example.toml`, with no step elevated.
+   same from `deploy/dsc/libvirt.example.toml`, the same machines under
+   KVM, with no step elevated; its Windows machines wait on how a Linux
+   host reads their secret and reaches them (ADR-0015, amendment
+   2026-11-22).
 7. The tester's operator certificate
    (`deploy/dsc/msdsc/environment/README.md`, *Running it*), and the run
    against the machines:

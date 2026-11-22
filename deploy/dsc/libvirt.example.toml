@@ -1,13 +1,19 @@
 # An Xmip environment on a Linux host's KVM, through libvirt: what
 # Deploy-XmipEnvironment reads (deploy/dsc/README.md). Copy it to
-# .local-work/deploy/libvirt.toml and write in linux_account, slicer, the
-# package and, for msdsc, the tools.
+# .local-work/deploy/libvirt.toml and write in linux_account, secret, slicer,
+# the packages and, for msdsc, the tools. It runs on the Linux host, the WSL
+# AlmaLinux guest included, as the account in the libvirt group.
 #
-# The network's DHCP and DNS give each machine its address and name, and
-# answer the names of the nodes each machine runs and of the cluster, so the
-# environment needs no DNS server of its own. Which node runs on which
-# machine is here, never in the cluster's file: the Essentials simulates
-# the nodes no machine runs.
+# The same machines as hyperv.example.toml, the owner's node plan of
+# 2026-11-22, under KVM. XMIP-DC01, the domain controller, is the network's
+# DNS server: the names of the cluster and its nodes are given it. Which
+# node runs on which machine is here, never in the cluster's file: the
+# Essentials simulates the nodes no machine runs.
+#
+# A Windows machine's answer and its logon need the Administrator's secret,
+# which only Windows reads today (deploy/dsc/machine/MachineSecret.ps1), and
+# msdsc reaches a Windows machine over WinRM, which PowerShell on Linux has
+# no client for: from a Linux host, the Windows machines wait on both.
 
 name = "xmip"
 # The template set that makes it all, machines and nodes: msdsc (Microsoft
@@ -17,10 +23,16 @@ hypervisor = "libvirt"
 # The pool's directory, which libvirt makes and owns.
 root = "/var/lib/libvirt/images/xmip"
 domain = "xmip.test"
+# msdsc only: the machine made the first domain controller of a new Active
+# Directory forest of the domain, at the network's DNS server; every other
+# Windows machine joins it. Leave it out for no domain.
+domain_controller = "XMIP-DC01"
 cluster = "CL1"
 # The account each AlmaLinux machine's kickstart makes; it is given the
 # environment's own SSH key, which Deploy-XmipEnvironment makes.
 linux_account = ""
+# The Windows machines' Administrator secret, Export-Clixml.
+secret = ''
 
 # The cluster's file, each node's configuration sliced from it.
 configuration = "test/core/essentials/configuration/cluster.xmip"
@@ -34,29 +46,56 @@ authority = ".local-work/environment/authority"
 # A folder per node of what New-XmipCertificate -Node wrote: node.pem,
 # node.key and anchors.pem.
 identity = ".local-work/environment/identity"
-# The Parties' far end the Essentials serves, where the machines reach it:
-# every Receive Location and Send Port is bound there over SFTP, port 7422
-# (ADR-0028, amendment 2026-10-22).
-far_end = "10.77.0.1"
+# The Parties' far ends the Send Ports put on, each by the name it is found
+# by, in the order the Essentials' configuration/external.xmip names its
+# receivers: each Send Port puts on the one of its turn over SFTP, port 7422.
+# With listen, each Receive Location listens over HTTP on its own node, where
+# the senders push to it (ADR-0028, amendment 2026-11-22). The far ends run
+# on the machines whose external names them. An environment with none names
+# the host on the network, far_end = "10.77.0.1", where the Essentials serves
+# the far end, and every Location is bound there (amendment 2026-10-22).
+far_end = ["EXTRX1", "EXTRX2", "EXTRX3"]
+listen = true
 # Who operates the nodes: each listed among every node's [operate] operators,
 # a certificate's subject as New-XmipCertificate -Operator names it, or an
 # account. Left out, no one operates them.
 operators = ["CN=operator"]
 
-# The package each AlmaLinux machine's node is installed from:
-# Build-XmipService -Site personal-computer -CargoArgument '--release'
-# -Package rpm on a Linux machine (deploy/package/README.md).
+# The packages the nodes are installed from: Build-XmipService -Site
+# personal-computer -Package archive on Windows, -Package rpm on a Linux
+# machine (deploy/package/README.md).
+[packages.Windows]
+path = ""
+# The module libraries the cluster's file names, built for Windows: a folder.
+modules = ""
+
 [packages.Linux]
 path = ""
 # The module libraries the cluster's file names, built for Linux: a folder.
 modules = ""
 
-# msdsc only: what DSC is brought to each node machine with, each
-# tarball checked against its SHA-256 and unpacked in the machine's staging
-# folder, never installed for the machine. PowerShell 7's
+# msdsc only: the program each machine whose external names a far end runs it
+# by, the Essentials' xmip-essentials-external built for its system, which
+# registers itself as the service xmip-<far end> there. Its certificate is
+# identity's folder of its name, New-XmipCertificate -Node.
+[far_ends.Windows]
+program = ""
+
+[far_ends.Linux]
+program = ""
+
+# msdsc only: what DSC is brought to each node machine with, each file
+# checked against its SHA-256 and unpacked in the machine's staging folder,
+# never installed for the machine. For Linux, PowerShell 7's
 # powershell-<version>-linux-x64.tar.gz and DSC's
-# DSC-<version>-x86_64-linux.tar.gz, from their GitHub releases.
+# DSC-<version>-x86_64-linux.tar.gz; for Windows, which ships Windows
+# PowerShell alone, PowerShell-<version>-win-x64.zip and
+# DSC-<version>-x86_64-pc-windows-msvc.zip; all from their GitHub releases.
 [tools.Linux]
+pwsh = { path = "", sha256 = "" }
+dsc = { path = "", sha256 = "" }
+
+[tools.Windows]
 pwsh = { path = "", sha256 = "" }
 dsc = { path = "", sha256 = "" }
 
@@ -65,46 +104,281 @@ name = "xmip"
 bridge = "virbr-xmip"
 prefix = "10.77.0.0/24"
 gateway = "10.77.0.1"
-dns_server = "10.77.0.1"
+# XMIP-DC01, the domain controller, answers the environment's names.
+dns_server = "10.77.0.10"
 nat = true
+# Whether a machine reaches past the network, through the gateway and its
+# NAT: none does here but the one whose own internet says so, XMIP-RX01. A
+# machine that does not is installed with no gateway and reaches the
+# network alone, the host on it included. Left out, every machine does.
+internet = false
+
+# The installation images. A TPM where an image asks for one, tpm = true, as
+# Windows 11's Setup does: swtpm's, on the host. libvirt's firmware enrolls
+# both of Microsoft's certificate authorities, so Windows and AlmaLinux
+# boot with Secure Boot on one firmware.
+[images.WindowsServer2025]
+path = "/mnt/d/Downloads/OS/Images/Microsoft/WindowsServer2025-Eval-26100.1742-en-us.iso"
+sha256 = "d0ef4502e350e3c6c53c15b1b3020d38a5ded011bf04998e950720ac8579b23d"
+family = "Windows"
+# Server Core: a node needs no Desktop Experience, which takes memory and
+# disk the machines do not have (the owner, 2026-11-21).
+edition = "Windows Server 2025 SERVERDATACENTERCORE"
+tpm = false
+
+[images.Windows11]
+path = "/mnt/d/Downloads/OS/Images/Microsoft/Windows11-Enterprise-Eval-26H2-26300.9457-en-us.iso"
+sha256 = "bc3f24086ebadc94489066b5ad78089e2cf5c3491e90e790bb81a2b199c10e38"
+family = "Windows"
+edition = "Windows 11 Enterprise Evaluation"
+tpm = true
 
 [images.AlmaLinux10]
 path = "/mnt/d/Downloads/OS/Images/AlmaLinux/AlmaLinux-10.2-x86_64-dvd.iso"
 sha256 = "90244ac532f67c978831a381b420da8bda363729e1f4cf8fb8991daca70ee287"
 family = "Linux"
+tpm = false
 
-# The machines are made in this order, one installation at a time, and
-# their nodes are given theirs in the same order: Xmip Storage first, which
-# the other nodes reach. The cluster's file lists DS1 and DS2 as its Storage
-# nodes, and neither serves until both answer (ADR-0056, amendment
-# 2026-11-08), so both run on machines of their own.
+# The same DVD with a desktop: the kickstart installs the environment group
+# named here, where AlmaLinux10 installs minimal-environment, and the
+# machine starts to its graphical target. For the people's machines alone.
+[images.AlmaLinux10Desktop]
+path = "/mnt/d/Downloads/OS/Images/AlmaLinux/AlmaLinux-10.2-x86_64-dvd.iso"
+sha256 = "90244ac532f67c978831a381b420da8bda363729e1f4cf8fb8991daca70ee287"
+family = "Linux"
+environment = "workstation-product-environment"
+tpm = false
 
-# application server, Xmip Storage
+# The machines of the owner's node plan of 2026-11-22, as hyperv.example.toml
+# lists them: the cluster's nodes, the far ends it trades with, and the
+# premises' own machines, each named for what it runs. They are made in this
+# order, one installation at a time, and their nodes are given theirs in the
+# same order: Xmip Storage first, which the other nodes reach; the people's
+# machines last.
+#
+# Memory: memory_gb is what a machine starts with, and installs with. An
+# AlmaLinux machine starts with 2 GiB, which its installer needs, and its
+# dynamic_memory's maximum_gb is the plan's figure: its domain's memory, of
+# which its balloon starts with memory_gb and gives back up to the most as
+# the machine runs short, the host given back every page it frees. libvirt
+# has no least, so minimum_gb is Hyper-V's alone. Windows has no balloon
+# driver of its own, so a Windows machine's memory is its memory_gb, static:
+# 2 GiB for Windows Server, the plan's floor for it, and 4 GiB for Windows
+# 11, whose Setup asks for it. Windows Server is Server Core.
+
+# domain controller and DNS for every machine
 [[machines]]
-name = "XMIP-APP03"
-address = "10.77.0.53"
+name = "XMIP-DC01"
+address = "10.77.0.10"
+image = "WindowsServer2025"
+memory_gb = 2
+cpu = 2
+disk_gb = 64
+
+# file storage, optional: brings software and packages into the premises
+[[machines]]
+name = "XMIP-FS01"
+address = "10.77.0.20"
+image = "WindowsServer2025"
+memory_gb = 2
+cpu = 2
+disk_gb = 64
+
+# Xmip node, Xmip Storage, the primary: the cluster's file lists DS1 and
+# DS2, and neither serves until both answer (ADR-0056, amendment 2026-11-08)
+[[machines]]
+name = "XMIP-DS01"
+address = "10.77.0.81"
 image = "AlmaLinux10"
-memory_gb = 4
+memory_gb = 2
+dynamic_memory = { minimum_gb = 0.5, maximum_gb = 4 }
 cpu = 2
 disk_gb = 32
 nodes = ["DS1"]
 
-# application server, Xmip Storage
+# Xmip node, Xmip Storage, the standby that follows DS1
 [[machines]]
-name = "XMIP-APP04"
-address = "10.77.0.54"
-image = "AlmaLinux10"
-memory_gb = 4
+name = "XMIP-DS02"
+address = "10.77.0.82"
+image = "WindowsServer2025"
+memory_gb = 2
 cpu = 2
-disk_gb = 32
+disk_gb = 64
 nodes = ["DS2"]
 
-# inbound
+# Xmip node, receiving; the one machine with a way out, optional
 [[machines]]
-name = "XMIP-IN01"
-address = "10.77.0.61"
+name = "XMIP-RX01"
+address = "10.77.0.41"
 image = "AlmaLinux10"
-memory_gb = 4
+memory_gb = 2
+dynamic_memory = { minimum_gb = 0.5, maximum_gb = 3 }
 cpu = 2
 disk_gb = 32
+internet = true
 nodes = ["RX1"]
+
+# Xmip node, receiving
+[[machines]]
+name = "XMIP-RX02"
+address = "10.77.0.42"
+image = "WindowsServer2025"
+memory_gb = 2
+cpu = 2
+disk_gb = 64
+nodes = ["RX2"]
+
+# Xmip node, receiving
+[[machines]]
+name = "XMIP-RX03"
+address = "10.77.0.43"
+image = "AlmaLinux10"
+memory_gb = 2
+dynamic_memory = { minimum_gb = 0.5, maximum_gb = 3 }
+cpu = 2
+disk_gb = 32
+nodes = ["RX3"]
+
+# Xmip node, processing between the receiving and sending nodes, such as a
+# Work Process
+[[machines]]
+name = "XMIP-EX01"
+address = "10.77.0.52"
+image = "WindowsServer2025"
+memory_gb = 2
+cpu = 2
+disk_gb = 64
+nodes = ["EX1"]
+
+# Xmip node, executing: receives, processes and sends at low latency
+[[machines]]
+name = "XMIP-EX02"
+address = "10.77.0.53"
+image = "AlmaLinux10"
+memory_gb = 2
+dynamic_memory = { minimum_gb = 0.5, maximum_gb = 4 }
+cpu = 2
+disk_gb = 32
+nodes = ["EX2"]
+
+# Xmip node, sending
+[[machines]]
+name = "XMIP-TX01"
+address = "10.77.0.71"
+image = "WindowsServer2025"
+memory_gb = 2
+cpu = 2
+disk_gb = 64
+nodes = ["TX1"]
+
+# Xmip node, sending
+[[machines]]
+name = "XMIP-TX02"
+address = "10.77.0.72"
+image = "AlmaLinux10"
+memory_gb = 2
+dynamic_memory = { minimum_gb = 0.5, maximum_gb = 3 }
+cpu = 2
+disk_gb = 32
+nodes = ["TX2"]
+
+# Xmip node, sending
+[[machines]]
+name = "XMIP-TX03"
+address = "10.77.0.73"
+image = "WindowsServer2025"
+memory_gb = 2
+cpu = 2
+disk_gb = 64
+nodes = ["TX3"]
+
+# a far end that sends to the cluster, the plan's external TX1
+[[machines]]
+name = "XMIP-EXTTX01"
+address = "10.77.0.91"
+image = "AlmaLinux10"
+memory_gb = 2
+dynamic_memory = { minimum_gb = 0.5, maximum_gb = 2 }
+cpu = 1
+disk_gb = 32
+external = "EXTTX1"
+
+# a far end that sends to the cluster, the plan's external TX2
+[[machines]]
+name = "XMIP-EXTTX02"
+address = "10.77.0.92"
+image = "WindowsServer2025"
+memory_gb = 2
+cpu = 1
+disk_gb = 64
+external = "EXTTX2"
+
+# a far end that sends to the cluster, the plan's external TX3
+[[machines]]
+name = "XMIP-EXTTX03"
+address = "10.77.0.93"
+image = "AlmaLinux10"
+memory_gb = 2
+dynamic_memory = { minimum_gb = 0.5, maximum_gb = 2 }
+cpu = 1
+disk_gb = 32
+external = "EXTTX3"
+
+# a far end the cluster sends to, the plan's external RX1
+[[machines]]
+name = "XMIP-EXTRX01"
+address = "10.77.0.101"
+image = "WindowsServer2025"
+memory_gb = 2
+cpu = 1
+disk_gb = 64
+external = "EXTRX1"
+
+# a far end the cluster sends to, the plan's external RX2
+[[machines]]
+name = "XMIP-EXTRX02"
+address = "10.77.0.102"
+image = "AlmaLinux10"
+memory_gb = 2
+dynamic_memory = { minimum_gb = 0.5, maximum_gb = 2 }
+cpu = 1
+disk_gb = 32
+external = "EXTRX2"
+
+# a far end the cluster sends to, the plan's external RX3
+[[machines]]
+name = "XMIP-EXTRX03"
+address = "10.77.0.103"
+image = "WindowsServer2025"
+memory_gb = 2
+cpu = 1
+disk_gb = 64
+external = "EXTRX3"
+
+# developer machine, Linux with a desktop
+[[machines]]
+name = "XMIP-DEV02"
+address = "10.77.0.32"
+image = "AlmaLinux10Desktop"
+memory_gb = 2
+dynamic_memory = { minimum_gb = 1, maximum_gb = 4 }
+cpu = 2
+disk_gb = 64
+
+# developer machine, Windows 11
+[[machines]]
+name = "XMIP-DEV01"
+address = "10.77.0.31"
+image = "Windows11"
+memory_gb = 4
+cpu = 2
+disk_gb = 128
+
+# operator machine, Windows 11
+[[machines]]
+name = "XMIP-OP01"
+address = "10.77.0.33"
+image = "Windows11"
+memory_gb = 4
+cpu = 2
+disk_gb = 128

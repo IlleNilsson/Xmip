@@ -22,11 +22,20 @@ network, a pool or a domain is libvirt's.
 ## The example environment
 
 `deploy/dsc/libvirt.example.toml`, which `Deploy-XmipEnvironment` reads
-(`deploy/dsc/README.md`), describes two machines on 10.77.0.0/24, AlmaLinux
-10 both: XMIP-APP03, the Essentials' DS1, and XMIP-IN01, its RX1. The
-network's DNS answers `DS1`, `RX1` and the cluster, `CL1`, at the addresses of
-the machines that run them, so the environment needs no DNS server of its
-own.
+(`deploy/dsc/README.md`), is the owner's node plan of 2026-11-22 under KVM:
+the Hyper-V example's 21 machines on 10.77.0.0/24, machine for machine, with
+the same names, addresses, systems, nodes and far ends
+(`deploy/dsc/msdsc/environment/README.md`). XMIP-DC01, the domain
+controller, is the network's DNS server; XMIP-RX01 alone reaches past the
+network; XMIP-DEV02 is AlmaLinux with a desktop. An AlmaLinux machine starts
+with 2 GiB and is given up to the plan's figure; a Windows machine has the
+plan's floor, static: 2 GiB for Windows Server, 4 GiB for Windows 11
+(ADR-0015, amendment 2026-11-22).
+
+From a Linux host the Windows machines wait on two things the owner
+decides: their Administrator secret, which only Windows reads
+(`deploy/dsc/machine/MachineSecret.ps1`), and how msdsc reaches them, since
+PowerShell on Linux has no WinRM client.
 
 ## What each machine is given
 
@@ -37,10 +46,29 @@ checked against it and uploaded only where the pool does not hold it yet, so
 a DVD's gigabytes are read once, not once per machine. A
 domain with UEFI and Secure Boot, the enrolled keys, its memory and CPUs, its
 adapter on the network with a static MAC made from its address (52-54-00 and
-the address's last three octets), and two DVD drives; a TPM where the host
-has `swtpm`, never required. It boots its disk first, then the DVD: the empty
-disk does not boot, so the firmware moves on to the ISO, which installs onto
-the disk.
+the address's last three octets), and two DVD drives; a TPM 2.0 from
+`swtpm` where its image says `tpm = true`, as Windows 11's does, refused
+where the host has no `swtpm`. It boots its disk first, then the DVD: the
+empty disk does not boot, so the firmware moves on to the ISO, which
+installs onto the disk.
+
+Its memory is `memory_gb`, static, or, where its `dynamic_memory` names
+its most, that most, of which a virtio balloon starts with `memory_gb`:
+the balloon gives the guest back up to its most once it runs short
+(`autodeflate`), and the host is given back every page the guest frees
+(`freePageReporting`). libvirt has no least, so `minimum_gb` is Hyper-V's
+alone. Windows has no balloon driver of its own (virtio-win's is a third
+party's), so a Windows machine gets no balloon, and its
+`dynamic_memory` is refused before anything is made. A Windows machine
+gets instead what KVM gives of Hyper-V's own interface, which Windows uses
+as it does on Hyper-V, and Hyper-V's clock, as `virt-install`'s osinfo gives
+Windows Server 2025 and Windows 11: no driver of anyone's.
+
+An AlmaLinux machine's chrony keeps KVM's clock, `refclock PHC
+/dev/ptp_kvm`, the module `ptp_kvm` loaded at every start, which AlmaLinux
+10's kernel builds as a module, and the device systemd's own udev rules
+link: a machine with no way out reaches no pool, and nodes and far ends on
+different machines time what they carry on one clock.
 
 What each definition is — the network, the pool, the domain, its volumes
 and drives — and the answers are `deploy/dsc/machine`'s, which Ansible's
@@ -64,7 +92,7 @@ installed again.
 Once, with sudo, on an AlmaLinux 10 host — the WSL AlmaLinux guest included:
 
 ```text
-sudo dnf install --assumeyes libicu qemu-kvm libvirt virt-install
+sudo dnf install --assumeyes libicu qemu-kvm libvirt virt-install swtpm swtpm-tools
 echo kvm_intel | sudo tee /etc/modules-load.d/kvm.conf
 sudo usermod --append --groups libvirt,kvm <account>
 sudo systemctl enable --now virtqemud.socket virtnetworkd.socket virtstoraged.socket
@@ -102,7 +130,10 @@ a medium or the answer medium is still in the pool, and its record naming
 the technology that made it, so the other technology is refused there.
 
 `test/MsdscLibvirt.Test.ps1` holds what can be held without libvirt: the
-network's and the domain's definitions, the example as
-`Deploy-XmipEnvironment` reads it, the machine's `set` while it installs,
-with `virsh` a stub: it leaves the machine to install and writes nothing,
-and an ISO hashed only where its volume is not in the pool whole.
+network's and the domain's definitions, their memory, balloon, TPM and
+Windows' interface and clock; an AlmaLinux machine's answer given KVM's
+clock; the example as `Deploy-XmipEnvironment` reads it, the Hyper-V
+example's plan machine for machine, every machine's domain defined, and a
+Windows machine's dynamic memory refused; the machine's `set` while it
+installs, with `virsh` a stub: it leaves the machine to install and writes
+nothing, and an ISO hashed only where its volume is not in the pool whole.

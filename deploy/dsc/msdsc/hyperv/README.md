@@ -206,6 +206,7 @@ controller.
 | `xmip-hyperv-*.dsc.resource.yaml` | the resource manifests |
 | `../../machine/HyperVDefinition.ps1` | the machine's folder files, static MAC, drives' places and answer medium, shared with Ansible's template |
 | `../../machine/MachineAnswer.ps1` | the install answers and the answer medium, shared with the libvirt template |
+| `../../machine/MachineGuest.ps1` | what the hypervisor gives its guest, its dynamic memory and chrony's clock line, shared with the libvirt template |
 | `../../machine/autounattend.template.xml` | the Windows answer `MachineAnswer.ps1` fills in |
 
 Each document requires DSC `^3.4.0-preview.3`, the latest release.

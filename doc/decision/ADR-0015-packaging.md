@@ -1482,3 +1482,51 @@ integration of windows-service.* Built by the assistant the same day.
   its node (`xmip-service --slice --bind a,b,c --listen`). One far end, the
   host, binds every Location as before. Ansible's inventory passes both;
   its role for a far end's machine is not written.
+
+## Amendment, 2026-11-22: the libvirt example is the node plan under KVM
+
+**Provenance.** The owner, 2026-11-22: *Now we need a local test,
+represented by processes and another represented by Hyper-V and a version
+for Linux. You can choose the Linux VM engine.* The engine chosen is KVM
+through libvirt, which the templates made machines on from nothing on
+2026-11-12. How the templates carry the plan there was decided by the
+assistant while building, for the owner to strike.
+
+- **The example is the plan.** `deploy/dsc/libvirt.example.toml` lists the
+  Hyper-V example's 21 machines, machine for machine: their names,
+  addresses, systems, nodes, far ends, the domain's controller as the DNS
+  server, XMIP-RX01's way out and XMIP-DEV02's desktop, each through the
+  key the Hyper-V example uses (the amendments before this one). XMIP-APP03,
+  XMIP-APP04 and XMIP-IN01 are deleted from it.
+- **Dynamic memory is a balloon.** On libvirt `dynamic_memory`'s
+  `maximum_gb` is the domain's memory, of which a virtio balloon starts with
+  `memory_gb`; the balloon gives the guest back up to its most once it runs
+  short (`autodeflate`) and the host every page the guest frees
+  (`freePageReporting`). libvirt has no least, so `minimum_gb` is
+  Hyper-V's alone. Windows has no balloon driver of its own and the one
+  there is, virtio-win's, is a third party's, so on libvirt a Windows
+  machine's memory is static and its `dynamic_memory` is refused before
+  anything is made; the example gives Windows Server 2 GiB, the plan's
+  floor, and Windows 11 4 GiB. The owner may take virtio-win's balloon
+  instead.
+- **One home for what a hypervisor gives its guest.**
+  `deploy/dsc/machine/MachineGuest.ps1` holds the instance's dynamic memory,
+  moved from the Hyper-V template, and chrony's clock line, which each
+  hypervisor calls with its own device: `ptp_hyperv` on Hyper-V,
+  `ptp_kvm` on KVM, its module loaded at every start since AlmaLinux 10's
+  kernel builds it as one. The Hyper-V way's own udev rule is deleted:
+  systemd 257's rules link both clocks (`50-udev-default.rules`).
+- **Windows under KVM, no driver of anyone's.** A Windows guest keeps the
+  SATA disk and e1000e adapter its installer knows, and is given what KVM
+  gives of Hyper-V's own interface and Hyper-V's clock, as `virt-install`'s
+  osinfo gives Windows Server 2025 and Windows 11. An image's `tpm`, which
+  the Hyper-V template reads, decides on libvirt too: `true` gives swtpm's
+  TPM 2.0, refused where the host has no `swtpm`, and left out, none, where
+  libvirt gave one wherever the host had `swtpm`.
+- **What waits on the owner.** From a Linux host the Windows machines are
+  not made yet, by either technology: their Administrator secret is read on
+  Windows alone (`MachineSecret.ps1`), and PowerShell on Linux has no WinRM
+  client, which msdsc reaches a Windows machine by where it is not on
+  Hyper-V. Ansible reaches Windows over WinRM, and writes no domain
+  controller and no far end. How a Linux host holds the secret and reaches
+  the Windows machines is the owner's to choose.

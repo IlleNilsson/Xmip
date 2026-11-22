@@ -93,15 +93,16 @@ function Get-XmipDeployEnvironment {
         if (-not [bool] (Get-TomlValue -Node $machine -Name 'internet' -Default $internet)) {
             $value['network']['gateway'] = ''
         }
-        $value['memoryGB'] = [int] (Get-TomlValue -Node $machine -Name 'memory_gb')
-        $value['dynamicMemory'] = Get-XmipDeployDynamicMemory -Machine $machine
-        $value['cpu'] = [int] (Get-TomlValue -Node $machine -Name 'cpu')
-        $value['diskGB'] = [int] (Get-TomlValue -Node $machine -Name 'disk_gb')
-        $value['pool'] = $name
         $value['image'] = ConvertTo-XmipTomlTable -Node (Get-TomlValue -Node $images -Name (
                 Get-TomlValue -Node $machine -Name 'image'))
         $value['image']['path'] = Resolve-XmipDeployPath -Estate $Estate -Path (
             [string] $value['image']['path'])
+        $value['memoryGB'] = [int] (Get-TomlValue -Node $machine -Name 'memory_gb')
+        $value['dynamicMemory'] = Get-XmipDeployDynamicMemory -Machine $machine -Hypervisor (
+            $hypervisor) -Family $value['image'].family
+        $value['cpu'] = [int] (Get-TomlValue -Node $machine -Name 'cpu')
+        $value['diskGB'] = [int] (Get-TomlValue -Node $machine -Name 'disk_gb')
+        $value['pool'] = $name
         $machines.Add($value)
         [string[]] $runs = @(Get-TomlValue -Node $machine -Name 'nodes' -Default @())
         if ($runs.Count -gt 1) {

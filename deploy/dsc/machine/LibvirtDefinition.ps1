@@ -11,13 +11,31 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-. (Join-Path -Path $PSScriptRoot -ChildPath 'MachineAnswer.ps1')
+foreach ($part in 'MachineAnswer.ps1', 'MachineGuest.ps1') {
+    . (Join-Path -Path $PSScriptRoot -ChildPath $part)
+}
 
 # KVM's MAC prefix: a machine's static MAC ends in its address's last three
 # octets (MachineAnswer.ps1), so the network's DHCP and the kickstart match it.
 $script:LibvirtMacPrefix = '525400'
 # The package of the guest services on KVM, which the kickstart installs.
 $script:LibvirtGuestPackage = 'qemu-guest-agent'
+# KVM's clock as chrony's source (MachineGuest.ps1): the module ptp_kvm gives
+# it, which AlmaLinux 10's kernel builds as a module and nothing loads, and
+# udev links it as ptp_kvm.
+$script:LibvirtClock = @(Get-MachineClockLine -Device 'ptp_kvm' -Module 'ptp_kvm')
+# What KVM gives a Windows guest of Hyper-V's own interface, which Windows
+# uses as it does on Hyper-V, and its clock: what virt-install's osinfo gives
+# Windows Server 2025 and Windows 11, every one built into KVM, no driver.
+$script:LibvirtWindowsFeature = @(
+    '    <hyperv>'
+    "      <relaxed state='on'/><vapic state='on'/><spinlocks state='on' retries='8191'/>"
+    "      <vpindex state='on'/><runtime state='on'/><synic state='on'/>"
+    "      <stimer state='on'/><frequencies state='on'/><tlbflush state='on'/>"
+    "      <ipi state='on'/><evmcs state='on'/><avic state='on'/>"
+    '    </hyperv>'
+)
+$script:LibvirtWindowsClock = "    <timer name='hypervclock' present='yes'/>"
 # The namespace of the machine's own record in its domain's metadata.
 $script:LibvirtMetadata = 'urn:xmip:machine'
 # The DVD drives' targets on the SATA bus; the disk is vda or sda before them.
@@ -166,13 +184,14 @@ function Get-LibvirtMachineDefinition {
     <#
     .SYNOPSIS
     The machine's domain as libvirt reads it. A Windows guest is given the
-    SATA disk and e1000e adapter its installer has drivers for; an AlmaLinux
-    guest virtio and the guest agent's channel.
+    SATA disk and e1000e adapter its installer has drivers for, and Hyper-V's
+    interface and clock, which KVM gives; an AlmaLinux guest virtio, the
+    guest agent's channel and the balloon.
     .DESCRIPTION
     The domain boots its disk first, then the DVD: the empty disk does not
     boot, so the firmware moves on to the ISO, which installs onto the disk,
-    and every later boot starts from the disk. A TPM is given wherever the
-    host has one to give, never required.
+    and every later boot starts from the disk. Its memory is
+    Get-LibvirtMemoryLine's, and a TPM is given where its image asks for one.
     #>
     [CmdletBinding()]
     [OutputType([string])]
@@ -187,20 +206,18 @@ function Get-LibvirtMachineDefinition {
     [string] $disk = if ($windows) { "dev='sda' bus='sata'" } else { "dev='vda' bus='virtio'" }
     [string] $model = if ($windows) { 'e1000e' } else { 'virtio' }
     [string] $mac = Get-LibvirtMacAddress -Address $Instance['address']
-    [string[]] $tpm = @()
-    if ($null -ne (Get-Command -Name swtpm -ErrorAction SilentlyContinue)) {
-        $tpm = @("    <tpm model='tpm-crb'><backend type='emulator' version='2.0'/></tpm>")
-    }
-    [string[]] $agent = @()
-    if (-not $windows) {
-        $agent = @("    <channel type='unix'><target type='virtio' " +
-            "name='org.qemu.guest_agent.0'/></channel>")
+    [string[]] $guest = @(Get-LibvirtGuestDevice -Instance $Instance)
+    [string[]] $feature = @()
+    [string[]] $clock = @()
+    if ($windows) {
+        $feature = $script:LibvirtWindowsFeature
+        $clock = @($script:LibvirtWindowsClock)
     }
     return @(
         "<domain type='kvm'>"
         "  <name>$(ConvertTo-LibvirtText -Value $Instance['name'])</name>"
         "  <description>$(ConvertTo-LibvirtText -Value $Instance['environment'])</description>"
-        "  <memory unit='GiB'>$($Instance['memoryGB'])</memory>"
+        @(Get-LibvirtMemoryLine -Instance $Instance)
         "  <vcpu>$($Instance['cpu'])</vcpu>"
         "  <os firmware='efi'>"
         "    <type arch='x86_64' machine='q35'>hvm</type>"
@@ -211,9 +228,17 @@ function Get-LibvirtMachineDefinition {
         "    <boot dev='hd'/>"
         "    <boot dev='cdrom'/>"
         '  </os>'
-        "  <features><acpi/><apic/><smm state='on'/></features>"
+        '  <features>'
+        "    <acpi/><apic/><smm state='on'/>"
+        $feature
+        '  </features>'
         "  <cpu mode='host-passthrough'/>"
-        "  <clock offset='utc'/>"
+        # UTC, the time zone every machine's answer gives it.
+        "  <clock offset='utc'>"
+        "    <timer name='rtc' tickpolicy='catchup'/><timer name='pit' tickpolicy='delay'/>"
+        "    <timer name='hpet' present='no'/>"
+        $clock
+        '  </clock>'
         '  <devices>'
         "    <disk type='volume' device='disk'><driver name='qemu' type='qcow2'/>"
         "      <source pool='$pool' volume='$($volume.Disk)'/><target $disk/></disk>"
@@ -229,18 +254,77 @@ function Get-LibvirtMachineDefinition {
         "    <serial type='pty'/><console type='pty'/>"
         "    <graphics type='vnc' listen='127.0.0.1'/>"
         "    <video><model type='virtio'/></video>"
-        $agent
-        $tpm
+        $guest
         '  </devices>'
         '</domain>'
     ) -join "`n"
+}
+
+function Get-LibvirtMemoryLine {
+    <#
+    .SYNOPSIS
+    The domain's memory lines, in MiB. Static, memory_gb, where the machine
+    says no more; where its dynamic memory names its most, that is the
+    domain's memory and memory_gb its balloon's start, currentMemory: the
+    guest starts with memory_gb and is given back up to its most from its
+    balloon once it runs short. libvirt has no least: minimum_gb is
+    Hyper-V's alone.
+    #>
+    [CmdletBinding()]
+    [OutputType([string])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [hashtable] $Instance
+    )
+
+    [long] $start = [long] $Instance['memoryGB'] * 1024
+    [Collections.IDictionary] $dynamic = Get-MachineDynamicMemory -Instance $Instance
+    [long] $most = if ($dynamic.Count -gt 0) { [long] $dynamic['maximumMB'] } else { $start }
+    "  <memory unit='MiB'>$most</memory>"
+    "  <currentMemory unit='MiB'>$start</currentMemory>"
+}
+
+function Get-LibvirtGuestDevice {
+    <#
+    .SYNOPSIS
+    The domain's devices that depend on its guest: for AlmaLinux the guest
+    agent's channel and the virtio balloon, which deflates as the guest runs
+    short (autodeflate) and gives the host back every page the guest frees
+    (freePageReporting); for Windows, which has no balloon driver of its
+    own, no balloon. And a TPM 2.0 from swtpm where the machine's image
+    asks for one, tpm = true, as Windows 11's Setup does: refused where this
+    host has no swtpm to give it.
+    #>
+    [CmdletBinding()]
+    [OutputType([string])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [hashtable] $Instance
+    )
+
+    if (Test-LibvirtWindows -Instance $Instance) {
+        "    <memballoon model='none'/>"
+    }
+    else {
+        "    <channel type='unix'><target type='virtio' name='org.qemu.guest_agent.0'/></channel>"
+        "    <memballoon model='virtio' autodeflate='on' freePageReporting='on'/>"
+    }
+    if (-not [bool] (Get-MachineValue -Of $Instance['image'] -Name 'tpm')) {
+        return
+    }
+    if ($null -eq (Get-Command -Name swtpm -ErrorAction SilentlyContinue)) {
+        throw ("REFUSED: $($Instance['name'])'s image asks for a TPM, and this host has no " +
+            'swtpm to give it (deploy/dsc/msdsc/libvirt/README.md).')
+    }
+    "    <tpm model='tpm-crb'><backend type='emulator' version='2.0'/></tpm>"
 }
 
 function New-LibvirtAnswerMedium {
     <#
     .SYNOPSIS
     Writes one machine's answer medium at $Path, as KVM's machines read it:
-    its static MAC by KVM's prefix and the guest agent in its packages.
+    its static MAC by KVM's prefix, the guest agent in its packages and
+    KVM's clock as chrony's source.
     #>
     [CmdletBinding(SupportsShouldProcess = $true)]
     [OutputType([void])]
@@ -257,6 +341,7 @@ function New-LibvirtAnswerMedium {
         MacAddress = Get-MachineMacAddress -Address $Instance['address'] -Prefix (
             $script:LibvirtMacPrefix)
         GuestPackage = $script:LibvirtGuestPackage
+        Clock = $script:LibvirtClock
     }
     if ($PSCmdlet.ShouldProcess($Path, 'Write the answer medium')) {
         [hashtable] $medium = Get-MachineAnswerMedium @asked

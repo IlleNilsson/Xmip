@@ -30,8 +30,8 @@ documents here their parameters from it; the layout and the accounts are
 
 The Hyper-V example, `deploy/dsc/hyperv.example.toml`, puts ten of the
 file's eleven nodes on ten node machines, as the owner's node plan of
-2026-11-22 lays them out, and the libvirt example DS1, DS2 and RX1 on three;
-the Essentials simulates the others, OP1 among them. Both Storage nodes the
+2026-11-22 lays them out, and the libvirt example the same ten on the same
+machines under KVM; the Essentials simulates the other, OP1. Both Storage nodes the
 file lists, DS1 and DS2, run on machines of their own: neither serves until
 both answer (ADR-0056, amendment 2026-11-08).
 

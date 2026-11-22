@@ -185,7 +185,9 @@ Describe 'The environment file' {
                 Lock-XmipDeployState -Folder $TestDrive | ForEach-Object { $_.Dispose() }
                 $script:Called
             })
-        $calls.Count | Should -Be 8
+        # Each step once, every one in its desired state.
+        $calls.Count | Should -Be @(Get-XmipTestDeployStep -Environment $made.Environment -Run (
+                [string] $TestDrive)).Count
     }
 }
 
@@ -212,11 +214,15 @@ Describe 'msdsc' {
                 Deploy-XmipEnvironment -Path $Path | Out-Null
                 $script:Called
             })
-        [string[]] $machine = @('XMIP-APP03', 'XMIP-APP04', 'XMIP-IN01' | ForEach-Object {
-                "$_ set", "$_ set", "$_ set" })
-        [string[]] $node = @(Get-PlacedNode -Environment $made.Environment | ForEach-Object {
-                "$_ set" })
-        $calls | Should -Be (@('network set') + $machine + $node + @('started set'))
+        # A step that installs, a machine or a domain's, is set until it is
+        # done before the next is begun; every other step once.
+        [string[]] $expected = @(foreach ($step in @(Get-XmipTestDeployStep -Environment (
+                        $made.Environment) -Run ([string] $TestDrive))) {
+                [int] $rounds = if ($step.ContainsKey('Install')) { 3 } else { 1 }
+                @(1..$rounds | ForEach-Object { "$($step.Name) set" })
+            })
+        @($calls | Where-Object { $_ -like 'XMIP-* set' }) | Should -Not -BeNullOrEmpty
+        $calls | Should -Be $expected
     }
 
     It 'tests a node again once every node is started, and fails one that still differs' {
@@ -265,8 +271,10 @@ Describe 'msdsc' {
                 $nodes[0].Value.ContainsKey($name) | Should -BeTrue -Because $name
             }
         }
+        [string] $third = @($made.Environment['machines'] | Where-Object {
+                @($_['nodes']) -contains $placed[2] })[0]['name']
         $nodes[2].Value.placed | Should -Be ($placed -join ',')
-        $nodes[2].Value.machine.name | Should -Be 'XMIP-IN01'
+        $nodes[2].Value.machine.name | Should -Be $third
         $nodes[2].Value.machine.family | Should -Be 'Linux'
         $nodes[2].Value.packages.Linux.file | Should -Be 'xmip.rpm'
         $nodes[2].Value.tools.Linux.pwsh.sha256 | Should -Be 'ab'
@@ -343,15 +351,18 @@ Describe 'msdsc' {
     }
 
     It 'gives the names to a DNS server only where one of the machines is it' {
-        [string[]] $without = @(Get-XmipTestDeployStep -Environment (
-                New-Environment).Environment -Run ([string] $TestDrive) |
-            ForEach-Object { $_.Name })
+        # The network's own DNS server, and so no domain controller either.
+        $made = New-Environment -Change @{ domain_controller = $null }
+        $made.Environment['network']['dns_server'] = $made.Environment['network']['gateway']
+        [string[]] $without = @(Get-XmipTestDeployStep -Environment $made.Environment -Run (
+                [string] $TestDrive) | ForEach-Object { $_.Name })
         $without | Should -Not -Contain 'names'
-        $made = New-Environment
-        $made.Environment['network']['dns_server'] = '10.77.0.53'
+        [Collections.IDictionary] $server = @($made.Environment['machines'] |
+                Where-Object { $_['nodes'] })[0]
+        $made.Environment['network']['dns_server'] = $server['address']
         [hashtable] $names = @(Get-XmipTestDeployStep -Environment $made.Environment -Run (
                 [string] $TestDrive) | Where-Object { $_.Name -eq 'names' })[0]
-        $names.Value.server.name | Should -Be 'XMIP-APP03'
+        $names.Value.server.name | Should -Be $server['name']
         @($names.Value.records | ForEach-Object { $_.name }) |
             Should -Contain @(Get-PlacedNode -Environment $made.Environment)[-1]
     }
@@ -375,9 +386,10 @@ Describe 'Ansible' {
             Should -Be '-o UserKnownHostsFile=known_hosts -o StrictHostKeyChecking=yes'
         $inventory.linux.vars.ansible_python_interpreter | Should -Be '/usr/bin/python3'
         $inventory.xmip_hypervisor_host.hosts.localhost.ansible_connection | Should -Be 'local'
-        # No machine is the DNS server: its group is there, and empty.
-        $inventory.Contains('xmip_name_server') | Should -BeTrue
-        $inventory.xmip_name_server.hosts.Count | Should -Be 0
+        # The machine at the network's DNS server, the domain's controller.
+        [string] $server = @($made.Environment['machines'] | Where-Object {
+                $_['address'] -eq $made.Environment['network']['dns_server'] })[0]['name']
+        @($inventory.xmip_name_server.hosts.Keys) | Should -Be @($server)
     }
 
     It 'reads a machine''s facts through ansible_facts, never as top-level variables' {
@@ -570,11 +582,15 @@ Describe 'The private state' {
                 Initialize-State -Environment $made.Environment -Folder $folder
             })
         [hashtable] $state = $twice[0]
+        [object[]] $linux = @($made.Environment['machines'] | Where-Object {
+                $made.Environment['images'][$_['image']]['family'] -eq 'Linux' })
         @($state.HostKey.Keys | Sort-Object) |
-            Should -Be @('XMIP-APP03', 'XMIP-APP04', 'XMIP-IN01')
+            Should -Be @($linux | ForEach-Object { $_['name'] } | Sort-Object)
         [string[]] $known = @(Get-Content -LiteralPath $state.KnownHosts)
-        $known[0] | Should -BeLike 'XMIP-APP03,10.77.0.53 ssh-ed25519 *'
-        $known[2] | Should -BeLike 'XMIP-IN01,10.77.0.61 ssh-ed25519 *'
+        foreach ($index in 0, 2) {
+            $known[$index] | Should -BeLike (
+                "$($linux[$index]['name']),$($linux[$index]['address']) ssh-ed25519 *")
+        }
         # The environment's own key, with no passphrase, so a run needs no one.
         Get-Content -LiteralPath "$($state.Key).pub" | Should -BeLike 'ssh-ed25519 * xmip-xmip'
         & ssh-keygen -y -P '' -f $state.Key | Should -BeLike 'ssh-ed25519 *'
@@ -620,8 +636,11 @@ Describe 'The private state' {
         [string] $known = (Initialize-State -Environment $made.Environment -Folder (
                 $folder)).KnownHosts
         [byte[]] $before = [IO.File]::ReadAllBytes($known)
-        # The file changes under the running run: another machine's address.
-        @($made.Environment['machines'])[0]['address'] = '10.77.0.99'
+        # The file changes under the running run: another AlmaLinux machine's
+        # address, which known_hosts holds.
+        @($made.Environment['machines'] | Where-Object {
+                $made.Environment['images'][$_['image']]['family'] -eq 'Linux' })[0]['address'] =
+            '10.77.0.99'
         & (Get-Module -Name Xmip) {
             param($Path, $Value)
             Write-XmipToml -Path $Path -Value $Value

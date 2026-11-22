@@ -78,7 +78,15 @@ schema: !embedded
       address:
         type: string
       memoryGB:
+        description: >-
+          The domain's memory, in GiB; where it is dynamic, the memory it
+          starts with, its balloon's.
         type: integer
+      dynamicMemory:
+        description: >-
+          minimumMB and maximumMB: the domain's memory is maximumMB, which
+          its balloon gives back; empty where its memory is static.
+        type: object
       cpu:
         type: integer
       diskGB:
@@ -89,7 +97,9 @@ schema: !embedded
         description: 'name, gateway, prefixLength and dnsServer.'
         type: object
       image:
-        description: 'path, sha256, family (Windows or Linux) and edition.'
+        description: >-
+          path, sha256, family (Windows or Linux), edition, environment and
+          tpm.
         type: object
       domainName:
         type: string
