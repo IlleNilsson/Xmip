@@ -218,8 +218,9 @@ fn every_node_configuration_deploy_writes_is_the_one_the_runtime_reads() {
     // every Location the file designs is placed on one of them.
 
     assert!(source(DEFAULTS).contains("'--bind', xmip_far_end, '--nodes'"));
-    let bound = xmip_configure::placed::at_far_end(&cluster, &mapped, "10.77.0.1")
-        .expect("places over the mapped nodes");
+    let bound =
+        xmip_configure::placed::at_far_ends(&cluster, &mapped, &["10.77.0.1".to_string()], false)
+            .expect("places over the mapped nodes");
     let mut placed = 0;
     for node in &mapped {
         let text = xmip_configure::slice_named(&bound, node, &environment)

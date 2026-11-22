@@ -12,7 +12,7 @@
 
 use std::path::{Path, PathBuf};
 
-use crate::install::command;
+use xmip_runtime::registration::apply::command;
 
 /// What the account may do in a folder.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

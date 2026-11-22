@@ -87,6 +87,20 @@ the text it signs differs — its set too, which DSC asks without a test
 first — and a run over an environment restarts no node for a new
 signature.
 
+**Each far end's machine** (`far-end-program.dsc.yaml`, from the host's
+`far-end.dsc.yaml`), where the environment file's `external` names one of
+the Essentials' far ends (ADR-0028, amendment 2026-11-22): its certificate,
+key and anchors from the cluster's own authority, `identity`'s folder of its
+name, under `tls`; the program `xmip-essentials-external` the file's
+`[far_ends.<family>]` names, placed and registered as the service
+`xmip-<name>` by its own `--install`, which asks the runtime's one
+registration of a service, as `xmip-service --install` does
+(`Xmip.Node/Program`); a firewall opening for exactly the ports
+`--listening` says it serves on, 7422 for a receiver's Send Ports and 7423
+for the roll; and the service running and started with the machine. The far
+end is no node: it takes no slice, package or account of its own. The names
+step gives its name the machine's address, and the roll finds it by it.
+
 **Each node machine** (`node.dsc.yaml`), in this order:
 
 1. its account: on AlmaLinux the system account `xmip`, made here; on
@@ -148,6 +162,7 @@ alike. The Windows PowerShell adapter is used nowhere here.
 | the slice in place on the node | `Xmip.Node/Slice` |
 | the firewall | `Xmip.Node/Opening` |
 | the service | `Xmip.Node/Service` |
+| a far end's program, placed and registered as its service by its own `--install` | `Xmip.Node/Program` |
 | the names | `Xmip.Environment/Name` |
 | the Active Directory domain, its controller promoted and each other Windows machine joined | `Xmip.Environment/Domain` |
 | a document applied on another machine | `Xmip.Environment/Machine` |
@@ -215,7 +230,9 @@ upgrade.
 | `node.dsc.yaml` | one node, on its machine |
 | `name.dsc.yaml` | the names, on the DNS server |
 | `started.dsc.yaml` | every node started together, from the host |
-| `node.resource.ps1`, `NodeMachine.ps1`, `NodeFile.ps1`, `NodeOpening.ps1`, `NodeAccess.ps1`, `NodePackage.ps1` | the `Xmip.Node` resources |
+| `far-end.dsc.yaml` | one of the Essentials' far ends, from the host: `far-end-program.dsc.yaml` applied on its machine |
+| `far-end-program.dsc.yaml` | one far end, on its machine: its certificate, its program placed and registered, its firewall opening and its service |
+| `node.resource.ps1`, `NodeMachine.ps1`, `NodeFile.ps1`, `NodeOpening.ps1`, `NodeAccess.ps1`, `NodePackage.ps1`, `NodeProgram.ps1` | the `Xmip.Node` resources |
 | `environment.resource.ps1`, `EnvironmentMachine.ps1`, `EnvironmentSsh.ps1`, `EnvironmentSlice.ps1`, `EnvironmentName.ps1`, `EnvironmentStarted.ps1` | the `Xmip.Environment` resources |
 | `*.dsc.resource.yaml` | their manifests, YAML as every configuration here: JSON is what the resources speak, never what a person writes (the owner, 2026-11-02); the embedded schema tagged `!embedded`, the form DSC's YAML reader takes |
 
@@ -344,7 +361,12 @@ fetches it, writes it to the Ledger on DS1, and a real sending node puts it
 back under its name, which the far end tells the Essentials of:
 each Receive Location's `delivery` says how many of the documents dropped
 there arrived whole where their route sends them and how long each took
-(ADR-0028, amendments 2026-10-22 and 2026-11-11). OP1, the file's
+(ADR-0028, amendments 2026-10-22 and 2026-11-11). Where the environment
+runs the far ends on machines of their own, as the Hyper-V example does
+(`external`, `far_end` the receivers, `listen`), the run finds each by its
+name and reaches it there instead: each round a sender pushes to each
+Receive Location listening on its node, and each Send Port puts on the
+receiver of its turn (ADR-0028, amendment 2026-11-22). OP1, the file's
 eleventh node, is simulated, and no node is started on the host beside
 real ones.
 

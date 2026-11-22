@@ -1726,3 +1726,43 @@ Held by
 which failed before the change (its verdict not Fine, the arrival never
 paired) and passes after, and by `stamp`'s tests: every shipped document
 stamped reads its stamp back and is routed where its unstamped one was.
+
+## Amendment, 2026-11-22: the far ends run on machines of their own, any sender to any receiving node
+
+**Provenance.** The owner's node plan of 2026-11-22: *the external TX's can
+shoot at any internal RX, so can the internal TX shoot at any external
+RX*, and the far ends six machines of their own in Hyper-V. A Receive
+Location bound to one sender's server, the turn given up, is not that (the
+coordinator, the same day); a Receive Location that listens is built
+(ADR-0018, amendment 2026-11-16), and with the stamp (the amendment before
+this one) no transport need carry a name. Built by the assistant the same
+day, for the owner to strike:
+
+- **Named apart from the nodes.** The far ends are EXTTX1 to EXTTX3 and
+  EXTRX1 to EXTRX3 in `configuration/external.xmip`, as their machines,
+  XMIP-EXTTX01 to XMIP-EXTRX03: the plan's external TX1 to TX3 and RX1 to
+  RX3. A far end is found by its own name, as a node is.
+- **Where every far end's name resolves, the run uses them there**
+  (`src/external/remote.rs`); where none does, the Parties' far end is
+  served on this computer as before; some and not others is refused.
+- **On its machine a far end is a service**, `xmip-<name>`, the program
+  `xmip-essentials-external --serve`, registered by its own `--install`
+  through the runtime's one registration of a service and run under the
+  Windows Service Control Manager by the runtime's one dispatcher
+  (`registration::apply` and `registration::control_manager`, moved there
+  from `xmip-service`, which calls them). It serves the roll's sessions
+  over Xmip's mutual TLS on port 7423, presenting the certificate the
+  cluster's authority issued it and asking the roll for one of the same
+  authority; the lines are the ones on one computer.
+- **Any sender to any receiving node.** Each Receive Location listens over
+  HTTP on its own node, a port of its own from 7480
+  (`configure::placed::far_ends`, which `xmip-service --slice --bind
+  --listen` binds by), and each round the sender whose turn it is pushes to
+  it with Xmip's own send.
+- **Any sending node to any receiver.** Each Send Port puts over SFTP on the
+  receiver of its turn, round robin in the order placed
+  (`far_ends::far_end_of`, the rule the local way's receivers follow too,
+  moved there), a user of its own whose password the roll mints and sets on
+  its node. The receiver serves its Send Ports with the server the far end on
+  one computer serves by (`far_end::serving`) and tells each file put with
+  its bytes, which the roll keeps where Carried judges it.

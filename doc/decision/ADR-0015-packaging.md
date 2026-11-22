@@ -1447,3 +1447,38 @@ told to the owner.
   security context 'elevated'*), so the documents stay as they were. A run
   that tests each step and sets only one that differs would pass an
   unchanged network unelevated; it waits on the owner.
+
+## Amendment, 2026-11-22: the Essentials' far ends on machines of their own, registered by the one registration
+
+**Provenance.** The owner's node plan of 2026-11-22 puts the Essentials'
+six far ends on machines of their own (ADR-0028, amendment of this date);
+the coordinator, the same day: *xmip-service already runs as a Windows
+service. The far end's Windows service must call that one implementation,
+moved to the lowest layer both can call if needed. Never write a second
+integration of windows-service.* Built by the assistant the same day.
+
+- **One registration, one dispatcher, in the runtime.** What applies a
+  service definition, registering it with the platform's service manager
+  and starting it, or stopping and removing it, is
+  `registration::apply`; what runs a registered program under the Windows
+  Service Control Manager, its dispatcher, control handler and states, is
+  `registration::control_manager`. Both moved from `xmip-service`
+  (`install.rs`, `control_manager.rs`), which now calls them with its own
+  definition, the account it gives its node and its drain; the root no
+  longer depends on the `windows-service` crate, the runtime does, once.
+  The Essentials' far end calls the same two with its own definition.
+- **A far end's machine.** A machine's `external` names the far end it
+  runs; the environment file's `[far_ends.<family>]` names the program,
+  `xmip-essentials-external` built for that family. msdsc's
+  `far-end.dsc.yaml` applies `far-end-program.dsc.yaml` there: the far
+  end's certificate from the cluster's authority, the program placed and
+  registered as the service `xmip-<name>` by its own `--install`
+  (`Xmip.Node/Program`, new), a firewall opening for the ports its
+  `--listening` says, and its service kept running. The names step gives
+  the far end's name its machine's address.
+- **Bound for them.** `far_end` takes a list, the receiving far ends in the
+  order the Essentials names its receivers, each Send Port bound to the one
+  of its turn; `listen = true` has each Receive Location listen over HTTP on
+  its node (`xmip-service --slice --bind a,b,c --listen`). One far end, the
+  host, binds every Location as before. Ansible's inventory passes both;
+  its role for a far end's machine is not written.

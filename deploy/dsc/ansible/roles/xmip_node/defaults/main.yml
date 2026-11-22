@@ -36,7 +36,14 @@ xmip_far_end: ""
 xmip_placed: >-
   {{ groups['xmip_nodes'] | default([])
   | map('extract', hostvars, 'xmip_node_name') | join(',') }}
-xmip_bound: "{{ ['--bind', xmip_far_end, '--nodes', xmip_placed] if xmip_far_end else [] }}"
+# The far ends may be several, comma separated, each Location bound to the
+# one of its turn; with xmip_listen each Receive Location listens on its
+# node instead, where the far ends push to it, `--listen` (ADR-0028,
+# amendment 2026-11-22).
+xmip_listen: false
+xmip_bound: >-
+  {{ (['--bind', xmip_far_end, '--nodes', xmip_placed]
+  + (['--listen'] if xmip_listen | bool else [])) if xmip_far_end else [] }}
 # Who operates the nodes, comma separated, each a certificate's subject,
 # CN=<person>, or an account: listed among every slice's [operate] operators
 # by `xmip-service --slice --operators`. Left empty, no one operates them.

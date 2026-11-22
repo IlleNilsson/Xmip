@@ -34,7 +34,10 @@ empty.
 | `configuration` | the cluster's file, each node's configuration sliced from it |
 | `slicer` | this machine's `xmip-service`, which slices each node's configuration and signs it |
 | `authority`, `identity` | the cluster's authority, which signs each slice and issued each node's certificate, and a folder per node of that certificate (`New-XmipCertificate -Node`) |
-| `far_end` | where the machines reach the Parties' far end the Essentials serves |
+| `far_end` | the Parties' far ends the Locations are bound to, one or a list, each by its address or the name it is found by: one far end, the host, where the Essentials serves it, binds every Location; several each Location of its turn |
+| `listen` | true: each Receive Location listens over HTTP on its own node, where the far ends push to it, and only the Send Ports are bound to `far_end` (ADR-0028, amendment 2026-11-22) |
+| `external` | on a machine: the Essentials' far end it runs, as its `configuration/external.xmip` names it; found by that name, which the names step gives the machine's address, and run as the service `xmip-<name>` (msdsc's `far-end.dsc.yaml`) |
+| `[far_ends.<family>]` | msdsc only: `program`, the Essentials' `xmip-essentials-external` built for that family, which each machine whose `external` names a far end runs it by; its certificate is `identity`'s folder of its name |
 | `operators` | who operates the nodes, a list, each a certificate's subject, `CN=<person>`, as `New-XmipCertificate -Operator` names it, or an account: listed among every node's `[operate] operators` (`xmip-service --slice --operators`). Left out, no one operates them, since a node's operate listener grants no one by default (ADR-0009) |
 | `[packages.<family>]` | the package a node is installed from, `path`: the `.rpm` for Linux, the portable archive for Windows (the MSI once it is built); and `modules`, a folder of the module libraries the cluster's file names, built for that system, carried beside every node's configuration |
 | `[tools.<family>]` | msdsc only: what DSC is brought to each machine of the family it applies a document on, the nodes' and the DNS server, with, `pwsh` and `dsc`, each `path` and `sha256`: tarballs for Linux, zips for Windows |
@@ -84,7 +87,10 @@ The keys are kept as long as the folder is: a person reaches a machine with
 **msdsc** applies each document on its own, with the parameters it
 declares: the network and the pool; each machine, one installation at a
 time, applied again every thirty seconds until it answers from its disk;
-the names, where one of the machines is the network's DNS server; then each
+the names, where one of the machines is the network's DNS server; each of
+the Essentials' far ends on the machine whose `external` names it,
+`msdsc/environment/far-end.dsc.yaml`, its program placed and registered as
+its service by its own `--install`; then each
 node on its machine in the order the file lists them —
 `msdsc/environment/machine.dsc.yaml`, which slices and signs the node's
 configuration here, brings DSC to the machine and applies `node.dsc.yaml`

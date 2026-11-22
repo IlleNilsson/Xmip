@@ -146,9 +146,11 @@ function Get-XmipDeployEnvironment {
         $read['Node'] = Get-XmipDeployNodeValue -Environment $Environment -Estate $Estate -Run (
             $Run) -Read $read
     }
+    Add-XmipDeployFarEnd -Environment $Environment -Estate $Estate -Read $read
     # The tools DSC is brought with, for each family a document is applied
-    # on: the nodes' machines, the DNS server and the domain's machines.
-    [string[]] $families = @(@($nodes | ForEach-Object { $_.machine.family }) + @(
+    # on: the nodes' and far ends' machines, the DNS server and the domain's.
+    [string[]] $families = @(@(@($nodes) + @($read.FarEnds) |
+                ForEach-Object { $_.machine.family }) + @(
             $read.NameServer | Where-Object { $_ } | ForEach-Object { $_.family }) + @(
             $read.Domain | Where-Object { $_ } | ForEach-Object { 'Windows' }) |
             Sort-Object -Unique)
@@ -240,7 +242,11 @@ function Get-XmipDeployNodeValue {
     if (-not $Read.Cluster) {
         throw 'REFUSED: the environment''s nodes need cluster, the cluster''s name.'
     }
-    $given['farEnd'] = Get-TomlValue -Node $Environment -Name 'far_end' -Default ''
+    # The Parties' far ends, one or a list, and whether each Receive
+    # Location listens on its node for their push (ADR-0028, amendment
+    # 2026-11-22).
+    $given['farEnd'] = @(Get-TomlValue -Node $Environment -Name 'far_end' -Default @()) -join ','
+    $given['listen'] = [bool] (Get-TomlValue -Node $Environment -Name 'listen' -Default $false)
     # Who operates the nodes, each listed among every slice's [operate]
     # operators (xmip-service --slice --operators): a certificate's subject,
     # CN=<person>, or an account. None given, no one operates them.
@@ -353,9 +359,9 @@ function Resolve-XmipDeployPath {
 
 function Get-XmipDeployName {
     <#
-        The names the environment adds to its machines' own: each node a
-        machine runs, at that machine's address, and the cluster at every
-        address that runs one of its nodes.
+        The names the environment adds to its machines' own: each node and
+        each far end a machine runs, at that machine's address, and the
+        cluster at every address that runs one of its nodes.
     #>
     [CmdletBinding()]
     [OutputType([hashtable])]
@@ -368,10 +374,15 @@ function Get-XmipDeployName {
     [string[]] $running = @()
     foreach ($machine in @(Get-TomlValue -Node $Environment -Name 'machines' -Default @())) {
         [string[]] $nodes = @(Get-TomlValue -Node $machine -Name 'nodes' -Default @())
+        [string] $address = Get-TomlValue -Node $machine -Name 'address'
+        # A far end is found by its own name, as a node is (ADR-0028,
+        # amendment 2026-11-22).
+        foreach ($external in @(Get-TomlValue -Node $machine -Name 'external' -Default @())) {
+            @{ name = $external; addresses = @($address) }
+        }
         if ($nodes.Count -eq 0) {
             continue
         }
-        [string] $address = Get-TomlValue -Node $machine -Name 'address'
         foreach ($node in $nodes) {
             @{ name = $node; addresses = @($address) }
         }

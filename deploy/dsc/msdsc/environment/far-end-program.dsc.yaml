@@ -1,0 +1,81 @@
+# One of the Essentials' far ends on a machine of its own, applied there:
+# its certificate from the cluster's own authority, the program
+# xmip-essentials-external placed and registered as its service by its own
+# --install, a firewall opening for exactly the ports it says it serves on,
+# and its service running and started with the machine (README.md). The far
+# end is the Essentials', not a node of the cluster: it takes no slice, no
+# package and no account of its own.
+$schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
+directives:
+  version: ^3.4.0-preview.3
+parameters:
+  staging:
+    type: string
+    description: >-
+      Where Xmip.Environment/Machine copied this folder and the files:
+      node.pem, node.key, anchors.pem and the program.
+  name:
+    type: string
+    description: >-
+      The far end, as the Essentials' configuration/external.xmip names it;
+      its service is xmip-<name>.
+  program:
+    type: string
+    description: The program's file name among the files.
+  layout:
+    type: object
+    description: Where the far end is kept on this family, folder.
+resources:
+  - name: Certificate
+    type: Xmip.Node/File
+    requireVersion: ^0.1
+    properties:
+      path: "[path(parameters('layout').folder, 'tls', 'node.pem')]"
+      source: "[path(parameters('staging'), 'files', 'node.pem')]"
+      private: false
+  - name: Key
+    type: Xmip.Node/File
+    requireVersion: ^0.1
+    dependsOn:
+      - "[resourceId('Xmip.Node/File', 'Certificate')]"
+    properties:
+      path: "[path(parameters('layout').folder, 'tls', 'node.key')]"
+      source: "[path(parameters('staging'), 'files', 'node.key')]"
+      private: true
+  - name: Anchors
+    type: Xmip.Node/File
+    requireVersion: ^0.1
+    dependsOn:
+      - "[resourceId('Xmip.Node/File', 'Key')]"
+    properties:
+      path: "[path(parameters('layout').folder, 'tls', 'anchors.pem')]"
+      source: "[path(parameters('staging'), 'files', 'anchors.pem')]"
+      private: false
+  - name: Program
+    type: Xmip.Node/Program
+    requireVersion: ^0.1
+    dependsOn:
+      - "[resourceId('Xmip.Node/File', 'Anchors')]"
+    properties:
+      path: "[path(parameters('layout').folder, parameters('program'))]"
+      source: "[path(parameters('staging'), 'files', parameters('program'))]"
+      node: "[parameters('name')]"
+      arguments: >-
+        [createArray('--name', parameters('name'), '--install', '--configuration',
+        path(parameters('layout').folder, 'tls'))]
+  - name: Opening
+    type: Xmip.Node/Opening
+    requireVersion: ^0.1
+    dependsOn:
+      - "[resourceId('Xmip.Node/Program', 'Program')]"
+    properties:
+      node: "[parameters('name')]"
+      program: "[path(parameters('layout').folder, parameters('program'))]"
+      configuration: "[path(parameters('layout').folder, 'tls')]"
+  - name: Service
+    type: Xmip.Node/Service
+    requireVersion: ^0.1
+    dependsOn:
+      - "[resourceId('Xmip.Node/Opening', 'Opening')]"
+    properties:
+      name: "[concat('xmip-', parameters('name'))]"

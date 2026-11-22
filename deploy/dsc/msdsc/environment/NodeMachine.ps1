@@ -62,6 +62,9 @@ function Get-NodeMachineState {
         'Service' {
             $state._exist = Test-NodeServiceRunning -Name $Instance.name
         }
+        'Program' {
+            $state = Get-NodeProgramState -Instance $Instance
+        }
     }
 
     return $state
@@ -119,6 +122,9 @@ function Set-NodeMachineState {
         }
         'Service' {
             Start-NodeService -Name $Instance.name
+        }
+        'Program' {
+            Install-NodeProgram -Instance $Instance
         }
     }
 }

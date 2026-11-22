@@ -43,10 +43,16 @@ authority = ".local-work/environment/authority"
 # A folder per node of what New-XmipCertificate -Node wrote: node.pem,
 # node.key and anchors.pem.
 identity = ".local-work/environment/identity"
-# The Parties' far end the Essentials serves on the host, where the machines
-# reach it: the host on the switch. Every Receive Location and Send Port is
-# bound there over SFTP, port 7422 (ADR-0028, amendment 2026-10-22).
-far_end = "10.77.0.1"
+# The Parties' far ends the Send Ports put on, each by the name it is found
+# by, in the order the Essentials' configuration/external.xmip names its
+# receivers: each Send Port puts on the one of its turn over SFTP, port 7422.
+# With listen, each Receive Location listens over HTTP on its own node, where
+# the senders push to it (ADR-0028, amendment 2026-11-22). The far ends run
+# on the machines whose external names them. An environment with none names
+# the host on the switch, far_end = "10.77.0.1", where the Essentials serves
+# the far end, and every Location is bound there (amendment 2026-10-22).
+far_end = ["EXTRX1", "EXTRX2", "EXTRX3"]
+listen = true
 # Who operates the nodes: each listed among every node's [operate] operators,
 # a certificate's subject as New-XmipCertificate -Operator names it, or an
 # account. Left out, no one operates them.
@@ -64,6 +70,16 @@ modules = ""
 path = ""
 # The module libraries the cluster's file names, built for Linux: a folder.
 modules = ""
+
+# msdsc only: the program each machine whose external names a far end runs it
+# by, the Essentials' xmip-essentials-external built for its system, which
+# registers itself as the service xmip-<far end> there. Its certificate is
+# identity's folder of its name, New-XmipCertificate -Node.
+[far_ends.Windows]
+program = ""
+
+[far_ends.Linux]
+program = ""
 
 # msdsc only: what DSC is brought to each node machine with, each file
 # checked against its SHA-256 and unpacked in the machine's staging folder,
@@ -274,7 +290,7 @@ cpu = 2
 disk_gb = 64
 nodes = ["TX3"]
 
-# a far end that sends to the cluster, external TX1
+# a far end that sends to the cluster, the plan's external TX1
 [[machines]]
 name = "XMIP-EXTTX01"
 address = "10.77.0.91"
@@ -283,8 +299,9 @@ memory_gb = 2
 dynamic_memory = { minimum_gb = 0.5, maximum_gb = 2 }
 cpu = 1
 disk_gb = 32
+external = "EXTTX1"
 
-# a far end that sends to the cluster, external TX2
+# a far end that sends to the cluster, the plan's external TX2
 [[machines]]
 name = "XMIP-EXTTX02"
 address = "10.77.0.92"
@@ -293,8 +310,9 @@ memory_gb = 1
 dynamic_memory = { minimum_gb = 0.5, maximum_gb = 2 }
 cpu = 1
 disk_gb = 64
+external = "EXTTX2"
 
-# a far end that sends to the cluster, external TX3
+# a far end that sends to the cluster, the plan's external TX3
 [[machines]]
 name = "XMIP-EXTTX03"
 address = "10.77.0.93"
@@ -303,8 +321,9 @@ memory_gb = 2
 dynamic_memory = { minimum_gb = 0.5, maximum_gb = 2 }
 cpu = 1
 disk_gb = 32
+external = "EXTTX3"
 
-# a far end the cluster sends to, external RX1
+# a far end the cluster sends to, the plan's external RX1
 [[machines]]
 name = "XMIP-EXTRX01"
 address = "10.77.0.101"
@@ -313,8 +332,9 @@ memory_gb = 1
 dynamic_memory = { minimum_gb = 0.5, maximum_gb = 2 }
 cpu = 1
 disk_gb = 64
+external = "EXTRX1"
 
-# a far end the cluster sends to, external RX2
+# a far end the cluster sends to, the plan's external RX2
 [[machines]]
 name = "XMIP-EXTRX02"
 address = "10.77.0.102"
@@ -323,8 +343,9 @@ memory_gb = 2
 dynamic_memory = { minimum_gb = 0.5, maximum_gb = 2 }
 cpu = 1
 disk_gb = 32
+external = "EXTRX2"
 
-# a far end the cluster sends to, external RX3
+# a far end the cluster sends to, the plan's external RX3
 [[machines]]
 name = "XMIP-EXTRX03"
 address = "10.77.0.103"
@@ -333,6 +354,7 @@ memory_gb = 1
 dynamic_memory = { minimum_gb = 0.5, maximum_gb = 2 }
 cpu = 1
 disk_gb = 64
+external = "EXTRX3"
 
 # developer machine, Linux with a desktop
 [[machines]]

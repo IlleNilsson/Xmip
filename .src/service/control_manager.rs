@@ -1,193 +1,59 @@
-//! `xmip-service` under the Windows Service Control Manager: the dispatcher
-//! the manager starts it through, the control handler its Stop and Shutdown
-//! arrive on, and the states it reports — start pending while ADR-0018's
-//! phases run, running once the node accepts work, stop pending while it
-//! drains, stopped with the exit code.
+//! `xmip-service` under the Windows Service Control Manager, through the
+//! runtime's one dispatcher (`registration::control_manager`): start pending
+//! while ADR-0018's phases run, running once the node accepts work, stop
+//! pending while it drains, stopped with the exit code.
 //!
-//! The handler only says a stop arrived; the drain is `run::serve`'s, the
-//! same one a console's Ctrl+C and a Unix SIGTERM reach. The service is its
-//! own process, so the name the dispatcher and the handler are given is not
-//! looked up; the service is registered under `registration`'s name.
+//! A Stop or a Shutdown the manager sends is the drain, asked: `run::serve`'s,
+//! the same one a console's Ctrl+C and a Unix SIGTERM reach. The service is
+//! its own process, so the name the dispatcher is given is not looked up; the
+//! service is registered under `registration`'s name.
 
 use std::process::ExitCode;
-use std::sync::OnceLock;
-use std::sync::mpsc::{self, Sender};
-use std::time::Duration;
+use std::sync::mpsc;
 
-use windows_service::service::{
-    ServiceControl, ServiceControlAccept, ServiceExitCode, ServiceState, ServiceStatus, ServiceType,
-};
-use windows_service::service_control_handler::{self, ServiceControlHandlerResult};
-use windows_service::service_dispatcher;
 use xmip_audit::program_audit::ProgramAudit;
 use xmip_runtime::registration::REFUSED;
+use xmip_runtime::registration::control_manager::{self, Reporter};
 
 use crate::arguments::Arguments;
-use crate::run::{self, Ended, StoppedBy};
+use crate::run::{self, Ended};
 use crate::{PROGRAM, audit};
 
-/// What the process was told, for the service's main, which the dispatcher
-/// calls with nothing of it.
-struct Told {
-    program: String,
-    audit: ProgramAudit,
-    arguments: Arguments,
-}
-
-static TOLD: OnceLock<Told> = OnceLock::new();
-static ENDED: OnceLock<u8> = OnceLock::new();
-
-/// How long the manager is told a start or a drain may take before it
-/// hears again; the node's own waits bound both.
-const WAIT: Duration = Duration::from_secs(30);
-
-/// Hand the process to the Service Control Manager, which calls the
-/// service's main and returns when the service has stopped.
+/// Hand the process to the Service Control Manager, which runs the node and
+/// returns when it has stopped.
 pub fn run(program: String, audit: ProgramAudit, arguments: Arguments) -> ExitCode {
-    let _ = TOLD.set(Told {
-        program,
-        audit,
-        arguments,
-    });
-    match service_dispatcher::start(PROGRAM, service_main) {
-        Ok(()) => ExitCode::from(ENDED.get().copied().unwrap_or(0)),
-        Err(error) => {
-            if let Some(told) = TOLD.get() {
-                audit::fail(
-                    &told.audit,
-                    "start",
-                    &format!(
-                        "{}: the Service Control Manager did not start it ({error}); \
-                         --console runs it in a terminal",
-                        told.program
-                    ),
-                );
-            }
-            ExitCode::from(REFUSED)
-        }
-    }
-}
-
-/// The service's main, as the dispatcher calls it. The arguments a start
-/// passes are not read: the node is the one `--configuration` named.
-extern "system" fn service_main(_count: u32, _arguments: *mut *mut u16) {
-    if let Some(told) = TOLD.get() {
-        serve(told);
-    }
-}
-
-fn serve(told: &Told) {
     let (tell, stops) = mpsc::channel();
     let stop = tell.clone();
-    let registered =
-        service_control_handler::register(PROGRAM, move |control| answer(control, &stop));
-    let status = match registered {
-        Ok(status) => status,
-        Err(error) => {
-            let problem = format!(
-                "{}: cannot take the manager's controls: {error}",
-                told.program
-            );
-            audit::fail(&told.audit, "start", &problem);
-            let _ = ENDED.set(REFUSED);
-            return;
+    let refused = (program.clone(), audit.clone());
+    let serving = Box::new(move |reporter: &Reporter| {
+        let ended = run::serve(
+            &program,
+            &audit,
+            &arguments,
+            (&tell, &stops),
+            || reporter.running(),
+            || reporter.stopping(),
+        );
+        match ended {
+            Ended::Stopped => 0,
+            Ended::Refused => REFUSED,
         }
-    };
-    let report = |state: ServiceState, accepted: ServiceControlAccept, code: u8| {
-        let reported = status.set_service_status(ServiceStatus {
-            service_type: ServiceType::OWN_PROCESS,
-            current_state: state,
-            controls_accepted: accepted,
-            exit_code: if code == 0 {
-                ServiceExitCode::Win32(0)
-            } else {
-                ServiceExitCode::ServiceSpecific(u32::from(code))
-            },
-            checkpoint: 0,
-            wait_hint: WAIT,
-            process_id: None,
-        });
-        if let Err(error) = reported {
-            eprintln!("{}: could not report {state:?}: {error}", told.program);
-        }
-    };
-    let taken = ServiceControlAccept::STOP | ServiceControlAccept::SHUTDOWN;
-
-    report(ServiceState::StartPending, ServiceControlAccept::empty(), 0);
-    let ended = run::serve(
-        &told.program,
-        &told.audit,
-        &told.arguments,
-        (&tell, &stops),
-        || report(ServiceState::Running, taken, 0),
-        || report(ServiceState::StopPending, ServiceControlAccept::empty(), 0),
-    );
-    let code = match ended {
-        Ended::Stopped => 0,
-        Ended::Refused => REFUSED,
-    };
-    let _ = ENDED.set(code);
-    report(ServiceState::Stopped, ServiceControlAccept::empty(), code);
-}
-
-/// The manager's control, answered: a Stop or a Shutdown is the drain,
-/// asked; an Interrogate is answered by the last status; nothing else is
-/// taken.
-fn answer(control: ServiceControl, stop: &Sender<run::Told>) -> ServiceControlHandlerResult {
-    let by: StoppedBy = match control {
-        ServiceControl::Stop => "the Service Control Manager",
-        ServiceControl::Shutdown => "the system shutting down",
-        ServiceControl::Interrogate => return ServiceControlHandlerResult::NoError,
-        _ => return ServiceControlHandlerResult::NotImplemented,
-    };
+    });
     // The receiver is gone only once the node has drained; a stop then asks
     // for nothing.
-    let _ = stop.send(run::Told::Stop(by));
-    ServiceControlHandlerResult::NoError
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::assert_matches;
-
-    #[test]
-    fn a_stop_and_a_shutdown_each_ask_for_the_drain_once() {
-        let (stop, stops) = mpsc::channel();
-
-        for (control, by) in [
-            (ServiceControl::Stop, "the Service Control Manager"),
-            (ServiceControl::Shutdown, "the system shutting down"),
-        ] {
-            assert_matches!(answer(control, &stop), ServiceControlHandlerResult::NoError);
-            assert_eq!(stops.try_recv(), Ok(run::Told::Stop(by)));
+    let stopping = Box::new(move |by: &'static str| {
+        let _ = stop.send(run::Told::Stop(by));
+    });
+    match control_manager::run(PROGRAM, stopping, serving) {
+        Ok(code) => ExitCode::from(code),
+        Err(problem) => {
+            let (program, audit) = refused;
+            audit::fail(
+                &audit,
+                "start",
+                &format!("{program}: {problem}; --console runs it in a terminal"),
+            );
+            ExitCode::from(REFUSED)
         }
-        assert!(stops.try_recv().is_err(), "one stop per control");
-    }
-
-    #[test]
-    fn nothing_else_the_manager_sends_stops_the_node() {
-        let (stop, stops) = mpsc::channel();
-
-        assert_matches!(
-            answer(ServiceControl::Interrogate, &stop),
-            ServiceControlHandlerResult::NoError
-        );
-        assert_matches!(
-            answer(ServiceControl::Pause, &stop),
-            ServiceControlHandlerResult::NotImplemented
-        );
-        assert!(stops.try_recv().is_err());
-    }
-
-    #[test]
-    fn a_stop_after_the_drain_asks_for_nothing() {
-        let (stop, stops) = mpsc::channel();
-        drop(stops);
-
-        assert_matches!(
-            answer(ServiceControl::Stop, &stop),
-            ServiceControlHandlerResult::NoError
-        );
     }
 }

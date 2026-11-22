@@ -2534,6 +2534,15 @@ run whose every file arrived reads as some not carried: 953 of 960 on
 2026-11-22, all 960 received. A count an operator reads must be the
 verdict, not a count taken while the last round is still in flight.
 
+## 110. A served roll under load publishes a fastest delivery of 0 ns
+
+Found 2026-11-22 in a served roll of the Essentials' cluster, the host at 0
+to 2 % headroom: two Receive Locations published "0ns the fastest" from
+drop to arrival, a time no whole file can take. The far end stamps its own
+drop since the same day, which ended the 0 ns an earlier roll showed when
+it timed a drop on hearing of it; what gives 0 ns under load is not
+diagnosed.
+
 # Suggested order
 
 Rewritten 2026-09-23, and corrected to what is built on 2026-11-10. The

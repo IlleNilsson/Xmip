@@ -9,9 +9,10 @@ function Get-XmipDeployStep {
             values of the parameters it declares: the network, each machine,
             the domain's controller where the file names one, the names
             where one of the machines is the environment's DNS server, each
-            other Windows machine joined to the domain, then each node on
-            its machine, in the order the environment file lists the
-            machines, and last every node started together.
+            other Windows machine joined to the domain, each of the
+            Essentials' far ends on its machine, then each node on its
+            machine, in the order the environment file lists the machines,
+            and last every node started together.
 
         .DESCRIPTION
             A machine's step is marked Install: the command applies it until
@@ -88,6 +89,18 @@ function Get-XmipDeployStep {
             Value = @{ common = $reach; machine = $member; domain = $Read.Domain.name
                 controller = $false }
             Install = $true
+        }
+    }
+    # Each of the Essentials' far ends on its machine, its program placed
+    # and registered there (Add-XmipDeployFarEnd).
+    [hashtable] $reached = $reach.Clone()
+    $reached['identity'] = $Read.Identity
+    foreach ($far in @($Read.FarEnds)) {
+        @{
+            Name = $far.name
+            Document = Join-Path $environment 'far-end.dsc.yaml'
+            Value = @{ common = $reached; programs = $Read.Programs; tools = $Read.Tools
+                name = $far.name; machine = $far.machine }
         }
     }
     if ($Read.Nodes.Count -eq 0) {

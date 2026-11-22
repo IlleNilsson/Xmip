@@ -14,9 +14,11 @@
 //! amendment 2026-10-21). With `--bind`, each Receive Location and Send
 //! Port the file designs is placed on one of the environment's `--nodes`
 //! and each Work Process on every one serving its stage, refusing work no
-//! node satisfies, the Locations over SFTP on the Parties' far end first
-//! (`placed::at_far_end`; ADR-0028, amendment 2026-10-22; ADR-0056,
-//! amendment 2026-11-13), and the node's own placements are in its slice.
+//! node satisfies, the Locations bound first over the Parties' far ends,
+//! each the far end of its turn, and with `--listen` each Receive Location
+//! listening on its node (`placed::at_far_ends`; ADR-0028, amendments
+//! 2026-10-22 and 2026-11-22; ADR-0056, amendment 2026-11-13), and the
+//! node's own placements are in its slice.
 //! With `--operators`, each name is listed among the node's `[operate]
 //! operators`: on machines of their own the environment names who operates
 //! its nodes (`observers::operated_by`).
@@ -50,8 +52,13 @@ fn sliced(arguments: &Arguments) -> Result<String, String> {
         .ok_or("--slice needs --node, the node it slices for")?;
     let mut cluster = std::fs::read_to_string(&arguments.configuration)
         .map_err(|error| format!("cannot read {}: {error}", arguments.configuration))?;
-    if let Some(host) = arguments.bind.as_deref() {
-        cluster = xmip_configure::placed::at_far_end(&cluster, &arguments.nodes, host)?;
+    if !arguments.bind.is_empty() {
+        cluster = xmip_configure::placed::at_far_ends(
+            &cluster,
+            &arguments.nodes,
+            &arguments.bind,
+            arguments.listen,
+        )?;
     }
     cluster = xmip_configure::observers::operated_by(&cluster, &arguments.operators)?;
     xmip_runtime::signed::sliced_signed(

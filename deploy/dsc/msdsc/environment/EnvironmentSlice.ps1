@@ -43,8 +43,9 @@ function Get-EnvironmentSliced {
     The node's configuration as xmip-service --slice prints it from the
     cluster's cluster.xmip for the cluster the environment names, signed by
     the authority kept in the instance's authority folder; with every Receive
-    Location and Send Port placed over the nodes on the Parties' far end
-    where the instance gives bind and nodes.
+    Location and Send Port placed over the nodes on the Parties' far ends
+    where the instance gives bind and nodes, each Receive Location listening
+    on its node where it says listen.
     #>
     [CmdletBinding()]
     [OutputType([string])]
@@ -60,6 +61,10 @@ function Get-EnvironmentSliced {
 
     if ($Instance.Contains('bind') -and $Instance.bind) {
         $argument += @('--bind', $Instance.bind, '--nodes', $Instance.nodes)
+        # The far ends push to each Receive Location, listening on its node.
+        if ($Instance.Contains('listen') -and $Instance.listen) {
+            $argument += '--listen'
+        }
     }
 
     # Who operates the nodes, listed among each slice's [operate] operators.

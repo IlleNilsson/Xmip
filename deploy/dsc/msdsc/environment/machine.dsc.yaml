@@ -20,8 +20,10 @@ parameters:
       authority (the folder the environment's authority is kept in here),
       slices (where each node's signed slice is written here, a folder per
       node), identity (a folder per node of what New-XmipCertificate -Node
-      wrote), secretPath, keyPath, knownHosts, linuxAccount, farEnd and
-      operators (who operates the nodes, comma separated).
+      wrote), secretPath, keyPath, knownHosts, linuxAccount, farEnd (the
+      Parties' far ends, comma separated), listen (whether each Receive
+      Location listens on its node for the far ends' push) and operators
+      (who operates the nodes, comma separated).
   packages:
     type: object
     description: Per family, the package's path and the file name it is given there.
@@ -75,6 +77,7 @@ resources:
       node: "[parameters('node')]"
       cluster: "[parameters('common').cluster]"
       bind: "[parameters('common').farEnd]"
+      listen: "[parameters('common').listen]"
       nodes: "[parameters('placed')]"
       operators: "[parameters('common').operators]"
   - name: Node machine

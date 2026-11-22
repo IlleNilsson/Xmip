@@ -143,8 +143,9 @@ mod tests {
              [[xmip_applications.receive_locations]]\nname = \"From A\"\nreceive_port = \"In\"\n\
              depth = \"light\"\n"
         );
+        let far = ["10.77.0.1".to_string()];
         let placed =
-            xmip_configure::placed::at_far_end(&file, std::slice::from_ref(&node), "10.77.0.1")
+            xmip_configure::placed::at_far_ends(&file, std::slice::from_ref(&node), &far, false)
                 .expect("placed");
         let text = xmip_configure::slice_named(&placed, &node, "listening").expect("slices");
         let document = xmip_configure::parse_toml(&text).expect("reads");
@@ -152,6 +153,33 @@ mod tests {
             listening(&document).is_empty(),
             "{:?}",
             listening(&document)
+        );
+    }
+
+    /// A Receive Location the far ends push to listens on its own port, so
+    /// its machine's firewall opens it.
+    #[cfg(feature = "transport-http")]
+    #[test]
+    fn a_location_the_far_ends_push_to_listens_on_its_port() {
+        let cluster = xmip_configure::fixture::test_cluster();
+        let node = cluster.with_role("receiving").name.clone();
+        let file = format!(
+            "[nodes.{node}]\nroles = \"receiving\"\n\
+             [[xmip_applications]]\nname = \"Orders\"\n\
+             [[xmip_applications.receive_ports]]\nname = \"In\"\n\
+             [[xmip_applications.receive_locations]]\nname = \"From A\"\nreceive_port = \"In\"\n\
+             depth = \"light\"\n"
+        );
+        let far = ["external-RX1".to_string()];
+        let placed =
+            xmip_configure::placed::at_far_ends(&file, std::slice::from_ref(&node), &far, true)
+                .expect("placed");
+        let text = xmip_configure::slice_named(&placed, &node, "listening").expect("slices");
+        let document = xmip_configure::parse_toml(&text).expect("reads");
+        let said = listening(&document);
+        assert!(
+            said.iter().any(|line| line.starts_with("7480/tcp")),
+            "{said:?}"
         );
     }
 

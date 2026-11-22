@@ -94,9 +94,15 @@ schema: !embedded
         type: string
       bind:
         description: >-
-          The Parties' far end, host or host:port, where each Receive Location
-          and Send Port is bound over SFTP; with nodes.
+          The Parties' far ends, comma separated, each host or host:port,
+          where each Receive Location and Send Port of its turn is bound over
+          SFTP; with nodes.
         type: string
+      listen:
+        description: >-
+          true: each Receive Location listens over HTTP on its node, where the
+          far ends push to it, and only the Send Ports are bound to bind.
+        type: boolean
       nodes:
         description: >-
           The nodes the environment runs, comma separated, which the Locations

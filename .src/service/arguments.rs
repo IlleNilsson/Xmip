@@ -6,7 +6,7 @@ pub const USAGE: &str = "usage: xmip-service --configuration <path> [--console] 
      [--purpose test|runtime]\n       \
      xmip-service --configuration <path> --definition\n       \
      xmip-service --configuration <cluster cluster.xmip> --node <name> [--cluster <name>] \
-     [--bind <host[:port]> --nodes <name,...>] [--operators <name,...>] \
+     [--bind <host[:port],...> [--listen] --nodes <name,...>] [--operators <name,...>] \
      [--authority <folder>] --slice\n       \
      xmip-service --configuration <cluster cluster.xmip> --node <name> --cluster <name> \
      [--account <account>] --install\n       \
@@ -25,9 +25,12 @@ pub const USAGE: &str = "usage: xmip-service --configuration <path> [--console] 
      --cluster names the cluster where the file names none; --bind places each \
      Receive Location and Send Port the file designs on one of the environment's \
      --nodes and each Work Process on every one serving its stage, refusing work no \
-     node satisfies, the Locations over SFTP on the Parties' far end at <host>, port \
-     7422 where it names none; --operators lists each name, a certificate's subject \
-     CN=<person> or an account, among the node's [operate] operators; \
+     node satisfies, the Locations over SFTP on the Parties' far ends at each <host>, \
+     each the next far end's in the order placed, port 7422 where it names none; \
+     --listen has each Receive Location listen over HTTP on its own node instead, \
+     a port of its own from 7480, so any far end pushes to it; --operators lists \
+     each name, a certificate's subject CN=<person> or an account, among the node's \
+     [operate] operators; \
      what --slice prints is signed by the cluster's authority kept in --authority, \
      beside cluster.xmip where it names none, made there where none is kept.\n\
      --install, where the node has no configuration yet, writes a starter cluster.xmip \
@@ -90,10 +93,13 @@ pub struct Arguments {
     /// The account the node's service runs as, with `--install`; the
     /// platform's default where it is not given.
     pub account: Option<String>,
-    /// The Parties' far end, with `--slice`, each Location the cluster's
-    /// file designs placed there on one of [`Self::nodes`] (ADR-0028,
-    /// amendment 2026-10-22).
-    pub bind: Option<String>,
+    /// The Parties' far ends, with `--slice`, each Location the cluster's
+    /// file designs placed on one of [`Self::nodes`] and bound to the far
+    /// end of its turn (ADR-0028, amendments 2026-10-22 and 2026-11-22).
+    pub bind: Vec<String>,
+    /// With `--bind`: each Receive Location listens on its own node, where
+    /// any far end pushes to it, rather than fetching from one.
+    pub listen: bool,
     /// The nodes the environment has, with `--bind`.
     pub nodes: Vec<String>,
     /// Who operates the environment's nodes, with `--slice`: each listed
@@ -119,8 +125,8 @@ impl Arguments {
         let mut configuration = None;
         let mut switches = Vec::new();
         let (mut node, mut cluster, mut account) = (None, None, None);
-        let (mut bind, mut nodes, mut operators) = (None, Vec::new(), Vec::new());
-        let mut authority = None;
+        let (mut bind, mut nodes, mut operators) = (Vec::new(), Vec::new(), Vec::new());
+        let (mut authority, mut listen) = (None, false);
         let mut purpose = Purpose::Runtime;
 
         while let Some(flag) = args.next() {
@@ -135,7 +141,8 @@ impl Arguments {
                 "--node" => node = Some(value()?),
                 "--cluster" => cluster = Some(value()?),
                 "--account" => account = Some(value()?),
-                "--bind" => bind = Some(value()?),
+                "--bind" => bind = listed(&value()?),
+                "--listen" => listen = true,
                 "--authority" => authority = Some(value()?),
                 "--nodes" => nodes = listed(&value()?),
                 "--operators" => operators = listed(&value()?),
@@ -165,7 +172,10 @@ impl Arguments {
         if account.is_some() && mode != Mode::Install {
             return Err("--account is the account --install registers the service as".into());
         }
-        placing(mode, bind.as_ref(), &nodes)?;
+        placing(mode, &bind, &nodes)?;
+        if listen && bind.is_empty() {
+            return Err("--listen has the Receive Locations --bind places listen".into());
+        }
         if authority.is_some() && mode != Mode::Slice {
             return Err(
                 "--authority is the folder --slice signs with the cluster's authority from".into(),
@@ -182,6 +192,7 @@ impl Arguments {
             cluster,
             account,
             bind,
+            listen,
             nodes,
             operators,
             authority,
@@ -219,15 +230,15 @@ fn names(mode: Mode, node: Option<&String>, cluster: Option<&String>) -> Result<
 }
 
 /// Whether `--bind` and `--nodes` come together, and only with `--slice`.
-fn placing(mode: Mode, bind: Option<&String>, nodes: &[String]) -> Result<(), String> {
-    match (bind, nodes.is_empty()) {
-        (None, true) => Ok(()),
+fn placing(mode: Mode, bind: &[String], nodes: &[String]) -> Result<(), String> {
+    match (bind.is_empty(), nodes.is_empty()) {
+        (true, true) => Ok(()),
         _ if mode != Mode::Slice => {
             Err("--bind and --nodes place the Locations --slice prints".into())
         }
-        (Some(_), false) => Ok(()),
-        (Some(_), true) => Err("--bind needs --nodes, the nodes the environment has".into()),
-        (None, false) => Err("--nodes needs --bind, the Parties' far end".into()),
+        (false, false) => Ok(()),
+        (false, true) => Err("--bind needs --nodes, the nodes the environment has".into()),
+        (true, false) => Err("--nodes needs --bind, the Parties' far end".into()),
     }
 }
 
@@ -287,9 +298,23 @@ mod tests {
         let placed = parsed("--slice --node n --bind h --nodes n,m --configuration cluster.xmip")
             .expect("reads");
         assert_eq!(
-            (placed.bind.as_deref(), placed.nodes.as_slice()),
-            (Some("h"), ["n".to_string(), "m".to_string()].as_slice())
+            (
+                placed.bind.as_slice(),
+                placed.nodes.as_slice(),
+                placed.listen
+            ),
+            (
+                ["h".to_string()].as_slice(),
+                ["n".to_string(), "m".to_string()].as_slice(),
+                false
+            )
         );
+        let pushed = parsed(
+            "--slice --node n --bind a,b,c --listen --nodes n,m --configuration cluster.xmip",
+        )
+        .expect("reads");
+        assert_eq!(pushed.bind, ["a", "b", "c"]);
+        assert!(pushed.listen);
 
         let signing = parsed("--slice --node n --authority keep --configuration cluster.xmip")
             .expect("reads");
@@ -360,6 +385,10 @@ mod tests {
             (
                 "--configuration a --listening --bind h --nodes n",
                 "place the Locations --slice prints",
+            ),
+            (
+                "--configuration a --slice --node n --listen",
+                "--listen has the Receive Locations --bind places listen",
             ),
             (
                 "--configuration a --install --node n --cluster c --authority k",

@@ -1,0 +1,90 @@
+$schema: https://aka.ms/dsc/schemas/v3/bundled/resource/manifest.json
+type: Xmip.Node/Program
+version: '0.1.0'
+description: >-
+  A program in place, the same bytes as its staged source, and registered as
+  its service, xmip-<node>, by its own --install: the Essentials' far end on
+  a machine of its own.
+tags:
+  - Xmip
+get:
+  executable: pwsh
+  args:
+    - -NoLogo
+    - -NonInteractive
+    - -NoProfile
+    - -File
+    - ./node.resource.ps1
+    - -Kind
+    - Program
+    - -Operation
+    - get
+  input: stdin
+  requireSecurityContext: elevated
+test:
+  executable: pwsh
+  args:
+    - -NoLogo
+    - -NonInteractive
+    - -NoProfile
+    - -File
+    - ./node.resource.ps1
+    - -Kind
+    - Program
+    - -Operation
+    - test
+  input: stdin
+  requireSecurityContext: elevated
+  return: state
+set:
+  executable: pwsh
+  args:
+    - -NoLogo
+    - -NonInteractive
+    - -NoProfile
+    - -File
+    - ./node.resource.ps1
+    - -Kind
+    - Program
+    - -Operation
+    - set
+  input: stdin
+  requireSecurityContext: elevated
+  implementsPretest: true
+  return: state
+exitCodes:
+  '0': Success
+  '1': Error
+schema: !embedded
+    $schema: https://json-schema.org/draft/2020-12/schema
+    type: object
+    required:
+      - path
+      - source
+      - node
+      - arguments
+    properties:
+      path:
+        description: 'Where the program is.'
+        type: string
+      source:
+        description: 'The staged program it holds the bytes of.'
+        type: string
+      node:
+        description: 'The name its service is registered by, xmip-<node>.'
+        type: string
+      arguments:
+        description: 'What its --install is given, which registers it and starts it.'
+        type: array
+      placed:
+        type: boolean
+        readOnly: true
+      registered:
+        type: boolean
+        readOnly: true
+      _exist:
+        type: boolean
+        readOnly: true
+      _inDesiredState:
+        type: boolean
+        readOnly: true

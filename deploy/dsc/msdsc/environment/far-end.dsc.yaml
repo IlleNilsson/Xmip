@@ -1,0 +1,64 @@
+# One of the Essentials' far ends on a machine of its own, from this host:
+# far-end-program.dsc.yaml applied on its machine with its certificate and
+# the program (README.md). Deploy-XmipEnvironment applies it once for each
+# machine whose external names a far end.
+$schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
+directives:
+  version: ^3.4.0-preview.3
+parameters:
+  common:
+    type: object
+    description: >-
+      What every machine is reached with: secretPath, keyPath, knownHosts
+      and linuxAccount; and identity, a folder per far end, by its name, of what
+      New-XmipCertificate -Node wrote.
+  programs:
+    type: object
+    description: >-
+      Per family, the far end's program, xmip-essentials-external built for
+      it: its path and the file name it is given there.
+  tools:
+    type: object
+    description: >-
+      Per family, each tool DSC is brought to the machine with, its tarball's
+      path and SHA-256: pwsh and dsc, tarballs for Linux, zips for Windows.
+  layout:
+    type: object
+    description: Per family, where a far end is kept, folder.
+    defaultValue:
+      Windows:
+        folder: C:\ProgramData\Xmip\far-end
+      Linux:
+        folder: /opt/xmip-far-end
+  name:
+    type: string
+    description: The far end, as the Essentials' configuration/external.xmip names it.
+  machine:
+    type: object
+    description: The machine the far end runs on, its name, address and family.
+resources:
+  - name: Far end machine
+    type: Xmip.Environment/Machine
+    requireVersion: ^0.1
+    properties:
+      name: "[parameters('machine').name]"
+      address: "[parameters('machine').address]"
+      family: "[parameters('machine').family]"
+      login: "[parameters('common').linuxAccount]"
+      secretPath: "[parameters('common').secretPath]"
+      keyPath: "[parameters('common').keyPath]"
+      knownHosts: "[parameters('common').knownHosts]"
+      tools: "[parameters('tools')[parameters('machine').family]]"
+      document: far-end-program.dsc.yaml
+      files: >-
+        [createObject(
+        'node.pem', path(parameters('common').identity, parameters('name'), 'node.pem'),
+        'node.key', path(parameters('common').identity, parameters('name'), 'node.key'),
+        'anchors.pem', path(parameters('common').identity, parameters('name'), 'anchors.pem'),
+        parameters('programs')[parameters('machine').family].file,
+        parameters('programs')[parameters('machine').family].path)]
+      parameters: >-
+        [createObject(
+        'name', parameters('name'),
+        'program', parameters('programs')[parameters('machine').family].file,
+        'layout', parameters('layout')[parameters('machine').family])]

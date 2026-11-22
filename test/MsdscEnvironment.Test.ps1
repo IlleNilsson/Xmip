@@ -42,14 +42,16 @@ BeforeAll {
 
     [string] $script:Template = Join-Path $script:Root 'deploy/dsc/msdsc/environment'
     foreach ($part in 'Program.ps1', 'NodeMachine.ps1', 'NodeFile.ps1', 'NodeOpening.ps1',
-        'NodeAccess.ps1', 'NodePackage.ps1', 'EnvironmentSsh.ps1', 'EnvironmentMachine.ps1',
+        'NodeAccess.ps1', 'NodePackage.ps1', 'NodeProgram.ps1', 'EnvironmentSsh.ps1',
+        'EnvironmentMachine.ps1',
         'EnvironmentSlice.ps1', 'EnvironmentDomain.ps1') {
         . (Join-Path $script:Template $part)
     }
     [bool] $script:HasDsc = $null -ne (Get-Command -Name dsc -ErrorAction SilentlyContinue)
     [string] $script:NoDsc = 'dsc (Microsoft DSC v3) is not on PATH; README.md installs it'
     [string[]] $script:Document = @('machine.dsc.yaml', 'names.dsc.yaml', 'node.dsc.yaml',
-        'name.dsc.yaml', 'domain.dsc.yaml', 'started.dsc.yaml')
+        'name.dsc.yaml', 'domain.dsc.yaml', 'started.dsc.yaml',
+        'far-end.dsc.yaml', 'far-end-program.dsc.yaml')
 
     # A copy of a document, in YAML, whose every instance is an Echo of its
     # type and properties, its condition kept, so evaluating it changes
@@ -140,13 +142,15 @@ Describe 'The documents' {
     }
 
     It 'parses <_> as YAML' -ForEach @('machine.dsc.yaml', 'names.dsc.yaml', 'node.dsc.yaml',
-        'name.dsc.yaml', 'domain.dsc.yaml', 'started.dsc.yaml') {
+        'name.dsc.yaml', 'domain.dsc.yaml', 'started.dsc.yaml',
+        'far-end.dsc.yaml', 'far-end-program.dsc.yaml') {
         $script:Parsed[$_] | Should -Not -BeNullOrEmpty
     }
 
     It 'declares in <_> every parameter it uses, and uses every one' -ForEach @(
         'machine.dsc.yaml', 'names.dsc.yaml', 'node.dsc.yaml', 'name.dsc.yaml',
-        'domain.dsc.yaml', 'started.dsc.yaml') {
+        'domain.dsc.yaml', 'started.dsc.yaml',
+        'far-end.dsc.yaml', 'far-end-program.dsc.yaml') {
         [string] $text = Get-Content -LiteralPath (Join-Path $script:Template $_) -Raw
         [string[]] $used = @(@([regex]::Matches($text, "parameters\('(\w+)'\)") |
             ForEach-Object { $_.Groups[1].Value }) + 'staging' | Sort-Object -Unique)
@@ -157,13 +161,15 @@ Describe 'The documents' {
 
     It 'requires DSC''s floor or newer in <_>' -ForEach @('machine.dsc.yaml',
         'names.dsc.yaml', 'node.dsc.yaml', 'name.dsc.yaml', 'domain.dsc.yaml',
-        'started.dsc.yaml') {
+        'started.dsc.yaml',
+        'far-end.dsc.yaml', 'far-end-program.dsc.yaml') {
         $script:Parsed[$_].directives.version | Should -Be "^$(Get-XmipTestFloor -Name 'dsc')"
     }
 
     It 'leaves elevation in <_> to each resource, never the whole document' -ForEach @(
         'machine.dsc.yaml', 'names.dsc.yaml', 'node.dsc.yaml', 'name.dsc.yaml',
-        'domain.dsc.yaml', 'started.dsc.yaml') {
+        'domain.dsc.yaml', 'started.dsc.yaml',
+        'far-end.dsc.yaml', 'far-end-program.dsc.yaml') {
         $script:Parsed[$_].directives.Contains('securityContext') | Should -BeFalse
     }
 
@@ -179,6 +185,7 @@ Describe 'The documents' {
         @{ Type = 'Xmip.Node/Package'; Elevated = @('set') }
         @{ Type = 'Xmip.Node/Service'; Elevated = @('set') }
         @{ Type = 'Xmip.Node/Slice'; Elevated = @('get', 'set', 'test') }
+        @{ Type = 'Xmip.Node/Program'; Elevated = @('get', 'set', 'test') }
     ) {
         [string] $file = ($Type -replace '^Xmip\.', 'xmip-' -replace '/', '-').ToLowerInvariant()
         [hashtable] $manifest = Read-XmipTestYaml -Path (
@@ -213,7 +220,7 @@ Describe 'The documents' {
             'Xmip.Environment/Name',
             'Xmip.Environment/Slice', 'Xmip.Environment/Started',
             'Xmip.Node/Account', 'Xmip.Node/File', 'Xmip.Node/Opening', 'Xmip.Node/Package',
-            'Xmip.Node/Service', 'Xmip.Node/Slice')
+            'Xmip.Node/Program', 'Xmip.Node/Service', 'Xmip.Node/Slice')
     }
 }
 
@@ -271,8 +278,9 @@ Describe 'The example environment' {
         }
     }
 
-    It 'tells each node machine the far end and every node the Locations are placed over' {
-        [string] $farEnd = $script:Example['far_end']
+    It 'tells each node machine the far ends, whether they push, and every node placed over' {
+        # The far ends one or a list, given as xmip-service --bind takes them.
+        [string] $farEnd = @($script:Example['far_end']) -join ','
         $farEnd | Should -Not -BeNullOrEmpty
         [string[]] $mapped = @($script:Nodes.Keys | Sort-Object)
 
@@ -280,9 +288,26 @@ Describe 'The example environment' {
             $slice = $script:Evaluated["$node slice"]
             $slice.node | Should -Be $node
             $slice.bind | Should -Be $farEnd
+            $slice.listen | Should -Be ([bool] $script:Example['listen'])
             @($slice.nodes -split ',' | Sort-Object) | Should -Be $mapped
             $slice.authority | Should -Be $script:Example['authority']
             $slice.into | Should -BeLike "*$node"
+        }
+    }
+
+    It 'gives each far end its machine, its certificate and its program, registered by name' {
+        if (-not $script:HasDsc) {
+            Set-ItResult -Skipped -Because $script:NoDsc
+        }
+        [string[]] $far = @($script:Example['machines'] | Where-Object { $_.Contains('external') } |
+                ForEach-Object { $_['external'] })
+        $far.Count | Should -Be 6
+        foreach ($name in $far) {
+            [hashtable] $machine = $script:Evaluated[$name]
+            $machine.document | Should -Be 'far-end-program.dsc.yaml'
+            $machine.parameters.name | Should -Be $name
+            $machine.files['node.key'] | Should -BeLike "*$name*node.key"
+            $machine.files.Keys | Should -Contain $machine.parameters.program
         }
     }
 }
@@ -771,5 +796,36 @@ Describe 'The Xmip resources'' own steps' {
 
     It 'quotes every value it hands the machine''s shell as one word' {
         ConvertTo-EnvironmentShellWord -Value "it's /var/tmp" | Should -Be "'it'\''s /var/tmp'"
+    }
+}
+
+Describe 'A far end''s program, every command its machine runs a stub' {
+    It 'is absent until it is placed and registered, then placed and registered by its --install' {
+        [string] $source = Join-Path $TestDrive 'staged-program'
+        Set-Content -LiteralPath $source -Value 'a far end'
+        [string] $path = Join-Path $TestDrive 'far-end/xmip-essentials-external'
+        [hashtable] $instance = @{ path = $path; source = $source; node = 'far-end-a'
+            arguments = @('--name', 'far-end-a', '--install', '--configuration', 'tls') }
+        $script:Registered = $false
+        $script:Ran = [Collections.Generic.List[string]]::new()
+        function Test-NodeServiceRegistered { param([string] $Name) $script:Registered }
+        function Stop-NodeService { param([string] $Name) $script:Ran.Add("stop $Name") }
+        function Invoke-DscProgram {
+            param([string] $Program, [string[]] $Argument)
+            $script:Ran.Add("$Program $($Argument -join ' ')")
+            if ($Argument -contains '--install') {
+                $script:Registered = $true
+            }
+        }
+        (Get-NodeProgramState -Instance $instance)._exist | Should -BeFalse
+        Install-NodeProgram -Instance $instance -Confirm:$false
+        Get-Content -LiteralPath $path | Should -Be 'a far end'
+        $script:Ran[-1] | Should -Be "$path --name far-end-a --install --configuration tls"
+        [hashtable] $state = Get-NodeProgramState -Instance $instance
+        $state.placed | Should -BeTrue
+        $state._exist | Should -BeTrue
+        # A program placed again stops its registered service first.
+        Install-NodeProgram -Instance $instance -Confirm:$false
+        $script:Ran | Should -Contain 'stop xmip-far-end-a'
     }
 }

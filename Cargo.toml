@@ -399,11 +399,12 @@ demote = ["dep:xmip-demote"]
 event = ["dep:xmip-event"]
 identify = ["dep:xmip-identify"]
 # The node's declaration; and what xmip-service alone uses (`.src/service/`),
-# which requires this feature: its console stop, its Windows Service Control
-# Manager and the command line's document it installs. A build that leaves
-# the program out links none of the three, which cargo refuses as unused
-# dependencies (unused_dependencies, Cargo 1.100).
-node = ["dep:xmip-node", "dep:ctrlc", "dep:windows-service", "dep:xmip-operate"]
+# which requires this feature: its console stop and the command line's
+# document it installs; its Windows Service Control Manager is the runtime's
+# (`registration::control_manager`). A build that leaves the program out
+# links neither, which cargo refuses as unused dependencies
+# (unused_dependencies, Cargo 1.100).
+node = ["dep:xmip-node", "dep:ctrlc", "dep:xmip-operate"]
 observe =["dep:xmip-observe"]
 party = ["dep:xmip-party"]
 path = ["dep:xmip-path"]
@@ -599,9 +600,6 @@ xmip-file = { package = "xmip-core-library-file", git = "https://github.com/Ille
 xmip-provision-acme = { package = "xmip-core-provision-acme", git = "https://github.com/IlleNilsson/xmip-core-provision-acme", branch = "main" }
 
 [target.'cfg(windows)'.dependencies]
-# xmip-service under the Windows Service Control Manager: the dispatcher, the
-# control handler a Stop or a Shutdown arrives on, and the status it reports.
-windows-service = { version = "0.8", optional = true }
 # The operating system's log and the key store on Windows (features audit and
 # secret).
 xmip-audit-windows-event-log = { package = "xmip-core-audit-windows-event-log", git = "https://github.com/IlleNilsson/xmip-core-audit-windows-event-log", branch = "main", optional = true }

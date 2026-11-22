@@ -155,7 +155,8 @@ function Read-XmipTestEnvironment {
         New-Item -Path (Join-Path $Folder $each) -ItemType Directory -Force | Out-Null
     }
     foreach ($each in 'slicer', 'xmip.rpm', 'xmip.msi', 'pwsh.tar.gz', 'dsc.tar.gz',
-        'pwsh.zip', 'dsc.zip', 'secret.xml') {
+        'pwsh.zip', 'dsc.zip', 'secret.xml', 'xmip-essentials-external',
+        'xmip-essentials-external.exe') {
         Set-Content -LiteralPath (Join-Path $Folder $each) -Value $each
     }
     $environment = & (Get-Module -Name Xmip) { param($Path) Read-XmipToml -Path $Path } $Path
@@ -178,6 +179,11 @@ function Read-XmipTestEnvironment {
             pwsh = @{ path = Join-Path $Folder 'pwsh.zip'; sha256 = 'EF' }
             dsc = @{ path = Join-Path $Folder 'dsc.zip'; sha256 = '01' }
         }
+    }
+    # The Essentials' far end's program, for a machine that runs one.
+    $environment['far_ends'] = @{
+        Linux = @{ program = Join-Path $Folder 'xmip-essentials-external' }
+        Windows = @{ program = Join-Path $Folder 'xmip-essentials-external.exe' }
     }
     if ($Technology) {
         $environment['technology'] = $Technology
