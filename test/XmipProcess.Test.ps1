@@ -157,10 +157,19 @@ Describe 'What an Essentials process is called' {
             Get-XmipEssentialsImageKind -Name "$prefix-node-cluster" | Should -Be 'Node'
             Get-XmipEssentialsImageKind -Name "$prefix-roll" | Should -Be 'Roll'
             Get-XmipEssentialsImageKind -Name "$prefix-cluster" | Should -Be 'Cluster'
+
+            # A far end outside the cluster carries a marker of its own, and
+            # the first marker is the kind: a node called external-roll is a
+            # node, a far end called node-roll a far end (ADR-0028, amendment
+            # 2026-11-22).
+            Get-XmipEssentialsImageKind -Name "$prefix-node-external-roll" | Should -Be 'Node'
+            Get-XmipEssentialsImageKind -Name "$prefix-external-node-roll" |
+                Should -Be 'External'
+            Get-XmipEssentialsImageKind -Name "$prefix-external-roll" | Should -Be 'External'
         }
     }
 
-    It 'says which of the three it is, named for a cluster or not' {
+    It 'says which of the four it is, named for a cluster or not' {
         InModuleScope Xmip -Parameters $script:Named {
             param($Name, $Node)
 
@@ -171,9 +180,11 @@ Describe 'What an Essentials process is called' {
                 "$prefix-cluster"                 = 'Cluster'
                 "$prefix-node-$Node"              = 'Node'
                 "$prefix-node-node"               = 'Node'
+                "$prefix-external-$Node"          = 'External'
                 'xmip-essentials-roll'            = 'Roll'
                 'xmip-essentials-cluster'         = 'Cluster'
                 'xmip-essentials-node'            = 'Node'
+                'xmip-essentials-external'        = 'External'
                 'xmip-gui-web'                    = ''
                 'xmip'                            = ''
                 'notepad'                         = ''
@@ -228,7 +239,7 @@ Describe 'What an Essentials process is called' {
             [string] $built = Join-Path -Path $Tree -ChildPath 'measured'
             [string] $examples = Join-Path -Path $built -ChildPath 'examples'
             $null = New-Item -ItemType Directory -Path $examples -Force
-            foreach ($file in 'roll', 'cluster', 'node') {
+            foreach ($file in 'roll', 'cluster', 'node', 'external') {
                 Set-Content -LiteralPath (Join-Path $built $file) -Value $file
             }
             foreach ($file in 'unit.dll', 'libunit.so', 'libunit.dylib', 'unit.pdb', 'unit.d') {
@@ -239,6 +250,7 @@ Describe 'What an Essentials process is called' {
                     Roll     = Join-Path $built 'roll'
                     Cluster  = Join-Path $built 'cluster'
                     Node     = Join-Path $built 'node'
+                    External = Join-Path $built 'external'
                     Examples = $examples
                     Image    = Join-Path $Tree 'image'
                     Suffix   = ''

@@ -183,7 +183,7 @@ cpu = 2
 disk_gb = 64
 nodes = ["DS2"]
 
-# Xmip node
+# Xmip node, processing between the receiving and sending nodes
 [[machines]]
 name = "XMIP-APP01"
 address = "10.77.0.51"
@@ -191,9 +191,9 @@ image = "WindowsServer2025"
 memory_gb = 4
 cpu = 2
 disk_gb = 64
-nodes = ["PX1"]
+nodes = ["EX1"]
 
-# Xmip node
+# Xmip node, executing: receives, processes and sends at low latency
 [[machines]]
 name = "XMIP-APP02"
 address = "10.77.0.52"
@@ -201,7 +201,7 @@ image = "WindowsServer2025"
 memory_gb = 4
 cpu = 2
 disk_gb = 64
-nodes = ["EX1"]
+nodes = ["EX2"]
 
 # Xmip node
 [[machines]]

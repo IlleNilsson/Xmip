@@ -116,6 +116,10 @@ function New-XmipEssentialsImage {
         Join-Path -Path $area -ChildPath (Split-Path -Leaf $layout.Cluster))
     Copy-XmipEssentialsImage -Source $layout.Node -Image (
         Join-Path -Path $area -ChildPath (Split-Path -Leaf $layout.Node))
+    # The far ends' program, beside the roll's image, where the roll finds it
+    # and links an image of it for each far end it starts.
+    Copy-XmipEssentialsImage -Source $layout.External -Image (
+        Join-Path -Path $area -ChildPath (Split-Path -Leaf $layout.External))
 
     # The libraries built as the crate's examples, the Work Process units the
     # run places beside each node that opens one, in an examples folder beside
@@ -254,17 +258,21 @@ function Test-XmipEssentialsOwnImage {
 function Get-XmipEssentialsImageKind {
     <#
         .SYNOPSIS
-            Which of the Essentials' three a process name is: Roll, Cluster,
-            Node, or the empty string for a name that is none of them. Pure.
+            Which of the Essentials' four a process name is: Roll, Cluster,
+            Node, External, or the empty string for a name that is none of
+            them. Pure.
 
         .DESCRIPTION
             The name is xmip-essentials-<cluster>-<what> since 2026-09-20, and
             xmip-essentials-<what> where no cluster named it — a roll started by
-            hand, or this crate's own tests. What is roll, cluster, or
-            node-<name>, and the node marker is read first: it is what lets a
-            node be called roll without being one (the owner, 2026-09-20). A
-            name carrying no marker and ending in neither word is a node too,
-            which is what the bare xmip-essentials-node is.
+            hand, or this crate's own tests. What is roll, cluster,
+            node-<name>, or external-<name> for a far end outside the cluster
+            (ADR-0028, amendment 2026-11-22), and a marker is read first: it is
+            what lets a node be called roll without being one (the owner,
+            2026-09-20). The first marker in the name is the kind, so a node
+            called external-x and a far end called node-x are each what they
+            are. A name carrying no marker and ending in none of the words is
+            a node too, which is what the bare xmip-essentials-node is.
 
         .PARAMETER Name
             The process name.
@@ -287,12 +295,20 @@ function Get-XmipEssentialsImageKind {
 
     # The marker before the endings: xmip-essentials-<cluster>-node-roll is
     # the node called roll, never the cluster's roll, and that is the whole
-    # point of the marker.
-    if ($rest.Contains('-node-')) {
+    # point of the marker. Of two markers the first is the kind; what follows
+    # it is a name.
+    [int] $node = $rest.IndexOf('-node-')
+    [int] $external = $rest.IndexOf('-external-')
+
+    if ($external -ge 0 -and ($node -lt 0 -or $external -lt $node)) {
+        return 'External'
+    }
+
+    if ($node -ge 0) {
         return 'Node'
     }
 
-    foreach ($kind in 'roll', 'cluster') {
+    foreach ($kind in 'roll', 'cluster', 'external') {
         if ($rest -eq $kind -or $rest.EndsWith("-$kind")) {
             return (Get-Culture).TextInfo.ToTitleCase($kind)
         }

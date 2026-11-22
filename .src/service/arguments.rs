@@ -17,7 +17,7 @@ pub const USAGE: &str = "usage: xmip-service --configuration <path> [--console] 
      example: xmip-service --configuration /opt/xmip/config/cluster.xmip --node RX1 \
      --cluster CL1 --slice\n\
      example: xmip-service --configuration /opt/xmip/config/cluster.xmip --node RX1 \
-     --cluster CL1 --bind 10.77.0.1 --nodes RX1,TX1,PX1,EX1,DS1 --slice\n\
+     --cluster CL1 --bind 10.77.0.1 --nodes RX1,TX1,EX1,EX2,DS1 --slice\n\
      example: xmip-service --configuration /opt/xmip/config/cluster.xmip --node RX1 \
      --cluster CL1 --account xmip --install\n\
      example: xmip-service --configuration /opt/xmip/config/node.xmip --listening\n\

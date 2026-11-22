@@ -740,7 +740,7 @@ one. Each README says each step in full.
    against the machines:
 
 ```powershell
-Start-XmipTest -Suite Core.Essentials -Cluster CL1 -Nodes RX1, TX1, PX1, EX1, DS1 `
+Start-XmipTest -Suite Core.Essentials -Cluster CL1 -Nodes RX1, TX1, EX1, EX2, DS1 `
     -Certificate D:\Repos\Xmip\.local-work\environment\tester
 Get-XmipTestStatus
 Get-XmipTestResult -Test Carried

@@ -1846,3 +1846,54 @@ And with it:
 test storage::tests::a_node_reaching_storage_says_a_standby_stopped_is_not_following ... ok
 test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 317 filtered out; finished in 1.26s
 ```
+
+## Amendment, 2026-11-22: one node covering every role works, and receiving, executing and sending nodes are split as need says
+
+**Provenance.** The owner, 2026-11-22, settling the plan of the nodes Xmip
+is tested on: *One node covering every role works; RX, EX and TX nodes are
+optional, split as security, firewall and load need*; then *Let's get it to
+work* and *I've said enough, just go to work*. The plan he settled keeps the
+line *The Work Process Order approval stays on EX1*. The build is the
+assistant's, the same day, for the owner to strike.
+
+- **One node covering every role works.** A node declaring executing serves
+  every stage (clause 3), so beside the Storage nodes it takes every Receive
+  Location, Send Port and Work Process a cluster's file designs, and a
+  cluster of it and its Storage nodes runs every flow. Receiving, executing
+  and sending nodes are optional. A cluster splits its work over them as its
+  needs say:
+  - security: a receiving node alone where the outside reaches in;
+  - firewall: which node opens which port;
+  - load: more of a kind as the load grows.
+
+  What decides is what each node declares (clause 1), never how many there
+  are or what they are called.
+- **The Essentials' cluster is the plan** (ADR-0028, amendment of this date):
+  - RX1 to RX3 declare receiving;
+  - EX1 declares processing and works between the receiving and sending
+    nodes, the Work Process *Order approval* on it;
+  - EX2 declares executing, for low latency;
+  - TX1 to TX3 declare sending;
+  - OP1 declares operational and monitoring;
+  - DS1 and DS2 declare storage.
+
+  The plan names the processing node EX1, where the designations of
+  2026-11-12 give such a node PXn. The letters only remind, and nothing reads
+  them (that amendment). The plan is the owner's later word, so EX1 declares
+  processing in the Essentials' file and PX1 is no node of it. The estate's
+  test cluster, `test/cluster.xmip`, keeps PX1.
+- **Order approval and the executing node.** The plan keeps *Order
+  approval* on EX1. A Work Process still runs on every node serving its
+  stage (the amendment of 2026-11-13, *a cluster's file places its work
+  through `place`*), so the executing EX2 takes its turns too. A rule keeping
+  a Work Process on the processing nodes while one is present is drafted and
+  waits for the owner's answer, since it changes his choice of that day.
+  Receive Locations and Send Ports are placed as before: round robin over
+  every node serving their stage, the executing ones included.
+- **Found, not built: placement goes round the nodes in their names' order,
+  not the file's.** Configure reads `[nodes]` into a table sorted by name,
+  where placement says it goes in the file's order. A node renamed can take
+  other work. It is recorded in `doc/planning/open-problems.md`.
+
+Held by the Essentials' test of the plan over its own files
+(`served::given`).

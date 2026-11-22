@@ -41,7 +41,9 @@
 
     Where a name may stand (ADR-0056, amendment 2026-10-03), and only there:
 
-    - an cluster.xmip, a cluster's configuration;
+    - an cluster.xmip, a cluster's configuration, and the Essentials'
+      external.xmip beside its own, which names the far ends outside it
+      (ADR-0028, amendment 2026-11-22);
     - a README.md, and doc/getting-started.md, the first run the README links
       first (ADR-0056, amendment 2026-10-20, drafted);
     - the .EXAMPLE and .PARAMETER sections of a comment-based help block in a
@@ -222,7 +224,8 @@ BeforeAll {
     <#
         .SYNOPSIS
         The indexes of the lines of a file where the owner's names belong:
-        all of an cluster.xmip, an example environment file and a README.md,
+        all of an cluster.xmip, the Essentials' external.xmip, an example
+        environment file and a README.md,
         the .EXAMPLE and .PARAMETER sections of a script's help, a binary's
         usage text.
     #>
@@ -232,7 +235,8 @@ BeforeAll {
         [bool] $test = $Path -like 'test/*' -or $leaf -like '*.Test.ps1'
 
         if ($leaf -eq 'README.md' -or $Path -eq 'doc/getting-started.md' -or
-            $leaf -like '*cluster.xmip' -or $leaf -like '*.example.toml') {
+            $leaf -like '*cluster.xmip' -or $leaf -like '*.example.toml' -or
+            $Path -eq 'test/core/essentials/configuration/external.xmip') {
             return 0..([Math]::Max($Line.Count - 1, 0))
         }
 

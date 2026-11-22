@@ -80,6 +80,10 @@ function Get-XmipEssentialsLayout {
         Roll       = Join-Path -Path $target -ChildPath "xmip-essentials-roll$suffix"
         Cluster    = Join-Path -Path $target -ChildPath "xmip-essentials-cluster$suffix"
         Node       = Join-Path -Path $target -ChildPath "xmip-essentials-node$suffix"
+        # Each far end outside the cluster the roll starts beside the nodes
+        # it runs as xmip-service, a sender or a receiver (ADR-0028,
+        # amendment 2026-11-22).
+        External   = Join-Path -Path $target -ChildPath "xmip-essentials-external$suffix"
         # The Work Process units the run places beside its nodes, built as
         # the crate's examples (Invoke-XmipEssentialsBuild).
         Examples   = Join-Path -Path $target -ChildPath 'examples'
@@ -107,7 +111,9 @@ function Invoke-XmipEssentialsBuild {
             `roll`, `cluster` or `node`. The roll spawns the cluster and the
             cluster spawns the nodes (the owner, 2026-09-19), so building the
             roll builds all three and building the cluster builds it and the
-            node. Each builds the Essentials' Work Process unit with it.
+            node; the roll also starts the far ends outside the cluster, so
+            building it builds their program too. Each builds the Essentials'
+            Work Process unit with it.
     #>
     [CmdletBinding()]
     [OutputType([string])]
@@ -132,12 +138,12 @@ function Invoke-XmipEssentialsBuild {
     }
 
     if ($Binary -eq 'roll') {
-        $bins += @('--bin', 'xmip-essentials-roll')
+        $bins += @('--bin', 'xmip-essentials-roll', '--bin', 'xmip-essentials-external')
     }
 
     # The Work Process unit the cluster's file names, built beside them: the
-    # run copies it from there beside each node that serves the process
-    # stage (configuration/order-approval.bpmn; ADR-0066 clause 4).
+    # run copies it from there beside each node the placement runs it on
+    # (configuration/order-approval.bpmn; ADR-0066 clause 4).
     $bins += @('--example', 'order_approval')
 
     # Cargo's first error is kept, so a failed build says why in its own

@@ -1572,3 +1572,118 @@ Now:
   another is refused, naming both. With a path it cannot read the app still
   says so on its page and stays up, so the declaration says what it opened,
   not that every read of it succeeded.
+
+## Amendment, 2026-11-22: the cluster is the node plan, and its far ends are three senders and three receivers, processes of their own
+
+**Provenance.** The owner, 2026-11-22, settling the plan of the nodes Xmip
+is tested on (ADR-0056, amendment of this date): *One node covering every
+role works; RX, EX and TX nodes are optional, split as security, firewall
+and load need*; then *Let's get it to work*. The plan runs one way in five,
+and on one computer it gives the far ends as *the Essentials' far ends,
+processes of their own*. Decided by the assistant while building, for the
+owner to strike:
+
+- which Locations the executing node takes;
+- the far ends' file and their names' home;
+- the senders' turn and the receivers' round robin;
+- a receiver's own folder;
+- the program's name.
+
+- **The Essentials' cluster file is the plan.** It declares eleven nodes:
+  RX1 to RX3 receiving, EX1 processing, EX2 executing, TX1 to TX3 sending,
+  OP1 operational and monitoring, DS1 and DS2 storage. PX1 is gone: EX1
+  processes. One file still serves every way (amendment 2026-10-21); which
+  node runs on which machine is the environment's. Placement places as it
+  did, and the Locations are listed so that every node takes work:
+  - EX2 takes the remittance advices from Party-E and the inventory reports
+    from Party-D and sends both on itself, each received and sent in one
+    node.
+  - The sales orders are received on RX1 and RX2, pass *Order approval*,
+    and go out through TX1. Order approval runs on EX1 and, while a
+    Work Process runs on every node serving its stage, on EX2 too (ADR-0056,
+    amendment of this date).
+  - Every other document goes from a receiving node to a sending one, and
+    the ERP's invoices to Party-A go out through EX2.
+
+  `served::given` holds the plan over the shipped files, every node found by
+  what it declares.
+- **Its far ends are three senders and three receivers.** They are named in
+  `configuration/external.xmip` beside the cluster's file: the Essentials'
+  own, outside the cluster, never Xmip's. On one computer each is a process
+  of its own (clause 2): the program `xmip-essentials-external`, run from an
+  image named `xmip-essentials-<cluster>-external-<name>`. The roll starts
+  them beside the nodes it runs as `xmip-service` and uses each once it
+  says it is ready. As the run ends, after every file has had its time to
+  arrive, the roll ends them by ending their input, before the nodes stop.
+  - **A sender** is handed each file and drops it into the Receive
+    Location's folder, written beside it and renamed in, as the rig did.
+    It says when it renamed the file in, and that is the drop's time: under
+    load the roll can hear of a drop after the file has already arrived, and
+    a first run that timed the drop by the roll's hearing gave a fastest
+    delivery of 0 ns. Each round each Location's document goes through the
+    next sender in turn, so every sender reaches every node that receives.
+  - **A receiver** is delivered to by Send Ports, each Send Port to one,
+    round robin in the order the Send Ports are placed, so each receiver is
+    reached by EX2 and the sending nodes. It moves each file into a folder
+    of its own and tells the roll the Send Port, the file and when, the
+    arrival's time. Carried judges the file there, as before.
+  - **Each says what it carried.** It audits its start, and its stop with
+    how many files it sent or received (ADR-0062), and declares itself at
+    `xmip:///<cluster>/external/<name>` (ADR-0053) in a folder of the run's,
+    as the nodes the run starts as `xmip-service` do. `Stop-XmipTest` ends
+    every process declared in the cluster's folder at once, which killed the
+    far ends of the first run before they could say what they carried.
+    Declared in the run's folder, they end with their input, as those nodes
+    do, once the roll is gone. The roll's stop says
+    each count after *carried*. A drop's recent item names its sender, and
+    an arrival's its receiver.
+  - **The tooling knows the program**: `Get-XmipEssentialsLayout`, the
+    Essentials' build, its images, and `Get-XmipEssentialsProcess -Kind
+    External`.
+- **Nodes on machines of their own are driven as before**, through the
+  Parties' far end the rig serves on the host (amendment 2026-10-22). The
+  plan's six far-end machines are the Hyper-V way's.
+- **The environments follow the names.** The Hyper-V example and the
+  msdsc README map EX1 and EX2 where they mapped PX1 and EX1. Each mapped
+  machine keeps the roles it ran: the processing node, then the executing
+  one.
+
+**Measured** with `Start-XmipTest -Suite Core.Essentials -Cluster C1`, at
+Brutal. The audit went to `.local-work/audit-agent`, and every node ran as a
+process of `xmip-service` on one computer. The roll of 15:41 ran 101 rounds
+and was stopped by `Stop-XmipTest`. Other work held up to 90 % of the
+machine meanwhile, by the roll's own headroom.
+
+Every Receive Location was Fine, its documents delivered whole where their
+routes send them and none lost. Times are from drop to arrival:
+
+| Receive Location | Node | Delivered | Fastest | Median |
+| --- | --- | --- | --- | --- |
+| Remittance advices from Party-E, in one node | EX2 | 104 | 11.1 ms | 16.6 ms |
+| Inventory reports from Party-D, in one node | EX2 | 103 | 15.2 ms | 22.5 ms |
+| Purchase order responses from Party-B | RX1 | 103 | 12.9 ms | 19.5 ms |
+| Sales orders from Party-A, through Order approval | RX1 | 104 | 17.9 ms | 30.2 ms |
+| Goods receipts from Party-C | RX2 | 103 | 11.4 ms | 20.9 ms |
+| Sales orders from Party-C, through Order approval | RX2 | 104 | 19.1 ms | 30.0 ms |
+| Order to cash documents from ERP | RX3 | 104 | 11.1 ms | 18.0 ms |
+| Procure to pay documents from ERP | RX3 | 103 | 9.5 ms | 18.1 ms |
+
+- **The receiving nodes:** RX1, RX2 and RX3 each took in 207 Streams.
+- **EX2** took in 207 and sent 238: 102 remittance advices, 102 inventory
+  reports and 34 invoices.
+- **The sending nodes:** TX1 sent 340 (204 sales orders, 102 purchase order
+  responses, 34 item masters), TX2 170, TX3 68.
+- **Xmip Storage:** DS1, the primary, held 3,457 writes. DS2, its standby,
+  was ready and none behind.
+- **OP1** operated and monitored, and carried no Message, as its roles say.
+- **EX1 carried nothing.** It neither wrote into Xmip Storage nor was handed
+  anything. EX2 wrote 101 more than its Receive Locations took in, and was
+  handed 101 more than its Send Ports sent. Under the rule of 2026-11-13, a
+  Work Process on every node serving its stage, Order approval's work ran on
+  EX2 (ADR-0056, amendment of this date).
+- **The far ends:**
+  - The senders dropped 299, 296 and 298 files, each into Locations on RX1,
+    RX2, RX3 and EX2.
+  - The receivers took 293, 331 and 256, each from Send Ports on EX2 and the
+    sending nodes.
+  - These figures are from their stop records and the run's recent items.

@@ -26,7 +26,7 @@ function Get-XmipEssentialsProcess {
             xmip-essentials-CL1-roll, xmip-essentials-CL1-node-RX1, for a
             cluster someone called CL1 and a node they called RX1,
             both names free — so the Essentials' own callers ask for
-            xmip-essentials-* and say which of the three with -Kind.
+            xmip-essentials-* and say which of the four with -Kind.
             xmip-gui-web is named outright.
 
         .PARAMETER Path
@@ -36,10 +36,11 @@ function Get-XmipEssentialsProcess {
             without a word, because nothing else writes that directory.
 
         .PARAMETER Kind
-            Which of the Essentials' three: Roll, Cluster or Node. The name
-            says it — a node carries the marker node-, and a name without one
-            ending in -roll or -cluster is that — so a roll's tree is found by
-            kind rather than by twenty names.
+            Which of the Essentials' four: Roll, Cluster, Node or External, a
+            far end outside the cluster. The name says it — a node carries the
+            marker node-, a far end external-, and a name without one ending
+            in -roll or -cluster is that — so a roll's tree is found by kind
+            rather than by twenty names.
     #>
     [CmdletBinding()]
     [OutputType([System.Diagnostics.Process])]
@@ -52,7 +53,7 @@ function Get-XmipEssentialsProcess {
         [string] $Path,
 
         [Parameter()]
-        [ValidateSet('Roll', 'Cluster', 'Node')]
+        [ValidateSet('Roll', 'Cluster', 'Node', 'External')]
         [string] $Kind
     )
 

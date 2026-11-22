@@ -2358,6 +2358,15 @@ a switchover on a stop in order, which reverses ADR-0056's amendment of
 2026-11-08, the deploy waiting for each Storage node to be ready before it
 restarts the next, or both.
 
+Proved 2026-11-22 on the Hyper-V environment: no Storage node's service
+exited with status 2 on 2026-11-21, every stop of either that day ending in
+order, so the start refused twice is not what held the cluster. The deploy's
+rolling restart of 2026-11-22 ended with one primary, never two and never
+none beyond a node's own restart, writes failing for 2.5 s and 5.2 s; but
+each primary restarted handed over to its standby and was copied whole on
+its return, and a standby of the new build could not finish a whole copy
+from a primary of the earlier build (open problem 106).
+
 ## 93. A backlog behind a Receive Location's sequence drains through a Work Process one Message a pass
 
 Found 2026-11-22 on the Hyper-V environment's real cluster. The Essentials'
@@ -2401,6 +2410,13 @@ sequence's next. The send step drained faster since it remembers what it
 found behind a head (`send_step::behind`). Still open: the send step on the
 same implementation (open problem 101), and the Work Process step's
 figures beside its Journeys — a turn that waits is said nowhere yet.
+
+Proved 2026-11-22 on the Hyper-V environment not to drain a queue written
+before the upgrade: the new step does not read an entry the earlier build
+wrote (open problem 103), so every Receive Location's sequence is headed by
+an entry its turn releases unread, and Order approval drained none in 28
+minutes, where the earlier build drained some four a minute. A queue
+written by the new build alone is still to be measured there.
 
 ## 99. A chunk's size line ends at a bare LF, and its extension is passed over unread
 
@@ -2447,6 +2463,68 @@ tests where it was seen), the receive's own error after it, so a primary
 that closed the connection, stopping or restarting, is said first to have
 gone silent, and an operator reading it looks for a network fault that is
 not there.
+
+## 103. A Work Process's queue entry the step cannot read heads its sequence, released unread and unaudited
+
+Found 2026-11-22 on the Hyper-V environment, proving problem 93. Building
+93 changed a Work Process queue entry's body from the identity facts to the
+places its Stream holds (`sequence::Kept`), and the new step reads an entry
+the earlier build wrote as holding no place: its turn's read finds it
+unreadable and releases it, "it is not one to take a turn of"
+(`work_step::turning`), with no audit record. The first such entry of each
+Receive Location heads its sequence, so every Message behind it waits, and
+nothing anywhere says why. Pre-GA an earlier body need not be read (the
+owner's rule: delete, don't keep compatibility), but an entry the step
+cannot read must never hold its sequence in silence. Whether it is audited
+and moved to the Dead Message Queue, its sequence going on, or audited and
+the sequence held for an operator, is the owner's to choose.
+
+## 104. Placement goes round a cluster's nodes in the order of their names, not the file's
+
+Found 2026-11-22, bringing the Essentials' cluster to the owner's node
+plan: configure reads `[nodes]` into a TOML table sorted by name, since the
+workspace's `toml` keeps no order. Renaming a node can therefore move a
+Receive Location or Send Port to another node, though placement says it
+follows the file's order and nothing reads a name (`configure::placed`,
+`configure::cluster::capabilities`).
+
+## 105. A node started with `--console` panics after its stop once nobody reads its output
+
+Found 2026-11-22 in the served rolls of the Essentials' cluster: a node
+started as `xmip-service --console` panics once its stop is recorded, if
+the program that read its output has gone: "failed printing to stdout: The
+pipe is being closed. (os error 232)". 9 of 11 nodes recorded it as
+`unhandled` right after their stop, when `Stop-XmipTest` ended the roll.
+The service prints with `println!` (`.src/service/activation.rs`), which
+panics on a closed pipe, where a node should say nothing more once nobody
+reads it.
+
+## 106. A standby cannot finish a whole copy from a primary of an earlier build
+
+Found 2026-11-22 on the Hyper-V environment, its two Storage nodes upgraded
+one after the other: DS1, on the new build, came back a standby of DS2, the
+primary on the earlier build, and alternated every 2 to 10 s between
+copying and finding its primary for nearly four minutes, never finishing
+its whole copy, until DS2 was upgraded too. Every upgrade of a cluster runs two builds side by side for a while; what a
+Storage node says to one of another build, and whether a standby refuses
+it plainly rather than trying again, is not decided.
+
+## 107. A node calls a standby copied whole "following", and a cluster one standby short "fine"
+
+Found 2026-11-22 on the Hyper-V environment, proving problem 95: a node
+shows a standby being copied whole as "a standby following the primary",
+the words it shows a ready standby by, and its record's mood stays fine
+while a Storage node's standby is stopped and the cluster has no copy of
+its writes. A standby copying is not yet a copy, and an operator should
+see both apart.
+
+## 108. A Storage node's stop drains for 150 to 264 ms
+
+Found 2026-11-22 on the Hyper-V environment, proving problem 94: each stop
+of a Storage node, standby or primary, ended in 0.41 to 0.61 s, its drain
+alone 150 to 264 ms, with little load. By the millisecond rule anything
+over a millisecond beyond load is a defect; what the drain waits for is not
+looked into.
 
 # Suggested order
 

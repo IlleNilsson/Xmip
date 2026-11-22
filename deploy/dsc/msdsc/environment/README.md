@@ -29,7 +29,7 @@ documents here their parameters from it; the layout and the accounts are
 `machine.dsc.yaml`'s own defaults.
 
 The Hyper-V example, `deploy/dsc/hyperv.example.toml`, puts six of the
-file's nine nodes on six node machines, and the libvirt example DS1, DS2 and
+file's eleven nodes on six node machines, and the libvirt example DS1, DS2 and
 RX1 on three; the Essentials simulates the others. Both Storage nodes the
 file lists, DS1 and DS2, run on machines of their own: neither serves until
 both answer (ADR-0056, amendment 2026-11-08).
@@ -38,8 +38,8 @@ both answer (ADR-0056, amendment 2026-11-08).
 | --- | --- | --- | --- | --- |
 | RX1 | receiving | XMIP-IN01 | AlmaLinux 10 | 10.77.0.61 |
 | TX1 | sending | XMIP-OUT01 | AlmaLinux 10 | 10.77.0.71 |
-| PX1 | processing | XMIP-APP01 | Windows Server 2025 | 10.77.0.51 |
-| EX1 | executing | XMIP-APP02 | Windows Server 2025 | 10.77.0.52 |
+| EX1 | processing | XMIP-APP01 | Windows Server 2025 | 10.77.0.51 |
+| EX2 | executing | XMIP-APP02 | Windows Server 2025 | 10.77.0.52 |
 | DS1 | storage | XMIP-APP03 | Windows Server 2025 | 10.77.0.53 |
 | DS2 | storage | XMIP-APP04 | Windows Server 2025 | 10.77.0.54 |
 
@@ -257,7 +257,7 @@ machine), and the cluster's authority and each node's certificate from it.
 Import-Module -Name D:\Repos\Xmip\Xmip\Xmip.psd1
 Build-XmipService -Site personal-computer -CargoArgument '--release' -Package msi
 [string] $local = 'D:\Repos\Xmip\.local-work\environment'
-foreach ($node in 'RX1', 'TX1', 'PX1', 'EX1', 'DS1') {
+foreach ($node in 'RX1', 'TX1', 'EX1', 'EX2', 'DS1') {
     [hashtable] $issue = @{
         Node      = $node
         Cluster   = 'CL1'
@@ -311,7 +311,7 @@ Set-Content -LiteralPath "$local\operator.xmip" -Value (($printed -join "`n") + 
 New-XmipCertificate -Operator 'tester@xmip.test' -Path $tester |
     New-XmipCertificate -Configuration "$local\operator.xmip" -Path "$tester\operator.pem"
 Copy-Item -LiteralPath "$local\authority\authority.pem" -Destination "$tester\anchors.pem"
-Start-XmipTest -Suite Core.Essentials -Cluster CL1 -Nodes RX1, TX1, PX1, EX1, DS1 -Certificate $tester
+Start-XmipTest -Suite Core.Essentials -Cluster CL1 -Nodes RX1, TX1, EX1, EX2, DS1 -Certificate $tester
 Get-XmipTestStatus
 Get-XmipTestResult -Test Carried
 Start-XmipOperationWeb -Snapshot D:\Repos\Xmip\.local-work\essentials\CL1-snapshot.xmip
