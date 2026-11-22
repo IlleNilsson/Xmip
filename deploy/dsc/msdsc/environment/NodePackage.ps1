@@ -116,13 +116,7 @@ function Test-NodeArchiveInstalled {
         if ($null -eq $entry) {
             return $false
         }
-        $stream = $entry.Open()
-        try {
-            [string] $shipped = (Get-FileHash -InputStream $stream -Algorithm SHA256).Hash
-        }
-        finally {
-            $stream.Dispose()
-        }
+        [string] $shipped = Get-NodeEntryHash -Entry $entry
     }
     finally {
         $zip.Dispose()
@@ -130,12 +124,60 @@ function Test-NodeArchiveInstalled {
     return $shipped -eq (Get-FileHash -LiteralPath $installed -Algorithm SHA256).Hash
 }
 
+function Get-NodeEntryHash {
+    <#
+    .SYNOPSIS
+    The SHA-256 of what the zip entry -Entry holds, as Get-FileHash says a
+    file's.
+    #>
+    [CmdletBinding()]
+    [OutputType([string])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [System.IO.Compression.ZipArchiveEntry] $Entry
+    )
+
+    $stream = $Entry.Open()
+    try {
+        return (Get-FileHash -InputStream $stream -Algorithm SHA256).Hash
+    }
+    finally {
+        $stream.Dispose()
+    }
+}
+
+function Get-NodeModulesPath {
+    <#
+    .SYNOPSIS
+    The zip of module libraries -Instance.modules names, or nothing where it
+    names none; refused where it names one that is not there, so a node is
+    never found current without the libraries asked of it.
+    #>
+    [CmdletBinding()]
+    [OutputType([string])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [hashtable] $Instance
+    )
+
+    [string] $path = $Instance['modules']
+    if (-not $path) {
+        return $null
+    }
+    if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
+        throw "REFUSED: the module libraries $path the node names are not there."
+    }
+    return $path
+}
+
 function Test-NodeModules {
     <#
     .SYNOPSIS
     Whether every module library the zip -Instance.modules holds lies in the
-    configuration folder as it is in the zip, by its length; true where the
-    zip holds none or the instance names none.
+    configuration folder as it is in the zip, by its SHA-256, so a library
+    built again reaches the node whatever its length; true where the
+    instance names none (2026-11-22: compared by length, a library of the
+    same length was found current).
     #>
     [CmdletBinding()]
     [OutputType([bool])]
@@ -144,16 +186,18 @@ function Test-NodeModules {
         [hashtable] $Instance
     )
 
-    if (-not $Instance['modules'] -or -not (Test-Path -LiteralPath $Instance['modules'])) {
+    [string] $modules = Get-NodeModulesPath -Instance $Instance
+    if (-not $modules) {
         return $true
     }
 
-    $zip = [System.IO.Compression.ZipFile]::OpenRead($Instance['modules'])
+    $zip = [System.IO.Compression.ZipFile]::OpenRead($modules)
     try {
         foreach ($entry in $zip.Entries) {
             [string] $placed = Join-Path -Path $Instance['configuration'] -ChildPath $entry.Name
             if (-not (Test-Path -LiteralPath $placed) -or
-                (Get-Item -LiteralPath $placed).Length -ne $entry.Length) {
+                (Get-FileHash -LiteralPath $placed -Algorithm SHA256).Hash -ne
+                (Get-NodeEntryHash -Entry $entry)) {
                 return $false
             }
             # On Windows the node's account reads a library by its folder's
@@ -265,11 +309,12 @@ function Install-NodeModules {
         [hashtable] $Instance
     )
 
-    if (-not $Instance['modules'] -or -not (Test-Path -LiteralPath $Instance['modules'])) {
+    [string] $modules = Get-NodeModulesPath -Instance $Instance
+    if (-not $modules) {
         return
     }
     $null = New-Item -ItemType Directory -Path $Instance['configuration'] -Force
-    Expand-NodeZip -Path $Instance['modules'] -Destination $Instance['configuration']
+    Expand-NodeZip -Path $modules -Destination $Instance['configuration']
     if (-not $IsWindows) {
         return
     }
@@ -277,7 +322,7 @@ function Install-NodeModules {
     # --install --account adds the node's account: one unpacked inheriting
     # nothing was read by the administrators alone, and the node could not
     # open its unit (2026-11-21, the Hyper-V environment's EX1).
-    $zip = [System.IO.Compression.ZipFile]::OpenRead($Instance['modules'])
+    $zip = [System.IO.Compression.ZipFile]::OpenRead($modules)
     try {
         foreach ($entry in $zip.Entries) {
             [string] $placed = Join-Path -Path $Instance['configuration'] -ChildPath $entry.Name

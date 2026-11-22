@@ -686,6 +686,27 @@ Describe 'The Xmip resources'' own steps' {
         Test-NodeModules -Instance $instance | Should -BeTrue
     }
 
+    It 'finds a module library built again at the same length not installed' {
+        [string] $from = Join-Path $TestDrive 'again'
+        [string] $configuration = Join-Path $TestDrive 'again-config'
+        [string] $zip = Join-Path $TestDrive 'again.zip'
+        $null = New-Item -ItemType Directory -Path $from, $configuration -Force
+        Set-Content -LiteralPath (Join-Path $from 'liborder_approval.so') -Value 'unit two'
+        [System.IO.Compression.ZipFile]::CreateFromDirectory($from, $zip)
+        Set-Content -LiteralPath (Join-Path $configuration 'liborder_approval.so') -Value 'unit one'
+        [hashtable] $instance = @{ modules = $zip; configuration = $configuration }
+        Test-NodeModules -Instance $instance | Should -BeFalse -Because 'the same length, other bytes'
+    }
+
+    It 'refuses module libraries the node names that are not there, never finding it current' {
+        [string] $missing = Join-Path $TestDrive 'missing.zip'
+        [hashtable] $instance = @{ modules = $missing; configuration = (Join-Path $TestDrive 'c') }
+        { Test-NodeModules -Instance $instance } |
+            Should -Throw "REFUSED: the module libraries $missing the node names are not there."
+        { Install-NodeModules -Instance $instance } | Should -Throw 'REFUSED: *'
+        Test-NodeModules -Instance @{ configuration = (Join-Path $TestDrive 'c') } | Should -BeTrue
+    }
+
     It 'answers a restarting domain machine absent, never refused, and sets nothing on it' {
         function New-EnvironmentSession { throw 'The machine does not answer.' }
         function Read-MachineSecret { throw 'No secret is read for a machine that does not answer.' }
