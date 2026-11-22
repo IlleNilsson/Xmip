@@ -1490,6 +1490,16 @@ What remains:
   over TCP — is taken whole.
 - **The C ABI's transport table** has no place for `sending` or for a
   receive's bound (ADR-0057, amendment 2026-10-19).
+- **A budget is no ceiling for one Message over it, nor for what is
+  parsed** (a review of the estate, 2026-11-22, its finding 7, confirmed in
+  the source). A charge above the budget's most is held as the most, alone
+  (`budget::Budget::hold`), so a large Message takes more than the budget
+  says; and a bound JSON Schema's validation loads the whole Stream and
+  parses it into a document beside it (the `json-schema` contract
+  capability), as other validators and path languages keep whole
+  documents. What a Message over the allowance meets, a refusal, a read
+  from disk or a path bounded apart, is open; not measured: the peak
+  memory of concurrent large Streams through validation and promotion.
 
 ## 42. The setup packages are written and not yet built
 
@@ -2248,6 +2258,51 @@ library to give it: a root example would be a second copy of a generated
 unit, and the runtime's `approval_unit` waits for a second Message of its
 Instance, which no Correlation keys. Which test it is, and where its unit
 comes from, is open.
+
+## 98. An HTTP client takes an interim answer for the final one
+
+Found 2026-11-22 by a review of the estate (its finding 6), confirmed in
+the source: `net::http::read_response` reads one head and returns it, so a
+100 Continue or a 103 Early Hints is taken for the exchange's answer, and
+the final answer stays unread on the connection. `exchange_kept` reads
+each answer through a `BufReader` of its own, dropped with whatever it
+read past that answer, so on a kept connection an interim and a final
+answer that arrive together lose the final one, and the next exchange
+reads what belongs to this one. Needed: interim answers read past until
+the final one, 101 apart, and one reader for the connection's life;
+tested with the two answers sent together and apart, another exchange
+after them on the connection.
+
+## 97. The shared HTTP reader accepts framing two parsers can read apart
+
+Found 2026-11-22 by a review of the estate (its finding 4), confirmed in
+the source: `net::head::header` takes the first field of a name, so two
+`Content-Length` fields that disagree are not refused; `http::body::read`
+takes `Transfer-Encoding: chunked` beside a `Content-Length`; and a field
+name is trimmed, so whitespace before its colon passes, where RFC 9112
+section 5.1 has a server refuse it with 400 and section 6.3 treats lengths
+that disagree as an error. Behind an intermediary that frames a request
+otherwise, a connection kept open can carry a request smuggled into the
+next. The writer copies framing fields it was given and adds its own. Not
+exploited; whether a deployment has such an intermediary decides the
+risk. Needed: framing checked once, before a body is read, and the writer
+the only author of framing fields.
+
+## 96. A Location's first receive deletes another live Location's claims on its node
+
+Found 2026-11-22 by a review of the estate (its finding 3), confirmed in
+the source: an object store's claim names its node alone
+(`claim::Claimant::of`), and each transport instance deletes every claim
+in its node's name by its first receive (`listed::Claims::recover`;
+ADR-0024, amendment 2026-11-20), S3, Azure Blob and Google Cloud Storage
+alike. Two Receive Locations of one node over the same or overlapping
+prefix, or one Location built again while its node runs, delete claims a
+live receive holds, and the object is taken again beside it. The
+conditional delete keeps a changed claim; it does not tell a claim of an
+earlier start of the node from a live one. Needed: the start of the node
+in the claim, or one recovery per node and store. Untested: one
+Location's arrival held unacknowledged while another of the same node
+starts over the prefix.
 
 ## 95. A node shows a stopped standby Storage node as ready
 
