@@ -1,6 +1,7 @@
 ---
 # One machine on Hyper-V, xmip_machine: a generation 2 VM in its folder,
-# <root>\<name>, with its new dynamic disk, its memory, processors and
+# <root>\<name>, with its new dynamic disk, its memory (static, or dynamic
+# where the machine says), processors and
 # adapter with its static MAC, Secure Boot by its image's template, and its
 # ISO and answer medium in two DVD drives; started, waited for until it
 # answers from its disk, its drives then removed, its answer medium deleted
@@ -60,11 +61,17 @@
         notes: "{{ xmip_environment }}"
         state: present
 
-    - name: Its memory, static
+    - name: Its memory, static, or dynamic where the machine names its least and most
       microsoft.hyperv.hv_memory:
         name: "{{ xmip_machine.name }}"
         startup_bytes: "{{ xmip_machine.memoryGB * xmip_gib }}"
-        dynamic_memory_enabled: false
+        dynamic_memory_enabled: "{{ xmip_dynamic }}"
+        minimum_bytes: >-
+          {{ (xmip_machine.dynamicMemory.minimumMB * 1048576) if xmip_dynamic else omit }}
+        maximum_bytes: >-
+          {{ (xmip_machine.dynamicMemory.maximumMB * 1048576) if xmip_dynamic else omit }}
+      vars:
+        xmip_dynamic: "{{ 'maximumMB' in (xmip_machine.dynamicMemory | default({})) }}"
 
     - name: Its processors
       microsoft.hyperv.hv_processor:

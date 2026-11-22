@@ -225,7 +225,8 @@ Describe 'The example environment' {
     }
 
     It 'maps only nodes the Essentials''s cluster file declares' {
-        $script:Nodes.Count | Should -Be 6
+        # The owner's node plan of 2026-11-22: every node but OP1 on a machine.
+        $script:Nodes.Count | Should -Be 10
         foreach ($node in $script:Nodes.Keys) {
             $node | Should -BeIn $script:Declared.Nodes
         }

@@ -28,23 +28,29 @@ Parties' far end the Essentials serves. `Deploy-XmipEnvironment` gives the
 documents here their parameters from it; the layout and the accounts are
 `machine.dsc.yaml`'s own defaults.
 
-The Hyper-V example, `deploy/dsc/hyperv.example.toml`, puts six of the
-file's eleven nodes on six node machines, and the libvirt example DS1, DS2 and
-RX1 on three; the Essentials simulates the others. Both Storage nodes the
+The Hyper-V example, `deploy/dsc/hyperv.example.toml`, puts ten of the
+file's eleven nodes on ten node machines, as the owner's node plan of
+2026-11-22 lays them out, and the libvirt example DS1, DS2 and RX1 on three;
+the Essentials simulates the others, OP1 among them. Both Storage nodes the
 file lists, DS1 and DS2, run on machines of their own: neither serves until
 both answer (ADR-0056, amendment 2026-11-08).
 
 | Node | Roles | Machine | Operating system | Address |
 | --- | --- | --- | --- | --- |
-| RX1 | receiving | XMIP-IN01 | AlmaLinux 10 | 10.77.0.61 |
-| TX1 | sending | XMIP-OUT01 | AlmaLinux 10 | 10.77.0.71 |
-| EX1 | processing | XMIP-APP01 | Windows Server 2025 | 10.77.0.51 |
-| EX2 | executing | XMIP-APP02 | Windows Server 2025 | 10.77.0.52 |
-| DS1 | storage | XMIP-APP03 | Windows Server 2025 | 10.77.0.53 |
-| DS2 | storage | XMIP-APP04 | Windows Server 2025 | 10.77.0.54 |
+| DS1 | storage | XMIP-DS01 | AlmaLinux 10 | 10.77.0.81 |
+| DS2 | storage | XMIP-DS02 | Windows Server 2025 | 10.77.0.82 |
+| RX1 | receiving | XMIP-RX01 | AlmaLinux 10 | 10.77.0.41 |
+| RX2 | receiving | XMIP-RX02 | Windows Server 2025 | 10.77.0.42 |
+| RX3 | receiving | XMIP-RX03 | AlmaLinux 10 | 10.77.0.43 |
+| EX1 | processing | XMIP-EX01 | Windows Server 2025 | 10.77.0.52 |
+| EX2 | executing | XMIP-EX02 | AlmaLinux 10 | 10.77.0.53 |
+| TX1 | sending | XMIP-TX01 | Windows Server 2025 | 10.77.0.71 |
+| TX2 | sending | XMIP-TX02 | AlmaLinux 10 | 10.77.0.72 |
+| TX3 | sending | XMIP-TX03 | Windows Server 2025 | 10.77.0.73 |
 
-Which six, and on which machine, is the assistant's draft of 2026-10-21 and
-2026-11-11, for the owner to strike.
+Which machine runs which node, and its system, are the owner's node plan of
+2026-11-22 (ADR-0028 and ADR-0056, amendments of that date); the addresses
+are the assistant's, the same day.
 
 ## What each machine is given
 
@@ -106,7 +112,8 @@ signature.
 3. its certificate, key and anchors from the cluster's own authority,
    `tls/node.pem`, `tls/node.key` and `tls/anchors.pem`, as the file's
    `[operate]` names them, the key private;
-4. the estate's package, the MSI or the `.rpm`, told the node, the cluster
+4. the estate's package, the portable archive (the MSI once it is built) or
+   the `.rpm`, told the node, the cluster
    and the account, whose `xmip-service --install` lays the node out by the
    slice already there, gives the account what it reads and writes, and
    registers and starts the node's service as that account;
@@ -250,14 +257,15 @@ The last lets the machines reach the far end the Essentials serves on this
 host, and nothing else reach it.
 
 Then, not elevated, in an Xmip PowerShell Console: the packages
-(`deploy/package/README.md`: the MSI on Windows, the `.rpm` on a Linux
-machine), and the cluster's authority and each node's certificate from it.
+(`deploy/package/README.md`: the portable archive on Windows, the `.rpm` on a
+Linux machine), and the cluster's authority and each node's certificate
+from it.
 
 ```powershell
 Import-Module -Name D:\Repos\Xmip\Xmip\Xmip.psd1
-Build-XmipService -Site personal-computer -CargoArgument '--release' -Package msi
+Build-XmipService -Site personal-computer -CargoArgument '--release' -Package archive
 [string] $local = 'D:\Repos\Xmip\.local-work\environment'
-foreach ($node in 'RX1', 'TX1', 'EX1', 'EX2', 'DS1') {
+foreach ($node in 'RX1', 'RX2', 'RX3', 'EX1', 'EX2', 'TX1', 'TX2', 'TX3', 'DS1', 'DS2') {
     [hashtable] $issue = @{
         Node      = $node
         Cluster   = 'CL1'
@@ -311,7 +319,8 @@ Set-Content -LiteralPath "$local\operator.xmip" -Value (($printed -join "`n") + 
 New-XmipCertificate -Operator 'tester@xmip.test' -Path $tester |
     New-XmipCertificate -Configuration "$local\operator.xmip" -Path "$tester\operator.pem"
 Copy-Item -LiteralPath "$local\authority\authority.pem" -Destination "$tester\anchors.pem"
-Start-XmipTest -Suite Core.Essentials -Cluster CL1 -Nodes RX1, TX1, EX1, EX2, DS1 -Certificate $tester
+[string[]] $mapped = 'RX1', 'RX2', 'RX3', 'EX1', 'EX2', 'TX1', 'TX2', 'TX3', 'DS1', 'DS2'
+Start-XmipTest -Suite Core.Essentials -Cluster CL1 -Nodes $mapped -Certificate $tester
 Get-XmipTestStatus
 Get-XmipTestResult -Test Carried
 Start-XmipOperationWeb -Snapshot D:\Repos\Xmip\.local-work\essentials\CL1-snapshot.xmip
@@ -324,23 +333,25 @@ real nodes as they receive, process and send.
 mutual TLS on the Storage plane's port, 7443, presenting its own
 `tls/node.pem`
 ([built, in the assembled service](../../../../doc/architecture/estate-map.md#storage-nodes));
-DS1's `xmip-service --listening` says `7443/tcp storage`, so its machine's
-firewall opens it. DS2 runs on no machine of the example: every node passes
-it over, and DS1 is the primary on its own (ADR-0056, amendment
-2026-10-22). The Essentials serves the Parties' far end on the host, port
-7422, each Location placed on the real nodes a user of its own there; each
+DS1's and DS2's `xmip-service --listening` says `7443/tcp storage`, so
+their machines' firewalls open it. Each runs on a machine of its own, the
+primary and the standby that follows it (ADR-0056, amendment 2026-11-08),
+and every other node reaches the primary. The Essentials serves the
+Parties' far end on the host, port 7422, each Location placed on the real
+nodes a user of its own there; each
 round it drops a file for every Receive Location, a real receiving node
 fetches it, writes it to the Ledger on DS1, and a real sending node puts it
 back under its name, which the far end tells the Essentials of:
 each Receive Location's `delivery` says how many of the documents dropped
 there arrived whole where their route sends them and how long each took
-(ADR-0028, amendments 2026-10-22 and 2026-11-11). The other four nodes of the
-file are simulated, and no node is started on the host beside real ones.
+(ADR-0028, amendments 2026-10-22 and 2026-11-11). OP1, the file's
+eleventh node, is simulated, and no node is started on the host beside
+real ones.
 
-**What waits on the owner.** The Windows machines take the MSI, which WiX
-7 builds only once its license is accepted, the owner's decision
-(`deploy/package/README.md`). Until it is there, the nodes on the Windows
-machines do not run, and the Locations placed on them are not fetched.
+**What waits on the owner.** The Windows machines take the portable
+archive, `Build-XmipService -Package archive`, until the MSI is built: WiX
+7 builds it only once its license is accepted, the owner's decision
+(`deploy/package/README.md`).
 
 ## How it is held
 

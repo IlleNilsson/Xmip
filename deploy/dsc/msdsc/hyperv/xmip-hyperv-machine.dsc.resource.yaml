@@ -75,8 +75,13 @@ schema: !embedded
       address:
         type: string
       memoryGB:
-        description: 'The VM''s memory, static, in GiB.'
+        description: 'The VM''s memory, in GiB; the memory it starts with where it is dynamic.'
         type: integer
+      dynamicMemory:
+        description: >-
+          minimumMB and maximumMB, the least and the most memory the VM is
+          given, in MiB; empty where its memory is static.
+        type: object
       cpu:
         description: 'The VM''s virtual processors.'
         type: integer

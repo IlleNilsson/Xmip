@@ -1395,3 +1395,55 @@ other, and one resolution has nothing to overwrite: they are gone, with
 `Get-XmipPackageProgram`'s `Target`. The dependencies the three programs
 share compile once, and nothing else of the package build changes
 (decided by the assistant while building, told to the owner).
+
+## Amendment, 2026-11-22: the Hyper-V example is the node plan, its machines sized and fenced per machine
+
+**Provenance.** The owner, 2026-11-22, settling the plan of the machines
+Xmip is tested on: twenty-one machines in Hyper-V, Windows Server as Server
+Core and Linux minimal but on the people's machines, the internet optional
+and on XMIP-RX01 alone; then *Now we need a local test, represented by
+processes and another represented by Hyper-V* and *Let's get it to work*.
+How the templates carry it was decided by the assistant while building,
+told to the owner.
+
+- **The example is the plan.** `deploy/dsc/hyperv.example.toml` lists the
+  plan's 21 machines: the domain controller and file storage, the ten
+  node machines, the six far-end machines and the three people's
+  machines; the Mac is not a VM. XMIP-DB01, XMIP-DB02, XMIP-APP01 to
+  XMIP-APP04, XMIP-IN01 and XMIP-OUT01 are deleted from it. Each machine
+  is named for what it runs, and the ten nodes the cluster's file declares
+  but OP1 each run on a machine of its own.
+- **Dynamic memory, per machine.** A machine's `memory_gb` is what it
+  starts and installs with; `dynamic_memory = { minimum_gb, maximum_gb }`
+  lets Hyper-V give it what it uses between the two, in steps of 2 MiB,
+  `minimum_gb <= memory_gb <= maximum_gb`; without it the memory is static,
+  as before. `Get-XmipDeployDynamicMemory` reads it once for both
+  technologies; `Xmip.HyperV/Machine` sets it and finds a VM that differs,
+  and Ansible's Hyper-V tasks set it at install. The example's maxima are
+  the plan's figures; Linux starts with 2 GiB, which its installer needs
+  (RHEL 10: 1.5 GiB from local media), so the plan's 1 GiB far ends get 2.
+- **A way out, per machine.** `internet` in `[network]` says whether its
+  machines reach past it, every one where it is left out, as before; a
+  machine's own `internet` overrides it. A machine that does not is
+  installed with no gateway — no route in its Windows answer, no
+  `--gateway` in its kickstart — and reaches the network alone, the host
+  on it included. The example says none does but XMIP-RX01. The NAT stays
+  for it.
+- **A Linux desktop.** A Linux image's `environment` names the kickstart's
+  environment group, `minimal-environment` where it names none; one with a
+  desktop is started to its graphical target. The example's
+  `AlmaLinux10Desktop` is the same DVD with
+  `workstation-product-environment`, for XMIP-DEV02.
+- **Time without a way out.** On Hyper-V the kickstart gives chrony the
+  host's clock, `refclock PHC /dev/ptp_hyperv`, a udev rule naming the
+  guest's `hyperv` PTP clock: a machine with no gateway reaches no pool,
+  and nodes and far ends on different machines time what they carry.
+- **Elevation, found.** Every run of `Deploy-XmipEnvironment` on Hyper-V
+  applies the network first, and its document asks for elevation as a
+  whole, so no run passes unelevated, a network already in its desired
+  state too. Moving the elevation to the resource's set alone does not
+  help: DSC 3.4.0-preview.3 refuses the unelevated `dsc config set` before
+  it tests (*Operation 'set' for resource 'Xmip.HyperV/Network' requires
+  security context 'elevated'*), so the documents stay as they were. A run
+  that tests each step and sets only one that differs would pass an
+  unchanged network unelevated; it waits on the owner.

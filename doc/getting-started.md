@@ -740,7 +740,8 @@ one. Each README says each step in full.
    against the machines:
 
 ```powershell
-Start-XmipTest -Suite Core.Essentials -Cluster CL1 -Nodes RX1, TX1, EX1, EX2, DS1 `
+[string[]] $mapped = 'RX1', 'RX2', 'RX3', 'EX1', 'EX2', 'TX1', 'TX2', 'TX3', 'DS1', 'DS2'
+Start-XmipTest -Suite Core.Essentials -Cluster CL1 -Nodes $mapped `
     -Certificate D:\Repos\Xmip\.local-work\environment\tester
 Get-XmipTestStatus
 Get-XmipTestResult -Test Carried
@@ -761,16 +762,15 @@ With Ansible, the environment file says `technology = "ansible"` and step
 playbook makes the machines and the nodes alike
 (`deploy/dsc/ansible/README.md`); the rest are the same.
 
-What waits on the owner of the estate. The Hyper-V way above has not run
-yet, in either technology: its machines need an account in the Hyper-V
-Administrators group, which the owner's has not joined yet, and with
-Ansible the Windows host's address and account and how the Linux
+What waits on the owner of the estate. The Hyper-V way above ran with
+msdsc from an elevated console on 2026-11-21; with Ansible
+it waits on the Windows host's address and account and how the Linux
 controller is given the Windows machines' Administrator password, which a
-secret file cannot carry off Windows. The Windows machines take the MSI,
-which WiX 7 builds only once its license is accepted
-(`deploy/package/README.md`). The AlmaLinux machines take the `.rpm`, built
-on a Linux machine. A machine without its package runs no node. What has
-run, from nothing, is the libvirt way on a Linux host, in both
+secret file cannot carry off Windows. The Windows machines take the
+portable archive until the MSI is built, which WiX 7 does only once its
+license is accepted (`deploy/package/README.md`). The AlmaLinux machines
+take the `.rpm`, built on a Linux machine. A machine without its package
+runs no node. The libvirt way on a Linux host has run from nothing in both
 technologies (ADR-0015, amendment 2026-11-11).
 
 ### The operator app on a phone

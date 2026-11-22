@@ -32,35 +32,56 @@ account Hyper-V does not let manage VMs, is an error.
 ## The example environment
 
 `deploy/dsc/hyperv.example.toml`, which `Deploy-XmipEnvironment` reads
-(`deploy/dsc/README.md`), describes eleven machines:
+(`deploy/dsc/README.md`), describes the 21 machines of the owner's node
+plan of 2026-11-22, the Mac beside them aside. Windows Server is Server
+Core, Linux is installed minimal but on the one developer machine with a
+desktop. Memory is what a machine starts with and, dynamic, the least and
+the most Hyper-V gives it, the most the plan's figure:
 
 | Machine | Operating system | Role | Memory | CPUs | Disk | Address |
 | --- | --- | --- | --- | --- | --- | --- |
-| XMIP-DC01 | Windows Server 2025 | domain controller | 4 GiB | 2 | 64 GiB | 10.77.0.10 |
-| XMIP-FS01 | Windows Server 2025 | file server | 4 GiB | 2 | 64 GiB | 10.77.0.20 |
-| XMIP-DEV01 | Windows 11 | developer machine | 12 GiB | 4 | 128 GiB | 10.77.0.30 |
-| XMIP-DB01 | AlmaLinux 10 | PostgreSQL | 4 GiB | 2 | 64 GiB | 10.77.0.41 |
-| XMIP-DB02 | AlmaLinux 10 | PostgreSQL, standby of XMIP-DB01 | 4 GiB | 2 | 64 GiB | 10.77.0.42 |
-| XMIP-APP01 | Windows Server 2025 | Xmip node | 4 GiB | 2 | 64 GiB | 10.77.0.51 |
-| XMIP-APP02 | Windows Server 2025 | Xmip node | 4 GiB | 2 | 64 GiB | 10.77.0.52 |
-| XMIP-APP03 | Windows Server 2025 | Xmip node | 4 GiB | 2 | 64 GiB | 10.77.0.53 |
-| XMIP-APP04 | Windows Server 2025 | Xmip node | 4 GiB | 2 | 64 GiB | 10.77.0.54 |
-| XMIP-IN01 | AlmaLinux 10 | Xmip node | 4 GiB | 2 | 32 GiB | 10.77.0.61 |
-| XMIP-OUT01 | AlmaLinux 10 | Xmip node | 4 GiB | 2 | 32 GiB | 10.77.0.71 |
+| XMIP-DC01 | Windows Server 2025 | domain controller and DNS | 2, 1-4 GiB | 2 | 64 GiB | 10.77.0.10 |
+| XMIP-FS01 | Windows Server 2025 | file storage, optional | 1, 0.5-2 GiB | 2 | 64 GiB | 10.77.0.20 |
+| XMIP-DS01 | AlmaLinux 10 | Xmip node DS1, Xmip Storage, primary | 2, 0.5-4 GiB | 2 | 32 GiB | 10.77.0.81 |
+| XMIP-DS02 | Windows Server 2025 | Xmip node DS2, Xmip Storage, standby | 1, 0.5-4 GiB | 2 | 64 GiB | 10.77.0.82 |
+| XMIP-RX01 | AlmaLinux 10 | Xmip node RX1, receiving; reaches past the network | 2, 0.5-3 GiB | 2 | 32 GiB | 10.77.0.41 |
+| XMIP-RX02 | Windows Server 2025 | Xmip node RX2, receiving | 1, 0.5-3 GiB | 2 | 64 GiB | 10.77.0.42 |
+| XMIP-RX03 | AlmaLinux 10 | Xmip node RX3, receiving | 2, 0.5-3 GiB | 2 | 32 GiB | 10.77.0.43 |
+| XMIP-EX01 | Windows Server 2025 | Xmip node EX1, processing | 1, 0.5-4 GiB | 2 | 64 GiB | 10.77.0.52 |
+| XMIP-EX02 | AlmaLinux 10 | Xmip node EX2, executing | 2, 0.5-4 GiB | 2 | 32 GiB | 10.77.0.53 |
+| XMIP-TX01 | Windows Server 2025 | Xmip node TX1, sending | 1, 0.5-3 GiB | 2 | 64 GiB | 10.77.0.71 |
+| XMIP-TX02 | AlmaLinux 10 | Xmip node TX2, sending | 2, 0.5-3 GiB | 2 | 32 GiB | 10.77.0.72 |
+| XMIP-TX03 | Windows Server 2025 | Xmip node TX3, sending | 1, 0.5-3 GiB | 2 | 64 GiB | 10.77.0.73 |
+| XMIP-EXTTX01 | AlmaLinux 10 | a far end that sends, external TX1 | 2, 0.5-2 GiB | 1 | 32 GiB | 10.77.0.91 |
+| XMIP-EXTTX02 | Windows Server 2025 | a far end that sends, external TX2 | 1, 0.5-2 GiB | 1 | 64 GiB | 10.77.0.92 |
+| XMIP-EXTTX03 | AlmaLinux 10 | a far end that sends, external TX3 | 2, 0.5-2 GiB | 1 | 32 GiB | 10.77.0.93 |
+| XMIP-EXTRX01 | Windows Server 2025 | a far end that receives, external RX1 | 1, 0.5-2 GiB | 1 | 64 GiB | 10.77.0.101 |
+| XMIP-EXTRX02 | AlmaLinux 10 | a far end that receives, external RX2 | 2, 0.5-2 GiB | 1 | 32 GiB | 10.77.0.102 |
+| XMIP-EXTRX03 | Windows Server 2025 | a far end that receives, external RX3 | 1, 0.5-2 GiB | 1 | 64 GiB | 10.77.0.103 |
+| XMIP-DEV02 | AlmaLinux 10, desktop | developer machine | 2, 1-4 GiB | 2 | 64 GiB | 10.77.0.32 |
+| XMIP-DEV01 | Windows 11 | developer machine | 4, 2-4 GiB | 2 | 128 GiB | 10.77.0.31 |
+| XMIP-OP01 | Windows 11 | operator machine | 4, 2-4 GiB | 2 | 128 GiB | 10.77.0.33 |
 
 They share an internal switch, `Xmip`, on 10.77.0.0/24. The host is
-10.77.0.1 on it, the machines' gateway and the one manual IPv4 address of
-the switch's host adapter, with outbound NAT; the domain is `xmip.test`, and
-XMIP-DC01's address is the DNS server the AlmaLinux machines are given. The
-roles are the environment templates' business; here they are a comment
-above each machine.
+10.77.0.1 on it, the one manual IPv4 address of the switch's host adapter,
+with outbound NAT; the domain is `xmip.test`, and XMIP-DC01's address is
+the DNS server every machine is given. Only XMIP-RX01 is given the host as
+its gateway, its `internet` saying so where the network's says none does:
+every other machine is installed with no gateway, and reaches the network
+alone, the host on it included. The plan's Linux developer machine takes
+the image `AlmaLinux10Desktop`, the same DVD installing
+`workstation-product-environment`. The far ends run on their machines in
+the plan; the Essentials serves them on the host still, until they are
+built for machines of their own. The roles are the environment templates'
+business; here they are a comment above each machine.
 
 ## What each machine is given
 
 A folder, `<root>\<machine>`, and in it a new dynamic disk, `os.vhdx`, made
 once and never resized or replaced. A generation 2 VM holding it, whose own
-files Hyper-V keeps in that folder, with static memory, its CPUs, no
-automatic checkpoints and the environment's name in its notes; its one
+files Hyper-V keeps in that folder, with the memory it starts with, static,
+or dynamic between the least and the most its `dynamic_memory` names, its
+CPUs, no automatic checkpoints and the environment's name in its notes; its one
 adapter on the switch with a static MAC made from its address (00-15-5D and
 the address's last three octets); Secure Boot on with the template its image
 names — `MicrosoftWindows` for Windows, `MicrosoftUEFICertificateAuthority`
@@ -79,19 +100,26 @@ the disk; every later boot starts from the disk.
 - **Windows**: the answer medium holds `autounattend.xml`, which Windows
   Setup reads from the root of a removable medium. It partitions the disk for
   UEFI, installs the image the parameters name as `edition` (the image's
-  `NAME` in the ISO's `sources\install.wim`), sets the computer name, enables
-  the built-in Administrator with the password in the secret file, and
-  skips the out-of-box experience. The password is in Windows's answer-file
-  encoding, Base64, which keeps it from a glance, not from a reader. A
+  `NAME` in the ISO's `sources\install.wim`), sets the computer name, the
+  static address, the DNS server and, where the machine has a gateway, a
+  route out through it, enables the built-in Administrator with the password
+  in the secret file, and skips the out-of-box experience. The password is
+  in Windows's answer-file encoding, Base64, which keeps it from a glance,
+  not from a reader. A
   Windows ISO boots only after *Press any key to boot from CD or DVD*, so for
   the first twenty seconds of that start the template presses Space through
   Hyper-V's virtual keyboard.
 - **AlmaLinux**: the answer medium is labeled `OEMDRV` and holds `ks.cfg`, a
   kickstart, which the installer reads from a volume of that label without
-  being told to. It installs from the DVD's own repositories: the host name
-  in the domain, the static address on the adapter with the static MAC, the
-  gateway and DNS server, the Linux account with the SSH key and sudo without
-  a password, root locked, sshd and firewalld on.
+  being told to. It installs from the DVD's own repositories the environment
+  group its image names, `minimal-environment` where it names none, a
+  desktop started to its graphical target: the host name in the domain, the
+  static address on the adapter with the static MAC, the gateway where the
+  machine has one, the DNS server, the Linux account with the SSH key and
+  sudo without a password, root locked, sshd and firewalld on, and chrony
+  keeping Hyper-V's clock (`refclock PHC /dev/ptp_hyperv`, the device udev
+  names for the guest's `hyperv` clock), since a machine with no way out
+  reaches no pool.
 
 The installation is done when the guest answers from its disk: a Windows
 machine opens PowerShell Direct as its Administrator, an AlmaLinux machine
@@ -191,7 +219,9 @@ echo, this table of machines against it, the install answers and the answer
 medium, and the resources' `get`, `test` and `set` with every Hyper-V and
 network command a stub: a switch, a NAT and a machine that are not there
 answered absent, a host's refusal kept an error, an absent network and
-machine made, a Windows 11 machine's TPM given before its media and Space
+machine made, a machine given dynamic memory between its least and its
+most, the gateway and a desktop where the example's machine has one, a
+Windows 11 machine's TPM given before its media and Space
 pressed for its first twenty seconds, a machine still installing answered
 by its state alone, a VM with two adapters refused, and an installed
 machine's media removed.

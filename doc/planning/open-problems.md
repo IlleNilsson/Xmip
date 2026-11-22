@@ -2526,6 +2526,14 @@ alone 150 to 264 ms, with little load. By the millisecond rule anything
 over a millisecond beyond load is a defect; what the drain waits for is not
 looked into.
 
+## 109. A roll's stop counts what was carried before it judges the last round
+
+Found 2026-11-22 in the served rolls of the Essentials' cluster: a roll's
+stop says *N of M carried* before it judges the last round's arrivals, so a
+run whose every file arrived reads as some not carried: 953 of 960 on
+2026-11-22, all 960 received. A count an operator reads must be the
+verdict, not a count taken while the last round is still in flight.
+
 # Suggested order
 
 Rewritten 2026-09-23, and corrected to what is built on 2026-11-10. The

@@ -1687,3 +1687,42 @@ routes send them and none lost. Times are from drop to arrival:
   - The receivers took 293, 331 and 256, each from Send Ports on EX2 and the
     sending nodes.
   - These figures are from their stop records and the run's recent items.
+
+## Amendment, 2026-11-22: a drop is paired with its arrival by the stamp it carries
+
+**Provenance.** The owner's node plan of 2026-11-22: *the external TX's
+can shoot at any internal RX, so can the internal TX shoot at any external
+RX*. On machines of their own the far ends push to a Receive Location
+that listens, and no listening technology carries a file's name: an HTTP
+or AS2 receive reads no Content-Disposition. Two ways were set side by
+side: a key the document carries, or the file's name carried by HTTP and
+AS2 as a property. The coordinator chose the first the same day, since it
+keeps the owner's design and changes no runtime; carrying the name over
+AS2 waits on the owner as a feature of its own.
+
+- **Each drop is stamped.** The rig sets each document's interchange
+  control reference, `UNB`'s fifth element and `UNZ`'s second, to the
+  run's tag, four base-36 characters of its start, and the drop's number,
+  ten digits: fourteen characters, as the reference holds (an..14). It is
+  read and written by Xmip's own `edi` path language
+  (`src/carried/stamp.rs`), never cut by hand. No Subscription reads the
+  reference, and Order approval assigns to the Message's context alone, so
+  a stamped document goes where it went and arrives with the bytes it was
+  dropped with.
+- **An arrival is paired by its stamp.** What a Send Port's spot tells of,
+  a folder's watch, a far end's receiver or the Parties' far end on the
+  host, is taken off the spot and kept by the stamp its bytes carry, then
+  judged against the drop of that stamp: whole where its route sends it,
+  elsewhere, or with other bytes, as before. A file with no stamp of this
+  run's, one an earlier run left on its way among them, is let go of as it
+  is seen. Its name no longer matters, so any transport may carry it.
+- **The far ends are handed bytes.** A sender's order carries the stamped
+  document, in Base64, where it named a shipped file to read, so a sender
+  on a machine of its own needs no file of the host's; a document keeps no
+  path.
+
+Held by
+`carried::tests::a_file_arriving_under_another_name_is_paired_with_its_drop_by_its_stamp`,
+which failed before the change (its verdict not Fine, the arrival never
+paired) and passes after, and by `stamp`'s tests: every shipped document
+stamped reads its stamp back and is routed where its unstamped one was.

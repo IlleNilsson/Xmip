@@ -53,8 +53,8 @@ far_end = "10.77.0.1"
 operators = ["CN=operator"]
 
 # The packages the nodes are installed from: Build-XmipService -Site
-# personal-computer -Package msi on Windows, -Package rpm on a Linux machine
-# (deploy/package/README.md).
+# personal-computer -Package archive on Windows, -Package rpm on a Linux
+# machine (deploy/package/README.md).
 [packages.Windows]
 path = ""
 # The module libraries the cluster's file names, built for Windows: a folder.
@@ -87,6 +87,11 @@ gateway = "10.77.0.1"
 # XMIP-DC01, the domain controller, answers the environment's names.
 dns_server = "10.77.0.10"
 nat = true
+# Whether a machine reaches past the network, through the gateway and its
+# NAT: none does here but the one whose own internet says so, XMIP-RX01. A
+# machine that does not is installed with no gateway and reaches the
+# network alone, the host on it included. Left out, every machine does.
+internet = false
 
 [images.WindowsServer2025]
 path = 'D:\Downloads\OS\Images\Microsoft\WindowsServer2025-Eval-26100.1742-en-us.iso'
@@ -113,112 +118,248 @@ family = "Linux"
 secureBootTemplate = "MicrosoftUEFICertificateAuthority"
 tpm = false
 
-# The machines are made in this order, one installation at a time, and
-# their nodes are given theirs in the same order: Xmip Storage first, which
-# the other nodes reach.
+# The same DVD with a desktop: the kickstart installs the environment group
+# named here, where AlmaLinux10 installs minimal-environment, and the
+# machine starts to its graphical target. For the people's machines alone.
+[images.AlmaLinux10Desktop]
+path = 'D:\Downloads\OS\Images\AlmaLinux\AlmaLinux-10.2-x86_64-dvd.iso'
+sha256 = "90244ac532f67c978831a381b420da8bda363729e1f4cf8fb8991daca70ee287"
+family = "Linux"
+environment = "workstation-product-environment"
+secureBootTemplate = "MicrosoftUEFICertificateAuthority"
+tpm = false
 
-# domain controller
+# The machines of the owner's node plan of 2026-11-22: the cluster's nodes,
+# the far ends it trades with, and the premises' own machines, each named
+# for what it runs. They are made in this order, one installation at a
+# time, and their nodes are given theirs in the same order: Xmip Storage
+# first, which the other nodes reach; the people's machines last.
+#
+# Memory: memory_gb is what a machine starts with, and installs with: 1 GiB
+# for Windows Server, 2 GiB for Linux, whose installer needs 1.5, 4 GiB for
+# Windows 11, whose Setup asks for it. dynamic_memory lets Hyper-V give it
+# what it uses between its least and its most, the plan's figure; a machine
+# without it keeps its memory_gb, static. Windows Server is Server Core.
+
+# domain controller and DNS for every machine
 [[machines]]
 name = "XMIP-DC01"
 address = "10.77.0.10"
 image = "WindowsServer2025"
-memory_gb = 4
+memory_gb = 2
+dynamic_memory = { minimum_gb = 1, maximum_gb = 4 }
 cpu = 2
 disk_gb = 64
 
-# file server
+# file storage, optional: brings software and packages into the premises
 [[machines]]
 name = "XMIP-FS01"
 address = "10.77.0.20"
 image = "WindowsServer2025"
-memory_gb = 4
+memory_gb = 1
+dynamic_memory = { minimum_gb = 0.5, maximum_gb = 2 }
 cpu = 2
 disk_gb = 64
 
-# developer machine
+# Xmip node, Xmip Storage, the primary: the cluster's file lists DS1 and
+# DS2, and neither serves until both answer (ADR-0056, amendment 2026-11-08)
 [[machines]]
-name = "XMIP-DEV01"
-address = "10.77.0.30"
-image = "Windows11"
-memory_gb = 12
-cpu = 4
-disk_gb = 128
-
-# PostgreSQL
-[[machines]]
-name = "XMIP-DB01"
-address = "10.77.0.41"
+name = "XMIP-DS01"
+address = "10.77.0.81"
 image = "AlmaLinux10"
-memory_gb = 4
+memory_gb = 2
+dynamic_memory = { minimum_gb = 0.5, maximum_gb = 4 }
 cpu = 2
-disk_gb = 64
-
-# PostgreSQL, standby of XMIP-DB01
-[[machines]]
-name = "XMIP-DB02"
-address = "10.77.0.42"
-image = "AlmaLinux10"
-memory_gb = 4
-cpu = 2
-disk_gb = 64
-
-# Xmip node, Xmip Storage
-[[machines]]
-name = "XMIP-APP03"
-address = "10.77.0.53"
-image = "WindowsServer2025"
-memory_gb = 4
-cpu = 2
-disk_gb = 64
+disk_gb = 32
 nodes = ["DS1"]
 
-# Xmip node, Xmip Storage: the cluster's file lists DS1 and DS2, and neither
-# serves until both answer (ADR-0056, amendment 2026-11-08)
+# Xmip node, Xmip Storage, the standby that follows DS1
 [[machines]]
-name = "XMIP-APP04"
-address = "10.77.0.54"
+name = "XMIP-DS02"
+address = "10.77.0.82"
 image = "WindowsServer2025"
-memory_gb = 4
+memory_gb = 1
+dynamic_memory = { minimum_gb = 0.5, maximum_gb = 4 }
 cpu = 2
 disk_gb = 64
 nodes = ["DS2"]
 
-# Xmip node, processing between the receiving and sending nodes
+# Xmip node, receiving; the one machine with a way out, optional
 [[machines]]
-name = "XMIP-APP01"
-address = "10.77.0.51"
+name = "XMIP-RX01"
+address = "10.77.0.41"
+image = "AlmaLinux10"
+memory_gb = 2
+dynamic_memory = { minimum_gb = 0.5, maximum_gb = 3 }
+cpu = 2
+disk_gb = 32
+internet = true
+nodes = ["RX1"]
+
+# Xmip node, receiving
+[[machines]]
+name = "XMIP-RX02"
+address = "10.77.0.42"
 image = "WindowsServer2025"
-memory_gb = 4
+memory_gb = 1
+dynamic_memory = { minimum_gb = 0.5, maximum_gb = 3 }
+cpu = 2
+disk_gb = 64
+nodes = ["RX2"]
+
+# Xmip node, receiving
+[[machines]]
+name = "XMIP-RX03"
+address = "10.77.0.43"
+image = "AlmaLinux10"
+memory_gb = 2
+dynamic_memory = { minimum_gb = 0.5, maximum_gb = 3 }
+cpu = 2
+disk_gb = 32
+nodes = ["RX3"]
+
+# Xmip node, processing between the receiving and sending nodes, such as a
+# Work Process
+[[machines]]
+name = "XMIP-EX01"
+address = "10.77.0.52"
+image = "WindowsServer2025"
+memory_gb = 1
+dynamic_memory = { minimum_gb = 0.5, maximum_gb = 4 }
 cpu = 2
 disk_gb = 64
 nodes = ["EX1"]
 
 # Xmip node, executing: receives, processes and sends at low latency
 [[machines]]
-name = "XMIP-APP02"
-address = "10.77.0.52"
-image = "WindowsServer2025"
-memory_gb = 4
+name = "XMIP-EX02"
+address = "10.77.0.53"
+image = "AlmaLinux10"
+memory_gb = 2
+dynamic_memory = { minimum_gb = 0.5, maximum_gb = 4 }
 cpu = 2
-disk_gb = 64
+disk_gb = 32
 nodes = ["EX2"]
 
-# Xmip node
+# Xmip node, sending
 [[machines]]
-name = "XMIP-IN01"
-address = "10.77.0.61"
-image = "AlmaLinux10"
-memory_gb = 4
-cpu = 2
-disk_gb = 32
-nodes = ["RX1"]
-
-# Xmip node
-[[machines]]
-name = "XMIP-OUT01"
+name = "XMIP-TX01"
 address = "10.77.0.71"
+image = "WindowsServer2025"
+memory_gb = 1
+dynamic_memory = { minimum_gb = 0.5, maximum_gb = 3 }
+cpu = 2
+disk_gb = 64
+nodes = ["TX1"]
+
+# Xmip node, sending
+[[machines]]
+name = "XMIP-TX02"
+address = "10.77.0.72"
 image = "AlmaLinux10"
-memory_gb = 4
+memory_gb = 2
+dynamic_memory = { minimum_gb = 0.5, maximum_gb = 3 }
 cpu = 2
 disk_gb = 32
-nodes = ["TX1"]
+nodes = ["TX2"]
+
+# Xmip node, sending
+[[machines]]
+name = "XMIP-TX03"
+address = "10.77.0.73"
+image = "WindowsServer2025"
+memory_gb = 1
+dynamic_memory = { minimum_gb = 0.5, maximum_gb = 3 }
+cpu = 2
+disk_gb = 64
+nodes = ["TX3"]
+
+# a far end that sends to the cluster, external TX1
+[[machines]]
+name = "XMIP-EXTTX01"
+address = "10.77.0.91"
+image = "AlmaLinux10"
+memory_gb = 2
+dynamic_memory = { minimum_gb = 0.5, maximum_gb = 2 }
+cpu = 1
+disk_gb = 32
+
+# a far end that sends to the cluster, external TX2
+[[machines]]
+name = "XMIP-EXTTX02"
+address = "10.77.0.92"
+image = "WindowsServer2025"
+memory_gb = 1
+dynamic_memory = { minimum_gb = 0.5, maximum_gb = 2 }
+cpu = 1
+disk_gb = 64
+
+# a far end that sends to the cluster, external TX3
+[[machines]]
+name = "XMIP-EXTTX03"
+address = "10.77.0.93"
+image = "AlmaLinux10"
+memory_gb = 2
+dynamic_memory = { minimum_gb = 0.5, maximum_gb = 2 }
+cpu = 1
+disk_gb = 32
+
+# a far end the cluster sends to, external RX1
+[[machines]]
+name = "XMIP-EXTRX01"
+address = "10.77.0.101"
+image = "WindowsServer2025"
+memory_gb = 1
+dynamic_memory = { minimum_gb = 0.5, maximum_gb = 2 }
+cpu = 1
+disk_gb = 64
+
+# a far end the cluster sends to, external RX2
+[[machines]]
+name = "XMIP-EXTRX02"
+address = "10.77.0.102"
+image = "AlmaLinux10"
+memory_gb = 2
+dynamic_memory = { minimum_gb = 0.5, maximum_gb = 2 }
+cpu = 1
+disk_gb = 32
+
+# a far end the cluster sends to, external RX3
+[[machines]]
+name = "XMIP-EXTRX03"
+address = "10.77.0.103"
+image = "WindowsServer2025"
+memory_gb = 1
+dynamic_memory = { minimum_gb = 0.5, maximum_gb = 2 }
+cpu = 1
+disk_gb = 64
+
+# developer machine, Linux with a desktop
+[[machines]]
+name = "XMIP-DEV02"
+address = "10.77.0.32"
+image = "AlmaLinux10Desktop"
+memory_gb = 2
+dynamic_memory = { minimum_gb = 1, maximum_gb = 4 }
+cpu = 2
+disk_gb = 64
+
+# developer machine, Windows 11
+[[machines]]
+name = "XMIP-DEV01"
+address = "10.77.0.31"
+image = "Windows11"
+memory_gb = 4
+dynamic_memory = { minimum_gb = 2, maximum_gb = 4 }
+cpu = 2
+disk_gb = 128
+
+# operator machine, Windows 11
+[[machines]]
+name = "XMIP-OP01"
+address = "10.77.0.33"
+image = "Windows11"
+memory_gb = 4
+dynamic_memory = { minimum_gb = 2, maximum_gb = 4 }
+cpu = 2
+disk_gb = 128

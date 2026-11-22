@@ -18,6 +18,16 @@ $ErrorActionPreference = 'Stop'
 $script:HyperVMacPrefix = '00155D'
 # The package of the guest services on Hyper-V, which the kickstart installs.
 $script:HyperVGuestPackage = 'hyperv-daemons'
+# Hyper-V's clock as chrony's source, the kickstart's %post lines: the host
+# keeps it, so a machine with no way out keeps time, and the far ends and
+# nodes on different machines time what they carry on one clock. The
+# guest's hv_utils names it hyperv; udev links it where chrony looks.
+$script:HyperVClock = @(
+    "echo 'SUBSYSTEM==`"ptp`", ATTR{clock_name}==`"hyperv`", SYMLINK += `"ptp_hyperv`"' " +
+        '> /etc/udev/rules.d/99-xmip-ptp-hyperv.rules'
+    "echo 'refclock PHC /dev/ptp_hyperv poll 3 dpoll -2 offset 0 stratum 2' " +
+        '>> /etc/chrony.conf'
+)
 
 # Where the VM's drives sit on SCSI controller 0: the disk New-VM attaches
 # first, then the two DVD drives.
@@ -109,6 +119,7 @@ function New-HyperVAnswerMedium {
         MacAddress = Get-MachineMacAddress -Address $Instance['address'] -Prefix (
             $script:HyperVMacPrefix)
         GuestPackage = $script:HyperVGuestPackage
+        Clock = $script:HyperVClock
     }
     if ($PSCmdlet.ShouldProcess($Path, 'Write the answer medium')) {
         [hashtable] $medium = Get-MachineAnswerMedium @asked

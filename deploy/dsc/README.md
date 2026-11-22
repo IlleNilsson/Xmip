@@ -36,9 +36,12 @@ empty.
 | `authority`, `identity` | the cluster's authority, which signs each slice and issued each node's certificate, and a folder per node of that certificate (`New-XmipCertificate -Node`) |
 | `far_end` | where the machines reach the Parties' far end the Essentials serves |
 | `operators` | who operates the nodes, a list, each a certificate's subject, `CN=<person>`, as `New-XmipCertificate -Operator` names it, or an account: listed among every node's `[operate] operators` (`xmip-service --slice --operators`). Left out, no one operates them, since a node's operate listener grants no one by default (ADR-0009) |
-| `[packages.<family>]` | the package a node is installed from, `path`: the `.rpm` for Linux, the MSI for Windows; and `modules`, a folder of the module libraries the cluster's file names, built for that system, carried beside every node's configuration |
+| `[packages.<family>]` | the package a node is installed from, `path`: the `.rpm` for Linux, the portable archive for Windows (the MSI once it is built); and `modules`, a folder of the module libraries the cluster's file names, built for that system, carried beside every node's configuration |
 | `[tools.<family>]` | msdsc only: what DSC is brought to each machine of the family it applies a document on, the nodes' and the DNS server, with, `pwsh` and `dsc`, each `path` and `sha256`: tarballs for Linux, zips for Windows |
 | `[network]`, `[images.<name>]`, `[[machines]]` | the network, the installation images, and each machine with the `nodes` it runs: one at most, since a package lays one node out in one folder; every Storage node the cluster's file lists on a machine of its own |
+| `internet` | in `[network]`, whether its machines reach past it, through the gateway and its NAT, every one where it is left out; on a machine, its own. A machine that does not is installed with no gateway and reaches the network alone, the host on it included |
+| `memory_gb`, `dynamic_memory` | on a machine: the memory it starts with and installs with, in GiB, static; and on Hyper-V, `{ minimum_gb, maximum_gb }`, the least and the most it is given as it uses it, in steps of 2 MiB, `minimum_gb <= memory_gb <= maximum_gb` |
+| `environment` | on a Linux image: the kickstart's environment group, `minimal-environment` where it names none; one with a desktop starts to its graphical target |
 
 A path not rooted is the estate's. The YAML each tool reads is written
 from this file into the run folder, `.local-work/deploy/<name>/`: DSC's

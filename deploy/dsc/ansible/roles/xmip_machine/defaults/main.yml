@@ -18,8 +18,9 @@ xmip_network_machines: []
 # The names the environment adds, each a name and its addresses.
 xmip_names: []
 # Each machine, with the properties Microsoft DSC's machine resource takes:
-# name, technology, address, memoryGB, cpu, diskGB, pool, network, image,
-# domainName, linuxAccount, sshPublicKeyPath, secretPath and hostKeyPath.
+# name, technology, address, memoryGB, dynamicMemory, cpu, diskGB, pool,
+# network, image, domainName, linuxAccount, sshPublicKeyPath, secretPath and
+# hostKeyPath.
 xmip_machines: []
 # deploy/dsc/machine/machine.ps1 on the controller, and the PowerShell 7
 # that runs it.

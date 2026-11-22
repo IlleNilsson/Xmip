@@ -81,11 +81,20 @@ function Get-XmipDeployEnvironment {
     }
     [Collections.Generic.List[hashtable]] $machines = @()
     [Collections.Generic.List[hashtable]] $nodes = @()
+    # Whether a machine reaches past the network: the network's default,
+    # each machine's own where it says; one that does not is given no
+    # gateway, and reaches the network alone.
+    [bool] $internet = [bool] (Get-TomlValue -Node $network -Name 'internet' -Default $true)
     foreach ($machine in @(Get-TomlValue -Node $Environment -Name 'machines' -Default @())) {
         [hashtable] $value = $common.Clone()
         $value['name'] = Get-TomlValue -Node $machine -Name 'name'
         $value['address'] = Get-TomlValue -Node $machine -Name 'address'
+        $value['network'] = $common.network.Clone()
+        if (-not [bool] (Get-TomlValue -Node $machine -Name 'internet' -Default $internet)) {
+            $value['network']['gateway'] = ''
+        }
         $value['memoryGB'] = [int] (Get-TomlValue -Node $machine -Name 'memory_gb')
+        $value['dynamicMemory'] = Get-XmipDeployDynamicMemory -Machine $machine
         $value['cpu'] = [int] (Get-TomlValue -Node $machine -Name 'cpu')
         $value['diskGB'] = [int] (Get-TomlValue -Node $machine -Name 'disk_gb')
         $value['pool'] = $name

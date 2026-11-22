@@ -19,12 +19,16 @@
       tested or set: every resource answers what is not there as absent.
     - The install answers: a Windows machine's autounattend.xml parses,
       names its computer and image and holds no plain-text password; an
-      AlmaLinux machine's kickstart gives its host name, static address and
-      key; the answer medium is an ISO with the label its installer reads.
+      AlmaLinux machine's kickstart gives its host name, static address,
+      key and Hyper-V's clock, the environment its image names and a desktop
+      started to it; each a gateway where the machine reaches past the
+      network, XMIP-RX01 alone, and none elsewhere; the answer medium is an
+      ISO with the label its installer reads.
     - The resources' get, test and set, every Hyper-V and network command a
       stub over a host held in memory: a switch, a NAT and a machine that
       are not there answered absent, a host's refusal kept an error, an
-      absent network and machine made, a Windows 11 machine's TPM given
+      absent network and machine made, a machine given dynamic memory
+      between its least and its most, a Windows 11 machine's TPM given
       before its media and Space pressed for its first twenty seconds, a
       machine still installing answered by its state alone, a VM with two
       adapters refused, an installed one's media removed.
@@ -201,9 +205,13 @@ BeforeAll {
         New-Item -Path (Split-Path -Path $disk -Parent) -ItemType Directory -Force | Out-Null
         [string] $mac = Get-MachineMacAddress -Address $Instance['address'] -Prefix (
             $script:HyperVMacPrefix)
+        [Collections.IDictionary] $dynamic = Get-HyperVDynamicMemory -Instance $Instance
+        [bool] $on = $dynamic.Count -gt 0
         $script:Fake.Vm += [pscustomobject] @{
             Name = $Instance['name']; State = $State; ProcessorCount = [long] $Instance['cpu']
-            MemoryStartup = [long] $Instance['memoryGB'] * 1GB; DynamicMemoryEnabled = $false
+            MemoryStartup = [long] $Instance['memoryGB'] * 1GB; DynamicMemoryEnabled = $on
+            MemoryMinimum = $(if ($on) { [long] $dynamic['minimumMB'] * 1MB } else { 512MB })
+            MemoryMaximum = $(if ($on) { [long] $dynamic['maximumMB'] * 1MB } else { 1TB })
             AutomaticCheckpointsEnabled = $false; Notes = $Instance['environment']
             HardDrives = @(New-FakeDrive -Location 0 -Path $disk)
             DVDDrives = @(New-FakeDrive -Location 1 -Path ''; New-FakeDrive -Location 2 -Path '')
@@ -283,7 +291,8 @@ BeforeAll {
         $script:Called.Add('New-VM')
         $script:Fake.Vm += [pscustomobject] @{
             Name = $Name; State = 'Off'; ProcessorCount = 1; MemoryStartup = $MemoryStartupBytes
-            DynamicMemoryEnabled = $true; AutomaticCheckpointsEnabled = $true; Notes = ''
+            DynamicMemoryEnabled = $true; MemoryMinimum = 512MB; MemoryMaximum = 1TB
+            AutomaticCheckpointsEnabled = $true; Notes = ''
             HardDrives = @(New-FakeDrive -Location 0 -Path $VHDPath); DVDDrives = @()
             NetworkAdapters = @([pscustomobject] @{
                 SwitchName = $SwitchName; MacAddress = '000000000000' })
@@ -292,11 +301,19 @@ BeforeAll {
 
     function Set-VM {
         param([string] $Name, [long] $ProcessorCount, [switch] $StaticMemory,
+            [switch] $DynamicMemory, [long] $MemoryMinimumBytes, [long] $MemoryMaximumBytes,
             [long] $MemoryStartupBytes, [bool] $AutomaticCheckpointsEnabled, [string] $Notes)
-        $script:Called.Add('Set-VM')
+        $script:Called.Add($(if ($DynamicMemory) {
+                    "Set-VM dynamic $($MemoryMinimumBytes / 1MB)-$($MemoryMaximumBytes / 1MB)"
+                }
+                else { 'Set-VM' }))
         [object] $vm = $script:Fake.Vm[0]
         $vm.ProcessorCount = $ProcessorCount
-        $vm.DynamicMemoryEnabled = -not $StaticMemory
+        $vm.DynamicMemoryEnabled = [bool] $DynamicMemory -and -not $StaticMemory
+        if ($DynamicMemory) {
+            $vm.MemoryMinimum = $MemoryMinimumBytes
+            $vm.MemoryMaximum = $MemoryMaximumBytes
+        }
         $vm.MemoryStartup = $MemoryStartupBytes
         $vm.AutomaticCheckpointsEnabled = $AutomaticCheckpointsEnabled
         $vm.Notes = $Notes
@@ -497,6 +514,23 @@ Describe 'The example environment' {
             }
             $vm.network.name | Should -Be 'Xmip'
             $vm.image.family | Should -Be $machine.image.family
+            $vm.dynamicMemory.maximumMB | Should -Be $machine.dynamicMemory.maximumMB
+        }
+    }
+
+    It 'gives the one machine whose internet says so a gateway, and every other none' {
+        # The owner's node plan: XMIP-RX01 alone reaches past the network.
+        [string[]] $out = @($script:Machine | Where-Object { $_.network.gateway } |
+            ForEach-Object { $_.name })
+        $out | Should -Be @('XMIP-RX01')
+        $script:Example['network']['gateway'] | Should -Be '10.77.0.1'
+    }
+
+    It 'gives every machine dynamic memory, from its memory_gb up to its most' {
+        foreach ($machine in $script:Machine) {
+            [hashtable] $dynamic = $machine.dynamicMemory
+            $dynamic.minimumMB | Should -BeLessOrEqual ($machine.memoryGB * 1024)
+            $dynamic.maximumMB | Should -BeGreaterOrEqual ($machine.memoryGB * 1024)
         }
     }
 
@@ -505,11 +539,12 @@ Describe 'The example environment' {
         [string[]] $addresses = @($script:Machine | ForEach-Object { $_.address })
         [string[]] $macs = @($addresses | ForEach-Object {
             Get-MachineMacAddress -Address $_ -Prefix $script:HyperVMacPrefix })
-        $script:Machine.Count | Should -Be 11
+        # The owner's node plan of 2026-11-22: 21 machines, the Mac aside.
+        $script:Machine.Count | Should -Be 21
         @($script:Machine | ForEach-Object { $_.name } | Sort-Object -Unique).Count |
-            Should -Be 11
-        @($addresses | Sort-Object -Unique).Count | Should -Be 11
-        @($macs | Sort-Object -Unique).Count | Should -Be 11
+            Should -Be 21
+        @($addresses | Sort-Object -Unique).Count | Should -Be 21
+        @($macs | Sort-Object -Unique).Count | Should -Be 21
         [string] $prefix = $script:Example['network']['prefix']
         [string] $mask = Get-MachineNetmask -PrefixLength ([int] ($prefix -replace '^.*/', ''))
         [uint32] $want = ([ipaddress] ($prefix -replace '/.*$')).Address
@@ -565,7 +600,14 @@ Describe 'The install answers' {
             $text | Should -Match (
                 "<IpAddress wcm:action=`"add`" wcm:keyValue=`"1`">$([regex]::Escape(
                 $machine.address))/$($machine.network.prefixLength)</IpAddress>")
-            $text | Should -Match "<NextHopAddress>$([regex]::Escape($machine.network.gateway))<"
+            # A route out where the machine has a gateway, and none where not.
+            if ($machine.network.gateway) {
+                $text | Should -Match (
+                    "<NextHopAddress>$([regex]::Escape($machine.network.gateway))<")
+            }
+            else {
+                $text | Should -Not -Match '<Routes>|<NextHopAddress>'
+            }
             $text | Should -Match "<Value>$([regex]::Escape($machine.image.edition))</Value>"
             $text | Should -Not -Match 'Pa55word'
             $text | Should -Match '<PlainText>false</PlainText>'
@@ -573,7 +615,7 @@ Describe 'The install answers' {
         }
     }
 
-    It 'gives each AlmaLinux machine a kickstart with its host name, address and key' {
+    It 'gives each AlmaLinux machine a kickstart with its host name, address, key and clock' {
         [string] $key = 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDummyKeyForTheTestOnly'
         foreach ($machine in @($script:Machine | Where-Object { $_.image.family -eq 'Linux' })) {
             [string] $raw = Get-MachineMacAddress -Address $machine.address -Prefix (
@@ -582,18 +624,49 @@ Describe 'The install answers' {
                 Machine = $machine
                 PublicKey = $key
                 MacAddress = $raw
-                GuestPackage = 'hyperv-daemons'
+                GuestPackage = $script:HyperVGuestPackage
+                Clock = $script:HyperVClock
             }
             [string] $kickstart = Get-MachineKickstart @asked
             [string] $mac = $raw -replace '(..)(?!$)', '$1:'
             $kickstart | Should -Match '(?m)^hyperv-daemons$'
             [string] $hostName = "$($machine.name.ToLowerInvariant()).xmip.test"
             $kickstart | Should -Match "--device=$mac --bootproto=static --ip=$($machine.address) "
-            $kickstart | Should -Match '--netmask=255\.255\.255\.0 --gateway=10\.77\.0\.1 '
+            # A gateway where the machine reaches past the network, none where not.
+            [string] $route = if ($machine.network.gateway) { '--gateway=10\.77\.0\.1 ' } else {
+                '' }
+            $kickstart | Should -Match "--netmask=255\.255\.255\.0 $route--nameserver="
             $kickstart | Should -Match "--hostname=$([regex]::Escape($hostName)) "
             $kickstart | Should -Match ([regex]::Escape("sshkey --username=account `"$key`""))
+            # chrony keeps Hyper-V's clock: no machine but one reaches a pool.
+            $kickstart | Should -Match '(?m)^chrony$'
+            $kickstart | Should -Match 'refclock PHC /dev/ptp_hyperv '
+            $kickstart | Should -Match 'ATTR\{clock_name\}=="hyperv", SYMLINK \+= "ptp_hyperv"'
             $kickstart | Should -Not -Match "`r"
         }
+    }
+
+    It 'installs the environment an image names, and starts a desktop to it' {
+        [string] $key = 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDummyKeyForTheTestOnly'
+        [object[]] $linux = @($script:Machine | Where-Object { $_.image.family -eq 'Linux' })
+        foreach ($machine in $linux) {
+            [hashtable] $asked = @{ Machine = $machine; PublicKey = $key
+                MacAddress = '00155D000001'; GuestPackage = 'hyperv-daemons' }
+            [string] $kickstart = Get-MachineKickstart @asked
+            [string] $environment = "$($machine.image['environment'])"
+            if ($environment) {
+                $kickstart | Should -Match "(?m)^@\^$([regex]::Escape($environment))$"
+                $kickstart | Should -Match '(?m)^xconfig --startxonboot$'
+                $kickstart | Should -Not -Match '(?m)^skipx$'
+            }
+            else {
+                $kickstart | Should -Match '(?m)^@\^minimal-environment$'
+                $kickstart | Should -Match '(?m)^skipx$'
+            }
+        }
+        # The example's one Linux desktop, the developer's.
+        @($linux | Where-Object { $_.image['environment'] } | ForEach-Object { $_.name }) |
+            Should -Be @('XMIP-DEV02')
     }
 
     It 'writes an answer medium with the label <Label>' -ForEach @(
@@ -726,6 +799,19 @@ Describe 'The machine, every Hyper-V command a stub' {
         $set.running | Should -BeTrue
         $set.findings | Should -Be @('XMIP-IN01: Installing, running True.')
         $set._inDesiredState | Should -BeFalse
+    }
+
+    It 'gives a machine dynamic memory between its least and its most, then finds it as it is' {
+        $script:Linux['dynamicMemory'] = @{ minimumMB = 512; maximumMB = 3072 }
+        Invoke-HyperVResource -Kind Machine -Operation set -Instance $script:Linux | Out-Null
+        $script:Called | Should -Contain 'Set-VM dynamic 512-3072'
+        [object] $vm = $script:Fake.Vm[0]
+        $vm.DynamicMemoryEnabled | Should -BeTrue
+        $vm.MemoryStartup | Should -Be 4GB
+        Get-HyperVHardwareFinding -Instance $script:Linux -Vm $vm | Should -BeNullOrEmpty
+        $vm.MemoryMaximum = 2GB
+        Get-HyperVHardwareFinding -Instance $script:Linux -Vm $vm |
+            Should -Be "XMIP-IN01: its MemoryMaximum is $(2GB), not $(3GB)."
     }
 
     It 'gives a Windows 11 machine its TPM before its media, then presses Space as it starts' {

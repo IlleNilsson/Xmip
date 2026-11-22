@@ -66,9 +66,10 @@ function Get-MachineWindowsAnswer {
     .DESCRIPTION
     A GPT layout on the first disk (EFI, MSR, Windows), the image the
     machine's image names as its edition, the computer name, the static
-    address, gateway and DNS server on the adapter with the machine's static
-    MAC, the built-in Administrator enabled with the given password, and the
-    out-of-box experience skipped. LF line endings.
+    address, the gateway where the machine has one, and the DNS server on the
+    adapter with the machine's static MAC, the built-in Administrator enabled
+    with the given password, and the out-of-box experience skipped. LF line
+    endings.
     #>
     [CmdletBinding()]
     [OutputType([string])]
@@ -97,6 +98,11 @@ function Get-MachineWindowsAnswer {
     [string] $template = Get-Content -LiteralPath (
         Join-Path -Path $PSScriptRoot -ChildPath 'autounattend.template.xml') -Raw
     [string] $answer = $template.Replace('COMPONENT>', "$script:UnattendComponent>")
+    # A machine that does not reach past the network has no gateway, and no
+    # route out.
+    if (-not $network.gateway) {
+        $answer = $answer -replace '(?s)\s*<Routes>.*?</Routes>', ''
+    }
     foreach ($token in $value.Keys) {
         [string] $text = [Security.SecurityElement]::Escape($value[$token])
         $answer = $answer.Replace(">$token<", ">$text<")
@@ -123,10 +129,12 @@ function Get-MachineKickstart {
     .DESCRIPTION
     Installs from the DVD's own repositories, so no network is needed while
     installing: the host name, the static address on the adapter with the
-    machine's static MAC, the network's DNS server, the Linux account with
-    the given SSH key, no password and sudo without one, root locked, sshd
-    and firewalld enabled, and the hypervisor's guest services. LF line
-    endings.
+    machine's static MAC, the gateway where the machine has one, the
+    network's DNS server, the Linux account with the given SSH key, no
+    password and sudo without one, root locked, sshd and firewalld enabled,
+    the hypervisor's guest services and its clock, and the environment its
+    image names, minimal-environment where it names none: one with a desktop
+    starts to it. LF line endings.
     #>
     [CmdletBinding()]
     [OutputType([string])]
@@ -145,6 +153,13 @@ function Get-MachineKickstart {
         [Parameter(Mandatory = $true)]
         [string] $GuestPackage,
 
+        # The %post lines that give chrony the hypervisor's own clock, which
+        # keeps a machine with no way out on time; none, and chrony keeps
+        # the pool it ships with.
+        [Parameter()]
+        [AllowEmptyCollection()]
+        [string[]] $Clock = @(),
+
         # The machine's SSH host key, OpenSSH's private key text, made where
         # the environment is deployed from, which known_hosts there holds;
         # none, and sshd makes its own at the first boot.
@@ -158,17 +173,26 @@ function Get-MachineKickstart {
     [object] $network = $Machine.network
     [string] $netmask = Get-MachineNetmask -PrefixLength $network.prefixLength
     [string] $user = $Machine.linuxAccount
+    [string] $gateway = if ($network.gateway) { "--gateway=$($network.gateway) " } else { '' }
+    [object] $image = Get-MachineValue -Of $Machine -Name 'image'
+    [string] $environment = Get-MachineValue -Of $image -Name 'environment'
+    if (-not $environment) {
+        $environment = 'minimal-environment'
+    }
+    # A desktop starts to its graphical target; a minimal machine has no X.
+    [string] $display = if ($environment -eq 'minimal-environment') { 'skipx' } else {
+        'xconfig --startxonboot' }
     [string[]] $kickstart = @(
         "# $($Machine.name), installed from the DVD."
         'cdrom'
         'text'
-        'skipx'
+        $display
         'firstboot --disable'
         'lang en_US.UTF-8'
         'keyboard --vckeymap=us'
         'timezone Etc/UTC --utc'
         "network --device=$mac --bootproto=static --ip=$($Machine.address) " +
-            "--netmask=$netmask --gateway=$($network.gateway) " +
+            "--netmask=$netmask $gateway" +
             "--nameserver=$($network.dnsServer) --hostname=$hostName --noipv6 " +
             '--onboot=yes --activate'
         'rootpw --lock'
@@ -183,11 +207,12 @@ function Get-MachineKickstart {
         'reboot'
         ''
         '%packages'
-        '@^minimal-environment'
+        "@^$environment"
         'openssh-server'
         'firewalld'
         'sudo'
         'tar'
+        'chrony'
         $GuestPackage
         '%end'
         ''
@@ -195,10 +220,38 @@ function Get-MachineKickstart {
         "echo '$user ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/$user"
         "chmod 0440 /etc/sudoers.d/$user"
         "echo 'PasswordAuthentication no' > /etc/ssh/sshd_config.d/40-xmip.conf"
+        $Clock
         @(Get-MachineHostKeyLine -HostKey $HostKey)
         '%end'
     )
     return ($kickstart -join "`n") + "`n"
+}
+
+function Get-MachineValue {
+    <#
+    .SYNOPSIS
+    The value -Name holds in -Of, a table where a template's resource is
+    given it and an object where Ansible's role or a test is; nothing where
+    it holds none.
+    #>
+    [CmdletBinding()]
+    [OutputType([object])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [AllowNull()]
+        [object] $Of,
+
+        [Parameter(Mandatory = $true)]
+        [string] $Name
+    )
+
+    if ($Of -is [Collections.IDictionary]) {
+        return $Of[$Name]
+    }
+    [object] $property = if ($null -ne $Of) { $Of.PSObject.Properties[$Name] }
+    if ($null -ne $property) {
+        return $property.Value
+    }
 }
 
 function Get-MachineHostKeyLine {
@@ -271,7 +324,12 @@ function Get-MachineAnswerMedium {
         [string] $MacAddress,
 
         [Parameter(Mandatory = $true)]
-        [string] $GuestPackage
+        [string] $GuestPackage,
+
+        # The hypervisor's clock as chrony's source, Get-MachineKickstart's.
+        [Parameter()]
+        [AllowEmptyCollection()]
+        [string[]] $Clock = @()
     )
 
     if ($Machine.image.family -eq 'Windows') {
@@ -297,6 +355,7 @@ function Get-MachineAnswerMedium {
         PublicKey = $key
         MacAddress = $MacAddress
         GuestPackage = $GuestPackage
+        Clock = $Clock
         HostKey = $hostKey
     }
     return @{

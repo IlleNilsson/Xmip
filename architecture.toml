@@ -1990,6 +1990,8 @@ dependency = ["xmip-core-library-codec"]
       "xmip-core-node",
       "xmip-core-observe",
       "xmip-core-party",
+      "xmip-core-path",
+      "xmip-core-path-edi",
       "xmip-core-persist",
       "xmip-core-persist-rocksdb",
       "xmip-core-persist-sqlite",

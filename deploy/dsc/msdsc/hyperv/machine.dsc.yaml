@@ -47,7 +47,12 @@ parameters:
     description: The machine's IPv4 address on the network.
   memoryGB:
     type: int
-    description: The VM's memory, static, in GiB.
+    description: The VM's memory, in GiB, the memory it starts with where it is dynamic.
+  dynamicMemory:
+    type: object
+    description: >-
+      minimumMB and maximumMB, the least and the most memory the VM is
+      given, in MiB; empty where its memory is static.
   cpu:
     type: int
     description: The VM's virtual processors.
@@ -63,6 +68,7 @@ resources:
       root: "[parameters('root')]"
       address: "[parameters('address')]"
       memoryGB: "[parameters('memoryGB')]"
+      dynamicMemory: "[parameters('dynamicMemory')]"
       cpu: "[parameters('cpu')]"
       diskGB: "[parameters('diskGB')]"
       network: "[parameters('network')]"

@@ -1,7 +1,8 @@
 #requires -PSEdition Core
 #requires -Version 7.7.0
 # The hardware of an Xmip.HyperV/Machine's VM (HyperVMachine.ps1): its
-# settings (static memory, its processors, no automatic checkpoints, the
+# settings (its memory, static, or dynamic between the least and the most
+# its machine names, its processors, no automatic checkpoints, the
 # environment's name in its notes), its devices (the machine's disk at
 # SCSI 0:0, one adapter on the environment's switch with a static MAC made
 # from its address, two DVD drives) and its firmware (Secure Boot with the
@@ -23,13 +24,39 @@ function Get-HyperVMachineSetting {
         [hashtable] $Instance
     )
 
-    return [ordered] @{
+    [Collections.IDictionary] $dynamic = Get-HyperVDynamicMemory -Instance $Instance
+    [Collections.Specialized.OrderedDictionary] $setting = [ordered] @{
         ProcessorCount = [long] $Instance['cpu']
         MemoryStartup = [long] $Instance['memoryGB'] * 1GB
-        DynamicMemoryEnabled = $false
-        AutomaticCheckpointsEnabled = $false
-        Notes = [string] $Instance['environment']
+        DynamicMemoryEnabled = $dynamic.Count -gt 0
     }
+    if ($dynamic.Count -gt 0) {
+        $setting['MemoryMinimum'] = [long] $dynamic['minimumMB'] * 1MB
+        $setting['MemoryMaximum'] = [long] $dynamic['maximumMB'] * 1MB
+    }
+    $setting['AutomaticCheckpointsEnabled'] = $false
+    $setting['Notes'] = [string] $Instance['environment']
+    return $setting
+}
+
+function Get-HyperVDynamicMemory {
+    <#
+    .SYNOPSIS
+    The machine's dynamic memory, minimumMB and maximumMB; empty where its
+    memory is static, as it is where the instance says none.
+    #>
+    [CmdletBinding()]
+    [OutputType([Collections.IDictionary])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [hashtable] $Instance
+    )
+
+    [object] $dynamic = $Instance['dynamicMemory']
+    if ($dynamic -is [Collections.IDictionary] -and $dynamic.Contains('maximumMB')) {
+        return $dynamic
+    }
+    return @{}
 }
 
 function Get-HyperVHardwareFinding {
@@ -186,10 +213,17 @@ function Set-HyperVHardware {
     [hashtable] $setting = @{
         Name = $name
         ProcessorCount = $want.ProcessorCount
-        StaticMemory = $true
         MemoryStartupBytes = $want.MemoryStartup
         AutomaticCheckpointsEnabled = $want.AutomaticCheckpointsEnabled
         Notes = $want.Notes
+    }
+    if ($want.DynamicMemoryEnabled) {
+        $setting['DynamicMemory'] = $true
+        $setting['MemoryMinimumBytes'] = $want.MemoryMinimum
+        $setting['MemoryMaximumBytes'] = $want.MemoryMaximum
+    }
+    else {
+        $setting['StaticMemory'] = $true
     }
     Set-VM @setting
     Set-HyperVDevice -Instance $Instance -Vm $vm
