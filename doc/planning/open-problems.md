@@ -2249,6 +2249,30 @@ unit, and the runtime's `approval_unit` waits for a second Message of its
 Instance, which no Correlation keys. Which test it is, and where its unit
 comes from, is open.
 
+## 95. A node shows a stopped standby Storage node as ready
+
+Found 2026-11-22 stopping DS2 on the Hyper-V environment while it was a
+standby: for the whole minute it was down, EX1's `<node>/storage` said
+"DS2:7443 a standby Storage node, epoch 6, ready". What a node shows of
+each Storage node is what it last came to with it (`client::Reached`), and
+a node asks a standby nothing once it knows it is one, so a standby that
+stopped stays as it was last seen. An operator reads the wrong standing at
+the one moment it matters, the cluster one standby short. How often a
+node asks a standby what it is, or whether the primary's own count of its
+standbys (`followers`) is what every node should show, is open.
+
+## 94. A standby Storage node does not stop when its service manager asks
+
+Found 2026-11-22 on the Hyper-V environment: `systemctl stop` of DS2, a
+standby of DS1 copying from it whole, waited systemd's 90 s for the node to
+end after SIGTERM, then killed it and the Storage process it had started,
+the unit ending `failed` with result `timeout`.
+Stopped as the primary a few minutes earlier, the same node stopped at
+once. The unit says it "drains it when the service manager stops it";
+whether a standby's copy or its following holds the drain, and how long
+the drain may take by the millisecond rule, is not looked into. A node
+killed while copying is copied whole again once it starts.
+
 ## 93. A backlog behind a Receive Location's sequence drains through a Work Process one Message a pass
 
 Found 2026-11-22 on the Hyper-V environment's real cluster. The Essentials'
