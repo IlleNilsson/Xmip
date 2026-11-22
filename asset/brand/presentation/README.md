@@ -5,14 +5,16 @@ This directory is the working home for both formats. Revise them together.
 
 ## View
 
-- [PowerPoint: 28 slides](Xmip-overview.pptx)
-- [Animated video: about 11 minutes](Xmip-overview.mp4)
+- [PowerPoint: 30 slides](Xmip-overview.pptx)
+- [Animated video: about 12 minutes](Xmip-overview.mp4)
 - [Video captions](Xmip-overview.srt)
 
 The media uses Git LFS. After cloning, run `git lfs pull` to obtain the actual
-files. Narration, flex poses and accessibility notes were updated on 2026-11-07. Project
-source references record the documentation used, rather than a promise of
-release readiness.
+files. Narration, flex poses and accessibility notes were updated on 2026-11-07.
+On 2026-11-22 the node roles, the parts around the nodes and the five ways to
+run one plan were added, and the integration path replaced the Application
+section in both formats. Project source references record the documentation
+used, rather than a promise of release readiness.
 
 ## Outreach
 
@@ -77,6 +79,15 @@ A media-authoring session may generate temporary recipes in
 `.ai-interaction/presentation/`, using the presentation skill or a media editor.
 The project sources and approved media in this directory remain the durable inputs.
 
+The media of 2026-11-22 were made this way. The deck was edited in PowerPoint
+through its COM automation from PowerShell 7. The narration was generated with
+kokoro-js on Node.js from the local model weights. The scenes were drawn on a
+canvas and encoded in headless Microsoft Edge through Playwright. Loudness,
+muxing and compression were done by ffmpeg called from PowerShell: H.264 High
+at CRF 30, with AAC at 128 kb/s, 48 kHz stereo. A figure is placed as a PNG
+drawn from its SVG by headless Edge, since an SVG inserted through automation
+carries no fallback for viewers without SVG support.
+
 The Python preparation helper requires Python 3.11+ with tomllib. From the root:
 
 ```text
@@ -103,6 +114,13 @@ in the working area's build/ directory, with N starting at zero. Timing JSON
 is an array of sentence objects containing text, start and duration in seconds.
 Run prepare.py --collect-narration to validate and collect matching audio and
 timing, then run preparation again before rendering.
+
+Preparation refuses a story and `audio/timing.toml` with different numbers of
+sections. When sections are added or removed, first re-index the voice tracks
+and timing to the new order, giving a new section a placeholder caption that
+preparation then asks to regenerate. To keep this directory untouched while
+authoring, run an unchanged copy of it from `.ai-interaction/presentation/material/`;
+the copy resolves the same repository root and working area.
 
 Inspect slides and validate the PowerPoint package before replacing the tracked
 deck. Review video playback, scene boundaries and captions before replacing the

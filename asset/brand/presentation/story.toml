@@ -735,47 +735,196 @@ reach Storage over mutual TLS.\
 ]
 
 [[section]]
-title = "Deployment and node roles"
-headline = "Compose the runtime for the site"
+title = "Node roles"
+headline = "Receive, execute and send, with Xmip Storage beside them"
 screen = """\
-Select target, roles and technologies\nCombine stages in an Executing \
-node\nPlace storage and observation deliberately\
+One node covering every role works\nSplit nodes as security, firewall and \
+load need\nEX1 between RX and TX; EX2 all three, low latency\
 """
 voice = "male"
 power = false
 narration = """\
-A deployment is a composition of roles and capabilities. Executing brings \
-the message stages together in one process, while other roles serve \
-storage, observation and operation. Site builds select the target and \
-technologies; configuration determines what the node starts.\
+Xmip’s node roles are receive, execute and send, with Xmip Storage beside \
+them. One node covering every role works; separate receive, execute and \
+send nodes are optional, split as security, firewall and load need. One \
+execute node works between receive and send nodes, such as a Work Process. \
+Another receives, processes and sends in one node at low latency, and more \
+execute nodes join as the load needs. Any external sender can send to any \
+receive node, and any send node to any external receiver.\
 """
 sources = [
-  "doc/architecture/deployment-model.md"
+  "doc/architecture/deployment-model.md",
+  "doc/decision/ADR-0056-a-node-declares-what-it-can-do.md",
+  "doc/terminology.md"
 ]
-note = ""
+note = "Each hand-over between nodes goes through Xmip Storage"
+accessibility_notes = """\
+The slide draws the node plan left to right. External senders on the left \
+reach any receive node, RX1 to RX3, and the low-latency node EX2. Inside the \
+Xmip cluster, the receive nodes hand on to EX1, which works between receive \
+and send nodes, such as a Work Process; the send nodes, TX1 to TX3, deliver \
+to the external receivers on the right. Below them, EX2, outlined in brand \
+lime, receives, processes and sends in one node. Dashed boxes within EX1 and \
+EX2 mark more execute nodes, optional, as the load needs. Xmip Storage, a \
+primary and a standby that follows it, runs along the bottom.\
+"""
 layout = [
-  "journey",
-  "A site’s runtime",
+  "nodes",
+  "Receive, execute and send",
   [
     [
-      "01",
-      "Select the target",
-      "Choose the site’s platform and deployment footprint."
+      "External senders",
+      "Any one reaches any receive node and EX2."
     ],
     [
-      "02",
-      "Select capabilities",
-      "Build the required roles and technologies into the runtime."
+      "Receive (RX)",
+      "RX1, RX2, RX3"
     ],
     [
-      "03",
-      "Configure the node",
-      "Start what the site needs from the capabilities the build contains."
+      "Execute (EX1)",
+      "Works between RX and TX nodes, such as a Work Process."
+    ],
+    [
+      "Send (TX)",
+      "TX1, TX2, TX3"
+    ],
+    [
+      "External receivers",
+      "Any send node and EX2 reach any one."
+    ],
+    [
+      "EX2, low latency",
+      "Receives, processes and sends in one node."
+    ],
+    [
+      "More EX nodes",
+      "Optional, as the load needs."
+    ],
+    [
+      "Xmip Storage",
+      """\
+A primary, and a standby that follows it. Each hand-over between nodes goes \
+through it.\
+"""
     ]
   ],
   """\
-Executing combines Receiving, Processing and Sending in one process. Other \
-roles cover operation, monitoring, development and Storage.\
+One node covering every role works. RX, EX and TX nodes are optional, split \
+as security, firewall and load need.\
+"""
+]
+
+[[section]]
+title = "Around the nodes"
+headline = "Parties, optional parts and the people’s machines"
+screen = """\
+Parties: resolved on receive, set on send\nOptional: internet, file \
+storage, remote operators\nA GUI only where developers and operators work\
+"""
+voice = "female"
+power = false
+narration = """\
+A Party is defined in Xmip. On receive, it is resolved from the call \
+against its configuration; on send, it is a set configuration. Some parts \
+are optional: one internet-connected receive node, a file storage that \
+brings software and packages onto the premises, and remote operators in a \
+web browser or the phone app. The developer and operator machines are the \
+only ones with a graphical interface. Retention, archiving and events are \
+functions beside the message path.\
+"""
+sources = [
+  "doc/decision/ADR-0019-identity-parties-and-direction.md",
+  "doc/decision/ADR-0040-xmip-retains-and-archives-it-does-not-delete.md",
+  "doc/decision/ADR-0065-events-are-subscribed-from-any-language.md",
+  "doc/decision/ADR-0014-operator-surfaces.md"
+]
+note = "Retention, archiving and events run beside the message path"
+layout = [
+  "rows",
+  "Around the nodes",
+  [
+    [
+      "Parties",
+      """\
+Defined in Xmip. On receive, resolved from the call against its \
+configuration; on send, a set configuration.\
+"""
+    ],
+    [
+      "Optional",
+      """\
+One internet-connected receive node, a file storage that brings software \
+and packages in, and remote operators in a web browser or the phone app.\
+"""
+    ],
+    [
+      "People",
+      "Developer and operator machines are the only ones with a GUI."
+    ],
+    [
+      "Beside the path",
+      "Retention, archiving and events are functions beside the message path."
+    ]
+  ]
+]
+
+[[section]]
+title = "One plan, five ways"
+headline = "The same plan, from one computer to physical machines"
+screen = """\
+One computer, Hyper-V, KVM with libvirt\nVMware and physical machines\nOne \
+cluster file; where nodes run, per environment\
+"""
+voice = "male"
+power = false
+narration = """\
+The same plan runs five ways: as processes on one computer, on Hyper-V, on \
+Linux with KVM and libvirt, on VMware, and on physical machines. One \
+cluster file serves all five; which node runs on which machine belongs to \
+the environment, never to the cluster file. One computer proves the flow and \
+its rules, virtual machines prove it on real Windows and Linux machines, and \
+physical machines are where an end user runs it.\
+"""
+sources = [
+  "deploy/dsc/README.md",
+  "doc/decision/ADR-0015-packaging.md",
+  "doc/decision/ADR-0028-the-xmip-essentials.md",
+  "doc/terminology.md"
+]
+note = "The VMware template is not built yet; validation varies by way"
+layout = [
+  "ways",
+  "One plan, five ways to run it",
+  [
+    [
+      "01",
+      "One computer",
+      "A process per node. Proves the flow and every rule."
+    ],
+    [
+      "02",
+      "Hyper-V",
+      "A machine per node, Windows and Linux, in a domain."
+    ],
+    [
+      "03",
+      "KVM with libvirt",
+      "The same machines on a Linux host."
+    ],
+    [
+      "04",
+      "VMware",
+      "The same machines. Its template is not built yet."
+    ],
+    [
+      "05",
+      "Physical machines",
+      "A machine per node, or one covering several roles."
+    ]
+  ],
+  """\
+One cluster file for all five. Which node runs on which machine belongs to \
+the environment, never to the cluster file.\
 """
 ]
 
