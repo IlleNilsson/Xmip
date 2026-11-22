@@ -459,7 +459,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 401237 lines of production
+Where each repository mounts and what it holds: 404444 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -484,11 +484,11 @@ hold no source to count.
 ├── module/
 │   ├── core/
 │   │   ├── capability/
-│   │   │   ├── transport                       9686
+│   │   │   ├── transport                       9789
 │   │   │   │   ├── amqp                        2733
 │   │   │   │   ├── opc-ua                      2505
 │   │   │   │   ├── db2                         2481
-│   │   │   │   ├── http                        2241
+│   │   │   │   ├── http                        2245
 │   │   │   │   ├── nfs                         2170
 │   │   │   │   ├── kafka                       2055
 │   │   │   │   ├── smb                         2019
@@ -515,23 +515,23 @@ hold no source to count.
 │   │   │   │   ├── ethercat                     987
 │   │   │   │   ├── as2                          984
 │   │   │   │   ├── aws-sns                      959
-│   │   │   │   ├── aws-s3                       956
-│   │   │   │   ├── azure-blob                   949
+│   │   │   │   ├── aws-s3                       958
+│   │   │   │   ├── azure-blob                   951
 │   │   │   │   ├── ethernet-ip                  941
 │   │   │   │   ├── activemq                     926
 │   │   │   │   ├── hart                         913
 │   │   │   │   ├── uds                          910
 │   │   │   │   ├── aws-kinesis                  905
 │   │   │   │   ├── j1939                        898
-│   │   │   │   ├── google-cloud-storage         894
+│   │   │   │   ├── google-cloud-storage         896
 │   │   │   │   ├── bluetooth                    886
 │   │   │   │   ├── azure-event-grid             880
 │   │   │   │   ├── redis-streams                880
 │   │   │   │   ├── lorawan                      878
 │   │   │   │   ├── azure-service-bus            872
 │   │   │   │   ├── pop3                         869
+│   │   │   │   ├── file                         865
 │   │   │   │   ├── google-pub-sub               863
-│   │   │   │   ├── file                         861
 │   │   │   │   ├── aws-sqs                      854
 │   │   │   │   ├── profinet                     838
 │   │   │   │   ├── cotp                         836
@@ -545,14 +545,14 @@ hold no source to count.
 │   │   │   │   ├── syslog                       741
 │   │   │   │   ├── iec-60870-5-104              733
 │   │   │   │   ├── iso-tp                       721
+│   │   │   │   ├── websocket                    699
 │   │   │   │   ├── mdns                         698
-│   │   │   │   ├── websocket                    696
 │   │   │   │   ├── dds                          693
 │   │   │   │   ├── io-link                      693
 │   │   │   │   ├── msmq                         680
 │   │   │   │   ├── dnp3                         678
 │   │   │   │   ├── obd-ii                       626
-│   │   │   │   ├── ssdp                         619
+│   │   │   │   ├── ssdp                         621
 │   │   │   │   ├── redpanda                     598
 │   │   │   │   ├── modbus                       595
 │   │   │   │   ├── coap                         585
@@ -574,8 +574,8 @@ hold no source to count.
 │   │   │   │   ├── postgresql                   245
 │   │   │   │   └── udp                          214
 │   │   │   ├── provision                       3831
-│   │   │   │   ├── internal-ca                 2554
-│   │   │   │   ├── acme                        1152
+│   │   │   │   ├── internal-ca                 2553
+│   │   │   │   ├── acme                        1150
 │   │   │   │   ├── self-signed                   81
 │   │   │   │       declared, not built 1
 │   │   │   │       platform
@@ -629,8 +629,8 @@ hold no source to count.
 │   │   │   │   ├── ntlm                         155
 │   │   │   │   ├── header                       148
 │   │   │   │   ├── certificate                  130
-│   │   │   │   ├── cookie                       127
 │   │   │   │   ├── oidc                         127
+│   │   │   │   ├── cookie                       124
 │   │   │   │   ├── kerberos                     116
 │   │   │   │   ├── transport                    109
 │   │   │   │   ├── party                         88
@@ -712,7 +712,7 @@ hold no source to count.
 │   │   │           declared, not built 5
 │   │   │           aws-s3  azure-blob  file  google-cloud-storage  sql
 │   │   ├── library/
-│   │   │   ├── net                             8896
+│   │   │   ├── net                             9061
 │   │   │   ├── codec                           5942
 │   │   │   ├── tls                             4181
 │   │   │   ├── mariadb                         1785
@@ -779,8 +779,8 @@ hold no source to count.
 │   │   ├── stream                               382
 │   │   └── party                                193
 │   └── platform/
-│       ├── runtime                            48849
-│       ├── persist                            22389
+│       ├── runtime                            50482
+│       ├── persist                            23679
 │       │   ├── rocksdb                          323
 │       │   ├── sqlite                           288
 │       │       declared, not built 1
@@ -789,7 +789,7 @@ hold no source to count.
 │       └── cluster                             5067
 └── test/
     └── core/
-        ├── essentials                         16707
+        ├── essentials                         16710
         └── module                                83
 ```
 

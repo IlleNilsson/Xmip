@@ -15,6 +15,8 @@
   version listed
 - Amended: 2026-11-20 — an object store's object is won by one node's claim
   beside it
+- Amended: 2026-11-22 — a claim names its node and that start of it, and a
+  start lets go only of what its node's earlier starts left
 - Supersedes: ADR-0017 (Exclusiveness)
 - Related: ADR-0010 (contract and transport boundaries), ADR-0012 (the module boundary),
   ADR-0018 (amendment 2026-10-01: a Host Service claims Journeys through the
@@ -1116,3 +1118,124 @@ Provenance: the owner's words above, and the brief's. The claim object
 beside the object, its delete as written, the claims kept and let go at the
 next listing, and putting the Azure blob lease aside are the assistant's,
 2026-11-20, for the owner to confirm or strike.
+
+## Amendment, 2026-11-22: a claim names its node and that start of it
+
+**Provenance.** Open problem 96, found 2026-11-22 by a review of the estate
+(its finding 3) and confirmed in the source: a claim named its node alone
+(`claim::Claimant::of`), and each Location's transport let go of every
+claim in its node's name at its first receive — the object stores' recovery
+of the amendment above (`listed::Claims::recover`) and the file family's of
+the amendments of 2026-09-26 and 2026-10-13 (`claim::Claimant::recover`)
+alike. A node builds each Location's transport itself, so two Receive
+Locations of one node over one prefix or one directory, or one Location
+built again while its node runs, let go of claims a live receive held, and
+the object was taken again beside it. The conditional delete kept a claim
+written again; it could not tell a claim of an earlier start of the node
+from a live one. Offered the start of the node in the claim or one recovery
+per node and store, the owner chose the first, 2026-11-22: *"Do them all"*,
+option a — **the claim names the node and that start of it.**
+
+**What stands.**
+
+- **A start is the process its node's membership row is keyed by**
+  (ADR-0056, amendment 2026-11-13: *`process`, drawn new at each start*): a
+  random 128-bit number, never zero, from the operating system's random
+  source (`runtime::membership::process`). It is drawn once in
+  `Running::start`, before startup phase 9 builds the Locations, where
+  `Running::join` drew it at activation; `Running` keeps it, and the row and
+  every Location's transport carry the one, so a claim says which start,
+  and so which row, holds it. Nothing reads meaning from it: it is compared
+  whole.
+- **The runtime hands it to each transport with the location.**
+  `transport::Configured::on_node` takes `transport::NodeStart` — the
+  node's `NodeLocation` and that start — where it took the location alone
+  (*Option A*, amendment 2026-09-26, stands), built once per start in
+  `startup::open`, so every Location of one start is given the same, and
+  the claimant is made from it (`claim::Claimant::of`). The file, FTP, SFTP,
+  S3, Azure Blob and Google Cloud Storage transports keep it, and the
+  Essentials' drop box, which builds a node's receives of its own, draws a
+  start as a node does.
+- **It is written into the claimant**: the location percent-encoded as
+  before, `~`, and the start in 32 hexadecimal digits.
+
+  ```text
+  <name>.xmip-claim.<node location, percent-encoded>~<start>.<nanoseconds>
+  <target>.xmip-sending.<node location, percent-encoded>~<start>.<count>.<nanoseconds>
+  ```
+
+  The encoding keeps only letters, digits, `-` and `_`, so `~` parts node
+  and start in one way; it is unreserved in a URI, allowed in every far
+  end's names, and no `.`, so a claimed name, a turn's holder, a sent file's
+  name and an object's claim read back as before.
+- **A start lets go only of what its node's earlier starts left**
+  (`claim::Claimant::is_earlier_start`): a claimant naming the same node and
+  not this start, since a node runs one start at a time. A claim of this
+  start, whichever of its Locations made it, is left, and another node's is
+  left as before. The one rule is called by the object stores' recovery, by
+  the file family's — claimed names, and turns, each turn now removed as
+  its holder's, which FTP's `RMD <turn>/<holder>` needs — and by the removal
+  of sent files not yet in place (`Claimant::remove_unfinished`), where the
+  set of sends in flight still guards a send of an earlier start that the
+  same process is still writing. The delete as listed stays.
+- **A claim written before names its node alone**, with no `~`, and reads as
+  an earlier start of it, so a node upgraded across this amendment lets go
+  of what it held before, as it did.
+
+**What remains.** Two processes running as one node at once, a
+configuration started twice, each read the other's claims as an earlier
+start's, as before this amendment each read them as its own. A node gone
+for good still leaves its claims: the cluster's half of the recovery is
+open, and the start in a claim is what it needs, since a claim whose
+start's membership row says it stopped is held by nobody.
+
+Proved by `xmip-core-transport`'s tests: a Location's arrival held
+unacknowledged while another Location of the same start starts over the
+same prefix is not taken again and its claim is left (`listed::claims`),
+and the same over a directory of the file family, the live Location's
+claimed file and turn left (`claim`); a claim of an earlier start of the
+node, and one naming the node alone, are let go as the node starts again,
+and another node's is left; a sent file of this start is kept and an
+earlier start's removed (`claim::unfinished`). Each object store drives two
+Locations of one start over one far end
+(`two_locations_of_one_start_listing_one_bucket_never_both_receive_one_object`
+in aws-s3 and google-cloud-storage,
+`two_locations_of_one_start_listing_one_container_never_both_receive_one_blob`
+in azure-blob), the file transport two over one drop directory, and the
+runtime's `tests/running/sharing.rs` sees both Locations of a start handed
+one start and the node started again handed another. The new tests,
+written against the code before this amendment, fail. Run 2026-11-22 on
+Linux, `cargo test -p xmip-core-transport --lib -- a_location_starting_beside`,
+before:
+
+```text
+test listed::claims::tests::a_location_starting_beside_a_live_one_of_its_start_leaves_its_claims ... FAILED
+test claim::tests::a_location_starting_beside_a_live_one_of_its_start_leaves_what_it_holds ... FAILED
+panicked at module/core/capability/transport/.src/listed/claims.rs:664:9:
+not taken again
+panicked at module/core/capability/transport/.src/claim.rs:377:9:
+not taken again
+test result: FAILED. 0 passed; 2 failed; 0 ignored; 0 measured; 173 filtered out; finished in 0.00s
+```
+
+and each object store's, before:
+
+```text
+test tests::two_nodes_listing_one_bucket_never_both_receive_one_object ... ok
+test tests::two_locations_of_one_start_listing_one_bucket_never_both_receive_one_object ... FAILED
+test result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured; 18 filtered out; finished in 0.00s
+test tests::two_nodes_listing_one_container_never_both_receive_one_blob ... ok
+test tests::two_locations_of_one_start_listing_one_container_never_both_receive_one_blob ... FAILED
+test result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured; 16 filtered out; finished in 0.00s
+test tests::two_nodes_listing_one_bucket_never_both_receive_one_object ... ok
+test tests::two_locations_of_one_start_listing_one_bucket_never_both_receive_one_object ... FAILED
+test result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured; 14 filtered out; finished in 0.00s
+```
+
+and after, every test of each crate passing: `xmip-core-transport` 177,
+aws-s3 20, azure-blob 18, google-cloud-storage 16, file 33, ftp 18, sftp 28.
+
+Provenance: the owner's choice above. The membership row's process as the
+start, drawing it before phase 9, `NodeStart`, `~` and the hexadecimal
+digits, and reading a claim of the old form as an earlier start's are the
+assistant's, 2026-11-22, for the owner to confirm or strike.

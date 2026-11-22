@@ -208,8 +208,11 @@ primary themselves, the first listed the first: one is promoted only where
 every one listed answers and none is a primary — the one holding most of
 the latest epoch, the first listed of equals — and each promotion raises
 the **epoch**, a primary of an earlier one asked by no node that met the
-later. **There is no witness, so there is no automatic failover**: a
-primary that is gone is waited for, never replaced, and the cluster settles
+later. One to be promoted keeps its epoch before it asks every one listed
+again, and is promoted only where none other holds it, so at most one is
+promoted in an epoch (ADR-0056, amendment 2026-11-22). **There is no
+witness, so there is no automatic failover**: a primary that is gone is
+waited for, never replaced, and the cluster settles
 once it is back (the owner, 2026-11-08: *automatic standby promotion is off
 until there is a witness*; ADR-0056, amendment 2026-11-08). A primary
 stopped in order hands on everything it wrote; one killed loses what it had
@@ -237,7 +240,12 @@ each standby by the node its certificate names, never by its address, and
 counts what it hands each — writes, the entries of a whole copy, and their
 bytes — and its node draws a link to each standby in the Topology, the
 relation *copies to*, streaming over Xmip Storage at the rate it copies
-(ADR-0052 and ADR-0056, amendments 2026-11-13). A Storage node whose sync
+(ADR-0052 and ADR-0056, amendments 2026-11-13). That list is the one every
+node shows each standby by: a node is told through the waits it asks each
+time who follows the primary changes, so a standby stopped is said *not
+following the primary* as soon as the primary knows (ADR-0056, amendment
+2026-11-22). A Storage node stopped ends at once, a standby mid-copy and a
+primary handing on a whole copy alike (open problem 94). A Storage node whose sync
 fails stops: it reads and writes nothing more until it is opened again over
 its log.
 
@@ -688,9 +696,11 @@ as a send thread), and its most is the bulkhead of the turns the step holds:
 a turn is admitted only under a place, queued and running together never
 more than the pool's threads, and each Work Process with work holds no more
 than its share, the places divided among those with work. Each queue is
-read a page a round from where its pass stands, the Work Processes in
+read a page a round from where its reads have gone, the Work Processes in
 rotation, so what has no place stays in the Ledger, never in memory, and a
-backlog in one holds back no turn of another (section 22). However a turn
+backlog in one holds back no turn of another (section 22; what waits behind
+a sequence's head is kept by the head, identifiers only, ADR-0066,
+amendment 2026-11-22). However a turn
 ends, its place is given back; one that panics is written Failed with what
 the panic said.
 
@@ -1832,13 +1842,17 @@ waits for its due time.
 amendment 2026-10-19): **a sent file not yet in place is its node's.** A
 send that writes its file beside the target and renames it into place — the
 file transport's, so a reader finds the old file or the whole new one —
-names it for the node writing it, `<target>.xmip-sending.<the node's
-location, percent-encoded>.<count>.<nanoseconds>`, as a claimed name carries
-the node (`xmip-core-transport`'s `claim::Claimant::sending`). A process that
-dies between the write and the rename leaves it; its node removes it as it
-starts, while it recovers its claims — a Receive Location in its drop
-directory, a Send Location beside its target — and removes no other node's,
-nor one a send of the same process is still writing. Until 2026-10-19 the
+names it for the node writing it and which start of it writes,
+`<target>.xmip-sending.<the node's location, percent-encoded>~<start>.<count>.<nanoseconds>`,
+as a claimed name carries them (`xmip-core-transport`'s
+`claim::Claimant::sending`; the start is the process the node's membership
+row is keyed by, the same for every Location of one start, ADR-0024,
+amendment 2026-11-22). A process that dies between the write and the rename
+leaves it; its node removes it as it starts, while it recovers its claims —
+a Receive Location in its drop directory, a Send Location beside its target
+— and removes no other node's, nor one its own start wrote, nor one a send
+of the same process is still writing; a Location's recovery lets go of
+nothing its own start holds through another Location. Until 2026-10-19 the
 name carried the process, and such a file stayed for good.
 
 **Corrected 2026-10-19** (the owner agreed the proposal; `open-problems.md`
@@ -2902,7 +2916,7 @@ amendment 2026-11-12).
 
 **Built 2026-11-12, as well:** the step holds no more turns than its Work
 pool runs, each Work Process with work its share of them, and reads each
-queue a page a round from where its pass stands, an entry already in a turn
+queue a page a round from where its read stands, an entry already in a turn
 here or failed moved past (section 3; ADR-0066, third amendment
 2026-11-12). A read's place in its queue is the node's convenience, never
 the truth: lost on a restart, it costs a read again. A turn that panics
@@ -2914,6 +2928,21 @@ its claim is let go of and taken up again, and no panic ends the
 dispatching. A turn that fails, however it failed, lets go of its place in
 its Work Process's sequence where the set's `on_failure` is `skip`, so the
 next Message of its key is taken its turn (section 3, *Sequences*).
+
+**Built 2026-11-22: a queue is read once, and what waits behind a
+sequence's head is kept by the head** (ADR-0066, amendment 2026-11-22; open
+problem 93). Each entry of a Work Process's queue names the places its
+Stream holds end to end. The step reads its queue from the start once, then
+on from where its reads have gone — what arrived, and the retries due —
+never a pass from the start again. Of each sequence the first Message it
+meets is taken up; the rest wait, kept in their order behind the head,
+never claimed, read or turned, at most a page a sequence, the rest read on
+from where the sequence was cut once those are gone. The head is read once,
+and again only once it moves — a turn here, a send on this node, or the
+watch — when the one now heading it is handed over. A backlog drains at the
+pace of its sequences, not of what waits in them: until then every pass
+took a turn of every entry, and 10,777 sales orders behind their Receive
+Locations' sequences went through at two to four a minute.
 
 **Built 2026-11-13: a Work Process is placed and bound by its stage, and
 its library is found from its configuration** (ADR-0056, amendment

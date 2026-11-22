@@ -1083,7 +1083,7 @@ dependency = ["xmip-core-library-codec"]
     dependency = ["xmip-core", "xmip-core-message"]
     [xmip.core.identify.cookie]
     maturity = "scaffolded"
-    dependency = ["xmip-core", "xmip-core-context"]
+    dependency = ["xmip-core", "xmip-core-library-net", "xmip-core-context"]
     [xmip.core.identify.dns]
     maturity = "scaffolded"
     dependency = ["xmip-core", "xmip-core-library-net", "xmip-core-context"]

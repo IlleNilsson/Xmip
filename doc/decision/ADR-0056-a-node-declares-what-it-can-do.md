@@ -1445,6 +1445,10 @@ in the order they happened.
    (`runtime-model.md`). A start that cannot be numbered writes no row,
    said as the node's failure, and is never numbered later, which could
    rank it above a start after it.
+   - *Note, 2026-11-22 (ADR-0024, amendment 2026-11-22):* the process is
+     drawn in `Running::start` now, before startup builds the Locations,
+     whose claims carry it; the start is still numbered and kept in
+     `Running::join`.
    - **Across a crash** the number kept survives, so the next start is
      above it even where the clock was set back since; a start that crashed
      before keeping its number sent nothing under it.
@@ -1670,4 +1674,175 @@ test result: ok. 100 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fi
 test result: ok. 27 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.98s
 test result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.92s
 test the_scripts_are_what_the_schema_writes ... ok
+```
+
+## Amendment, 2026-11-22: a Storage node keeps the epoch it is promoted in, then asks again
+
+**Provenance.** Open problem 92, found 2026-11-21 on the Hyper-V
+environment: its two Storage nodes, restarted one after the other by the
+deploy, ended with neither the primary, and every write failed. The owner
+ordered it fixed with the problems a review recorded, 2026-11-22: *Do them
+all*. The design and the build are the assistant's, the same day.
+
+**What a rolling restart comes to by the rules as built.** Each Storage node
+restarted in turn ends with one primary, writes accepted, and every write
+answered read back. That covers either order, a node writing all along,
+and the second restart meeting the first in any of three states:
+
+- still being copied whole, the copy ended by the stop in order;
+- still being copied whole, the copy ended by a page that does not read,
+  as a kill ends it;
+- following, ready.
+
+`standby/tests/rolling.rs` holds the six cases, and they passed before this
+change: 23 rounds of the six on the Linux build machine. The rules make it
+so:
+
+- Only a ready Storage node is promoted.
+- A node turns copying only by standing by a primary that answered. That
+  primary is ready, and it stays ready across its own restart.
+- So one listed node is always ready. Once every one listed answers and
+  none is a primary, the best of the ready is promoted.
+
+The two states the problem quotes were never current together. The first
+node, at epoch 4, had not met the epoch 5 in which the second stood by it.
+What a node showed of a Storage node was what it last came to with it (open
+problem 95), until the next amendment, *every node shows a standby from its
+primary's list of who follows it*. What held the cluster without a primary
+lies outside the election and is still open (open problem 92).
+
+**What the rolling restart meets in the election: two primaries in one
+epoch.** As the primary restarted second comes back, the other may turn
+ready, its catch-up done:
+
+1. The one back asks while the other is not ready yet, so it is the one
+   promoted as it sees it.
+2. The other, now ready and holding more, asks before the one back has kept
+   its new epoch, so it too is the one promoted as it sees it.
+
+Both were promoted in the same epoch. A primary steps down only for a later
+epoch (amendment 2026-10-22), so both served on.
+
+- **A Storage node to be promoted keeps the epoch first, durable, then asks
+  every one listed again** (`standby::finding`: `StorageNode::promoting` and
+  `unrivalled`). It is promoted only where every one answers, none is a
+  primary, and none other holds that epoch or a later one.
+  - Of two that the same round made the one to promote, the one asking
+    second finds the other's epoch already kept. So at most one is
+    promoted in an epoch.
+  - One not promoted says why, *could not be promoted: … holds epoch N
+    already*, and rests a beat, so two that each found the other's epoch do
+    not ask on together.
+- **Nothing else changes.** Every one listed still answers before one is
+  promoted, a primary that is gone is still waited for (amendment
+  2026-11-08), and there is still no witness. `StorageNode::promote` is as
+  it was; only the loop's step around it is new.
+- **What it costs.** One more request to each Storage node listed per
+  promotion, which no Message waits on. One not promoted keeps the epoch it
+  asked in, as one whose databases did not open always did. It was the best
+  of those ready when it asked.
+
+Held by `standby/tests/rolling.rs`,
+`one_turning_ready_as_its_peer_is_promoted_leaves_one_primary_of_the_epoch`,
+which takes the two Storage nodes' turns in the race's order. It was run on
+the Linux build machine (`cargo test -p xmip-core-persist --features
+test-support --lib -- standby::tests::rolling`), first with the loop's step
+moved unchanged into `promoting`:
+
+```text
+test storage::standby::tests::rolling::one_turning_ready_as_its_peer_is_promoted_leaves_one_primary_of_the_epoch ... FAILED
+assertion `left == right` failed: the primary Storage node, epoch 1, no standby following, 3 writes held / the primary Storage node, epoch 1, no standby following, 42 writes held
+  left: 2
+ right: 1
+test result: FAILED. 6 passed; 1 failed; 0 ignored; 0 measured; 224 filtered out; finished in 7.73s
+```
+
+After the change, the same run over every standby test (`-- standby::`):
+
+```text
+test storage::standby::tests::rolling::one_turning_ready_as_its_peer_is_promoted_leaves_one_primary_of_the_epoch ... ok
+test result: ok. 37 passed; 0 failed; 0 ignored; 0 measured; 195 filtered out; finished in 12.50s
+```
+
+## Amendment, 2026-11-22: every node shows a standby from its primary's list of who follows it
+
+**Provenance.** Open problem 95, found 2026-11-22 on the Hyper-V
+environment: a standby Storage node stopped for a minute, and a node
+reaching the Storage nodes said of it the whole minute *a standby Storage
+node, epoch 6, ready*. What a node showed of each Storage node was what it
+last came to with it (`client::Reached`), and it asks a standby nothing
+once it knows it is one, so a standby that stopped stayed as it was last
+seen. The record left open how often a node should ask a standby what it
+is, or whether the primary's own count of its standbys is what every node
+shows. The owner, 2026-11-22, *Do them all*, chose the second: every node
+shows a standby's standing from the primary's list of who follows it right
+now, `standby::followers` — one source, no new polling — and a standby that
+stopped following is shown as not following as soon as the primary knows.
+The design and the build are the assistant's, the same day.
+
+- **A standby says its place as it asks to follow.** `Follow` carries its
+  place among the Storage nodes listed, found by the process it answers as
+  (`StorageNode::place`), and the primary's list keeps it for each standby
+  (`Follower::place`). Every node lists the Storage nodes in the same
+  order, so a node matches the list to its own `[storage] nodes` by place,
+  never by a name and never by the address a standby connected from.
+- **The primary tells who follows it as it changes.** Its count of the
+  changes, its epoch above it, is a watched kind of its own,
+  `Watched::Standbys` (`embedded/watched.rs`): no write moves it; a
+  standby beginning or ending following tells it to every wait on the
+  primary (`standby/ship.rs`). The epoch above keeps another primary's
+  count from being taken for this one's.
+- **A node is told through the waits it already asks.** A Storage client
+  names that count beside whatever its caller waits on in every wait it
+  asks (`client/waiting.rs`, `client/standbys.rs`). Every node has a wait
+  under way all the time, its membership's at the least (amendment
+  2026-11-13, *a node is a member through Xmip Storage*), so no request is
+  added that asks again and again. Where the count moved, the client reads
+  the list once of the Storage node that told it (wire operation 47,
+  `Request::Standbys`, its server's to answer from the node it serves).
+  Where nothing its caller waits on moved, it waits again for what is left
+  of the bound, so no caller is woken for it.
+- **What a node says.** `StorageClient::following` says, of each Storage
+  node listed, whether the primary's list holds it. `<node>/storage` of a
+  node reaching the Storage nodes says the primary *answered*, and of each
+  other *a standby following the primary* or *not following the primary*,
+  with why its last ask failed where that was not a standby's word
+  (`storage/reached.rs`, `standing`). What a standby said of itself is
+  never shown once a primary said its list. Where none said, or the one
+  that said did not answer its last ask, each is said as before: what its
+  last ask came to. How far behind each standby is stays in the primary's
+  own record and its *copies to* link: the list is read only as who
+  follows changes, so a count read with it would be stale.
+- **What it costs.** One position more on each wait, a read of an atomic
+  where the wait begins, and one request per change of who follows, none of
+  them on a Message's path.
+
+**Not closed.** A primary knows a standby went when its next frame to it
+fails: within a beat or two of a stop, which now shuts the socket the
+standby follows on (open problem 94); for a standby gone without a word,
+a machine lost, only once the write fails, the server's write bound of
+30 s. A Storage node's own record is unchanged: a standby says itself, the
+primary lists its standbys.
+
+Held by persist (`standby/tests/following.rs`: a node's client with a
+wait under way is told the standby at place 1 follows, and, once it
+stops, that none does; `standby::followers`, the place and the list's
+form; `watch`, the kind's form) and the runtime (`storage::reached`,
+`standing`, and `storage`'s
+`a_node_reaching_storage_says_a_standby_stopped_is_not_following`). The
+runtime's test, run on the Linux build machine (`cargo test -p
+xmip-core-runtime --lib -- storage`) with the primary's list left out of
+what the node says, as it was:
+
+```text
+test storage::tests::a_node_reaching_storage_says_a_standby_stopped_is_not_following ... FAILED
+the Storage nodes <first>, <second> over Xmip's mutual TLS: <first> answered; <second> a standby Storage node, epoch 1, ready, Streams in chunks of 62 KiB
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 338 filtered out; finished in 5.10s
+```
+
+And with it:
+
+```text
+test storage::tests::a_node_reaching_storage_says_a_standby_stopped_is_not_following ... ok
+test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 317 filtered out; finished in 1.26s
 ```

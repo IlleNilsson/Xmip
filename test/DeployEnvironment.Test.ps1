@@ -306,7 +306,7 @@ Describe 'msdsc' {
         }
     }
 
-    It 'promotes the domain''s controller before the names and joins each other Windows machine after' {
+    It 'promotes the domain''s controller before the names, then joins each other Windows machine' {
         [string] $folder = Join-Path $TestDrive ([guid]::NewGuid().ToString('n'))
         $environment = Read-XmipTestEnvironment -Path (
             Join-Path $script:Root 'deploy/dsc/hyperv.example.toml') -Folder $folder

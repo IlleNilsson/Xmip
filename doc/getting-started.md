@@ -683,7 +683,8 @@ Get-XmipHealth -Scope xmip:///CL1/node/RX1/storage
 ```
 
 `xmip:///CL1/node/RX1/storage` says which Storage node RX1 reaches and whether
-it answered, and DS1's which it is, the primary or a standby.
+it answered, and of each standby whether its primary says it follows it now;
+DS1's says which it is, the primary or a standby.
 
 At test level 2 the same cluster file runs with
 real nodes — `xmip-service` on machines of their own — and the same

@@ -695,7 +695,8 @@ Describe 'The Xmip resources'' own steps' {
         [System.IO.Compression.ZipFile]::CreateFromDirectory($from, $zip)
         Set-Content -LiteralPath (Join-Path $configuration 'liborder_approval.so') -Value 'unit one'
         [hashtable] $instance = @{ modules = $zip; configuration = $configuration }
-        Test-NodeModules -Instance $instance | Should -BeFalse -Because 'the same length, other bytes'
+        Test-NodeModules -Instance $instance |
+            Should -BeFalse -Because 'the same length, other bytes'
     }
 
     It 'refuses module libraries the node names that are not there, never finding it current' {
@@ -709,7 +710,9 @@ Describe 'The Xmip resources'' own steps' {
 
     It 'answers a restarting domain machine absent, never refused, and sets nothing on it' {
         function New-EnvironmentSession { throw 'The machine does not answer.' }
-        function Read-MachineSecret { throw 'No secret is read for a machine that does not answer.' }
+        function Read-MachineSecret {
+            throw 'No secret is read for a machine that does not answer.'
+        }
         [hashtable] $instance = @{ name = 'XMIP-DC01'; address = '10.77.0.10'
             domain = 'xmip.test'; controller = $true; secretPath = 'secret.xml' }
         [hashtable] $state = Get-EnvironmentDomain -Instance $instance

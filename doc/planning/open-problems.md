@@ -661,7 +661,7 @@ still a stage inside `round-trip`.
 | 2 | `xmip-core-provision-acme`: RFC 8555 — directory, nonce, an account key and JWS, order, challenge, a CSR finalized, the chain fetched, renewal before expiry — against any directory a node's configuration names | done 2026-10-13: http-01 on any port, dns-01 through a provider's `DnsWriter`; tls-alpn-01 not built |
 | 3 | `self-signed` and `internal-ca` beside it, so an offline node has a source without ACME | done 2026-10-13; `internal-ca` also serves ACME to the cluster |
 | 4 | `identity-local`: a node not online provisions by ACME and presents the result on mutual TLS | proved 2026-10-13 in `internal-ca`'s tests against its own ACME server, offline, nothing installed; the Essentials test is not built, and whether it runs step-ca (the SDK, `prerequisite.toml`) is the owner's |
-| 5 | `identity-online` on nodes that declare online, against Let's Encrypt | configuration only; open below |
+| 5 | `identity-online` on nodes that declare online, against Let's Encrypt, and relayed for nodes without internet (ADR-0034, amendment 2026-11-22) | configuration only; the relay decided, not built; open below |
 
 The owner, 2026-10-13: Let's Encrypt for Receive Locations and between nodes
 *as an option* — never required, never a default — and the validation *on any
@@ -720,6 +720,14 @@ domain and the way its DNS is written, or a public host and its port 80 the
 Essentials may use. Its configuration is `[provision.receive]` with `source =
 "xmip-core-provision-acme"`, `directory` Let's Encrypt's, `names` that domain,
 `agree_terms = true` and the challenge chosen (`node-configuration.md`).
+
+**Decided 2026-11-22** (ADR-0034, amendment 2026-11-22): a node with
+internet obtains public certificates for nodes without, through the
+premises' own ACME service, each key made on its own node and never
+moved, the name proved by dns-01, across an air gap by the file route;
+proved first against the cluster's own authority standing in for Let's
+Encrypt. Built in the round after problems 92 to 98; the domain and its DNS
+provider stay open.
 
 ## 28. A node cannot run under a group Managed Service Account
 
@@ -2211,6 +2219,26 @@ Essentials cluster ran beside it, and passed alone. Whether a node's own
 deadline or the test's bound gives way under load is not yet known; the
 millisecond rule says which must not.
 
+Two more failed together twice on 2026-11-22, in a landing's runs of every
+changed crate's tests on the Linux build machine, the second beside another
+build (load average 21 on 20 hardware threads):
+`stop::a_stop_drains_the_node_and_the_service_exits_zero`
+(`.src/test/service/stop.rs:47`) and
+`activation::a_signed_slice_the_node_cannot_start_leaves_its_active_configuration_running_and_recoverable`
+(`.src/test/service/activation.rs:46`). Each node, stopped just after its
+test delivered over TCP, drained in some 60 ms saying *received 0*. Their
+binary run again alone passed three times in three. Whether a stop that
+comes before a Location's first receive leaves callers queued at its
+listener untaken is not looked into. In a third run that day, the machine
+near idle (load average 3), the failover test failed at the same line as
+above: the ten files dropped just before the primary's stop, `order-20` to
+`order-29`, had not arrived 30 s after its return, while the ten dropped
+after the stop had; it passed in the other runs. Then, the machine quiet,
+stop and activation passed five runs of the whole binary in five, and the
+failover test 14 of 15: four of the five, the same ten missing in the
+fifth, and ten of ten run alone. Whether those ten are lost or late is not
+looked into.
+
 ## 85. On Linux a dropped file is claimed by the receive poll, never by the directory's notice
 
 Found 2026-11-20 on the Linux build machine in the root's `measured`
@@ -2259,74 +2287,76 @@ unit, and the runtime's `approval_unit` waits for a second Message of its
 Instance, which no Correlation keys. Which test it is, and where its unit
 comes from, is open.
 
-## 98. An HTTP client takes an interim answer for the final one
+## 89. A unit test of the Essentials waits twenty seconds for timeouts
 
-Found 2026-11-22 by a review of the estate (its finding 6), confirmed in
-the source: `net::http::read_response` reads one head and returns it, so a
-100 Continue or a 103 Early Hints is taken for the exchange's answer, and
-the final answer stays unread on the connection. `exchange_kept` reads
-each answer through a `BufReader` of its own, dropped with whatever it
-read past that answer, so on a kept connection an interim and a final
-answer that arrive together lose the final one, and the next exchange
-reads what belongs to this one. Needed: interim answers read past until
-the final one, 101 apart, and one reader for the connection's life;
-tested with the two answers sent together and apart, another exchange
-after them on the connection.
+Found 2026-11-21, when it stopped a landing: the Essentials'
+`round_trip::tests::harsh_sizes_are_carried_or_refused_with_a_reason` ran
+past the minute a landing gives one test, beside the landing's other parts.
+Alone it passes in 25.4 s on Windows and 22.5 s on Linux, of which 0.3 s is
+the processor's: it waits, not works. Not yet measured is on what: its
+twelve rounds carry file, TCP and UDP at sizes up to 65,537 bytes, the UDP
+round trip declares the datagram ceiling but does not pass the refusal it
+gives above it on, and the file transport claims at its receive poll on
+Linux (problem 85). A test that waits measures nothing it asserts and is the
+first to fail under load. A second landing the same day stopped on it in
+another way: its TCP rounds connected fast enough beside the landing's
+other parts to exhaust Windows's ports (*Only one usage of each socket
+address*, os error 10048). It now runs for the runner, `#[ignore]` as the
+brutal sizes are, and `Start-XmipTest -Stress Harsh` drives the same sizes;
+what it waits on and why it exhausts ports are still open.
 
-## 97. The shared HTTP reader accepts framing two parsers can read apart
+## 90. On Linux the Essentials' roll ends as it starts, saying nothing
 
-Found 2026-11-22 by a review of the estate (its finding 4), confirmed in
-the source: `net::head::header` takes the first field of a name, so two
-`Content-Length` fields that disagree are not refused; `http::body::read`
-takes `Transfer-Encoding: chunked` beside a `Content-Length`; and a field
-name is trimmed, so whitespace before its colon passes, where RFC 9112
-section 5.1 has a server refuse it with 400 and section 6.3 treats lengths
-that disagree as an error. Behind an intermediary that frames a request
-otherwise, a connection kept open can carry a request smuggled into the
-next. The writer copies framing fields it was given and adds its own. Not
-exploited; whether a deployment has such an intermediary decides the
-risk. Needed: framing checked once, before a body is read, and the writer
-the only author of framing fields.
+Found 2026-11-21, once the roll could be started on Linux at all (problem 88):
+`Start-XmipTest -Suite Core.Essentials` built, started the roll,
+and the roll ended within its first second, its standard output and error
+empty and its run record unchanged. Not looked into.
 
-## 96. A Location's first receive deletes another live Location's claims on its node
+## 91. Windows blocks a program the Essentials starts, its firewall prompt unanswered
 
-Found 2026-11-22 by a review of the estate (its finding 3), confirmed in
-the source: an object store's claim names its node alone
-(`claim::Claimant::of`), and each transport instance deletes every claim
-in its node's name by its first receive (`listed::Claims::recover`;
-ADR-0024, amendment 2026-11-20), S3, Azure Blob and Google Cloud Storage
-alike. Two Receive Locations of one node over the same or overlapping
-prefix, or one Location built again while its node runs, delete claims a
-live receive holds, and the object is taken again beside it. The
-conditional delete keeps a changed claim; it does not tell a claim of an
-earlier start of the node from a live one. Needed: the start of the node
-in the claim, or one recovery per node and store. Untested: one
-Location's arrival held unacknowledged while another of the same node
-starts over the prefix.
+Found 2026-11-21 driving the Hyper-V environment's real nodes: the roll's
+Parties' far end listened on `0.0.0.0:7422`, the machines timed out
+reaching it (os error 10060), and Windows Firewall held inbound *block*
+rules for `xmip-essentials-c1-roll` and `Xmip.Gui.Web` on the Public
+profile, which Windows makes itself when a new program listens and its
+prompt is not answered. A block rule wins over the port rule that allows
+7422, and every new name a build gives the roll, one per cluster, is a new
+program to Windows. Removing them takes an elevated console; how the
+Essentials should stand with Windows Firewall on one computer, a rule of
+its own made once by the elevated install or none needed, is open.
 
-## 95. A node shows a stopped standby Storage node as ready
+## 92. Two Storage nodes restarted one after the other end as standbys of each other
 
-Found 2026-11-22 stopping DS2 on the Hyper-V environment while it was a
-standby: for the whole minute it was down, EX1's `<node>/storage` said
-"DS2:7443 a standby Storage node, epoch 6, ready". What a node shows of
-each Storage node is what it last came to with it (`client::Reached`), and
-a node asks a standby nothing once it knows it is one, so a standby that
-stopped stays as it was last seen. An operator reads the wrong standing at
-the one moment it matters, the cluster one standby short. How often a
-node asks a standby what it is, or whether the primary's own count of its
-standbys (`followers`) is what every node should show, is open.
+Found 2026-11-21 on the Hyper-V environment, its two AlmaLinux Storage
+nodes upgraded by the deploy one after the other (rpm's upgrade restarts
+the node). DS1 restarted first and came back "a standby Storage node of the
+primary at DS2:7443, epoch 4, copying, not promoted until ready"; DS2
+restarted a minute later and came back "a standby Storage node of the
+primary at DS1:7443, epoch 5". Neither was primary, and every node's
+writes failed: "no Storage node answered". Stopping DS2, restarting DS1
+alone and then starting DS2 settled it, DS2 the primary at epoch 6. A
+rolling restart, the way every upgrade goes, must never leave a cluster
+without its primary; how the two decide while one of them restarts is not
+looked into, and whether the deploy should restart Storage nodes one at a
+time and wait for each to settle is a question for the cluster design
+(ADR-0056, amendment 2026-10-22).
 
-## 94. A standby Storage node does not stop when its service manager asks
-
-Found 2026-11-22 on the Hyper-V environment: `systemctl stop` of DS2, a
-standby of DS1 copying from it whole, waited systemd's 90 s for the node to
-end after SIGTERM, then killed it and the Storage process it had started,
-the unit ending `failed` with result `timeout`.
-Stopped as the primary a few minutes earlier, the same node stopped at
-once. The unit says it "drains it when the service manager stops it";
-whether a standby's copy or its following holds the drain, and how long
-the drain may take by the millisecond rule, is not looked into. A node
-killed while copying is copied whole again once it starts.
+Looked into 2026-11-22: the Storage nodes' election ends a rolling restart
+with one primary in either order, whatever the first node is doing when the
+second restarts (persist's `standby/tests/rolling.rs`, passing before any
+change), and the two quoted states were never current together, one an old
+view as open problem 95 describes; the one gap the restart met in the
+election, two nodes promoted in one epoch as one turns ready while the
+other comes back, is closed (ADR-0056, amendment 2026-11-22). What held
+this cluster without a primary is outside the election and still open: a
+start whose two attempts are refused exiting with a status systemd does
+not restart (not yet confirmed on the environment), and the deploy
+restarting each node twice, the second time while it is copied whole. A
+primary's stop that lasted as long as the whole copy it handed on, a third,
+ends at once since open problem 94. Closing it waits on the owner's choice:
+a switchover on a stop in order, which reverses ADR-0056's amendment of
+2026-11-08, the deploy waiting for each Storage node to be ready before it
+restarts the next, or both.
 
 ## 93. A backlog behind a Receive Location's sequence drains through a Work Process one Message a pass
 
@@ -2361,59 +2391,62 @@ waits behind its Stream's head before it claims it, or reading a
 sequence's head rather than every entry behind it, belongs with ADR-0066's
 step and the owner's sequences of 2026-10-22 together.
 
-## 92. Two Storage nodes restarted one after the other end as standbys of each other
+Built 2026-11-22 (the owner: "Do them all"; ADR-0066, amendment
+2026-11-22): a Work Process's queue is read once and on from where its
+reads went, each entry naming the places its Stream holds, and what waits
+behind a sequence's head is kept by the head, unclaimed and unread, its
+next handed over as the head moves: 1,000 Messages over four sequences are
+claimed once each, and 2,000 behind four over loopback go at 0.71 ms a
+sequence's next. The send step drained faster since it remembers what it
+found behind a head (`send_step::behind`). Still open: the send step on the
+same implementation (open problem 101), and the Work Process step's
+figures beside its Journeys — a turn that waits is said nowhere yet.
 
-Found 2026-11-21 on the Hyper-V environment, its two AlmaLinux Storage
-nodes upgraded by the deploy one after the other (rpm's upgrade restarts
-the node). DS1 restarted first and came back "a standby Storage node of the
-primary at DS2:7443, epoch 4, copying, not promoted until ready"; DS2
-restarted a minute later and came back "a standby Storage node of the
-primary at DS1:7443, epoch 5". Neither was primary, and every node's
-writes failed: "no Storage node answered". Stopping DS2, restarting DS1
-alone and then starting DS2 settled it, DS2 the primary at epoch 6. A
-rolling restart, the way every upgrade goes, must never leave a cluster
-without its primary; how the two decide while one of them restarts is not
-looked into, and whether the deploy should restart Storage nodes one at a
-time and wait for each to settle is a question for the cluster design
-(ADR-0056, amendment 2026-10-22).
+## 99. A chunk's size line ends at a bare LF, and its extension is passed over unread
 
-## 91. Windows blocks a program the Essentials starts, its firewall prompt unanswered
+Found 2026-11-22 by the round's workers, building problem 97: the shared
+HTTP reader reads a chunked body's size line as any line, ended at a bare
+LF (`net::read::line`), and passes over the chunk extension after its `;`
+unread, a bare CR in it included (`net::http::body::unchunk`). RFC 9112
+section 7.1 ends the size line at CRLF and gives the extension a grammar,
+and a stricter reader in front of Xmip ends the line elsewhere: a place two
+readers can still frame a body apart now that problem 97 is built. Whether
+to refuse both, as such readers do, is open.
 
-Found 2026-11-21 driving the Hyper-V environment's real nodes: the roll's
-Parties' far end listened on `0.0.0.0:7422`, the machines timed out
-reaching it (os error 10060), and Windows Firewall held inbound *block*
-rules for `xmip-essentials-c1-roll` and `Xmip.Gui.Web` on the Public
-profile, which Windows makes itself when a new program listens and its
-prompt is not answered. A block rule wins over the port rule that allows
-7422, and every new name a build gives the roll, one per cluster, is a new
-program to Windows. Removing them takes an elevated console; how the
-Essentials should stand with Windows Firewall on one computer, a rule of
-its own made once by the elevated install or none needed, is open.
+## 100. On Windows a standby Storage node's stop waits for its read's 50 ms watch
 
-## 90. On Linux the Essentials' roll ends as it starts, saying nothing
+Found 2026-11-22 by the round's workers, building problem 94: a stop ends a
+standby's following by shutting the socket it reads its primary on, at
+once on Linux and macOS. Windows leaves a receive blocked on a socket
+waiting, so there the read looks at the stop each 50 ms (`server::WATCH`,
+as the Storage server's connections do; `standby::follow`), and a
+standby's stop ends within the watch, not at once. By the millisecond rule
+that wait is a defect. Needed: a receive in the net library that a stop
+can cancel on Windows too.
 
-Found 2026-11-21, once the roll could be started on Linux at all (problem 88):
-`Start-XmipTest -Suite Core.Essentials` built, started the roll,
-and the roll ended within its first second, its standard output and error
-empty and its run record unchanged. Not looked into.
+## 101. The send step reads its queue whole and claims again what waits behind a head
 
-## 89. A unit test of the Essentials waits twenty seconds for timeouts
+Found 2026-11-22 by the round's workers, building problem 93 (ADR-0066,
+amendment 2026-11-22): the send step does not keep what waits behind a
+sequence's head as the Work Process step now does (`sequence::Heads`). Its
+scan reads its queue whole for its figures, the retries waiting and what
+failed; at each `send_scan` it claims again every Message it found behind a
+head (`send_step::behind`); and it takes a page Xmip Storage read short, an
+entry let go of between the range of the queue's index and its own read,
+for its queue's end, reading on only at its next scan. Putting it on
+`Heads` replaces `send_step::behind` and its take-up with the hand-over,
+keeping the next of a sequence taken up beside the send ahead of it
+(ADR-0018, amendment 2026-11-15), against some thirty send tests.
 
-Found 2026-11-21, when it stopped a landing: the Essentials'
-`round_trip::tests::harsh_sizes_are_carried_or_refused_with_a_reason` ran
-past the minute a landing gives one test, beside the landing's other parts.
-Alone it passes in 25.4 s on Windows and 22.5 s on Linux, of which 0.3 s is
-the processor's: it waits, not works. Not yet measured is on what: its
-twelve rounds carry file, TCP and UDP at sizes up to 65,537 bytes, the UDP
-round trip declares the datagram ceiling but does not pass the refusal it
-gives above it on, and the file transport claims at its receive poll on
-Linux (problem 85). A test that waits measures nothing it asserts and is the
-first to fail under load. A second landing the same day stopped on it in
-another way: its TCP rounds connected fast enough beside the landing's
-other parts to exhaust Windows's ports (*Only one usage of each socket
-address*, os error 10048). It now runs for the runner, `#[ignore]` as the
-brutal sizes are, and `Start-XmipTest -Stress Harsh` drives the same sizes;
-what it waits on and why it exhausts ports are still open.
+## 102. A standby says its primary went silent when the primary closed the connection
+
+Found 2026-11-22 by the round's workers, building problem 92: a standby
+following its primary opens every receive that failed with *heard nothing
+for* its silence bound (`standby::follow`; 1 s by default, 400 ms in the
+tests where it was seen), the receive's own error after it, so a primary
+that closed the connection, stopping or restarting, is said first to have
+gone silent, and an operator reading it looks for a network fault that is
+not there.
 
 # Suggested order
 
@@ -3391,3 +3424,109 @@ while `Start-XmipEssentialsRollProcess` (the roll), `Start-XmipTestNode` and
 `Start-XmipOperationWeb` ask on every system. One way to start a detached
 process, used by all four, is the fix; until it is made, no Essentials run,
 served or simulated, starts off Windows.
+
+## 94. A standby Storage node does not stop when its service manager asks — **Resolved**
+
+*Resolved 2026-11-22:* a Storage node stopped ends at once — a standby's
+stop shuts the socket it follows on (on Windows its read looks at the stop
+each 50 ms, open problem 100) and its whole copy's wipe looks at the stop
+between pages, each on from the last key removed where each page scanned
+again from the first, walking every RocksDB tombstone; a primary's stop
+wakes its shipping and cuts a whole copy it hands on short, its standby
+copying still; measured on Linux at 36 µs following, 38 µs mid-copy and
+370 µs for a primary handing on a copy. Still open: a standby killed while
+copied whole is copied whole again; a primary writing to a standby that
+does not read waits up to the 30 s write bound.
+
+Found 2026-11-22 on the Hyper-V environment: `systemctl stop` of DS2, a
+standby of DS1 copying from it whole, waited systemd's 90 s for the node to
+end after SIGTERM, then killed it and the Storage process it had started,
+the unit ending `failed` with result `timeout`.
+Stopped as the primary a few minutes earlier, the same node stopped at
+once. The unit says it "drains it when the service manager stops it";
+whether a standby's copy or its following holds the drain, and how long
+the drain may take by the millisecond rule, is not looked into. A node
+killed while copying is copied whole again once it starts.
+
+## 95. A node shows a stopped standby Storage node as ready — **Resolved**
+
+*Resolved 2026-11-22 (the owner's option a; ADR-0056, amendment
+2026-11-22):* every node shows each standby from its primary's list of who
+follows it, told through the waits it already asks (`Watched::Standbys`)
+and matched by the place each standby says asking to follow, so a standby
+stopped is said not following as soon as the primary knows — within a beat
+or two of a stop, or up to the 30 s write bound for one gone without a
+word.
+
+Found 2026-11-22 stopping DS2 on the Hyper-V environment while it was a
+standby: for the whole minute it was down, EX1's `<node>/storage` said
+"DS2:7443 a standby Storage node, epoch 6, ready". What a node shows of
+each Storage node is what it last came to with it (`client::Reached`), and
+a node asks a standby nothing once it knows it is one, so a standby that
+stopped stays as it was last seen. An operator reads the wrong standing at
+the one moment it matters, the cluster one standby short. How often a
+node asks a standby what it is, or whether the primary's own count of its
+standbys (`followers`) is what every node should show, is open.
+
+## 96. A Location's first receive deletes another live Location's claims on its node — **Resolved**
+
+*Resolved 2026-11-22 (the owner: "Do them all", option a; ADR-0024,
+amendment 2026-11-22):* a claim names its node and that start of it, the
+process its membership row is keyed by, handed to every Location of the
+start through `Configured::on_node` (`transport::NodeStart`), and a
+Location's recovery lets go only of what an earlier start of its node left
+(`claim::Claimant::is_earlier_start`), so two Locations of one node over one
+prefix or directory, or one built again while its node runs, leave what the
+other holds.
+
+Found 2026-11-22 by a review of the estate (its finding 3), confirmed in
+the source: an object store's claim names its node alone
+(`claim::Claimant::of`), and each transport instance deletes every claim
+in its node's name by its first receive (`listed::Claims::recover`;
+ADR-0024, amendment 2026-11-20), S3, Azure Blob and Google Cloud Storage
+alike. Two Receive Locations of one node over the same or overlapping
+prefix, or one Location built again while its node runs, delete claims a
+live receive holds, and the object is taken again beside it. The
+conditional delete keeps a changed claim; it does not tell a claim of an
+earlier start of the node from a live one. Needed: the start of the node
+in the claim, or one recovery per node and store. Untested: one
+Location's arrival held unacknowledged while another of the same node
+starts over the prefix.
+
+## 97. The shared HTTP reader accepts framing two parsers can read apart — **Resolved**
+
+*Resolved 2026-11-22:* the shared reader refuses what two readers can frame
+apart before a body is read, a server answering it 400, the writer the only
+author of Content-Length and Transfer-Encoding. A chunk's size line is open
+problem 99.
+
+Found 2026-11-22 by a review of the estate (its finding 4), confirmed in
+the source: `net::head::header` takes the first field of a name, so two
+`Content-Length` fields that disagree are not refused; `http::body::read`
+takes `Transfer-Encoding: chunked` beside a `Content-Length`; and a field
+name is trimmed, so whitespace before its colon passes, where RFC 9112
+section 5.1 has a server refuse it with 400 and section 6.3 treats lengths
+that disagree as an error. Behind an intermediary that frames a request
+otherwise, a connection kept open can carry a request smuggled into the
+next. The writer copies framing fields it was given and adds its own. Not
+exploited; whether a deployment has such an intermediary decides the
+risk. Needed: framing checked once, before a body is read, and the writer
+the only author of framing fields.
+
+## 98. An HTTP client takes an interim answer for the final one — **Resolved**
+
+*Resolved 2026-11-22:* an HTTP client reads past interim answers to the
+final one, a 101 final, through the one reader a kept connection holds for
+its life.
+
+Found 2026-11-22 by a review of the estate (its finding 6), confirmed in
+the source: `net::http::read_response` reads one head and returns it, so a
+100 Continue or a 103 Early Hints is taken for the exchange's answer, and
+the final answer stays unread on the connection. `exchange_kept` reads
+each answer through a `BufReader` of its own, dropped with whatever it
+read past that answer, so on a kept connection an interim and a final
+answer that arrive together lose the final one, and the next exchange
+reads what belongs to this one. Needed: interim answers read past until
+the final one, 101 apart, and one reader for the connection's life;
+tested with the two answers sent together and apart, another exchange
+after them on the connection.

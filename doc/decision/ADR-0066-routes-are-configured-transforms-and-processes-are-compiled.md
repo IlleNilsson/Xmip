@@ -1301,3 +1301,82 @@ and placed no unit where the bindings gave a node its Work Process, and the
 roll, running from its image, did not find the unit built beside the
 binaries the image links. On Linux no Essentials run starts yet (open
 problem 88).
+
+## Amendment, 2026-11-22: a Work Process's queue is read once, and what waits behind a sequence's head is kept by the head
+
+**Provenance.** Open problem 93: on the Hyper-V environment's real cluster
+a backlog of 10,777 sales orders bound for *Order approval* went through
+at two to four a minute while every direct route drained at four a second.
+Each Receive Location is one end-to-end sequence (the owner, 2026-10-22:
+*one stream, message, journey at a time*), and the step took a turn of every
+entry its pass read — the claim, the Journey and Message read, the Ledger
+asked whether its Stream headed, the claim given back — so a pass over
+10,000 was some 40,000 requests and completed one Message a sequence. The
+owner, 2026-11-22: *Do them all*, choosing that each pass reads only each
+sequence's head from the Ledger, that entries behind a head are not
+claimed, read or turned, and that the cost grows with the number of
+sequences, not with what is queued. Keeping each sequence's order behind
+its head, so no read pages the whole queue again, is the coordinator's
+correction of the same day; how it is kept, its bounds and its names are
+the assistant's, for the owner to overrule.
+
+This supersedes, in the third amendment of 2026-11-12, the bullet **A queue
+is read a page a round** — each ask beginning a pass from the start — and
+the bullet **On the pool the pass is read before the head**: there is no
+pass and no head read beside it any more.
+
+- **A queue's entry names the places its Stream holds end to end**, each with
+  its holder, before the identity it arrived with (`sequence::Kept`, one
+  writer and one reader): a step reads an entry's sequences from its
+  queue's page, no Journey read. A Send Port Group delivery's place and the
+  point's own are asked under the claim as before.
+- **A queue is read once from its start, then on from where its reads have
+  gone**: what arrived, which the watch wakes the step for, and the retries
+  that are due. A page shorter than asked is read on from, never taken for
+  the end: an entry let go of between the range of the queue's index and
+  its own read is passed over (found as this was built; the send step's read
+  takes such a page for its end, and its next scan reads on).
+- **What waits behind a sequence's head is kept by the head**
+  (`sequence::Heads`): of each sequence the first Message met is taken up as
+  before, its turn asking under its claim; the rest are kept in their
+  order, identifiers only — Journey, place, places — never claimed, read or
+  turned. The head is read once, and the step waits on it. Once it moves — a
+  turn here, a send's hand-on on this node, or the watch on any other — it
+  is read again and the Message now heading it handed over: its entry read
+  again by its place, claimed, taken a turn of. One found behind after all
+  is kept again; one gone is let go of.
+- **Bounded.** At most a page, 64, are kept a sequence: past them the
+  sequence is cut, and read on from where it was cut once those kept are
+  gone, a range of the queue from there to where the step's reads have
+  gone. At most 65,536 are kept a queue: a read meeting more stops until
+  some are gone.
+- **The scan reads each kept head again and what arrived**, and takes up
+  again what waits on an Instance, a key, another node's claim or Xmip
+  Storage's answer; it never reads the queue again. A full read happens
+  only as the step starts, where nothing is known.
+- **A turn that unwound past its own catch is taken up again by the step's
+  next round**, nothing asked.
+
+Measured. In memory, 1,000 Messages over four sequences drained with 1,000
+claims, 1,000 Journeys read, under three reads of a head or an entry a
+Message, and some 65 pages of the queue; before, the same backlog took 92,520
+claims, 183,895 head reads and 5,180 pages. Over Xmip Storage on loopback,
+in the optimized build, 2,000 Messages each a sequence of its own drained at
+89.5 µs a Message, and 2,000 behind four sequences at 713 µs a sequence's
+next once the one ahead of it was done, each the fastest of five drains.
+
+Not built: the send step on the same implementation (open problem 101). It
+drained faster since it remembers what it found behind a head
+(`send_step::behind`) and takes the next of a sequence up beside the send
+ahead of it (ADR-0018, amendment 2026-11-15), but its scan still reads its
+queue whole, for its figures, and claims again, at each `send_scan`, every
+Message it found behind. Nor the Work Process step's figures beside its
+Journeys: a turn that waits is said nowhere yet.
+
+Tested in the runtime (`tests/ledger/work_backlog.rs`: 1,000 Messages over
+four sequences each claimed and its Journey read once, each in its
+sequence's order, the queue read a few times its length over a page;
+`sequence::heads`: a backlog behind one head kept with its head read once,
+each next handed over as it moves, and a sequence cut past a page read on
+from where it was cut; `tests/measured/work_drain.rs`: the two drains above,
+each under the millisecond).

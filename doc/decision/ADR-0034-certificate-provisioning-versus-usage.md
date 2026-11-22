@@ -778,3 +778,40 @@ the authority's ACME server among them, unchanged in what they assert.
 
 Provenance: the assistant's drafting, 2026-11-16, with the library, for
 the owner to overrule.
+
+## Amendment, 2026-11-22: a node with internet obtains public certificates for nodes without
+
+The owner, 2026-11-22: *The nodes that have internet access should be able
+to propagate certificates to the nodes that do not have internet*; asked
+six questions, *Do all as recommended*. Decided, and built in the round
+after open problems 92 to 98:
+
+1. **The key never travels.** A node without internet makes its own key
+   and the request for its public names, as it does for its node
+   certificate (clause 4 of the amendment of 2026-10-22). What comes back
+   to it is the signed chain. No node makes a key for another.
+2. **The premises' own ACME service relays.** The node that serves the
+   cluster's ACME service (clause 3 of the amendment of 2026-10-22) passes
+   an order for a public name on to the public authority its configuration
+   names, Let's Encrypt one option, as that authority's ACME client,
+   finalizing with the requesting node's own request, and answers the
+   requesting node with the chain returned. A node without internet keeps
+   the one client it has and asks the service it already asks; renewal is
+   the same order. Which node may hold which public name is the cluster's
+   configuration, and an order for a name not given to the node asking is
+   refused.
+3. **The name is proved by DNS**: dns-01 through a DNS provider's
+   `DnsWriter`, so no node needs a public port.
+4. **Proved first offline**, the cluster's own authority (`internal-ca`)
+   standing in for the public one. The real domain and its DNS provider,
+   which step 5 of open problem 27 waits on, are named later.
+5. **Across an air gap, the file route carries it**: the request and the
+   chain travel as a node certificate's do (clause 4 of the amendment of
+   2026-10-22), the relay ordering where it is kept.
+6. **Clause 5 of the amendment of 2026-10-22 stands.** A node's own
+   certificate, for client authentication between nodes, always comes from
+   the cluster's authority; what is relayed is the public server side,
+   `[provision.receive]`.
+
+Provenance: the owner, 2026-11-22, choosing each of the six as the
+assistant drafted them.
