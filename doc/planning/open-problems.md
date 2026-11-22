@@ -2249,6 +2249,39 @@ unit, and the runtime's `approval_unit` waits for a second Message of its
 Instance, which no Correlation keys. Which test it is, and where its unit
 comes from, is open.
 
+## 93. A backlog behind a Receive Location's sequence drains through a Work Process one Message a pass
+
+Found 2026-11-22 on the Hyper-V environment's real cluster. The Essentials'
+Parties dropped files for five and a half hours while Windows Firewall kept
+EX1 from them (problem 91). Once let through, every direct route drained its
+backlog of about 5,000 at about four a second, and the sales orders bound
+for the Work Process "Order approval", 10,777 in its queue, went through at
+two to four a minute, in bursts about 45 s apart: some 50 hours to drain.
+Restarting EX1 changed nothing.
+
+Read from Xmip Storage as EX1 reads it, every entry was due, unclaimed and
+not failed, its Journey, Message and identity facts readable, no Instance
+written. The first entry of each Receive Location heads its end-to-end
+sequence (the owner, 2026-10-22: *one stream, message, journey at a time*);
+every other waits behind it. The Work Process step takes a turn of each
+entry its pass reads: the claim, the Journey and Message read,
+`sequence::heading` asking the Ledger, *behind*, the claim given back. A
+pass over 10,000 is some 40,000 requests, 25 to 50 s on two hardware
+threads, and completes the one Message of each sequence that heads. The
+head is read again only once the pass is through, since `dispatch::quantum`
+reads the pass first and its head with the places left. In memory and over
+loopback (a probe of `tests/ledger`, not kept) 2,000 drained in half a
+second, every client a sequence of its own.
+
+The send step takes a Message up the same way (`sequence::may_go` after its
+claim); why its queues drained a thousand times faster is not looked into.
+A turn that waits says so nowhere, no figure and no audit, and a node's
+Work Process step publishes no figures beside its Journeys: this was found
+by reading Storage by hand. Not built: the step learning that a Message
+waits behind its Stream's head before it claims it, or reading a
+sequence's head rather than every entry behind it, belongs with ADR-0066's
+step and the owner's sequences of 2026-10-22 together.
+
 ## 92. Two Storage nodes restarted one after the other end as standbys of each other
 
 Found 2026-11-21 on the Hyper-V environment, its two AlmaLinux Storage
