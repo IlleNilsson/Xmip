@@ -11,7 +11,10 @@
 //! - `activation.rs`: a correctly signed slice the node cannot start leaves
 //!   the configuration that ran before running and recoverable, the pin
 //!   kept and an older serial still refused; signed again, it runs, and
-//!   `--activation` says so (ADR-0031, amendment 2026-11-12).
+//!   `--activation` says so (ADR-0031, amendment 2026-11-12); and
+//!   `--readiness` says a node ready while it runs its slice and its Xmip
+//!   Storage stands Fine, and not before it published nor once it stopped
+//!   (ADR-0056, amendment 2026-11-23).
 //! - `operate.rs`: a node configured with `[operate]` is reached on its
 //!   operate listener as a surface on another machine reaches it, its
 //!   publication read and an act taken as the certificate's subject.
@@ -25,10 +28,11 @@
 //!   and refuses and audits one whose certificate names another.
 //! - `failover.rs`: a receiving and a sending node reach the test cluster's
 //!   two Storage nodes over Xmip's mutual TLS, keeping none themselves;
-//!   the primary Storage node is stopped while files are dropped, its
-//!   standby is not promoted and nothing more is taken in until the
-//!   primary is started again, and then every file dropped arrives once,
-//!   whole.
+//!   the primary Storage node is stopped in order while files are dropped,
+//!   its standby succeeds it at once and every file dropped while it is
+//!   gone arrives through it; started again, the former primary follows
+//!   it, and every file dropped arrives once, whole (ADR-0056, amendment
+//!   2026-11-23).
 //! - `authority.rs`: a node whose `[provision.node]` serves the cluster's
 //!   authority answers ACME for the premises and publishes its revocation
 //!   list, `--listening` names both ports, and a client obtains, is told

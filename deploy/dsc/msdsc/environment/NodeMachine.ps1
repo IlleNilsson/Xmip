@@ -4,8 +4,9 @@
 <#
     What node.resource.ps1 does for each kind: read the state, judge it and
     make it so, on Windows and on Linux. Dot-sourced by node.resource.ps1
-    and by test/MsdscEnvironment.Test.ps1. The files, the openings and the
-    package are NodeFile.ps1's, NodeOpening.ps1's and NodePackage.ps1's.
+    and by test/MsdscEnvironment.Test.ps1. The files, the openings, the
+    package and the node's service are NodeFile.ps1's, NodeOpening.ps1's,
+    NodePackage.ps1's and NodeService.ps1's.
 
     Style: doc/governance/powershell-style.md
 #>
@@ -298,100 +299,19 @@ function Set-NodeSlice {
         return
     }
 
-    # Only a node that runs is restarted: one that does not, as before its
-    # package is installed again, is started by the package and the service
-    # after it, by the program the package brings.
+    # Only a node that runs is restarted, and then waited for until it is
+    # ready: one that does not, as before its package is installed again, is
+    # started by the package and the service after it, by the program the
+    # package brings.
     [string] $name = "xmip-$($Instance.node)"
+    if (-not (Test-NodeServiceActive -Name $name)) {
+        return
+    }
     if ($IsWindows) {
-        if ((Get-Service -Name $name).Status -eq 'Running') {
-            Restart-Service -Name $name
-        }
-        return
+        Restart-Service -Name $name
     }
-
-    Invoke-DscProgram -Program 'systemctl' -Argument @('try-restart', $name) | Out-Null
-}
-function Test-NodeServiceRunning {
-    <#
-    .SYNOPSIS
-    Whether the node's service runs and starts with the machine: its
-    Windows service running and automatic, its systemd unit active and
-    enabled.
-    #>
-    [CmdletBinding()]
-    [OutputType([bool])]
-    param(
-        [Parameter(Mandatory = $true)]
-        [string] $Name
-    )
-
-    if ($IsWindows) {
-        $service = Get-Service -Name $Name -ErrorAction SilentlyContinue
-        return $null -ne $service -and $service.Status -eq 'Running' -and
-            $service.StartType -eq 'Automatic'
+    else {
+        Invoke-DscProgram -Program 'systemctl' -Argument @('restart', $name) | Out-Null
     }
-
-    & systemctl is-active --quiet $Name
-    [bool] $active = $LASTEXITCODE -eq 0
-    & systemctl is-enabled --quiet $Name
-    return $active -and $LASTEXITCODE -eq 0
-}
-
-function Start-NodeService {
-    <#
-    .SYNOPSIS
-    Make the node's service start with the machine and start it, waiting
-    for nothing: a node of a cluster whose Storage nodes are not all up yet
-    refuses to accept work, so the environment's nodes are started together
-    after (Xmip.Environment/Started), and test says whether this one runs.
-    #>
-    [CmdletBinding(SupportsShouldProcess = $true)]
-    param(
-        [Parameter(Mandatory = $true)]
-        [string] $Name
-    )
-
-    if (-not $PSCmdlet.ShouldProcess($Name, 'Enable and start')) {
-        return
-    }
-
-    if ($IsWindows) {
-        Set-Service -Name $Name -StartupType Automatic
-        Start-Service -Name $Name -ErrorAction SilentlyContinue
-        return
-    }
-
-    Invoke-DscProgram -Program 'systemctl' -Argument @('enable', $Name) | Out-Null
-    Invoke-DscProgram -Program 'systemctl' -Argument @('start', '--no-block', $Name) | Out-Null
-}
-
-function Stop-NodeService {
-    <#
-    .SYNOPSIS
-    Stop the node's service where it runs, so what it holds open, its
-    module libraries, can be replaced; nothing where it is not registered
-    or not running. The install that follows starts it again.
-    #>
-    [CmdletBinding(SupportsShouldProcess = $true)]
-    param(
-        [Parameter(Mandatory = $true)]
-        [string] $Name
-    )
-
-    if (-not $PSCmdlet.ShouldProcess($Name, 'Stop')) {
-        return
-    }
-
-    if ($IsWindows) {
-        $service = Get-Service -Name $Name -ErrorAction SilentlyContinue
-        if ($null -ne $service -and $service.Status -ne 'Stopped') {
-            Stop-Service -Name $Name -Force
-        }
-        return
-    }
-
-    & systemctl is-active --quiet $Name
-    if ($LASTEXITCODE -eq 0) {
-        Invoke-DscProgram -Program 'systemctl' -Argument @('stop', $Name) | Out-Null
-    }
+    Wait-NodeReadiness -Instance $Instance
 }

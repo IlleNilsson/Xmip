@@ -21,16 +21,19 @@
 
 # Which of Start-XmipTest's switches each kind of Xmip's own suites takes
 # beside -Suite: roll is Core.System and Core.Systems, pester Core.Estate,
-# demo Core.Demo.
+# internal Core.Internal, demo Core.Demo. -ComputerName is the internal
+# tests' alone, Core.Estate's and Core.Internal's: they run on another
+# computer (Start-XmipTestOnComputer).
 # A provider's command is handed everything (Start-XmipProviderSuite). A
 # switch belongs to the first kind listed that takes it.
 [System.Collections.Specialized.OrderedDictionary] $script:XmipSuiteSwitch = [ordered]@{
-    roll   = @(
+    roll     = @(
         'Stress', 'Test', 'Rounds', 'Duration', 'TimeFactor', 'Nodes', 'NodeRole', 'OnlineNodes'
         'Cluster', 'Certificate', 'LoadBytes', 'Path', 'PassThru', 'Hidden'
     )
-    pester = @('Test', 'Path')
-    demo   = @('Cluster', 'Stress', 'Hidden', 'Tester')
+    pester   = @('Test', 'Path', 'ComputerName')
+    internal = @('Test', 'ComputerName')
+    demo     = @('Cluster', 'Stress', 'Hidden', 'Tester')
 }
 
 function Get-XmipSuiteSwitchForeign {
@@ -40,7 +43,7 @@ function Get-XmipSuiteSwitchForeign {
             -Suite and PowerShell's common parameters never among them. Pure.
 
         .PARAMETER Kind
-            roll, pester or demo.
+            roll, pester, internal or demo.
 
         .PARAMETER Bound
             What Start-XmipTest was called with.
@@ -49,7 +52,7 @@ function Get-XmipSuiteSwitchForeign {
     [OutputType([string[]])]
     param(
         [Parameter(Mandatory)]
-        [ValidateSet('roll', 'pester', 'demo')]
+        [ValidateSet('roll', 'pester', 'internal', 'demo')]
         [string] $Kind,
 
         [Parameter(Mandatory)]
@@ -81,7 +84,7 @@ function Get-XmipSuiteSwitchRefusal {
             starts, as every refusal of Start-XmipTest is (ADR-0055 clause 2).
 
         .PARAMETER Kind
-            roll, pester or demo.
+            roll, pester, internal or demo.
 
         .PARAMETER Bound
             What Start-XmipTest was called with.
@@ -93,7 +96,7 @@ function Get-XmipSuiteSwitchRefusal {
     [OutputType([string])]
     param(
         [Parameter(Mandatory)]
-        [ValidateSet('roll', 'pester', 'demo')]
+        [ValidateSet('roll', 'pester', 'internal', 'demo')]
         [string] $Kind,
 
         [Parameter(Mandatory)]
@@ -104,9 +107,10 @@ function Get-XmipSuiteSwitchRefusal {
     )
 
     [hashtable] $suite = @{
-        roll   = "$script:XmipSystemTestSuite and $script:XmipSystemsTestSuite"
-        pester = $script:XmipEstateSuite
-        demo   = $script:XmipDemoSuite
+        roll     = "$script:XmipSystemTestSuite and $script:XmipSystemsTestSuite"
+        pester   = "$script:XmipEstateSuite and $script:XmipInternalSuite"
+        internal = $script:XmipInternalSuite
+        demo     = $script:XmipDemoSuite
     }
     [string] $not = if ($Chosen -ne '') { $Chosen } else { $suite[$Kind] }
     [string[]] $foreign = @(Get-XmipSuiteSwitchForeign -Kind $Kind -Bound $Bound)

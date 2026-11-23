@@ -614,8 +614,12 @@ environment's nodes and bound on the Parties' far end the Systems Tests serve
 listens on, and its service
 (ADR-0015, amendment 2026-10-21). Every rule about the node is
 `xmip-service`'s — `--slice --cluster --bind --nodes`, `--listening`, `--install
---account`, and `--activation`, whether the node runs the slice it was shipped
-(ADR-0031, amendment 2026-11-12) — and `cargo test --test deploy` reads the System Tests' cluster
+--account`, `--activation`, whether the node runs the slice it was shipped
+(ADR-0031, amendment 2026-11-12), and `--readiness --within`, whether a node
+the deploy restarted is ready, so the next is restarted only once it is: a
+Storage node the primary, or a standby ready and following that its
+primary's stop in order hands over to at once (ADR-0056, amendment
+2026-11-23) — and `cargo test --test deploy` reads the System Tests' cluster
 file, which the example environment runs, as `xmip-service` reads it for
 every node it declares. That file is the same on one computer and on the
 machines (ADR-0028, amendment 2026-10-21).
@@ -928,6 +932,9 @@ Start-XmipTest -Suite Core.Estate                     # every test/*.Test.ps1, d
 Start-XmipTest -Suite Core.Estate -Test Rust.Style    # test/Rust.Style.Test.ps1 alone
 Get-XmipTestStatus                                    # building, running, OK or FAILED
 Get-XmipTestResult -Suite Core.Estate                 # one object per failed test
+Start-XmipTest -Suite Core.Internal -Test module/foundation/core  # as a landing verifies it
+Start-XmipTest -Suite Core.Estate -ComputerName build1  # on the computer build1.toml names
+Get-XmipTestStatus -ComputerName build1               # running, OK or FAILED there
 Start-XmipTest -Suite Core.System -Cluster CL1 -Test RoundTrip  # omit -Nodes: dealt
 Start-XmipTest -Suite * -Cluster CL1                   # every suite but Core.Demo, run by name
 Start-XmipTest -Suite Core.Demo -Cluster CL1 -Stress Realistic -Tester alice@example.org
@@ -938,12 +945,29 @@ change touched them, and never the System Tests or the demo readiness check:
 
 | Suite | Runs | Command |
 | --- | --- | --- |
-| A module's own | its crate or project | `cargo test` in the module; `dotnet test <path to the *.Test.csproj>`; `Invoke-Pester module/core/operation/powershell/tests` |
+| A module's own | its crate or project | `cargo test` in the module; `dotnet test <path to the *.Test.csproj>`; `Invoke-Pester module/core/operation/powershell/tests`; or, as a landing verifies it, its format, lints and tests and its .NET projects, detached: `Start-XmipTest -Suite Core.Internal -Test <module>`, then `Get-XmipTestStatus`, `Get-XmipTestResult -Suite Core.Internal`, `Stop-XmipTest -Suite Core.Internal` |
 | The System Tests' own | `test/core/system-test` | `cargo test` in `test/core/system-test` |
 | The estate's | the style rules, the manifest, the record, the estate module, one Pester file each under `test/` | `Start-XmipTest -Suite Core.Estate`, then `Get-XmipTestStatus`, `Get-XmipTestResult -Suite Core.Estate`, `Stop-XmipTest -Suite Core.Estate` |
 | The System Tests | Xmip end to end, every transport by every contract, as a cluster you name, every node a process on this computer | `Start-XmipTest -Suite Core.System -Cluster <name>`, then `Get-XmipTestStatus`, `Get-XmipTestResult -Worst`, `Stop-XmipTest` |
 | The Systems Tests | the same on an environment's machines, set up first with `Deploy-XmipEnvironment`, every node one that answers there | `Start-XmipTest -Suite Core.Systems -Cluster <name> -Nodes <the mapped nodes> -Certificate <folder>`, then as above |
 | The demo readiness check | what the owner's demo runs: a roll of the cluster you name, the web operations tool over it, the Desktop operations app over the same snapshot, the VS Code extension and its language server | `Start-XmipTest -Suite Core.Demo -Cluster <name> -Stress Realistic -Tester <person>`, then `Get-XmipTestStatus`, `Get-XmipTestResult -Suite Core.Demo`, `Stop-XmipTest -Suite Core.Demo` |
+
+The internal tests, `Core.Estate` and `Core.Internal`, run on another
+computer too, a Linux one beside a Windows one, with `-ComputerName <name>`
+on `Start-XmipTest`, `Get-XmipTestStatus`, `Get-XmipTestResult` and
+`Stop-XmipTest`. The computer is `.local-work/test-computer/<name>.toml`,
+this machine's and never in Git: `host`, `user` and `key`, the address ssh
+connects to, the account and the private key's path, and where they differ
+from the defaults, `folder`, where the estate is copied under that account's
+home (`xmip-test`), and `slots`, how many builds run there at once (2, each
+holding a lock on `~/slot<n>.lock`; where every slot is taken the start
+waits, saying once a minute who holds them, and a wait whose console has
+gone starts nothing). OpenSSH's `ssh` and `scp` and `tar` carry
+it: the estate is sent as a difference into a mirror there, copied into a
+tree of its own that is one Git repository of what the estate holds, and
+that computer's own `Start-XmipTest` runs the suite detached in it. One run
+works in a copy at a time, and a start while one does is refused; runs side
+by side take a computer file each, the same `host` and a `folder` of its own.
 
 What it runs before anything is pushed, in the estate's one Cargo workspace,
 whose committed `[patch]` resolves every estate crate to its working tree
@@ -1145,10 +1169,10 @@ Every command that changes state accepts `-WhatIf`. Reporting is the default.
 | `Get-XmipStatus` | The whole estate at once: dirty, ahead, behind, new modules, and the build output a landing refuses. |
 | `Publish-XmipChange` | Test and land a change, dependency order, modules first. Aliased `xgit` and `xmip-git`. |
 | `Publish-XmipPin` | Move the superproject's gitlinks to where the modules now are: how a land ends, and how one that stopped halfway is finished. |
-| `Start-XmipTest`, `Get-XmipTestStatus`, `Stop-XmipTest` | A suite of Xmip's tests: `Core.System`, `Core.Systems`, `Core.Estate`, `Core.Demo` — a bare name is accepted and resolves to those — or a provider's `<Provider>.<Name>`. `-Suite` takes wildcards. Xmip's own start detached and are observed and stopped from outside; `-Tester` is the demo readiness check's alone. |
+| `Start-XmipTest`, `Get-XmipTestStatus`, `Stop-XmipTest` | A suite of Xmip's tests: `Core.System`, `Core.Systems`, `Core.Estate`, `Core.Internal`, `Core.Demo` — a bare name is accepted and resolves to those — or a provider's `<Provider>.<Name>`. `-Suite` takes wildcards. Xmip's own start detached and are observed and stopped from outside; `-Tester` is the demo readiness check's alone, and `-ComputerName` the internal tests', `Core.Estate` and `Core.Internal`, run on the test computer `.local-work/test-computer/<name>.toml` names. |
 | `Start-XmipTestNode`, `Get-XmipTestNode`, `Stop-XmipTestNode` | Simulated node processes, by name. |
 | `Deploy-XmipEnvironment` | Make an environment from one TOML file with the technology it names, Microsoft DSC v3 or Ansible: the network, each machine installed from its ISO one at a time, on Hyper-V or libvirt, then the Xmip node on each machine (`deploy/dsc/README.md`); the environment keeps the technology that made it and refuses the other; `-WhatIf` tests, a host where nothing is made yet too. |
-| `Get-XmipTestResult`, `Get-XmipHistory` | What a run reports, now and over time. `Get-XmipTestResult -Suite Core.Estate` reads the estate run's record and returns its failures, and `-Suite Core.Demo` every part of the latest demo readiness check, OK, FAILED or SKIPPED with its reason. `Get-XmipTestResult` reads the snapshot through the operator module's `Xmip.Surface` and ranks by the runtime's order, as every surface does, and `Get-XmipHistory` reads the history through the runtime's reader (`observe::Curve`) the same way; the module is built once per change of its sources into `.local-work/operator` and loaded from there on first use, and the runtime (`cargo build` in `module/platform/runtime`) must be built. |
+| `Get-XmipTestResult`, `Get-XmipHistory` | What a run reports, now and over time. `Get-XmipTestResult -Suite Core.Estate` reads the estate run's record and returns its failures, `-Suite Core.Internal` likewise the module where its verification stopped, and `-Suite Core.Demo` every part of the latest demo readiness check, OK, FAILED or SKIPPED with its reason; with `-ComputerName`, the test computer's. `Get-XmipTestResult` reads the snapshot through the operator module's `Xmip.Surface` and ranks by the runtime's order, as every surface does, and `Get-XmipHistory` reads the history through the runtime's reader (`observe::Curve`) the same way; the module is built once per change of its sources into `.local-work/operator` and loaded from there on first use, and the runtime (`cargo build` in `module/platform/runtime`) must be built. |
 | `Start-XmipOperationWeb`, `Get-XmipOperationWeb`, `Stop-XmipOperationWeb` | The web GUI, detached; it opens no browser. One host holds one cluster per `-Snapshot`. |
 | `Get-XmipDecisionRecord`, `New-XmipDecisionIndex` | The decision record and its index. |
 | `Get-XmipRepositoryRoot`, `Expand-XmipEstate` | The module's own footing: find the estate from any working directory, and flatten `architecture.toml`'s nesting into repositories. |

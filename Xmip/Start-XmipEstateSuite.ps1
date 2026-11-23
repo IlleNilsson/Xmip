@@ -87,7 +87,9 @@ function Start-XmipEstateSuite {
 
     [string] $area = $layout.Estate
     New-Item -ItemType Directory -Path $area -Force | Out-Null
-    Remove-XmipRunFinished -Run @(Get-XmipEstateRun -Path $area)
+    Remove-XmipRunFinished -Run @(
+        Get-XmipEstateRun -Path $area | Where-Object Suite -EQ $script:XmipEstateSuite
+    )
 
     [string] $stamp = Get-Date -Format 'yyyyMMdd-HHmmss-fff'
     [hashtable] $run = @{
@@ -230,6 +232,10 @@ function Write-XmipEstateStart {
 
         .PARAMETER Started
             When the run's process started.
+
+        .PARAMETER Kind
+            pester, the estate's Pester suite, or internal, the internal
+            tests of named modules (Start-XmipInternalSuite).
     #>
     [CmdletBinding()]
     [OutputType([void])]
@@ -239,6 +245,10 @@ function Write-XmipEstateStart {
 
         [Parameter(Mandatory)]
         [string] $Suite,
+
+        [Parameter()]
+        [ValidateSet('pester', 'internal')]
+        [string] $Kind = 'pester',
 
         [Parameter(Mandatory)]
         [string] $Path,
@@ -259,6 +269,7 @@ function Write-XmipEstateStart {
 
     $written = [ordered]@{
         suite   = $Suite
+        kind    = $Kind
         pid     = $Id
         started = $Started.ToUniversalTime().ToString('o')
         path    = $Path

@@ -24,7 +24,8 @@
       </ViewSelectedBy>
       <TableControl>
         <TableHeaders>
-          <TableColumnHeader><Label>Suite</Label><Width>12</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Suite</Label><Width>13</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Computer</Label><Width>9</Width></TableColumnHeader>
           <TableColumnHeader><Label>Cluster</Label><Width>10</Width></TableColumnHeader>
           <TableColumnHeader><Label>Id</Label><Width>7</Width><Alignment>Right</Alignment></TableColumnHeader>
           <TableColumnHeader><Label>Started</Label><Width>11</Width></TableColumnHeader>
@@ -41,7 +42,8 @@
           <TableRowEntry>
             <TableColumnItems>
               <TableColumnItem><PropertyName>Suite</PropertyName></TableColumnItem>
-              <TableColumnItem><ScriptBlock>if ($_.Kind -eq 'pester') { '' } elseif ($null -eq $_.Cluster) { 'by hand' } elseif ($_.Hidden) { "$($_.Cluster) test" } else { $_.Cluster }</ScriptBlock></TableColumnItem>
+              <TableColumnItem><ScriptBlock>if ($null -eq $_.ComputerName) { 'here' } else { $_.ComputerName }</ScriptBlock></TableColumnItem>
+              <TableColumnItem><ScriptBlock>if ($_.Kind -in 'pester', 'internal') { '' } elseif ($null -eq $_.Cluster) { 'by hand' } elseif ($_.Hidden) { "$($_.Cluster) test" } else { $_.Cluster }</ScriptBlock></TableColumnItem>
               <TableColumnItem><PropertyName>Id</PropertyName></TableColumnItem>
               <TableColumnItem><ScriptBlock>$_.StartTime.ToString('MM-dd HH:mm')</ScriptBlock></TableColumnItem>
               <TableColumnItem><PropertyName>State</PropertyName></TableColumnItem>
@@ -51,7 +53,7 @@
               <TableColumnItem><ScriptBlock>if ($null -eq $_.Nodes) { '' } elseif ($_.Nodes.Count -eq 0) { 'none' } else { $_.Nodes -join ',' }</ScriptBlock></TableColumnItem>
               <TableColumnItem><ScriptBlock>if ($null -eq $_.OnlineNodes) { '' } elseif ($_.OnlineNodes.Count -eq 0) { 'none' } else { $_.OnlineNodes -join ',' }</ScriptBlock></TableColumnItem>
               <TableColumnItem><ScriptBlock>if ($null -eq $_.RealNodes -or $_.RealNodes.Count -eq 0) { '' } else { $_.RealNodes -join ',' }</ScriptBlock></TableColumnItem>
-              <TableColumnItem><ScriptBlock>if ($_.Kind -in 'pester', 'build', 'demo') { $_.Tally } else { $_.Worst }</ScriptBlock></TableColumnItem>
+              <TableColumnItem><ScriptBlock>if ($_.Kind -in 'pester', 'internal', 'build', 'demo') { $_.Tally } else { $_.Worst }</ScriptBlock></TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>
         </TableRowEntries>

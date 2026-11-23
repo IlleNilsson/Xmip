@@ -14,13 +14,15 @@
     - File: a file in place, the same bytes as its source; private where
       asked, readable by its owner alone.
     - Package: the estate's package installed, which runs xmip-service
-      --install with the node, the cluster and the account.
+      --install with the node, the cluster and the account; a node that ran
+      before is waited for until it is ready, as xmip-service --readiness
+      says, before the next node is deployed (NodeService.ps1).
     - Slice: the node's configuration, node.xmip, as the machine deploying
       the environment sliced and signed it, writable by the node's account
       and the administrators alone (NodeAccess.ps1), and, where the node is
       installed, the configuration it runs, as xmip-service --activation
       says; the service is restarted when it changed or the node does not
-      run it.
+      run it, and waited for until it is ready.
     - Opening: a firewall opening for each port xmip-service --listening
       says the node's configuration listens on, and no other.
     - Service: the node's service running and started with the machine.
@@ -46,7 +48,7 @@ $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
 [string[]] $parts = @('Program.ps1', 'NodeMachine.ps1', 'NodeFile.ps1', 'NodeOpening.ps1',
-    'NodeAccess.ps1', 'NodePackage.ps1', 'NodeProgram.ps1')
+    'NodeAccess.ps1', 'NodePackage.ps1', 'NodeProgram.ps1', 'NodeService.ps1')
 
 foreach ($part in $parts) {
     . (Join-Path -Path $PSScriptRoot -ChildPath $part)

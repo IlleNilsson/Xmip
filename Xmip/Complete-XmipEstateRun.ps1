@@ -9,7 +9,8 @@ Set-StrictMode -Version Latest
 .DESCRIPTION
     Called by the run itself, in its own pwsh (Start-XmipEstateSuite), never by
     the console that started it. The record it writes is read by
-    Get-XmipEstateRun.
+    Get-XmipEstateRun, and written by Write-XmipRunVerdict, which a run of the
+    internal tests of named modules writes its verdict with too.
 
     Style: doc/governance/powershell-style.md
 #>
@@ -82,27 +83,100 @@ function Complete-XmipEstateRun {
         $Fault = 'Invoke-Pester returned nothing.'
     }
 
-    [double] $seconds = 0
-
-    if ($null -ne $Result) {
-        $seconds = [math]::Round($Result.Duration.TotalSeconds, 1)
+    [hashtable] $verdict = @{
+        State   = if ($passed) { 'OK' } else { 'FAILED' }
+        Passed  = if ($null -ne $Result) { [int] $Result.PassedCount } else { 0 }
+        Failed  = if ($null -ne $Result) { [int] $Result.FailedCount } else { 0 }
+        Skipped = if ($null -ne $Result) { [int] $Result.SkippedCount } else { 0 }
+        Seconds = if ($null -ne $Result) { $Result.Duration.TotalSeconds } else { 0 }
+        Fault   = $Fault
+        Failure = @(Get-XmipEstateFailure -Result $Result)
     }
+    [hashtable] $run = @{ Record = $Record; Suite = $Suite; Path = $Path; Test = $Test; Log = $Log }
+
+    Write-XmipRunVerdict @run @verdict -Kind pester
+}
+
+
+function Write-XmipRunVerdict {
+    <#
+        .SYNOPSIS
+            Writes a detached run's verdict into its record, whole: what was
+            started, the state in words, the counts, the duration and every
+            failure. The one writer of a verdict, for the estate's Pester
+            suite (Complete-XmipEstateRun) and the internal tests of named
+            modules (Complete-XmipInternalRun), each run in its own pwsh.
+
+        .PARAMETER Kind
+            pester or internal, as Get-XmipTestStatus lists the run.
+
+        .PARAMETER Failure
+            Each failure as a table: file, path and message.
+    #>
+    [CmdletBinding()]
+    [OutputType([void])]
+    param(
+        [Parameter(Mandatory)]
+        [string] $Record,
+
+        [Parameter(Mandatory)]
+        [string] $Suite,
+
+        [Parameter(Mandatory)]
+        [ValidateSet('pester', 'internal')]
+        [string] $Kind,
+
+        [Parameter(Mandatory)]
+        [string] $Path,
+
+        [Parameter()]
+        [AllowEmptyCollection()]
+        [string[]] $Test = @(),
+
+        [Parameter(Mandatory)]
+        [string] $Log,
+
+        [Parameter(Mandatory)]
+        [ValidateSet('OK', 'FAILED')]
+        [string] $State,
+
+        [Parameter()]
+        [int] $Passed = 0,
+
+        [Parameter()]
+        [int] $Failed = 0,
+
+        [Parameter()]
+        [int] $Skipped = 0,
+
+        [Parameter()]
+        [double] $Seconds = 0,
+
+        [Parameter()]
+        [AllowEmptyString()]
+        [string] $Fault = '',
+
+        [Parameter()]
+        [AllowEmptyCollection()]
+        [object[]] $Failure = @()
+    )
 
     $written = [ordered]@{
         suite      = $Suite
+        kind       = $Kind
         pid        = $PID
         started    = (Get-Process -Id $PID).StartTime.ToUniversalTime().ToString('o')
         path       = $Path
         tests      = @($Test)
         log        = $Log
         finished   = [datetime]::UtcNow.ToString('o')
-        state      = if ($passed) { 'OK' } else { 'FAILED' }
-        passed     = if ($null -ne $Result) { [int] $Result.PassedCount } else { 0 }
-        failed     = if ($null -ne $Result) { [int] $Result.FailedCount } else { 0 }
-        skipped    = if ($null -ne $Result) { [int] $Result.SkippedCount } else { 0 }
-        duration_s = $seconds
+        state      = $State
+        passed     = $Passed
+        failed     = $Failed
+        skipped    = $Skipped
+        duration_s = [math]::Round($Seconds, 1)
         fault      = $Fault
-        failures   = @(Get-XmipEstateFailure -Result $Result)
+        failures   = @($Failure)
     }
 
     Write-XmipToml -Path $Record -Value $written

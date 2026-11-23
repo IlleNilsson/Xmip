@@ -57,6 +57,13 @@ parameters:
     description: >-
       Where the package puts the node on this family: program, the
       xmip-service it installs, and configuration, its config folder.
+  ready:
+    type: int
+    description: >-
+      How long, in seconds, a node this document restarted is waited for
+      until it is ready, before the next node is deployed (ADR-0056,
+      amendment 2026-11-23).
+    defaultValue: 180
 resources:
   - name: Account
     type: Xmip.Node/Account
@@ -74,6 +81,7 @@ resources:
       node: "[parameters('node')]"
       account: "[parameters('account')]"
       program: "[parameters('layout').program]"
+      ready: "[parameters('ready')]"
   - name: Certificate
     type: Xmip.Node/File
     requireVersion: ^0.1
@@ -113,6 +121,8 @@ resources:
       modules: "[path(parameters('staging'), 'files', 'modules.zip')]"
       configuration: "[parameters('layout').configuration]"
       names: "[parameters('names')]"
+      program: "[parameters('layout').program]"
+      ready: "[parameters('ready')]"
 
   - name: Opening
     type: Xmip.Node/Opening

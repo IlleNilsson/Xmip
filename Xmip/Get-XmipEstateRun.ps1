@@ -12,8 +12,9 @@ Set-StrictMode -Version Latest
     owner's console for ten minutes before that, and the rule is his: nothing
     starts itself; Start starts, Status observes, Stop stops (the owner,
     2026-09-12). Start-XmipEstateSuite starts it, Complete-XmipEstateRun is
-    what the run writes when it ends, Stop-XmipDetachedRun (in Stop-XmipTest.ps1)
-    ends it early; what reads a run is here.
+    what the run writes when it ends, Stop-XmipDetachedRun ends it early; what
+    reads a run is here. A run of Core.Internal is recorded and read the same
+    way (Start-XmipInternalSuite), its kind internal.
 
     A run is one TOML record under .local-work/estate (Get-XmipSystemTestLayout's
     Estate), named for the time it started: estate-<yyyyMMdd-HHmmss-fff>.toml,
@@ -101,9 +102,11 @@ function ConvertTo-XmipEstateRun {
         "$passed passed, $failed failed, $skipped skipped in $([int] $seconds) s"
     }
 
+    # What the run declared itself: the estate's Pester suite, or the
+    # internal tests of named modules (Start-XmipInternalSuite).
     [hashtable] $row = @{
         Suite    = [string](Get-TomlValue -Node $Record -Name 'suite' -Default '')
-        Kind     = 'pester'
+        Kind     = [string](Get-TomlValue -Node $Record -Name 'kind' -Default 'pester')
         State    = $state
         Id       = $run.Id
         Property = @{
@@ -241,11 +244,12 @@ function Test-XmipDetachedAlive {
 function Get-XmipEstateResult {
     <#
         .SYNOPSIS
-            The failures of the latest estate run, one Xmip.TestResult each,
-            for Get-XmipTestResult -Suite Core.Estate.
+            The failures of the latest run of a suite recorded in the
+            estate's area, one Xmip.TestResult each, for Get-XmipTestResult
+            -Suite Core.Estate and -Suite Core.Internal.
 
         .DESCRIPTION
-            The latest run is the one started last. While it runs there is
+            The latest run is the one of -Suite started last. While it runs there is
             no verdict yet, and that is said rather than answered with an
             empty list that would read as nothing failing. A run that passed
             says so in words and returns nothing, since nothing failed. A run
@@ -261,6 +265,9 @@ function Get-XmipEstateResult {
 
         .PARAMETER Worst
             Only the first failure.
+
+        .PARAMETER Suite
+            Whose run: Core.Estate unless said.
     #>
     [CmdletBinding()]
     [OutputType('Xmip.TestResult')]
@@ -274,15 +281,19 @@ function Get-XmipEstateResult {
         [string[]] $Test,
 
         [Parameter()]
-        [switch] $Worst
+        [switch] $Worst,
+
+        [Parameter()]
+        [string] $Suite = $script:XmipEstateSuite
     )
 
-    $run = @(Get-XmipEstateRun -Path $Path | Sort-Object -Property StartTime) |
-        Select-Object -Last 1
+    $run = @(
+        Get-XmipEstateRun -Path $Path | Where-Object Suite -EQ $Suite |
+            Sort-Object -Property StartTime
+    ) | Select-Object -Last 1
 
     if ($null -eq $run) {
-        Write-Error ("No run of $script:XmipEstateSuite is recorded. " +
-            "Start-XmipTest -Suite $script:XmipEstateSuite starts one.")
+        Write-Error "No run of $Suite is recorded. Start-XmipTest -Suite $Suite starts one."
         return
     }
 

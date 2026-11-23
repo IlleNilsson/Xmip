@@ -9,6 +9,7 @@
 //!     [--account <account>] --install
 //! xmip-service --configuration <path> --listening
 //! xmip-service --configuration <path> --activation
+//! xmip-service --configuration <path> --readiness [--within <seconds>]
 //! xmip-service --configuration <path> --uninstall
 //! ```
 //!
@@ -37,6 +38,11 @@
 //! `--activation` says, in the node's words, whether the node runs the slice
 //! at `<path>` as its active configuration, and exits 0 only where it does
 //! (`activation.rs`): what a deployment asks after it restarts a node.
+//! `--readiness` says whether the node is ready — it runs that slice and
+//! its Xmip Storage stands Fine, a Storage node the primary or a standby
+//! ready and following — waiting `--within` seconds for it where given
+//! (`ready.rs`; ADR-0056, amendment 2026-11-23): what a deployment asks
+//! before it restarts the next node.
 //!
 //! `--definition` prints what this platform's service manager is told about
 //! the node's service — a systemd unit, a launchd property list, or the
@@ -104,6 +110,7 @@ mod listening;
 mod opened;
 mod publication;
 mod readiness;
+mod ready;
 mod run;
 mod slice;
 mod starter;
@@ -152,6 +159,7 @@ fn main() -> ExitCode {
         Mode::Install => install::install(&audit, &arguments),
         Mode::Listening => listening::print(&audit, &arguments),
         Mode::Activation => activation::print(&audit, &arguments),
+        Mode::Readiness => ready::print(&audit, &arguments),
         Mode::Uninstall => install::uninstall(&audit, &arguments),
         Mode::Console => console::run(&program, &audit, &arguments),
         #[cfg(windows)]

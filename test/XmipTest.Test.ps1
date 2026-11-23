@@ -118,7 +118,8 @@ Describe 'Start, Get and Stop, and nothing else' {
             $completer.ScriptBlock.Invoke('Start-XmipTest', 'Suite', '', $null, @{})
         )
 
-        $offered | Should -Be @('Core.System', 'Core.Systems', 'Core.Estate', 'Core.Demo')
+        $offered |
+            Should -Be @('Core.System', 'Core.Systems', 'Core.Estate', 'Core.Internal', 'Core.Demo')
     }
 
     It 'canonicalizes every spelling to the qualified name, and accepts the bare one' {
@@ -819,11 +820,11 @@ Describe 'A suite carries its provider' {
             [object[]] $known = @(Get-XmipTestSuite -Path $area)
 
             @($known | ForEach-Object { $_.Name }) |
-                Should -Be @(
-                    'Core.System', 'Core.Systems', 'Core.Estate', 'Core.Demo', 'Example.System')
-            $known[4].Kind | Should -Be 'command'
-            $known[4].Command | Should -Be 'Start-ExampleXmipTest'
-            $known[4].Provider | Should -Be 'Example'
+                Should -Be @('Core.System', 'Core.Systems', 'Core.Estate', 'Core.Internal',
+                    'Core.Demo', 'Example.System')
+            $known[5].Kind | Should -Be 'command'
+            $known[5].Command | Should -Be 'Start-ExampleXmipTest'
+            $known[5].Provider | Should -Be 'Example'
             Get-XmipTestSuiteRefusal -Name 'example.system' -Known $known |
                 Should -Be ''
         }

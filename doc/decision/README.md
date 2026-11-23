@@ -1146,6 +1146,7 @@ You have a word. This gives you the decision that governs it.
 | conformance | [A contract holds well-formedness always and conformance when named](ADR-0042-a-contract-holds-well-formedness-always-and-conformance-when-named.md) |
 | consolidation | [One error declaration](ADR-0037-one-error-declaration.md) |
 | copied files | [A technology shares through its capability](ADR-0044-a-technology-shares-through-its-capability.md) |
+| Core.Internal, test computer | [The Xmip System Tests and Systems Tests](ADR-0028-the-xmip-system-test.md) |
 | Dead Message | [A Journey whose circumstances changed is a Dead Message](ADR-0069-a-journey-whose-circumstances-changed-is-dead.md) |
 | Dead Message Queue | [The Journey model](ADR-0013-journey-model.md) |
 | decision | [A resilience technology is a guard on the attempt](ADR-0048-a-resilience-technology-is-a-guard-on-the-attempt.md) |

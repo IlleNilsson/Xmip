@@ -26,10 +26,12 @@
 
 # Build output, fetched packages, git's own directory and the working areas.
 # Nobody wrote these and they would dominate every count that included them;
-# Find-XmipFile never descends into one.
+# Find-XmipFile never descends into one. A folder cargo built into is known
+# by what it holds, the CACHEDIR.TAG cargo writes in it (Test-XmipBuildOutput),
+# never by its name: deploy/profile/target holds a deployment target's
+# profiles, which are source, and was skipped by name until 2026-11-23.
 [string[]] $script:XmipSourceSkip = @(
-    'target', 'obj', 'node_modules', '.git', '.ai-interaction', '.ai-work',
-    $script:XmipWorkName
+    'obj', 'node_modules', '.git', '.ai-interaction', '.ai-work', $script:XmipWorkName
 )
 
 # .NET's build output, skipped only beside the project that builds into it.
@@ -113,9 +115,11 @@ function Find-XmipFile {
             The estate's one walk of its own trees: the source count below,
             the landing's question whether a module holds a .NET project, the
             projects a surface builds and what a repository's build uses, and
-            the tests that read every Cargo.toml or project. A directory named
-            in $script:XmipSourceSkip is pruned before it is entered, and so
-            is a bin beside a .NET project, which is that project's build
+            the tests that read every Cargo.toml or project, and what is sent
+            to a test computer (Send-XmipTestComputerEstate). A directory
+            named in $script:XmipSourceSkip is pruned before it is entered,
+            and so is one holding cargo's CACHEDIR.TAG, whatever its name,
+            and a bin beside a .NET project, which is that project's build
             output; a Rust crate's src/bin is walked. A built tree is walked
             as fast as a clean one; a link is not followed, as Get-ChildItem
             -Recurse does not. Depth first, each directory's files before its
@@ -174,6 +178,9 @@ function Find-XmipFileBelow {
                     $Directory.GetFiles($script:XmipDotnetProject).Count -eq 0
             } |
             Where-Object { -not $_.Attributes.HasFlag([System.IO.FileAttributes]::ReparsePoint) } |
+            Where-Object {
+                -not [System.IO.File]::Exists((Join-Path $_.FullName $script:XmipCacheTag))
+            } |
             Sort-Object -Property Name
     )
 
@@ -196,7 +203,8 @@ function Get-XmipSourceFile {
             the same on every platform and can be compared against a mount.
 
             Build output is excluded, so a clean tree and a built one count
-            the same: target, obj, and the bin beside a .NET project. A Rust
+            the same: a folder cargo built into, obj, and the bin beside a
+            .NET project. A Rust
             crate's src/bin holds programs written by hand, and is counted.
 
         .PARAMETER Root

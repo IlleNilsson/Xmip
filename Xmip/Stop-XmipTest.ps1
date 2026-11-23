@@ -29,15 +29,16 @@ function Stop-XmipTest {
             Get-XmipTestStatus; those with the process ids in -Id; or every
             run when nothing is named.
 
-            A run of Core.Estate, the estate's Pester suite, is one pwsh of
-            its own: stopping it ends that pwsh and whatever it started, and
-            takes its record; its log is kept. One that has already ended is
-            listed by Get-XmipTestStatus with its verdict and is never picked
-            by a filter; named by -Id it is REFUSED, since nothing of it runs.
-            A roll still building is stopped the same way — its pwsh, cargo
-            and the compilers beneath it — and picked by its cluster, suite
-            and tests as the roll it would have become; one whose build
-            FAILED has ended, and is REFUSED by -Id as an ended estate run is.
+            A run of Core.Estate, the estate's Pester suite, or of
+            Core.Internal, is one pwsh of its own: stopping it ends that pwsh
+            and whatever it started, and takes its record; its log is kept.
+            One that has already ended is listed by Get-XmipTestStatus with
+            its verdict and is never picked by a filter; named by -Id it is
+            REFUSED, since nothing of it runs. A roll still building is
+            stopped the same way — its pwsh, cargo and the compilers beneath
+            it — and picked by its cluster, suite and tests as the roll it
+            would have become; one whose build FAILED has ended, and is
+            REFUSED by -Id as an ended estate run is.
             A run of Core.Demo, the demo readiness check, is one pwsh too:
             what it started — its roll, its web host and its desktop app — is
             stopped first and said in words, the desktop app's gui.toml given
@@ -86,8 +87,16 @@ function Stop-XmipTest {
             running (ADR-0028, amendment 2026-09-30). A run named by -Id or
             on the pipeline is stopped whether hidden or not.
 
+        .PARAMETER ComputerName
+            Stops runs on that test computer instead, by its own Stop-XmipTest,
+            picked by -Id or the filters as here; a run piped from
+            Get-XmipTestStatus -ComputerName is stopped there without it.
+
         .EXAMPLE
             Stop-XmipTest
+
+        .EXAMPLE
+            Stop-XmipTest -ComputerName build1 -Suite Core.Estate
 
         .EXAMPLE
             Stop-XmipTest -Suite Core.Estate
@@ -170,7 +179,16 @@ function Stop-XmipTest {
         [string] $Suite,
 
         [Parameter(ParameterSetName = 'Filter')]
-        [switch] $IncludeHidden
+        [switch] $IncludeHidden,
+
+        [Parameter(ParameterSetName = 'Id')]
+        [Parameter(ParameterSetName = 'Filter')]
+        [ArgumentCompleter({
+            & (Get-Module -Name Xmip | Select-Object -First 1) {
+                Get-XmipTestComputerChoice -Word $args[0] } $args[2]
+        })]
+        [ValidateNotNullOrWhiteSpace()]
+        [string] $ComputerName
     )
 
     begin {
@@ -178,16 +196,25 @@ function Stop-XmipTest {
         [System.Collections.Generic.List[int]] $targets = @()
         # The clusters whose roll a demo run stopped in this call, with it.
         [System.Collections.Generic.List[string]] $cleared = @()
+        [hashtable] $far = @{} # The ids of piped runs on a test computer, by computer.
     }
 
     process {
-        foreach ($item in @($InputObject)) {
-            if ($null -ne $item) {
+        foreach ($item in @($InputObject | Where-Object { $null -ne $_ })) {
+            [string] $there = if ($item.PSObject.Properties['ComputerName']) {
+                "$($item.ComputerName)"
+            }
+
+            if ($there -eq '') {
                 $targets.Add([int] $item.Id)
+            }
+            else {
+                $far[$there] = @($far[$there] | Where-Object { $null -ne $_ }) + [int] $item.Id
             }
         }
 
-        if ($PSBoundParameters.ContainsKey('Id')) {
+        # An id given with -ComputerName is that computer's process, never one here.
+        if ($PSBoundParameters.ContainsKey('Id') -and -not $ComputerName) {
             $targets.AddRange($Id)
         }
     }
@@ -199,6 +226,16 @@ function Stop-XmipTest {
         trap {
             Write-XmipAudit -Action 'Stop-XmipTest' -ErrorRecord $_
             break
+        }
+
+        # A run on a test computer is stopped there, by that computer's own
+        # Stop-XmipTest; nothing of this computer is picked by -ComputerName.
+        if ($PSBoundParameters.ContainsKey('ComputerName') -or $far.Count -gt 0) {
+            Stop-XmipTestOnComputer -Caller $PSCmdlet -Bound $PSBoundParameters -Piped $far
+
+            if ($targets.Count -eq 0) {
+                return
+            }
         }
 
         # An estate run that has ended is listed, and there is nothing of it
@@ -236,9 +273,10 @@ function Stop-XmipTest {
             }
 
             # The estate's Pester run is one pwsh and what it started, and so
-            # is a roll still building — cargo beneath it — and a demo run;
-            # none has nodes or a cluster process (Stop-XmipDetachedRun).
-            [bool] $detached = $roll.Kind -in 'pester', 'build', 'demo'
+            # are a run of the internal tests, a roll still building — cargo
+            # beneath it — and a demo run; none has nodes or a cluster
+            # process (Stop-XmipDetachedRun).
+            [bool] $detached = $roll.Kind -in 'pester', 'internal', 'build', 'demo'
 
             # A demo run that ended without a verdict never ran its stop part:
             # what it started may still run, and is stopped as if it ran.
@@ -359,42 +397,4 @@ function Update-XmipPromptFollowing {
     if ($rolling.Count -gt 0) {
         $prompt::Follow($rolling[0], $rolling)
     }
-}
-
-function Stop-XmipDetachedRun {
-    <#
-        .SYNOPSIS
-            Ends a run that is one detached pwsh — an estate run, or a roll
-            still building: that pwsh and everything it started, then its
-            record.
-
-        .DESCRIPTION
-            A test may start a process of its own — cargo, a node, a host —
-            and a build is cargo and its compilers, so ending only the pwsh
-            would orphan them: the whole tree is ended, as Stop-XmipTest ends
-            a roll's tree. The log is kept, for what the run said before it
-            was stopped.
-
-        .PARAMETER Run
-            The run, from Get-XmipEstateRun or Get-XmipSystemTestBuild.
-    #>
-    [CmdletBinding()]
-    [OutputType([void])]
-    param(
-        [Parameter(Mandatory)]
-        [PSObject] $Run
-    )
-
-    try {
-        [System.Diagnostics.Process]::GetProcessById($Run.Id).Kill($true)
-    }
-    catch {
-        [string] $why = $_.Exception.Message
-        Write-Error "REFUSED: $($Run.Suite) run $($Run.Id) could not be stopped: $why"
-        return
-    }
-
-    Wait-Process -Id $Run.Id -Timeout 5 -ErrorAction SilentlyContinue
-    Remove-Item -LiteralPath $Run.Record -Force -ErrorAction SilentlyContinue
-    Write-Verbose "stopped the $($Run.Suite) run $($Run.Id)"
 }

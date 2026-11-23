@@ -91,7 +91,18 @@ Storage node the cluster lists does (ADR-0056, amendment 2026-11-08), so
 none of them starts alone, one machine after another. Then each node is
 asked `xmip-service --activation`, and fails the run, in the node's words,
 until it runs the slice it was shipped: a service that started does not
-say its slice took (ADR-0031, amendment 2026-11-12). The role writes no
+say its slice took (ADR-0031, amendment 2026-11-12). A node that ran before
+the run, which the run restarts — its slice or certificate changed, or an
+`.rpm` of another build installed over it — is waited for until it is ready
+before the next host is deployed, as `xmip-service --readiness --within
+<xmip_ready_window>` says in the node's words (`handlers/main.yml`, 180
+seconds by default; the owner, 2026-11-23: *That has to be sorted, nothing
+can be left*; ADR-0056, amendment 2026-11-23): a Storage node restarted
+comes back a standby, and its primary stopped in order before it follows
+ready has no standby to hand over to. The hosts are deployed one at a time
+(`serial: 1`), each host's handlers before the next, so the next Storage
+node is restarted only once the one before is ready; past the window the
+run fails. The role writes no
 starter of its own: a node given no cluster file gets the package's,
 written once in `xmip-service --install`.
 

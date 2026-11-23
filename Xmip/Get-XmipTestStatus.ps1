@@ -34,6 +34,9 @@ function Get-XmipTestStatus {
             started by hand (`cargo run --bin xmip-system-test-roll`) has no record and is
             listed with what a process alone can tell.
 
+            A run of Core.Internal, the internal tests of named modules, is
+            listed as an estate run is, kind internal.
+
             Nothing here starts, stops or writes anything. Nothing running
             and nothing recorded means no output.
 
@@ -56,8 +59,19 @@ function Get-XmipTestStatus {
             amendment 2026-09-30). A run is hidden by what it declared, never
             by its cluster's name; Hidden says which.
 
+        .PARAMETER ComputerName
+            The runs on that test computer instead, as its own
+            Get-XmipTestStatus lists them in the copy of the estate
+            Start-XmipTest -ComputerName sent there: running, OK or FAILED
+            from its record and log there, ComputerName saying where, Path,
+            Record and Log that computer's. Nothing where nothing was ever
+            started there.
+
         .EXAMPLE
             Get-XmipTestStatus
+
+        .EXAMPLE
+            Get-XmipTestStatus -ComputerName build1
 
         .EXAMPLE
             Get-XmipTestStatus -Cluster 'C*' | Format-List
@@ -79,10 +93,28 @@ function Get-XmipTestStatus {
         [string] $Cluster = '*',
 
         [Parameter()]
-        [switch] $IncludeHidden
+        [switch] $IncludeHidden,
+
+        [Parameter()]
+        [ArgumentCompleter({
+            & (Get-Module -Name Xmip | Select-Object -First 1) {
+                Get-XmipTestComputerChoice -Word $args[0] } $args[2]
+        })]
+        [ValidateNotNullOrWhiteSpace()]
+        [string] $ComputerName
     )
 
     $ErrorActionPreference = 'Stop'
+
+    # There, that computer's own Get-XmipTestStatus answers.
+    if ($PSBoundParameters.ContainsKey('ComputerName')) {
+        [hashtable] $asked = @{ Cluster = $Cluster; IncludeHidden = [bool] $IncludeHidden }
+        $computer = Read-XmipTestComputer -Name $ComputerName
+
+        return Invoke-XmipTestComputer -Computer $computer -Command Get-XmipTestStatus -Parameter (
+            $asked) -AllowAbsent | ConvertFrom-XmipTestComputerStatus -ComputerName $ComputerName
+    }
+
     $layout = Get-XmipSystemTestLayout
 
     if ([string]::IsNullOrWhiteSpace($Path)) {

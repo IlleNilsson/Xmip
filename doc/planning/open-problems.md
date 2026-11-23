@@ -2367,6 +2367,32 @@ each primary restarted handed over to its standby and was copied whole on
 its return, and a standby of the new build could not finish a whole copy
 from a primary of the earlier build (open problem 106).
 
+Decided 2026-11-23 (the owner: "That has to be sorted, nothing can be
+left"): both. A ready standby takes over when its primary stops in order,
+and the deploy restarts the next Storage node only once the one before is
+ready.
+
+Built 2026-11-23 (ADR-0056, amendment 2026-11-23): a primary stopped in
+order hands every write on, names the first standby handed every one its
+successor (`Shipped::Stopped`), and its stop waits for that standby to keep
+the next epoch; the standby is promoted at once, the primary that handed
+over not asked, and the former primary keeps its positions, so it follows
+its successor on, never copied whole. One that vanishes is still waited
+for. A standby is following only once its primary has handed it a frame.
+`xmip-service --readiness --within <seconds>` says a node ready where it
+runs its slice and its Xmip Storage stands Fine, and both deploy
+technologies ask it after restarting a node that ran, before the next
+(Ansible's handlers, `xmip_ready_window`; Microsoft DSC's
+`Wait-NodeReadiness`, the node document's `ready`). Measured in the
+optimized build over 25 stops, the fastest of five: the standby serves
+0.49 ms after the stop begins on Windows and 0.20 ms on Linux, where the
+rolling restart of 2026-11-22 failed writes for 2.5 s and 5.2 s; a node
+writing all along waits 4.2 ms on Windows and 4.8 ms on Linux, most of it
+a new connection's handshake (open problems 119 and 120). Found and fixed
+on the way: a stop waited out a beat when it came between the shipping's
+two reads, and each write handed on was written and flushed alone. Found
+and recorded: 121 to 124.
+
 ## 93. A backlog behind a Receive Location's sequence drains through a Work Process one Message a pass
 
 Found 2026-11-22 on the Hyper-V environment's real cluster. The System Tests'
@@ -2478,6 +2504,10 @@ owner's rule: delete, don't keep compatibility), but an entry the step
 cannot read must never hold its sequence in silence. Whether it is audited
 and moved to the Dead Message Queue, its sequence going on, or audited and
 the sequence held for an operator, is the owner's to choose.
+
+Decided for now 2026-11-23 (the owner: "The queues can be dropped for now,
+we are developing"): before the first release a queue an earlier build
+wrote is dropped with its Storage, not read, so neither choice is built yet.
 
 ## 104. Placement goes round a cluster's nodes in the order of their names, not the file's
 
@@ -2621,6 +2651,79 @@ counted a record left in `.local-work/demo` by an earlier run, a CL1 row
 the test had not made, and failed; on Linux, with no such record, it
 passed. A test that reads the computer's own run area passes or fails by
 what ran there before.
+
+## 119. Every mutual-TLS connection to a Storage node is a full handshake
+
+Found 2026-11-23 building problem 92: Xmip's TLS client keeps no session
+(`configuration.rs` keeps no TLS 1.3 ticket), so each new connection to a
+Storage node costs a full handshake, 1.8 ms on Linux and 4 to 8 ms on
+Windows. It is most of a writing node's wait across a primary's stop in
+order, 4.2 to 4.8 ms where the successor is promoted in 0.2 to 0.5 ms. By
+the millisecond rule that wait is a defect. Needed: resumption, or a
+handshake under a millisecond.
+
+## 120. A successor reads its primary's stop late while a new connection to it opens
+
+Found 2026-11-23 building problem 92: on Linux, while a writing node opens
+a new connection to the successor, the successor reads its primary's
+`Stopped` frame 3.1 to 3.4 ms late, where it reads it in 9 µs otherwise.
+Not diagnosed.
+
+## 121. A Message whose hand-on was refused at a primary's stop waits for its claim to lapse
+
+Found 2026-11-23 building problem 92, and older than it: a send whose
+hand-on Xmip Storage refused as its primary stopped is sent again only
+once its claim lapses, `send_lease`, 30 s by default, and arrives twice at
+the far end, though its claim, the same token and fence, is still valid at
+the successor. The service's failover test sets `send_lease = "5s"` in its
+cluster so that its files in flight arrive within the test; the lease
+stands in until the claim is carried on.
+
+## 122. On Windows a timing test of a whole copy exceeds its bound before any change
+
+Found 2026-11-23 building problem 92: persist's timing test
+`stopped::a_primary_handing_on_a_whole_copy…` takes 1.75 to 2.40 ms on
+Windows against its 1.07 ms bound, built from the commit before the change
+as well; on Linux it takes 0.38 ms. A Windows run of persist's timing
+program fails it.
+
+## 123. With three or more Storage nodes a standby not named can race the named successor
+
+Found 2026-11-23 building problem 92: a primary stopped in order names the
+first standby handed every write its successor. With three or more Storage
+nodes another standby can ask for the same epoch at the same moment;
+neither is then promoted, and the cluster waits for the former primary to
+return, as it did before the switchover.
+
+## 124. On Windows a Storage node's console stop takes seconds
+
+Found 2026-11-23 building problem 92: in the service's failover test a
+Storage node run in a console took 4.5 s to stop on Windows and 0.2 to
+0.3 s on Linux. No earlier figure exists to compare with.
+
+## 125. On Linux and macOS a detached run's log is empty once the pwsh that started it exits
+
+Found 2026-11-23 running the internal tests on another computer: there
+`Start-Process` copies a redirected stream through the process that
+started it, so once that pwsh exits the log stays at 0 bytes. Every run on
+another computer leaves an empty log, its record's verdict and failures
+whole. The cause is the estate's one starter of background processes
+(`Start-XmipHiddenProcess`), so the System Tests' rolls, the builds and the
+demo lose their logs on Linux and macOS too. A start through
+`sh -c 'exec "$@" >log 2>err'` there is one way.
+
+## 126. Two callers of ssh
+
+Found 2026-11-23 the same day: the Microsoft DSC resources reach a machine
+through `deploy/dsc/msdsc/environment/EnvironmentSsh.ps1` and the Xmip
+module reaches a test computer through `Invoke-XmipTestComputerShell`. One
+concern, two homes.
+
+## 127. A run of the internal tests beside a landing overwrites the landing's logs
+
+Found 2026-11-23 the same day: `Core.Internal` and a landing on the same
+computer both write their part logs and the runtime copy under
+`.local-work/landing`, so running both at once overwrites the landing's.
 
 # Suggested order
 

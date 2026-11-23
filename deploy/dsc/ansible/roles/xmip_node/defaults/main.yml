@@ -62,6 +62,12 @@ xmip_configuration: "{{ 'C:\\ProgramData\\Xmip\\config' if ansible_facts['os_fam
 # How long, in seconds, the environment's nodes are started again together
 # until each runs (tasks/started.yml).
 xmip_started_window: 180
+# How long, in seconds, a node this run restarted is waited for until it is
+# ready before the next host is deployed (handlers/main.yml): it runs its
+# slice and its Xmip Storage stands Fine, a Storage node the primary or a
+# standby ready and following, as `xmip-service --readiness` says (ADR-0056,
+# amendment 2026-11-23). Past it the run fails, in the node's words.
+xmip_ready_window: 180
 # Where the package is copied before it is installed: Ansible's own, never
 # the folder Microsoft DSC's template stages in.
 xmip_staging: "{{ 'C:\\ProgramData\\Xmip\\ansible' if ansible_facts['os_family'] == 'Windows' else '/var/tmp/xmip-ansible' }}"

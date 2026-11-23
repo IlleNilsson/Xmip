@@ -4,6 +4,15 @@
 # its service: nothing makes it, and `xmip-service --install --account`
 # gives it what it reads.
 
+# A node that runs before this run touches it is waited for until it is
+# ready once this run restarts it, before the next host is deployed
+# (handlers/main.yml); one that did not run is started with the others by
+# started.yml.
+- name: Whether the node runs before it is deployed
+  ansible.windows.win_service_info:
+    name: "xmip-{{ xmip_node_name }}"
+  register: xmip_ran_windows
+
 - name: The config and staging folders
   ansible.windows.win_file:
     path: "{{ item }}"

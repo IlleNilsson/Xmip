@@ -994,6 +994,12 @@ Describe 'The dependency tree verifies whole before anything lands' {
         Set-Content -LiteralPath (Join-Path $copy 'Cargo.toml') -Value @(
             '[package]', 'name = "xmip-core-copy"', 'version = "0.1.0"'
         )
+
+        # Build output is known by what cargo writes in it, never by its name
+        # (Find-XmipFile, 2026-11-23).
+        Set-Content -LiteralPath (
+            Join-Path $script:Estate 'module/foundation/a/target/CACHEDIR.TAG') -Value @(
+            'Signature: 8a477f597d28d172789f06886806bc55')
     }
 
     It 'makes every estate crate a member, patched by its folder, and nothing in build output' {

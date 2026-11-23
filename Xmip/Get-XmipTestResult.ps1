@@ -30,7 +30,9 @@ function Get-XmipTestResult {
             per test that failed, with the path Pester names it by in Name
             and its message in Message. A run that passed says OK in words
             and returns nothing; one still running says so and returns
-            nothing, since it has no verdict yet.
+            nothing, since it has no verdict yet. -Suite Core.Internal reads
+            its latest run the same way: the module or part where the
+            verification stopped, and the log that says why.
 
             -Suite Core.Demo reads the latest run of the demo readiness check:
             one object per part, OK, FAILED or SKIPPED, the reason in Message
@@ -66,8 +68,16 @@ function Get-XmipTestResult {
             allowed. A provider's suite reports through its own command and
             is REFUSED here, naming it.
 
+        .PARAMETER ComputerName
+            The results on that test computer instead, as its own
+            Get-XmipTestResult reads them in the copy of the estate
+            Start-XmipTest -ComputerName sent there; -Path is that copy's.
+
         .EXAMPLE
             Get-XmipTestResult -Suite Core.Estate
+
+        .EXAMPLE
+            Get-XmipTestResult -Suite Core.Internal -ComputerName build1
 
         .EXAMPLE
             Get-XmipTestResult | Where-Object -Property State -NE -Value fine
@@ -97,10 +107,35 @@ function Get-XmipTestResult {
 
         [Parameter()]
         [SupportsWildcards()]
-        [string] $Suite = $script:XmipSystemTestSuite
+        [string] $Suite = $script:XmipSystemTestSuite,
+
+        [Parameter()]
+        [ArgumentCompleter({
+            & (Get-Module -Name Xmip | Select-Object -First 1) {
+                Get-XmipTestComputerChoice -Word $args[0] } $args[2]
+        })]
+        [ValidateNotNullOrWhiteSpace()]
+        [string] $ComputerName
     )
 
     $ErrorActionPreference = 'Stop'
+
+    # There, that computer's own Get-XmipTestResult answers, as Xmip.TestResult.
+    if ($PSBoundParameters.ContainsKey('ComputerName')) {
+        [hashtable] $asked = @{ Suite = $Suite; Worst = [bool] $Worst }
+
+        foreach ($name in 'Path', 'Test', 'Node') {
+            if ($PSBoundParameters.ContainsKey($name)) {
+                $asked[$name] = $PSBoundParameters[$name]
+            }
+        }
+
+        $computer = Read-XmipTestComputer -Name $ComputerName
+        Invoke-XmipTestComputer -Computer $computer -Command Get-XmipTestResult -Parameter $asked |
+            ForEach-Object { $_.PSObject.TypeNames.Insert(0, 'Xmip.TestResult'); $_ }
+
+        return
+    }
 
     # Which suite is read as Start-XmipTest reads it, so Estate and
     # Core.Estate are one; a snapshot is the System Tests', a record of
@@ -129,10 +164,11 @@ function Get-XmipTestResult {
     [bool] $rolls = @($matched | Where-Object { $_.Kind -eq 'roll' }).Count -gt 0
 
     # -Path is the estate's record directory only when the estate alone was
-    # asked for; beside the System Tests it is the snapshot's.
-    if (@($matched | Where-Object { $_.Kind -eq 'pester' }).Count -gt 0) {
+    # asked for; beside the System Tests it is the snapshot's. Core.Internal
+    # records its runs there too.
+    foreach ($one in @($matched | Where-Object { $_.Kind -in 'pester', 'internal' })) {
         [string] $area = if ($rolls) { '' } else { $Path }
-        Get-XmipEstateResult -Path $area -Test $Test -Worst:$Worst
+        Get-XmipEstateResult -Path $area -Test $Test -Worst:$Worst -Suite $one.Name
     }
 
     if (-not $rolls) {

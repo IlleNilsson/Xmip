@@ -92,6 +92,14 @@ schema: !embedded
           The account the node's service runs as, which with the administrators
           alone may write node.xmip.
         type: string
+      ready:
+        description: >-
+          How long, in seconds, the node is waited for until it is ready once
+          its slice restarted it, as xmip-service --readiness says, before
+          the next node is deployed (ADR-0056, amendment 2026-11-23); refused
+          past it, in the node's words.
+        type: integer
+        default: 180
       access:
         description: >-
           Who may write node.xmip as found: on Windows each rule as

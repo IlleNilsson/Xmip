@@ -17,8 +17,10 @@ function Start-XmipTest {
             Stop-XmipTest ends it; Core.Estate is the Pester suite under
             test/, the estate's memory of every past defect, which runs in a
             pwsh of its own, detached, and says OK or FAILED when it ends, as
-            Core.Demo, the demo readiness check, does part by part. A third
-            party's suite is <Provider>.<Name> and joins by a declaration.
+            Core.Internal, named modules verified as a landing verifies them,
+            does, and Core.Demo, the demo readiness check, does part by part.
+            Either of the first two runs on a test computer by -ComputerName.
+            A third party's suite is <Provider>.<Name> and joins by a declaration.
 
             The System Tests (ADR-0028) is the estate's integration test over
             time: a roll drives every scenario round after round and publishes
@@ -48,7 +50,8 @@ function Start-XmipTest {
         .PARAMETER Suite
             Which test suite to run: Core.System (the default), the System
             Tests on this computer; Core.Systems, the Systems Tests on an
-            environment's machines; Core.Estate or Core.Demo. Every suite is
+            environment's machines; Core.Estate; Core.Internal, the internal
+            tests of modules as a landing verifies them; or Core.Demo. Every suite is
             <Provider>.<Name> and core is the reserved provider that means
             Xmip itself (ADR-0011): a bare System is accepted and resolves to
             Core.System. A third party's suite carries its own provider. Case
@@ -97,7 +100,8 @@ function Start-XmipTest {
             System Tests' are RoundTrip, LowLatency, HeavyLoad, Retention,
             Filing, ExclusiveClaim and DailyBacklog. The estate's are its
             Pester files by name: Allocation, Decision, Rust.Style, XmipTest
-            and the rest of test/. Tab completes either.
+            and the rest of test/; Core.Internal's, modules by folder as a
+            landing names them, `.` the root crate. Tab completes each.
 
             Wildcards select a group: -Test Round* is RoundTrip, -Test * is
             every test and says the same as omitting it. A pattern that
@@ -216,6 +220,11 @@ function Start-XmipTest {
             Core.Demo's alone: the person who demonstrates, as New-XmipCertificate
             -Operator named them, handed to Start-XmipOperationWeb -Tester.
 
+        .PARAMETER ComputerName
+            Core.Estate's and Core.Internal's: runs the suite detached on the
+            computer .local-work/test-computer/<name>.toml names, never in Git
+            (Read-XmipTestComputer), in a copy of this estate sent there.
+
         .EXAMPLE
             # Omitted -Nodes: the System Tests' own cluster file's nodes
             # ([nodes.RX1] roles = "receiving", and so on).
@@ -255,6 +264,9 @@ function Start-XmipTest {
 
         .EXAMPLE
             Start-XmipTest -Suite Core.Demo -Cluster CL1 -Stress Realistic -Tester alice@example.org
+
+        .EXAMPLE
+            Start-XmipTest -Suite Core.Internal -Test module/foundation/core -ComputerName build1
     #>
     [CmdletBinding(SupportsShouldProcess, PositionalBinding = $false)]
     [OutputType('Xmip.TestStatus')]
@@ -267,14 +279,8 @@ function Start-XmipTest {
         [Parameter(Position = 0)]
         [SupportsWildcards()]
         [ArgumentCompleter({
-            param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
-
-            # A completer runs in the caller's scope, so the module is asked.
-            $module = Get-Module -Name Xmip | Select-Object -First 1
-
-            if ($null -ne $module) {
-                & $module { param($Word) Get-XmipTestSuiteChoice -Word $Word } $wordToComplete
-            }
+            & (Get-Module -Name Xmip | Select-Object -First 1) {
+                Get-XmipTestSuiteChoice -Word $args[0] } $args[2]
         })]
         [string] $Suite = 'Core.System',
 
@@ -288,16 +294,8 @@ function Start-XmipTest {
         [Parameter(Position = 1)]
         [SupportsWildcards()]
         [ArgumentCompleter({
-            param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
-
-            # Asked of the module, as -Suite's completer asks.
-            $module = Get-Module -Name Xmip | Select-Object -First 1
-            [string] $asked = "$($fakeBoundParameters['Suite'])"
-            [scriptblock] $choice = { param($Suite, $Word) Get-XmipTestChoice @PSBoundParameters }
-
-            if ($null -ne $module) {
-                & $module $choice $asked $wordToComplete
-            }
+            & (Get-Module -Name Xmip | Select-Object -First 1) {
+                Get-XmipTestChoice -Suite $args[0] -Word $args[1] } "$($args[4]['Suite'])" $args[2]
         })]
         [string[]] $Test = @(),
 
@@ -345,7 +343,15 @@ function Start-XmipTest {
 
         [Parameter()]
         [ValidateNotNullOrWhiteSpace()]
-        [string] $Tester
+        [string] $Tester,
+
+        [Parameter()]
+        [ArgumentCompleter({
+            & (Get-Module -Name Xmip | Select-Object -First 1) {
+                Get-XmipTestComputerChoice -Word $args[0] } $args[2]
+        })]
+        [ValidateNotNullOrWhiteSpace()]
+        [string] $ComputerName
     )
 
     # The first failure ends the call (a cascade of twenty errors, 2026-09-12).
@@ -381,20 +387,13 @@ function Start-XmipTest {
     # The System Tests' own work: checking the choice, then building, spawning
     # and recording the roll. It is handed this cmdlet so -WhatIf and -Confirm
     # still decide there, and a parameter nobody gave is not handed on.
-    [hashtable] $systemTest = @{ Caller = $PSCmdlet; Bound = $PSBoundParameters }
-    [string[]] $handed = @('Suite', 'Stress', 'Test', 'Rounds', 'Duration', 'TimeFactor',
-        'Nodes', 'NodeRole', 'OnlineNodes', 'Cluster', 'Path', 'PassThru')
+    [hashtable] $systemTest = @{
+        Caller = $PSCmdlet; Bound = $PSBoundParameters; Machines = [bool] $chosen.Machines
+    }
 
-    foreach ($name in $handed) {
+    foreach ($name in $script:XmipRollHanded) {
         $systemTest[$name] = Get-Variable -Name $name -ValueOnly
     }
-    $systemTest.Machines = [bool] $chosen.Machines
 
-    $resolved = Resolve-XmipSystemTestChoice -Choice $systemTest
-
-    if ($null -eq $resolved) {
-        return
-    }
-
-    Start-XmipSystemTestRoll @resolved
+    Start-XmipChosenRoll -Choice $systemTest
 }

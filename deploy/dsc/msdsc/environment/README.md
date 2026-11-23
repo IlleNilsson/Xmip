@@ -123,7 +123,7 @@ step gives its name the machine's address, and the roll finds it by it.
    started does not say so, since a correctly signed slice the node cannot
    start is refused and the node runs the last one that ran; set restarts
    the node then, which tries the slice again (ADR-0031, amendment
-   2026-11-12);
+   2026-11-12), and waits until it is ready, as below;
 3. its certificate, key and anchors from the cluster's own authority,
    `tls/node.pem`, `tls/node.key` and `tls/anchors.pem`, as the file's
    `[operate]` names them, the key private;
@@ -131,7 +131,18 @@ step gives its name the machine's address, and the roll finds it by it.
    the `.rpm`, told the node, the cluster
    and the account, whose `xmip-service --install` lays the node out by the
    slice already there, gives the account what it reads and writes, and
-   registers and starts the node's service as that account;
+   registers and starts the node's service as that account. A node that
+   ran before, which the slice or the package restarted, is waited for until
+   it is ready before the next machine is deployed, as `xmip-service
+   --readiness --within <ready>` says in the node's words: it runs its slice
+   and its Xmip Storage stands Fine, a Storage node the primary or a standby
+   ready and following (`NodeService.ps1`, `Wait-NodeReadiness`; the owner,
+   2026-11-23: *That has to be sorted, nothing can be left*; ADR-0056,
+   amendment 2026-11-23). A Storage node restarted comes back a standby,
+   and its primary stopped in order before it follows ready has no standby
+   to hand over to; past `ready` seconds, 180 unless the document's
+   parameter says, the set is refused in the node's words and no next
+   node is deployed;
 5. a firewall opening for exactly the ports `xmip-service --listening` says
    its configuration listens on, and none it no longer does — none for the
    far end, which a node reaches and never serves;
@@ -233,7 +244,7 @@ upgrade.
 | `started.dsc.yaml` | every node started together, from the host |
 | `far-end.dsc.yaml` | one of the Systems Tests' far ends, from the host: `far-end-program.dsc.yaml` applied on its machine |
 | `far-end-program.dsc.yaml` | one far end, on its machine: its certificate, its program placed and registered, its firewall opening and its service |
-| `node.resource.ps1`, `NodeMachine.ps1`, `NodeFile.ps1`, `NodeOpening.ps1`, `NodeAccess.ps1`, `NodePackage.ps1`, `NodeProgram.ps1` | the `Xmip.Node` resources |
+| `node.resource.ps1`, `NodeMachine.ps1`, `NodeFile.ps1`, `NodeOpening.ps1`, `NodeAccess.ps1`, `NodePackage.ps1`, `NodeProgram.ps1`, `NodeService.ps1` | the `Xmip.Node` resources |
 | `environment.resource.ps1`, `EnvironmentMachine.ps1`, `EnvironmentSsh.ps1`, `EnvironmentSlice.ps1`, `EnvironmentName.ps1`, `EnvironmentStarted.ps1` | the `Xmip.Environment` resources |
 | `*.dsc.resource.yaml` | their manifests, YAML as every configuration here: JSON is what the resources speak, never what a person writes (the owner, 2026-11-02); the embedded schema tagged `!embedded`, the form DSC's YAML reader takes |
 

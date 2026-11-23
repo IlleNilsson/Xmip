@@ -77,6 +77,14 @@ Describe 'Get-XmipSourceFile counts what a file holds' {
         New-FixtureFile -Path 'module/one/target/generated.rs' -Text @(
             'this', 'was', 'not', 'written', 'by', 'anyone'
         )
+        New-FixtureFile -Path 'module/one/target/CACHEDIR.TAG' -Text @(
+            'Signature: 8a477f597d28d172789f06886806bc55'
+        )
+
+        # A folder merely called target is source: deploy/profile/target
+        # holds a deployment target's profiles, skipped by name until
+        # 2026-11-23.
+        New-FixtureFile -Path 'module/one/profile/target/Profile.ps1' -Text @('kept')
 
         # A crate's further program, one line over the gate. Until 2026-11-11
         # every directory called bin was skipped as .NET's output, and the
@@ -125,8 +133,13 @@ Describe 'Get-XmipSourceFile counts what a file holds' {
         ($script:Found | Where-Object Path -eq 'test/two/Thing.ps1').Code | Should -Be 2
     }
 
-    It 'reads nothing out of target, which nobody wrote' {
-        @($script:Found | Where-Object Path -match 'target') | Should -BeNullOrEmpty
+    It 'reads nothing out of a folder cargo built into, known by its CACHEDIR.TAG' {
+        @($script:Found | Where-Object Path -like 'module/one/target/*') | Should -BeNullOrEmpty
+    }
+
+    It 'reads a folder merely called target, which is source' {
+        @($script:Found | Where-Object Path -eq 'module/one/profile/target/Profile.ps1').Count |
+            Should -Be 1
     }
 
     It 'reads a Rust crate''s src/bin, so a program over the gate is reported' {

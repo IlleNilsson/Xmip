@@ -42,7 +42,8 @@ BeforeAll {
 
     [string] $script:Template = Join-Path $script:Root 'deploy/dsc/msdsc/environment'
     foreach ($part in 'Program.ps1', 'NodeMachine.ps1', 'NodeFile.ps1', 'NodeOpening.ps1',
-        'NodeAccess.ps1', 'NodePackage.ps1', 'NodeProgram.ps1', 'EnvironmentSsh.ps1',
+        'NodeAccess.ps1', 'NodePackage.ps1', 'NodeProgram.ps1', 'NodeService.ps1',
+        'EnvironmentSsh.ps1',
         'EnvironmentMachine.ps1',
         'EnvironmentSlice.ps1', 'EnvironmentDomain.ps1') {
         . (Join-Path $script:Template $part)
@@ -559,22 +560,23 @@ Describe 'The Xmip resources'' own steps' {
         $runs.said | Should -Be 'activated: serial 3 of save sha256:00'
     }
 
-    It 'restarts a running node that does not run the slice it holds, though no file changed' {
+    It 'restarts a running node not running the slice it holds, then waits until it is ready' {
         Mock -CommandName Test-NodeSlice -MockWith { $true }
         Mock -CommandName Get-NodeSliceAccess -MockWith { @() }
         Mock -CommandName Get-NodeFileState -MockWith { @{ _exist = $true } }
         Mock -CommandName Set-NodeSliceAccess -MockWith { }
         Mock -CommandName Test-NodeRegistered -MockWith { $true }
         Mock -CommandName Get-NodeActivation -MockWith { @{ active = $false; said = 'refused' } }
+        Mock -CommandName Test-NodeServiceActive -MockWith { $true }
+        Mock -CommandName Wait-NodeReadiness -MockWith { }
         Mock -CommandName Invoke-DscProgram -MockWith { }
         if ($IsWindows) {
-            Mock -CommandName Get-Service -MockWith { [pscustomobject]@{ Status = 'Running' } }
             Mock -CommandName Restart-Service -MockWith { }
         }
         [hashtable] $slice = @{
             configuration = Join-Path $TestDrive 'config'; source = 'node.xmip'
             certificate = 'authority.pem'; node = 'n'; account = 'xmip'
-            program = Join-Path $TestDrive 'installed/xmip-service'
+            program = Join-Path $TestDrive 'installed/xmip-service'; ready = 180
         }
 
         (Get-NodeMachineState -Kind Slice -Instance $slice)._exist | Should -BeFalse
@@ -586,9 +588,54 @@ Describe 'The Xmip resources'' own steps' {
         }
         else {
             Should -Invoke -CommandName Invoke-DscProgram -Times 1 -Exactly -ParameterFilter {
-                $Program -eq 'systemctl' -and $Argument[0] -eq 'try-restart'
+                $Program -eq 'systemctl' -and $Argument[0] -eq 'restart'
             }
         }
+        Should -Invoke -CommandName Wait-NodeReadiness -Times 1 -Exactly
+    }
+
+    It 'restarts no node that does not run, and waits for none' {
+        Mock -CommandName Test-NodeSlice -MockWith { $true }
+        Mock -CommandName Get-NodeSliceAccess -MockWith { @() }
+        Mock -CommandName Get-NodeFileState -MockWith { @{ _exist = $true } }
+        Mock -CommandName Set-NodeSliceAccess -MockWith { }
+        Mock -CommandName Test-NodeRegistered -MockWith { $true }
+        Mock -CommandName Get-NodeActivation -MockWith { @{ active = $false; said = 'refused' } }
+        Mock -CommandName Test-NodeServiceActive -MockWith { $false }
+        Mock -CommandName Wait-NodeReadiness -MockWith { }
+        Mock -CommandName Invoke-DscProgram -MockWith { }
+        [hashtable] $slice = @{
+            configuration = Join-Path $TestDrive 'config'; source = 'node.xmip'
+            certificate = 'authority.pem'; node = 'n'; account = 'xmip'
+            program = Join-Path $TestDrive 'installed/xmip-service'; ready = 180
+        }
+
+        Set-NodeSlice -Instance $slice -Confirm:$false
+
+        Should -Invoke -CommandName Invoke-DscProgram -Times 0 -Exactly
+        Should -Invoke -CommandName Wait-NodeReadiness -Times 0 -Exactly
+    }
+
+    It 'waits for a node it restarted as --readiness says, refused in words past its window' {
+        [hashtable] $node = @{
+            configuration = Join-Path $TestDrive 'config'; node = 'n'; ready = 7
+            program = Join-Path $TestDrive 'installed/xmip-service'
+        }
+        Mock -CommandName Invoke-DscProgram -MockWith { 'activated: serial 3; Fine' }
+        Wait-NodeReadiness -Instance $node
+        [string] $placed = Join-Path $node.configuration 'node.xmip'
+        Should -Invoke -CommandName Invoke-DscProgram -Times 1 -Exactly -ParameterFilter {
+            $Program -eq $node.program -and
+            ($Argument -join ' ') -eq "--configuration $placed --readiness --within 7"
+        }
+
+        Mock -CommandName Invoke-DscProgram -MockWith {
+            throw 'the node is not ready: a standby Storage node, copying'
+        }
+        { Wait-NodeReadiness -Instance $node } |
+            Should -Throw -ExpectedMessage (
+                'REFUSED: node n is not ready within 7 s, so no next node is deployed: ' +
+                'the node is not ready: a standby Storage node, copying')
     }
 
     It 'hands the slice its node''s account in node.dsc.yaml' {
@@ -785,13 +832,20 @@ Describe 'The Xmip resources'' own steps' {
             if ($args[0] -eq '-q') { $script:Installed }
         }
         function dnf { $script:Ran.Add("dnf $($args -join ' ')"); $global:LASTEXITCODE = 0 }
+        # Not running before the first install; running before the upgrade,
+        # which restarts it, so it is waited for until it is ready.
+        $script:Running = $false
+        function Test-NodeServiceActive { param([string] $Name) $script:Running }
+        function Stop-NodeService { param([string] $Name) }
+        function Wait-NodeReadiness { param([hashtable] $Instance) $script:Ran.Add('ready') }
         [hashtable] $package = @{ node = 'n'; path = 'xmip.rpm'; cluster = 'c'; account = 'xmip' }
         Install-NodePackage -Instance $package -Confirm:$false
         $script:Installed = 'aa'
+        $script:Running = $true
         Install-NodePackage -Instance $package -Confirm:$false
         @($script:Ran | Where-Object { $_ -notlike 'rpm -q *' }) |
             Should -Be @('dnf install --assumeyes --disablerepo=* xmip.rpm',
-                'rpm --upgrade --replacepkgs --replacefiles xmip.rpm')
+                'rpm --upgrade --replacepkgs --replacefiles xmip.rpm', 'ready')
     }
 
     It 'quotes every value it hands the machine''s shell as one word' {

@@ -63,6 +63,9 @@ function Get-XmipEstateLayout {
         Deploy       = Join-Path -Path $work -ChildPath 'deploy'
         Web          = Join-Path -Path $work -ChildPath 'web'
         Audit        = Join-Path -Path $work -ChildPath 'audit'
+        # Each computer a suite runs on, by -ComputerName: <name>.toml, its
+        # address and key, never in Git, and <name>/, what was sent there.
+        TestComputer = Join-Path -Path $work -ChildPath 'test-computer'
         VerifyTime   = Join-Path -Path $work -ChildPath 'verify-time.json'
         EstateMap    = Join-Path -Path $work -ChildPath 'estate-map.html'
     }

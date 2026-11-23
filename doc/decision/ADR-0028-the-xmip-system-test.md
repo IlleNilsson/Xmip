@@ -29,6 +29,8 @@
   is optional
 - Amended: 2026-11-23 — the System Tests, local, and the Systems Tests, on
   machines: two suites, Core.System and Core.Systems, everywhere
+- Amended: 2026-11-23 — the internal tests by hand: Core.Internal, and both
+  of their suites on another computer by -ComputerName
 - Related: ADR-0018 (the Service and the Host Services), ADR-0027 (the operator
   boundary), ADR-0010 (contract and transport boundaries), ADR-0025 (when a
   Module loads), ADR-0052 (the views' "show test clusters" box, its
@@ -41,7 +43,7 @@
 - Subject: The System Tests exercise everything, all the time
 - Name: The Xmip System Tests and Systems Tests
 - Order: 5
-- Concepts: System Tests, Systems Tests, internal tests, exercise, verdict; Development node; simulated node, real node, test level; Parties' far end, placing Locations on nodes; demo readiness check, Core.Demo
+- Concepts: System Tests, Systems Tests, internal tests, exercise, verdict; Development node; simulated node, real node, test level; Parties' far end, placing Locations on nodes; demo readiness check, Core.Demo; Core.Internal, test computer
 
 **`xmip-test-system-test` exercises Xmip continuously.** It spawns Development
 nodes as System Processes on one machine — no virtualization — and drives every
@@ -1850,3 +1852,54 @@ refused; on one computer none is resolved, every node simulated),
 `test/XmipTest.Test.ps1` (the suites, the certificate's refusals, the
 variable) and `test/Terminology.Test.ps1` (neither old name in the records
 but here).
+
+## Amendment, 2026-11-23: the internal tests by hand, here or on a test computer
+
+**Provenance.** The owner, 2026-11-23, of the recommendation to move the
+Linux checks into the estate as a parameter of `Start-XmipTest`: *Do what
+you recommend*. Until this day they ran on a second computer through two
+bash scripts kept outside the estate, in a folder a restart clears. The
+suite's name and the computer file's keys are the worker's drafting, for
+the owner to strike.
+
+- **Core.Internal is the internal tests of the modules `-Test` names**, as
+  a landing verifies each (`Test-XmipChangeTree -Alone`): what their tests
+  load, built first; each crate's format, its lints with every feature, its
+  tests and lints with its default features and its tests with every
+  feature; each module's .NET projects, extension shell and Event bindings.
+  Not the root crate, the workspace's lints or the timing programs, which a
+  landing adds for a change as a whole, and nothing of it is recorded as a
+  landing's. A module is named by its folder, as a landing names it, `.`
+  the root crate; its whole suite is every module, so it is started by its
+  name alone (`ByName`). It runs as Core.Estate runs, detached, recorded
+  under `.local-work/estate` as kind `internal`, and is read and stopped the
+  same way.
+- **A test computer runs the internal tests' suites, Core.Estate and
+  Core.Internal, by `-ComputerName`** on `Start-XmipTest`,
+  `Get-XmipTestStatus`, `Get-XmipTestResult` and `Stop-XmipTest`, never a
+  cmdlet of its own (the owner: a new act on a known noun is a parameter).
+  The computer is `.local-work/test-computer/<name>.toml`, this machine's
+  and never in Git: `host`, `user` and `key`, and `folder` and `slots` where
+  they differ from the defaults; a missing file or key is REFUSED, naming
+  the file and the keys. The estate travels as a difference (the estate's
+  one walk, build output known by its `CACHEDIR.TAG`), with OpenSSH's own
+  `ssh`, `scp` and `tar`, into a mirror there, and is copied into a tree of
+  its own that is one Git repository of what the estate holds; one run works
+  in a copy at a time, and runs side by side take a computer file each, with
+  a `folder` of its own. That
+  computer's own `Start-XmipTest` starts the suite there in one of its build
+  slots, a lock on `~/slot<n>.lock` its run holds until its last process
+  ends. Where every slot is taken the start waits, as every builder there
+  waits, saying once a minute who holds them; each of those lines is also
+  how a wait whose console has gone ends, since it cannot be written, so
+  nothing starts later on its own (the owner, 2026-09-12). What a cmdlet answers
+  there crosses as PowerShell's own serialization; its words are shown
+  prefixed with the computer's name. The System Tests, the Systems Tests
+  and the demo are refused there by name: they are this computer's or an
+  environment's.
+
+Proved by `test/TestComputer.Test.ps1` (the file's refusals, the
+difference, the parameters, what crosses and back, Core.Internal's
+verification alone and its record) and by the estate's Pester suite run on
+a Linux test computer through `Start-XmipTest -Suite Core.Estate
+-ComputerName`.

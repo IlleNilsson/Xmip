@@ -38,6 +38,11 @@ function Test-XmipChangeTree {
             The first failure stops the run with nothing landed (the owner,
             2026-10-05: *Do dependency tree build and stop when a leaf
             fails*).
+
+            With -Alone it verifies the modules named and nothing else, for
+            Core.Internal (Start-XmipInternalSuite): not the root crate, the
+            timing programs' lints or the timing programs, and nothing of it
+            is recorded as a landing's, its time or its failure.
     #>
     [CmdletBinding()]
     [OutputType([pscustomobject])]
@@ -63,7 +68,10 @@ function Test-XmipChangeTree {
         [switch] $NoVerify,
 
         [Parameter()]
-        [string] $Message = ''
+        [string] $Message = '',
+
+        [Parameter()]
+        [switch] $Alone
     )
 
     [List[string]] $skipped = [List[string]]::new()
@@ -146,15 +154,19 @@ function Test-XmipChangeTree {
             }
 
             [List[hashtable]] $parts = [List[hashtable]]::new()
-            $parts.Add(@{
-                    Name     = 'Rust'
-                    Command  = 'Test-XmipRustChange'
-                    Argument = @{
-                        RepositoryRoot = $RepositoryRoot
-                        Module         = $crates.ToArray()
-                        Consumer       = $Consumer.Count -gt 0
-                    }
-                })
+
+            if (-not $Alone -or $crates.Count -gt 0) {
+                $parts.Add(@{
+                        Name     = 'Rust'
+                        Command  = 'Test-XmipRustChange'
+                        Argument = @{
+                            RepositoryRoot = $RepositoryRoot
+                            Module         = $crates.ToArray()
+                            Consumer       = $Consumer.Count -gt 0
+                            Alone          = [bool] $Alone
+                        }
+                    })
+            }
 
             if ($dotnet.Count -gt 0) {
                 $parts.Add(@{
@@ -184,7 +196,10 @@ function Test-XmipChangeTree {
             [timespan[]] $known = @(
                 $parts | ForEach-Object { $last[$_.Name] } | Where-Object { $_ }
             )
-            [string] $left = if ($known.Count -eq $parts.Count -and $last['measured']) {
+            [string] $left = if ($Alone) {
+                'the modules named alone'
+            }
+            elseif ($known.Count -eq $parts.Count -and $last['measured']) {
                 [timespan] $longest = $known | Sort-Object -Descending | Select-Object -First 1
                 [timespan] $whole = $longest + $last['measured']
                 'about {0:N0} minutes left, as the last landing took' -f $whole.TotalMinutes
@@ -193,7 +208,8 @@ function Test-XmipChangeTree {
                 'time left unknown: not yet timed'
             }
             [string] $named = @($parts | ForEach-Object { $_.Name }) -join ', '
-            [string] $plan = "$named side by side, then the timing programs alone; $left"
+            [string] $then = if ($Alone) { '' } else { ', then the timing programs alone' }
+            [string] $plan = "$named side by side$then; $left"
             Write-Host $plan -ForegroundColor Cyan
 
             [object[]] $verdicts = @(
@@ -204,14 +220,14 @@ function Test-XmipChangeTree {
                     Select-Object -First 1 -ExpandProperty Name
             ) -join ''
 
-            foreach ($verdict in @($verdicts | Where-Object Passed)) {
+            foreach ($verdict in @($verdicts | Where-Object { $_.Passed -and -not $Alone })) {
                 [hashtable] $took = @{ Name = $verdict.Name; Duration = $verdict.Took }
                 Set-XmipVerifyTime -RepositoryRoot $RepositoryRoot @took
             }
         }
 
         # 3. The timing programs, alone, the root's last.
-        if (-not $failed) {
+        if (-not $failed -and -not $Alone) {
             [System.Diagnostics.Stopwatch] $clock = [System.Diagnostics.Stopwatch]::StartNew()
 
             foreach ($folder in @($crateFolders) + $RepositoryRoot) {
@@ -234,6 +250,14 @@ function Test-XmipChangeTree {
             if (-not $failed) {
                 [hashtable] $timed = @{ Name = 'measured'; Duration = $clock.Elapsed }
                 Set-XmipVerifyTime -RepositoryRoot $RepositoryRoot @timed
+            }
+        }
+
+        if ($failed -and $Alone) {
+            Write-Host "FAILED. Stopping at $failed." -ForegroundColor Red
+
+            return [pscustomobject]@{
+                Verified = @(); Skipped = $skipped.ToArray(); Failed = $failed
             }
         }
 

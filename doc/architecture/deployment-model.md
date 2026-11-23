@@ -710,10 +710,15 @@ copy into it is under way or was cut short (ADR-0056, amendment
 2026-11-04); each promotion raises the epoch, and
 a primary of an earlier one is not asked. The promote is the standbys' own,
 not a command, and there is no witness, so it happens only where every one
-listed answers and none is a primary: a primary that is gone is waited for,
-never replaced, and automatic failover returns with a witness (the owner,
-2026-11-08; ADR-0056, amendment 2026-11-08; open problem 45). A stays the
-choice for a database server.
+listed answers and none is a primary: a primary that vanishes — killed,
+its machine lost, cut off — is waited for, never replaced, and automatic
+failover returns with a witness (the owner, 2026-11-08; ADR-0056,
+amendment 2026-11-08; open problem 45). A primary stopped in order hands
+over: every write handed on, it names a standby holding every one its
+successor, which keeps the next epoch and is promoted at once, and the
+former primary follows it on from where it stopped once it is back (the
+owner, 2026-11-23; ADR-0056, amendment 2026-11-23). A stays the choice for
+a database server.
 
 **Rejected: option B**, an embedded engine on a shared disk. RocksDB is not
 supported on network file systems.
@@ -835,7 +840,11 @@ Xmip Storage, and no Storage node before every one its cluster lists
 (ADR-0015 and ADR-0056, amendments 2026-11-11) — and running the slice it
 was shipped, as `xmip-service --activation` says, since a correctly signed
 slice a node cannot start is refused and the node runs the last one that
-ran (ADR-0031, amendment 2026-11-12). Each slice has
+ran (ADR-0031, amendment 2026-11-12). A node the deploy restarts is waited
+for until it is ready, as `xmip-service --readiness` says, before the next
+is restarted: a Storage node restarted comes back a standby, and its
+primary, stopped in order, hands over to a standby ready and following at
+once (ADR-0056, amendment 2026-11-23). Each slice has
 every Receive Location and Send Port the file designs placed over the
 environment's nodes by `xmip-core-configure`'s one placement and bound on
 the far end the environment names (ADR-0028, amendment 2026-10-22), and
@@ -957,10 +966,11 @@ dying stops no work either** while another is left: every node reaches the
 next one round robin. **The database server's failover is IT's.** One
 embedded Storage node alone has none: while it is down, its site stores
 nothing. Several are a primary and its standbys, and with no witness a
-primary that is gone is waited for, not replaced: the site stores nothing
+primary that vanishes is waited for, not replaced: the site stores nothing
 until it is back (section 7, *C is built for embedded Storage nodes*). A
-primary stopped in order loses nothing; one killed loses the writes it had
-not handed on.
+primary stopped in order loses nothing and stops no work: a standby ready
+and following succeeds it at once (ADR-0056, amendment 2026-11-23); one
+killed loses the writes it had not handed on.
 
 ### What Xmip does, and what the infrastructure does
 
@@ -979,7 +989,7 @@ Replication between Storage nodes, a promote command and epoch fencing are
 not Xmip's under option A; they are option C's, recorded in section 7, and
 built for embedded Storage nodes on 2026-10-22 — the promote the standbys'
 own, with no witness yet, and so never while the primary is gone
-(2026-11-08).
+(2026-11-08), but at once from a primary stopped in order (2026-11-23).
 
 Xmip cannot own every bad decision in configuration or custom code, but it
 mitigates avoidable loss:

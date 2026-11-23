@@ -208,7 +208,15 @@ Run `Start-XmipTest -Suite Core.Estate` before landing anything non-trivial, and
 land when `Get-XmipTestStatus` says OK; the suite is around two hundred tests
 and is the estate's memory of every past defect. It runs detached, so the
 prompt is yours meanwhile; `Get-XmipTestResult -Suite Core.Estate` says what
-failed.
+failed. `Start-XmipTest -Suite Core.Internal -Test <module>` verifies the
+modules named as a landing verifies each, their format, lints and tests and
+their .NET projects, without landing anything. Either runs on another
+computer, a Linux one beside a Windows one, with `-ComputerName <name>`:
+the estate is sent there as a difference and runs in a copy of its own,
+and `Get-XmipTestStatus`, `Get-XmipTestResult` and `Stop-XmipTest` take the
+same `-ComputerName`. The computer is `.local-work/test-computer/<name>.toml`,
+which says `host`, `user` and `key`, and may say `folder` and `slots`; it is
+this machine's and never in Git.
 
 **The toolchain**, as of 2026-10-19 (ADR-0021, amendment 2026-10-19).
 PowerShell Core 7.7.0 or newer, with PSToml, powershell-yaml and posh-git, and Pester 6, each at its latest release.
@@ -331,7 +339,9 @@ separate; the prefix does not. Write to `.ai-interaction/`, never to
 `.local-work/` is the third of the untracked family: device-local state for
 building or running Xmip on this machine — a target choice, a local node
 configuration, what a test run writes: `system-test/` for the rolls,
-`estate/` for the estate's Pester runs, `demo/` for the demo readiness
+`estate/` for the estate's Pester runs and the runs of the internal tests
+of named modules, `test-computer/` for the computers a suite runs on by
+`-ComputerName` and what was sent to each, `demo/` for the demo readiness
 check's runs (ADR-0028, amendment 2026-11-10), `web/` for what a web monitor
 `Start-XmipOperationWeb` started wrote to its console, `operator/` for the
 operator module the estate's tooling builds once per change (ADR-0052), and

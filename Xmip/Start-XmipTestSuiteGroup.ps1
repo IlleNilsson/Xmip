@@ -10,9 +10,11 @@
     against the 400 the estate allows a file and the owner asked for the estate to
     be consolidated. Start-XmipTest chooses and refuses; what each kind of suite
     then does is here, except the estate's own Pester suite, which is
-    Start-XmipEstateSuite.ps1 since 2026-09-25, and the demo readiness check,
-    Start-XmipDemoSuite.ps1 since 2026-11-10. Which switches each suite takes
-    is Get-XmipSuiteSwitchRefusal.ps1.
+    Start-XmipEstateSuite.ps1 since 2026-09-25, the demo readiness check,
+    Start-XmipDemoSuite.ps1 since 2026-11-10, the internal tests of named
+    modules, Start-XmipInternalSuite.ps1, and a suite on another computer,
+    Start-XmipTestOnComputer.ps1, both since 2026-11-23. Which switches each
+    suite takes is Get-XmipSuiteSwitchRefusal.ps1.
 
     Style: doc/governance/powershell-style.md
 #>
@@ -22,8 +24,9 @@ function Start-XmipChosenSuite {
     <#
         .SYNOPSIS
             Starts the one suite Start-XmipTest chose when it is not the
-            System Tests: the estate's Pester suite, the demo readiness check,
-            or a provider's.
+            System Tests: the estate's Pester suite, the internal tests of
+            named modules, the demo readiness check, or a provider's; on the
+            computer -ComputerName names, where it was given.
 
         .PARAMETER Chosen
             The suite, from Get-XmipTestSuite.
@@ -60,9 +63,19 @@ function Start-XmipChosenSuite {
         [string[]] $Test = @()
     )
 
+    # The computer is chosen before the suite's own start: there, the far
+    # estate's Start-XmipTest starts it as it starts here.
+    if ($Bound.ContainsKey('ComputerName')) {
+        return Start-XmipTestOnComputer -Chosen $Chosen -Caller $Caller -Bound $Bound
+    }
+
     if ($Chosen.Kind -eq 'pester') {
         [hashtable] $pester = @{ Caller = $Caller; Bound = $Bound; Suite = $Chosen.Name }
         return Start-XmipPesterSuite @pester -Path $Path -Test $Test
+    }
+
+    if ($Chosen.Kind -eq 'internal') {
+        return Start-XmipInternalSuite -Caller $Caller -Bound $Bound -Test $Test
     }
 
     if ($Chosen.Kind -eq 'demo') {
@@ -154,7 +167,7 @@ function Start-XmipPesterSuite {
         [string[]] $Test = @()
     )
 
-    [string] $refused = Get-XmipSuiteSwitchRefusal -Kind pester -Bound $Bound
+    [string] $refused = Get-XmipSuiteSwitchRefusal -Kind pester -Bound $Bound -Chosen $Suite
 
     if ($refused -ne '') {
         Write-Error $refused
@@ -224,9 +237,13 @@ function Start-XmipTestSuiteGroup {
         $forward['Suite'] = $one.Name
         $forward['ErrorAction'] = 'Stop'
 
+        # -ComputerName is never dropped: a suite that cannot run there is
+        # refused by name, and nothing asked for there runs here instead.
         if ($one.Kind -ne 'command') {
             foreach ($only in @(Get-XmipSuiteSwitchForeign -Kind $one.Kind -Bound $forward)) {
-                $forward.Remove($only)
+                if ($only -ne 'ComputerName') {
+                    $forward.Remove($only)
+                }
             }
         }
 

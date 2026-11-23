@@ -1,5 +1,7 @@
 //! What `xmip-service` was told: every parameter named, none by position.
 
+use std::time::Duration;
+
 use xmip_node::Purpose;
 
 pub const USAGE: &str = "usage: xmip-service --configuration <path> [--console] \
@@ -12,6 +14,7 @@ pub const USAGE: &str = "usage: xmip-service --configuration <path> [--console] 
      [--account <account>] --install\n       \
      xmip-service --configuration <path> --listening\n       \
      xmip-service --configuration <path> --activation\n       \
+     xmip-service --configuration <path> --readiness [--within <seconds>]\n       \
      xmip-service --configuration <path> --uninstall\n\
      example: xmip-service --configuration /opt/xmip/config/node.xmip --console\n\
      example: xmip-service --configuration /opt/xmip/config/cluster.xmip --node RX1 \
@@ -21,6 +24,8 @@ pub const USAGE: &str = "usage: xmip-service --configuration <path> [--console] 
      example: xmip-service --configuration /opt/xmip/config/cluster.xmip --node RX1 \
      --cluster CL1 --account xmip --install\n\
      example: xmip-service --configuration /opt/xmip/config/node.xmip --listening\n\
+     example: xmip-service --configuration /opt/xmip/config/node.xmip --readiness \
+     --within 180\n\
      --slice prints the node's configuration, sliced from its cluster's cluster.xmip; \
      --cluster names the cluster where the file names none; --bind places each \
      Receive Location and Send Port the file designs on one of the environment's \
@@ -45,6 +50,11 @@ pub const USAGE: &str = "usage: xmip-service --configuration <path> [--console] 
      --activation says, in the node's words, whether the node runs the slice at <path> \
      as its active configuration, and exits 0 only where it does: a correctly signed \
      slice the node cannot start is refused, and the node runs the last one that ran.\n\
+     --readiness says, in the node's words, whether the node is ready: it runs the \
+     slice at <path> and its Xmip Storage stands Fine, a Storage node the primary or a \
+     standby ready and following; it exits 0 only where it is, asking again each time \
+     the node publishes until it is or --within seconds are spent, at once without it. \
+     A deployment asks it after it restarts a node, before it restarts the next.\n\
      --console runs in a terminal and stops on Ctrl+C, and with --purpose test also at \
      the end of its input, as the test that started it ends it; without it the \
      operating system's service manager runs it and stops it.";
@@ -70,6 +80,9 @@ pub enum Mode {
     /// Say whether the node runs the slice at its configuration's path as
     /// its active configuration (ADR-0031, amendment 2026-11-12).
     Activation,
+    /// Say whether the node is ready, waiting for it within a bound where
+    /// one is given (ADR-0056, amendment 2026-11-23).
+    Readiness,
     /// Stop and remove the node's service; nothing else.
     Uninstall,
 }
@@ -111,6 +124,9 @@ pub struct Arguments {
     /// amendment 2026-11-06); the `authority` folder beside the cluster's
     /// file where it names none.
     pub authority: Option<String>,
+    /// How long `--readiness` waits for the node to be ready; none, it
+    /// answers at once.
+    pub within: Option<Duration>,
 }
 
 impl Arguments {
@@ -126,7 +142,7 @@ impl Arguments {
         let mut switches = Vec::new();
         let (mut node, mut cluster, mut account) = (None, None, None);
         let (mut bind, mut nodes, mut operators) = (Vec::new(), Vec::new(), Vec::new());
-        let (mut authority, mut listen) = (None, false);
+        let (mut authority, mut listen, mut within) = (None, false, None);
         let mut purpose = Purpose::Runtime;
 
         while let Some(flag) = args.next() {
@@ -146,12 +162,14 @@ impl Arguments {
                 "--authority" => authority = Some(value()?),
                 "--nodes" => nodes = listed(&value()?),
                 "--operators" => operators = listed(&value()?),
+                "--within" => within = Some(seconds(&value()?)?),
                 "--console" => switches.push(Mode::Console),
                 "--definition" => switches.push(Mode::Definition),
                 "--slice" => switches.push(Mode::Slice),
                 "--install" => switches.push(Mode::Install),
                 "--listening" => switches.push(Mode::Listening),
                 "--activation" => switches.push(Mode::Activation),
+                "--readiness" => switches.push(Mode::Readiness),
                 "--uninstall" => switches.push(Mode::Uninstall),
                 _ => return Err(format!("{flag} is not a parameter of xmip-service")),
             }
@@ -162,8 +180,8 @@ impl Arguments {
             [mode] => *mode,
             _ => {
                 return Err(
-                    "--console, --definition, --slice, --install, --listening, --activation \
-                     and --uninstall exclude each other"
+                    "--console, --definition, --slice, --install, --listening, --activation, \
+                     --readiness and --uninstall exclude each other"
                         .into(),
                 );
             }
@@ -184,6 +202,9 @@ impl Arguments {
         if !operators.is_empty() && mode != Mode::Slice {
             return Err("--operators are listed in the node's configuration --slice prints".into());
         }
+        if within.is_some() && mode != Mode::Readiness {
+            return Err("--within is how long --readiness waits for the node".into());
+        }
         Ok(Self {
             configuration: configuration.ok_or("--configuration names no node configuration")?,
             mode,
@@ -196,8 +217,17 @@ impl Arguments {
             nodes,
             operators,
             authority,
+            within,
         })
     }
+}
+
+/// `value`, whole seconds.
+fn seconds(value: &str) -> Result<Duration, String> {
+    value
+        .parse::<u64>()
+        .map(Duration::from_secs)
+        .map_err(|_| format!("--within takes whole seconds, not '{value}'"))
 }
 
 /// The names of a comma-separated list, each trimmed, none empty.
@@ -326,6 +356,11 @@ mod tests {
         let activation = parsed("--activation --configuration node.xmip").expect("reads");
         assert_eq!(activation.mode, Mode::Activation);
 
+        let readiness = parsed("--readiness --configuration node.xmip").expect("reads");
+        assert_eq!((readiness.mode, readiness.within), (Mode::Readiness, None));
+        let waited = parsed("--readiness --within 180 --configuration node.xmip").expect("reads");
+        assert_eq!(waited.within, Some(Duration::from_secs(180)));
+
         let uninstall = parsed("--uninstall --configuration node.xmip").expect("reads");
         assert_eq!(uninstall.mode, Mode::Uninstall);
     }
@@ -399,6 +434,22 @@ mod tests {
                 "--operators are listed in the node's configuration --slice prints",
             ),
             ("--configuration a --purpose Test", "test"),
+            (
+                "--configuration a --readiness --activation",
+                "exclude each other",
+            ),
+            (
+                "--configuration a --activation --within 5",
+                "--within is how long --readiness waits",
+            ),
+            (
+                "--configuration a --readiness --within soon",
+                "--within takes whole seconds, not 'soon'",
+            ),
+            (
+                "--configuration a --readiness --within",
+                "--within needs a value",
+            ),
         ] {
             let refused = parsed(line).expect_err(line);
             assert!(refused.contains(words), "{line}: {refused}");

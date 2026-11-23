@@ -57,18 +57,77 @@ fn standing(directory: &Path) -> (Health, String) {
     (record.health, record.evidence)
 }
 
-/// What `xmip-service --activation` says of the slice at `configuration`,
-/// and its exit code.
-fn activation(configuration: &Path, directory: &Path) -> (Option<i32>, String) {
+/// What `xmip-service` says asked `asked` of the node at `configuration`,
+/// auditing in `directory`, and its exit code.
+pub(super) fn asked(
+    configuration: &Path,
+    directory: &Path,
+    asked: &[&str],
+) -> (Option<i32>, String) {
     let output = Command::new(env!("CARGO_BIN_EXE_xmip-service"))
         .args(["--configuration", configuration.to_str().expect("UTF-8")])
-        .arg("--activation")
+        .args(asked)
         .env("XMIP_AUDIT_DIRECTORY", directory.join("audit"))
         .env("XMIP_PROCESS_DIRECTORY", directory.join("process"))
         .output()
         .expect("runs");
     let said = String::from_utf8_lossy(&output.stdout) + String::from_utf8_lossy(&output.stderr);
     (output.status.code(), said.into_owned())
+}
+
+/// What `xmip-service --activation` says of the slice at `configuration`,
+/// and its exit code.
+fn activation(configuration: &Path, directory: &Path) -> (Option<i32>, String) {
+    asked(configuration, directory, &["--activation"])
+}
+
+/// ADR-0056, amendment 2026-11-23: a node is ready while it runs its slice
+/// and its Xmip Storage stands Fine, as its publication says — what a
+/// deployment waits for, `--within` its bound, before it restarts the next
+/// node — and not before it has published, nor once it has stopped.
+#[test]
+fn a_node_is_ready_while_it_runs_its_slice_and_its_storage_stands_fine() {
+    let directory = xmip_file::temporary::Folder::new("service-readiness");
+    let receive = unheld().to_string();
+    let configuration = written(&directory, &receive);
+    let (code, said) = asked(&configuration, &directory, &["--readiness"]);
+    assert_eq!(code, Some(2), "{said}");
+    assert!(said.contains("has published nothing"), "{said}");
+
+    let child = spawned(&configuration, &directory);
+    let mut ending = Ending(Some(child.id()));
+    let mut child = child;
+    let said = lines(&mut child);
+    heard(
+        &said,
+        &format!("{} accepts work", node_scope()),
+        Duration::from_secs(10),
+    );
+    let (code, ready) = asked(
+        &configuration,
+        &directory,
+        &["--readiness", "--within", "10"],
+    );
+    assert_eq!(code, Some(0), "{ready}");
+    assert!(ready.contains("its own Storage node"), "{ready}");
+    stop(&child);
+    heard(&said, "stopped by the console", Duration::from_secs(5));
+    assert!(exited(child, Duration::from_secs(5)).success());
+    ending.0 = None;
+
+    let (code, stopped) = asked(
+        &configuration,
+        &directory,
+        &["--readiness", "--within", "1"],
+    );
+    assert_eq!(code, Some(2), "{stopped}");
+    for words in [
+        "REFUSED within 1 s",
+        "the node is not ready",
+        "stopped with the node",
+    ] {
+        assert!(stopped.contains(words), "{words}: {stopped}");
+    }
 }
 
 #[test]

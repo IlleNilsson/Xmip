@@ -4,17 +4,20 @@ Set-StrictMode -Version Latest
 
 # A test suite carries a provider, exactly as a module does (ADR-0011), and
 # the qualified form is the canonical one: Xmip's own are Core.System,
-# Core.Systems, Core.Estate and Core.Demo, which is what every surface prints,
-# records and documents (ADR-0059, amendment 2026-09-20; the owner: "It's name
-# is Core.System, to give place for third parties"). A bare name is still
-# accepted and canonicalized. Said once here, so no surface spells a name for
-# itself and none of them can disagree. Core.System is the System Tests on one
-# computer and Core.Systems the Systems Tests on an environment's machines
-# (ADR-0028, amendment 2026-11-23); Core.Demo is the demo readiness check
-# (ADR-0028, amendment 2026-11-10).
+# Core.Systems, Core.Estate, Core.Internal and Core.Demo, which is what every
+# surface prints, records and documents (ADR-0059, amendment 2026-09-20; the
+# owner: "It's name is Core.System, to give place for third parties"). A bare
+# name is still accepted and canonicalized. Said once here, so no surface
+# spells a name for itself and none of them can disagree. Core.System is the
+# System Tests on one computer and Core.Systems the Systems Tests on an
+# environment's machines (ADR-0028, amendment 2026-11-23); Core.Internal is
+# the internal tests of the modules -Test names, as a landing verifies them
+# (ADR-0028, amendment 2026-11-23, the second); Core.Demo is the demo
+# readiness check (ADR-0028, amendment 2026-11-10).
 [string] $script:XmipSystemTestSuite = 'Core.System'
 [string] $script:XmipSystemsTestSuite = 'Core.Systems'
 [string] $script:XmipEstateSuite = 'Core.Estate'
+[string] $script:XmipInternalSuite = 'Core.Internal'
 [string] $script:XmipDemoSuite = 'Core.Demo'
 
 # Where a provider declares a suite of its own: one TOML file per suite in
@@ -29,8 +32,9 @@ function Get-XmipTestSuite {
             caller gives -Suite, who provides it, and how it starts.
 
         .DESCRIPTION
-            Core.System, Core.Systems, Core.Estate and Core.Demo are known to the module,
-            so the estate's own gate runs on a fresh clone with nothing declared.
+            Core.System, Core.Systems, Core.Estate, Core.Internal and
+            Core.Demo are known to the module, so the estate's own gate runs
+            on a fresh clone with nothing declared.
             Every other suite is a third party's, declared in a TOML file under
             test/suite and read here. A declaration that is malformed is
             REFUSED by name (ADR-0055) rather than skipped, because a suite
@@ -51,6 +55,7 @@ function Get-XmipTestSuite {
     New-XmipTestSuite -Provider 'Core' -Name 'System' -Kind 'roll'
     New-XmipTestSuite -Provider 'Core' -Name 'Systems' -Kind 'roll' -ByName -Machines
     New-XmipTestSuite -Provider 'Core' -Name 'Estate' -Kind 'pester'
+    New-XmipTestSuite -Provider 'Core' -Name 'Internal' -Kind 'internal' -ByName
     New-XmipTestSuite -Provider 'Core' -Name 'Demo' -Kind 'demo' -ByName
 
     if ([string]::IsNullOrWhiteSpace($Path)) {
@@ -95,8 +100,9 @@ function New-XmipTestSuite {
 
         .PARAMETER Kind
             How it starts: roll is the System Tests' detached roll, pester is
-            the estate's Pester files, demo the demo readiness check (Start-
-            XmipDemoSuite), command is a provider's own command.
+            the estate's Pester files, internal the landing's verification of
+            named modules (Start-XmipInternalSuite), demo the demo readiness
+            check (Start-XmipDemoSuite), command is a provider's own command.
 
         .PARAMETER Command
             The command that starts a provider's suite.
@@ -108,8 +114,10 @@ function New-XmipTestSuite {
             Started by its name alone, never by a pattern naming a group:
             Core.Demo, which builds and opens the desktop app, holds the web
             host's address and rolls a cluster of its own (ADR-0028,
-            amendment 2026-11-10); and Core.Systems, which needs an
-            environment's machines (ADR-0028, amendment 2026-11-23).
+            amendment 2026-11-10); Core.Systems, which needs an
+            environment's machines (ADR-0028, amendment 2026-11-23); and
+            Core.Internal, whose whole suite is every module's landing
+            verification.
 
         .PARAMETER Machines
             Runs on an environment's machines, every node of the run one that
@@ -127,7 +135,7 @@ function New-XmipTestSuite {
         [string] $Name,
 
         [Parameter(Mandatory)]
-        [ValidateSet('roll', 'pester', 'demo', 'command')]
+        [ValidateSet('roll', 'pester', 'internal', 'demo', 'command')]
         [string] $Kind,
 
         [Parameter()]

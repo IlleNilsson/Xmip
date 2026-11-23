@@ -4,12 +4,14 @@
 //! second its standby copying it; a receiving node taking files dropped in
 //! a file Receive Location; a sending node writing each to a file Send
 //! Location; neither keeping Xmip Storage itself (ADR-0056, amendments
-//! 2026-10-20 and 2026-10-22). The primary is stopped while files are
-//! dropped, and the standby is not promoted: with no witness, a primary
-//! gone is waited for (ADR-0056, amendment 2026-11-08), so no file dropped
-//! after the stop arrives until the primary is started again. Once it is,
-//! every one listed answers, they settle, and every file dropped arrives,
-//! once, whole; the time a file takes is measured on both sides.
+//! 2026-10-20 and 2026-10-22). The primary is stopped in order while files
+//! are dropped, once its standby follows ready, and hands over: the standby
+//! succeeds it at once, and every file dropped after the stop arrives while
+//! the former primary is gone (ADR-0056, amendment 2026-11-23). Started
+//! again, the former primary follows its successor, and every file dropped
+//! arrives, once, whole; the time a file takes is measured on both sides.
+//! A primary that vanishes, waited for with no witness (amendment
+//! 2026-11-08), is persist's standby tests'.
 
 use std::path::{Path, PathBuf};
 use std::process::Child;
@@ -23,7 +25,7 @@ use super::{Ending, endpoint, exited, heard, lines, spawned, stop, test_cluster,
 const HALF: usize = 20;
 
 /// What bounds a file's way from its drop to its file sent, the primary's
-/// return included: a bound on the test, never on Xmip.
+/// stop included: a bound on the test, never on Xmip.
 const CARRY: Duration = Duration::from_secs(30);
 
 /// The Application the receiving and the sending node share: one file
@@ -74,7 +76,10 @@ pub(super) fn declaring(role: &str) -> Vec<String> {
 /// The configuration of `node`, declaring `roles`, in a folder of its own
 /// beneath `directory`: reaching the Storage nodes at `addresses` with the
 /// certificate `directory`'s `tls` holds, serving them at `served` where it
-/// is one, and `bound` — its bindings of the Application.
+/// is one, and `bound` — its bindings of the Application. A send's lease is
+/// 5 s: a Message whose hand-on its primary Storage node refused as it
+/// stopped in order is sent again only once its claim lapses, the lease of
+/// 30 s by default (open problem drafted 2026-11-23).
 pub(super) fn configured(
     directory: &Path,
     (node, roles): (&str, &str),
@@ -90,7 +95,8 @@ pub(super) fn configured(
     let text = format!(
         "roles = \"{roles}\"\n\n[service]\nname = \"xmip-{node}\"\ncluster_name = \"{cluster}\"\n\
          node_name = \"{node}\"\ndata = \"data\"\n\n\
-         [tuning]\nstorage_silence = \"500ms\"\nsend_scan = \"50ms\"\nreceive_backoff = \"50ms\"\n\n\
+         [tuning]\nstorage_silence = \"500ms\"\nsend_scan = \"50ms\"\nsend_lease = \"5s\"\n\
+         receive_backoff = \"50ms\"\n\n\
          [storage]\nnodes = [{nodes}]\n{listen_line}certificate = \"{tls}/node.pem\"\n\
          key = \"{tls}/node.key\"\nanchors = \"{tls}/anchors.pem\"\n\
          {bound}{APPLICATION}\n[operate]\nlocal = \"{local}\"\n",
@@ -181,30 +187,40 @@ pub(super) fn scope(node: &str) -> String {
     format!("{}/node/{node}", test_cluster().scope())
 }
 
+/// A Storage node running, its configuration, and the scope it says it
+/// accepts work in.
+type Storage = (Running, PathBuf, String);
+
 /// The cluster's two Storage nodes started, each serving at its own of
-/// `addresses`: the primary, with its configuration and the scope it says
-/// it accepts work in, then its standby.
-fn storage_started(
-    directory: &Path,
-    addresses: &[String],
-) -> ((Running, PathBuf, String), Running) {
-    let mut primary = None;
-    let mut standby = None;
-    for (place, node) in declaring("storage").iter().enumerate().take(2) {
-        let path = configured(
-            directory,
-            (node, "storage"),
-            (addresses, Some(&addresses[place])),
-            "",
-        );
-        let running = started(&path, &scope(node));
-        if place == 0 {
-            primary = Some((running, path, scope(node)));
-        } else {
-            standby = Some(running);
-        }
-    }
-    (primary.expect("the primary"), standby.expect("the standby"))
+/// `addresses`: the primary, then its standby.
+fn storage_started(directory: &Path, addresses: &[String]) -> (Storage, Storage) {
+    let mut started_ones = declaring("storage")
+        .iter()
+        .enumerate()
+        .take(2)
+        .map(|(place, node)| {
+            let path = configured(
+                directory,
+                (node, "storage"),
+                (addresses, Some(&addresses[place])),
+                "",
+            );
+            (started(&path, &scope(node)), path, scope(node))
+        })
+        .collect::<Vec<Storage>>()
+        .into_iter();
+    let primary = started_ones.next().expect("the primary");
+    (primary, started_ones.next().expect("the standby"))
+}
+
+/// Until the node configured at `path` is ready, as `xmip-service
+/// --readiness` says, within the bound on the test: what the deploy waits
+/// for before it restarts the next Storage node (ADR-0056, amendment
+/// 2026-11-23).
+fn readied(path: &Path) {
+    let folder = path.parent().expect("its folder");
+    let (code, said) = super::activation::asked(path, folder, &["--readiness", "--within", "20"]);
+    assert_eq!(code, Some(0), "{said}");
 }
 
 /// `node`'s binding of the Application's `kind` called `name` to `at`,
@@ -275,7 +291,7 @@ fn all_arrived_whole(arrived: &[String], out: &Path) {
 }
 
 #[test]
-fn every_file_dropped_arrives_once_when_the_primary_storage_node_stops_mid_run_and_returns() {
+fn every_file_dropped_arrives_once_when_the_primary_storage_node_stops_in_order_and_returns() {
     let directory = xmip_file::temporary::Folder::new("service-failover");
     certified(&directory);
     let (drop, out) = (directory.join("in"), directory.join("out"));
@@ -285,7 +301,8 @@ fn every_file_dropped_arrives_once_when_the_primary_storage_node_stops_mid_run_a
         .iter()
         .map(|_| xmip_net::fixture::unheld().to_string())
         .collect();
-    let ((primary, primary_path, primary_scope), standby) = storage_started(&directory, &addresses);
+    let ((primary, primary_path, primary_scope), (standby, standby_path, _)) =
+        storage_started(&directory, &addresses);
     let (receiving, sending) = carriers_started(&directory, (&drop, &out), &addresses);
 
     let began = Instant::now();
@@ -295,32 +312,29 @@ fn every_file_dropped_arrives_once_when_the_primary_storage_node_stops_mid_run_a
     assert_eq!(before.len(), HALF, "before the primary stops: {before:?}");
     let carried_before = began.elapsed();
 
+    // Stopped in order once its standby follows ready, as the deploy stops
+    // it: the standby succeeds it at once, so every file dropped arrives
+    // while it is gone, those dropped after its stop among them.
+    readied(&standby_path);
     let stopping = Instant::now();
     dropped(&directory, &drop, (HALF, HALF / 2));
     stopped(primary);
     let primary_stopped = stopping.elapsed();
-    let late = HALF + HALF / 2;
-    dropped(&directory, &drop, (late, HALF - HALF / 2));
+    dropped(&directory, &drop, (HALF + HALF / 2, HALF - HALF / 2));
+    let while_gone = arrived(&changed, &out, 2 * HALF);
+    let carried_across = stopping.elapsed();
+    all_arrived_whole(&while_gone, &out);
 
-    // No witness: the standby is not promoted, so nothing dropped after the
-    // stop is taken in while the primary is gone: six times its silence.
-    std::thread::sleep(Duration::from_secs(3));
-    let waiting = names(&out);
-    assert!(
-        (late..2 * HALF).all(|n| !waiting.contains(&format!("order-{n}.edi"))),
-        "a file dropped after the primary stopped arrived without it: {waiting:?}"
-    );
-
+    // Started again, it follows its successor on, ready.
     let returning = Instant::now();
     let primary = started(&primary_path, &primary_scope);
-    let after = arrived(&changed, &out, 2 * HALF);
-    let settled = returning.elapsed();
-
-    all_arrived_whole(&after, &out);
+    readied(&primary_path);
+    let back = returning.elapsed();
+    all_arrived_whole(&names(&out), &out);
     println!(
         "carried {HALF} files through the primary in {carried_before:?}, and {HALF} more across \
-         its stop, after {primary_stopped:?}, and its return, the rest arriving {settled:?} \
-         after it was started again"
+         its stop in order, after {primary_stopped:?}, through its standby in \
+         {carried_across:?}; started again, it followed ready in {back:?}"
     );
 
     stopped(sending);

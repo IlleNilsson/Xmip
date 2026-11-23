@@ -214,13 +214,18 @@ promotion raises the epoch, a primary that meets a later one steps down, and a
 primary stopped in order hands on everything it wrote. A primary knows each
 standby by the node its certificate names and counts what it hands each, and
 its node draws each as *copies to* at the rate it copies; a standby not ready
-yet stands Working (amendments 2026-11-13). No witness, so no automatic
-failover: a primary that is gone is waited for, never replaced, and automatic
-failover returns with a witness (the owner, 2026-11-08). Drafted, for the
-owner (ADR-0056, amendment 2026-10-22); promotion decided (amendment
-2026-11-08). Records: ADR-0056 (amendments 2026-10-22, 2026-11-08 and
-2026-11-13), ADR-0052 (amendment 2026-11-13), ADR-0063 (amendment 2026-10-22),
-deployment-model.md sections 7 and 9.
+yet, or handed nothing yet, stands Working (amendments 2026-11-13 and
+2026-11-23). No witness, so no automatic failover: a primary that vanishes is
+waited for, never replaced, and automatic failover returns with a witness (the
+owner, 2026-11-08). A primary stopped in order hands over to a standby holding
+every write it took, which is promoted at once, and follows it on from where
+it stopped once back; the deploy restarts the next Storage node only once the
+one before is ready, as `xmip-service --readiness` says (the owner,
+2026-11-23). Drafted, for the owner (ADR-0056, amendment 2026-10-22);
+promotion decided (amendments 2026-11-08 and 2026-11-23). Records: ADR-0056
+(amendments 2026-10-22, 2026-11-08, 2026-11-13 and 2026-11-23), ADR-0052
+(amendment 2026-11-13), ADR-0063 (amendment 2026-10-22), deployment-model.md
+sections 7 and 9.
 
 #### `subscription-pause`
 
@@ -460,7 +465,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 407125 lines of production
+Where each repository mounts and what it holds: 408312 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -780,8 +785,8 @@ hold no source to count.
 │   │   ├── stream                               382
 │   │   └── party                                193
 │   └── platform/
-│       ├── runtime                            50928
-│       ├── persist                            23679
+│       ├── runtime                            51043
+│       ├── persist                            24751
 │       │   ├── rocksdb                          323
 │       │   ├── sqlite                           288
 │       │       declared, not built 1

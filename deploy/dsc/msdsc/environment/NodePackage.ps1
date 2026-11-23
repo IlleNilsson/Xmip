@@ -363,7 +363,9 @@ function Install-NodePackage {
     XMIP_ACCOUNT. Either runs xmip-service --install, which
     lays the node out by the slice already in place, and registers and
     starts the node's service as that account. An .rpm of another build is
-    installed over the one there, an upgrade or the same version again.
+    installed over the one there, an upgrade or the same version again. A
+    node that ran before is waited for until it is ready
+    (Wait-NodeReadiness).
     #>
     [CmdletBinding(SupportsShouldProcess = $true)]
     param(
@@ -377,10 +379,32 @@ function Install-NodePackage {
 
     # Before the install, which starts the node: it opens its units and
     # reaches its Storage nodes by name as it starts. A node running holds
-    # its units open, so it is stopped first (2026-11-21, EX1 on Windows).
+    # its units open, so it is stopped first (2026-11-21, EX1 on Windows),
+    # and once installed waited for until it is ready, before the next node
+    # is deployed (ADR-0056, amendment 2026-11-23).
+    [bool] $ran = Test-NodeServiceActive -Name "xmip-$($Instance.node)"
     Stop-NodeService -Name "xmip-$($Instance.node)" -Confirm:$false
     Install-NodeModules -Instance $Instance
     Set-NodeNamesBlock -Instance $Instance
+    Install-NodeBuild -Instance $Instance
+    if ($ran) {
+        Wait-NodeReadiness -Instance $Instance
+    }
+}
+
+function Install-NodeBuild {
+    <#
+    .SYNOPSIS
+    The package's programs installed by its own install, which registers and
+    starts the node's service: on Windows the portable archive's
+    xmip-service --install, on AlmaLinux the .rpm, upgraded over another
+    build or installed.
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [hashtable] $Instance
+    )
 
     if ($IsWindows) {
         # The portable archive, Windows's package until the MSI is built (the

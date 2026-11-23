@@ -31,3 +31,47 @@
     argv: [firewall-cmd, --reload]
   changed_when: true
   become: true
+
+# A node this run restarted, one that ran before it, is waited for until it
+# is ready before the next host is deployed: environment.yml deploys the
+# nodes one host at a time, each host's handlers run before the next, so the
+# next Storage node is restarted only once the one before is ready — a
+# Storage node restarted comes back a standby, and its primary stopped in
+# order before it follows ready has no standby to hand over to (the owner,
+# 2026-11-23: "That has to be sorted, nothing can be left"; ADR-0056,
+# amendment 2026-11-23). Ready is the node's own word, `xmip-service
+# --readiness`, asked again as the node publishes, never a sleep, and past
+# xmip_ready_window seconds the run fails in the node's words. After the
+# restarts above: handlers run in the order written here.
+- name: The Xmip node ready before the next is deployed
+  ansible.builtin.command:
+    argv:
+      - "{{ xmip_program }}"
+      - --configuration
+      - "{{ xmip_configuration }}/node.xmip"
+      - --readiness
+      - --within
+      - "{{ xmip_ready_window }}"
+  changed_when: false
+  when: ansible_facts['os_family'] != 'Windows' and xmip_ran.rc | default(1) == 0
+  become: true
+  listen:
+    - Restart the Xmip node
+    - The Xmip node restarted
+
+- name: The Xmip node ready before the next is deployed, on Windows
+  ansible.windows.win_command:
+    argv:
+      - "{{ xmip_program }}"
+      - --configuration
+      - "{{ xmip_configuration }}\\node.xmip"
+      - --readiness
+      - --within
+      - "{{ xmip_ready_window }}"
+  changed_when: false
+  when: >-
+    ansible_facts['os_family'] == 'Windows'
+    and (xmip_ran_windows.services | default([]) | map(attribute='state') | list) == ['started']
+  listen:
+    - Restart the Xmip node
+    - The Xmip node restarted

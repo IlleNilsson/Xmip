@@ -1897,3 +1897,155 @@ assistant's, the same day, for the owner to strike.
 
 Held by the System Tests' test of the plan over its own files
 (`served::given`).
+
+## Amendment, 2026-11-23: a primary stopped in order hands over, and the deploy restarts the next Storage node only once the one before is ready
+
+**Provenance.** Open problem 92: the Hyper-V environment's rolling restart
+of 2026-11-22 ended with one primary, but writes failed for 2.5 s and 5.2 s
+while each primary restarted, since its standby waited for it to return
+(amendment 2026-11-08), and each primary was copied whole on its return. The
+problem left the owner the choice: a switchover on a stop in order, which
+reverses the amendment of 2026-11-08 for that stop, the deploy waiting for
+each Storage node to be ready before it restarts the next, or both. The
+owner, 2026-11-23, chose both: *That has to be sorted, nothing can be
+left.* The design and the build are the assistant's, the same day.
+
+**What is reversed, and what is not.** The amendment of 2026-11-08 waits
+for a primary that is gone, since with no witness a standby cannot tell one
+gone from one cut off and serving on. A primary stopped in order is neither:
+it says so itself, and serves nothing more. So it hands over. A primary that
+vanishes — killed, its machine lost, cut off — says nothing, and is still
+waited for, never replaced. Only a ready Storage node is promoted (amendment
+2026-11-12), and at most one in an epoch (amendment 2026-11-22).
+
+- **The primary stops, then says so.** Its stop serves nothing more, waits
+  for every operation lent, and syncs what its standbys could not be handed
+  yet. Each connection it hands writes on hands the last of them, then says
+  it stopped (`Shipped::Stopped`): its epoch, the next write of each
+  database, and its successor. The successor is the first standby handed
+  every write, named by its place among the Storage nodes listed.
+- **The successor keeps the next epoch first.** Named, it syncs what it
+  took, and checks three things: it is ready, it holds every write its
+  primary said, and it is of its primary's epoch. Then it keeps the next
+  epoch, durable, and answers so (`Succeeding::Kept`), or answers why not.
+- **The successor is promoted at once.** It is promoted where every other
+  Storage node listed answers, none is a primary, and none other holds that
+  epoch or a later one (`StorageNode::succeed`, `unrivalled`). The primary
+  that handed over is not asked: its hand-over is its answer. With two
+  Storage nodes, nobody is asked.
+- **The stopped primary cannot be promoted beside it.** The primary's stop
+  waits for its successor's answer before it ends, within the silence. So
+  the successor has kept its epoch before the primary can start again, and
+  started again, the primary finds that epoch kept and is never the one to
+  promote.
+- **A standby told another succeeds rests a beat** before it asks the
+  others what they are, so it finds the successor the primary and follows
+  it, and never vies with it. One that cannot succeed says why; the cluster
+  then waits for its primary to return, as before.
+- **The former primary keeps its positions.** Its stop, every write synced,
+  writes its positions again, so once back it follows its successor on from
+  where it stopped, never copied whole. Until this day a primary stopped in
+  order came back holding no history's writes. A primary stopped while its
+  standby was down could so be passed over for that standby, holding fewer,
+  and the writes it took alone were lost. One killed keeps no positions and
+  is copied whole, as before.
+- **A standby is following only once its primary hands it a frame** on its
+  connection (`StorageNode::is_following`). One that stood by and was
+  handed nothing yet stands Working at `<node>/storage`, and says *handed
+  nothing yet*. Until this day it stood Fine as soon as it stood by, before
+  its primary served its connection, and a primary stopped in that moment
+  had no standby to hand over to.
+
+**The deploy restarts the next Storage node only once the one before is
+ready.** Ready is the node's own word, never a sleep:
+
+- **The rule is the runtime's** (`running::activation::readiness`). The
+  node's last publication says it runs the slice it holds — the activation
+  rule — and its Xmip Storage stands Fine at `<node>/storage`. For a
+  Storage node of several that is the primary, or a standby ready and
+  following. A stopped node's publication says its Storage Done, so a node
+  that has not published since it started again is never ready by what it
+  said before.
+- **`xmip-service --readiness [--within <seconds>]` asks it.** It asks
+  again each time the node publishes, every 250 ms, until the node is ready
+  or the bound is spent, and is refused then, in the node's words, with
+  exit code 2.
+- **Both deploy technologies ask it after a restart.**
+  - Ansible deploys the hosts one at a time, each host's handlers before
+    the next. A handler asks after any restart of a node that ran before
+    the run: its slice or certificate changed, or an `.rpm` of another
+    build installed over it. The bound is `xmip_ready_window`, 180 s.
+  - Microsoft DSC's `Xmip.Node/Slice` asks after it restarts a running
+    node, and `Xmip.Node/Package` after it installs over a node that ran
+    (`Wait-NodeReadiness`). The bound is the node document's `ready`, 180 s.
+
+**Defects found on the way, by the millisecond rule, and fixed.**
+
+- **A lost wake.** The primary's shipping read whether its node stopped
+  before it read what it waits on, so a stop between the two was waited out
+  a whole beat, 100 ms by default. It reads what it waits on first now.
+- **A write per frame.** Each write handed on was written and flushed
+  alone, some 60 µs each on Windows. A primary stopping in order handed a
+  standby 180 writes behind for 11 ms before it could say who succeeds it.
+  A turn's writes now go out in one write, a frame each (`wire::appended`).
+- **A new handshake at the switchover.** A node's client dropped a
+  connection whose Storage node said it is a standby, so it reached the
+  successor on a new connection. Its handshake costs some 1.8 ms on Linux
+  and 4 to 8 ms on Windows. Now a standby's connection is kept and asked
+  what it is again before it is used, so a promoted standby is still held
+  to its epoch (`client::node`, `Node::held`). A node told who follows the primary,
+  through the wait it always has under way, keeps a live connection to each
+  standby (`client::waiting`, `reach`), opened there and never on a
+  Message's path.
+
+**Measured** in the optimized build, the fastest of five over 25 stops in
+order of a rolling restart, each stop's standby following ready:
+
+| | Windows | Linux |
+| --- | --- | --- |
+| the standby serving as the primary, from the stop's start, no node asking meanwhile | 0.49 ms, median 0.59 ms | 0.20 ms, median 0.22 ms |
+| the same with a node writing all along | 1.68 ms, median 2.32 ms | 4.69 ms, median 5.69 ms |
+| that node's longest wait across the stop | 4.17 ms, median 5.97 ms | 4.76 ms, median 5.80 ms |
+| one of its writes | 0.27 ms | 0.045 ms |
+
+**Not closed.** These are recorded in `doc/planning/open-problems.md`:
+
+- A node writing all along still waits some 5 ms across the stop. Its second
+  thread asking at once opens a new connection, and Xmip's TLS resumes no
+  session, so its handshake is a full one.
+- While a new connection to the successor is opened, the successor reads
+  its primary's last frame up to some 3 ms late. Without that connection the
+  switchover takes 0.2 ms.
+- On Windows the timing program's *a primary handing on a whole copy*
+  measures 1.75 to 2.40 ms, over its bound, with or without this change; it
+  passes on Linux.
+- With three Storage nodes or more, a standby not named can vie with the
+  one named in a rare race. Both keep the epoch before they ask again, so
+  neither is promoted then, and the cluster waits for the former primary to
+  return.
+
+Held by persist:
+
+- `standby/tests/succession.rs`: a rolling restart of two Storage nodes,
+  each primary stopped in order in turn while a node writes all along —
+  writes go on through the successor, every write is read back, and each
+  former primary follows on, handed no whole copy; and of three, the
+  standby not named follows the one that is.
+- `standby/tests.rs` and `uncopied.rs`, with a primary killed: one that
+  vanishes is still waited for.
+- `rolling.rs`: either order of a rolling restart still ends with one
+  primary.
+- `shipped.rs`: the new frames' forms.
+- The timing program, `tests/measured/succession.rs`.
+
+Held by the runtime, `storage::reached`'s *handed nothing yet* stands
+Working. Held by the service:
+
+- `.src/test/service/activation.rs`: `--readiness` says a node ready while
+  it runs its slice and its Storage stands Fine, and not before it published
+  nor once it stopped.
+- `.src/test/service/failover.rs`: every file dropped across a primary's
+  stop in order arrives through its successor, and once more after the
+  former primary is back.
+
+Held by the deploy's Pester tests (`test/MsdscEnvironment.Test.ps1`).

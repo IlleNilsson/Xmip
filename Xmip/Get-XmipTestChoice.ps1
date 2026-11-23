@@ -39,19 +39,23 @@ function Get-XmipTestChoice {
         [string] $Word = ''
     )
 
-    # Qualified or bare, both name the estate's suite, and Core.Estate is the
-    # spelling (ADR-0059, amendment 2026-09-20); omitted, -Suite is the
-    # System Tests.
-    [string[]] $names = if ($Suite -ieq 'Estate' -or $Suite -ieq 'Core.Estate') {
-        [string] $root = Get-XmipRepositoryRoot
-        Get-ChildItem -Path (Join-Path -Path $root -ChildPath 'test') -Filter '*.Test.ps1' |
-            ForEach-Object { $_.Name -replace '\.Test\.ps1$', '' }
+    # The suite as Start-XmipTest reads it, qualified or bare (ADR-0059,
+    # amendment 2026-09-20), and its tests by what kind of suite it is;
+    # omitted or unknown, -Suite is the System Tests.
+    $chosen = if ($Suite -ne '') {
+        Get-XmipNamedTestSuite -Name $Suite -Known @(Get-XmipTestSuite) | Select-Object -First 1
     }
-    elseif ($Suite -ieq 'Demo' -or $Suite -ieq $script:XmipDemoSuite) {
-        @()
-    }
-    else {
-        @($script:XmipScenarioOfTest.Keys)
+    [string] $kind = if ($null -ne $chosen) { $chosen.Kind } else { 'roll' }
+    [string] $root = Get-XmipRepositoryRoot
+
+    [string[]] $names = switch ($kind) {
+        'pester' {
+            Get-ChildItem -Path (Join-Path -Path $root -ChildPath 'test') -Filter '*.Test.ps1' |
+                ForEach-Object { $_.Name -replace '\.Test\.ps1$', '' }
+        }
+        'internal' { Get-XmipInternalTest -RepositoryRoot $root }
+        'roll' { @($script:XmipScenarioOfTest.Keys) }
+        default { @() }
     }
 
     $names | Where-Object { $_ -like "$Word*" }

@@ -46,6 +46,44 @@ function Get-XmipSystemTestChoice {
 }
 
 
+# Start-XmipTest's parameters it hands the System Tests' roll, given or not:
+# what was left out is handed as its default, a parameter nobody named as
+# nothing (Resolve-XmipSystemTestChoice reads Bound for which were given).
+[string[]] $script:XmipRollHanded = @(
+    'Suite', 'Stress', 'Test', 'Rounds', 'Duration', 'TimeFactor', 'Nodes', 'NodeRole',
+    'OnlineNodes', 'Cluster', 'Path', 'PassThru'
+)
+
+
+function Start-XmipChosenRoll {
+    <#
+        .SYNOPSIS
+            The System Tests' own work for Start-XmipTest: the choice checked,
+            then the roll built, spawned and recorded; nothing after a
+            refusal said in words. Part of Start-XmipTest's body until
+            2026-11-23, when -ComputerName took the room that file had left.
+
+        .PARAMETER Choice
+            Caller, Bound and Machines, and the values of
+            $script:XmipRollHanded as Start-XmipTest holds them.
+    #>
+    [CmdletBinding()]
+    [OutputType('Xmip.TestStatus')]
+    param(
+        [Parameter(Mandatory)]
+        [hashtable] $Choice
+    )
+
+    $resolved = Resolve-XmipSystemTestChoice -Choice $Choice
+
+    if ($null -eq $resolved) {
+        return
+    }
+
+    Start-XmipSystemTestRoll @resolved
+}
+
+
 # What already rolls or builds as a cluster is Get-XmipClusterRunning.ps1, the
 # one answer this refusal and the demo readiness check's share (2026-11-10).
 # Which live processes are the System Tests' is Get-XmipSystemTestProcess.ps1:

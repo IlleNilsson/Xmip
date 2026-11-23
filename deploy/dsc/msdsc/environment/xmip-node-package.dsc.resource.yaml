@@ -88,6 +88,19 @@ schema: !embedded
           Every node of the cluster by its name at its machine's address, a
           line each, kept as a marked block of the machine's hosts file.
         type: string
+      program:
+        description: >-
+          The xmip-service the package installs, asked whether a node it
+          restarted is ready.
+        type: string
+      ready:
+        description: >-
+          How long, in seconds, a node that ran before the install restarted
+          it is waited for until it is ready, as xmip-service --readiness
+          says, before the next node is deployed (ADR-0056, amendment
+          2026-11-23); refused past it, in the node's words.
+        type: integer
+        default: 180
       _exist:
         type: boolean
         readOnly: true

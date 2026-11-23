@@ -211,12 +211,17 @@ the **epoch**, a primary of an earlier one asked by no node that met the
 later. One to be promoted keeps its epoch before it asks every one listed
 again, and is promoted only where none other holds it, so at most one is
 promoted in an epoch (ADR-0056, amendment 2026-11-22). **There is no
-witness, so there is no automatic failover**: a primary that is gone is
-waited for, never replaced, and the cluster settles
-once it is back (the owner, 2026-11-08: *automatic standby promotion is off
-until there is a witness*; ADR-0056, amendment 2026-11-08). A primary
-stopped in order hands on everything it wrote; one killed loses what it had
-not handed on, which the owner accepted on 2026-10-01. A Storage node's
+witness, so there is no automatic failover**: a primary that vanishes —
+killed, its machine lost, cut off — is waited for, never replaced, and the
+cluster settles once it is back (the owner, 2026-11-08: *automatic standby
+promotion is off until there is a witness*; ADR-0056, amendment
+2026-11-08). **A primary stopped in order hands over**: it hands on
+everything it wrote and names a standby holding every write its
+successor, which keeps the next epoch and is promoted at once, and the
+former primary follows it on from where it stopped once back (the owner,
+2026-11-23: *That has to be sorted, nothing can be left*; ADR-0056,
+amendment 2026-11-23). One killed loses what it had not handed on, which
+the owner accepted on 2026-10-01. A Storage node's
 stop ends each connection at its next question, the one in hand answered,
 so a node that keeps asking it never holds the stop (ADR-0056, amendment
 2026-11-12, *a Storage node's stop ends a connection its node keeps asking
@@ -393,8 +398,9 @@ two forms are recorded for later, and only for then
 with Xmip copying from a claimed primary to standbys, and D, C for the hot
 Ledger with A for history. C is built for embedded Storage nodes, drafted on
 2026-10-22 while A is not built (*Embedded Storage nodes are a primary and
-its standbys*, above); its witness is not, so its failover waits for the
-primary to return (ADR-0056, amendment 2026-11-08).
+its standbys*, above); its witness is not, so its failover waits for a
+primary that vanishes to return (ADR-0056, amendment 2026-11-08), and only
+a primary stopped in order is succeeded at once (amendment 2026-11-23).
 
 **Every Ledger write counts only once the database has it durably** (the
 owner, 2026-10-01: *Safe way*), the hand-ons between steps included. Behind a

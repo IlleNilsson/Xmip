@@ -52,6 +52,10 @@ function Test-XmipRustChange {
             linted against it; a change of comments and prose alone has none
             (Test-XmipCodeChange).
 
+        .PARAMETER Alone
+            The crates named and nothing else: not the root crate and not
+            the timing programs' lints, for Core.Internal
+            (Start-XmipInternalSuite).
     #>
     [CmdletBinding()]
     [OutputType([string])]
@@ -64,10 +68,13 @@ function Test-XmipRustChange {
         [string[]] $Module = @(),
 
         [Parameter()]
-        [switch] $Consumer
+        [switch] $Consumer,
+
+        [Parameter()]
+        [switch] $Alone
     )
 
-    [string[]] $crates = @($Module) + '.'
+    [string[]] $crates = if ($Alone) { @($Module) } else { @($Module) + '.' }
     [string[]] $member = @('.') + @((Get-XmipWorkspacePlan -RepositoryRoot $RepositoryRoot).Member)
     [string[]] $selected = @(
         $crates | Where-Object { $_ -in $member } | ForEach-Object {
@@ -77,24 +84,31 @@ function Test-XmipRustChange {
     [string[]] $lint = if ($Consumer) { @('--workspace') } else { $selected }
 
     [List[pscustomobject]] $steps = [List[pscustomobject]]::new()
-    $steps.Add([pscustomobject]@{
-            Name = 'format'; At = $RepositoryRoot; Argument = @('fmt', '--check') + $selected
-        })
 
-    # Every member, so every consumer of the change, against the change.
-    $steps.Add([pscustomobject]@{
-            Name     = 'the lints, every feature'
-            At       = $RepositoryRoot
-            Argument = @('clippy', '--all-targets', '--all-features') + $lint
-        })
+    # Members named, or every member: `cargo fmt` with no -p formats the
+    # whole workspace, which a crate named alone outside it never asked for.
+    if (@($lint).Count -gt 0) {
+        $steps.Add([pscustomobject]@{
+                Name = 'format'; At = $RepositoryRoot; Argument = @('fmt', '--check') + $selected
+            })
+
+        # Every member, so every consumer of the change, against the change.
+        $steps.Add([pscustomobject]@{
+                Name     = 'the lints, every feature'
+                At       = $RepositoryRoot
+                Argument = @('clippy', '--all-targets', '--all-features') + $lint
+            })
+    }
 
     # `--all-targets` leaves out a target cargo does not test by default;
     # across the workspace, `--test measured` takes the crates that have one.
-    $steps.Add([pscustomobject]@{
-            Name     = 'the timing programs'' lints'
-            At       = $RepositoryRoot
-            Argument = @('clippy', '--workspace', '--all-features', '--test', 'measured')
-        })
+    if (-not $Alone) {
+        $steps.Add([pscustomobject]@{
+                Name     = 'the timing programs'' lints'
+                At       = $RepositoryRoot
+                Argument = @('clippy', '--workspace', '--all-features', '--test', 'measured')
+            })
+    }
 
     foreach ($name in $crates) {
         [string] $crate = Join-Path -Path $RepositoryRoot -ChildPath $name

@@ -3,6 +3,19 @@
 # here, which `xmip-service --install --account` gives what it reads and
 # names in the systemd unit as User=.
 
+# A node that runs before this run touches it is waited for until it is
+# ready once this run restarts it, before the next host is deployed
+# (handlers/main.yml); one that did not run is started with the others by
+# started.yml.
+- name: Whether the node runs before it is deployed
+  ansible.builtin.command:
+    argv: [systemctl, is-active, --quiet, "xmip-{{ xmip_node_name }}"]
+  register: xmip_ran
+  changed_when: false
+  failed_when: false
+  check_mode: false
+  become: true
+
 - name: The node's account
   ansible.builtin.user:
     name: "{{ xmip_account }}"
@@ -191,6 +204,8 @@
   when: not (ansible_check_mode and xmip_shipped is changed)
   become: true
 
+# Its `xmip-service --install` restarts the node on the new program, which
+# is then waited for until it is ready (handlers/main.yml).
 - name: The package shipped installed over another build, which runs xmip-service --install
   ansible.builtin.command:
     argv: [rpm, --upgrade, --replacepkgs, --replacefiles, "{{ xmip_staging }}/xmip.rpm"]
@@ -202,6 +217,7 @@
   when: >-
     xmip_header is not skipped
     and xmip_header.results[0].stdout != xmip_header.results[1].stdout
+  notify: The Xmip node restarted
   become: true
 
 # The file is the node's alone to write: its account's and root's, read by
