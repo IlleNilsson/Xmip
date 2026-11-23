@@ -398,19 +398,19 @@ duration = 5
 file = "scene-19.wav"
 
 [[scene.caption]]
-text = "The same plan runs five ways: as processes on one computer, on Hyper-V, on Linux with KVM and libvirt, on VMware, and on physical machines."
+text = "The same plan runs six ways: as processes on one computer, on Hyper-V, on Linux with KVM and libvirt, on VMware, in containers, and on physical machines."
 start = 0
-duration = 11.275
+duration = 12.05
 
 [[scene.caption]]
-text = "One cluster file serves all five; which node runs on which machine belongs to the environment, never to the cluster file."
-start = 11.455
+text = "One cluster file serves all six; which node runs on which machine belongs to the environment, never to the cluster file."
+start = 12.23
 duration = 8.425
 
 [[scene.caption]]
-text = "One computer proves the flow and its rules, virtual machines prove it on real Windows and Linux machines, and physical machines are where an end user runs it."
-start = 20.06
-duration = 10.35
+text = "The System Tests prove the flow and its rules on one computer; the Systems Tests prove it on real Windows and Linux machines and in containers; and physical machines are where an end user runs it."
+start = 20.835
+duration = 12.725
 
 [[scene]]
 file = "scene-20.wav"
@@ -575,13 +575,13 @@ start = 0
 duration = 5.35
 
 [[scene.caption]]
-text = "Capability boundaries make ownership clear, while the Essentials and test harnesses exercise behavior and expose evidence."
+text = "Capability boundaries make ownership clear, while the System Tests and test harnesses exercise behavior and expose evidence."
 start = 5.53
-duration = 8.275
+duration = 8.35
 
 [[scene.caption]]
 text = "For the project team, progress means a demonstrated flow and reproducible results, alongside the design."
-start = 13.985
+start = 14.06
 duration = 7.575
 
 [[scene]]

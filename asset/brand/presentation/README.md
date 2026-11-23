@@ -18,10 +18,9 @@ The media uses Git LFS. After cloning, run `git lfs pull` to obtain the actual
 files. Narration, flex poses and accessibility notes were updated on 2026-11-07.
 On 2026-11-22 the node roles, the parts around the nodes and the five ways to
 run one plan were added, and the integration path replaced the Application
-section in both formats. On 2026-11-23 the story and the deck took the System
-Tests and the Systems Tests, and containers as the sixth way to run the plan;
-the video and its captions still say five ways until that section's narration
-is generated again. Project source references record the documentation
+section in both formats. On 2026-11-23 the story, the deck, the video and its
+captions took the System Tests and the Systems Tests, and containers as the
+sixth way to run the plan. Project source references record the documentation
 used, rather than a promise of release readiness.
 
 ## Outreach
@@ -96,7 +95,10 @@ canvas and encoded in headless Microsoft Edge through Playwright. Loudness,
 muxing and compression were done by ffmpeg called from PowerShell: H.264 High
 at CRF 30, with AAC at 128 kb/s, 48 kHz stereo. A figure is placed as a PNG
 drawn from its SVG by headless Edge, since an SVG inserted through automation
-carries no fallback for viewers without SVG support.
+carries no fallback for viewers without SVG support. On 2026-11-23 the same
+recipes ran on VS Code's own Node.js (`ELECTRON_RUN_AS_NODE`), with
+playwright-core installed into the working area driving the installed
+Microsoft Edge, never a downloaded browser.
 
 The preparation helper is PowerShell 7, reading the TOML through the estate
 module's one reader. From the root:
