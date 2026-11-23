@@ -2607,6 +2607,21 @@ expected value at line 1 column 1*, and none of what the resource itself
 wrote, so the cause was not in the log and was found only by running the
 resource again with its errors captured.
 
+## 117. A Systems Tests result is labeled Core.System
+
+Found 2026-11-23 with the split of the System Tests and the Systems Tests
+(ADR-0028, amendment 2026-11-23): `Get-XmipTestResult` labels every result
+of a snapshot `Core.System`, a Systems Tests run's too, since the snapshot
+does not say which suite rolled it.
+
+## 118. A Pester test of hidden runs reads this computer's run area
+
+Found 2026-11-23 landing the same split: on Windows `HiddenRun.Test.ps1`
+counted a record left in `.local-work/demo` by an earlier run, a CL1 row
+the test had not made, and failed; on Linux, with no such record, it
+passed. A test that reads the computer's own run area passes or fails by
+what ran there before.
+
 # Suggested order
 
 Rewritten 2026-09-23, and corrected to what is built on 2026-11-10. The
