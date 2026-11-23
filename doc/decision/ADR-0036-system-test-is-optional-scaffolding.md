@@ -1,36 +1,36 @@
-# ADR-0036: The Essentials is optional scaffolding, mounted at the estate root
+# ADR-0036: The System Tests are optional scaffolding, mounted at the estate root
 
 - Status: Accepted
 - Date: 2026-09-06
-- Amended: 2026-11-04 — the Playground is named Essentials (ADR-0028,
+- Amended: 2026-11-23 — named the System Tests and the Systems Tests (ADR-0028,
   amendment of that date)
-- Related: ADR-0016 (submodule composition), ADR-0028 (the Xmip Essentials),
+- Related: ADR-0016 (submodule composition), ADR-0028 (the Xmip System Tests),
   ADR-0011 (module and repository naming), doc/architecture/repository-model.md
 
 ## In brief
 
 - Theme: The shape of the estate
 - Subject: A repository may declare its mount and mark itself optional
-- Name: The Essentials is optional scaffolding
+- Name: The System Tests are optional scaffolding
 - Order: 8
 - Concepts: Mount, declared versus computed; optional repository; test scaffolding
 
-**The Essentials is its own repository (`xmip-test-essentials`), and it is not a
-capability the runtime loads — it is what exercises Xmip. So it mounts at the
-estate root as `test/essentials`, not under `module/`, and it is declared
-optional: the estate builds and runs without it.** Two new manifest keys carry
+**The System Tests are a repository of their own (`xmip-test-system-test`), and they are
+not a capability the runtime loads — they are what exercises Xmip. So they mount at the
+estate root as `test/system-test`, not under `module/`, and they are declared
+optional: the estate builds and runs without them.** Two new manifest keys carry
 this: `mount` overrides the computed path, `optional` marks a repository the core
 gate does not require.
 
 ## Context
 
-The owner, 2026-09-06: the Essentials *should be in its own repository, mounted
-as an optional submodule.* It was already its own repository, but mounted at
-`module/operation/essentials` — the domain-grouped path `Get-XmipMountPath`
+The owner, 2026-09-06: the System Tests *should be in its own repository, mounted
+as an optional submodule.* They were already a repository of their own, but mounted at
+`module/operation/system-test` — the domain-grouped path `Get-XmipMountPath`
 computes from `architecturalDomain`. That path says "a module the runtime loads
-under Operations", which the Essentials is not: it spawns nodes and drives every
-transport and contract through them (ADR-0028). Its provider namespace is already
-`test` (`[xmip.test.essentials]`), so the mount was the part still saying the
+under Operations", which the System Tests are not: they spawn nodes and drive every
+transport and contract through them (ADR-0028). Their provider namespace is already
+`test` (`[xmip.test.system-test]`), so the mount was the part still saying the
 wrong thing.
 
 ## Decision
@@ -39,16 +39,16 @@ wrong thing.
 
 `Get-XmipMountPath` computes `module/<domain>/<leaf>` for a module, which is
 right for a capability. A repository that is not a capability may declare
-`mount`, and the declared value wins. The Essentials declares
-`mount = "test/essentials"`: the estate root, beside the estate's own tests,
+`mount`, and the declared value wins. The System Tests declare
+`mount = "test/system-test"`: the estate root, beside the estate's own tests,
 not under `module/`. This is the first non-`module/` submodule mount, and the
 mechanism is general — any future non-module repository uses the same key.
 
 ### 2. Optional is declared, and recorded now
 
 `optional = true` marks a repository the estate builds and runs without. The
-Essentials is the first: nothing in the runtime depends on it, and a checkout
-without it is a complete Xmip. The flag is **recorded now**; the tooling that
+System Tests are the first: nothing in the runtime depends on them, and a checkout
+without them is a complete Xmip. The flag is **recorded now**; the tooling that
 acts on it — not cloning it by default, excluding it from the core landing gate —
 is deferred (the owner's call, 2026-09-06). Recording it first means the manifest
 states the intent before the machinery arrives, which is the estate's habit.
@@ -61,17 +61,17 @@ are added; the repository, its name, and its dependencies are untouched.
 
 ## Consequences
 
-- `architecture.toml` gains `mount` and `optional` on `[xmip.test.essentials]`;
+- `architecture.toml` gains `mount` and `optional` on `[xmip.test.system-test]`;
   `Resolve-XmipNodeFacts`, `Expand-XmipEstate` and `New-XmipRepositoryEntry` carry
   them onto the manifest, and `Get-XmipMountPath` honors `mount`.
-- `.gitmodules` mounts the submodule at `test/essentials`; the working tree moves
+- `.gitmodules` mounts the submodule at `test/system-test`; the working tree moves
   there by `git mv`.
-- ADR-0028's path reference is updated to `test/essentials`.
+- ADR-0028's path reference is updated to `test/system-test`.
 - No module repository changes: this is a superproject move plus the resolver.
 
 ## Provenance
 
-The requirement is the owner's, 2026-09-06: the Essentials in its own repository,
+The requirement is the owner's, 2026-09-06: the System Tests in a repository of their own,
 mounted as an optional submodule, at the estate root under a test path. The
 `mount`/`optional` mechanism and the deferral of the optional tooling are the
 assistant's drafting of it, on the instruction to proceed and write it down.

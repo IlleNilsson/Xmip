@@ -5,12 +5,12 @@
 .SYNOPSIS
     The demo readiness check's web part: the web operations tool started
     over the roll's snapshot, answering over https at its address under the
-    Essentials' authority.
+    System Tests' authority.
 
 .DESCRIPTION
     The host is started as the demo starts it, Start-XmipOperationWeb over
     the snapshot with -Tester, so it is built, served in Xmip's own TLS under
-    the Essentials' authority and audited as every start of it is (ADR-0009,
+    the System Tests' authority and audited as every start of it is (ADR-0009,
     amendment 2026-10-21; ADR-0063). What is checked is what a browser on the
     demo machine meets: the address answers https, with a certificate that
     reaches the anchor the tester's browser trusts.
@@ -20,7 +20,7 @@
     TLS is the host's side of the connection (xmip_operate.h section 21) and
     no TLS client of it reaches the tooling, and a browser's TLS is never
     Xmip's either — as Xmip.Surface.Test's BrowserOverTlsTest reaches the host.
-    The chain is built over the Essentials' anchor alone, with no operating
+    The chain is built over the System Tests' anchor alone, with no operating
     system store (ADR-0063), and presents no certificate, which proves no one:
     the host serves such a browser and lets it act on nothing (ADR-0009,
     amendment 2026-10-06).
@@ -38,7 +38,7 @@ function Test-XmipDemoWeb {
     <#
         .SYNOPSIS
             Starts the web operations tool over the run's snapshot and checks
-            it answers over https under the Essentials' authority; returns
+            it answers over https under the System Tests' authority; returns
             what it found in words, or throws why not.
 
         .PARAMETER Run
@@ -80,7 +80,7 @@ function Test-XmipDemoWeb {
         'for no tester: a browser acts as no one but the user the host runs as'
     }
 
-    return ("$($web.Url) $answered, its certificate issued under the Essentials' " +
+    return ("$($web.Url) $answered, its certificate issued under the System Tests' " +
         "authority ($anchor); the host is pid $($web.Id), $for")
 }
 
@@ -89,7 +89,7 @@ function Get-XmipDemoWebAnchor {
     <#
         .SYNOPSIS
             The trust anchor a running web host was given, which must be the
-            Essentials' authority's; throws otherwise, or where the host has
+            System Tests' authority's; throws otherwise, or where the host has
             ended.
 
         .PARAMETER Id
@@ -102,7 +102,7 @@ function Get-XmipDemoWebAnchor {
         [int] $Id
     )
 
-    $layout = Get-XmipEssentialsLayout
+    $layout = Get-XmipSystemTestLayout
     $process = Get-Process -Id $Id -ErrorAction SilentlyContinue
 
     if ($null -eq $process) {
@@ -123,7 +123,7 @@ function Get-XmipDemoWebAnchor {
         [System.IO.Path]::GetFullPath($anchor).StartsWith($inside, $case)
 
     if (-not $under) {
-        throw "the web host trusts '$anchor', not the Essentials' authority under $authority."
+        throw "the web host trusts '$anchor', not the System Tests' authority under $authority."
     }
 
     return $anchor

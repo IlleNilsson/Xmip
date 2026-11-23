@@ -32,7 +32,7 @@ says where modules mount, which is a different question.**
 
 `repository-model.md` section 7 is the only picture of the estate the
 documents hold. It draws the modules under `module/{foundation, capability,
-operation, platform}` and `test/essentials` — forty-one submodules — and stops
+operation, platform}` and `test/system-test` — forty-one submodules — and stops
 there.
 
 The manifest declares 330 repositories: 18 Capability, 10 Foundation, 9

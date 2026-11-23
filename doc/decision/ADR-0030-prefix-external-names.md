@@ -35,7 +35,7 @@ A name is external when it enters a namespace Xmip does not own, where another
 party's name could collide with it. These are prefixed:
 
 - **Repositories and crates** — `xmip-core-*`, on GitHub and crates.io. ADR-0011.
-- **Environment variables** — `XMIP_ESSENTIALS_AREA`, in the OS environment.
+- **Environment variables** — `XMIP_SYSTEM_TEST_AREA`, in the OS environment.
 - **Published commands** — `Get-XmipHistory`, in the operator's shell, where it
   would otherwise shadow or collide with a built-in (`Get-History`).
 - Anything else presented to the outside: a service name registered with the OS,
@@ -47,7 +47,7 @@ A name is internal when it lives only within Xmip's own operation, read by Xmip
 and no one else. These drop the prefix:
 
 - **Local runtime files** the estate writes for itself — `<cluster>-snapshot.xmip`,
-  `<cluster>-history.toml`, the `essentials` directory under `.local-work`.
+  `<cluster>-history.toml`, the `system-test` directory under `.local-work`.
 - Modules, types, functions and fields **within** a crate — a struct is not named
   `XmipSnapshot` inside `xmip-core-observe`; it is `Snapshot`.
 - Internal configuration **sections and keys**, which sit under a context that

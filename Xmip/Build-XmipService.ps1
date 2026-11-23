@@ -212,7 +212,7 @@ function Build-XmipService {
     }
 
     if ($PSCmdlet.ParameterSetName -eq 'Extension') {
-        [string] $module = (Get-XmipEssentialsLayout).Extension
+        [string] $module = (Get-XmipSystemTestLayout).Extension
         [string] $shell = Join-Path -Path $module -ChildPath 'extension'
 
         if (-not $PSCmdlet.ShouldProcess($shell, 'restore, compile with tsc and zip a VSIX')) {

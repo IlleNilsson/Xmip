@@ -358,7 +358,7 @@ one, and a node it ran held in memory for its own life. Now:
   engine's lock held by another process, a key that does not unwrap —
   before anything serves. A program that linked no engine, starting a node
   that names no store, holds in memory as before; a program that opened a
-  store itself (the Essentials) hands it over and that one is the node's.
+  store itself (the System Tests) hands it over and that one is the node's.
 - **`xmip-service` links them by build feature**: `persist-rocksdb` for a
   server or hosted site, `persist-sqlite` for an edge or computer site
   (ADR-0015, amendment 2026-10-01), and with either the
@@ -382,7 +382,7 @@ are refused with exit 2. What the pause held is not seen there: the build
 links no authenticator, so every Stream is refused at its gate before
 routing (the amendment of 2026-09-28), and that a held Message survives a
 restart is proved where Streams route, in the runtime's `pickup` and the
-Essentials.
+System Tests.
 
 Provenance: the owner, 2026-09-30, *Sort what you can*, after the gap was
 reported. The keys, their defaults, the data directory, the order place and
@@ -394,7 +394,7 @@ named, for the owner to overrule.
 `xmip-service` ran a node, kept its store and took its orders, and published
 nothing: no operation surface could see a real node — its Monitor, its
 Topology, its Subscriptions — and a surface had nowhere to read where to
-leave a pause. Only the Essentials' rolls published. Now the service
+leave a pause. Only the System Tests' rolls published. Now the service
 publishes its node through the one publication there is (ADR-0052;
 `observe::Publication`, ADR-0027):
 
@@ -408,7 +408,7 @@ publishes its node through the one publication there is (ADR-0052;
   each kind (Streams at receive, Journeys at process, Messages at send, and
   what failed at the node), its Subscriptions with their standing, and the
   node drawn as a topology. The drawing is `observe::topology::draw` and
-  `party`, the one every publisher calls, moved there from the Essentials
+  `party`, the one every publisher calls, moved there from the System Tests
   (ADR-0052, amendment of this date). A node's configuration names no Party
   yet, so the Party on each side is drawn as `any-party`. What moved over
   the drawing is stated since the amendment of 2026-11-10, over the window
@@ -422,10 +422,10 @@ publishes its node through the one publication there is (ADR-0052;
   `Get-XmipProcess -Name 'xmip-service*' | Start-XmipOperationWeb`, or with
   `Start-XmipOperationWeb -Snapshot <data>/snapshot.xmip`.
 - **How.** Whole or not at all: `observe::publication::write_atomic`, the
-  one writer, moved there from the Essentials, which calls it too.
+  one writer, moved there from the System Tests, which call it too.
 - **When.** As the node starts to accept work; at the look after an order
   was applied, so a pause shows in the next publication, not a round later;
-  otherwise every quarter of a second, the Essentials' round. Once more
+  otherwise every quarter of a second, the System Tests' round. Once more
   after the drain, saying the node stopped — the node, its System Process,
   its modules and its Locations Done, what it declared and its
   Subscriptions' standing kept (`running::publication::stopped`) — so a
@@ -1277,7 +1277,7 @@ no console of its own to press Ctrl+Break in, starts the node with its
 input held open and ends it to stop it, and a node whose rig went stops
 with it. Without `--purpose test` a console node reads nothing of its
 input. The root's service tests hold every node's input open and still stop
-it with Ctrl+Break; the Essentials ends it (ADR-0028, amendment of this
+it with Ctrl+Break; the System Tests end it (ADR-0028, amendment of this
 date). The assistant's, 2026-10-22.
 
 ## Amendment, 2026-10-27: one behind holds the one ahead back while it is still taking
@@ -1404,7 +1404,7 @@ the sent file's, the directory's it is renamed in (synced since
 The node drawn in its publication (the amendment of 2026-09-30, **What**)
 said a rate of zero on every link and an activity of one on the node
 while its System Process was alive, whatever it carried: only the
-Essentials' roll stated what moved, and a surface over a node read nothing
+System Tests' roll stated what moved, and a surface over a node read nothing
 moving at all. `Running::publication` now takes the window its publisher
 keeps — `observe::topology::window::Window`, the one every publisher states
 its drawing over (ADR-0052, amendment of this date) — and states on the
@@ -1429,7 +1429,7 @@ Party link moves as it receives).
 
 ## Amendment, 2026-11-11: a node processes where it routes, and counts at each Location
 
-Every slice carries every Subscription, so every node of the Essentials'
+Every slice carries every Subscription, so every node of the System Tests'
 cluster declared processing and drew a Work Process stage — the Storage
 nodes, the operational node and the sending nodes too — against ADR-0056's
 amendment of 2026-10-01 and the paragraph *What* above (*process where a
@@ -1487,7 +1487,7 @@ declares no processing, publishes no Subscription, section 14 lists none of
 its file and a pause is refused in words), observe (`topology::draw`: a
 Subscription the node published is drawn beneath its process stage, a
 transport's name is not; `topology::party`: one Location facing a Party
-gives its transport, never its name) and the Essentials (`topology`: a node
+gives its transport, never its name) and the System Tests (`topology`: a node
 the run reads is drawn with any-party on each side it faces).
 
 Provenance: the judged design of 2026-11-11 found the false Work Process
@@ -1652,7 +1652,7 @@ carried in turn, 0.36 ms apart and held under a millisecond, the sending
 node's Storage calls for it timed one by one — what is due 0.14 ms, the
 claim with its sync 1.93 ms, the Message's place 0.12 ms, its Journey
 0.09 ms and its Message 0.09 ms — most of them overlapping the publishing
-node's sync. The Essentials'
+node's sync. The System Tests'
 delivery medians across nodes, still 4 to 8 ms beyond one node's, are
 ADR-0028's amendment of this date, and what is left of open problem 46 is
 that problem's.
@@ -1711,7 +1711,7 @@ owner's to decide.
   and the record of the Stream that Message's first Section is over, each
   found by what Xmip Storage keeps of it in columns, never by reading a
   body. Asked one by one until now, four round trips after the claim — in
-  the Essentials 0.77 to 0.96 ms together, one request 0.28 to 0.47 ms
+  the System Tests 0.77 to 0.96 ms together, one request 0.28 to 0.47 ms
   (ADR-0028, amendment of this date). Where nothing answers it whole the
   four reads are its default; a Message or Stream not among what it read
   is read as before.
@@ -1775,21 +1775,21 @@ its carry began against 2.90 ms where the sending node published it
 itself, 0.17 ms apart (0.36 ms that morning), reading nothing of what is
 due after the wake, its claim 1.86 ms and its place, Journey and Message
 one request of 0.19 ms where the three reads were 0.13, 0.09 and 0.10 ms.
-The Essentials' rolls before and after, and each step on its sending
+The System Tests' rolls before and after, and each step on its sending
 nodes, are ADR-0028's amendment of this date; what is left is open problem
 46's.
 
 Provenance: open problem 46's proposals of 2026-11-12 — the wait answering
 with what is due, and a wait that answers where a sequence's head moves and
 for a turn that lost its Instance — and the owner's task of that day to
-break the Essentials' gap down per step and cut any round trip needing no
+break the System Tests' gap down per step and cut any round trip needing no
 decision of his; how each is built, the read under a claim and the steps'
 timing are the assistant's, the same day, for the owner to overrule.
 
 ## Amendment, 2026-11-12: a claim a send is taken under is answered once readable, and its far end sees the send once the claim is durable
 
 What open problem 46 left on the sending node was the claim, 3.4 to 5.8 ms
-in the Essentials, its sync on the path before the send; the amendment above
+in the System Tests, its sync on the path before the send; the amendment above
 left it to the owner, since it changes what a claim answers. The owner,
 2026-11-12: *Do as you recommend*, to a transport that can hold its last
 step sending under a readable claim and every other keeping the wait; and
@@ -1911,7 +1911,7 @@ its Journey counting one try).
 
 **Measured:** not yet. The timing programs — persist's, the runtime's
 (`tests/measured/woken.rs`) and the root's (`.src/test/measured/woken.rs`) —
-each run alone, and the Essentials' rolls before and after, are ADR-0028's
+each run alone, and the System Tests' rolls before and after, are ADR-0028's
 to record and open problem 46's to cut by.
 
 Provenance: the design of 2026-11-12, *early send under a readable claim*,
@@ -3250,9 +3250,9 @@ millisecond is built optimized; only the builds that measure pay for it.
   debug assertions and overflow checks kept as rust-style.md section 5c asks.
   Every timing program runs in it (`Test-XmipMeasuredProgram`, `cargo test
   --profile measured --all-features --test measured -- --test-threads=1`),
-  and so do the Essentials' roll, cluster and node and the `xmip-service` a
+  and so do the System Tests' roll, cluster and node and the `xmip-service` a
   roll starts, whose latency the board and the demo read
-  (`Get-XmipEssentialsLayout`; the roll, cluster and node in a build
+  (`Get-XmipSystemTestLayout`; the roll, cluster and node in a build
   directory of their own, ADR-0028, amendment 2026-11-20). It is built on
   `release`, not on `dev`: a profile that inherits `dev` inherits its
   package overrides too, and would build a crate `dev` lowers at the lower

@@ -269,7 +269,7 @@ Windows, which renames through a handle opened on the file first, so two
 nodes both succeed and the second moves the file from under the first. The
 rename is therefore made holding the file's turn, `<dropped
 name>.xmip-claim`, created only where it does not exist — the exclusive step
-every file system offers alike, and the one the Essentials' claim already
+every file system offers alike, and the one the System Tests' claim already
 used. A claim left by a node that is gone and does not start again is not
 returned yet: the cluster's half of the recovery is open.
 
@@ -314,7 +314,7 @@ section 7, and is not part of this decision.
 
 ## Amendment, 2026-10-13: one winner for every Receive Location
 
-**Provenance.** The owner, 2026-10-13, of the Essentials' drop box:
+**Provenance.** The owner, 2026-10-13, of the System Tests' drop box:
 *induce multiple files for FILE and (S)FTP(S) so I can see that it holds
 up*, and *only one Rn should win*. Then *(S)FTP(S) has a near problem to
 FILE, it has been discussed*, and *We have a thing for it, I called it
@@ -411,7 +411,7 @@ consume nothing at the far end.
 Proved by `xmip-core-transport`'s `claim` tests (two claimants racing over
 one location: exactly one wins; recovery; a return held from a newer
 file), the file, FTP (with and without `tls`) and SFTP transports' tests of
-two receiving nodes over one directory or server, and the Essentials' drop
+two receiving nodes over one directory or server, and the System Tests' drop
 box (ADR-0028, amendment 2026-10-13).
 
 Provenance: the owner's words above. The FTP turn's holder directory, the
@@ -1154,7 +1154,7 @@ option a — **the claim names the node and that start of it.**
   `startup::open`, so every Location of one start is given the same, and
   the claimant is made from it (`claim::Claimant::of`). The file, FTP, SFTP,
   S3, Azure Blob and Google Cloud Storage transports keep it, and the
-  Essentials' drop box, which builds a node's receives of its own, draws a
+  System Tests' drop box, which builds a node's receives of its own, draws a
   start as a node does.
 - **It is written into the claimant**: the location percent-encoded as
   before, `~`, and the start in 32 hexadecimal digits.

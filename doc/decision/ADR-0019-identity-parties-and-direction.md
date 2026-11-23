@@ -565,7 +565,7 @@ Locations a node starts: each admits what its `accept` declares it takes,
 its Parties narrowed at authentication and not a second time.
 
 **Drafted, for the owner to overrule.** A configured Party's identifier is
-its place among `[[parties]]`, counted from one, as the Essentials already
+its place among `[[parties]]`, counted from one, as the System Tests already
 counted (`configure::party::id`); every node of a cluster holds the same
 list, so each gives a Party the same identifier, and a Party written in
 another place has another. A configured identity names neither its
@@ -607,7 +607,7 @@ Built the same day:
   or with another Party's, is a problem every node's binding reports, and a
   node refuses to start on it: *the Party 'x' has no id: a Party is written
   with its id, a UUIDv7 minted once with it*. `configure::party::id`, the
-  place counted from one, is deleted with every use; the Essentials'
+  place counted from one, is deleted with every use; the System Tests'
   Parties carry ids of their own (ADR-0028, amendment 2026-10-20).
 - **Identities** (`configure::PartyIdentity`): `{ mechanism, purpose, value
   }`, the mechanism by the name it declares, the purpose `receive` or
@@ -835,7 +835,7 @@ accepts — so the Location, not a rule, says how strong a claim it takes.
 The second item the amendment of 2026-10-30 left open in open problem 59,
 built on the assistant's draft with the owner's assistant settling its
 three questions. Xmip's SSH and FTP servers — the loopbacks' far ends and
-the Essentials' — admitted any password, and the SFTP far end chose a
+the System Tests' — admitted any password, and the SFTP far end chose a
 user's directory by that unchecked name.
 
 - **The server is handed the check; it links no authenticator.**
@@ -856,8 +856,8 @@ user's directory by that unchecked name.
   a Receive Location's gate; it is not a login Xmip's FTP server takes.
 - **The real nodes' far end checks the secrets their own Locations
   hold.** Each placement on the Parties' far end names the secret
-  `far-end.<user>` (`configure::placed::far_end_secret`); the Essentials
-  mints its password, sets it on the Location's node through that node's
+  `far-end.<user>` (`configure::placed::far_end_secret`); the System Tests
+  mint its password, set it on the Location's node through that node's
   operate listener — the node's secret store, the one place the value is
   kept, never read back out — and the far end keeps only its salted
   verifier. The drop box's far ends mint each Party's password the same
@@ -893,7 +893,7 @@ still chose a directory by the user a key merely named. Now:
   end's user with the one password or key it presents
   (`sftp::Credential::admitted_as`, over `net::login::only` and the new
   `net::login::only_key`); the SFTP tests enroll each key they log in
-  with for its user. The Essentials' check is both gates
+  with for its user. The System Tests' check is both gates
   (`login::checking(passwords, keys)`); the drop box and the real nodes'
   far end enroll no key, since every Location there logs in by password,
   so a key is refused there whatever user it signed for.
@@ -948,7 +948,7 @@ agreed on 2026-11-06 (*Agreed, go ahead*) to what follows:
   not only its first), and the send side's, which identity a Party presents.
   `Recognized` and `configure::party::holding` are deleted;
   `configure::party::place_holding` stays for readers of the configuration,
-  such as the Essentials.
+  such as the System Tests.
 
 Not built: a Send Location presents the Party's `send` identity's secret —
 the transports present the Location's own (amendment 2026-10-29). A Party's
@@ -1054,7 +1054,7 @@ Built:
   `Subscriber::in_process` and `Subscriber::declared` are deleted; tests
   build theirs through `subscriber::fixture`, test support behind
   `test-support`. The C, C++, .NET, Java and Python bindings follow, and so
-  does the Essentials: each node subscribes through
+  does the System Tests: each node subscribes through
   `plane::caller::subscriber` as *operations*, declared holding the run's
   account, the one Party it hears every Event and the failures as
   (ADR-0065 and ADR-0027, amendments 2026-11-11).
@@ -1119,5 +1119,5 @@ Provenance: the rules and the scope are the owner's, 2026-11-10; the names
 `Contract::agreed`, `Parties::serve`, `plane::caller::subscriber` and
 `subscriber::refused`, the sentence's words, resolving at the gate only
 what was proven or vouched for, binding possession to the arrival by the
-signed `messageDigest`, and the Essentials' one Party are the assistant's,
+signed `messageDigest`, and the System Tests' one Party are the assistant's,
 2026-11-11, for the owner to overrule.

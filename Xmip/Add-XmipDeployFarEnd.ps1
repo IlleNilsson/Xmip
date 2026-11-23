@@ -5,17 +5,17 @@ Set-StrictMode -Version Latest
 function Add-XmipDeployFarEnd {
     <#
         .SYNOPSIS
-            The Essentials' far ends an environment runs on machines of their
+            The Systems Tests' far ends an environment runs on machines of their
             own, added to what Get-XmipDeployEnvironment read: each machine's
             external, the far end it runs, with the machine; and, where any
             does, the program each family runs them by and the folder of
             their certificates.
 
         .DESCRIPTION
-            A machine's external names one far end of the Essentials'
+            A machine's external names one far end of the Systems Tests'
             configuration/external.xmip (deploy/dsc/README.md; ADR-0028,
             amendment 2026-11-22). [far_ends.<family>] program is the
-            program xmip-essentials-external built for that family, which
+            program xmip-system-test-external built for that family, which
             msdsc places and registers on each such machine
             (far-end.dsc.yaml); each far end's certificate is identity's
             folder of its name, New-XmipCertificate -Node.
@@ -69,7 +69,7 @@ function Add-XmipDeployFarEnd {
             Get-TomlValue -Node $entry -Name 'program' -Default '')
         if (-not $path -or -not (Test-Path -LiteralPath $path -PathType Leaf)) {
             throw ("REFUSED: a far end on a $family machine needs [far_ends.$family] program, " +
-                "xmip-essentials-external built for it: '$path'.")
+                "xmip-system-test-external built for it: '$path'.")
         }
         $Read.Programs[$family] = @{ path = $path; file = Split-Path -Path $path -Leaf }
     }

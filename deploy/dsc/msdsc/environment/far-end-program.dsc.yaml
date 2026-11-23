@@ -1,9 +1,9 @@
-# One of the Essentials' far ends on a machine of its own, applied there:
+# One of the Systems Tests' far ends on a machine of its own, applied there:
 # its certificate from the cluster's own authority, the program
-# xmip-essentials-external placed and registered as its service by its own
+# xmip-system-test-external placed and registered as its service by its own
 # --install, a firewall opening for exactly the ports it says it serves on,
 # and its service running and started with the machine (README.md). The far
-# end is the Essentials', not a node of the cluster: it takes no slice, no
+# end is the Systems Tests', not a node of the cluster: it takes no slice, no
 # package and no account of its own.
 $schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
 directives:
@@ -17,7 +17,7 @@ parameters:
   name:
     type: string
     description: >-
-      The far end, as the Essentials' configuration/external.xmip names it;
+      The far end, as the Systems Tests' configuration/external.xmip names it;
       its service is xmip-<name>.
   program:
     type: string

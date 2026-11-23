@@ -22,7 +22,7 @@ function Start-XmipChosenSuite {
     <#
         .SYNOPSIS
             Starts the one suite Start-XmipTest chose when it is not the
-            Essentials: the estate's Pester suite, the demo readiness check,
+            System Tests: the estate's Pester suite, the demo readiness check,
             or a provider's.
 
         .PARAMETER Chosen
@@ -82,8 +82,8 @@ function Resolve-XmipTestSuite {
             Which suites there are is read, never declared at the parameter: a
             third party's is a file it dropped, and this session may have
             started before it existed. Whatever was typed, the suite says what
-            it is called: a bare Essentials resolves to the Essentials and the
-            record carries the canonical spelling, Core.Essentials (ADR-0059,
+            it is called: a bare System resolves to the System Tests and the
+            record carries the canonical spelling, Core.System (ADR-0059,
             amendment 2026-09-20). Part of Start-XmipTest's body until
             2026-09-30.
 
@@ -113,7 +113,7 @@ function Start-XmipPesterSuite {
     <#
         .SYNOPSIS
             Starts the estate's Pester suite for Start-XmipTest, refusing a
-            switch that belongs to the Essentials alone.
+            switch that belongs to the System Tests alone.
 
         .DESCRIPTION
             Part of Start-XmipTest's body until 2026-09-30, when -Hidden took

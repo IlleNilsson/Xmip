@@ -10,7 +10,7 @@ function Get-XmipDeployStep {
             the domain's controller where the file names one, the names
             where one of the machines is the environment's DNS server, each
             other Windows machine joined to the domain, each of the
-            Essentials' far ends on its machine, then each node on its
+            System Tests' far ends on its machine, then each node on its
             machine, in the order the environment file lists the machines,
             and last every node started together.
 
@@ -91,7 +91,7 @@ function Get-XmipDeployStep {
             Install = $true
         }
     }
-    # Each of the Essentials' far ends on its machine, its program placed
+    # Each of the System Tests' far ends on its machine, its program placed
     # and registered there (Add-XmipDeployFarEnd).
     [hashtable] $reached = $reach.Clone()
     $reached['identity'] = $Read.Identity

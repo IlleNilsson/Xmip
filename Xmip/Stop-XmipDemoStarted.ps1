@@ -56,7 +56,7 @@ function Stop-XmipDemoStarted {
     # Stop-XmipOperationWeb their default, which is every run and every host.
     if ($roll -ne '') {
         try {
-            [string] $area = (Get-XmipEssentialsLayout).Area
+            [string] $area = (Get-XmipSystemTestLayout).Area
             [int[]] $rolling = @(
                 Get-XmipClusterRunning -Path $area -Cluster $roll | Where-Object { $_ -in $ours }
             )

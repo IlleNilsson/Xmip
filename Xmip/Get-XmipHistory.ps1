@@ -9,8 +9,8 @@ function Get-XmipHistory {
             publishes, one object per point.
 
         .DESCRIPTION
-            The CLI's history surface, ADR-0029. The Xmip Essentials (and, later,
-            a running node) publishes its throughput over time as a TOML file —
+            The CLI's history surface, ADR-0029. The Xmip System Tests (and, later,
+            a running node) publish their throughput over time as a TOML file —
             on disk the estate is TOML, and JSON is reserved for memory and the
             wire. This reads that file and emits one object per point, so an
             operator without a browser sees the same curve the UI draws, and can
@@ -27,7 +27,7 @@ function Get-XmipHistory {
         .PARAMETER Path
             The history file to read, or a directory holding one cluster's
             history file, `<cluster>-history.toml`. Defaults to the run area,
-            `.local-work/essentials` under the repository, so no argument is
+            `.local-work/system-test` under the repository, so no argument is
             needed while one cluster rolls.
 
         .PARAMETER Counted
@@ -59,7 +59,7 @@ function Get-XmipHistory {
     )
 
     if ([string]::IsNullOrWhiteSpace($Path)) {
-        $Path = (Get-XmipEssentialsLayout).Area
+        $Path = (Get-XmipSystemTestLayout).Area
     }
 
     if (Test-Path -LiteralPath $Path -PathType Container) {
@@ -95,7 +95,7 @@ function Get-XmipHistory {
 
     # A file with no points at all is the producer's fault, not the reader's,
     # and it is said rather than answered with silence (ADR-0055). Every
-    # history the Essentials published between 2026-09-05 and 2026-09-19 was
+    # history the System Tests published between 2026-09-05 and 2026-09-19 was
     # one of these, and nobody noticed because nothing said anything.
     if ($points.Count -eq 0) {
         Write-Warning "The history at $Path holds no points; its producer wrote none."

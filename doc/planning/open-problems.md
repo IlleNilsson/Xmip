@@ -178,7 +178,7 @@ only answer for a server cluster.
 2026-09-26: ADR-0067 gives a node one address with operate, sync and alive as
 listeners on it; option A's protocol is the sync listener.
 
-2026-09-19: the Essentials hands work R -> P -> S between node processes through
+2026-09-19: the System Tests hand work R -> P -> S between node processes through
 per-node inboxes in the cluster's shared directory, each hop recorded. This is
 option A rehearsed in the rig only; it rules nothing for the runtime, which stays
 the owner's to decide.
@@ -336,7 +336,7 @@ holds; it answers nothing here.
 
 ## 23. Recovery is decided but undemonstrated, and unbuilt below the contracts
 
-A power cut during an Essentials run on 2026-09-06 asked the plain question: what
+A power cut during a System Tests run on 2026-09-06 asked the plain question: what
 survives a shutdown, a network drop, or an attached device going away. The model
 is decided and recorded; almost none of it is built, and nothing demonstrates it.
 
@@ -372,8 +372,8 @@ owed (`runtime-model.md` section 3). A device
 mount that vanishes after a claim-rename but before completion is the same gap in
 the attached-device case. Single-node restart recovers; failover does not.
 
-**Undemonstrated.** The Essentials is a harness — in-memory scenario state,
-temp dirs rebuilt each run — so a power cut just re-rolls it and it proves
+**Undemonstrated.** The System Tests are a harness — in-memory scenario state,
+temp dirs rebuilt each run — so a power cut just re-rolls them and they prove
 nothing about recovery. A **blackout** scenario (kill a node mid-Journey,
 restart, assert resume from checkpoint with no loss and no double-effect) is the
 missing proof, and it only becomes real once a `RuntimeStore` backend exists.
@@ -454,7 +454,7 @@ behind the `port` feature and nothing in any test opens a port.
 own device stand-in on top of that line — `m-bus/src/loopback.rs` has a
 loopback meter, `hart/src/loopback.rs` a loopback field device. This is the
 same duplication `transport/.src/loopback.rs` was written to end one level up,
-where the dance had been written in the Essentials *forty-two times over*
+where the dance had been written in the System Tests *forty-two times over*
 (ADR-0051). It has reappeared below, per protocol, unremarked.
 
 **What none of them can prove.** A serial bus is multi-drop: several devices
@@ -513,7 +513,7 @@ escaping and nothing else.
 | f | TOML string quoting | the node declaration escapes three characters; archive's copy escapes all | **Resolved 2026-09-24:** `codec::toml::{quote, unquote}` is the one TOML basic string, every control character escaped; the node's declaration and the file archive's sidecar use it, and the archive now reads a quoted key holding `=` |
 | g | msmq over https | always writes `http://`; its `tls` feature does nothing | **Resolved 2026-09-24:** msmq sends through `http::endpoint` as as2, as4 and webdav do; `msmqs://`, `https://` and `DIRECT=HTTPS://` queues go over the one TLS behind `tls`, are refused rather than sent in the clear without it, and a test holds both |
 | h | A null context value | route's `X` reads null as present, `context:X` as absent | **Resolved 2026-09-24:** `route::routable`, beside `text_of`, is the one reading; `X`, `context:X`, `header:`, `party:`, `regex:` and `content:` read a missing value and a Null as absent and refuse bytes, a test holds both spellings, and ADR-0046 records the owner's ruling |
-| i | A node's capability | parsed three ways: Essentials and PowerShell refuse an unknown word, the surface drops it silently and is case-sensitive | **Resolved 2026-09-24:** `node::Stage::declared` is the one parse and `Stage::WORDS` the one word list, exact lowercase only (the owner, 2026-09-24); the runtime's library forwards both (`xmip_stage_words_v1`, `xmip_stage_declared_v1`, `xmip_operate.h` section 7), `Xmip.Surface` and the script module call them through the operator module, and no copy is kept anywhere (ADR-0056, amendment 2026-09-24, corrected the same day; ADR-0052). Since 2026-10-01 a node declares its roles instead, `node::NodeRole::declared` the one parse, forwarded as `xmip_role_declared_v1` (ADR-0056, amendment 2026-10-01). |
+| i | A node's capability | parsed three ways: System Tests and PowerShell refuse an unknown word, the surface drops it silently and is case-sensitive | **Resolved 2026-09-24:** `node::Stage::declared` is the one parse and `Stage::WORDS` the one word list, exact lowercase only (the owner, 2026-09-24); the runtime's library forwards both (`xmip_stage_words_v1`, `xmip_stage_declared_v1`, `xmip_operate.h` section 7), `Xmip.Surface` and the script module call them through the operator module, and no copy is kept anywhere (ADR-0056, amendment 2026-09-24, corrected the same day; ADR-0052). Since 2026-10-01 a node declares its roles instead, `node::NodeRole::declared` the one parse, forwarded as `xmip_role_declared_v1` (ADR-0056, amendment 2026-10-01). |
 | j | A health color | `SegmentRender.Traffic` maps Paused yellow and Holding red, the prompt grey and orange | **Resolved 2026-09-24:** the prompt paints `English.Color`'s name in posh-git's palette (`SegmentRender.Paint`); `Traffic` holds no table of its own and `PromptMonitor.Paint` is gone (ADR-0041, clarified) |
 | k | Scope containment | `observe` compares text, `ScopeTree` strips scheme and authority first | **Resolved 2026-09-24:** `observe::Scope` is the one implementation of containment and a scope's parts; the runtime's library forwards it (`xmip_scope_contains_v1`, `xmip_scope_parts_v1`) and `ScopeTree` calls it, so the snapshot and every surface answer by one rule; the two-writer ruling and `scope-vector.xmip` are struck by the owner (ADR-0052, amendments 2026-09-24) |
 | l | Landing a pin | `Publish-XmipPin` checked only the push, so a failed commit followed by an empty push reported success | **Resolved 2026-09-23:** `Invoke-XmipGit` is the one way the module runs git, and a test refuses any other |
@@ -522,7 +522,7 @@ escaping and nothing else.
 | p | The operator surfaces' rules | the CLI and `Xmip.PowerShell` each wrote which surface to read, the runtime override, wildcard selection, the acts, the validation verdict, status meaning, the ABI boundaries, probe conformance and the mood, figure and nothing-at wording; five of them disagreed (the cmdlets took scopes literally, never used the discovery rule, reported one boundary, never judged a probe, and said `Unknown` where the CLI said `unknown`) | **Resolved 2026-09-24** (the owner: *CLI and PowerShell shall share*; *code shall be uniquely placed*): each rule is written once — in its Rust crate where the runtime owns it (scope, stage, mood word and color, worst-first order, called through `xmip_operate.h` section 7), else in `Xmip.Abi` or `Xmip.Surface` — and tested there; the cmdlets take `-Remote`, `-Snapshot`, an optional `-Library` and wildcard scopes as the executable does, and the script module loads the operator module and keeps no capability words, snapshot reader or mood ranking of its own (ADR-0052, amendments 2026-09-24) |
 | q | Where a node sits in a scope | `ScopeTree.Node` takes segment 0, so the Monitor's rows name the cluster as a record's node, and the prompt's `SegmentRender.At` reads the literal `node` segment itself: the scope's shape known in two surfaces (found 2026-09-25) | **Resolved 2026-09-25:** `observe::Scope::node` and `Scope::stage` are the one reading — the node the segment after the `node` marker beneath the cluster, never the cluster, the stage the first stage word beneath it — forwarded as `xmip_scope_node_v1` (`xmip_operate.h` section 7) and bound once in `RuntimeRules.Node`; `ScopeTree.Node`, `ScopeTree.Stage`, `ScopeIndex` and the prompt's `SegmentRender.At` call it, and a Monitor row names the node, not the cluster (ADR-0027, ADR-0052, amendments 2026-09-25) |
 | r | Headers into the Message Context | `<protocol>.header.<name>` is one name (`context::property::header`, case folded per protocol), but `transport::Arrived` carries only an origin and bytes, so no header reaches a Message | **Resolved 2026-10-08:** a transport hands the headers it received with `transport::Arrived` (`transport::Headers`, under the protocol's word) and writes into no context; the runtime writes each into the Message Context once, at arrival, as `<protocol>.header.<name>` through `context::property::header`, case folded where the protocol folds it (`arrival::identity_context`; ADR-0046, amendment 2026-09-25, later) |
-| s | Tests that fail under load | google-pub-sub's brim (10 MiB in a debug build against a 2 s loopback timeout), the Essentials' `cluster::a_silent_node_is_restarted_and_the_restart_is_a_yellow` and `low_latency::spikes_push_a_pair_over_its_budget` fail when the machine is busy and pass alone; they stopped two landings on 2026-09-25 | a test judges what it tests, not the machine's speed: a deadline scaled to the payload or measured from the work itself, never a wall-clock guess |
+| s | Tests that fail under load | google-pub-sub's brim (10 MiB in a debug build against a 2 s loopback timeout), the System Tests' `cluster::a_silent_node_is_restarted_and_the_restart_is_a_yellow` and `low_latency::spikes_push_a_pair_over_its_budget` fail when the machine is busy and pass alone; they stopped two landings on 2026-09-25 | a test judges what it tests, not the machine's speed: a deadline scaled to the payload or measured from the work itself, never a wall-clock guess |
 | t | Slow where it should not be | Xmip's own, the Rust: a brutal node's first round far past 10 s (the millisecond rule, CONTRIBUTING). The estate's tooling: the estate suite takes 11 minutes idle, `EstateMap.Test.ps1` 104 s idle and 1,170 s under load, `Dependency.Test.ps1` 104 s, `Start-XmipTest` 2.5 to 4.8 s to return, importing the module seconds (PSToml); `transport::socket::accept_tcp` with a timeout sleeps 2 ms between polls, adding up to 2 ms to every bounded accept (found 2026-09-26) | the Rust measured and fixed to the millisecond rule; the tooling made quick enough that a developer does not wait on it — the owner, 2026-09-26: *CLI, PowerShell and Web operation tools are built on .NET for the tooling and ease of development* |
 | u | Xmip's tools not using Xmip | the .NET surfaces use the platform's TLS (problem 29 step 6); the .NET side reads TOML with Tomlyn and the PowerShell module with PSToml, where `configure` and `codec` are Xmip's; the web host serves HTTP with Kestrel where `net::http` and `net::http2` are Xmip's | the owner, 2026-09-26: *Xmip shall use its own tool chain, dogfooding as much as possible* (CONTRIBUTING) — each moved onto Xmip's own implementation through the runtime's library, or its reason recorded. **TOML resolved 2026-11-17:** every TOML read or write .NET makes crosses `xmip_operate.h` section 27 to `configure::document`, the runtime's one reader, and Tomlyn is deleted (`TomlDocument`, `TomlConfigurationSource`; ADR-0052 and ADR-0031, amendments 2026-11-17); the estate's PowerShell reads and writes a configuration Xmip runs — a cluster's `cluster.xmip`, a node's document — the same way over the operator module (`Read-XmipConfiguration`). **PSToml stays, by decision** (the placement plan of 2026-11-13): for the estate's own files alone — its manifests (`architecture.toml`, `allocation.toml`, `prerequisite.toml`), its run and build records, its profiles, sites and deployment environments, through `Read-XmipToml` — since the tool that builds the runtime reads them and cannot need the runtime to. TLS and Kestrel remain open. |
 | v | Observation lags, or never arrives | what a node observes reaches the surfaces as a TOML publication written once per round, re-read and re-parsed; and in the runtime itself `start_published` (`runtime/src/start.rs`) publishes once, at start, while Receive, Work Process and Send never call `record_count` (outside tests it is called only in `ffi/operate.rs`'s fixtures) — so nothing a node does after it starts reaches an operator, a surface or an exporter (found 2026-09-26 building OTLP and Prometheus) | the owner, 2026-09-26: *everything — stream, message, receive, process, send, observe, event — has to be near, very near real time* (CONTRIBUTING) — every Receive, Work Process and Send outcome records its figure as it happens, the runtime publishes on change to the surfaces' change feed and to observe's exporters (`offer(Arc<Snapshot>)`, measured at a lock and a handle), and a file written per round becomes a record, not the channel |
@@ -552,7 +552,7 @@ a test.
 
 **Done 2026-09-25:** the `Loopback` trait learned `exchanges_in_order` and `FarEnd::datagram`, and 16 `round` and 26 `unblock` overrides are gone (ADR-0051); HTTP/1.1 is one codec, `net::http`, with `net::Endpoint` and `net::head`, and http keeps TLS, serving and status (ADR-0044); the CAN pair is one `can_bus::loopback::Session`; `xmip-core-library-ssh` holds RFC 4251's types (ADR-0050); a header is `<protocol>.header.<name>` with case folded per protocol (ADR-0046).
 
-**Owned by the wrong crate.** The Essentials holds the snapshot format the
+**Owned by the wrong crate.** The System Tests hold the snapshot format the
 surfaces read, the topology and run header they draw, retention's policy,
 node capability and placement, and a claim by rename it documents elsewhere
 as unsafe; the runtime holds Message treatment presets `message` owns.
@@ -652,7 +652,7 @@ reaches, and two tests, `identity-local` and `identity-online`.
 What exists: certificate **usage** — mutual TLS on Receive and Send, a stand-in
 certificate authority, the certificate authenticators — and, since 2026-10-13,
 the sources that **obtain** one, proved in their own tests. What does not: a
-running node using them, and the Essentials' two identity tests; identity is
+running node using them, and the System Tests' two identity tests; identity is
 still a stage inside `round-trip`.
 
 | step | what | state |
@@ -660,7 +660,7 @@ still a stage inside `round-trip`.
 | 1 | `xmip-core-provision` declared and created, its trait in the capability (a provider may ship a certificate source) | done 2026-10-13 |
 | 2 | `xmip-core-provision-acme`: RFC 8555 — directory, nonce, an account key and JWS, order, challenge, a CSR finalized, the chain fetched, renewal before expiry — against any directory a node's configuration names | done 2026-10-13: http-01 on any port, dns-01 through a provider's `DnsWriter`; tls-alpn-01 not built |
 | 3 | `self-signed` and `internal-ca` beside it, so an offline node has a source without ACME | done 2026-10-13; `internal-ca` also serves ACME to the cluster |
-| 4 | `identity-local`: a node not online provisions by ACME and presents the result on mutual TLS | proved 2026-10-13 in `internal-ca`'s tests against its own ACME server, offline, nothing installed; the Essentials test is not built, and whether it runs step-ca (the SDK, `prerequisite.toml`) is the owner's |
+| 4 | `identity-local`: a node not online provisions by ACME and presents the result on mutual TLS | proved 2026-10-13 in `internal-ca`'s tests against its own ACME server, offline, nothing installed; the System Tests test is not built, and whether it runs step-ca (the SDK, `prerequisite.toml`) is the owner's |
 | 5 | `identity-online` on nodes that declare online, against Let's Encrypt, and relayed for nodes without internet (ADR-0034, amendment 2026-11-22) | configuration only; the relay decided, not built; open below |
 
 The owner, 2026-10-13: Let's Encrypt for Receive Locations and between nodes
@@ -717,7 +717,7 @@ node's answer, which may listen on any port behind forwarding; `dns-01` needs
 write access to the name's DNS, through a DNS provider's `DnsWriter`, and no
 port. A laptop has neither. `identity-online` needs one of them named: a
 domain and the way its DNS is written, or a public host and its port 80 the
-Essentials may use. Its configuration is `[provision.receive]` with `source =
+System Tests may use. Its configuration is `[provision.receive]` with `source =
 "xmip-core-provision-acme"`, `directory` Let's Encrypt's, `names` that domain,
 `agree_terms = true` and the challenge chosen (`node-configuration.md`).
 
@@ -744,7 +744,7 @@ platform's default account or a named one, and none of them as a gMSA.
 | 4 | Linux: an AD-joined host with a gMSA ticket fetched by a daemon (e.g. `credentials-fetcher`), verified on AlmaLinux before it is claimed |
 
 **Open for the owner before step 2 can be proven:** a test domain — a domain
-controller Xmip's tests may use, or one the Essentials stands up.
+controller Xmip's tests may use, or one the System Tests stand up.
 
 ## 29. Xmip stores nothing, encrypts nothing at rest, and has no home for keys
 
@@ -1564,7 +1564,7 @@ Three things are left:
   unmeasured. Proposed: a kill test that says how many writes a killed
   primary had not handed on, under load.
 
-## 46. A delivery across nodes is 1.2 ms behind one node's in the Essentials
+## 46. A delivery across nodes is 1.2 ms behind one node's in the System Tests
 
 One defect by the millisecond rule, open. What is built (2026-11-12;
 ADR-0018, ADR-0066, ADR-0027, ADR-0028 and ADR-0067, amendments of that
@@ -1589,7 +1589,7 @@ its last step at that step, every other before its first byte — and a send
 whose claim never is abandoned unseen (the owner, 2026-11-12: *Do as you
 recommend*, *Go ahead*; ADR-0018, third amendment of that date).
 
-**Where it stands.** In the Essentials, twelve rounds on C1, the median
+**Where it stands.** In the System Tests, twelve rounds on C1, the median
 from drop to arrival: 10.9 ms on one node, 14.8 to 19.8 ms across nodes;
 like for like, one Send Port sent by L1, 14.8 ms from R1 against 10.9 ms
 from L1 itself, 3.9 ms apart where it was 6.1 ms that morning (ADR-0028,
@@ -1608,7 +1608,7 @@ ADR-0018, second amendment 2026-11-12).
   send of a Stream another node received, 1.36 ms longer than one handed in
   memory, its chunks read over the wire, below. **A technology that cannot hold its last
   step waits for the claim's sync before its first byte**, the read and the
-  sequences overlapping it only: on machines of their own the Essentials'
+  sequences overlapping it only: on machines of their own the System Tests'
   Send Ports are SFTP, which holds next, then FTP and FTPS, then the SQL
   family through one helper, each in a piece of its own; SFTP and FTP write
   their target in place until then, so a reader listing the far end can
@@ -1881,7 +1881,7 @@ Landed 2026-11-01 (ADR-0009, amendment 2026-11-01):
 Landed 2026-11-01 (ADR-0019, amendment 2026-11-01):
 
 - **The SSH and FTP servers check the password.** Xmip's server sides
-  for the loopbacks and the Essentials' far ends are handed the check
+  for the loopbacks and the System Tests' far ends are handed the check
   rather than linking an authenticator, since identity presentation is
   not a transport's (`architecture.toml`): `net::login::Offered` (user,
   secret) asked of a `net::login::Check`. `ssh::userauth::serve` admits a
@@ -1893,7 +1893,7 @@ Landed 2026-11-01 (ADR-0019, amendment 2026-11-01):
   admitted, or a verified key signed for. The check is
   `authenticate/password`'s (`PasswordAuthenticator::admits`); the
   loopbacks check the one login their near end presents
-  (`net::login::only`); the Essentials' drop box mints each Party's
+  (`net::login::only`); the System Tests' drop box mints each Party's
   password per server, and the real nodes' far end mints each
   Location's, sets it on the Location's node through its operate
   listener (`far-end.<user>`, named by `configure::placed`) and keeps
@@ -1908,7 +1908,7 @@ Landed 2026-11-01 (ADR-0019, amendment 2026-11-01):
   `ssh-key` gate's (`Verifier::admits`, the lookup and narrowing its
   `verify` uses); a loopback admits the one key its near end presents
   (`net::login::only_key`, through `sftp::Credential::admitted_as`), and
-  the Essentials' drop box and real nodes' far end enroll no key. The
+  the System Tests' drop box and real nodes' far end enroll no key. The
   SFTP far end chooses a directory only by a name the check admitted,
   with its password or its key.
 
@@ -2008,8 +2008,8 @@ place, with no alias:
 - **the VS Code designer**: the views and references
   (`views.rs`, `references.rs`) and the Route view draw integrations, each
   one path, and the Wizard's *Put together* writes one;
-- **the Essentials**: the RoundTrip Application of
-  `test/core/essentials/configuration/cluster.xmip` becomes its
+- **the System Tests**: the RoundTrip Application of
+  `test/core/system-test/configuration/cluster.xmip` becomes its
   integrations;
 - **every surface**, in order: the ABI (`xmip_operate.h` section 10's
   views, edits and slices), the CLI, PowerShell and the GUI (the Operation
@@ -2073,7 +2073,7 @@ binding's drain, listen and call back marshalling — .NET's
 through a binding: the .NET latency test was deleted, and the figures for
 .NET, Java and Python are not measured again. The runtime's Rust tests
 reach the C exports, never a binding's marshalling. To build: an export,
-or the Essentials' test node, that serves a node in a test's process, so
+or the System Tests' test node, that serves a node in a test's process, so
 the drain, call back and latency tests return in every binding.
 
 ## 67. A node hands its process's hub no policy, and an act names its own actor
@@ -2214,8 +2214,8 @@ hardware threads): `routed::an_edifact_document_goes_to_the_send_port_its_messag
 `failover::every_file_dropped_arrives_once_when_the_primary_storage_node_stops_mid_run_and_returns`
 (`.src/test/service/failover.rs:270`) failed. Run alone on the same tree
 they passed three times in three, the failover test taking 12 to 39 s. The
-failover test had failed the same way on Windows a week earlier, while an
-Essentials cluster ran beside it, and passed alone. Whether a node's own
+failover test had failed the same way on Windows a week earlier, while a
+System Tests cluster ran beside it, and passed alone. Whether a node's own
 deadline or the test's bound gives way under load is not yet known; the
 millisecond rule says which must not.
 
@@ -2274,22 +2274,22 @@ as the carried file's does, is open.
 
 ## 87. No test a landing runs carries a Message through a loaded unit in a running node
 
-Found 2026-11-21, making a Work Process run in the Essentials (ADR-0066,
+Found 2026-11-21, making a Work Process run in the System Tests (ADR-0066,
 amendment 2026-11-21). A unit generated from a design is opened through the
 C ABI and turned in the runtime's own test, and the Ledger's tests run a
 Work Process compiled in memory, but no test a landing runs starts a node,
 gives it a Receive Location, a Work Process whose unit is a library, and a
-Send Port, and sees a Message through all three. The Essentials does so in
-a served run (`Start-XmipTest -Suite Core.Essentials`), which a landing
+Send Port, and sees a Message through all three. The System Tests do so in
+a served run (`Start-XmipTest -Suite Core.System`), which a landing
 does not run. The root's service tests start `xmip-service` but have no unit
 library to give it: a root example would be a second copy of a generated
 unit, and the runtime's `approval_unit` waits for a second Message of its
 Instance, which no Correlation keys. Which test it is, and where its unit
 comes from, is open.
 
-## 89. A unit test of the Essentials waits twenty seconds for timeouts
+## 89. A unit test of the System Tests wait twenty seconds for timeouts
 
-Found 2026-11-21, when it stopped a landing: the Essentials'
+Found 2026-11-21, when it stopped a landing: the System Tests'
 `round_trip::tests::harsh_sizes_are_carried_or_refused_with_a_reason` ran
 past the minute a landing gives one test, beside the landing's other parts.
 Alone it passes in 25.4 s on Windows and 22.5 s on Linux, of which 0.3 s is
@@ -2305,24 +2305,24 @@ address*, os error 10048). It now runs for the runner, `#[ignore]` as the
 brutal sizes are, and `Start-XmipTest -Stress Harsh` drives the same sizes;
 what it waits on and why it exhausts ports are still open.
 
-## 90. On Linux the Essentials' roll ends as it starts, saying nothing
+## 90. On Linux the System Tests' roll ends as it starts, saying nothing
 
 Found 2026-11-21, once the roll could be started on Linux at all (problem 88):
-`Start-XmipTest -Suite Core.Essentials` built, started the roll,
+`Start-XmipTest -Suite Core.System` built, started the roll,
 and the roll ended within its first second, its standard output and error
 empty and its run record unchanged. Not looked into.
 
-## 91. Windows blocks a program the Essentials starts, its firewall prompt unanswered
+## 91. Windows blocks a program the System Tests start, its firewall prompt unanswered
 
 Found 2026-11-21 driving the Hyper-V environment's real nodes: the roll's
 Parties' far end listened on `0.0.0.0:7422`, the machines timed out
 reaching it (os error 10060), and Windows Firewall held inbound *block*
-rules for `xmip-essentials-c1-roll` and `Xmip.Gui.Web` on the Public
+rules for `xmip-system-test-c1-roll` and `Xmip.Gui.Web` on the Public
 profile, which Windows makes itself when a new program listens and its
 prompt is not answered. A block rule wins over the port rule that allows
 7422, and every new name a build gives the roll, one per cluster, is a new
 program to Windows. Removing them takes an elevated console; how the
-Essentials should stand with Windows Firewall on one computer, a rule of
+System Tests should stand with Windows Firewall on one computer, a rule of
 its own made once by the elevated install or none needed, is open.
 
 ## 92. Two Storage nodes restarted one after the other end as standbys of each other
@@ -2369,7 +2369,7 @@ from a primary of the earlier build (open problem 106).
 
 ## 93. A backlog behind a Receive Location's sequence drains through a Work Process one Message a pass
 
-Found 2026-11-22 on the Hyper-V environment's real cluster. The Essentials'
+Found 2026-11-22 on the Hyper-V environment's real cluster. The System Tests'
 Parties dropped files for five and a half hours while Windows Firewall kept
 EX1 from them (problem 91). Once let through, every direct route drained its
 backlog of about 5,000 at about four a second, and the sales orders bound
@@ -2481,7 +2481,7 @@ the sequence held for an operator, is the owner's to choose.
 
 ## 104. Placement goes round a cluster's nodes in the order of their names, not the file's
 
-Found 2026-11-22, bringing the Essentials' cluster to the owner's node
+Found 2026-11-22, bringing the System Tests' cluster to the owner's node
 plan: configure reads `[nodes]` into a TOML table sorted by name, since the
 workspace's `toml` keeps no order. Renaming a node can therefore move a
 Receive Location or Send Port to another node, though placement says it
@@ -2490,7 +2490,7 @@ follows the file's order and nothing reads a name (`configure::placed`,
 
 ## 105. A node started with `--console` panics after its stop once nobody reads its output
 
-Found 2026-11-22 in the served rolls of the Essentials' cluster: a node
+Found 2026-11-22 in the served rolls of the System Tests' cluster: a node
 started as `xmip-service --console` panics once its stop is recorded, if
 the program that read its output has gone: "failed printing to stdout: The
 pipe is being closed. (os error 232)". 9 of 11 nodes recorded it as
@@ -2528,7 +2528,7 @@ looked into.
 
 ## 109. A roll's stop counts what was carried before it judges the last round
 
-Found 2026-11-22 in the served rolls of the Essentials' cluster: a roll's
+Found 2026-11-22 in the served rolls of the System Tests' cluster: a roll's
 stop says *N of M carried* before it judges the last round's arrivals, so a
 run whose every file arrived reads as some not carried: 953 of 960 on
 2026-11-22, all 960 received. A count an operator reads must be the
@@ -2536,7 +2536,7 @@ verdict, not a count taken while the last round is still in flight.
 
 ## 110. A served roll under load publishes a fastest delivery of 0 ns
 
-Found 2026-11-22 in a served roll of the Essentials' cluster, the host at 0
+Found 2026-11-22 in a served roll of the System Tests' cluster, the host at 0
 to 2 % headroom: two Receive Locations published "0ns the fastest" from
 drop to arrival, a time no whole file can take. The far end stamps its own
 drop since the same day, which ended the 0 ns an earlier roll showed when
@@ -2675,7 +2675,7 @@ retires entries from stops being an order.
                                        callers Kerberos and Active Directory
                                        prove, and the account behind an SSH
                                        key (ADR-0014, Reach) (ADR-0009,
-                                       amendment 2026-10-06); the Essentials'
+                                       amendment 2026-10-06); the System Tests'
                                        directory is the fake
                                        `TesterDirectory`
 4. Tracking and message search         problem 19: finding a Message by a
@@ -3141,7 +3141,7 @@ Raised by the outside review of 2026-10-08 as a decision to reconsider:
 ADR-0009's exception (the owner's *Go with A* of 2026-10-03) made every
 certificate-free caller over this machine's loopback the operating system
 user the host runs as (`GatedOperator.Proven`). With a role stated for the
-run, or an Essentials host's tester directory, another local user acted as
+run, or a System Tests host's tester directory, another local user acted as
 that account, and a reverse proxy forwarding to loopback extended the same
 trust to remote callers; the audit named the host's account. Decided by
 the owner, 2026-10-19: *local callers are proven by the operating system*,
@@ -3183,7 +3183,7 @@ Decided by the owner, 2026-10-21, and built the same day: *a Unix socket
 belongs to `[operate] group`, the node's own group where it is left out,
 and is `0660`, the node's peer check staying the second gate
 (`plane::local::unix`; proved in the AlmaLinux 10 guest); an account's name
-is kept until the node restarts; and *the Essentials tester in the web GUI
+is kept until the node restarts; and *the [System Tests] tester in the web GUI
 acts with an operator certificate* — the roll's host serves https on
 127.0.0.1 under the roll's authority, in Xmip's own TLS, the tester
 presents a certificate from `New-XmipCertificate -Operator`, and the tester
@@ -3372,7 +3372,7 @@ its crate's package its repository's name; the reserved `retain.s3` and
 `retain.gcs` to `retain.aws-s3` and `retain.google-cloud-storage` in
 `architecture.toml`; and what an operator writes: the transport's name and
 its scheme, `aws-s3://`, the archives' receipts, `aws-s3://` and
-`google-cloud-storage://`, and the Essentials' filing cabinet, `aws-s3`.
+`google-cloud-storage://`, and the System Tests' filing cabinet, `aws-s3`.
 Every crate, site, document and test naming the old words was changed with
 them. *S3* stays where it names Amazon's service or its interface, and
 Signature Version 4's `s3` service scope is unchanged.
@@ -3434,7 +3434,7 @@ Found 2026-11-19. `runtime::operator_certificate::sign` read `node.xmip`
 raw, not through the signed-slice check (ADR-0031), so a hand edit changed
 the certificate's lifetime (any duration) and which kept authority signed
 (any folder, an absolute path included); the names were not affected. The
-Essentials' and the deployment environment's `operator.xmip` (ADR-0009,
+System Tests' and the deployment environment's `operator.xmip` (ADR-0009,
 amendment 2026-10-21) were unsigned. The options were (A)
 `[provision.operator]` becomes part of the node's signed slice, or (B)
 signing reads no node configuration and each surface names the authority
@@ -3444,7 +3444,7 @@ Decided by the owner: A, on the reasons that every setting a node acts on
 is signed and that the limit stays with the node rather than with each
 surface that asks for a certificate. `sign` reads through `start::read`, so
 a hand-edited or unsigned slice is refused or the active slice signs;
-`signed::sliced_signed` is the one slice-and-sign; the Essentials declare
+`signed::sliced_signed` is the one slice-and-sign; the System Tests declare
 `[nodes.OP1.provision.operator]` in the cluster file and write
 `operator.xmip` as that node's signed slice, finding the node by its table,
 never by its name.
@@ -3566,22 +3566,22 @@ their own are ordered by their clocks, and a registration lost with a
 killed primary's writes (open problem 45) is a member again only at its
 next write.
 
-## 88. The Essentials does not start on Linux: a hidden window is asked for everywhere — **Resolved**
+## 88. The System Tests do not start on Linux: a hidden window is asked for everywhere — **Resolved**
 
 *Resolved 2026-11-21:* `Start-XmipHiddenProcess` is the one way the tooling
 starts a process in the background, a hidden window on Windows alone; the
 roll, a test's nodes, the web host, the detached shells and the tests that
 start a process of their own call it, and nothing else asks for a window.
 
-Found 2026-11-21, the first served Essentials run on the Linux build
-machine: `Start-XmipTest -Suite Core.Essentials` built for eight minutes and
+Found 2026-11-21, the first served System Tests run on the Linux build
+machine: `Start-XmipTest -Suite Core.System` built for eight minutes and
 then FAILED, *The parameter '-WindowStyle' is not supported for the cmdlet
 'Start-Process' on this edition of PowerShell.* Where a process is started
 detached, one rule says a hidden window is asked for on Windows alone, and
 it is written four times: `Start-XmipDetachedShell` asks only on Windows,
-while `Start-XmipEssentialsRollProcess` (the roll), `Start-XmipTestNode` and
+while `Start-XmipSystemTestRollProcess` (the roll), `Start-XmipTestNode` and
 `Start-XmipOperationWeb` ask on every system. One way to start a detached
-process, used by all four, is the fix; until it is made, no Essentials run,
+process, used by all four, is the fix; until it is made, no System Tests run,
 served or simulated, starts off Windows.
 
 ## 94. A standby Storage node does not stop when its service manager asks — **Resolved**

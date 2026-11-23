@@ -40,15 +40,15 @@ function Stop-XmipTestCluster {
         [string] $Cluster = ''
     )
 
-    # Found through Get-XmipEssentialsProcess, which judges by declaration
+    # Found through Get-XmipSystemTestProcess, which judges by declaration
     # first and by name second, so a cluster whose image was rebuilt under it
     # is still found and still stopped (2026-09-19). Since 2026-09-20 its name
-    # carries its cluster — xmip-essentials-V1-cluster — so the kind is asked
+    # carries its cluster — xmip-system-test-V1-cluster — so the kind is asked
     # for rather than the name.
-    $layout = Get-XmipEssentialsLayout
+    $layout = Get-XmipSystemTestLayout
 
     [System.Diagnostics.Process[]] $clusters = @(
-        Get-XmipEssentialsProcess -Name 'xmip-essentials-*' -Path $layout.Cluster -Kind Cluster |
+        Get-XmipSystemTestProcess -Name 'xmip-system-test-*' -Path $layout.Cluster -Kind Cluster |
             Where-Object {
                 $owner = try { $_.Parent } catch { $null }
                 $null -ne $owner -and $owner.Id -eq $Parent

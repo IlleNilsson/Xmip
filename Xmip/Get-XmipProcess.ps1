@@ -35,9 +35,9 @@ function Get-XmipProcess {
 
         .PARAMETER Name
             Only the processes whose name matches, wildcards allowed:
-            -Name 'xmip-essentials-*' is every roll, cluster and node on this
-            machine, and -Name 'xmip-essentials-CL1-*' is the tree of a
-            cluster someone called CL1, since an Essentials process carries
+            -Name 'xmip-system-test-*' is every roll, cluster and node on this
+            machine, and -Name 'xmip-system-test-CL1-*' is the tree of a
+            cluster someone called CL1, since a System Tests process carries
             its cluster and what it is (ADR-0053, amendment 2026-09-20). Every
             Xmip process unless said.
 
@@ -58,7 +58,7 @@ function Get-XmipProcess {
             Get-XmipProcess -Purpose Test | Stop-Process -Force
 
         .EXAMPLE
-            Get-XmipProcess -Name 'xmip-essentials-CL1-*'
+            Get-XmipProcess -Name 'xmip-system-test-CL1-*'
 
         .EXAMPLE
             Get-XmipProcess -Name 'xmip-service*' | Start-XmipOperationWeb
@@ -129,7 +129,7 @@ function Read-XmipProcessDeclaration {
             ([Xmip.Surface.ProcessDeclaration]::Undeclare): this module
             removes no file itself. Each declaration is a dictionary of what the
             file says — name, location, purpose, pid, started_unix, path, and
-            whatever else the process said of itself, such as an Essentials
+            whatever else the process said of itself, such as a System Tests
             node's flags — and file, where it stands.
 
         .PARAMETER Path

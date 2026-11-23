@@ -147,7 +147,7 @@ record = ["ADR-0019 (amendments 2026-10-19 and 2026-10-20)", "ADR-0024 (amendmen
 [implementation.arrival-validation]
 name = "Holding a Stream to a named Contract"
 state = "decided"
-note = "A node refuses to start a Receive or Send Location that names a Contract, in words: arrival holds no Stream to one yet (`xmip-core-runtime`'s `startup.rs`). The contract technologies validate, and the Essentials holds its generated content to them in its own harness, not at a node's Location."
+note = "A node refuses to start a Receive or Send Location that names a Contract, in words: arrival holds no Stream to one yet (`xmip-core-runtime`'s `startup.rs`). The contract technologies validate, and the System Tests hold their generated content to them in their own harness, not at a node's Location."
 record = ["ADR-0042", "ADR-0031 (amendment 2026-10-05)"]
 
 [implementation.security-profile]
@@ -171,7 +171,7 @@ record = ["ADR-0034 (amendments 2026-10-15 and 2026-10-22)", "ADR-0033 (amendmen
 [implementation.program-audit]
 name = "Every Xmip program audits to its audit file"
 state = "assembled"
-note = "`xmip-service`, `xmip`, both PowerShell modules, the web host, the language server and the Essentials record through `xmip-core-audit`'s `ProgramAudit` into `audit.toml`, each program handing it `xmip-core-audit-file`'s sink as it starts, synchronously: a record is appended before `record` returns, chained in its writer's audit chain under `audit.lock` (ADR-0070 clause 5), the operating system's log the program hands in — the Windows Event Log or syslog — the fallback; the next append seals a record whose write was interrupted, kept as written and in no chain; `xmip audit --verify`, `Get-XmipAudit -Verify` and the Audit view's verify walk the chains and say each such fragment apart from them."
+note = "`xmip-service`, `xmip`, both PowerShell modules, the web host, the language server and the System Tests record through `xmip-core-audit`'s `ProgramAudit` into `audit.toml`, each program handing it `xmip-core-audit-file`'s sink as it starts, synchronously: a record is appended before `record` returns, chained in its writer's audit chain under `audit.lock` (ADR-0070 clause 5), the operating system's log the program hands in — the Windows Event Log or syslog — the fallback; the next append seals a record whose write was interrupted, kept as written and in no chain; `xmip audit --verify`, `Get-XmipAudit -Verify` and the Audit view's verify walk the chains and say each such fragment apart from them."
 record = ["ADR-0062", "ADR-0070"]
 
 [implementation.audit-through-storage]
@@ -213,7 +213,7 @@ record = ["ADR-0018", "ADR-0064"]
 [implementation.process-execution]
 name = "Compiling a Work Process at design time, and running it"
 state = "built"
-note = "A BPMN 2.0 design compiles to a Work Process program and a unit crate exporting it through `xmip_module.h` section 13 (`xmip-core-process`, `xmip-core-process-bpmn`); the runtime's Work Process step takes a turn of each Instance from the Ledger, held by `tests/ledger/work_process.rs` (a Batch in the order received, two clients at once never overtaking, a node killed mid-process finishing from the Ledger) and the two crates' tests. A unit is opened from its library as the node starts, through the runtime's `dynamic-loading` feature, which `xmip-service` is built with, its library named as the node's own system names it (`xmip_module.h` section 1). The Essentials runs one: every sales order passes the Work Process *Order approval* (`test/core/essentials/configuration/order-approval.bpmn`, its unit the Essentials' example `order_approval`) on its way to the ERP. A unit's settings and calls through the standard units are decided, not built; no test a landing runs carries a Message through a loaded unit in a running node (open problem 87)."
+note = "A BPMN 2.0 design compiles to a Work Process program and a unit crate exporting it through `xmip_module.h` section 13 (`xmip-core-process`, `xmip-core-process-bpmn`); the runtime's Work Process step takes a turn of each Instance from the Ledger, held by `tests/ledger/work_process.rs` (a Batch in the order received, two clients at once never overtaking, a node killed mid-process finishing from the Ledger) and the two crates' tests. A unit is opened from its library as the node starts, through the runtime's `dynamic-loading` feature, which `xmip-service` is built with, its library named as the node's own system names it (`xmip_module.h` section 1). The System Tests run one: every sales order passes the Work Process *Order approval* (`test/core/system-test/configuration/order-approval.bpmn`, its unit the System Tests' example `order_approval`) on its way to the ERP. A unit's settings and calls through the standard units are decided, not built; no test a landing runs carries a Message through a loaded unit in a running node (open problem 87)."
 record = ["ADR-0066 (amendments 2026-10-22, 2026-11-21)", "ADR-0025 (amendment 2026-11-21)", "runtime-model.md section 22"]
 
 [implementation.module-loading]
@@ -249,7 +249,7 @@ record = ["ADR-0048 (amendments 2026-10-06)"]
 [implementation.retention-archiving]
 name = "Archiving by retention window"
 state = "built"
-note = "`xmip-core-retain` and `xmip-core-archive` are driven by the Essentials on a simulated clock; a node has no retention or archive step and reads no `[retention]` table."
+note = "`xmip-core-retain` and `xmip-core-archive` are driven by the System Tests on a simulated clock; a node has no retention or archive step and reads no `[retention]` table."
 record = ["ADR-0040"]
 
 [implementation.regulation-quest]
@@ -267,7 +267,7 @@ record = ["ADR-0015 (amendments 2026-10-01 and 2026-10-20)", "ADR-0056 (amendmen
 [implementation.storage-nodes]
 name = "Storage nodes reached over mutual TLS"
 state = "assembled"
-note = "A node without the Storage role reaches the Storage nodes `[storage] nodes` lists over Xmip's mutual TLS, presenting the certificate, key and anchors `[storage]` names — the node's own, from the cluster's authority — a standby passed over, a primary of an earlier epoch not asked, and refused at start in words where it names nothing to present; a node with the Storage role serves Xmip Storage at `[storage] listen`, and `xmip-service --listening` says its port; every node publishes at `<node>/storage` which Storage it uses and whether it answered, Done where none did. Held by the root's `failover` and `wire` tests and the Essentials' level 1, every node a process."
+note = "A node without the Storage role reaches the Storage nodes `[storage] nodes` lists over Xmip's mutual TLS, presenting the certificate, key and anchors `[storage]` names — the node's own, from the cluster's authority — a standby passed over, a primary of an earlier epoch not asked, and refused at start in words where it names nothing to present; a node with the Storage role serves Xmip Storage at `[storage] listen`, and `xmip-service --listening` says its port; every node publishes at `<node>/storage` which Storage it uses and whether it answered, Done where none did. Held by the root's `failover` and `wire` tests and the System Tests' level 1, every node a process."
 record = ["ADR-0056 (amendments 2026-10-01 and 2026-10-22)", "ADR-0067 (amendment 2026-10-22)"]
 
 [implementation.storage-standby]
@@ -1908,27 +1908,27 @@ dependency = ["xmip-core-library-codec"]
 
 # What exercises Xmip, under the provider whose work it exercises. `test` is
 # the kind of work, not a provider: until 2026-09-23 it stood in the provider's
-# place — xmip-test-essentials at test/essentials — and left nowhere for anyone
-# else's. A second provider's is xmip-<theirs>-test-essentials at
-# test/<theirs>/essentials, and the estate's rules apply to it unchanged.
+# place — xmip-test-system-test at test/system-test — and left nowhere for anyone
+# else's. A second provider's is xmip-<theirs>-test-system-test at
+# test/<theirs>/system-test, and the estate's rules apply to it unchanged.
   [xmip.core.test]
-  description = "What exercises Xmip: the Essentials, and what follows it. Every provider may have one."
+  description = "What exercises Xmip: the System Tests, and what follows it. Every provider may have one."
   architecturalDomain = "Operation"
   repositoryRole = "operational-capability"
   maturity = "reserved"
   dependency = []
 
-  [xmip.core.test.essentials]
-  description = "The Xmip Essentials: spawns Development nodes as processes and exercises every transport and content contract through them, continuously, publishing a verdict per pair as health. ADR-0028."
+  [xmip.core.test.system-test]
+  description = "The Xmip System Tests: spawns Development nodes as processes and exercises every transport and content contract through them, continuously, publishing a verdict per pair as health. ADR-0028."
   architecturalDomain = "Operation"
   repositoryRole = "operational-capability"
   maturity = "scaffolded"
   # Test scaffolding, not a capability the runtime loads: it mounts outside
   # module/, and it is optional — the estate builds and runs without it
-  # (ADR-0036). Under the provider, because another provider's essentials
-  # mounts at test/<theirs>/essentials beside it (the owner, 2026-09-23, and
+  # (ADR-0036). Under the provider, because another provider's System Tests
+  # mount at test/<theirs>/system-test beside it (the owner, 2026-09-23, and
   # again 2026-09-24 when it had been moved under module/).
-  mount = "test/core/essentials"
+  mount = "test/core/system-test"
   optional = true
   dependency = [
       "xmip-core",
@@ -2101,7 +2101,7 @@ dependency = ["xmip-core-library-codec"]
   architecturalDomain = "Operation"
   repositoryRole = "operational-capability"
   maturity = "scaffolded"
-  # Test scaffolding beside the Essentials: the runtime links nothing of it,
+  # Test scaffolding beside the System Tests: the runtime links nothing of it,
   # and its tests load the library it builds.
   mount = "test/core/module"
   primaryLanguage = "rust"

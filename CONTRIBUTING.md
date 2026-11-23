@@ -199,8 +199,8 @@ unchanged consumer linted at once in one workspace-wide `cargo clippy
 --all-features`, and the root crate whenever a module lands; .NET, every
 changed or consuming project; Pester, the root's `test/` when the root
 changed. Then each changed crate's timing program runs alone in the
-optimized `measured` build (ADR-0018, amendment 2026-11-20); the Essentials
-is never run. `README.md`, *Build, test, land*, lists the commands. The first
+optimized `measured` build (ADR-0018, amendment 2026-11-20); the System Tests
+are never run. `README.md`, *Build, test, land*, lists the commands. The first
 failure stops the run with nothing pushed. Only then does it push what an
 interrupted run left committed, land each changed module, dependencies
 first, and the root last.
@@ -330,7 +330,7 @@ separate; the prefix does not. Write to `.ai-interaction/`, never to
 
 `.local-work/` is the third of the untracked family: device-local state for
 building or running Xmip on this machine — a target choice, a local node
-configuration, what a test run writes: `essentials/` for the rolls,
+configuration, what a test run writes: `system-test/` for the rolls,
 `estate/` for the estate's Pester runs, `demo/` for the demo readiness
 check's runs (ADR-0028, amendment 2026-11-10), `web/` for what a web monitor
 `Start-XmipOperationWeb` started wrote to its console, `operator/` for the

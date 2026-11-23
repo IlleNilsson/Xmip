@@ -53,7 +53,7 @@ function Get-XmipEstateLayout {
         Manifest     = Join-Path -Path $Root -ChildPath $script:XmipManifestName
         Prerequisite = Join-Path -Path $Root -ChildPath $script:XmipPrerequisiteName
         Work         = $work
-        Essentials   = Join-Path -Path $work -ChildPath 'essentials'
+        SystemTest   = Join-Path -Path $work -ChildPath 'system-test'
         Estate       = Join-Path -Path $work -ChildPath 'estate'
         Demo         = Join-Path -Path $work -ChildPath 'demo'
         Landing      = Join-Path -Path $work -ChildPath 'landing'

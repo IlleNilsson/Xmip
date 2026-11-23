@@ -8,7 +8,7 @@
 
 .DESCRIPTION
     Apart from New-XmipPackage.ps1 since 2026-11-20: the service's build,
-    the package's and the Essentials' service read it.
+    the package's and the System Tests' service read it.
 
     Style: doc/governance/powershell-style.md
 #>

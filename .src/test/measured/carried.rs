@@ -146,7 +146,7 @@ fn an_edifact_order_routed_by_its_content_keeps_xmip_s_own_share_under_its_bound
     let filter = "filter = \"\\\"content:edi:UNH/2/1\\\" = 'ORDERS'\"";
     carried("carried-edifact", filter, |round| {
         format!(
-            "UNB+UNOC:3+PARTY-A:ZZZ+ESSENTIALS:ZZZ+261111:0905+A{round}'\n\
+            "UNB+UNOC:3+PARTY-A:ZZZ+SYSTEM-TEST:ZZZ+261111:0905+A{round}'\n\
              UNH+1+ORDERS:D:24A:UN'\nBGM+220+PO-{round}+9'\n\
              LIN+1++4006381333931:SRS'\nQTY+21:{round}:PCE'\nUNS+S'\n\
              UNT+6+1'\nUNZ+1+A{round}'\n"

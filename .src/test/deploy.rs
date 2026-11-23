@@ -1,5 +1,5 @@
 //! Every node configuration `deploy/` writes, read the way `xmip-service`
-//! reads its own: the Essentials' cluster `cluster.xmip` — the one file a
+//! reads its own: the System Tests' cluster `cluster.xmip` — the one file a
 //! test runs whether its nodes are simulated or on machines of their own
 //! (ADR-0028, amendment 2026-10-21), which the environment templates under
 //! `deploy/dsc` put on each node machine — sliced to every node it declares
@@ -24,7 +24,7 @@ use xmip_configure::XmipConfigurationDocument;
 use xmip_runtime::catalogue;
 use xmip_runtime::execution_tree::build_execution_tree;
 
-const ESSENTIALS: &str = "test/core/essentials/configuration/cluster.xmip";
+const SYSTEM_TEST: &str = "test/core/system-test/configuration/cluster.xmip";
 const TASKS_WINDOWS: &str = "deploy/dsc/ansible/roles/xmip_node/tasks/windows.yml";
 const TASKS_LINUX: &str = "deploy/dsc/ansible/roles/xmip_node/tasks/linux.yml";
 const TASKS_SLICE: &str = "deploy/dsc/ansible/roles/xmip_node/tasks/slice.yml";
@@ -168,23 +168,23 @@ fn the_controller_slices_and_signs_and_a_node_never_slices() {
 fn every_node_configuration_deploy_writes_is_the_one_the_runtime_reads() {
     let directory = xmip_file::temporary::Folder::new("deploy");
 
-    // The Essentials' file is the one a test runs whether its nodes are
+    // The System Tests' file is the one a test runs whether its nodes are
     // simulated or on machines of their own (ADR-0028, amendment
     // 2026-10-21): every node it declares slices as the environment names
     // the cluster and reads as xmip-service reads it.
-    let cluster = source(ESSENTIALS);
+    let cluster = source(SYSTEM_TEST);
     assert_eq!(
         xmip_configure::cluster::cluster_name(&cluster).expect("reads"),
         None,
-        "{ESSENTIALS} names no cluster: where it runs is the environment's"
+        "{SYSTEM_TEST} names no cluster: where it runs is the environment's"
     );
     let environment = xmip_configure::fixture::test_cluster().name;
     let nodes = xmip_configure::cluster::nodes(&cluster).expect("declares its nodes");
-    assert!(!nodes.is_empty(), "{ESSENTIALS} declares its nodes");
+    assert!(!nodes.is_empty(), "{SYSTEM_TEST} declares its nodes");
     for node in &nodes {
         let text = xmip_configure::slice_named(&cluster, node, &environment)
             .unwrap_or_else(|problem| panic!("{node} does not slice: {problem}"));
-        let document = read(&directory, &format!("essentials-{node}"), &text);
+        let document = read(&directory, &format!("system-test-{node}"), &text);
         assert_eq!(document.service.cluster_name, environment);
         assert_eq!(document.service.node_name, *node);
         let operate = document
@@ -205,7 +205,7 @@ fn every_node_configuration_deploy_writes_is_the_one_the_runtime_reads() {
         for one in &named {
             assert!(
                 nodes.iter().any(|node| node == one),
-                "{environment} maps {one}, which {ESSENTIALS} does not declare"
+                "{environment} maps {one}, which {SYSTEM_TEST} does not declare"
             );
         }
     }

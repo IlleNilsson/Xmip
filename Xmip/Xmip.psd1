@@ -68,7 +68,7 @@
         'Get-XmipProcess'
     )
 
-    # Table views for the essentials and web objects, so Get-XmipTestStatus
+    # Table views for the System Tests and web objects, so Get-XmipTestStatus
     # reads at a glance.
     FormatsToProcess     = @('Xmip.Format.ps1xml')
 

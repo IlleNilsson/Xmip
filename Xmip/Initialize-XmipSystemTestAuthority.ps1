@@ -2,14 +2,14 @@
 
 Set-StrictMode -Version Latest
 
-function Initialize-XmipEssentialsAuthority {
+function Initialize-XmipSystemTestAuthority {
     <#
         .SYNOPSIS
-            The Essentials' authority, kept under its area, and a certificate
+            The System Tests' authority, kept under its area, and a certificate
             for the web host under it; made where none is kept.
 
         .DESCRIPTION
-            The Essentials tester acts in the web GUI with an operator
+            The System Tests tester acts in the web GUI with an operator
             certificate (ADR-0009, amendment 2026-10-21): the host serves
             https on 127.0.0.1 under the roll's authority and the tester
             presents a certificate that authority signed. The authority is
@@ -21,7 +21,7 @@ function Initialize-XmipEssentialsAuthority {
             Xmip.Surface's RuntimeLibrary); nothing here writes a key.
 
             Beside the folder, operator.xmip is the slice of the node the
-            Essentials' cluster.xmip declares [provision.operator] for, found
+            System Tests' cluster.xmip declares [provision.operator] for, found
             by that table and never by its name, sliced as the run names the
             cluster (Get-XmipTestClusterPath) and signed by this authority
             through xmip_cluster_signed_slice_v1, written anew at each call
@@ -35,7 +35,7 @@ function Initialize-XmipEssentialsAuthority {
             Configuration a tester signs by.
 
         .PARAMETER Folder
-            Where the authority is kept. Get-XmipEssentialsLayout's Authority
+            Where the authority is kept. Get-XmipSystemTestLayout's Authority
             unless given. Its name is authority, the folder the trust reads
             beside a slice.
 
@@ -47,7 +47,7 @@ function Initialize-XmipEssentialsAuthority {
     [OutputType([PSCustomObject])]
     param(
         [Parameter()]
-        [string] $Folder = (Get-XmipEssentialsLayout).Authority,
+        [string] $Folder = (Get-XmipSystemTestLayout).Authority,
 
         [Parameter()]
         [string] $HostName = '127.0.0.1'
@@ -60,7 +60,7 @@ function Initialize-XmipEssentialsAuthority {
         throw "REFUSED. $full is not named authority, the folder the trust reads beside a slice."
     }
 
-    [string] $act = "Keep the Essentials' authority and issue $HostName"
+    [string] $act = "Keep the System Tests' authority and issue $HostName"
 
     if (-not $PSCmdlet.ShouldProcess($full, $act)) {
         return
@@ -71,14 +71,14 @@ function Initialize-XmipEssentialsAuthority {
     $issued = $null
     [string] $refused = ''
 
-    if (-not $hosting.Issue($full, 'Xmip Essentials authority', $HostName, $full,
+    if (-not $hosting.Issue($full, 'Xmip System Tests authority', $HostName, $full,
             [ref] $issued, [ref] $refused)) {
-        throw "REFUSED. The Essentials' authority at ${full}: $refused"
+        throw "REFUSED. The System Tests' authority at ${full}: $refused"
     }
 
     # Names are configuration (ADR-0056, amendment 2026-10-03): the cluster
     # the run names, and the node the cluster's file declares the table for.
-    [string] $file = (Get-XmipEssentialsLayout).Configuration
+    [string] $file = (Get-XmipSystemTestLayout).Configuration
     [string] $cluster = (Read-XmipTestCluster -Path (Get-XmipTestClusterPath)).Name
     $nodes = Get-TomlValue -Node (Read-XmipConfiguration -Path $file) -Name 'nodes'
     [string[]] $signing = @(Get-TomlKey -Node $nodes | Where-Object {

@@ -869,42 +869,43 @@ and packages in, and remote operators in a web browser or the phone app.\
 ]
 
 [[section]]
-title = "One plan, five ways"
+title = "One plan, six ways"
 headline = "The same plan, from one computer to physical machines"
 screen = """\
-One computer, Hyper-V, KVM with libvirt\nVMware and physical machines\nOne \
-cluster file; where nodes run, per environment\
+One computer, Hyper-V, KVM with libvirt\nVMware, containers and physical \
+machines\nOne cluster file; where nodes run, per environment\
 """
 voice = "male"
 power = false
 narration = """\
-The same plan runs five ways: as processes on one computer, on Hyper-V, on \
-Linux with KVM and libvirt, on VMware, and on physical machines. One \
-cluster file serves all five; which node runs on which machine belongs to \
-the environment, never to the cluster file. One computer proves the flow and \
-its rules, virtual machines prove it on real Windows and Linux machines, and \
-physical machines are where an end user runs it.\
+The same plan runs six ways: as processes on one computer, on Hyper-V, on \
+Linux with KVM and libvirt, on VMware, in containers, and on physical \
+machines. One cluster file serves all six; which node runs on which machine \
+belongs to the environment, never to the cluster file. The System Tests \
+prove the flow and its rules on one computer; the Systems Tests prove it on \
+real Windows and Linux machines and in containers; and physical machines \
+are where an end user runs it.\
 """
 sources = [
   "deploy/dsc/README.md",
   "doc/decision/ADR-0015-packaging.md",
-  "doc/decision/ADR-0028-the-xmip-essentials.md",
+  "doc/decision/ADR-0028-the-xmip-system-test.md",
   "doc/terminology.md"
 ]
-note = "The VMware template is not built yet; validation varies by way"
+note = "The VMware template and the container images are not built yet; validation varies by way"
 layout = [
   "ways",
-  "One plan, five ways to run it",
+  "One plan, six ways to run it",
   [
     [
       "01",
       "One computer",
-      "A process per node. Proves the flow and every rule."
+      "A process per node: the System Tests. Proves the flow and every rule."
     ],
     [
       "02",
       "Hyper-V",
-      "A machine per node, Windows and Linux, in a domain."
+      "A machine per node, Windows and Linux, in a domain: the Systems Tests."
     ],
     [
       "03",
@@ -918,12 +919,17 @@ layout = [
     ],
     [
       "05",
+      "Containers",
+      "A container per node, wherever containers live. Not built yet."
+    ],
+    [
+      "06",
       "Physical machines",
       "A machine per node, or one covering several roles."
     ]
   ],
   """\
-One cluster file for all five. Which node runs on which machine belongs to \
+One cluster file for all six. Which node runs on which machine belongs to \
 the environment, never to the cluster file.\
 """
 ]
@@ -1277,13 +1283,13 @@ power = false
 narration = """\
 The engineering approach connects decisions to implementation and \
 verification. Capability boundaries make ownership clear, while the \
-Essentials and test harnesses exercise behavior and expose evidence. For \
+System Tests and test harnesses exercise behavior and expose evidence. For \
 the project team, progress means a demonstrated flow and reproducible \
 results, alongside the design.\
 """
 sources = [
   "CONTRIBUTING.md",
-  "doc/decision/ADR-0028-the-xmip-essentials.md",
+  "doc/decision/ADR-0028-the-xmip-system-test.md",
   "doc/architecture/estate-map.md"
 ]
 note = ""
@@ -1304,7 +1310,7 @@ layout = [
     [
       "03",
       "Verify",
-      "Exercise behavior through the Essentials and repeatable module tests."
+      "Exercise behavior through the System Tests and repeatable module tests."
     ]
   ],
   """\

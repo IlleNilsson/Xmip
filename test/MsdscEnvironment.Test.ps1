@@ -22,7 +22,7 @@
       replaced by Microsoft.DSC.Debug/Echo: the names are given every node
       machine's address, each node machine is given its node's files and
       values and the environment's known_hosts, and every node mapped is one
-      the Essentials' cluster file declares.
+      the System Tests' cluster file declares.
     - An AlmaLinux machine is reached over OpenSSH with the environment's
       key and known_hosts, checked strictly, and DSC is brought to it only
       from a tarball whose SHA-256 is the one named.
@@ -131,7 +131,7 @@ BeforeAll {
         $script:Evaluated = Invoke-EchoEnvironment
     }
 
-    $script:Declared = InModuleScope Xmip { Read-XmipEssentialsCluster }
+    $script:Declared = InModuleScope Xmip { Read-XmipSystemTestCluster }
 }
 
 Describe 'The documents' {
@@ -231,7 +231,7 @@ Describe 'The example environment' {
         }
     }
 
-    It 'maps only nodes the Essentials''s cluster file declares' {
+    It 'maps only nodes the System Tests'' cluster file declares' {
         # The owner's node plan of 2026-11-22: every node but OP1 on a machine.
         $script:Nodes.Count | Should -Be 10
         foreach ($node in $script:Nodes.Keys) {
@@ -803,7 +803,7 @@ Describe 'A far end''s program, every command its machine runs a stub' {
     It 'is absent until it is placed and registered, then placed and registered by its --install' {
         [string] $source = Join-Path $TestDrive 'staged-program'
         Set-Content -LiteralPath $source -Value 'a far end'
-        [string] $path = Join-Path $TestDrive 'far-end/xmip-essentials-external'
+        [string] $path = Join-Path $TestDrive 'far-end/xmip-system-test-external'
         [hashtable] $instance = @{ path = $path; source = $source; node = 'far-end-a'
             arguments = @('--name', 'far-end-a', '--install', '--configuration', 'tls') }
         $script:Registered = $false

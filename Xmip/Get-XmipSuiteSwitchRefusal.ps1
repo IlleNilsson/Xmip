@@ -8,10 +8,10 @@
 
 .DESCRIPTION
     One table for the three of them since 2026-11-10, when Core.Demo, the
-    demo readiness check, joined Core.Essentials and Core.Estate with a
+    demo readiness check, joined Core.System and Core.Estate with a
     switch of its own, -Tester (ADR-0028, amendment 2026-11-10). Until then
-    a list of the Essentials' switches refused them on the estate's suite and
-    nothing refused anything on the Essentials. Start-XmipTest refuses through
+    a list of the System Tests' switches refused them on the estate's suite and
+    nothing refused anything on the System Tests. Start-XmipTest refuses through
     Get-XmipSuiteSwitchRefusal for the one suite named, and a group drops
     through Get-XmipSuiteSwitchForeign for each suite a pattern chose.
 
@@ -20,7 +20,8 @@
 
 
 # Which of Start-XmipTest's switches each kind of Xmip's own suites takes
-# beside -Suite: roll is Core.Essentials, pester Core.Estate, demo Core.Demo.
+# beside -Suite: roll is Core.System and Core.Systems, pester Core.Estate,
+# demo Core.Demo.
 # A provider's command is handed everything (Start-XmipProviderSuite). A
 # switch belongs to the first kind listed that takes it.
 [System.Collections.Specialized.OrderedDictionary] $script:XmipSuiteSwitch = [ordered]@{
@@ -76,7 +77,7 @@ function Get-XmipSuiteSwitchRefusal {
 
         .DESCRIPTION
             Each switch is said with the suite it belongs to: "-Stress belong
-            to Core.Essentials, not Core.Estate." Refused before anything
+            to Core.System and Core.Systems, not Core.Estate." Refused before anything
             starts, as every refusal of Start-XmipTest is (ADR-0055 clause 2).
 
         .PARAMETER Kind
@@ -84,6 +85,9 @@ function Get-XmipSuiteSwitchRefusal {
 
         .PARAMETER Bound
             What Start-XmipTest was called with.
+
+        .PARAMETER Chosen
+            The suite chosen, as the refusal names it; omitted, the kind's.
     #>
     [CmdletBinding()]
     [OutputType([string])]
@@ -93,14 +97,18 @@ function Get-XmipSuiteSwitchRefusal {
         [string] $Kind,
 
         [Parameter(Mandatory)]
-        [System.Collections.IDictionary] $Bound
+        [System.Collections.IDictionary] $Bound,
+
+        [Parameter()]
+        [string] $Chosen = ''
     )
 
     [hashtable] $suite = @{
-        roll   = $script:XmipEssentialsSuite
+        roll   = "$script:XmipSystemTestSuite and $script:XmipSystemsTestSuite"
         pester = $script:XmipEstateSuite
         demo   = $script:XmipDemoSuite
     }
+    [string] $not = if ($Chosen -ne '') { $Chosen } else { $suite[$Kind] }
     [string[]] $foreign = @(Get-XmipSuiteSwitchForeign -Kind $Kind -Bound $Bound)
     [string[]] $said = @(
         foreach ($owner in @($script:XmipSuiteSwitch.Keys)) {
@@ -110,7 +118,7 @@ function Get-XmipSuiteSwitchRefusal {
             $foreign = @($foreign | Where-Object { $_ -notin $owned })
 
             if ($owned.Count -gt 0) {
-                "-$($owned -join ', -') belong to $($suite[$owner]), not $($suite[$Kind])."
+                "-$($owned -join ', -') belong to $($suite[$owner]), not $not."
             }
         }
     )

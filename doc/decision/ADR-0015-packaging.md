@@ -154,7 +154,7 @@ technologies:
   sum and adds nothing (`roles = ["receiving", "processing", "sending"]`);
   `operational` brings cluster, event, persist, retain, archive and
   resilience; `monitoring` brings event and report; `development`, the
-  Essentials', composes executing, operational and monitoring.
+  System Tests', composes executing, operational and monitoring.
   `xmip-service`'s own features — node, audit, observe — are always on, and
   say so in one place: its `[[bin]] required-features` in `Cargo.toml`.
 - **Technologies**, what it integrates with (`technologies`): the
@@ -719,7 +719,7 @@ equal by `test/MsdscEnvironment.Test.ps1`; since the second amendment of
 2026-11-11 the environment file's alone, the YAML written from it — and
 never the cluster's file:
 the example runs R1 on XMIP-IN01, S1 on XMIP-OUT01, P1 on XMIP-APP01, L1
-on XMIP-APP02 and D1 on XMIP-APP03, and the Essentials simulates the rest.
+on XMIP-APP02 and D1 on XMIP-APP03, and the System Tests simulate the rest.
 
 **Microsoft DSC v3 as it is** (checked 2026-10-21: 3.3.0 current, 3.2.0
 general availability 2026-04-29, 3.2.3 on the owner's machine). DSC is a
@@ -798,7 +798,7 @@ until today only D1 did. Nothing the templates do changed: each node's
 certificate from the cluster's authority is what it presents to the
 Storage nodes as well as on its operate listener, and the firewall opening
 follows `xmip-service --listening`, which says `7443/tcp storage` on a node
-declaring the Storage role. The Essentials' cluster file says its Storage
+declaring the Storage role. The System Tests' cluster file says its Storage
 nodes once for every node, `[storage]`; the example's D2 is on no machine,
 and every node passes it over. The assistant's, 2026-10-22.
 
@@ -820,7 +820,7 @@ nothing is released (open problem 41); the scripts under
 ## Amendment, 2026-11-03: the machines in one command, on Hyper-V or libvirt
 
 The owner, 2026-11-03: *It should be easy, now it is hard*; *one should be
-able to set up the Core.Essentials on virtual servers with msdsc or Ansible
+able to set up the Core.System on virtual servers with msdsc or Ansible
 by a command*; *From whatever platform, you should be able fire up the test
 environment with DSC*; and of the language of what manages it: *.NET or
 PowerShell. That is for management, Rust is for runtime.*
@@ -1313,7 +1313,7 @@ crate build every build of the module runs (`Invoke-XmipCrateBuild`).
 winget's installer manifest names it under `Commands`.
 
 **No package ships `cli.toml`.** The command line's build copies the
-repository's beside the executable, and that one follows the Essentials,
+repository's beside the executable, and that one follows the System Tests,
 so the staging copies the three programs alone. `xmip-service --install`
 writes the installed node's `<bin>/cli.toml` where there is none —
 `Surface = "local"`, `Local` the node's local endpoint, no audit directory
@@ -1448,9 +1448,9 @@ told to the owner.
   that tests each step and sets only one that differs would pass an
   unchanged network unelevated; it waits on the owner.
 
-## Amendment, 2026-11-22: the Essentials' far ends on machines of their own, registered by the one registration
+## Amendment, 2026-11-22: the System Tests' far ends on machines of their own, registered by the one registration
 
-**Provenance.** The owner's node plan of 2026-11-22 puts the Essentials'
+**Provenance.** The owner's node plan of 2026-11-22 puts the System Tests'
 six far ends on machines of their own (ADR-0028, amendment of this date);
 the coordinator, the same day: *xmip-service already runs as a Windows
 service. The far end's Windows service must call that one implementation,
@@ -1466,10 +1466,10 @@ integration of windows-service.* Built by the assistant the same day.
   (`install.rs`, `control_manager.rs`), which now calls them with its own
   definition, the account it gives its node and its drain; the root no
   longer depends on the `windows-service` crate, the runtime does, once.
-  The Essentials' far end calls the same two with its own definition.
+  The System Tests' far end calls the same two with its own definition.
 - **A far end's machine.** A machine's `external` names the far end it
   runs; the environment file's `[far_ends.<family>]` names the program,
-  `xmip-essentials-external` built for that family. msdsc's
+  `xmip-system-test-external` built for that family. msdsc's
   `far-end.dsc.yaml` applies `far-end-program.dsc.yaml` there: the far
   end's certificate from the cluster's authority, the program placed and
   registered as the service `xmip-<name>` by its own `--install`
@@ -1477,7 +1477,7 @@ integration of windows-service.* Built by the assistant the same day.
   `--listening` says, and its service kept running. The names step gives
   the far end's name its machine's address.
 - **Bound for them.** `far_end` takes a list, the receiving far ends in the
-  order the Essentials names its receivers, each Send Port bound to the one
+  order the System Tests name their receivers, each Send Port bound to the one
   of its turn; `listen = true` has each Receive Location listen over HTTP on
   its node (`xmip-service --slice --bind a,b,c --listen`). One far end, the
   host, binds every Location as before. Ansible's inventory passes both;

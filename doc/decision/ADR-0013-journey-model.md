@@ -449,8 +449,8 @@ node's program linked, never a side file.
   `xmip_event_subscription_order_v1`. A read publication's Subscriptions are
   `xmip_publication_subscriptions_v1`, the plain name now this noun's, and
   its Event subscriptions `xmip_publication_event_subscriptions_v1`.
-- **The Essentials configures real ones.** Its RoundTrip test is an Xmip
-  Application, a section of the Essentials' `configuration/cluster.xmip`
+- **The System Tests configure real ones.** Their RoundTrip test is an Xmip
+  Application, a section of the System Tests' `configuration/cluster.xmip`
   (ADR-0064, amendment 2026-10-03): four
   Subscriptions, one per family of content contracts, each to the Send Port
   the send stage serves. The node that declared process writes it and a
@@ -473,7 +473,7 @@ node's program linked, never a side file.
 Provenance: the owner's requirement and steer, quoted; what the code
 showed; the record's form — the hold's place in the runtime, the persisted
 shapes, the order in pickup, the restart rule, the order's move to
-`observe`, the Essentials' Application — is the assistant's drafting, for
+`observe`, the System Tests' Application — is the assistant's drafting, for
 the owner to overrule.
 
 ## Open
@@ -853,7 +853,7 @@ a response Stream the Send Port makes a Message of, its travel in the same
 Journey. So a Receive Location's `interaction` — `composite`,
 `data-transfer`, `batch-load` — is deleted with every use: from
 `xmip-core-configure` (`Interaction`, `DesignedReceiveLocation::interaction`
-and the problem of a Location stating none), the samples, the Essentials'
+and the problem of a Location stating none), the samples, the System Tests'
 `cluster.xmip` and the documents (`runtime-model.md` sections 5, 6, 7, 11 and
 20; ADR-0031). Processing depth stays.
 

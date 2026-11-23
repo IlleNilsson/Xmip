@@ -81,6 +81,23 @@ Describe 'Terminology: another system is a Party' {
     }
 }
 
+Describe 'Terminology: the System Tests and the Systems Tests' {
+    It 'keeps the retired names out of the records but for the amendment that retired them' {
+        # The owner, 2026-11-23: *Essentials is a problem*, and *we can't have
+        # Playground and Essentials*. ADR-0028's amendment of that date quotes
+        # both once; nothing else in doc/ may use either (ADR-0028).
+        [string] $ruling = '(?s)## Amendment, 2026-11-23: the System Tests, local, and the ' +
+            'Systems Tests, on machines.*?(?=\n## |\z)'
+        $records = Get-ChildItem -Path $script:DocsRoot -Recurse -Filter *.md
+        [string[]] $uses = foreach ($file in $records) {
+            $text = [regex]::Replace((Get-Content -Raw -LiteralPath $file.FullName), $ruling, '')
+            if ($text -match '(?i)essentials|playground') { $file.FullName }
+        }
+
+        $uses | Should -BeNullOrEmpty -Because 'the estate says System Tests and Systems Tests'
+    }
+}
+
 Describe 'Terminology: a settled but overloaded word stays qualified' {
     It 'does not let a bare watchword grow past its frozen ceiling' {
         foreach ($w in $script:Watchwords) {

@@ -2,7 +2,7 @@
 
 Set-StrictMode -Version Latest
 
-# Which live processes are the Essentials'. The file on disk is not the
+# Which live processes are the System Tests'. The file on disk is not the
 # answer: on 2026-09-19 the owner's roll, its cluster and its nodes were
 # alive while Get-XmipTestStatus and Get-XmipTestNode said nothing, because
 # the binaries had been rebuilt under the running processes and the lookup
@@ -13,30 +13,30 @@ Set-StrictMode -Version Latest
 # stop, so this finds by declaration first, by name second, and says in words
 # when the file and the image disagree (ADR-0055).
 
-function Get-XmipEssentialsProcess {
+function Get-XmipSystemTestProcess {
     <#
         .SYNOPSIS
-            Every live process running one Essentials binary: the ones the
+            Every live process running one System Tests binary: the ones the
             operating system names, and the ones that declared themselves as
             it, whatever has happened to the file since they started.
 
         .PARAMETER Name
             The process name, wildcards allowed. Since 2026-09-20 a
-            Essentials process is named for its cluster and what it is —
-            xmip-essentials-CL1-roll, xmip-essentials-CL1-node-RX1, for a
+            System Tests process is named for its cluster and what it is —
+            xmip-system-test-CL1-roll, xmip-system-test-CL1-node-RX1, for a
             cluster someone called CL1 and a node they called RX1,
-            both names free — so the Essentials' own callers ask for
-            xmip-essentials-* and say which of the four with -Kind.
+            both names free — so the System Tests' own callers ask for
+            xmip-system-test-* and say which of the four with -Kind.
             xmip-gui-web is named outright.
 
         .PARAMETER Path
             Where the binary is expected to be. A process whose image is
             elsewhere is still this one's, and it is said. A process running
-            one of the Essentials' own per-instance images is this one's
+            one of the System Tests' own per-instance images is this one's
             without a word, because nothing else writes that directory.
 
         .PARAMETER Kind
-            Which of the Essentials' four: Roll, Cluster, Node or External, a
+            Which of the System Tests' four: Roll, Cluster, Node or External, a
             far end outside the cluster. The name says it — a node carries the
             marker node-, a far end external-, and a name without one ending
             in -roll or -cluster is that — so a roll's tree is found by kind
@@ -62,11 +62,11 @@ function Get-XmipEssentialsProcess {
     [bool] $byKind = $PSBoundParameters.ContainsKey('Kind')
 
     foreach ($process in @(Get-Process -Name $Name -ErrorAction SilentlyContinue)) {
-        if ($byKind -and (Get-XmipEssentialsImageKind -Name $process.ProcessName) -ne $Kind) {
+        if ($byKind -and (Get-XmipSystemTestImageKind -Name $process.ProcessName) -ne $Kind) {
             continue
         }
 
-        if (Test-XmipEssentialsBinary -Process $process -Path $Path -Declared $declared) {
+        if (Test-XmipSystemTestBinary -Process $process -Path $Path -Declared $declared) {
             $found.Add($process.Id)
             $process
         }
@@ -82,7 +82,7 @@ function Get-XmipEssentialsProcess {
             continue
         }
 
-        if ($byKind -and (Get-XmipEssentialsImageKind -Name $said) -ne $Kind) {
+        if ($byKind -and (Get-XmipSystemTestImageKind -Name $said) -ne $Kind) {
             continue
         }
 
@@ -103,7 +103,7 @@ function Get-XmipEssentialsProcess {
     }
 }
 
-function Test-XmipEssentialsBinary {
+function Test-XmipSystemTestBinary {
     <#
         .SYNOPSIS
             Whether a process is the named Xmip binary — its own build where
@@ -148,13 +148,13 @@ function Test-XmipEssentialsBinary {
 
     [string] $image = try { $Process.Path } catch { '' }
 
-    # A process running one of the Essentials' own per-instance images is the
-    # Essentials', and nothing about it disagrees: the image is not the built
+    # A process running one of the System Tests' own per-instance images is the
+    # System Tests', and nothing about it disagrees: the image is not the built
     # binary on purpose, because a process name is its image's name and an
     # operator asked to read the cluster and the node off it (ADR-0053,
     # amendment 2026-09-20). Nothing but this module writes that directory.
-    if ((Test-XmipEssentialsOwnImage -Path $started) -or
-        (Test-XmipEssentialsOwnImage -Path $image)) {
+    if ((Test-XmipSystemTestOwnImage -Path $started) -or
+        (Test-XmipSystemTestOwnImage -Path $image)) {
         return $true
     }
 
@@ -166,10 +166,10 @@ function Test-XmipEssentialsBinary {
         Expected = $Path
     }
 
-    return Test-XmipEssentialsImage @judgment
+    return Test-XmipSystemTestImage @judgment
 }
 
-function Test-XmipEssentialsImage {
+function Test-XmipSystemTestImage {
     <#
         .SYNOPSIS
             The judgment itself, over what a process says of itself: the

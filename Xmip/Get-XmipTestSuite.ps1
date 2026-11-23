@@ -3,14 +3,17 @@
 Set-StrictMode -Version Latest
 
 # A test suite carries a provider, exactly as a module does (ADR-0011), and
-# the qualified form is the canonical one: Xmip's own are Core.Essentials,
-# Core.Estate and Core.Demo, which is what every surface prints, records and
-# documents (ADR-0059, amendment 2026-09-20; the owner: "It's name is
-# Core.Essentials, to give place for third parties"). A bare name is still
+# the qualified form is the canonical one: Xmip's own are Core.System,
+# Core.Systems, Core.Estate and Core.Demo, which is what every surface prints,
+# records and documents (ADR-0059, amendment 2026-09-20; the owner: "It's name
+# is Core.System, to give place for third parties"). A bare name is still
 # accepted and canonicalized. Said once here, so no surface spells a name for
-# itself and none of them can disagree. Core.Demo is the demo readiness check
+# itself and none of them can disagree. Core.System is the System Tests on one
+# computer and Core.Systems the Systems Tests on an environment's machines
+# (ADR-0028, amendment 2026-11-23); Core.Demo is the demo readiness check
 # (ADR-0028, amendment 2026-11-10).
-[string] $script:XmipEssentialsSuite = 'Core.Essentials'
+[string] $script:XmipSystemTestSuite = 'Core.System'
+[string] $script:XmipSystemsTestSuite = 'Core.Systems'
 [string] $script:XmipEstateSuite = 'Core.Estate'
 [string] $script:XmipDemoSuite = 'Core.Demo'
 
@@ -26,7 +29,7 @@ function Get-XmipTestSuite {
             caller gives -Suite, who provides it, and how it starts.
 
         .DESCRIPTION
-            Core.Essentials, Core.Estate and Core.Demo are known to the module,
+            Core.System, Core.Systems, Core.Estate and Core.Demo are known to the module,
             so the estate's own gate runs on a fresh clone with nothing declared.
             Every other suite is a third party's, declared in a TOML file under
             test/suite and read here. A declaration that is malformed is
@@ -45,7 +48,8 @@ function Get-XmipTestSuite {
         [string] $Path
     )
 
-    New-XmipTestSuite -Provider 'Core' -Name 'Essentials' -Kind 'roll'
+    New-XmipTestSuite -Provider 'Core' -Name 'System' -Kind 'roll'
+    New-XmipTestSuite -Provider 'Core' -Name 'Systems' -Kind 'roll' -ByName -Machines
     New-XmipTestSuite -Provider 'Core' -Name 'Estate' -Kind 'pester'
     New-XmipTestSuite -Provider 'Core' -Name 'Demo' -Kind 'demo' -ByName
 
@@ -79,18 +83,18 @@ function New-XmipTestSuite {
     <#
         .SYNOPSIS
             One suite as the Xmip.TestSuite object every surface reads. The
-            canonical spelling is Provider.Name for everyone, Xmip's own two
-            included — Core.Essentials, Core.Estate — and a caller is matched
+            canonical spelling is Provider.Name for everyone, Xmip's own
+            included — Core.System, Core.Estate — and a caller is matched
             against it without regard to case.
 
         .PARAMETER Provider
             Who publishes the suite. Core is Xmip itself (ADR-0011).
 
         .PARAMETER Name
-            What the provider calls the suite: Essentials, Estate.
+            What the provider calls the suite: System, Systems, Estate.
 
         .PARAMETER Kind
-            How it starts: roll is the Essentials' detached roll, pester is
+            How it starts: roll is the System Tests' detached roll, pester is
             the estate's Pester files, demo the demo readiness check (Start-
             XmipDemoSuite), command is a provider's own command.
 
@@ -104,7 +108,14 @@ function New-XmipTestSuite {
             Started by its name alone, never by a pattern naming a group:
             Core.Demo, which builds and opens the desktop app, holds the web
             host's address and rolls a cluster of its own (ADR-0028,
-            amendment 2026-11-10).
+            amendment 2026-11-10); and Core.Systems, which needs an
+            environment's machines (ADR-0028, amendment 2026-11-23).
+
+        .PARAMETER Machines
+            Runs on an environment's machines, every node of the run one that
+            answers there and none spawned in its place: Core.Systems, the
+            Systems Tests. The suite says so; a name never does (ADR-0028,
+            amendment 2026-11-23).
     #>
     [CmdletBinding()]
     [OutputType('Xmip.TestSuite')]
@@ -126,7 +137,10 @@ function New-XmipTestSuite {
         [string] $Source = '',
 
         [Parameter()]
-        [switch] $ByName
+        [switch] $ByName,
+
+        [Parameter()]
+        [switch] $Machines
     )
 
     # Every suite is spelled <Provider>.<Name>, Xmip's own included: the slot
@@ -145,6 +159,7 @@ function New-XmipTestSuite {
         Command    = $Command
         Source     = $Source
         ByName     = [bool] $ByName
+        Machines   = [bool] $Machines
     }
 }
 
@@ -159,15 +174,15 @@ function Get-XmipNamedTestSuite {
         .DESCRIPTION
             A name is matched against the canonical <Provider>.<Name> and,
             for the reserved provider alone, against the bare name, so
-            Essentials and Core.Essentials are the one suite and the one
-            spelling that comes back is Core.Essentials (ADR-0011; ADR-0059,
+            System and Core.System are the one suite and the one
+            spelling that comes back is Core.System (ADR-0011; ADR-0059,
             amendment 2026-09-20). A bare name reaches Xmip's own suites and
             no one else's. Case never matters, here or anywhere.
 
             The match is a wildcard, as -Test's is and as Get-XmipTestNode
             -Name's is (the owner, 2026-09-19: "Filter the -Suite as the -Test
             parameter"), so -Suite * is every suite this estate knows and
-            -Suite *Ess* is the Essentials. A literal name holds no wildcard
+            -Suite *Sys* is the System Tests. A literal name holds no wildcard
             character and selects exactly one suite, so nothing an operator
             typed before this means anything else now. A suite started by
             name alone (ByName: Core.Demo) is never selected by a pattern,
@@ -278,8 +293,8 @@ function Test-XmipWholeSuite {
             run all tests in the test suite).
 
         .DESCRIPTION
-            Core.Essentials and Core.Estate both did this already and did it
-            by two unrelated accidents — an unset XMIP_ESSENTIALS_SCENARIOS
+            Core.System and Core.Estate both did this already and did it
+            by two unrelated accidents — an unset XMIP_SYSTEM_TEST_SCENARIOS
             that the roll reads as every scenario, and an empty -Test that
             Pester reads as every file. Two behaviors that happen to agree are
             not a rule; this is the rule, and all three branches ask it.

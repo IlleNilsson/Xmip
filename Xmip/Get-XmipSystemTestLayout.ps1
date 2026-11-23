@@ -2,23 +2,23 @@
 
 Set-StrictMode -Version Latest
 
-function Get-XmipEssentialsLayout {
+function Get-XmipSystemTestLayout {
     <#
         .SYNOPSIS
-            Where the Essentials' binaries, the web host and this machine's
-            run output live. One answer for every essentials cmdlet.
+            Where the System Tests' binaries, the web host and this machine's
+            run output live. One answer for every System Tests cmdlet.
 
         .DESCRIPTION
             The roll, cluster and node binaries are cargo's `measured` build of
-            test/core/essentials, in the estate's one workspace: the board and
+            test/core/system-test, in the estate's one workspace: the board and
             the demo read latency from them, and the millisecond rule is
             measured on the optimized build (ADR-0018, amendment 2026-11-20).
-            They build in Target, .local-work/essentials/target, a build
+            They build in Target, .local-work/system-test/target, a build
             directory of their own, so a running roll never holds a file a
             landing builds.
             The web host is the GUI's debug build. Everything
             a run writes on this machine — snapshots, run records, node logs —
-            goes under .local-work/essentials, the device-local folder the
+            goes under .local-work/system-test, the device-local folder the
             estate reserves for running Xmip here (CONTRIBUTING.md:
             .local-work is where). Nothing here is created; Start-* create
             what they use.
@@ -30,22 +30,22 @@ function Get-XmipEssentialsLayout {
             never copies of the repository, and they are device-local like
             everything else a run writes here.
 
-            Authority is the Essentials' own certificate authority, one for
+            Authority is the System Tests' own certificate authority, one for
             every roll in the area: the web host is served https under it, a
             tester's operator certificate is signed by it
-            (Initialize-XmipEssentialsAuthority; ADR-0009, amendment
+            (Initialize-XmipSystemTestAuthority; ADR-0009, amendment
             2026-10-21), and the nodes a run starts as xmip-service are issued
             under it, so it outlives every run (ADR-0028, amendment
             2026-10-27).
 
-            Configuration is the Essentials' own cluster cluster.xmip, the one
+            Configuration is the System Tests' own cluster cluster.xmip, the one
             file a run is the same over whether its nodes are simulated or on
             machines of their own (ADR-0028, amendment 2026-10-21): the nodes
             a run spawns where -Nodes names none, and what the environment
             templates under deploy/dsc put on each node machine.
 
             Estate is where a run of the estate's Pester suite writes its
-            record and its log: .local-work/estate, beside the Essentials'
+            record and its log: .local-work/estate, beside the System Tests'
             area and not inside it, since it is no roll's. Demo is the same
             for a run of Core.Demo, the demo readiness check, which reads a
             roll through Desktop, the Desktop operations app's project, and
@@ -58,14 +58,14 @@ function Get-XmipEssentialsLayout {
 
     [pscustomobject] $estate = Get-XmipEstateLayout
     [string] $root = $estate.Root
-    [string] $essentials = Join-Path -Path $root -ChildPath 'test/core/essentials'
+    [string] $systemTest = Join-Path -Path $root -ChildPath 'test/core/system-test'
 
     # The roll, cluster and node build in a build directory of their own,
-    # under the Essentials' area, in its `measured` folder: a running roll
+    # under the System Tests' area, in its `measured` folder: a running roll
     # holds its binaries open (its images are hard links to them), and on
     # Windows a landing's timing runs, which build in the estate's
     # (Get-XmipEstateLayout, Build), would fail on a file held there.
-    [string] $built = Join-Path -Path $estate.Essentials -ChildPath 'target'
+    [string] $built = Join-Path -Path $estate.SystemTest -ChildPath 'target'
     [string] $target = Join-Path -Path $built -ChildPath $script:XmipMeasuredProfile
 
     [string] $suffix = if ($IsWindows) { '.exe' } else { '' }
@@ -74,35 +74,35 @@ function Get-XmipEssentialsLayout {
 
     return [PSCustomObject]@{
         Root       = $root
-        Essentials = $essentials
-        Configuration = Join-Path -Path $essentials -ChildPath 'configuration/cluster.xmip'
+        SystemTest = $systemTest
+        Configuration = Join-Path -Path $systemTest -ChildPath 'configuration/cluster.xmip'
         Target     = $built
-        Roll       = Join-Path -Path $target -ChildPath "xmip-essentials-roll$suffix"
-        Cluster    = Join-Path -Path $target -ChildPath "xmip-essentials-cluster$suffix"
-        Node       = Join-Path -Path $target -ChildPath "xmip-essentials-node$suffix"
+        Roll       = Join-Path -Path $target -ChildPath "xmip-system-test-roll$suffix"
+        Cluster    = Join-Path -Path $target -ChildPath "xmip-system-test-cluster$suffix"
+        Node       = Join-Path -Path $target -ChildPath "xmip-system-test-node$suffix"
         # Each far end outside the cluster the roll starts beside the nodes
         # it runs as xmip-service, a sender or a receiver (ADR-0028,
         # amendment 2026-11-22).
-        External   = Join-Path -Path $target -ChildPath "xmip-essentials-external$suffix"
+        External   = Join-Path -Path $target -ChildPath "xmip-system-test-external$suffix"
         # The Work Process units the run places beside its nodes, built as
-        # the crate's examples (Invoke-XmipEssentialsBuild).
+        # the crate's examples (Invoke-XmipSystemTestBuild).
         Examples   = Join-Path -Path $target -ChildPath 'examples'
         Web        = Join-Path -Path $root -ChildPath "$web$suffix"
         Desktop    = Join-Path -Path $root -ChildPath $desktop
         Extension  = Join-Path -Path $root -ChildPath 'module/core/operation/gui/vscode'
-        Area       = $estate.Essentials
-        Authority  = Join-Path -Path $estate.Essentials -ChildPath 'authority'
-        Image      = Join-Path -Path $estate.Essentials -ChildPath 'image'
+        Area       = $estate.SystemTest
+        Authority  = Join-Path -Path $estate.SystemTest -ChildPath 'authority'
+        Image      = Join-Path -Path $estate.SystemTest -ChildPath 'image'
         Estate     = $estate.Estate
         Demo       = $estate.Demo
         Suffix     = $suffix
     }
 }
 
-function Invoke-XmipEssentialsBuild {
+function Invoke-XmipSystemTestBuild {
     <#
         .SYNOPSIS
-            Builds one Essentials binary, cargo's lines on the Verbose stream.
+            Builds one System Tests binary, cargo's lines on the Verbose stream.
             Cargo is a no-op when the binary is current, so this always runs:
             a stale binary silently running yesterday's scenarios is the thing
             it prevents.
@@ -112,7 +112,7 @@ function Invoke-XmipEssentialsBuild {
             cluster spawns the nodes (the owner, 2026-09-19), so building the
             roll builds all three and building the cluster builds it and the
             node; the roll also starts the far ends outside the cluster, so
-            building it builds their program too. Each builds the Essentials'
+            building it builds their program too. Each builds the System Tests'
             Work Process unit with it.
     #>
     [CmdletBinding()]
@@ -123,22 +123,22 @@ function Invoke-XmipEssentialsBuild {
         [string] $Binary
     )
 
-    $layout = Get-XmipEssentialsLayout
+    $layout = Get-XmipSystemTestLayout
     [string] $path = switch ($Binary) {
         'roll' { $layout.Roll }
         'cluster' { $layout.Cluster }
         default { $layout.Node }
     }
 
-    Write-Verbose "cargo build --bin $Binary in $($layout.Essentials)"
-    [string[]] $bins = @('--bin', 'xmip-essentials-node')
+    Write-Verbose "cargo build --bin $Binary in $($layout.SystemTest)"
+    [string[]] $bins = @('--bin', 'xmip-system-test-node')
 
     if ($Binary -in 'roll', 'cluster') {
-        $bins += @('--bin', 'xmip-essentials-cluster')
+        $bins += @('--bin', 'xmip-system-test-cluster')
     }
 
     if ($Binary -eq 'roll') {
-        $bins += @('--bin', 'xmip-essentials-roll', '--bin', 'xmip-essentials-external')
+        $bins += @('--bin', 'xmip-system-test-roll', '--bin', 'xmip-system-test-external')
     }
 
     # The Work Process unit the cluster's file names, built beside them: the
@@ -149,7 +149,7 @@ function Invoke-XmipEssentialsBuild {
     # Cargo's first error is kept, so a failed build says why in its own
     # words and not only its exit code (Get-XmipTestStatus shows it).
     [string[]] $measured = @('--profile', $script:XmipMeasuredProfile) + $bins
-    [hashtable] $building = @{ Directory = $layout.Essentials; Argument = $measured }
+    [hashtable] $building = @{ Directory = $layout.SystemTest; Argument = $measured }
     [string] $was = $env:CARGO_TARGET_DIR
     $env:CARGO_TARGET_DIR = $layout.Target
 
@@ -165,7 +165,7 @@ function Invoke-XmipEssentialsBuild {
 
     if (-not $built.Passed) {
         [string] $why = if ($first -ne '') { ": $first" } else { '.' }
-        throw "cargo build --bin $Binary failed in $($layout.Essentials)$why"
+        throw "cargo build --bin $Binary failed in $($layout.SystemTest)$why"
     }
 
     return $path
@@ -181,7 +181,7 @@ function Invoke-XmipCargoBuild {
             The estate is one workspace whose [patch] resolves every estate
             crate to its working tree (ADR-0016, amendment 2026-11-20), so a
             build tests what is here and never only what was pushed. The
-            Essentials' binaries and the demo readiness check's language
+            System Tests' binaries and the demo readiness check's language
             server are built by it.
 
         .PARAMETER Directory
@@ -212,7 +212,7 @@ function Invoke-XmipCargoBuild {
     }
 }
 
-function Invoke-XmipEssentialsService {
+function Invoke-XmipSystemTestService {
     <#
         .SYNOPSIS
             Builds the xmip-service a run of `Cluster` starts its nodes as, and
@@ -223,7 +223,7 @@ function Invoke-XmipEssentialsService {
             every stage, Xmip Storage and the file transport, in the estate's
             one workspace and its `measured` build, the one the millisecond
             rule is measured on (ADR-0018, amendment 2026-11-20). The binary
-            is copied to .local-work/essentials/service/<cluster>, so a later
+            is copied to .local-work/system-test/service/<cluster>, so a later
             build never changes what a running roll's nodes run (ADR-0028,
             amendment 2026-10-22).
 
@@ -237,7 +237,7 @@ function Invoke-XmipEssentialsService {
         [string] $Cluster
     )
 
-    $layout = Get-XmipEssentialsLayout
+    $layout = Get-XmipSystemTestLayout
     [string[]] $measured = @('--profile', $script:XmipMeasuredProfile)
     $null = Build-XmipService -Site personal-computer -CargoArgument $measured
 
@@ -253,27 +253,27 @@ function Invoke-XmipEssentialsService {
 }
 
 
-function Get-XmipEssentialsPublication {
+function Get-XmipSystemTestPublication {
     <#
         .SYNOPSIS
             Where the roll of a cluster publishes its snapshot, history and
             activity in an area, as the roll itself says.
 
         .DESCRIPTION
-            The names are the Essentials' to decide (environment.rs,
+            The names are the System Tests' to decide (environment.rs,
             publish_paths), so this asks the roll binary —
-            `xmip-essentials-roll --publication <cluster> <area>`, which
+            `xmip-system-test-roll --publication <cluster> <area>`, which
             prints them and starts nothing — rather than naming the files a
             second time. Refused in words when the roll cannot answer.
 
         .PARAMETER Roll
-            The roll binary, from Invoke-XmipEssentialsBuild.
+            The roll binary, from Invoke-XmipSystemTestBuild.
 
         .PARAMETER Cluster
             The cluster the roll rolls as.
 
         .PARAMETER Path
-            The area the roll publishes in, as XMIP_ESSENTIALS_AREA tells it.
+            The area the roll publishes in, as XMIP_SYSTEM_TEST_AREA tells it.
     #>
     [CmdletBinding()]
     [OutputType([PSCustomObject])]

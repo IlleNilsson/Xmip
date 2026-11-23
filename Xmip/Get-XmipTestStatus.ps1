@@ -9,7 +9,7 @@ function Get-XmipTestStatus {
             suite, what it was started with and how it stands.
 
         .DESCRIPTION
-            A run of the Essentials is a roll, and the suite it names is the
+            A run of the System Tests is a roll, and the suite it names is the
             one it was started with, read back from the run record. A run of
             Core.Estate is the estate's Pester suite in a pwsh of its own,
             listed from its record under .local-work/estate while it runs and
@@ -29,9 +29,9 @@ function Get-XmipTestStatus {
             words, and Tally the part it is on or how many parts were OK;
             Get-XmipTestResult -Suite Core.Demo says each part and why.
             Reads the run records Start-XmipTest wrote under -Path and
-            keeps the ones whose process is alive and is the Essentials' own
+            keeps the ones whose process is alive and is the System Tests' own
             roll binary — never a process that merely shares the name. A roll
-            started by hand (`cargo run --bin xmip-essentials-roll`) has no record and is
+            started by hand (`cargo run --bin xmip-system-test-roll`) has no record and is
             listed with what a process alone can tell.
 
             Nothing here starts, stops or writes anything. Nothing running
@@ -39,7 +39,7 @@ function Get-XmipTestStatus {
 
         .PARAMETER Path
             Where the rolls' run records are. Defaults to the repository's
-            .local-work/essentials folder, where Start-XmipTest writes. The
+            .local-work/system-test folder, where Start-XmipTest writes. The
             estate's records are always read from .local-work/estate.
 
         .PARAMETER Cluster
@@ -83,7 +83,7 @@ function Get-XmipTestStatus {
     )
 
     $ErrorActionPreference = 'Stop'
-    $layout = Get-XmipEssentialsLayout
+    $layout = Get-XmipSystemTestLayout
 
     if ([string]::IsNullOrWhiteSpace($Path)) {
         $Path = $layout.Area
@@ -94,10 +94,10 @@ function Get-XmipTestStatus {
     Get-XmipEstateRun -Path $layout.Estate | Where-Object { "$($_.Cluster)" -like $Cluster }
 
     [System.Diagnostics.Process[]] $rolls = @(
-        Get-XmipEssentialsProcess -Name 'xmip-essentials-*' -Path $layout.Roll -Kind Roll
+        Get-XmipSystemTestProcess -Name 'xmip-system-test-*' -Path $layout.Roll -Kind Roll
     )
     [object[]] $builds = @(
-        Get-XmipEssentialsBuild -Path $Path | Where-Object { "$($_.Cluster)" -like $Cluster }
+        Get-XmipSystemTestBuild -Path $Path | Where-Object { "$($_.Cluster)" -like $Cluster }
     )
     [object[]] $demos = @(
         Get-XmipDemoRun -Path $layout.Demo | Where-Object { "$($_.Cluster)" -like $Cluster }
@@ -154,9 +154,9 @@ function Get-XmipTestStatus {
 
         # The suite the run was started with, from the record that carries it,
         # said the one way whatever spelling started it: a record written
-        # earlier may say Essentials and this says Core.Essentials
+        # earlier may say System and this says Core.System
         # (ADR-0059, amendment 2026-09-20). A roll started by hand has no
-        # record and is the Essentials by the binary it is.
+        # record and is the System Tests by the binary it is.
         [string] $named = [string](Get-TomlValue -Node $record -Name 'suite' -Default '')
         $ran = if ($named -ne '') {
             Get-XmipNamedTestSuite -Name $named -Known $suites | Select-Object -First 1
@@ -173,7 +173,7 @@ function Get-XmipTestStatus {
         [string[]] $asked = @(Get-TomlValue -Node $record -Name 'tests' -Default @())
 
         [hashtable] $row = @{
-            Suite    = if ($named -ne '') { $named } else { $script:XmipEssentialsSuite }
+            Suite    = if ($named -ne '') { $named } else { $script:XmipSystemTestSuite }
             Kind     = 'roll'
             State    = 'running'
             Id       = $roll.Id

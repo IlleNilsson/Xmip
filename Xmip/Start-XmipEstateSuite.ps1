@@ -66,7 +66,7 @@ function Start-XmipEstateSuite {
         [string[]] $Test = @()
     )
 
-    $layout = Get-XmipEssentialsLayout
+    $layout = Get-XmipSystemTestLayout
 
     if ([string]::IsNullOrWhiteSpace($Path)) {
         $Path = Join-Path -Path $layout.Root -ChildPath 'test'

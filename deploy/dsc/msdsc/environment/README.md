@@ -15,8 +15,8 @@ It is a template for creating Xmip environments, never a lab.
 
 ## The one file, and the environment
 
-`cluster.xmip` is the Essentials' own,
-`test/core/essentials/configuration/cluster.xmip`: the one file a test runs
+`cluster.xmip` is the Systems Tests' own,
+`test/core/system-test/configuration/cluster.xmip`: the one file a test runs
 whether its nodes are simulated on one computer or on machines of their own
 (the owner, 2026-10-21: *one TOML file that can be run for tests regardless
 of node faking or actual nodes*; ADR-0028, amendment 2026-10-21). It says
@@ -24,14 +24,15 @@ what the cluster is and nothing of where it runs. What the environment adds
 is the environment file's, `deploy/dsc/README.md`: the cluster's name, its
 DNS domain, which node runs on which machine, the package, the folder of
 each node's certificate, and `far_end`, where the machines reach the
-Parties' far end the Essentials serves. `Deploy-XmipEnvironment` gives the
+Parties' far end the Systems Tests serve. `Deploy-XmipEnvironment` gives the
 documents here their parameters from it; the layout and the accounts are
 `machine.dsc.yaml`'s own defaults.
 
 The Hyper-V example, `deploy/dsc/hyperv.example.toml`, puts ten of the
 file's eleven nodes on ten node machines, as the owner's node plan of
 2026-11-22 lays them out, and the libvirt example the same ten on the same
-machines under KVM; the Essentials simulates the other, OP1. Both Storage nodes the
+machines under KVM; OP1, the eleventh, runs on no machine and is left out of the
+Systems Tests' run. Both Storage nodes the
 file lists, DS1 and DS2, run on machines of their own: neither serves until
 both answer (ADR-0056, amendment 2026-11-08).
 
@@ -57,7 +58,7 @@ are the assistant's, the same day.
 **The DNS server**, XMIP-DC01 (`name.dsc.yaml`): the zone, `xmip.test`,
 where it is not there, and an A record for the cluster, `CL1`, holding every
 node machine's address, and one for each node holding its machine's. A node
-finds another by its name — `DS1:7443` — and the Essentials uses a node whose
+finds another by its name — `DS1:7443` — and the Systems Tests use a node whose
 name resolves.
 
 **Each node's slice, on this machine** (`machine.dsc.yaml`,
@@ -71,8 +72,8 @@ every Work Process on each node serving its stage, and work no node
 satisfies refused (ADR-0056, amendment 2026-11-13); the Locations bound
 over SFTP on the Parties' far end at `far_end`, port 7422, each a user of
 its own there, so a
-node fetches what the Essentials drops and puts what it sends where the
-Essentials is told of it (ADR-0028, amendment 2026-10-22). The nodes are the
+node fetches what the Systems Tests drop and puts what it sends where the
+Systems Tests are told of it (ADR-0028, amendment 2026-10-22). The nodes are the
 environment file's, never written again. A node never slices and never
 holds the authority's key, so a `node.xmip` edited on it is refused there
 and the node runs its active configuration, the last slice that ran. Its
@@ -89,9 +90,9 @@ signature.
 
 **Each far end's machine** (`far-end-program.dsc.yaml`, from the host's
 `far-end.dsc.yaml`), where the environment file's `external` names one of
-the Essentials' far ends (ADR-0028, amendment 2026-11-22): its certificate,
+the Systems Tests' far ends (ADR-0028, amendment 2026-11-22): its certificate,
 key and anchors from the cluster's own authority, `identity`'s folder of its
-name, under `tls`; the program `xmip-essentials-external` the file's
+name, under `tls`; the program `xmip-system-test-external` the file's
 `[far_ends.<family>]` names, placed and registered as the service
 `xmip-<name>` by its own `--install`, which asks the runtime's one
 registration of a service, as `xmip-service --install` does
@@ -230,7 +231,7 @@ upgrade.
 | `node.dsc.yaml` | one node, on its machine |
 | `name.dsc.yaml` | the names, on the DNS server |
 | `started.dsc.yaml` | every node started together, from the host |
-| `far-end.dsc.yaml` | one of the Essentials' far ends, from the host: `far-end-program.dsc.yaml` applied on its machine |
+| `far-end.dsc.yaml` | one of the Systems Tests' far ends, from the host: `far-end-program.dsc.yaml` applied on its machine |
 | `far-end-program.dsc.yaml` | one far end, on its machine: its certificate, its program placed and registered, its firewall opening and its service |
 | `node.resource.ps1`, `NodeMachine.ps1`, `NodeFile.ps1`, `NodeOpening.ps1`, `NodeAccess.ps1`, `NodePackage.ps1`, `NodeProgram.ps1` | the `Xmip.Node` resources |
 | `environment.resource.ps1`, `EnvironmentMachine.ps1`, `EnvironmentSsh.ps1`, `EnvironmentSlice.ps1`, `EnvironmentName.ps1`, `EnvironmentStarted.ps1` | the `Xmip.Environment` resources |
@@ -252,7 +253,7 @@ are brought theirs waits on the owner's Hyper-V run.
 
 **On the host**, in an elevated Xmip PowerShell Console, once: WinRM may
 reach the Windows machines by address, and the host asks XMIP-DC01 for the
-environment's names, so `RX1` and `CL1` resolve where the Essentials runs.
+environment's names, so `RX1` and `CL1` resolve where the Systems Tests run.
 
 ```powershell
 Set-Item -Path WSMan:\localhost\Client\TrustedHosts -Value '10.77.0.*' -Force
@@ -260,7 +261,7 @@ Add-DnsClientNrptRule -Namespace '.xmip.test' -NameServers '10.77.0.10'
 [string[]] $suffixes = @((Get-DnsClientGlobalSetting).SuffixSearchList) + 'xmip.test'
 Set-DnsClientGlobalSetting -SuffixSearchList $suffixes
 [hashtable] $farEnd = @{
-    DisplayName   = 'Xmip Essentials, the Parties'' far end'
+    DisplayName   = 'Xmip Systems Tests, the Parties'' far end'
     Direction     = 'Inbound'
     Protocol      = 'TCP'
     LocalPort     = 7422
@@ -270,7 +271,7 @@ Set-DnsClientGlobalSetting -SuffixSearchList $suffixes
 New-NetFirewallRule @farEnd
 ```
 
-The last lets the machines reach the far end the Essentials serves on this
+The last lets the machines reach the far end the Systems Tests serve on this
 host, and nothing else reach it.
 
 Then, not elevated, in an Xmip PowerShell Console: the packages
@@ -314,22 +315,24 @@ every one runs or its window, 180 seconds, is spent. Each document runs itself e
 through WinRM as the Administrator or SSH with sudo; on the host it needs
 none. `-WhatIf` says what differs and changes nothing.
 
-Then the Essentials runs against the machines: the names typed resolve and
-answer, and the run says which nodes are real. The tester's operator
+Then the Systems Tests run against the machines, `Start-XmipTest -Suite
+Core.Systems`: every node typed must resolve and answer as that node, or the
+run is REFUSED before it starts, and none is spawned in a machine's place
+(ADR-0028, amendment 2026-11-23). The tester's operator
 certificate is signed by the same authority, the one `[provision.operator]`
 names in the slice of the node the cluster's file declares that table for,
 OP1: sliced and signed as every node's slice is, by the environment file's
 `slicer` with the same `--cluster` and `--authority`, and kept as
 `operator.xmip` beside the `authority` folder, where its trust reads it, so
 one edited by hand is refused (ADR-0031, amendment 2026-11-19). Type
-exactly the nodes the environment file maps, which the Essentials places
+exactly the nodes the environment file maps, which the Systems Tests place
 the Locations over as the machines did:
 
 ```powershell
 [string] $local = 'D:\Repos\Xmip\.local-work\environment'
 [string] $tester = "$local\tester"
 [string] $slicer = '<the environment file''s slicer>'
-[string] $cluster = 'D:\Repos\Xmip\test\core\essentials\configuration\cluster.xmip'
+[string] $cluster = 'D:\Repos\Xmip\test\core\system-test\configuration\cluster.xmip'
 [string[]] $printed = & $slicer --configuration $cluster --node OP1 --cluster CL1 `
     --authority "$local\authority" --slice
 Set-Content -LiteralPath "$local\operator.xmip" -Value (($printed -join "`n") + "`n") -NoNewline
@@ -337,10 +340,10 @@ New-XmipCertificate -Operator 'tester@xmip.test' -Path $tester |
     New-XmipCertificate -Configuration "$local\operator.xmip" -Path "$tester\operator.pem"
 Copy-Item -LiteralPath "$local\authority\authority.pem" -Destination "$tester\anchors.pem"
 [string[]] $mapped = 'RX1', 'RX2', 'RX3', 'EX1', 'EX2', 'TX1', 'TX2', 'TX3', 'DS1', 'DS2'
-Start-XmipTest -Suite Core.Essentials -Cluster CL1 -Nodes $mapped -Certificate $tester
+Start-XmipTest -Suite Core.Systems -Cluster CL1 -Nodes $mapped -Certificate $tester
 Get-XmipTestStatus
 Get-XmipTestResult -Test Carried
-Start-XmipOperationWeb -Snapshot D:\Repos\Xmip\.local-work\essentials\CL1-snapshot.xmip
+Start-XmipOperationWeb -Snapshot D:\Repos\Xmip\.local-work\system-test\CL1-snapshot.xmip
 ```
 
 Open <https://127.0.0.1:5087> in a Web Browser tab: the Monitor follows the
@@ -353,12 +356,12 @@ mutual TLS on the Storage plane's port, 7443, presenting its own
 DS1's and DS2's `xmip-service --listening` says `7443/tcp storage`, so
 their machines' firewalls open it. Each runs on a machine of its own, the
 primary and the standby that follows it (ADR-0056, amendment 2026-11-08),
-and every other node reaches the primary. The Essentials serves the
+and every other node reaches the primary. The Systems Tests serve the
 Parties' far end on the host, port 7422, each Location placed on the real
 nodes a user of its own there; each
 round it drops a file for every Receive Location, a real receiving node
 fetches it, writes it to the Ledger on DS1, and a real sending node puts it
-back under its name, which the far end tells the Essentials of:
+back under its name, which the far end tells the Systems Tests of:
 each Receive Location's `delivery` says how many of the documents dropped
 there arrived whole where their route sends them and how long each took
 (ADR-0028, amendments 2026-10-22 and 2026-11-11). Where the environment
@@ -367,8 +370,7 @@ runs the far ends on machines of their own, as the Hyper-V example does
 name and reaches it there instead: each round a sender pushes to each
 Receive Location listening on its node, and each Send Port puts on the
 receiver of its turn (ADR-0028, amendment 2026-11-22). OP1, the file's
-eleventh node, is simulated, and no node is started on the host beside
-real ones.
+eleventh node, is not in the run, and no node is started on the host.
 
 **What waits on the owner.** The Windows machines take the portable
 archive, `Build-XmipService -Package archive`, until the MSI is built: WiX

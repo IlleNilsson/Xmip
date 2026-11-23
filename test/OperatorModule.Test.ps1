@@ -198,7 +198,7 @@ Describe 'The built operator module reads the snapshot under the estate root' {
 
             [string] $line = @(Get-Content -LiteralPath $document |
                     Where-Object { $_ -match '^Snapshot\s*=' })[0]
-            $line | Should -Be "Snapshot = `"../../../.local-work/essentials/$leaf`""
+            $line | Should -Be "Snapshot = `"../../../.local-work/system-test/$leaf`""
         }
     }
 }

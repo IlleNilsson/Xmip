@@ -3,8 +3,8 @@
 
 <#
     A program placed on a machine and registered as its service by its own
-    --install (node.resource.ps1, kind Program): the Essentials' far end on
-    a machine of its own, xmip-essentials-external, whose --install
+    --install (node.resource.ps1, kind Program): the Systems Tests' far end on
+    a machine of its own, xmip-system-test-external, whose --install
     registers it through the runtime's one registration of a service and
     starts it, as xmip-service --install registers a node's. In its desired
     state where the program in place has its staged source's bytes and its

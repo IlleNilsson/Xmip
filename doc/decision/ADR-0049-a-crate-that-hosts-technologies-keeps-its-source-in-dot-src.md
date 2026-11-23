@@ -66,7 +66,7 @@ directory of one usage.
 
 - Twelve `Cargo.toml` files gain a `[lib] path`; twelve directories are
   renamed; every reference to a host crate's `src/` in the records, the
-  recipe sheet and the essentials' local patches follows.
+  recipe sheet and the System Tests' local patches follows.
 - A listing of a Capability is its Technologies. The one directory that is
   not one is named as an aside.
 - The rule is applied after the batch of technology repositories in flight

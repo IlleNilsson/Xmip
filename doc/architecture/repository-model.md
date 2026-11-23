@@ -478,7 +478,7 @@ Xmip/
 │           └── cli   powershell   gui
 ├── test/
 │   └── core/
-│       └── essentials        the Xmip Essentials, ADR-0028
+│       └── system-test       the Xmip System Tests, ADR-0028
 └── template/
     ├── rust     what a Rust module repository is generated from
     └── dotnet   what a .NET one is
@@ -503,8 +503,8 @@ retry due times, the estate's first scheduling: ADR-0058, amendment
 
 **What starts Xmip carries no provider; everything else does, provider
 before purpose.** The owner, 2026-09-23, reading the estate map: *there is no
-room for third parties*. The Essentials was `xmip-test-essentials` at
-`test/essentials`, which put `test` in the provider's place — the second
+room for third parties*. The System Tests were `xmip-test-system-test` at
+`test/system-test`, which put `test` in the provider's place — the second
 segment of a name, where `core` belongs — and left a second provider nowhere to
 stand. His rule, the same day: *what is needed to start Xmip on a node does not
 need to be mounted with provider; everything else has to be* — and then
@@ -517,10 +517,10 @@ you think core is not needed to start Xmip?* They hold together:
 xmip-core                        ->  module/foundation/core
 xmip-core-runtime                ->  module/platform/runtime
 xmip-core-transport              ->  module/core/capability/transport
-xmip-core-test-essentials        ->  test/core/essentials
+xmip-core-test-system-test        ->  test/core/system-test
 xmip-<provider>-transport        ->  module/<provider>/capability/transport
 xmip-<provider>-transport-kafka  ->  kafka, inside that
-xmip-<provider>-test-essentials  ->  test/<provider>/essentials
+xmip-<provider>-test-system-test  ->  test/<provider>/system-test
 ```
 
 `Get-XmipMountPath` computes it, and `test/Sync-XmipEstate.Test.ps1` holds it

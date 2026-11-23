@@ -2,12 +2,12 @@
 
 Set-StrictMode -Version Latest
 
-# The Essentials' tests by the names a person asks for them, and the scope
+# The System Tests' tests by the names a person asks for them, and the scope
 # segment the roll drives and publishes each under
-# (test/core/essentials/src/bin/roll.rs). The owner's shape, 2026-09-12:
-# Start-XmipTest -Suite Core.Essentials -Test HeavyLoad. 2026-09-19, the owner: the
+# (test/core/system-test/src/bin/roll.rs). The owner's shape, 2026-09-12:
+# Start-XmipTest -Suite Core.System -Test HeavyLoad. 2026-09-19, the owner: the
 # old scenario wording is replaced by the test names everywhere.
-[System.Collections.Specialized.OrderedDictionary] $script:XmipEssentialsTest = [ordered]@{
+[System.Collections.Specialized.OrderedDictionary] $script:XmipScenarioOfTest = [ordered]@{
     RoundTrip      = 'round-trip'
     LowLatency     = 'low-latency'
     HeavyLoad      = 'heavy-load'
@@ -17,7 +17,7 @@ Set-StrictMode -Version Latest
     DailyBacklog   = 'daily-backlog'
 }
 
-function ConvertTo-XmipEssentialsScenario {
+function ConvertTo-XmipSystemTestScenario {
     <#
         .SYNOPSIS
             The roll's scenario names for the tests a person named, in order.
@@ -34,12 +34,12 @@ function ConvertTo-XmipEssentialsScenario {
     )
 
     [string[]] $wanted = @(
-        Expand-XmipTestName -Test $Test -Known @($script:XmipEssentialsTest.Keys)
+        Expand-XmipTestName -Test $Test -Known @($script:XmipScenarioOfTest.Keys)
     )
     [string[]] $scenarios = @()
 
     foreach ($name in $wanted) {
-        $scenarios += $script:XmipEssentialsTest[$name]
+        $scenarios += $script:XmipScenarioOfTest[$name]
     }
 
     return $scenarios
@@ -60,8 +60,8 @@ function ConvertTo-XmipTestName {
         [string] $Scenario
     )
 
-    foreach ($name in $script:XmipEssentialsTest.Keys) {
-        if ($script:XmipEssentialsTest[$name] -eq $Scenario) {
+    foreach ($name in $script:XmipScenarioOfTest.Keys) {
+        if ($script:XmipScenarioOfTest[$name] -eq $Scenario) {
             return $name
         }
     }
@@ -156,7 +156,7 @@ function Assert-XmipNodeName {
 
         .DESCRIPTION
             A node's name is the last word of its process name and so a file
-            name — xmip-essentials-<cluster>-node-<node> (ADR-0053, amendment
+            name — xmip-system-test-<cluster>-node-<node> (ADR-0053, amendment
             2026-09-20) — which is why the shape is the one -Cluster takes,
             and that is the whole of it. No word is reserved: the name carries
             a node marker, so a node called roll is a node called roll (the
@@ -201,7 +201,7 @@ function Assert-XmipNodeName {
     }
 }
 
-function New-XmipEssentialsEnvironment {
+function New-XmipSystemTestEnvironment {
     <#
         .SYNOPSIS
             The environment a roll is started with: every switch the roll reads,
@@ -209,7 +209,7 @@ function New-XmipEssentialsEnvironment {
             against the roll's own documentation.
 
         .DESCRIPTION
-            The variables are the roll's (test/core/essentials/src/bin/roll.rs) and
+            The variables are the roll's (test/core/system-test/src/bin/roll.rs) and
             carry the xmip prefix because they are external names (ADR-0030).
             Only what the caller chose is set — an unset variable is the
             roll's own default, and a roll started by hand behaves the same.
@@ -253,9 +253,7 @@ function New-XmipEssentialsEnvironment {
         [switch] $Hidden,
 
         [Parameter()]
-        [AllowNull()]
-        [AllowEmptyCollection()]
-        [string[]] $Named,
+        [switch] $Machines,
 
         [Parameter()]
         [string] $Certificate,
@@ -268,29 +266,29 @@ function New-XmipEssentialsEnvironment {
     )
 
     # The roll names its snapshot, history and activity in the area itself
-    # (Get-XmipEssentialsPublication asks it where).
+    # (Get-XmipSystemTestPublication asks it where).
     [hashtable] $environment = @{
-        XMIP_ESSENTIALS_STRESS = $Stress.ToLowerInvariant()
-        XMIP_ESSENTIALS_AREA   = $Area
+        XMIP_SYSTEM_TEST_STRESS = $Stress.ToLowerInvariant()
+        XMIP_SYSTEM_TEST_AREA   = $Area
     }
 
     # Nothing named is the whole suite (the owner, 2026-09-19), and
     # Test-XmipWholeSuite is the one place that decides it. An unset
-    # XMIP_ESSENTIALS_SCENARIOS is how the roll is told so.
+    # XMIP_SYSTEM_TEST_SCENARIOS is how the roll is told so.
     if (-not (Test-XmipWholeSuite -Test $Test)) {
-        [string[]] $scenarios = ConvertTo-XmipEssentialsScenario -Test $Test
-        $environment.XMIP_ESSENTIALS_SCENARIOS = $scenarios -join ','
+        [string[]] $scenarios = ConvertTo-XmipSystemTestScenario -Test $Test
+        $environment.XMIP_SYSTEM_TEST_SCENARIOS = $scenarios -join ','
     }
 
     # The named cluster: the roll's scope root and the nodes' (ADR-0028). The
     # roll refuses without one; the name is the owner's, never invented here.
     if (-not [string]::IsNullOrWhiteSpace($Cluster)) {
-        $environment.XMIP_ESSENTIALS_CLUSTER = $Cluster
+        $environment.XMIP_SYSTEM_TEST_CLUSTER = $Cluster
     }
 
     # The nodes are cluster.xmip, each one process declaring the
     # roles its roles key says (ADR-0056, amendment 2026-10-03): the run's
-    # own, written from -Cluster and the nodes -Nodes or the Essentials' own
+    # own, written from -Cluster and the nodes -Nodes or the System Tests' own
     # cluster file names (Write-XmipTestCluster). The
     # variable is the one every test fixture reads.
     # With them, which may assume the internet (ADR-0045), by name: none
@@ -298,22 +296,22 @@ function New-XmipEssentialsEnvironment {
     if (-not [string]::IsNullOrWhiteSpace($ClusterFile)) {
         $environment.XMIP_TEST_CLUSTER = $ClusterFile
         [string[]] $online = @($OnlineNodes | Where-Object { $null -ne $_ })
-        $environment.XMIP_ESSENTIALS_ONLINE_NODES = $online -join ','
+        $environment.XMIP_SYSTEM_TEST_ONLINE_NODES = $online -join ','
     }
 
     $invariant = [System.Globalization.CultureInfo]::InvariantCulture
 
     if ($null -ne $Duration) {
         [double] $seconds = ([timespan] $Duration).TotalSeconds
-        $environment.XMIP_ESSENTIALS_MAX_SECONDS = $seconds.ToString($invariant)
+        $environment.XMIP_SYSTEM_TEST_MAX_SECONDS = $seconds.ToString($invariant)
     }
 
     if ($null -ne $TimeFactor) {
-        $environment.XMIP_ESSENTIALS_TIME_FACTOR = ([double] $TimeFactor).ToString('R', $invariant)
+        $environment.XMIP_SYSTEM_TEST_TIME_FACTOR = ([double] $TimeFactor).ToString('R', $invariant)
     }
 
     if (-not [string]::IsNullOrWhiteSpace($LoadBytes)) {
-        $environment.XMIP_ESSENTIALS_LOAD_BYTES = $LoadBytes
+        $environment.XMIP_SYSTEM_TEST_LOAD_BYTES = $LoadBytes
     }
 
     # Where this run's per-instance images go, so the cluster process and each
@@ -321,7 +319,7 @@ function New-XmipEssentialsEnvironment {
     # it is (ADR-0053, amendment 2026-09-20). Unset, nothing is linked and each
     # keeps the binary's own name, which is what a roll started by hand does.
     if (-not [string]::IsNullOrWhiteSpace($Image)) {
-        $environment.XMIP_ESSENTIALS_IMAGES = $Image
+        $environment.XMIP_SYSTEM_TEST_IMAGES = $Image
     }
 
     # A run that declares itself hidden says so to the roll, which says it in
@@ -329,21 +327,20 @@ function New-XmipEssentialsEnvironment {
     # and say it in their declarations and on every audit record (ADR-0028,
     # amendment 2026-09-30). Unset, the run is shown, whatever it is called.
     if ($Hidden) {
-        $environment.XMIP_ESSENTIALS_HIDDEN = 'true'
+        $environment.XMIP_SYSTEM_TEST_HIDDEN = 'true'
     }
 
-    # The nodes the operator typed, the only node names the roll resolves to
-    # find a real node, and the operator certificate it asks one with
-    # (ADR-0028, amendment 2026-10-21). Unset, no name is resolved but the
-    # cluster's, and a resolving one is refused for want of a certificate.
-    [string[]] $typed = @($Named | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
-
-    if ($typed.Count -gt 0) {
-        $environment.XMIP_ESSENTIALS_NAMED = $typed -join ','
+    # The Systems Tests run on an environment's machines: the roll resolves
+    # every node of the run and the cluster's name, each asked with the
+    # operator certificate, and spawns none in a machine's place. Unset, the
+    # System Tests run here and no name is resolved (ADR-0028, amendment
+    # 2026-11-23). The suite says which, never a name.
+    if ($Machines) {
+        $environment.XMIP_SYSTEM_TEST_MACHINES = 'true'
     }
 
     if (-not [string]::IsNullOrWhiteSpace($Certificate)) {
-        $environment.XMIP_ESSENTIALS_CERTIFICATE = [System.IO.Path]::GetFullPath($Certificate)
+        $environment.XMIP_SYSTEM_TEST_CERTIFICATE = [System.IO.Path]::GetFullPath($Certificate)
     }
 
     # The xmip-service the run starts every node as that is neither real nor
@@ -351,7 +348,7 @@ function New-XmipEssentialsEnvironment {
     # its Receive Locations (ADR-0028, amendment 2026-10-22). Unset, every
     # node not real is simulated.
     if (-not [string]::IsNullOrWhiteSpace($Service)) {
-        $environment.XMIP_ESSENTIALS_SERVICE = [System.IO.Path]::GetFullPath($Service)
+        $environment.XMIP_SYSTEM_TEST_SERVICE = [System.IO.Path]::GetFullPath($Service)
     }
 
     return $environment

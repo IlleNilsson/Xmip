@@ -5,7 +5,7 @@
     The manifest says what each repository depends on, and until 2026-09-22 it
     said something else from what the builds did: generated side by side, the
     two disagreed for most modules — `runtime` used sixteen estate crates and
-    declared six, `receive` used three it never declared, the Essentials used
+    declared six, `receive` used three it never declared, the System Tests used
     a hundred and twenty-three and declared five. A declaration nobody checks
     is a guess that was right once. The owner asked for the estate to be
     consolidated; the first thing consolidated was the record of what uses

@@ -77,7 +77,7 @@ function Start-XmipDemoSuite {
         return
     }
 
-    $layout = Get-XmipEssentialsLayout
+    $layout = Get-XmipSystemTestLayout
     [string] $area = $layout.Demo
     [object[]] $runs = @(Get-XmipDemoRun -Path $area)
     [int[]] $running = @($runs | Where-Object { $_.State -eq 'running' } | ForEach-Object Id)

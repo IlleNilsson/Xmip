@@ -254,7 +254,7 @@ No second seam was added.
   silence and HTTP/2 frames, and the nonces it keeps. A monitoring node's
   surfaces of its members take the node's Clock; a program's surface or
   listener through the C ABI, which hands no Clock across the boundary,
-  the operating system's (`ffi::remote::hosted_clock`), as the Essentials'
+  the operating system's (`ffi::remote::hosted_clock`), as the System Tests'
   rig and the root's tests hand theirs.
 - **A Stream's stall**: `StreamShare::new` takes the Clock, and
   `StreamShare::timed_by` is deleted.

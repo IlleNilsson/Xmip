@@ -215,7 +215,7 @@ function Set-XmipOperatorModuleRoot {
             relative to the module's directory. A build under
             .local-work/operator/<key> lies three levels down, so the shipped
             path climbed past the root: Get-XmipHealth read
-            D:\.local-work\essentials (2026-10-20). The climb is written again
+            D:\.local-work\system-test (2026-10-20). The climb is written again
             for where this build lies; the rest of the path is the
             document's own.
     #>

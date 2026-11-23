@@ -4,7 +4,7 @@
 - Date: 2026-09-11
 - Amended: 2026-09-24 — the far ends are the capability's
 - Amended: 2026-09-25 — the trait knows the order and the release
-- Related: ADR-0028 (the Essentials: clause 5, the far end is Xmip; the
+- Related: ADR-0028 (the System Tests: clause 5, the far end is Xmip; the
   amendment of 2026-09-09, every transport declares its ceiling), ADR-0044
   (a technology shares through its capability), ADR-0010 (one protocol,
   both directions)
@@ -22,26 +22,26 @@
 in its own crate, by implementing the capability's `Loopback` trait: stand
 up the far end, say where it listens, send from a fresh near end, take the
 one arrival, and declare the ceiling and the refusals that are facts about
-the protocol. The Essentials drives every transport through one adapter over
-that trait and writes no dance of its own. A new transport is a `loopback()`
-constructor in its crate and one line in the Essentials' list.**
+the protocol. The System Tests drive every transport through one adapter over
+that trait and write no dance of their own. A new transport is a `loopback()`
+constructor in its crate and one line in the System Tests' list.**
 
 ## Context
 
 ADR-0028 clause 5 made Xmip its own far end: wherever a transport ships both
-a server's worth of protocol and a client, the Essentials uses them as the
+a server's worth of protocol and a client, the System Tests use them as the
 counterparty and stands up nothing external. What that takes is one dance
 per protocol — bind, learn the address, send on one thread while the far end
 accepts on another, poke a listener whose sender failed so the round is
 judged rather than waited on. By 2026-09-11 that dance was written in the
-Essentials forty-two times, once per transport, in thirteen files, around
+System Tests forty-two times, once per transport, in thirteen files, around
 the very session and client each technology already ships for its own tests;
 the technology's tests did the same dance a forty-third time. Thirty-six more
-transports landed on 2026-09-11 with no adapter at all, and the Essentials
+transports landed on 2026-09-11 with no adapter at all, and the System Tests
 went on exercising forty-two of eighty-four.
 
 The ceiling and the refusals sat in the adapters too — one datagram's 65 507
-bytes in the Essentials' `roundtrip.rs`, the SNMP and DHCP ceilings in its
+bytes in the System Tests' `roundtrip.rs`, the SNMP and DHCP ceilings in its
 `management.rs` — although the amendment of 2026-09-09 says a ceiling is a
 fact about the protocol, written where it comes from.
 
@@ -68,14 +68,14 @@ transport needs, so it lives in the crate every transport depends on.
 
 `Loopback::ceiling` and `Loopback::refuses` are answered by the technology.
 The number for a datagram is in the udp crate; the number for an SNMP
-message is in the snmp crate. The Essentials reads them; it no longer holds
+message is in the snmp crate. The System Tests read them; they no longer hold
 them.
 
-### 3. The Essentials has one adapter
+### 3. The System Tests have one adapter
 
-`Looped<L: Loopback>` implements the Essentials' `RoundTrip` over any
+`Looped<L: Loopback>` implements the System Tests' `RoundTrip` over any
 loopback, and `all_transports` lists loopbacks. The `RoundTrip` trait stays:
-it is the scenarios' view, and a transport the Essentials cannot yet drive
+it is the scenarios' view, and a transport the System Tests cannot yet drive
 both ends of is still answered one-sided through it. The per-transport
 adapter files go as each transport moves; `listen_exchange` goes with the
 last of them.
@@ -91,24 +91,24 @@ than writing the dance a third time. What the test asserts beyond the round
 file, tcp, udp and http move with this record. The remaining thirty-eight
 adapters move, and the thirty-six transports of 2026-09-11 gain their
 loopbacks, in waves of agents each inside its crates, the way the
-technologies were built; the Essentials' list grows to eighty-four as they
+technologies were built; the System Tests' list grows to eighty-four as they
 land. A transport with only one side keeps answering one-sided until it has
 both.
 
 ## Consequences
 
-- The Essentials' adapter code — some two and a half thousand lines across
-  thirteen files — leaves it, and the Essentials' Cargo manifest still names
+- The System Tests' adapter code — some two and a half thousand lines across
+  thirteen files — leaves it, and the System Tests' Cargo manifest still names
   every transport, because a loopback is a dependency.
 - A technology's crate is the one place its protocol dance, ceiling and
-  refusals are written; its tests and the Essentials read the same one.
-- Wiring a new transport into the Essentials is a constructor and a line, so
+  refusals are written; its tests and the System Tests read the same one.
+- Wiring a new transport into the System Tests is a constructor and a line, so
   an assistant building a technology wires it in the same change.
 - ADR-0028 clause 5 and its ceiling amendment are amended to point here.
 
 ## Alternatives considered
 
-**Keep the adapters in the Essentials and write thirty-six more.** Rejected:
+**Keep the adapters in the System Tests and write thirty-six more.** Rejected:
 it is the duplication ADR-0044 exists to stop, at the estate's largest
 multiplier.
 
@@ -124,7 +124,7 @@ that never calls it pays nothing.
 ## Provenance
 
 The re-engineering was asked for by the owner on 2026-09-11 — *let's go bold
-and consolidate, refactor and re-engineer if needed* — after the Essentials
+and consolidate, refactor and re-engineer if needed* — after the System Tests
 rolled over forty-two of eighty-four transports. The trait, its home and the
 waves are the assistant's drafting.
 
@@ -134,7 +134,7 @@ Problem 25 found the rig written again in every technology: fifty-one
 transports over a parent that shared only the traits, each declaring the
 struct its far end is — a listener or a socket with its address, a device
 held in process, a session map with its counter — and the refusal of a
-payload over the ceiling written twenty-nine times, the Essentials' among
+payload over the ceiling written twenty-nine times, the System Tests' among
 them. Shared code goes up
 (clause 1), so the rig moved into the capability, and the trait is
 unchanged:

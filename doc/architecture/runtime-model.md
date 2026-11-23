@@ -1941,7 +1941,7 @@ amendment 2026-11-12; the owner: *Do as you recommend*, *Go ahead*): **a
 claim a send is taken under is answered once readable, and its far end
 sees the send once the claim is durable.** A Message taken from its queue
 waited for its claim's sync before anything of its send began, 3.4 to
-5.8 ms in the Essentials. Now the scan claims ahead
+5.8 ms in the System Tests. Now the scan claims ahead
 (`XmipStorage::claim_ahead`), answered once the claim is decided and
 readable with when it is durable; over the wire one request answered in
 two frames, the claim and then its durability, its connection asked
@@ -2266,7 +2266,7 @@ category, using time, size, count, state or hold rules.
 retained history. Targets may include CSV, SQL, JSON, Parquet, XML, Avro, file
 systems, object stores and custom providers. Both are
 [built, not in the assembled service](estate-map.md#retention-archiving): the
-Essentials drives them, a node does not. An archived item is never written
+System Tests drive them, a node does not. An archived item is never written
 over: a store keyed by name creates an item's metadata first, as its claim,
 then its bytes, each only where the name is free, and gives the receipt only
 after both, so an identifier archived again with the same bytes answers the
@@ -2967,13 +2967,13 @@ alike; `process::generate` writes it so (ADR-0025, amendment 2026-11-21). A
 unit generated from a design is loaded through the C ABI and turned in the
 runtime's own test.
 
-**Built 2026-11-21: a Work Process runs in the Essentials** (ADR-0028 and
-ADR-0066, amendments 2026-11-21). The Essentials' cluster hands every sales
+**Built 2026-11-21: a Work Process runs in the System Tests** (ADR-0028 and
+ADR-0066, amendments 2026-11-21). The System Tests' cluster hands every sales
 order to the Work Process *Order approval*, a design beside its
 configuration (`order-approval.bpmn`) that marks the order
 `Approval = 'approved'` and publishes it, and a second Subscription takes
-it to the ERP. Its unit is the Essentials' example `order_approval`, which
-the Essentials' build builds and the run copies beside each node that
+it to the ERP. Its unit is the System Tests' example `order_approval`, which
+the System Tests' build builds and the run copies beside each node that
 opens it.
 
 **Decided, not built:** the `settings` a Work Process gives its unit; unit

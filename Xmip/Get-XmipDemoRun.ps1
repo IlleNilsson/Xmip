@@ -36,7 +36,7 @@ function Get-XmipDemoRun {
     )
 
     if ([string]::IsNullOrWhiteSpace($Path)) {
-        $Path = (Get-XmipEssentialsLayout).Demo
+        $Path = (Get-XmipSystemTestLayout).Demo
     }
 
     foreach ($read in @(Read-XmipRunRecord -Path $Path -Kind demo)) {

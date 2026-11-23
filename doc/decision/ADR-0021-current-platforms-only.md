@@ -345,7 +345,7 @@ What stands now:
   yet, the test names a path inside its folder.
 - Another Library takes it as a dev-dependency, as `net` and `tls` take
   `xcore::latency`: what a Library is built from stays Library
-  (`test/Layer.Test.ps1` reads `[dependencies]`). The Essentials, a test
+  (`test/Layer.Test.ps1` reads `[dependencies]`). The System Tests, tests
   never in a node, takes it among its dependencies, and the runtime under
   its own `test-support`, for its test authority.
 - `test/Rust.Style.Test.ps1` refuses `temp_dir()` in any Rust file but the
@@ -355,7 +355,7 @@ What stands now:
   server's copies of the runtime it loads, the runtime fixture that names
   the shared place a test must not write in, a Unix socket's far end, whose
   address is its path as a network transport's is a port (ADR-0051), and
-  the Essentials roll's working folder, named for its cluster.
+  the System Tests roll's working folder, named for its cluster.
 
 Evidence, 2026-11-19. `git grep --recurse-submodules -n 'temp_dir()' -- '*.rs'`
 before and after, and the guard's own tests, `cargo test --lib temporary` in
@@ -404,12 +404,12 @@ error: warnings are denied by `build.warnings` configuration
   not link them.
 - **The build directory's new layout.** Final artifacts stay where they
   were: `<target>/debug/` holds the binaries, the cdylibs and `examples/`,
-  so `Get-XmipEssentialsLayout` and `Test-XmipEssentialsBinary` find the
-  Essentials as before. A test program moved, from `<target>/debug/deps/`
+  so `Get-XmipSystemTestLayout` and `Test-XmipSystemTestBinary` find the
+  System Tests as before. A test program moved, from `<target>/debug/deps/`
   to a unit's own `<target>/debug/build/<package>/<hash>/out/`, so a test
   that found an example one folder above itself found none; the runtime's
   test of a generated unit's library now looks up every folder above it,
-  and the Essentials' binary lookup no longer looks one folder above
+  and the System Tests' binary lookup no longer looks one folder above
   itself, which only a test program in `deps/` ever needed. A cdylib
   crate's rlib is written in its unit's own folder too
   (`build/xmip-core-operate/<hash>/out/libxmip_core_operate.rlib`), so

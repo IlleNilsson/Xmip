@@ -25,7 +25,7 @@ xmip_authority: ""
 # for this node under the cluster's own authority: node.pem, node.key and
 # anchors.pem. Left empty, the node is given no certificate.
 xmip_identity: ""
-# The Parties' far end the Essentials serves, where the machines reach it:
+# The Parties' far end the Systems Tests serve, where the machines reach it:
 # every Receive Location and Send Port the cluster's file designs is bound
 # there over SFTP, placed over the inventory's nodes, and every Work Process
 # on each node serving its stage, by `xmip-service --slice --bind --nodes`

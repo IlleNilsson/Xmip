@@ -2,11 +2,11 @@
 #requires -Version 7.7.0
 
 <#
-    The Essentials tester acts in the web GUI with an operator certificate:
+    The System Tests tester acts in the web GUI with an operator certificate:
     the roll's host serves https on 127.0.0.1 under the roll's authority, the
     tester presents a certificate from New-XmipCertificate -Operator, and the
     tester directory knows that certificate's subject (the owner,
-    2026-10-21; ADR-0009). These hold the authority the Essentials keeps, the
+    2026-10-21; ADR-0009). These hold the authority the System Tests keep, the
     file a tester signs by, and what Start-XmipOperationWeb hands a host over
     a roll. Nothing is started: Start-Process and dotnet are stood in for.
 #>
@@ -22,9 +22,9 @@ AfterAll {
     $env:XMIP_AUDIT_DIRECTORY = $script:AuditBefore
 }
 
-Describe "The Essentials' authority" {
+Describe "The System Tests' authority" {
     It 'is made once, keeps its anchor, issues the host anew and names itself to sign by' {
-        [string] $area = Join-Path -Path $TestDrive -ChildPath 'essentials'
+        [string] $area = Join-Path -Path $TestDrive -ChildPath 'system-test'
         InModuleScope Xmip -Parameters @{
             Folder = (Join-Path -Path $area -ChildPath 'authority')
             Area   = $area
@@ -32,10 +32,10 @@ Describe "The Essentials' authority" {
         } {
             param($Folder, $Area, $Phone)
 
-            $first = Initialize-XmipEssentialsAuthority -Folder $Folder -Confirm:$false
+            $first = Initialize-XmipSystemTestAuthority -Folder $Folder -Confirm:$false
             [string] $anchor = Get-Content -Raw -LiteralPath $first.TrustAnchor
             [string] $host1 = Get-Content -Raw -LiteralPath $first.Certificate
-            $again = Initialize-XmipEssentialsAuthority -Folder $Folder -Confirm:$false
+            $again = Initialize-XmipSystemTestAuthority -Folder $Folder -Confirm:$false
 
             Get-Content -Raw -LiteralPath $again.TrustAnchor | Should -Be $anchor
             Get-Content -Raw -LiteralPath $again.Certificate | Should -Not -Be $host1
@@ -77,7 +77,7 @@ Describe "The Essentials' authority" {
         InModuleScope Xmip -Parameters @{ Folder = $folder } {
             param($Folder)
 
-            { Initialize-XmipEssentialsAuthority -Folder $Folder -Confirm:$false } |
+            { Initialize-XmipSystemTestAuthority -Folder $Folder -Confirm:$false } |
                 Should -Throw -ExpectedMessage '*not named authority*'
             $Folder | Should -Not -Exist
         }
@@ -88,7 +88,7 @@ Describe "The Essentials' authority" {
         InModuleScope Xmip -Parameters @{ Folder = $folder } {
             param($Folder)
 
-            Initialize-XmipEssentialsAuthority -Folder $Folder -WhatIf | Should -BeNullOrEmpty
+            Initialize-XmipSystemTestAuthority -Folder $Folder -WhatIf | Should -BeNullOrEmpty
             $Folder | Should -Not -Exist
         }
     }
@@ -97,7 +97,7 @@ Describe "The Essentials' authority" {
 Describe 'A web host over a roll' {
     BeforeEach {
         InModuleScope Xmip {
-            [string] $area = (Get-XmipEssentialsLayout).Area
+            [string] $area = (Get-XmipSystemTestLayout).Area
             $null = New-Item -ItemType Directory -Path $area -Force
             $script:Snapshot = Join-Path $area "xmip-pester-$([guid]::NewGuid().ToString('n')).xmip"
             Set-Content -LiteralPath $script:Snapshot -Value '' -NoNewline
@@ -109,7 +109,7 @@ Describe 'A web host over a roll' {
             }
             Mock -CommandName dotnet -MockWith { $global:LASTEXITCODE = 0 }
             Mock -CommandName Test-XmipOperationWebAnswering -MockWith { $false }
-            Mock -CommandName Initialize-XmipEssentialsAuthority -MockWith {
+            Mock -CommandName Initialize-XmipSystemTestAuthority -MockWith {
                 [PSCustomObject]@{
                     Certificate   = 'C:/kept/host.pem'
                     PrivateKey    = 'C:/kept/host.key'
@@ -148,7 +148,7 @@ Describe 'A web host over a roll' {
             $said | Should -Contain '--Kestrel:Endpoints:Http:Url=http://127.0.0.1:5099'
             @($said | Where-Object { $_ -like '--Xmip:Certificate=*' }).Count | Should -Be 0
             @($said | Where-Object { $_ -like '--Xmip:Tester=*' }).Count | Should -Be 0
-            Should -Invoke -CommandName Initialize-XmipEssentialsAuthority -Times 0
+            Should -Invoke -CommandName Initialize-XmipSystemTestAuthority -Times 0
         }
     }
 
@@ -157,7 +157,7 @@ Describe 'A web host over a roll' {
             Start-XmipOperationWeb -Snapshot $script:Snapshot -Tester 'alice' -WhatIf
 
             Should -Invoke -CommandName Start-Process -Times 0
-            Should -Invoke -CommandName Initialize-XmipEssentialsAuthority -Times 0
+            Should -Invoke -CommandName Initialize-XmipSystemTestAuthority -Times 0
         }
     }
 }

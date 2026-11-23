@@ -7,7 +7,7 @@ Set-StrictMode -Version Latest
     nodes a roll spawns (ADR-0056, amendment 2026-10-03: names are parameters
     and configuration). Start-XmipTest writes the run's own file from
     -Cluster, and the nodes -Nodes names or, where it names none, every node
-    the Essentials' own cluster file declares, each with the roles -NodeRole
+    the System Tests' own cluster file declares, each with the roles -NodeRole
     states or that file declares (ADR-0028, amendment 2026-10-21: one file
     for one computer and for machines of their own), and names it to the
     roll in XMIP_TEST_CLUSTER — the variable every language's test fixture
@@ -110,10 +110,10 @@ function Get-XmipClusterNodeRole {
     return [pscustomobject]@{ Nodes = $names; Role = $role }
 }
 
-function Read-XmipEssentialsCluster {
+function Read-XmipSystemTestCluster {
     <#
         .SYNOPSIS
-            The nodes the Essentials' own cluster cluster.xmip declares and the
+            The nodes the System Tests' own cluster cluster.xmip declares and the
             roles each declares. It names no cluster: where it runs is the
             run's or the environment's (ADR-0028, amendment 2026-10-21).
     #>
@@ -121,7 +121,7 @@ function Read-XmipEssentialsCluster {
     [OutputType([pscustomobject])]
     param()
 
-    [string] $path = (Get-XmipEssentialsLayout).Configuration
+    [string] $path = (Get-XmipSystemTestLayout).Configuration
     return Get-XmipClusterNodeRole -Document (Read-XmipConfiguration -Path $path)
 }
 
@@ -129,7 +129,7 @@ function Join-XmipNodeRole {
     <#
         .SYNOPSIS
             The roles each of -Nodes declares in a run: what -NodeRole states
-            for it, else what the Essentials' file declares, else none.
+            for it, else what the System Tests' file declares, else none.
 
         .PARAMETER Nodes
             The run's nodes.
@@ -138,7 +138,7 @@ function Join-XmipNodeRole {
             What -NodeRole stated per node, or $null.
 
         .PARAMETER Declared
-            What the Essentials' file declares per node (Read-XmipEssentialsCluster).
+            What the System Tests' file declares per node (Read-XmipSystemTestCluster).
     #>
     [CmdletBinding()]
     [OutputType([hashtable])]

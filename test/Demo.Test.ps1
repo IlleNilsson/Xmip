@@ -4,7 +4,7 @@
 <#
     Core.Demo, the demo readiness check (ADR-0028, amendment 2026-11-10). The
     owner's demo is 2026-12-18, and the check proves a tree is ready for it:
-    the Essentials roll, the web operations tool, the Desktop operations app
+    the System Tests roll, the web operations tool, the Desktop operations app
     and the VS Code extension with its language server, each said OK, FAILED
     or SKIPPED in words, and everything it started stopped. These check what
     can be checked without starting the cluster: the refusals, the start, the
@@ -66,7 +66,8 @@ Describe 'Core.Demo is one of Xmip''s suites, and refuses what it does not take'
             Mock Write-XmipAudit { }
             Mock Start-XmipDetachedShell { throw 'started' }
 
-            [string] $rounds = '*REFUSED. -Rounds belong to Core.Essentials, not Core.Demo.*'
+            [string] $rounds =
+                '*REFUSED. -Rounds belong to Core.System and Core.Systems, not Core.Demo.*'
             [string] $tester = '*REFUSED. -Tester belong to Core.Demo, not Core.Estate.*'
 
             { Start-XmipTest -Suite Core.Demo -Cluster $Cluster -Rounds 3 -ErrorAction Stop } |
@@ -74,11 +75,11 @@ Describe 'Core.Demo is one of Xmip''s suites, and refuses what it does not take'
             { Start-XmipTest -Suite Core.Estate -Tester someone -ErrorAction Stop } |
                 Should -Throw -ExpectedMessage $tester
 
-            [hashtable] $essentials = @{
-                Suite = 'Core.Essentials'; Cluster = $Cluster; Tester = 'someone'; WhatIf = $true
+            [hashtable] $systemTest = @{
+                Suite = 'Core.System'; Cluster = $Cluster; Tester = 'someone'; WhatIf = $true
             }
-            { Start-XmipTest @essentials -ErrorAction Stop } |
-                Should -Throw -ExpectedMessage '*-Tester belong to Core.Demo, not Core.Essentials*'
+            { Start-XmipTest @systemTest -ErrorAction Stop } |
+                Should -Throw -ExpectedMessage '*-Tester belong to Core.Demo, not Core.System*'
             { Start-XmipTest -Suite Core.Demo -ErrorAction Stop } |
                 Should -Throw -ExpectedMessage '*REFUSED. Core.Demo*-Cluster <name>*'
 
@@ -107,7 +108,7 @@ Describe 'Core.Demo is one of Xmip''s suites, and refuses what it does not take'
             $script:DemoArea = $Area
             Mock Write-XmipAudit { }
             Mock Write-Host { }
-            Mock Get-XmipEssentialsLayout {
+            Mock Get-XmipSystemTestLayout {
                 [pscustomobject]@{ Demo = $script:DemoArea; Area = $script:DemoArea }
             }
             Mock Get-XmipClusterRunning { }
@@ -144,7 +145,7 @@ Describe 'Core.Demo is one of Xmip''s suites, and refuses what it does not take'
             $script:DemoArea = $Area
             Mock Write-XmipAudit { }
             Mock Write-Host { }
-            Mock Get-XmipEssentialsLayout {
+            Mock Get-XmipSystemTestLayout {
                 [pscustomobject]@{ Demo = $script:DemoArea; Area = $script:DemoArea }
             }
             Mock Get-XmipClusterRunning { }
@@ -153,7 +154,7 @@ Describe 'Core.Demo is one of Xmip''s suites, and refuses what it does not take'
                 Get-Process -Id $PID
             }
 
-            # Never the Essentials' hardest, which an omitted -Stress is for a
+            # Never the System Tests' hardest, which an omitted -Stress is for a
             # roll asked for by itself.
             (Start-XmipTest -Suite Core.Demo -Cluster $Cluster).Stress | Should -Be 'Realistic'
             $script:DemoScript | Should -Match "Stress = 'Realistic'"
@@ -177,7 +178,7 @@ Describe 'Core.Demo is one of Xmip''s suites, and refuses what it does not take'
 
             $script:DemoArea = $Area
             Mock Write-XmipAudit { }
-            Mock Get-XmipEssentialsLayout {
+            Mock Get-XmipSystemTestLayout {
                 [pscustomobject]@{ Demo = $script:DemoArea; Area = $script:DemoArea }
             }
             Mock Get-XmipClusterRunning { }
@@ -198,7 +199,7 @@ Describe 'Core.Demo is one of Xmip''s suites, and refuses what it does not take'
 
             $script:DemoArea = $Area
             Mock Write-XmipAudit { }
-            Mock Get-XmipEssentialsLayout {
+            Mock Get-XmipSystemTestLayout {
                 [pscustomobject]@{ Demo = $script:DemoArea; Area = $script:DemoArea }
             }
             Mock Get-XmipClusterRunning { 4242 }
@@ -236,7 +237,7 @@ Describe 'Core.Demo is one of Xmip''s suites, and refuses what it does not take'
             $script:DemoArea = $Area
             Mock Write-XmipAudit { }
             Mock Write-Host { }
-            Mock Get-XmipEssentialsLayout {
+            Mock Get-XmipSystemTestLayout {
                 [pscustomobject]@{ Demo = $script:DemoArea; Area = $script:DemoArea }
             }
             Mock Get-XmipClusterRunning { }
@@ -423,7 +424,7 @@ Describe 'The roll part rolls its own cluster from this tree, timed from its spa
 
             # Spawned a minute and a half before the check first saw it.
             [hashtable] $row = @{
-                Suite    = 'Core.Essentials'
+                Suite    = 'Core.System'
                 Kind     = 'roll'
                 State    = 'running'
                 Id       = 31
@@ -453,7 +454,7 @@ Describe 'The roll part rolls its own cluster from this tree, timed from its spa
             [string] $said = Test-XmipDemoRoll -Run $run
 
             Should -Invoke Start-XmipTest -Times 1 -ParameterFilter {
-                $Suite -eq 'Core.Essentials' -and $Stress -eq 'Realistic'
+                $Suite -eq 'Core.System' -and $Stress -eq 'Realistic'
             }
             Should -Invoke Wait-XmipSnapshot -Times 1 -ParameterFilter {
                 $Since -eq $script:Rolling.StartTime
@@ -478,7 +479,7 @@ Describe 'The roll part rolls its own cluster from this tree, timed from its spa
             [string] $recorded = Join-Path $Area 'roll-31.toml'
             Set-Content -LiteralPath $recorded -Value "nodes = [`"$($Pair[0])`", `"$($Pair[1])`"]"
             [hashtable] $row = @{
-                Suite    = 'Core.Essentials'
+                Suite    = 'Core.System'
                 Kind     = 'roll'
                 State    = 'running'
                 Id       = 31
@@ -629,7 +630,7 @@ Describe 'Stop-XmipDemoStarted ends what a run launched, and only that' {
             param($Area, $Cluster)
 
             [hashtable] $sleeping = @{
-                FilePath     = Join-Path $PSHOME "pwsh$((Get-XmipEssentialsLayout).Suffix)"
+                FilePath     = Join-Path $PSHOME "pwsh$((Get-XmipSystemTestLayout).Suffix)"
                 ArgumentList = @('-NoProfile', '-Command', 'Start-Sleep -Seconds 120')
                 PassThru     = $true
             }
@@ -715,7 +716,7 @@ Describe 'Stop-XmipDemoStarted ends what a run launched, and only that' {
 
             # Only a roll a demo run stopped in the same call is passed over.
             [hashtable] $row = @{
-                Suite    = 'Core.Essentials'
+                Suite    = 'Core.System'
                 Kind     = 'roll'
                 State    = 'running'
                 Id       = 2000000001
@@ -846,7 +847,7 @@ Describe 'The desktop app is the program dotnet names, and is said only to have 
 
             $script:Program = $Exe
             $script:Reads = "$Cluster-snapshot.xmip"
-            Mock Get-XmipEssentialsLayout { [pscustomobject]@{ Desktop = 'project' } }
+            Mock Get-XmipSystemTestLayout { [pscustomobject]@{ Desktop = 'project' } }
             Mock Build-XmipDemoDesktop { $script:Program }
             Mock Set-XmipDemoDocument { }
             Mock Write-XmipDemoRecord { }
@@ -886,7 +887,7 @@ Describe 'The desktop app is the program dotnet names, and is said only to have 
 
             $script:Program = $Exe
             $script:Shell = (Get-Process -Id $PID).Path
-            Mock Get-XmipEssentialsLayout { [pscustomobject]@{ Desktop = 'project' } }
+            Mock Get-XmipSystemTestLayout { [pscustomobject]@{ Desktop = 'project' } }
             Mock Build-XmipDemoDesktop { $script:Program }
             Mock Set-XmipDemoDocument { }
             Mock Write-XmipDemoRecord { }
@@ -997,7 +998,7 @@ Describe 'The language server is asked as an editor asks' {
     }
 }
 
-Describe 'The web host is asked over https under the Essentials'' authority' {
+Describe 'The web host is asked over https under the System Tests'' authority' {
     BeforeAll {
         <#
             .SYNOPSIS
@@ -1167,11 +1168,11 @@ Describe 'The web host is asked over https under the Essentials'' authority' {
         }
     }
 
-    It 'takes the anchor the host was given only where it is the Essentials'' authority' {
+    It 'takes the anchor the host was given only where it is the System Tests'' authority' {
         InModuleScope Xmip -Parameters @{ Area = $TestDrive } {
             param($Area)
 
-            [string] $authority = (Get-XmipEssentialsLayout).Authority
+            [string] $authority = (Get-XmipSystemTestLayout).Authority
             $script:Line = "xmip-gui-web --Xmip:TrustAnchor=$(Join-Path $authority 'a.pem')"
             Mock Get-Process { [pscustomobject]@{ CommandLine = $script:Line } }
 
@@ -1180,13 +1181,13 @@ Describe 'The web host is asked over https under the Essentials'' authority' {
             [string] $elsewhere = Join-Path $Area 'ca.pem'
             $script:Line = "xmip-gui-web --Xmip:TrustAnchor=$elsewhere"
             { Get-XmipDemoWebAnchor -Id 5 } |
-                Should -Throw -ExpectedMessage "*not the Essentials' authority*"
+                Should -Throw -ExpectedMessage "*not the System Tests' authority*"
 
             # A folder beside it whose name begins with the authority's.
             [string] $beside = [System.IO.Path]::TrimEndingDirectorySeparator($authority) + '-old'
             $script:Line = "xmip-gui-web --Xmip:TrustAnchor=$(Join-Path $beside 'ca.pem')"
             { Get-XmipDemoWebAnchor -Id 5 } |
-                Should -Throw -ExpectedMessage "*not the Essentials' authority*"
+                Should -Throw -ExpectedMessage "*not the System Tests' authority*"
         }
     }
 }

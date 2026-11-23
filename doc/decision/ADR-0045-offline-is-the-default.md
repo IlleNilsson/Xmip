@@ -3,7 +3,7 @@
 - Status: Accepted
 - Date: 2026-09-10
 - Related: ADR-0015 (packaging), ADR-0021 (current platforms only), ADR-0023
-  (the licensing model), ADR-0028 (the Essentials, offline by design),
+  (the licensing model), ADR-0028 (the System Tests, offline by design),
   ADR-0034 (certificate provisioning versus usage),
   doc/architecture/deployment-model.md (air-gapped nodes)
 
@@ -27,7 +27,7 @@ need the internet run online.**
 
 The deployment model has said since 2026-08 that an Xmip node may be an
 air-gapped appliance, ADR-0023 built the licensing model for sovereign and
-regulated sites, ADR-0028 made the Essentials offline by design and ADR-0034
+regulated sites, ADR-0028 made the System Tests offline by design and ADR-0034
 drew the line between certificates provisioned online and used offline. What
 no record said was the rule those four are instances of, and what a test does
 about it. The owner, 2026-09-10: *tests need switches per cluster and node.
@@ -73,8 +73,8 @@ The estate's tests run with no internet, all of them, on a laptop in a tunnel:
 loopback sockets, temporary directories, in-process far ends (ADR-0028
 clause 5). A test that genuinely needs the internet — the day one does — reads
 the switch and does not run without it, saying so rather than failing: in Rust
-through the essentials' `switch::online()`, which reads `XMIP_ONLINE`, and in
-PowerShell through the same variable. The essentials' node processes carry
+through the System Tests' `switch::online()`, which reads `XMIP_ONLINE`, and in
+PowerShell through the same variable. The System Tests' node processes carry
 `--online` and publish it, so a cluster's board shows which emulated nodes think
 they may reach out; at every stress level the default is that none may.
 
@@ -84,7 +84,7 @@ they may reach out; at every stress level the default is that none may.
   false, and the desktop editor round-trips it.
 - The DSC and Ansible node configurations write `online = false`; an operator
   sets it true on purpose, per node.
-- The essentials gains `switch.rs`, the node binary `--online`, the roll
+- The System Tests gain `switch.rs`, the node binary `--online`, the roll
   passes it, and every emulated node's health record says `offline` or
   `online`. There is no test today that needs the internet; the gate exists so
   the first one does not bring the suite online with it.

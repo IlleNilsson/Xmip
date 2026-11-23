@@ -78,8 +78,8 @@ pins what starts a node by its domain alone, `xmip-core` at
 `module/foundation/core` and `xmip-core-runtime` at `module/platform/runtime`,
 and every other module at `module/<provider>/<domain>/<leaf>`,
 `xmip-core-transport` at `module/core/capability/transport` and another
-provider's at `module/<theirs>/…` beside it. An Essentials is test scaffolding
-and mounts at `test/<provider>/essentials` (ADR-0028); the templates stay at
+provider's at `module/<theirs>/…` beside it. System Tests are test scaffolding
+and mounts at `test/<provider>/system-test` (ADR-0028); the templates stay at
 `template/<language>`, belonging to no provider.
 
 As first written, this amendment read *provider before purpose* as replacing
@@ -217,7 +217,7 @@ owner's was decided by the assistant while building, told to the owner.
 
 **Decision 4 is resolved: path dependencies win, and a repository alone
 still builds.** The root's `Cargo.toml` lists every crate of the estate as
-a member — 281 of them, every crate under `module/`, `test/core/essentials`,
+a member — 281 of them, every crate under `module/`, `test/core/system-test`,
 `test/core/module` and `sdk` — and excludes `template`. Its `[patch]` maps
 each estate crate a manifest names by its git URL to its folder, 208 of
 them, by a relative path, so one committed manifest serves every machine. A
@@ -344,8 +344,8 @@ checked out alone. Every place that looked for a build in a crate's own
 - PowerShell reads one property, `Get-XmipEstateLayout`'s `Build`, which
   `Test-XmipChangeTree`, `Import-XmipOperatorModule`,
   `Install-XmipNativeLibrary` and `Get-XmipPackageBinary` read; the
-  Essentials' roll, cluster and node build in a build directory of their
-  own, `Get-XmipEssentialsLayout`'s `Target` (ADR-0028, amendment
+  System Tests' roll, cluster and node build in a build directory of their
+  own, `Get-XmipSystemTestLayout`'s `Target` (ADR-0028, amendment
   2026-11-20), so a running roll never holds what a landing builds; `Get-XmipPackageBinary` moved from
   `New-XmipPackage.ps1` into a file of its own, which keeps that file under
   400 lines.
@@ -478,7 +478,7 @@ it lands:
 landing's Rust part is `Test-XmipRustChange`, its .NET part
 `Test-XmipDotnetChange`), the per-module estimate `Get-XmipRemainingTime`,
 each member's `[workspace]` and `[profile.dev.package."*"]`, and the
-Essentials' service build in a directory of its own.
+System Tests' service build in a directory of its own.
 
 **Measured, before**, on the Linux build machine (20 hardware threads,
 Rust 1.100), each build in a fresh build directory, the root with every
@@ -508,7 +508,7 @@ again after one crate changed: `Finished ... in 14.39s`.
 Following it, the same day: ADR-0018's amendment, the two builds the
 workspace's root holds (`dev` at opt-level 1 with line tables, `measured`
 optimized for the millisecond rule); ADR-0015's, the package's library and
-command line as members; ADR-0028's, the Essentials built in the workspace
+command line as members; ADR-0028's, the System Tests built in the workspace
 and in `measured`; ADR-0058's, the workspace in place of the local patch.
 
 ## Amendment, 2026-11-21: a test holds its promise, never its crate's feature name

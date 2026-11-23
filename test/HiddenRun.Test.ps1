@@ -34,22 +34,22 @@ Describe 'A run declares itself hidden and is listed only when asked' {
         InModuleScope Xmip {
             $least = @{ Stress = 'Calm'; Area = 'a' }
 
-            (New-XmipEssentialsEnvironment @least -Hidden).XMIP_ESSENTIALS_HIDDEN |
+            (New-XmipSystemTestEnvironment @least -Hidden).XMIP_SYSTEM_TEST_HIDDEN |
                 Should -Be 'true'
-            (New-XmipEssentialsEnvironment @least).Keys |
-                Should -Not -Contain 'XMIP_ESSENTIALS_HIDDEN'
+            (New-XmipSystemTestEnvironment @least).Keys |
+                Should -Not -Contain 'XMIP_SYSTEM_TEST_HIDDEN'
         }
     }
 
     It 'reads the variable the roll reads, from the file that reads it' {
         # environment.rs is the one place the roll reads a variable.
         [string] $roll = Get-Content -Raw -LiteralPath (
-            Join-Path $script:Root 'test/core/essentials/src/environment.rs')
+            Join-Path $script:Root 'test/core/system-test/src/environment.rs')
 
-        $roll | Should -Match 'XMIP_ESSENTIALS_HIDDEN'
+        $roll | Should -Match 'XMIP_SYSTEM_TEST_HIDDEN'
     }
 
-    It 'belongs to the Essentials and the demo check that rolls one, and is recorded' {
+    It 'belongs to the System Tests and the demo check that rolls one, and is recorded' {
         # Core.Demo hands it to the roll it starts (ADR-0028, amendment
         # 2026-11-10); the estate's Pester suite rolls nothing and refuses it.
         InModuleScope Xmip {
@@ -61,7 +61,7 @@ Describe 'A run declares itself hidden and is listed only when asked' {
         (Get-Command -Name Start-XmipTest).Parameters['Hidden'].ParameterType |
             Should -Be ([switch])
         [string] $roll = Get-Content -Raw -LiteralPath (
-            Join-Path $script:Root 'Xmip/Start-XmipEssentialsRollProcess.ps1')
+            Join-Path $script:Root 'Xmip/Start-XmipSystemTestRollProcess.ps1')
         $roll | Should -Match 'hidden\s+= \$hidden'
     }
 
@@ -79,7 +79,7 @@ Describe 'A run declares itself hidden and is listed only when asked' {
 
             Mock Get-XmipEstateRun { }
             Mock Get-XmipTestNode { }
-            Mock Get-XmipEssentialsProcess { $script:Two }
+            Mock Get-XmipSystemTestProcess { $script:Two }
             Mock Get-XmipRollRecord {
                 # The first declared itself hidden; the second declared
                 # nothing.
@@ -88,7 +88,7 @@ Describe 'A run declares itself hidden and is listed only when asked' {
                     Id     = $Id
                     File   = "roll-$Id.toml"
                     Record = @{
-                        suite    = 'Core.Essentials'
+                        suite    = 'Core.System'
                         cluster  = if ($hidden) {
                             $script:HiddenCluster
                         }
@@ -123,7 +123,7 @@ Describe 'A run declares itself hidden and is listed only when asked' {
 
             Mock Get-XmipEstateRun { }
             Mock Get-XmipTestNode { }
-            Mock Get-XmipEssentialsProcess { $script:One }
+            Mock Get-XmipSystemTestProcess { $script:One }
             Mock Get-XmipRollRecord {
                 [PSCustomObject]@{
                     Id     = $Id
@@ -146,11 +146,11 @@ Describe 'A run declares itself hidden and is listed only when asked' {
             $script:ShownCluster = $ShownCluster
             Mock Get-XmipTestStatus {
                 [PSCustomObject]@{
-                    Id = 21; Kind = 'roll'; State = 'running'; Suite = 'Core.Essentials'
+                    Id = 21; Kind = 'roll'; State = 'running'; Suite = 'Core.System'
                     Cluster = $script:HiddenCluster; Tests = @(); Hidden = $true; Stress = 'calm'
                 }
                 [PSCustomObject]@{
-                    Id = 22; Kind = 'roll'; State = 'running'; Suite = 'Core.Essentials'
+                    Id = 22; Kind = 'roll'; State = 'running'; Suite = 'Core.System'
                     Cluster = $script:ShownCluster; Tests = @(); Hidden = $false; Stress = 'calm'
                 }
             }

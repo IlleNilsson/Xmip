@@ -25,7 +25,7 @@ function New-XmipTestStatus {
 
         .PARAMETER Kind
             roll, pester, or build: a roll still building, before it rolls
-            (Get-XmipEssentialsBuild); or demo, a run of the demo readiness
+            (Get-XmipSystemTestBuild); or demo, a run of the demo readiness
             check (Get-XmipDemoRun).
 
         .PARAMETER State

@@ -34,7 +34,7 @@
 
 # .NET's build output, skipped only beside the project that builds into it.
 # Rust keeps a crate's further programs in src/bin, written by hand: skipped by
-# name until 2026-11-11, the Essentials' roll and node grew past the 400-line
+# name until 2026-11-11, the System Tests' roll and node grew past the 400-line
 # gate without its reading a line of either.
 [string] $script:XmipDotnetOutput = 'bin'
 [string] $script:XmipDotnetProject = '*.csproj'

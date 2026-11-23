@@ -12,7 +12,7 @@ function Start-XmipTest {
         .DESCRIPTION
             Xmip provides its tests as suites, and -Suite says which one runs.
             A suite carries the provider who publishes it, exactly as a module
-            does (ADR-0011): Core.Essentials is a roll that runs detached
+            does (ADR-0011): Core.System is a roll that runs detached
             until you stop it, Get-XmipTestStatus says what runs and
             Stop-XmipTest ends it; Core.Estate is the Pester suite under
             test/, the estate's memory of every past defect, which runs in a
@@ -20,7 +20,7 @@ function Start-XmipTest {
             Core.Demo, the demo readiness check, does part by part. A third
             party's suite is <Provider>.<Name> and joins by a declaration.
 
-            The Essentials (ADR-0028) is the estate's integration test over
+            The System Tests (ADR-0028) is the estate's integration test over
             time: a roll drives every scenario round after round and publishes
             a snapshot, a history and the recent activity as TOML files a
             monitor reads. This starts exactly one roll as a background
@@ -46,25 +46,23 @@ function Start-XmipTest {
             `roll-<start time>.log` and `.err`, and `roll-<pid>.toml`.
 
         .PARAMETER Suite
-            Which test suite to run: Core.Essentials (the default),
-            Core.Estate or Core.Demo, which are Xmip's own. Every suite is
+            Which test suite to run: Core.System (the default), the System
+            Tests on this computer; Core.Systems, the Systems Tests on an
+            environment's machines; Core.Estate or Core.Demo. Every suite is
             <Provider>.<Name> and core is the reserved provider that means
-            Xmip itself (ADR-0011), so Core.Essentials is how the Essentials
-            is spelled — in the run record, in every refusal and on every
-            surface. A bare Essentials is still accepted and resolves to it,
-            so nothing typed before this means anything else now. A third
-            party's suite carries its own provider: <Provider>.<Name>. Case
-            does not matter. The parameters below are the Essentials', and
+            Xmip itself (ADR-0011): a bare System is accepted and resolves to
+            Core.System. A third party's suite carries its own provider. Case
+            does not matter. The parameters below are the two rolls', and
             Core.Demo takes -Cluster, -Stress, -Hidden and its own -Tester.
 
             Wildcards select a group, exactly as -Test does (the owner,
             2026-09-19): -Suite * is every suite this estate knows, -Suite
-            *Ess* is the Essentials, a literal name is one suite as before,
+            *Sys* is the System Tests, a literal name is one suite as before,
             and Core.Demo is started by its name alone. A pattern matching
             nothing is REFUSED, naming it and the suites there are, before anything starts.
 
             Several suites matched run one after another in the order they
-            are listed, each returning what it returns — the Essentials a
+            are listed, each returning what it returns — the System Tests a
             detached roll, the estate a detached Pester run, both back at
             once, a provider's whatever its command gives — so a caller reads
             the stream by type. It is said in words which are about to run and
@@ -79,7 +77,7 @@ function Start-XmipTest {
             company (ADR-0059, amendment 2026-09-20):
 
                 provider = "Example"
-                name     = "Essentials"
+                name     = "System"
                 command  = "Start-ExampleXmipTest"
 
             Start-XmipTest hands that command everything it was given beside
@@ -96,7 +94,7 @@ function Start-XmipTest {
         .PARAMETER Test
             Which tests of the suite to run. Omit it, for any suite and any
             provider, and the whole suite runs (the owner, 2026-09-19). The
-            Essentials' are RoundTrip, LowLatency, HeavyLoad, Retention,
+            System Tests' are RoundTrip, LowLatency, HeavyLoad, Retention,
             Filing, ExclusiveClaim and DailyBacklog. The estate's are its
             Pester files by name: Allocation, Decision, Rust.Style, XmipTest
             and the rest of test/. Tab completes either.
@@ -139,14 +137,14 @@ function Start-XmipTest {
             anything starts. An empty list, @(), is no nodes at any level.
 
             A node's name is also the last word of its process name —
-            xmip-essentials-<cluster>-node-<node> (ADR-0053, amendment
+            xmip-system-test-<cluster>-node-<node> (ADR-0053, amendment
             2026-09-20) — so it takes the shape -Cluster takes, and that is
             all: no word is reserved, and a node called roll is a node called
             roll. Anything a file cannot be called is REFUSED before a process
             starts.
 
-            Omit it and the run takes every node of the Essentials' own
-            cluster file, test/core/essentials/configuration/cluster.xmip, one
+            Omit it and the run takes every node of the System Tests' own
+            cluster file, test/core/system-test/configuration/cluster.xmip, one
             process each, declaring the roles its roles key says. A role the
             message path needs and no node declares is
             REFUSED before anything starts, as for named nodes. The run record
@@ -163,10 +161,10 @@ function Start-XmipTest {
             exactly, by comma or plus; any other word ('Sending' and the old
             'receive' too), or a node -Nodes does not name, is REFUSED before
             anything starts. A node the table does not name declares what the
-            Essentials' own cluster file declares for it, and nothing where
+            System Tests' own cluster file declares for it, and nothing where
             that file does not declare it.
             ADR-0056 names two further kinds of capability, authentication and
-            runtime, which the Essentials does not model.
+            runtime, which the System Tests do not model.
 
         .PARAMETER OnlineNodes
             Which of the named nodes may assume a route to the internet
@@ -185,18 +183,19 @@ function Start-XmipTest {
             Start-XmipTest -Cluster CL2 -PassThru | Start-XmipOperationWeb -Url ...
 
         .PARAMETER Certificate
-            operator.pem, operator.key and anchors.pem's folder: a -Cluster or
-            -Nodes name that resolves is asked with it, real if it answers as
-            that node, else REFUSED; one that does not resolve runs here.
+            Core.Systems' alone, and required there: operator.pem, operator.key
+            and anchors.pem's folder, which every node's machine and a
+            resolving -Cluster are asked with; one that does not answer as that
+            node is REFUSED, and none is spawned in its place.
 
         .PARAMETER LoadBytes
             The HeavyLoad test's payload: a number or a size like 512mb or 2gb.
             Omit for a megabyte.
 
         .PARAMETER Path
-            Essentials: where the run writes — snapshot, history, activity,
+            System Tests: where the run writes — snapshot, history, activity,
             run record and the roll's own log; defaults to
-            `.local-work/essentials` under the repository. Estate: the
+            `.local-work/system-test` under the repository. Estate: the
             directory of Pester tests; defaults to test/ under the repository.
 
         .PARAMETER PassThru
@@ -209,7 +208,7 @@ function Start-XmipTest {
             leave it out until "show test clusters" is ticked, as
             Get-XmipTestStatus and Get-XmipAudit do until -IncludeHidden. The
             declaration hides it, never its name. The assistant's test cluster
-            is started so, always: Start-XmipTest -Suite Core.Essentials
+            is started so, always: Start-XmipTest -Suite Core.System
             -Cluster CL2 -Test RoundTrip -Nodes RX1, PX1, TX1 -NodeRole
             @{ RX1 = 'receiving'; PX1 = 'processing'; TX1 = 'sending' } -Hidden
 
@@ -218,15 +217,15 @@ function Start-XmipTest {
             -Operator named them, handed to Start-XmipOperationWeb -Tester.
 
         .EXAMPLE
-            # Omitted -Nodes: the Essentials' own cluster file's nodes
+            # Omitted -Nodes: the System Tests' own cluster file's nodes
             # ([nodes.RX1] roles = "receiving", and so on).
-            Start-XmipTest -Suite Core.Essentials -Cluster CL1
+            Start-XmipTest -Suite Core.System -Cluster CL1
 
         .EXAMPLE
-            Start-XmipTest -Suite Core.Essentials -Cluster CL1 -Test HeavyLoad -Stress Harsh
+            Start-XmipTest -Suite Core.System -Cluster CL1 -Test HeavyLoad -Stress Harsh
 
         .EXAMPLE
-            Start-XmipTest -Suite Core.Essentials -Cluster CL1 -Nodes RX1, TX1 -PassThru |
+            Start-XmipTest -Suite Core.System -Cluster CL1 -Nodes RX1, TX1 -PassThru |
                 Start-XmipOperationWeb
 
         .EXAMPLE
@@ -246,7 +245,7 @@ function Start-XmipTest {
             Start-XmipTest -Cluster CL1 -Duration 00:15:00 -TimeFactor 9.5e-6 -WhatIf
 
         .EXAMPLE
-            Start-XmipTest -Suite Example.Essentials -Cluster CL1
+            Start-XmipTest -Suite Example.System -Cluster CL1
 
         .EXAMPLE
             Start-XmipTest -Suite Core.Estate -Test Sync-Xmip*
@@ -260,7 +259,7 @@ function Start-XmipTest {
     [CmdletBinding(SupportsShouldProcess, PositionalBinding = $false)]
     [OutputType('Xmip.TestStatus')]
     param(
-        # The sentence is "start the Essentials' HeavyLoad": suite first, then
+        # The sentence is "start the System Tests' HeavyLoad": suite first, then
         # the tests, and nothing else by position (the owner, 2026-09-12).
         # Neither the set nor the shape is declared here: the completer offers
         # the suites there are and the body refuses the rest, in the estate's
@@ -277,7 +276,7 @@ function Start-XmipTest {
                 & $module { param($Word) Get-XmipTestSuiteChoice -Word $Word } $wordToComplete
             }
         })]
-        [string] $Suite = 'Core.Essentials',
+        [string] $Suite = 'Core.System',
 
         # The hardest level, because an omitted selector means the most the
         # rig can give and not a cautious default (the owner, 2026-09-19;
@@ -379,22 +378,23 @@ function Start-XmipTest {
         return Start-XmipChosenSuite @other -Path $Path -Test $Test
     }
 
-    # The Essentials' own work: checking the choice, then building, spawning
+    # The System Tests' own work: checking the choice, then building, spawning
     # and recording the roll. It is handed this cmdlet so -WhatIf and -Confirm
     # still decide there, and a parameter nobody gave is not handed on.
-    [hashtable] $essentials = @{ Caller = $PSCmdlet; Bound = $PSBoundParameters }
+    [hashtable] $systemTest = @{ Caller = $PSCmdlet; Bound = $PSBoundParameters }
     [string[]] $handed = @('Suite', 'Stress', 'Test', 'Rounds', 'Duration', 'TimeFactor',
         'Nodes', 'NodeRole', 'OnlineNodes', 'Cluster', 'Path', 'PassThru')
 
     foreach ($name in $handed) {
-        $essentials[$name] = Get-Variable -Name $name -ValueOnly
+        $systemTest[$name] = Get-Variable -Name $name -ValueOnly
     }
+    $systemTest.Machines = [bool] $chosen.Machines
 
-    $resolved = Resolve-XmipEssentialsChoice -Choice $essentials
+    $resolved = Resolve-XmipSystemTestChoice -Choice $systemTest
 
     if ($null -eq $resolved) {
         return
     }
 
-    Start-XmipEssentialsRoll @resolved
+    Start-XmipSystemTestRoll @resolved
 }

@@ -139,10 +139,10 @@ user store and assigns no role of its own; it reads which of Observer,
 Operator and Developer the directory grants the proven identity. Running the
 tests without a directory, **the tester is God** — the owner's words: the
 person who started the run holds every role and is refused nothing, unless
-the run says otherwise, because a essentials roll is that person's own
+the run says otherwise, because a System Tests roll is that person's own
 machine and their own doing (ADR-0028), and a gate there would guard
-nothing. The owner's later wording the same evening: the essentials has no
-directory, it has a **fake directory** that allows the tester — so a surface
+nothing. The owner's later wording the same evening: the System Tests have no
+directory, they have a **fake directory** that allows the tester — so a surface
 run over a roll asks a directory like any other and is told yes, and the
 role gate has one code path, not a test-mode bypass. Which directory group
 means which role is configuration, not code, and is not yet written.
@@ -150,7 +150,7 @@ means which role is configuration, not code, and is not yet written.
 *Wired 2026-09-29:* both GUIs take the role by this rule, once
 (`RoleAssignment`, in `Xmip.Surface`, since the amendment of 2026-10-06): a
 role the run states is the role, a word that is no role is Observer, and with
-none stated the directory answers — the Essentials' fake one allowing the
+none stated the directory answers — the System Tests' fake one allowing the
 tester — and with no directory the role is Observer (ADR-0052, amendment
 2026-09-29; the amendment of 2026-10-06 below).
 
@@ -165,7 +165,7 @@ domain controller, a tenant endpoint, an LDAP URL), because a name resolves
 differently from each machine and an address alone does not say what it is.
 The kinds are the directories the remoting paths already prove against,
 and the parameter is built when the gate it feeds exists, not before: a
-parameter the essentials cannot honor is a stub, and the essentials does not
+parameter the System Tests cannot honor is a stub, and the System Tests do not
 simulate (ADR-0028).
 
 ## Amendment, 2026-10-03: an act from elsewhere is refused server-side
@@ -242,11 +242,11 @@ guarded remote surfaces, not the browser.
   (`IDirectory`, ADR-0068) answers for the caller; else Observer. **An
   unstated role grants nothing.** `RoleContext` is the caller and that role,
   one per browser circuit, and is what every screen offers by.
-- **The tester is God in the Essentials only, by configuration.** The fake
+- **The tester is God in the System Tests only, by configuration.** The fake
   directory of the amendment of 2026-09-14 is `TesterDirectory`: it allows
   the user the host runs as every role and knows no one else. A host has it
   only where its configuration names it, `Directory = "tester"`, which
-  `Start-XmipOperationWeb` passes to a host following an Essentials roll; no
+  `Start-XmipOperationWeb` passes to a host following a System Tests roll; no
   name of a cluster, node or file decides it. A directory kind not built is
   no directory, so a misstatement grants nothing.
 - **Every act passes `GatedOperator`, as its caller.** The screens act
@@ -263,12 +263,12 @@ directory group means which role, and the directories a production caller is
 proven against beyond a client certificate — Kerberos and Active Directory,
 the account behind an SSH key (ADR-0014, Reach) — are not built. Until they
 are, a run that does not state a role grants Observer outside the
-Essentials.
+System Tests.
 
 Proved in `Xmip.Surface.Test` (`BrowserCallerTest`): an anonymous browser's
 act is refused whatever the run states, an Observer is refused and audited
 as themselves, an Operator's act is taken and audited under that Operator's
-certificate subject and never the host's account, the Essentials' tester
+certificate subject and never the host's account, the System Tests' tester
 acts by the fake directory on loopback, and every request's user over the
 wire is what its connection proved; and in `Xmip.Gui.Test`
 (`MessageActsViewTest`): a screen's act is audited as the browser's caller,
@@ -296,7 +296,7 @@ no directory is asked there yet.
 loopback without a certificate was the host's own user (the owner's *Go
 with A*), and the amendment of 2026-10-06, which carried that to every
 browser.** Raised by the outside review of 2026-10-08 (open problem 35):
-with a role stated for the run, or an Essentials host's tester directory,
+with a role stated for the run, or a System Tests host's tester directory,
 another user on the machine acted as the host's account, and a reverse
 proxy forwarding to loopback gave remote callers the same trust. Decided
 by the owner, 2026-10-19: *local callers are proven by the operating
@@ -329,7 +329,7 @@ without a certificate is no one, an Observer, and its act is not taken
 even where the tester directory is configured; every request's user over
 the wire is what a certificate proved, and *nobody* over plain loopback.
 
-**Drafted, for the owner: how the Essentials' tester acts in the web
+**Drafted, for the owner: how the System Tests' tester acts in the web
 GUI.** The tester directory allows the user a host runs as, whom a browser
 no longer is. Recommended: `Start-XmipOperationWeb` serves a roll's host on
 `https://127.0.0.1` under the roll's cluster authority, the tester presents
@@ -341,10 +341,10 @@ Provenance: the owner's decision of 2026-10-19, quoted; the deletion's
 reach and the tester's draft are the assistant's, for the owner to
 overrule.
 
-## Amendment, 2026-10-21: the Essentials' tester acts in the web GUI with an operator certificate, in Xmip's own TLS
+## Amendment, 2026-10-21: the System Tests' tester acts in the web GUI with an operator certificate, in Xmip's own TLS
 
 **Decided by the owner, 2026-10-21**, as the amendment above drafted it:
-*the Essentials tester in the web GUI acts with an operator certificate: the
+*the [System Tests] tester in the web GUI acts with an operator certificate: the
 roll's host serves https on 127.0.0.1 under the roll's authority, the tester
 presents a certificate from `New-XmipCertificate -Operator`, and the tester
 directory knows that certificate's subject. Use Xmip's own TLS (dogfood),
@@ -374,9 +374,9 @@ Built the same day:
   plain loopback address keeps Kestrel's sockets. `SurfaceTls` is
   `SecureSurface`, holding the files alone; https names its anchors, the
   operating system's trust store never one.
-- **The roll's authority** is kept under the Essentials' area
-  (`Get-XmipEssentialsLayout`'s `Authority`,
-  `Initialize-XmipEssentialsAuthority`), made where none is kept
+- **The roll's authority** is kept under the System Tests' area
+  (`Get-XmipSystemTestLayout`'s `Authority`,
+  `Initialize-XmipSystemTestAuthority`), made where none is kept
   (`provision::Issuer::kept_or_made`, which internal-ca's authority calls
   too), and issues the host a certificate for 127.0.0.1 as an iPAddress
   alternative name (`provision::host::issue_into`, `xmip_host_issue_v1`).
@@ -391,14 +391,14 @@ Built the same day:
 - **The tester's way**: `New-XmipCertificate -Operator <person> -Path
   <folder>`, the host started once so the authority exists,
   `New-XmipCertificate -Request <folder>/operator.csr -Configuration
-  .local-work/essentials/authority/operator.xmip -Path
+  .local-work/system-test/authority/operator.xmip -Path
   <folder>/operator.pem`, the certificate and key loaded into the browser and
   `authority.pem` trusted there.
 
 Proved by `Xmip.Surface.Test` (`BrowserCallerTest`: the tester's
 certificate acts with the tester's role, another certificate or none does
 not; the scheme is https), `Xmip.Abi.Test`'s section 21 checks,
-`test/EssentialsAuthority.Test.ps1`, and the built host over https on
+`test/SystemTestAuthority.Test.ps1`, and the built host over https on
 127.0.0.1: a roll-signed `CN=alice@example.org` was answered, and so was a
 request presenting nothing. Not proved: a real browser.
 
@@ -413,7 +413,7 @@ runtime's `receive_certificate` and `ffi::remote::identity` — are left for
 a sweep of their own.
 
 Provenance: the decisions and both naming rules are the owner's, quoted;
-the exports' shapes, one authority for the whole Essentials and the
+the exports' shapes, one authority for the whole System Tests and the
 lifetimes are the assistant's.
 
 ## Amendment, 2026-10-29: every plane admits a call before it reads it
@@ -597,7 +597,7 @@ node must decide.* Built (decided by the assistant, each in one line):
   PowerShell module pass none, acting as themselves. Proved by two callers
   acting at once, through one surface in the runtime and through the gate in
   .NET, each reaching the node as their own.
-- **The Essentials** names the account its run runs as as each node's one
+- **The System Tests** name the account their run runs as as each node's one
   relay, so the tester's web host relays the tester's browser.
 
 **The limit, written for the owner** (closed by the amendment of
@@ -623,9 +623,9 @@ own),
 `xmip-core-configure` (`[operate] relay` takes `anchors`),
 `xmip-core-authenticate` (`Chain::from_der`), `Xmip.Surface.Test`
 (`GatedCallerTest`: two callers acting at once through the gate, hopping
-threads, each reach the surface behind it as their own) and the Essentials
+threads, each reach the surface behind it as their own) and the System Tests
 (`served::given`: a tester's operator certificate, signed by the
-Essentials' one authority as `New-XmipCertificate -Request` has it
+System Tests' one authority as `New-XmipCertificate -Request` has it
 signed, is verified and relayed by every node a run starts, whose
 `tls/anchors.pem` is that authority).
 
@@ -812,7 +812,7 @@ requests over two connections hold two handles and one `NameIdentifier`,
 another certificate's differs, no certificate carries none.
 
 Provenance: the assistant's, 2026-11-12, found when the owner saw the
-Operation Web over the Essentials stand still.
+Operation Web over the System Tests stand still.
 
 ## Amendment, 2026-11-13: the node an act is asked of judges its caller again, by name
 
@@ -873,7 +873,7 @@ by role when the environment is written, not granted at run time.*
   carries, `CN=<node>`, as the cluster's authority issues it
   (`provision::node`): `configure::observers`, called by the one slice
   (`configure::cluster::slice`). Every environment writes a node's
-  configuration through it — the Essentials' served runs and the deploy
+  configuration through it — the System Tests' served runs and the deploy
   templates' `xmip-service --slice` alike — so no environment holds a copy
   of the rule, and no name decides it.
 - **Granted nothing more.** An Observer reads the publication and its
@@ -898,14 +898,14 @@ swapping what is listed, and a name granted more keeping its role).
 The owner, 2026-11-19, on open problem 79, signing a person's request read
 `[provision.operator]` around the trust: *Go with that*, the assistant's
 option A. Until then `runtime::operator_certificate::sign` read the file it
-was given as it was, and the Essentials' and the deployment environment's
+was given as it was, and the System Tests' and the deployment environment's
 `operator.xmip` of the amendment of 2026-10-21 were written unsigned beside
 the authority. A hand edit of the table was honored: its `lifetime`, any
 length, and its `authority`, any folder an authority is kept in. The names
 were never the table's: the subject is the request's person.
 
 - **The table is part of a node's slice**, declared for the node in the
-  cluster's file as `[nodes.<name>.provision.operator]`. The Essentials'
+  cluster's file as `[nodes.<name>.provision.operator]`. The System Tests'
   `cluster.xmip` declares it for OP1, `authority = "authority"`: the folder
   beside the slice, where the trust reads its anchor and, where the
   authority is kept, its key.
@@ -913,11 +913,11 @@ were never the table's: the subject is the request's person.
   ADR-0031, amendment 2026-11-19): a slice edited by hand or unsigned is
   refused, and where the node has an active configuration, that slice's
   table is read.
-- **The Essentials writes `operator.xmip` anew at each start**
-  (`Initialize-XmipEssentialsAuthority`), beside its authority's folder,
-  `.local-work/essentials/operator.xmip`: the slice of the node the cluster's
+- **The System Tests write `operator.xmip` anew at each start**
+  (`Initialize-XmipSystemTestAuthority`), beside their authority's folder,
+  `.local-work/system-test/operator.xmip`: the slice of the node the cluster's
   file declares the table for, found by the table and never by its name,
-  sliced as the run names the cluster and signed by the Essentials'
+  sliced as the run names the cluster and signed by the System Tests'
   authority through `xmip_cluster_signed_slice_v1`, whose argument may now
   name the cluster and the folder the authority is kept in. A folder not
   named `authority` is refused, since the trust reads no other.
@@ -927,7 +927,7 @@ were never the table's: the subject is the request's person.
   (`deploy/dsc/msdsc/environment/README.md`). Both ways are the runtime's
   one slicing and signing, `signed::sliced_signed`.
 - **The tester's way**: `New-XmipCertificate -Request
-  <folder>/operator.csr -Configuration .local-work/essentials/operator.xmip
+  <folder>/operator.csr -Configuration .local-work/system-test/operator.xmip
   -Path <folder>/operator.pem`.
 - **The GUI** signs nothing and shows no lifetime or authority: the
   Desktop's certificate page makes the request and keeps the chain and the

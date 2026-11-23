@@ -168,10 +168,10 @@ Describe 'Rust style, section 5f: a test''s temporary folder is file::temporary:
             # The far end's address (ADR-0051), as a port is for a network
             # transport.
             'module/core/capability/transport/unix-socket/src/lib.rs' = 1
-            # The Essentials roll's own working folder, named for its cluster
+            # The System Tests roll's own working folder, named for its cluster
             # so a second cluster beside it neither wipes nor shares it: a
             # program, not a test, built without test-support.
-            'test/core/essentials/src/bin/roll.rs'                    = 1
+            'test/core/system-test/src/bin/roll.rs'                    = 1
         }
 
         # A call, not a word in a comment.

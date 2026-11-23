@@ -102,7 +102,7 @@ AGPL-3.0-or-later, as ADR-0023 says. No license text changes. CONTRIBUTING's
 **7. A provider declares its modules in core's `architecture.toml`**, under its
 own provider — `[xmip.<provider>.…]` — through a change to this repository, as
 core's are. The mount follows ADR-0016: `module/<provider>/<domain>/<leaf>`,
-and an Essentials at `test/<provider>/essentials`.
+and a System Tests at `test/<provider>/system-test`.
 
 **8. The SDK may hold `unsafe`, confined to its export modules** (the owner,
 2026-09-24). The export stands on the far side of the C boundary and must know

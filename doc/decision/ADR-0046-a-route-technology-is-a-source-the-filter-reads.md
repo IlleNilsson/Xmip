@@ -316,14 +316,14 @@ reason.
 
 ## Amendment, 2026-11-11: xmip-service links `content` and `edi`
 
-The owner, 2026-11-10, of the Essentials: *As long as you do not get stuck
+The owner, 2026-11-10, of the System Tests: *As long as you do not get stuck
 in the 'More game', that is Subscriptions functionality in the real world.
-Do your Essentials test, promotion thing.* The `content` technology and the
+Do your [System Tests] test, promotion thing.* The `content` technology and the
 `edi` path language were built and tested on their own, and the assembled
 service linked no route technology at all (`.src/service/built.rs`: *No
 route technology is linked yet*), so a node's filter could read only the
 Message Context, and a filter naming `content:` refused the node at its
-start (the amendment of 2026-09-28). That is why the Essentials routed by
+start (the amendment of 2026-09-28). That is why the System Tests routed by
 the name a file arrived under (ADR-0028, amendment 2026-10-13, *which
 nothing in the assembled service promotes*), which is now no longer so.
 
@@ -333,16 +333,16 @@ Now the root crate has two features, `route-content` and `path-edi`, and
 and no namespaces (an EDI path names none). The source and its list of
 languages are made in one place, the route technology itself, each language
 by a feature of its own (`xmip-core-route-content`'s `edi`), which the root's
-`path-edi` turns on; the Essentials, which predicts where a node routes a
-document it drops, calls the same constructor with the same feature, so
+`path-edi` turns on; the System Tests, which predict where a node routes a
+document they drop, call the same constructor with the same feature, so
 neither keeps a copy that drifts as a site adds a language. A site links
 them by repository name like any technology;
-`deploy/site/personal-computer.xmip`, which the Essentials and the
+`deploy/site/personal-computer.xmip`, which the System Tests and the
 environment templates build `xmip-service` from, names both. So a
 Subscription reads an EDIFACT interchange's message type and recipient:
 
 ```toml
-filter = "\"content:edi:UNH/2/1\" = 'ORDERS' and \"content:edi:UNB/3/1\" = 'ESSENTIALS'"
+filter = "\"content:edi:UNH/2/1\" = 'ORDERS' and \"content:edi:UNB/3/1\" = 'SYSTEM-TEST'"
 ```
 
 A path with `/` and digits is no bare name in the expression language, so

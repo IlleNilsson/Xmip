@@ -3,12 +3,12 @@
 
 <#
 .SYNOPSIS
-    An Essentials roll that is still building, as its build record says it.
+    A System Tests roll that is still building, as its build record says it.
 
 .DESCRIPTION
     A roll builds before it rolls, and since 2026-10-13 the build runs detached
     as the roll does: the owner, that day, of Start-XmipTest holding his console
-    during the first build. Start-XmipEssentialsBuild starts it and writes one
+    during the first build. Start-XmipSystemTestBuild starts it and writes one
     record per build, build-<start time>.toml, in the roll area; the build
     removes it once the roll it spawned has its own run record, or writes into
     it why it FAILED. Get-XmipTestStatus lists what is here beside the rolls;
@@ -18,10 +18,10 @@
 #>
 
 
-function Get-XmipEssentialsBuild {
+function Get-XmipSystemTestBuild {
     <#
         .SYNOPSIS
-            Every recorded Essentials build in a roll area, as the
+            Every recorded System Tests build in a roll area, as the
             Xmip.TestStatus objects Get-XmipTestStatus lists.
 
         .DESCRIPTION
@@ -42,12 +42,12 @@ function Get-XmipEssentialsBuild {
     )
 
     foreach ($read in @(Read-XmipRunRecord -Path $Path -Kind build)) {
-        ConvertTo-XmipEssentialsBuild -Record $read.Record -File $read.File -Area $Path
+        ConvertTo-XmipSystemTestBuild -Record $read.Record -File $read.File -Area $Path
     }
 }
 
 
-function ConvertTo-XmipEssentialsBuild {
+function ConvertTo-XmipSystemTestBuild {
     <#
         .SYNOPSIS
             One build record as an Xmip.TestStatus of kind build.
@@ -89,7 +89,7 @@ function ConvertTo-XmipEssentialsBuild {
     [string] $state = if ($run.State -eq 'building') { 'building' } else { 'FAILED' }
     [string] $fault = $run.Fault
     [string] $tally = if ($state -eq 'building') {
-        Get-XmipEssentialsBuildProgress -Log $log
+        Get-XmipSystemTestBuildProgress -Log $log
     }
     else {
         $fault
@@ -122,7 +122,7 @@ function ConvertTo-XmipEssentialsBuild {
 }
 
 
-function Get-XmipEssentialsBuildProgress {
+function Get-XmipSystemTestBuildProgress {
     <#
         .SYNOPSIS
             How far a running build has come, in words, from cargo's lines in
@@ -182,7 +182,7 @@ function Get-XmipEssentialsBuildProgress {
 }
 
 
-function Remove-XmipEssentialsBuildEnded {
+function Remove-XmipSystemTestBuildEnded {
     <#
         .SYNOPSIS
             Deletes what the ended builds of one cluster left — record, log
@@ -206,7 +206,7 @@ function Remove-XmipEssentialsBuildEnded {
         [string] $Cluster
     )
 
-    foreach ($build in @(Get-XmipEssentialsBuild -Path $Path)) {
+    foreach ($build in @(Get-XmipSystemTestBuild -Path $Path)) {
         if ($build.State -eq 'building' -or $build.Cluster -ne $Cluster) {
             continue
         }

@@ -1,4 +1,4 @@
-# One of the Essentials' far ends on a machine of its own, from this host:
+# One of the Systems Tests' far ends on a machine of its own, from this host:
 # far-end-program.dsc.yaml applied on its machine with its certificate and
 # the program (README.md). Deploy-XmipEnvironment applies it once for each
 # machine whose external names a far end.
@@ -15,7 +15,7 @@ parameters:
   programs:
     type: object
     description: >-
-      Per family, the far end's program, xmip-essentials-external built for
+      Per family, the far end's program, xmip-system-test-external built for
       it: its path and the file name it is given there.
   tools:
     type: object
@@ -32,7 +32,7 @@ parameters:
         folder: /opt/xmip-far-end
   name:
     type: string
-    description: The far end, as the Essentials' configuration/external.xmip names it.
+    description: The far end, as the Systems Tests' configuration/external.xmip names it.
   machine:
     type: object
     description: The machine the far end runs on, its name, address and family.

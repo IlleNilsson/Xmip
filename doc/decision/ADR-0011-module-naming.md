@@ -280,9 +280,9 @@ PostgreSQL's frontend/backend protocol 3.0 is placed once, in
 MariaDB's is in `xmip-core-library-mariadb`: the framing and the messages
 both halves send, the client that logs in by trust or a cleartext password in
 the simple query flow, and the far end a test serves. It had sat in
-`xmip-core-transport-postgresql`, and the archive target and the Essentials
+`xmip-core-transport-postgresql`, and the archive target and the System Tests
 reached it through the transport. Now the transport, the archive target and
-the Essentials' archive cabinet depend on the library for the wire, and Xmip
+the System Tests' archive cabinet depend on the library for the wire, and Xmip
 Storage's PostgreSQL backend, decided and not built (ADR-0015, amendment
 2026-10-01), will too. The library's refusal is the network library's
 `NetError`, as every library's is; nothing in it names the transport. The
@@ -322,7 +322,7 @@ repository's name, and every dependency on it follows. So does what an
 operator writes: the transport declares itself `aws-s3`, and its scheme,
 which chooses the technology (ADR-0064, amendment 2026-10-28), is
 `aws-s3://`; the archives' receipts are `aws-s3://<bucket>/<key>` and
-`google-cloud-storage://<bucket>/<object>`; the Essentials files into
+`google-cloud-storage://<bucket>/<object>`; the System Tests file into
 `filing/aws-s3/<contract>`. The old words are deleted, with no alias. *S3*
 stays where it names Amazon's service or its interface — the S3 REST API, an
 S3-compatible store, `S3Transport` and `S3Archive`, Signature Version 4's

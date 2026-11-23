@@ -286,8 +286,8 @@ members = [
     "module/platform/persist/sqlite",
     "module/platform/runtime",
     "sdk",
-    "test/core/essentials",
     "test/core/module",
+    "test/core/system-test",
 ]
 # The template is a repository of its own, never a member.
 exclude = ["template"]
@@ -455,8 +455,8 @@ authorize-location = ["authorize", "dep:xmip-authorize-location"]
 # https://, sftp://, tcp://, udp:// (ADR-0064, amendment 2026-10-28). tcp
 # terminates TLS where its Location says `tls = true`, with the node's
 # `[provision.receive]` certificate. sftp takes files from and puts them on
-# an SFTP server, each under its name: the Parties' far end the Essentials
-# serves nodes on machines of their own (ADR-0028, amendment 2026-10-22).
+# an SFTP server, each under its name: the Parties' far end the System Tests
+# serve nodes on machines of their own (ADR-0028, amendment 2026-10-22).
 transport-file = ["dep:xmip-transport-file"]
 transport-ftp = ["dep:xmip-transport-ftp", "xmip-transport-ftp/tls"]
 transport-http = ["dep:xmip-transport-http"]
@@ -642,14 +642,14 @@ opt-level = 3
 # library naming symbols (core's precondition_check, its own constants) that
 # none of its codegen units held (2026-11-02), and the same build linked with
 # CARGO_INCREMENTAL=0. A compiler defect, not this crate's.
-[profile.dev.package.xmip-core-test-essentials]
+[profile.dev.package.xmip-core-test-system-test]
 incremental = false
 
 # The millisecond rule is measured on the optimized build: `measured`,
 # every crate at opt-level 3, debug assertions and overflow checks kept
 # as the estate tests with them (rust-style.md section 5c). Every timing
 # program runs in it (Test-XmipMeasuredProgram), and so do the binaries
-# the Essentials and the demo time. Built on `release`, not `dev`: a
+# the System Tests and the demo time. Built on `release`, not `dev`: a
 # profile that inherits `dev` inherits its package overrides too.
 [profile.measured]
 inherits = "release"
@@ -660,8 +660,8 @@ overflow-checks = true
 incremental = true
 codegen-units = 256
 
-# The Essentials build whole here too, for the reason above.
-[profile.measured.package.xmip-core-test-essentials]
+# The System Tests build whole here too, for the reason above.
+[profile.measured.package.xmip-core-test-system-test]
 incremental = false
 
 # Every estate crate a member names by its git URL, resolved to its

@@ -3,12 +3,12 @@
 
 <#
 .SYNOPSIS
-    The demo readiness check's first part: the Essentials cluster rolled from
+    The demo readiness check's first part: the System Tests cluster rolled from
     the tree under test, its snapshot published, and every node it declares
     running.
 
 .DESCRIPTION
-    The check starts the roll exactly as Start-XmipTest -Suite Core.Essentials
+    The check starts the roll exactly as Start-XmipTest -Suite Core.System
     starts any roll, at the -Stress it was given, and its stop part ends it.
     It never follows a roll it did not start: one built from another tree, or
     at another stress, proves nothing of this one, so a cluster that rolls or
@@ -43,7 +43,7 @@ function Test-XmipDemoRoll {
 
     [string] $cluster = $Run['cluster']
     [hashtable] $start = @{
-        Suite       = $script:XmipEssentialsSuite
+        Suite       = $script:XmipSystemTestSuite
         Cluster     = $cluster
         Stress      = $Run['stress']
         Hidden      = [bool] $Run['hidden']

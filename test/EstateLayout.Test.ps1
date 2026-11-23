@@ -51,7 +51,7 @@ Describe 'The estate layout' {
             }
 
             $layout.Manifest | Should -Be (Join-Path $Estate $script:XmipManifestName)
-            $layout.Essentials | Should -BeLike "$($layout.Work)*"
+            $layout.SystemTest | Should -BeLike "$($layout.Work)*"
         }
     }
 

@@ -132,8 +132,8 @@ Describe 'Every estate path a document names exists' {
         # repository-model.md are what the mount rule replaced, said as such.
         [string[]] $intended = @(
             'README.md names test/suite'
-            'test/core/essentials/README.md names test/suite'
-            'doc/architecture/repository-model.md names test/essentials'
+            'test/core/system-test/README.md names test/suite'
+            'doc/architecture/repository-model.md names test/system-test'
             'doc/architecture/repository-model.md names module/capability/core/transport'
         )
 
@@ -202,7 +202,7 @@ Describe 'Every argument is named' {
         # the same of code (powershell-style.md, section 3).
         [string[]] $files = @(
             (Join-Path $script:Root 'README.md')
-            (Join-Path $script:Root 'test/core/essentials/README.md')
+            (Join-Path $script:Root 'test/core/system-test/README.md')
             (Get-ChildItem -Path (Join-Path $script:Root 'Xmip') -Filter '*.ps1' |
                 ForEach-Object { $_.FullName })
         )

@@ -155,8 +155,8 @@ function New-XmipEstatePage {
     [PSCustomObject[]] $mounted = @($Repository | Where-Object { $_.Mounted })
     [hashtable] $weight = Get-XmipMapWeight -Source $Source -Mount @($mounted.Mount)
 
-    # A module is a repository mounted under module/. The Essentials declares
-    # itself an Operation and mounts under test/; drawn as a module it put a
+    # A module is a repository mounted under module/. The System Tests declare
+    # themselves an Operation and mount under test/; drawn as a module it put a
     # hundred edges on the page and hid every other one.
     [PSCustomObject[]] $modules = @(
         $mounted |
@@ -179,7 +179,7 @@ function New-XmipEstatePage {
     )
 
     # What the graph leaves out, said in numbers rather than hidden: the
-    # Essentials links every technology and would bury the drawing.
+    # System Tests link every technology and would bury the drawing.
     [hashtable[]] $outside = @(
         $mounted |
             Where-Object { $_.Domain -ne 'Technology' } |

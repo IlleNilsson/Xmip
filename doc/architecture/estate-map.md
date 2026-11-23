@@ -167,7 +167,7 @@ started. Records: ADR-0018, ADR-0064.
 #### `program-audit`
 
 **Every Xmip program audits to its audit file.** `xmip-service`, `xmip`, both
-PowerShell modules, the web host, the language server and the Essentials
+PowerShell modules, the web host, the language server and the System Tests
 record through `xmip-core-audit`'s `ProgramAudit` into `audit.toml`, each
 program handing it `xmip-core-audit-file`'s sink as it starts, synchronously:
 a record is appended before `record` returns, chained in its writer's audit
@@ -197,7 +197,7 @@ earlier epoch not asked, and refused at start in words where it names nothing
 to present; a node with the Storage role serves Xmip Storage at `[storage]
 listen`, and `xmip-service --listening` says its port; every node publishes at
 `<node>/storage` which Storage it uses and whether it answered, Done where
-none did. Held by the root's `failover` and `wire` tests and the Essentials'
+none did. Held by the root's `failover` and `wire` tests and the System Tests'
 level 1, every node a process. Records: ADR-0056 (amendments 2026-10-01 and
 2026-10-22), ADR-0067 (amendment 2026-10-22).
 
@@ -292,13 +292,13 @@ clients at once never overtaking, a node killed mid-process finishing from the
 Ledger) and the two crates' tests. A unit is opened from its library as the
 node starts, through the runtime's `dynamic-loading` feature, which
 `xmip-service` is built with, its library named as the node's own system names
-it (`xmip_module.h` section 1). The Essentials runs one: every sales order
+it (`xmip_module.h` section 1). The System Tests run one: every sales order
 passes the Work Process *Order approval*
-(`test/core/essentials/configuration/order-approval.bpmn`, its unit the
-Essentials' example `order_approval`) on its way to the ERP. A unit's settings
-and calls through the standard units are decided, not built; no test a landing
-runs carries a Message through a loaded unit in a running node (open problem
-87). Records: ADR-0066 (amendments 2026-10-22, 2026-11-21), ADR-0025
+(`test/core/system-test/configuration/order-approval.bpmn`, its unit the
+System Tests' example `order_approval`) on its way to the ERP. A unit's
+settings and calls through the standard units are decided, not built; no test
+a landing runs carries a Message through a loaded unit in a running node (open
+problem 87). Records: ADR-0066 (amendments 2026-10-22, 2026-11-21), ADR-0025
 (amendment 2026-11-21), runtime-model.md section 22.
 
 #### `regulation-quest`
@@ -330,8 +330,8 @@ ADR-0048.
 #### `retention-archiving`
 
 **Archiving by retention window.** `xmip-core-retain` and `xmip-core-archive`
-are driven by the Essentials on a simulated clock; a node has no retention or
-archive step and reads no `[retention]` table. Records: ADR-0040.
+are driven by the System Tests on a simulated clock; a node has no retention
+or archive step and reads no `[retention]` table. Records: ADR-0040.
 
 ### Decided, not built
 
@@ -340,8 +340,9 @@ archive step and reads no `[retention]` table. Records: ADR-0040.
 **Holding a Stream to a named Contract.** A node refuses to start a Receive or
 Send Location that names a Contract, in words: arrival holds no Stream to one
 yet (`xmip-core-runtime`'s `startup.rs`). The contract technologies validate,
-and the Essentials holds its generated content to them in its own harness, not
-at a node's Location. Records: ADR-0042, ADR-0031 (amendment 2026-10-05).
+and the System Tests hold their generated content to them in their own
+harness, not at a node's Location. Records: ADR-0042, ADR-0031 (amendment
+2026-10-05).
 
 #### `artifact-scope`
 
@@ -459,7 +460,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 407097 lines of production
+Where each repository mounts and what it holds: 407125 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -789,7 +790,7 @@ hold no source to count.
 │       └── cluster                             5067
 └── test/
     └── core/
-        ├── essentials                         18825
+        ├── system-test                        18853
         └── module                                83
 ```
 
@@ -1047,7 +1048,7 @@ Declared, and none composed: `module/core/operation/report` has no
 The parent is not composed here, so what it composes cannot be read; every
 technology below is declared only.
 
-- **scaffolded**, 2 — essentials, module
+- **scaffolded**, 2 — module, system-test
 
 ---
 

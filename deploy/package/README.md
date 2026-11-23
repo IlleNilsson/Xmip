@@ -63,7 +63,7 @@ workspace, and goes in every package (ADR-0015, amendments 2026-11-19 and
 
 Which node it reads is said in `cli.toml` beside it. A package ships none:
 the one a developer's build copies beside the executable follows the
-Essentials, so `New-XmipPackage` stages the three programs alone, and
+System Tests, so `New-XmipPackage` stages the three programs alone, and
 `xmip-service --install` writes the installed node's, `Surface = "local"`
 at the node's local endpoint, where there is none, and keeps it on removal.
 Until one is there, `--local xmip-<node>` on the line names the node.

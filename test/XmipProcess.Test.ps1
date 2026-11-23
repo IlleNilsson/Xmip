@@ -59,9 +59,9 @@ Describe 'What a killed process left behind' {
 
             # No process has this id: the highest a pid can be on Windows is
             # far below it, and Linux stops at four million by default.
-            [string] $stale = Join-Path $Area 'xmip-essentials-node-2000000000.toml'
+            [string] $stale = Join-Path $Area 'xmip-system-test-node-2000000000.toml'
             Set-Content -LiteralPath $stale -Encoding utf8 -Value @(
-                'name = "xmip-essentials-node"'
+                'name = "xmip-system-test-node"'
                 "location = `"$Location`""
                 'purpose = "test"'
                 'pid = 2000000000'
@@ -114,7 +114,7 @@ Describe 'What a killed process left behind' {
     }
 }
 
-Describe 'What an Essentials process is called' {
+Describe 'What a System Tests process is called' {
     <#
         ADR-0053, amendment 2026-09-20. The owner, reading eleven rows of
         Get-Process with two clusters up: "these process names do not tell an
@@ -125,16 +125,16 @@ Describe 'What an Essentials process is called' {
         InModuleScope Xmip -Parameters $script:Named {
             param($Name, $Node)
 
-            Get-XmipEssentialsImageName -Cluster $Name -What 'roll' |
-                Should -Be "xmip-essentials-$Name-roll"
-            Get-XmipEssentialsImageName -Cluster $Name -What 'cluster' |
-                Should -Be "xmip-essentials-$Name-cluster"
-            Get-XmipEssentialsImageName -Cluster $Name -What "node-$Node" |
-                Should -Be "xmip-essentials-$Name-node-$Node"
+            Get-XmipSystemTestImageName -Cluster $Name -What 'roll' |
+                Should -Be "xmip-system-test-$Name-roll"
+            Get-XmipSystemTestImageName -Cluster $Name -What 'cluster' |
+                Should -Be "xmip-system-test-$Name-cluster"
+            Get-XmipSystemTestImageName -Cluster $Name -What "node-$Node" |
+                Should -Be "xmip-system-test-$Name-node-$Node"
 
             # Clause 1 is untouched: the owner's one line still finds them.
             foreach ($what in 'roll', 'cluster', "node-$Node") {
-                Get-XmipEssentialsImageName -Cluster $Name -What $what |
+                Get-XmipSystemTestImageName -Cluster $Name -What $what |
                     Should -BeLike 'xmip-*'
             }
         }
@@ -147,25 +147,25 @@ Describe 'What an Essentials process is called' {
         InModuleScope Xmip -Parameters $script:Named {
             param($Name, $Node)
 
-            [string] $prefix = "xmip-essentials-$Name"
-            Get-XmipEssentialsImageName -Cluster $Name -What 'node-roll' |
+            [string] $prefix = "xmip-system-test-$Name"
+            Get-XmipSystemTestImageName -Cluster $Name -What 'node-roll' |
                 Should -Be "$prefix-node-roll"
-            Get-XmipEssentialsImageName -Cluster $Name -What 'node-roll' |
-                Should -Not -Be (Get-XmipEssentialsImageName -Cluster $Name -What 'roll')
+            Get-XmipSystemTestImageName -Cluster $Name -What 'node-roll' |
+                Should -Not -Be (Get-XmipSystemTestImageName -Cluster $Name -What 'roll')
 
-            Get-XmipEssentialsImageKind -Name "$prefix-node-roll" | Should -Be 'Node'
-            Get-XmipEssentialsImageKind -Name "$prefix-node-cluster" | Should -Be 'Node'
-            Get-XmipEssentialsImageKind -Name "$prefix-roll" | Should -Be 'Roll'
-            Get-XmipEssentialsImageKind -Name "$prefix-cluster" | Should -Be 'Cluster'
+            Get-XmipSystemTestImageKind -Name "$prefix-node-roll" | Should -Be 'Node'
+            Get-XmipSystemTestImageKind -Name "$prefix-node-cluster" | Should -Be 'Node'
+            Get-XmipSystemTestImageKind -Name "$prefix-roll" | Should -Be 'Roll'
+            Get-XmipSystemTestImageKind -Name "$prefix-cluster" | Should -Be 'Cluster'
 
             # A far end outside the cluster carries a marker of its own, and
             # the first marker is the kind: a node called external-roll is a
             # node, a far end called node-roll a far end (ADR-0028, amendment
             # 2026-11-22).
-            Get-XmipEssentialsImageKind -Name "$prefix-node-external-roll" | Should -Be 'Node'
-            Get-XmipEssentialsImageKind -Name "$prefix-external-node-roll" |
+            Get-XmipSystemTestImageKind -Name "$prefix-node-external-roll" | Should -Be 'Node'
+            Get-XmipSystemTestImageKind -Name "$prefix-external-node-roll" |
                 Should -Be 'External'
-            Get-XmipEssentialsImageKind -Name "$prefix-external-roll" | Should -Be 'External'
+            Get-XmipSystemTestImageKind -Name "$prefix-external-roll" | Should -Be 'External'
         }
     }
 
@@ -174,44 +174,44 @@ Describe 'What an Essentials process is called' {
             param($Name, $Node)
 
             # A node called node is a node too.
-            [string] $prefix = "xmip-essentials-$Name"
+            [string] $prefix = "xmip-system-test-$Name"
             [hashtable] $expected = @{
                 "$prefix-roll"                    = 'Roll'
                 "$prefix-cluster"                 = 'Cluster'
                 "$prefix-node-$Node"              = 'Node'
                 "$prefix-node-node"               = 'Node'
                 "$prefix-external-$Node"          = 'External'
-                'xmip-essentials-roll'            = 'Roll'
-                'xmip-essentials-cluster'         = 'Cluster'
-                'xmip-essentials-node'            = 'Node'
-                'xmip-essentials-external'        = 'External'
+                'xmip-system-test-roll'            = 'Roll'
+                'xmip-system-test-cluster'         = 'Cluster'
+                'xmip-system-test-node'            = 'Node'
+                'xmip-system-test-external'        = 'External'
                 'xmip-gui-web'                    = ''
                 'xmip'                            = ''
                 'notepad'                         = ''
             }
 
             foreach ($name in $expected.Keys) {
-                Get-XmipEssentialsImageKind -Name $name | Should -Be $expected[$name]
+                Get-XmipSystemTestImageKind -Name $name | Should -Be $expected[$name]
             }
         }
     }
 
-    It 'is the Essentials''s own where its image is, whatever the built file is called' {
+    It 'is the System Tests'' own where its image is, whatever the built file is called' {
         # The image is deliberately not the built binary: a process name is
         # its image's name. Nothing but this module writes that directory, so
-        # a process running out of it is the Essentials' without a warning
+        # a process running out of it is the System Tests' without a warning
         # about a binary that changed under it.
         InModuleScope Xmip -Parameters $script:Named {
             param($Name, $Node)
 
-            [string] $area = (Get-XmipEssentialsLayout).Image
-            [string] $image = Join-Path $area $Name "xmip-essentials-$Name-node-$Node.exe"
+            [string] $area = (Get-XmipSystemTestLayout).Image
+            [string] $image = Join-Path $area $Name "xmip-system-test-$Name-node-$Node.exe"
 
-            Test-XmipEssentialsOwnImage -Path $image | Should -BeTrue
-            Test-XmipEssentialsOwnImage -Path '' | Should -BeFalse
-            Test-XmipEssentialsOwnImage -Path 'C:/Windows/notepad.exe' | Should -BeFalse
-            Test-XmipEssentialsOwnImage -Path (
-                Join-Path (Get-XmipEssentialsLayout).Essentials 'target/debug/x.exe') |
+            Test-XmipSystemTestOwnImage -Path $image | Should -BeTrue
+            Test-XmipSystemTestOwnImage -Path '' | Should -BeFalse
+            Test-XmipSystemTestOwnImage -Path 'C:/Windows/notepad.exe' | Should -BeFalse
+            Test-XmipSystemTestOwnImage -Path (
+                Join-Path (Get-XmipSystemTestLayout).SystemTest 'target/debug/x.exe') |
                 Should -BeFalse
         }
     }
@@ -220,10 +220,10 @@ Describe 'What an Essentials process is called' {
         InModuleScope Xmip -Parameters $script:Named {
             param($Name, $Node)
 
-            $layout = Get-XmipEssentialsLayout
+            $layout = Get-XmipSystemTestLayout
 
             $layout.Image | Should -BeLike '*.local-work*'
-            Get-XmipEssentialsImageArea -Cluster $Name |
+            Get-XmipSystemTestImageArea -Cluster $Name |
                 Should -Be (Join-Path $layout.Image $Name)
         }
     }
@@ -245,7 +245,7 @@ Describe 'What an Essentials process is called' {
             foreach ($file in 'unit.dll', 'libunit.so', 'libunit.dylib', 'unit.pdb', 'unit.d') {
                 Set-Content -LiteralPath (Join-Path $examples $file) -Value $file
             }
-            Mock Get-XmipEssentialsLayout {
+            Mock Get-XmipSystemTestLayout {
                 [pscustomobject] @{
                     Roll     = Join-Path $built 'roll'
                     Cluster  = Join-Path $built 'cluster'
@@ -257,8 +257,8 @@ Describe 'What an Essentials process is called' {
                 }
             }
 
-            $null = New-XmipEssentialsImage -Cluster $Name -Confirm:$false
-            [string] $units = Join-Path (Get-XmipEssentialsImageArea -Cluster $Name) 'examples'
+            $null = New-XmipSystemTestImage -Cluster $Name -Confirm:$false
+            [string] $units = Join-Path (Get-XmipSystemTestImageArea -Cluster $Name) 'examples'
             @(Get-ChildItem -LiteralPath $units -File).Name | Sort-Object |
                 Should -Be @('libunit.dylib', 'libunit.so', 'unit.dll')
         }
@@ -273,7 +273,7 @@ Describe 'Which processes are Xmip''s' {
         the command line is found and stopped with the rest.
     #>
     It 'is xmip or xmip-<what>, and nothing else' {
-        InModuleScope Xmip -Parameters @{ Roll = "xmip-essentials-$($script:Named.Name)-roll" } {
+        InModuleScope Xmip -Parameters @{ Roll = "xmip-system-test-$($script:Named.Name)-roll" } {
             param([string] $Roll)
 
             foreach ($owned in 'xmip', 'xmip-service', $Roll) {

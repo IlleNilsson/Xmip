@@ -4,7 +4,7 @@
 - Date: 2026-09-07
 - Related: ADR-0010 (contract and transport repository boundaries), ADR-0016
   (submodule composition, amended 2026-09-07), ADR-0011 (naming), ADR-0028 (the
-  Essentials), doc/development/creating-transports-contracts-and-processes.md,
+  System Tests), doc/development/creating-transports-contracts-and-processes.md,
   ADR-0018 (amendment 2026-10-05: no other runtime in an Xmip process unless
   invited)
 
@@ -32,7 +32,7 @@ process unless configuration invites it (amendment 2026-10-05).**
 ## Context
 
 By 2026-09-07 the contract capability held one technology, `csv`, against
-twenty-three declared, and the Essentials carried its own JSON and XML checks
+twenty-three declared, and the System Tests carried their own JSON and XML checks
 waiting for the estate's to land. Building the rest raised three questions the
 manifest did not answer, and the owner answered each the same day.
 
@@ -96,7 +96,7 @@ compiled by its author (the amendment of 2026-11-05).
   copybooks, `edi-edifact`, and the `dotnet` template. Each documents the subset
   of its schema language it reads and refuses the rest by name at bind time, so
   an operator learns at configuration, not from a Stream that passed.
-- The Essentials validates JSON and XML through the estate's own technologies
+- The System Tests validate JSON and XML through the estate's own technologies
   and exercises every contract technology over every transport (ADR-0028); its
   stand-in checks are gone.
 - `json-schema` asserts `pattern` and `format`, which it could not before the
@@ -168,7 +168,7 @@ Xmip.*
   capability.
 - `xmip-core-contract-rust` was an external module the runtime's loader is
   tested against (ADR-0057), not a slot for a language: it is
-  `xmip-core-test-module` at `test/core/module`, beside the Essentials.
+  `xmip-core-test-module` at `test/core/module`, beside the System Tests.
 - Which runtimes may enter an Xmip process stays as the amendment of
   2026-10-05 and ADR-0018 say.
 

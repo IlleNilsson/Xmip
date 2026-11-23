@@ -86,7 +86,7 @@ function Get-XmipMountPath {
 
     # An explicit mount wins over the computed path. Almost nothing declares one
     # — the path computed below is right for a module. One whose owner is
-    # reserved (a library, the Essentials) mounts where it says.
+    # reserved (a library, the System Tests) mounts where it says.
     [string] $declaredMount = [string](
         Get-XmipPropertyValue -Object $Repository -Name 'mount' -Default ''
     )

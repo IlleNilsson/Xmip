@@ -27,7 +27,7 @@
 
 **Every Xmip program records what it does and every failure through
 `xmip-core-audit` — the runtime and its node, the web and desktop monitors,
-the command line, both PowerShell modules, the Essentials' roll, cluster and
+the command line, both PowerShell modules, the System Tests' roll, cluster and
 node processes, the language server and the estate's own tooling — not the
 runtime alone. The record is written once, in the audit capability; a .NET
 program and PowerShell reach it through the runtime's library, as they reach
@@ -85,7 +85,7 @@ record behind it is a defect.
 
 ## Consequences
 
-- The web host's unhandled errors, the Essentials' crashes and a landing
+- The web host's unhandled errors, the System Tests' crashes and a landing
   that stopped are all found in one place, or in the operating system's log
   when that place was down.
 - Registering the `Xmip` event source on Windows needs elevation once; the
@@ -125,7 +125,7 @@ record behind it is a defect.
   failure, its acts on a scope, the prompt's failures); the script module's
   `Write-XmipAudit` in `Start-XmipTest`, `Stop-XmipTest`,
   `Start-XmipOperationWeb`, `Stop-XmipOperationWeb` and
-  `Publish-XmipChange`; the Essentials' roll, cluster and node processes
+  `Publish-XmipChange`; the System Tests' roll, cluster and node processes
   and the language server, which call the capability directly. The web
   host's console is kept in `.local-work/web` beside its run, as a roll's
   is; the estate's records go to `.local-work/audit`.
@@ -165,7 +165,7 @@ read for meaning.
 
 A process that belongs somewhere in Xmip writes on every record the
 location it declares (ADR-0053 clause 3): `location = "xmip:///C1"` for a
-Essentials roll and its cluster, `xmip:///C1/node/R1` for a node and for the
+System Tests roll and its cluster, `xmip:///C1/node/R1` for a node and for the
 Xmip Service. The one writer puts it there — `ProgramAudit::locate`, set
 once where the process declares itself and shared by every clone, the panic
 hook's among them — so no caller writes it of its own. A program that serves
@@ -394,7 +394,7 @@ sink or which log it writes to. What stands:
   log once to `operating_system_log::hand`; the first log handed stands, and
   a program that handed none has a record its sink refused refused in
   words. Nothing chooses a sink or a log by name: the program links what it
-  writes to. `xmip-service`, the language server, the Essentials' processes
+  writes to. `xmip-service`, the language server, the System Tests' processes
   and the runtime's library each hand in the file sink and, on Windows, the
   Event Log, on Unix, syslog; each log's crate is empty off its own
   platform, so both are linked and each builds where it works.
@@ -463,7 +463,7 @@ What stands:
   `xmip-core-audit-syslog` in `[target.'cfg(unix)'.dependencies]`, under the
   `cfg` the program's hand-in is written under, in the root crate,
   `xmip-core-operate`, `xmip-core-cli`, the language server and the
-  Essentials. The key stores of ADR-0063 clause 4 follow the same rule:
+  System Tests. The key stores of ADR-0063 clause 4 follow the same rule:
   `xmip-core-secret-dpapi` on Windows, `xmip-core-secret-file` on Unix,
   `xmip-core-secret-keychain` on macOS.
 - **The five crates' own dependencies are their platform's too.** Off it

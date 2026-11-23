@@ -80,7 +80,7 @@ Describe 'Get-XmipSourceFile counts what a file holds' {
 
         # A crate's further program, one line over the gate. Until 2026-11-11
         # every directory called bin was skipped as .NET's output, and the
-        # Essentials' roll and node grew past the gate unread.
+        # System Tests' roll and node grew past the gate unread.
         [string[]] $long = @(1..($script:MaximumFileLines + 1) | ForEach-Object { "// $_" })
         New-FixtureFile -Path 'module/one/src/bin/program.rs' -Text $long
 

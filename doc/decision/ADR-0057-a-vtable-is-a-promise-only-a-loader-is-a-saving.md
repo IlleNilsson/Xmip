@@ -75,7 +75,7 @@ And what was not:
   depends on 16 Xmip crates and not one of them is a technology. The `xmip`
   assembly crate at the repository root names 33, all of them Foundation,
   Capabilities, Platform or Operations. The one place technologies are
-  linked is `test/essentials`, which names 123 distinct Xmip crates, 111 of
+  linked is `test/system-test`, which names 123 distinct Xmip crates, 111 of
   them with a fourth name part — a technology under ADR-0011.
 
 The measured coupling, counted on 2026-09-19 by searching every `Cargo.toml`
@@ -297,7 +297,7 @@ happens.
   delayed Module is loaded on the first call that needs it. Until step 2
   there is nothing to delay.
 - **A node still cannot use a technology.** The runtime links none and
-  loads none; only `test/essentials` names them. That is the plainest
+  loads none; only `test/system-test` names them. That is the plainest
   statement of why this work matters, and it is not a new fact — it is what
   the queue's item 1, *run a node for real*, has been waiting on.
 - **For the owner to rule on.** Four things this record found and does not

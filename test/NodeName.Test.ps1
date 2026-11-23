@@ -41,7 +41,7 @@
 
     Where a name may stand (ADR-0056, amendment 2026-10-03), and only there:
 
-    - an cluster.xmip, a cluster's configuration, and the Essentials'
+    - an cluster.xmip, a cluster's configuration, and the System Tests'
       external.xmip beside its own, which names the far ends outside it
       (ADR-0028, amendment 2026-11-22);
     - a README.md, and doc/getting-started.md, the first run the README links
@@ -224,7 +224,7 @@ BeforeAll {
     <#
         .SYNOPSIS
         The indexes of the lines of a file where the owner's names belong:
-        all of an cluster.xmip, the Essentials' external.xmip, an example
+        all of an cluster.xmip, the System Tests' external.xmip, an example
         environment file and a README.md,
         the .EXAMPLE and .PARAMETER sections of a script's help, a binary's
         usage text.
@@ -236,7 +236,7 @@ BeforeAll {
 
         if ($leaf -eq 'README.md' -or $Path -eq 'doc/getting-started.md' -or
             $leaf -like '*cluster.xmip' -or $leaf -like '*.example.toml' -or
-            $Path -eq 'test/core/essentials/configuration/external.xmip') {
+            $Path -eq 'test/core/system-test/configuration/external.xmip') {
             return 0..([Math]::Max($Line.Count - 1, 0))
         }
 
@@ -421,7 +421,7 @@ Describe 'No cluster or node is named in code or tests' {
             "scope = `"xmip:///$any`""
             "format!(`"{}/node/$any/receive`", cluster.scope())"
             "`"node/$any/process`""
-            "xmip-essentials-$($cluster.Name)-node-$node"
+            "xmip-system-test-$($cluster.Name)-node-$node"
             "--nodes $any=receiving,$other=sending"
             "-NodeRole @{ $node = 'receiving' }"
             "Start-XmipTest -Nodes $node, $other"

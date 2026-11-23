@@ -12,11 +12,11 @@ Set-StrictMode -Version Latest
 #
 # ADR-0053, amendment 2026-09-20.
 
-function Get-XmipEssentialsImageArea {
+function Get-XmipSystemTestImageArea {
     <#
         .SYNOPSIS
             Where one cluster's images live: a directory of its own under the
-            Essentials' image area, so two clusters never share a file.
+            System Tests' image area, so two clusters never share a file.
 
         .PARAMETER Cluster
             The cluster the images are for.
@@ -28,14 +28,14 @@ function Get-XmipEssentialsImageArea {
         [string] $Cluster
     )
 
-    return Join-Path -Path (Get-XmipEssentialsLayout).Image -ChildPath $Cluster
+    return Join-Path -Path (Get-XmipSystemTestLayout).Image -ChildPath $Cluster
 }
 
-function Get-XmipEssentialsImageName {
+function Get-XmipSystemTestImageName {
     <#
         .SYNOPSIS
-            What one instance of the Essentials is called:
-            xmip-essentials-<cluster>-<what>, where what is roll, cluster or
+            What one instance of the System Tests is called:
+            xmip-system-test-<cluster>-<what>, where what is roll, cluster or
             node-<name>. Pure.
 
         .PARAMETER Cluster
@@ -46,8 +46,8 @@ function Get-XmipEssentialsImageName {
             what makes the kind a shape rather than a word a node may not be
             called. The owner, 2026-09-20: a node is a node and can have one
             or more roles, roll is something different. So
-            xmip-essentials-CL1-node-roll is the node called roll, and
-            xmip-essentials-CL1-roll is still the roll; nothing collides and no
+            xmip-system-test-CL1-node-roll is the node called roll, and
+            xmip-system-test-CL1-roll is still the roll; nothing collides and no
             name is refused (ADR-0053, amendment 2026-09-20).
     #>
     [CmdletBinding()]
@@ -60,15 +60,15 @@ function Get-XmipEssentialsImageName {
         [string] $What
     )
 
-    return "xmip-essentials-$Cluster-$What"
+    return "xmip-system-test-$Cluster-$What"
 }
 
-function New-XmipEssentialsImage {
+function New-XmipSystemTestImage {
     <#
         .SYNOPSIS
             Links the binaries a roll's tree runs into the cluster's own image
             area and answers the roll's image, the one the operator will see as
-            xmip-essentials-<cluster>-roll.
+            xmip-system-test-<cluster>-roll.
 
         .DESCRIPTION
             Three files are laid down here, and the Work Process units beside
@@ -98,27 +98,27 @@ function New-XmipEssentialsImage {
         [string] $Cluster
     )
 
-    $layout = Get-XmipEssentialsLayout
-    [string] $area = Get-XmipEssentialsImageArea -Cluster $Cluster
+    $layout = Get-XmipSystemTestLayout
+    [string] $area = Get-XmipSystemTestImageArea -Cluster $Cluster
 
-    if (-not $PSCmdlet.ShouldProcess($area, 'Link the Essentials images')) {
+    if (-not $PSCmdlet.ShouldProcess($area, 'Link the System Tests images')) {
         return ''
     }
 
-    Remove-XmipEssentialsImage -Cluster $Cluster -Confirm:$false
+    Remove-XmipSystemTestImage -Cluster $Cluster -Confirm:$false
     New-Item -ItemType Directory -Path $area -Force | Out-Null
 
-    [string] $name = Get-XmipEssentialsImageName -Cluster $Cluster -What 'roll'
+    [string] $name = Get-XmipSystemTestImageName -Cluster $Cluster -What 'roll'
     [string] $roll = Join-Path -Path $area -ChildPath "$name$($layout.Suffix)"
 
-    Copy-XmipEssentialsImage -Source $layout.Roll -Image $roll
-    Copy-XmipEssentialsImage -Source $layout.Cluster -Image (
+    Copy-XmipSystemTestImage -Source $layout.Roll -Image $roll
+    Copy-XmipSystemTestImage -Source $layout.Cluster -Image (
         Join-Path -Path $area -ChildPath (Split-Path -Leaf $layout.Cluster))
-    Copy-XmipEssentialsImage -Source $layout.Node -Image (
+    Copy-XmipSystemTestImage -Source $layout.Node -Image (
         Join-Path -Path $area -ChildPath (Split-Path -Leaf $layout.Node))
     # The far ends' program, beside the roll's image, where the roll finds it
     # and links an image of it for each far end it starts.
-    Copy-XmipEssentialsImage -Source $layout.External -Image (
+    Copy-XmipSystemTestImage -Source $layout.External -Image (
         Join-Path -Path $area -ChildPath (Split-Path -Leaf $layout.External))
 
     # The libraries built as the crate's examples, the Work Process units the
@@ -136,13 +136,13 @@ function New-XmipEssentialsImage {
 
     foreach ($library in $built) {
         [string] $image = Join-Path -Path $units -ChildPath $library.Name
-        Copy-XmipEssentialsImage -Source $library.FullName -Image $image
+        Copy-XmipSystemTestImage -Source $library.FullName -Image $image
     }
 
     return $roll
 }
 
-function Copy-XmipEssentialsImage {
+function Copy-XmipSystemTestImage {
     <#
         .SYNOPSIS
             One image: a hard link to the built binary, or a copy of it where a
@@ -179,7 +179,7 @@ function Copy-XmipEssentialsImage {
     }
 }
 
-function Remove-XmipEssentialsImage {
+function Remove-XmipSystemTestImage {
     <#
         .SYNOPSIS
             Takes a cluster's images away. A process holds its own image open,
@@ -196,13 +196,13 @@ function Remove-XmipEssentialsImage {
         [string] $Cluster
     )
 
-    [string] $area = Get-XmipEssentialsImageArea -Cluster $Cluster
+    [string] $area = Get-XmipSystemTestImageArea -Cluster $Cluster
 
     if (-not (Test-Path -LiteralPath $area)) {
         return
     }
 
-    if (-not $PSCmdlet.ShouldProcess($area, 'Remove the Essentials images')) {
+    if (-not $PSCmdlet.ShouldProcess($area, 'Remove the System Tests images')) {
         return
     }
 
@@ -218,12 +218,12 @@ function Remove-XmipEssentialsImage {
     Remove-Item -LiteralPath $area -Recurse -Force -Confirm:$false -ErrorAction SilentlyContinue
 }
 
-function Test-XmipEssentialsOwnImage {
+function Test-XmipSystemTestOwnImage {
     <#
         .SYNOPSIS
-            Whether a path is one of the Essentials' own per-instance images.
-            Nothing but New-XmipEssentialsImage and the roll's tree write that
-            directory, so a process running out of it is the Essentials',
+            Whether a path is one of the System Tests' own per-instance images.
+            Nothing but New-XmipSystemTestImage and the roll's tree write that
+            directory, so a process running out of it is the System Tests',
             whatever the binary beside the repository is called now.
 
         .PARAMETER Path
@@ -241,7 +241,7 @@ function Test-XmipEssentialsOwnImage {
         return $false
     }
 
-    [string] $area = (Get-XmipEssentialsLayout).Image
+    [string] $area = (Get-XmipSystemTestLayout).Image
 
     try {
         [string] $full = [System.IO.Path]::GetFullPath($Path)
@@ -255,16 +255,16 @@ function Test-XmipEssentialsOwnImage {
         [System.StringComparison]::OrdinalIgnoreCase)
 }
 
-function Get-XmipEssentialsImageKind {
+function Get-XmipSystemTestImageKind {
     <#
         .SYNOPSIS
-            Which of the Essentials' four a process name is: Roll, Cluster,
+            Which of the System Tests' four a process name is: Roll, Cluster,
             Node, External, or the empty string for a name that is none of
             them. Pure.
 
         .DESCRIPTION
-            The name is xmip-essentials-<cluster>-<what> since 2026-09-20, and
-            xmip-essentials-<what> where no cluster named it — a roll started by
+            The name is xmip-system-test-<cluster>-<what> since 2026-09-20, and
+            xmip-system-test-<what> where no cluster named it — a roll started by
             hand, or this crate's own tests. What is roll, cluster,
             node-<name>, or external-<name> for a far end outside the cluster
             (ADR-0028, amendment 2026-11-22), and a marker is read first: it is
@@ -272,7 +272,7 @@ function Get-XmipEssentialsImageKind {
             2026-09-20). The first marker in the name is the kind, so a node
             called external-x and a far end called node-x are each what they
             are. A name carrying no marker and ending in none of the words is
-            a node too, which is what the bare xmip-essentials-node is.
+            a node too, which is what the bare xmip-system-test-node is.
 
         .PARAMETER Name
             The process name.
@@ -285,7 +285,7 @@ function Get-XmipEssentialsImageKind {
         [string] $Name
     )
 
-    [string] $prefix = 'xmip-essentials-'
+    [string] $prefix = 'xmip-system-test-'
 
     if ($Name -notlike "$prefix*" -or $Name.Length -le $prefix.Length) {
         return ''
@@ -293,7 +293,7 @@ function Get-XmipEssentialsImageKind {
 
     [string] $rest = $Name.Substring($prefix.Length).ToLowerInvariant()
 
-    # The marker before the endings: xmip-essentials-<cluster>-node-roll is
+    # The marker before the endings: xmip-system-test-<cluster>-node-roll is
     # the node called roll, never the cluster's roll, and that is the whole
     # point of the marker. Of two markers the first is the kind; what follows
     # it is a name.

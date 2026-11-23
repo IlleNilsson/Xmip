@@ -400,7 +400,7 @@ Describe 'The estate is more than its modules' {
     }
 
     It 'leaves a provider other than core a subtree of its own' {
-        # The owner, 2026-09-23: the Essentials had taken test/essentials and
+        # The owner, 2026-09-23: the System Tests had taken test/system-test and
         # left nowhere for anyone else's; what starts a node carries no
         # provider, everything else does, provider before purpose. Read as one
         # rule, foundation went under core; the owner, 2026-09-24: *Do you think

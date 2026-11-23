@@ -1,5 +1,5 @@
 //! A node routes by what the document says (the owner, 2026-11-10: *the
-//! Essentials test, promotion thing*; ADR-0046, amendment 2026-11-11): its
+//! [System Tests] test, promotion thing*; ADR-0046, amendment 2026-11-11): its
 //! Subscriptions read the message type and the recipient an EDIFACT
 //! interchange carries, `content:edi:UNH/2/1` and `content:edi:UNB/3/1`,
 //! through the `content` route technology and the `edi` path language this
@@ -15,18 +15,18 @@ use std::time::{Duration, Instant};
 use super::{Ending, exited, heard, lines, spawned, stop, test_cluster, told, watched};
 
 /// An order, as a trading Party sends one.
-const ORDERS: &str = "UNB+UNOC:3+PARTY-A:ZZZ+ESSENTIALS:ZZZ+261111:0905+A0001'\n\
+const ORDERS: &str = "UNB+UNOC:3+PARTY-A:ZZZ+SYSTEM-TEST:ZZZ+261111:0905+A0001'\n\
 UNH+1+ORDERS:D:24A:UN'\nBGM+220+PO-A-4711+9'\nDTM+137:20261111:102'\n\
 NAD+BY+PARTY-A::ZZZ'\nLIN+1++4006381333931:SRS'\nQTY+21:120:PCE'\nUNS+S'\n\
 UNT+8+1'\nUNZ+1+A0001'\n";
 
 /// An invoice to that Party.
-const INVOIC: &str = "UNB+UNOC:3+ESSENTIALS:ZZZ+PARTY-A:ZZZ+261111:1600+S0003'\n\
+const INVOIC: &str = "UNB+UNOC:3+SYSTEM-TEST:ZZZ+PARTY-A:ZZZ+261111:1600+S0003'\n\
 UNH+1+INVOIC:D:24A:UN'\nBGM+380+INV-1001+9'\nDTM+137:20261111:102'\n\
 MOA+86:1086.00'\nUNT+5+1'\nUNZ+1+S0003'\n";
 
 /// A status message, which no Subscription takes.
-const IFTSTA: &str = "UNB+UNOC:3+PARTY-A:ZZZ+ESSENTIALS:ZZZ+261111:1205+A9001'\n\
+const IFTSTA: &str = "UNB+UNOC:3+PARTY-A:ZZZ+SYSTEM-TEST:ZZZ+261111:1205+A9001'\n\
 UNH+1+IFTSTA:D:24A:UN'\nBGM+77+ST-9001+9'\nUNT+3+1'\nUNZ+1+A9001'\n";
 
 /// What bounds a file's way from its drop to its Send Port's folder: a
@@ -97,7 +97,7 @@ name = "Invoices"
 [[xmip_applications.subscriptions]]
 id = "Sales orders"
 destination = {{ send-port = "Orders" }}
-filter = "\"content:edi:UNH/2/1\" = 'ORDERS' and \"content:edi:UNB/3/1\" = 'ESSENTIALS'"
+filter = "\"content:edi:UNH/2/1\" = 'ORDERS' and \"content:edi:UNB/3/1\" = 'SYSTEM-TEST'"
 
 [[xmip_applications.subscriptions]]
 id = "Invoices"

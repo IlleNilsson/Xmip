@@ -23,10 +23,10 @@ function Get-XmipOperationWeb {
     param()
 
     $ErrorActionPreference = 'Stop'
-    $layout = Get-XmipEssentialsLayout
+    $layout = Get-XmipSystemTestLayout
 
     [System.Diagnostics.Process[]] $hosts = @(
-        Get-XmipEssentialsProcess -Name 'xmip-gui-web' -Path $layout.Web
+        Get-XmipSystemTestProcess -Name 'xmip-gui-web' -Path $layout.Web
     )
 
     foreach ($process in $hosts) {

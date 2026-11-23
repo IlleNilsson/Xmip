@@ -1706,8 +1706,8 @@ repository on 2026-08-26 as a judgment call; retired on 2026-09-12."""
 #     section 15 scope -> module/core/capability/resilience/README.md
 #       (mounted at module/platform/resilience when this move was made;
 #        resilience became a Capability on 2026-09-19, ADR-0058)
-#   doc/decision/ADR-0028-the-xmip-essentials.md
-#     3a, 3b and the difficulty amendment -> test/core/essentials/README.md
+#   doc/decision/ADR-0028-the-xmip-system-test.md
+#     3a, 3b and the difficulty amendment -> test/core/system-test/README.md
 
 # ---------------------------------------------------------------------------
 # Consolidation, tier three, 2026-09-14. What the survey found sitting twice,
@@ -1774,9 +1774,9 @@ amendment of 2026-09-09) survived and the older one did not."""
 #   template/rust/TEMPLATE_SETUP.md, template/dotnet/TEMPLATE_SETUP.md
 #     items 1, 2, 8 and 9 -> citations of repository-model.md section 2,
 #     architectural-change-permission.md and the template README
-#   test/core/essentials/README.md
+#   test/core/system-test/README.md
 #     Running it -> the estate's README.md, which already showed the commands;
-#     the XMIP_ESSENTIALS_* variables and the test-name mapping stay
+#     the XMIP_SYSTEM_TEST_* variables and the test-name mapping stay
 #   fifty-three technology READMEs under identify, authenticate, authorize and
 #   transport/peppol and transport/sftp
 #     "nothing goes sideways" -> a citation of repository-model.md section 4
@@ -1909,7 +1909,7 @@ amendment of 2026-09-09) survived and the older one did not."""
 # Moved on 2026-11-13, PostgreSQL's frontend/backend protocol 3.0 out of
 # its transport into xmip-core-library-postgresql, mounted at
 # module/core/library/postgresql (ADR-0011, amendment 2026-11-13); the
-# transport, the archive target and the Essentials' archive cabinet
+# transport, the archive target and the System Tests' archive cabinet
 # depend on the library for the wire:
 #   module/core/capability/transport/postgresql/src/wire.rs
 #     -> module/core/library/postgresql/src/wire.rs
@@ -2386,7 +2386,7 @@ amendment of 2026-09-09) survived and the older one did not."""
 #     -> the same file's OperatingSystemLog, a trait, with hand and write;
 #     each program hands its log in (.src/service/main.rs,
 #     module/core/operation/gui/vscode/.src/main.rs,
-#     test/core/essentials/src/process_audit.rs program,
+#     test/core/system-test/src/process_audit.rs program,
 #     module/core/operation/operate/src/ffi/audit.rs)
 #   module/core/operation/operate/dotnet/Xmip.Surface/OperatingSystemLog.cs,
 #   deleted, with Xmip.Surface's System.Diagnostics.EventLog
@@ -2446,7 +2446,7 @@ amendment of 2026-09-09) survived and the older one did not."""
 #   ConfigurationKey and Find, deleted: the runtime reads a surface's
 #   document, so the document names no runtime library
 #   Xmip/Write-XmipTestCluster.ps1 and
-#   Xmip/Initialize-XmipEssentialsAuthority.ps1, a cluster's and a node's
+#   Xmip/Initialize-XmipSystemTestAuthority.ps1, a cluster's and a node's
 #   file read and written with PSToml
 #     -> Xmip/Read-XmipConfiguration.ps1, Read-XmipConfiguration and
 #     Write-XmipConfiguration, through the operator module

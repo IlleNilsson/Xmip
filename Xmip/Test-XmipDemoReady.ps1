@@ -10,7 +10,7 @@
 .DESCRIPTION
     Started by Start-XmipDemoSuite, never by the console that asked for it
     (ADR-0028, amendment 2026-11-10). The parts are what the owner's demo
-    runs: the Essentials roll (Test-XmipDemoRoll.ps1), the web operations
+    runs: the System Tests roll (Test-XmipDemoRoll.ps1), the web operations
     tool over it (Test-XmipDemoWeb.ps1), the Desktop operations app over the
     same snapshot (Test-XmipDemoDesktop.ps1) and the VS Code extension with
     its language server (Test-XmipDemoExtension.ps1); last, stop, which ends
@@ -29,7 +29,7 @@
 
 
 # The stress the check rolls at where -Stress is not given: the demo's own,
-# Realistic (the coordinator's brief, 2026-11-10), never the Essentials'
+# Realistic (the coordinator's brief, 2026-11-10), never the System Tests'
 # hardest, which is the roll's rule for a roll asked for by itself.
 [string] $script:XmipDemoStress = 'Realistic'
 

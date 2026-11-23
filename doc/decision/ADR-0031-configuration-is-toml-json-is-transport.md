@@ -3,7 +3,7 @@
 - Status: Accepted
 - Date: 2026-09-05
 - Related: ADR-0011 (module and repository naming), ADR-0030 (prefix external
-  names), ADR-0028 (the Xmip Essentials), ADR-0029 (observation has history),
+  names), ADR-0028 (the Xmip System Tests), ADR-0029 (observation has history),
   ADR-0015 and ADR-0018 (amendments 2026-10-01: Xmip Storage, and a node's
   configuration read into memory)
 
@@ -49,7 +49,7 @@ available: Xmip has to speak JSON to the world.
 ### 3. On disk is TOML, even for data the estate writes for itself
 
 A file the estate persists — configuration or its own runtime data, like the
-Essentials' snapshot and history — is TOML. JSON is reserved for what lives in
+System Tests' snapshot and history — is TOML. JSON is reserved for what lives in
 memory or on the network. A persisted file is neither, so it is TOML. (ADR-0029
 clause 5 applies this to the history file.)
 
@@ -614,7 +614,7 @@ owns, and names without the prefix the extension now says.
   written as TOML as before: a cluster's `cluster.xmip` (was `xmip.toml`), a
   node's slice `node.xmip` (was `xmip-node.toml`), the surfaces' `gui.xmip`,
   `cli.xmip` and `powershell.xmip`, the deploy profiles and sites, what the
-  runtime and the Essentials persist, and the estate's own
+  runtime and the System Tests persist, and the estate's own
   `architecture.xmip`, `prerequisite.xmip`, `asset/brand/brand.xmip` and
   `doc/planning/allocation.xmip`.
 - **What another tool names stays**: `Cargo.toml`, `rust-toolchain.toml`,
@@ -690,7 +690,7 @@ next deployment and runs it until then.
 
 Every writer of a slice signs it through `runtime::signed`: the install's
 starter, `xmip-service --slice` (with the authority beside the cluster's
-file, made there where none is), the Essentials, and the Operation
+file, made there where none is), the System Tests, and the Operation
 Desktop's save (`xmip_cluster_signed_slice_v1`), which writes the
 authority's certificate beside each slice it delivers. A test writes its
 node through `runtime::fixture::write_signed`.
@@ -763,7 +763,7 @@ anchor and keeping:
    as an administrator, and a surface.
 
 Every signer is unchanged in how it is called (`runtime::signed::sign`,
-`xmip-service --slice`, the Essentials, the Operation Desktop's
+`xmip-service --slice`, the System Tests, the Operation Desktop's
 `xmip_cluster_signed_slice_v1`), and the desired-state templates still
 ship `node.xmip` and `authority/authority.pem` alone.
 
@@ -781,10 +781,10 @@ installation, the files the designer and Xmip's tools open; everything else
 Xmip keeps is `.toml` again. The amendment of 2026-11-04 stands as the record
 of what was done; this one narrows it.
 
-- **`.xmip`, unchanged**: a cluster's `cluster.xmip` (and the Essentials'
+- **`.xmip`, unchanged**: a cluster's `cluster.xmip` (and the System Tests'
   `<cluster>.xmip`, the test clusters' and the samples'), a node's slice
   `node.xmip` and its accepted copy `<stem>.accepted.xmip`, a node
-  configuration the runtime reads (the Essentials' `authority/operator.xmip`),
+  configuration the runtime reads (the System Tests' `authority/operator.xmip`),
   a snapshot (`snapshot.xmip`, `<cluster>-snapshot.xmip`, a node's
   publication), and a site, `deploy/site/<name>.xmip`.
 - **`.toml` again**: the estate's `architecture.toml`, `prerequisite.toml`,
@@ -798,7 +798,7 @@ of what was done; this one narrows it.
   machine, from which the YAML DSC and Ansible read is written (ADR-0015,
   amendment 2026-11-11); the surfaces' `gui.toml` (the phone's
   `android-gui.toml` too), `cli.toml` and `powershell.toml`; the landing's
-  `.local-work/landing/patch.toml`; `audit.toml`; the Essentials' records,
+  `.local-work/landing/patch.toml`; `audit.toml`; the System Tests' records,
   `<cluster>-history.toml`, `<cluster>-activity.toml`, `roll-<pid>.toml`,
   `build-<start time>.toml` and `estate-<start time>.toml`; a process's
   declaration, `<name>-<pid>.toml`; an operator's order,
@@ -931,7 +931,7 @@ the phone reads its own document.
   and a node's document through them, over the operator module
   (`Read-XmipConfiguration`, `Write-XmipConfiguration`): a test run's
   cluster file (`Write-XmipTestCluster`, `Read-XmipTestCluster`,
-  `Read-XmipEssentialsCluster`) and the Essentials authority's
+  `Read-XmipSystemTestCluster`) and the System Tests authority's
   `operator.xmip`.
 - **The estate's own files stay on PSToml**: its manifests
   (`architecture.toml`, `allocation.toml`, `prerequisite.toml`), its run and

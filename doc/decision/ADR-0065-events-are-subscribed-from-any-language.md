@@ -219,12 +219,12 @@ point the owner's to overrule.
   subscription and a Subscription (amendment 2026-09-30).
 - **The snapshot carries the subscriptions.** A node records what its hub
   holds in its snapshot (`Snapshot::record_event_subscription`), a
-  publication writes them as `[[event_subscriptions]]`, the Essentials'
+  publication writes them as `[[event_subscriptions]]`, the System Tests'
   cluster and roll merge them as they merge health, and a surface reads them
   through `xmip_publication_event_subscriptions_v1`. None is persisted: a subscription
   lives in its process's hub, and the snapshot says what the hub held when
   it was taken.
-- **Every Essentials node subscribes two Parties**, through the hub and
+- **Every System Tests node subscribes two Parties**, through the hub and
   nothing of its own: *operations* hears every Event on the node and is
   called back; *on-call* hears the failures and is drained each round
   (since the amendment of 2026-11-11, one Party, *operations*, subscribes
@@ -244,13 +244,13 @@ point the owner's to overrule.
   lists and, with `--pause`, `--resume` or `--remove` on one named by
   `--location` and `--id`, acts; `Get-XmipEventSubscription` is the one
   cmdlet for the noun, the act a parameter set with `-WhatIf`.
-- **Not yet.** No Essentials node forwards over the wire, so every
+- **Not yet.** No System Tests node forwards over the wire, so every
   subscription the view lists is in process. A snapshot lists what its
   publisher last published, so an act left for a node shows within a round,
   not at once.
 
 Provenance: the owner's requirement, quoted; the model, the order
-through the publication, the Essentials' Parties and the view's form are
+through the publication, the System Tests' Parties and the view's form are
 the assistant's, for the owner to overrule.
 
 ## Amendment, 2026-09-30: every name of the Event kind says Event
@@ -332,7 +332,7 @@ means the assistant's):
   Party allow-list: a hub's gate (`gate`) is the `authorize::Authorizer`s it
   is handed (`Hub::authorize_by`), the node's as it starts, or one the
   program hosting the hub takes from the authorize capability — "these
-  Parties" is the party technology's `PartyPolicy`, which the Essentials and
+  Parties" is the party technology's `PartyPolicy`, which the System Tests and
   every test hand their hub, never a copy of it. Across the C boundary the
   trait is a callback the hosting program hands over —
   `xmip_event_authorize_v1`, answering allow, deny or no opinion of each
@@ -470,7 +470,7 @@ a `_v2`:
   and test (its loader needed no change: it resolves the symbols by name),
   `xmip_event.hpp`, Java's `Library`, Python's `xmip_event`, and .NET's
   `RuntimeEvents` and `EventFeed`, which takes the program's audit alone.
-  No CLI, PowerShell or GUI code subscribed. The Essentials did: each node
+  No CLI, PowerShell or GUI code subscribed. The System Tests did: each node
   now subscribes through `plane::caller::subscriber` as *operations*,
   declared holding the run's account as its `peer-credentials` identity,
   and since one account is one Party, *operations* hears both what the
@@ -491,7 +491,7 @@ a `_v2`:
   measured again until then.
 
 Provenance: the defect is the review's, the rules the owner's, 2026-11-10;
-the in-place change, what the bindings' tests prove and the Essentials'
+the in-place change, what the bindings' tests prove and the System Tests'
 one Party are the assistant's, 2026-11-11, for the owner to overrule.
 
 ## Amendment, 2026-11-13: the membership records are written
@@ -603,7 +603,7 @@ date).
   runtime's `node` feature. Its `remote` build, the phone's
   (`Build-XmipRemoteRuntime`), links no hub — a read publication's Event
   subscriptions and who is unheard are `observe`'s records — and takes
-  none. The Essentials take `delivery`. The HTTP, Kafka and AMQP
+  none. The System Tests take `delivery`. The HTTP, Kafka and AMQP
   transports implement `xevent::wire::Wire`, and only their event-wire
   tests take `delivery`, as a dev-dependency.
 - **Nothing a subscriber sees changes**: what is delivered, how it is
@@ -749,7 +749,7 @@ What stands:
   subscription, listener and node that audits in it: the tests of
   `xmip-core-cluster`, the Event exports' tests in `xmip-core-operate`, the
   event-wire tests of the HTTP, Kafka and AMQP transports, and the
-  Essentials' Eventing test. The settle one test made before its folder
+  System Tests' Eventing test. The settle one test made before its folder
   was dropped (`delivery/gate.rs`) is gone with it.
 - **A node process a test kills drops nothing**, so `tests/sync_process.rs`
   gives each node process the cluster's folder as its temporary directory

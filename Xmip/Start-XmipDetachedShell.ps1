@@ -16,7 +16,7 @@
     Every process the tooling starts in the background starts through
     Start-XmipHiddenProcess: the roll, a test's nodes, the web host and these
     shells. Each had asked for a hidden window on every system, which
-    PowerShell refuses off Windows, so no Essentials run started on Linux
+    PowerShell refuses off Windows, so no System Tests run started on Linux
     (2026-11-21).
 
     Style: doc/governance/powershell-style.md
@@ -88,7 +88,7 @@ function Start-XmipDetachedShell {
         [string] $Log
     )
 
-    $layout = Get-XmipEssentialsLayout
+    $layout = Get-XmipSystemTestLayout
     [string] $shell = Join-Path -Path $PSHOME -ChildPath "pwsh$($layout.Suffix)"
     [string] $encoded = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($Script))
 

@@ -18,8 +18,8 @@
 
 **Code that two technologies both need lives in the crate both already
 depend on: their parent capability, or the technology they both ride on. A
-technology never copies a sibling's file. The essentials' adapters follow
-the same rule through the essentials' own shared modules.**
+technology never copies a sibling's file. The System Tests' adapters follow
+the same rule through the System Tests' own shared modules.**
 
 ## Context
 
@@ -72,12 +72,12 @@ the metadata text through the capability; they keep their own quoting, their
 own bytes literal and their own way of reading an id back. The rule moves what
 is *the same*, not what is *similar*.
 
-### 3. The essentials follows the rule through its own modules
+### 3. The System Tests follow the rule through their own modules
 
-Every adapter file in the essentials — `industrial.rs`, `broker.rs`,
+Every adapter file in the System Tests — `industrial.rs`, `broker.rs`,
 `storage.rs`, `remote.rs` and the rest — shares through `roundtrip.rs`,
 `cabinet.rs` and `support.rs`, never by repeating a helper. The scan runs
-over the essentials as well.
+over the System Tests as well.
 
 ### 4. Problem 7's lean, applied
 
@@ -551,11 +551,11 @@ refusal answered at once is a SYN the system never sends twice.
   process makes reads them (`net::retransmission`). A program that runs no
   node — the command line, a surface — connects by the defaults
   (`net::RETRANSMISSION`).
-- **The Essentials on one computer** give every node of the run
+- **The System Tests on one computer** give every node of the run
   `[tuning] connect_retransmissions = 0`: every connect there is over
   loopback, which loses no SYN, so none is sent again and a stopped node's
   refusal is all a connect waits for. The same cluster on machines of its
-  own keeps the default, a network's: the Essentials' `cluster.xmip` says
+  own keeps the default, a network's: the System Tests' `cluster.xmip` says
   nothing of where it runs, and the run on one computer gives this as it
   gives each node its addresses on loopback.
 - **A full backlog.** A Windows listener whose backlog is full refuses as
@@ -575,7 +575,7 @@ stopped alone took six.
 
 Provenance: the defect, the decision and its limits are the
 coordinator's, 2026-11-14; the research, the measurements, the keys'
-names and defaults, the ICMP rule and the Essentials' setting are the
+names and defaults, the ICMP rule and the System Tests' setting are the
 assistant's, for the owner to overrule.
 
 ## Amendment, 2026-11-14: the 1601 epoch is the library's
@@ -625,7 +625,7 @@ stands now:
   technology of its own standard, or on a Library's. A sibling, of the same
   parent, stays clause 1's declared carrier; an Operation module's
   technologies — the archive's on the transports (clause 4), observe's,
-  the editor's, the Essentials — are not held by it. The eight such edges
+  the editor's, the System Tests — are not held by it. The eight such edges
   standing that day are listed in the test, each open problem 32, wave C,
   and the list may only shrink. This is a concrete dependency of the kind
   ADR-0068 clause 1 refuses between parts; the owner chose it for the one

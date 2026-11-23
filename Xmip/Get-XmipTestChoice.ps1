@@ -22,7 +22,7 @@ function Get-XmipTestChoice {
             so far. Private; the completer asks the module for it.
 
         .PARAMETER Suite
-            The suite typed so far; empty is the Essentials.
+            The suite typed so far; empty is the System Tests.
 
         .PARAMETER Word
             What has been typed of the test.
@@ -41,7 +41,7 @@ function Get-XmipTestChoice {
 
     # Qualified or bare, both name the estate's suite, and Core.Estate is the
     # spelling (ADR-0059, amendment 2026-09-20); omitted, -Suite is the
-    # Essentials.
+    # System Tests.
     [string[]] $names = if ($Suite -ieq 'Estate' -or $Suite -ieq 'Core.Estate') {
         [string] $root = Get-XmipRepositoryRoot
         Get-ChildItem -Path (Join-Path -Path $root -ChildPath 'test') -Filter '*.Test.ps1' |
@@ -51,7 +51,7 @@ function Get-XmipTestChoice {
         @()
     }
     else {
-        @($script:XmipEssentialsTest.Keys)
+        @($script:XmipScenarioOfTest.Keys)
     }
 
     $names | Where-Object { $_ -like "$Word*" }

@@ -3,7 +3,7 @@
 
 <#
 .SYNOPSIS
-    Starting one Essentials roll: its choices, what already rolls, and the roll itself.
+    Starting one System Tests roll: its choices, what already rolls, and the roll itself.
 
 .DESCRIPTION
     Apart from Start-XmipTest.ps1 since 2026-09-22, when that file was 944 lines
@@ -15,11 +15,11 @@
 #>
 
 
-function Get-XmipEssentialsChoice {
+function Get-XmipSystemTestChoice {
     <#
         .SYNOPSIS
             The optional roll switches the caller actually gave, as the
-            arguments New-XmipEssentialsEnvironment takes for them.
+            arguments New-XmipSystemTestEnvironment takes for them.
     #>
     [CmdletBinding()]
     [OutputType([hashtable])]
@@ -48,23 +48,23 @@ function Get-XmipEssentialsChoice {
 
 # What already rolls or builds as a cluster is Get-XmipClusterRunning.ps1, the
 # one answer this refusal and the demo readiness check's share (2026-11-10).
-# Which live processes are the Essentials' is Get-XmipEssentialsProcess.ps1:
-# Test-XmipEssentialsBinary moved there on 2026-09-19, with the finding that a
+# Which live processes are the System Tests' is Get-XmipSystemTestProcess.ps1:
+# Test-XmipSystemTestBinary moved there on 2026-09-19, with the finding that a
 # rebuilt binary must not make a running roll disappear.
 
 
-function Start-XmipEssentialsRoll {
+function Start-XmipSystemTestRoll {
     <#
         .SYNOPSIS
-            Starts one Essentials roll for Start-XmipTest, detached: the build
+            Starts one System Tests roll for Start-XmipTest, detached: the build
             and the roll run in a pwsh of their own, and this returns at once.
 
         .DESCRIPTION
-            The Essentials' own work, once Start-XmipTest has chosen the
+            The System Tests' own work, once Start-XmipTest has chosen the
             suite and refused what it cannot run: lay the run out, refuse a
             cluster already rolling or building, write the run's cluster file,
             and hand the rest — the build, the roll's spawn and its run record
-            — to Start-XmipEssentialsBuild. Part of Start-XmipTest's body
+            — to Start-XmipSystemTestBuild. Part of Start-XmipTest's body
             until 2026-09-22, when that one function was 610 lines against
             the 400 the estate allows a file.
 
@@ -119,6 +119,10 @@ function Start-XmipEssentialsRoll {
 
         .PARAMETER PassThru
             As Start-XmipTest takes it, already checked there.
+
+        .PARAMETER Machines
+            Whether the suite runs on an environment's machines, as the
+            suite Start-XmipTest chose declares it: Core.Systems.
     #>
     [CmdletBinding()]
     [OutputType([PSCustomObject])]
@@ -163,19 +167,22 @@ function Start-XmipEssentialsRoll {
         [string] $Path,
 
         [Parameter(Mandatory = $false)]
-        [switch] $PassThru
+        [switch] $PassThru,
+
+        [Parameter(Mandatory = $false)]
+        [bool] $Machines
     )
 
     Set-StrictMode -Version Latest
     $ErrorActionPreference = 'Stop'
 
-    $layout = Get-XmipEssentialsLayout
+    $layout = Get-XmipSystemTestLayout
 
     if ([string]::IsNullOrWhiteSpace($Path)) {
         $Path = $layout.Area
     }
 
-    [hashtable] $choice = Get-XmipEssentialsChoice -Bound $Bound
+    [hashtable] $choice = Get-XmipSystemTestChoice -Bound $Bound
     $choice.Stress = $Stress
     $choice.Test = $Test
     $choice.Area = $Path
@@ -184,18 +191,18 @@ function Start-XmipEssentialsRoll {
     [string] $of = if ($Test.Count -gt 0) { " of $($Test -join ', ')" } else { '' }
     [string] $for = if ($Rounds -gt 0) { " for $Rounds rounds" } else { ' until stopped' }
     [string] $with = if (-not $boundNodes) {
-        ", the nodes of $((Get-XmipEssentialsLayout).Configuration)"
+        ", the nodes of $((Get-XmipSystemTestLayout).Configuration)"
     }
     elseif ($Nodes.Count -eq 0) { ', no nodes' } else { ", nodes $($Nodes -join ', ')" }
     [string] $online = if ($OnlineNodes.Count -gt 0) { " ($($OnlineNodes -join ', ') online)" }
     [string] $what = "roll at $($Stress.ToLowerInvariant())$of$for$with$online as cluster $Cluster"
 
-    if (-not $Caller.ShouldProcess("the Xmip Essentials in $Path", "Start a $what")) {
+    if (-not $Caller.ShouldProcess("the Xmip System Tests in $Path", "Start a $what")) {
         return
     }
 
     New-Item -ItemType Directory -Path $Path -Force | Out-Null
-    Remove-XmipEssentialsBuildEnded -Path $Path -Cluster $Cluster
+    Remove-XmipSystemTestBuildEnded -Path $Path -Cluster $Cluster
 
     # A roll is a cluster, and two rolls are two clusters (ADR-0028; ADR-0052,
     # ruling 1 of 2026-09-14). Two under one name publish to one file and each
@@ -212,14 +219,14 @@ function Start-XmipEssentialsRoll {
     }
 
     # The nodes are cluster.xmip (ADR-0056, amendment 2026-10-03),
-    # the Essentials' own, one file for one computer and for machines of
+    # the System Tests' own, one file for one computer and for machines of
     # their own (ADR-0028, amendment 2026-10-21): the run's file is written
     # from -Cluster and the nodes -Nodes names, each with the roles -NodeRole
-    # or, where it says none, the Essentials' file declares; omitted, its
+    # or, where it says none, the System Tests' file declares; omitted, its
     # every node. XMIP_TEST_CLUSTER names it to the roll, and the run record
-    # says the nodes it declares. Only typed names are resolved for a real
-    # node, so they alone are named to the roll.
-    $declared = Read-XmipEssentialsCluster
+    # says the nodes it declares. The Systems Tests resolve every one of them
+    # on the environment's machines; the System Tests resolve none.
+    $declared = Read-XmipSystemTestCluster
     [string[]] $typed = if ($boundNodes) { @($Nodes) } else { @($declared.Nodes) }
     [hashtable] $joined = @{ Nodes = $typed; NodeRole = $NodeRole; Declared = $declared.Role }
     [hashtable] $written = @{
@@ -229,10 +236,7 @@ function Start-XmipEssentialsRoll {
         Path     = $Path
     }
     [string] $clusterFile = Write-XmipTestCluster @written
-
-    if ($boundNodes) {
-        $choice.Named = @($Nodes)
-    }
+    $choice.Machines = $Machines
 
     $configured = Read-XmipTestCluster -Path $clusterFile
     $choice.ClusterFile = $clusterFile
@@ -265,7 +269,7 @@ function Start-XmipEssentialsRoll {
     $choice.Hidden = $hidden
 
     # Everything the roll is spawned and recorded with, handed to the
-    # detached build as one value (Start-XmipEssentialsRollProcess).
+    # detached build as one value (Start-XmipSystemTestRollProcess).
     [hashtable] $start = @{
         Suite       = $Suite
         Cluster     = $Cluster
@@ -295,7 +299,7 @@ function Start-XmipEssentialsRoll {
         [hashtable] $where = @{ Roll = $layout.Roll; Cluster = $Cluster; Path = $Path }
 
         try {
-            $snapshot = (Get-XmipEssentialsPublication @where).Snapshot
+            $snapshot = (Get-XmipSystemTestPublication @where).Snapshot
         }
         catch {
             Write-Verbose "the roll built before could not say where it publishes: $_"
@@ -303,7 +307,7 @@ function Start-XmipEssentialsRoll {
     }
 
     $start.Snapshot = $snapshot
-    [int] $id = Start-XmipEssentialsBuild -Start $start
+    [int] $id = Start-XmipSystemTestBuild -Start $start
 
     # The prompt, where this session shows one, follows the roll just started:
     # the shipped document names one cluster, and on 2026-09-18 a roll of a

@@ -71,7 +71,7 @@ every other machine is installed with no gateway, and reaches the network
 alone, the host on it included. The plan's Linux developer machine takes
 the image `AlmaLinux10Desktop`, the same DVD installing
 `workstation-product-environment`. The far ends run on their machines in
-the plan; the Essentials serves them on the host still, until they are
+the plan; the Systems Tests serve them on the host still, until they are
 built for machines of their own. The roles are the environment templates'
 business; here they are a comment above each machine.
 

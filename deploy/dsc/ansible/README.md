@@ -11,8 +11,8 @@ cross platform, so is Blazor, MAUI and DSC. We keep Ansible and other tech
 for familiarity and support for the project.*). It is a template for
 creating Xmip environments, never a lab.
 
-`cluster.xmip` is the Essentials' own,
-`test/core/essentials/configuration/cluster.xmip`, the one file a test runs
+`cluster.xmip` is the Systems Tests' own,
+`test/core/system-test/configuration/cluster.xmip`, the one file a test runs
 whether its nodes are simulated or on machines of their own (ADR-0028,
 amendment 2026-10-21). Which node runs on which machine is the environment
 file's, `deploy/dsc/README.md`, never that file's: `Deploy-XmipEnvironment`
@@ -71,7 +71,7 @@ the active configuration runs, and is tried again at the next start
 every Receive Location and
 Send Port the cluster's file designs placed over the inventory's
 `xmip_nodes`, round robin by their roles, and bound over SFTP on the
-Parties' far end the Essentials serves at `xmip_far_end`, port 7422, each a
+Parties' far end the Systems Tests serve at `xmip_far_end`, port 7422, each a
 user of its own there (ADR-0028, amendment 2026-10-22); a firewall opening
 for exactly the ports `xmip-service --listening` says, and none it no
 longer does — none for the far end, which a node reaches and never serves —
@@ -168,11 +168,11 @@ On Hyper-V the controller reaches the Windows host at the file's `host`,
 over WinRM, as `ANSIBLE_REMOTE_USER`; that host's address, the account and
 its rights wait on the owner's Hyper-V run.
 
-Then the Essentials runs against the machines as
+Then the Systems Tests run against the machines as
 `deploy/dsc/msdsc/environment/README.md` says under *Running it*, typing
 exactly the environment's nodes, and what runs is the same: the real nodes
-reach DS1 for Xmip Storage, and the Essentials drives them through the
-Parties' far end it serves on the host, counting at `xmip:///CL1/carried`
+reach DS1 for Xmip Storage, and the Systems Tests drive them through the
+Parties' far end they serve on the host, counting at `xmip:///CL1/carried`
 what they carried.
 
 ## How it is held

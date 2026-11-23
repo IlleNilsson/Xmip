@@ -1592,7 +1592,7 @@ own lists, until signed slices exist; and an act asked never expires.
   .NET bindings and tests; the snapshot surface's orders
   (`SnapshotOrder`): a snapshot is read and never acted on, and declines
   every act in one sentence (`SnapshotOperator.NotActed`); and the
-  Essentials' orders — a simulated node taking them each round, the roll
+  System Tests' orders — a simulated node taking them each round, the roll
   carrying them to the nodes it reads. Every act now reaches its node
   through a door and Xmip Storage alone; `xmip_event_subscription_act_v1`
   stays, the act on a process's own hub.
@@ -1698,7 +1698,7 @@ Decided while building, the same day, and built:
   one, `$XDG_RUNTIME_DIR/xmip` on Linux and `$TMPDIR/xmip` on macOS
   (`Initialize-XmipRuntimeDirectory`), wherever it sets the audit's
   directory — every `Start-Xmip*` that starts a process, `Start-XmipTest`
-  and the Essentials' runs among them — and before every cargo and dotnet
+  and the System Tests' runs among them — and before every cargo and dotnet
   it runs (`Invoke-XmipTool`); Windows is unaffected. A Rust test cannot
   set it — edition 2024 makes it `unsafe`, which the runtime denies outside
   `src/ffi/` — so a test run is started with it, and a unit test hands its

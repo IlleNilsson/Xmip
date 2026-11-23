@@ -107,18 +107,18 @@ Three records point at a thing none of them defines. This one defines it.
 - Open problem 17 keeps its question — how work *moves* — and loses the
   prior one: which node could take it is answerable before any protocol
   exists to carry it there.
-- **The Essentials models two of the four, and says which two.** Online
+- **The System Tests model two of the four, and say which two.** Online
   capability was already there — `-OnlineNodes`, the `--online` flag and
   the `switch` record, published per node since ADR-0045 — and feature
   capability landed with this record, as the stages of the message path a
   node can serve: `--can receive`, `--can process,send`, one or more per
-  node. Both live in one value (`test/essentials/src/capability.rs`), so
+  node. Both live in one value (`test/system-test/src/capability.rs`), so
   the rig has one notion of what a node can do and not two. A node is
   started with its capability, publishes it at
   `xmip:///<cluster>/node/<name>/capability`, and the topology takes a
   node's stages from that record; `[run]` says what each node was started
   with. **Authentication and runtime capability are not modeled**: the
-  Essentials verifies no credential and isolates no identity context, so
+  System Tests verify no credential and isolate no identity context, so
   either would be a word with nothing behind it. The node's own capability
   record says so in as many words, rather than leaving a reader to guess
   which of the four a silent rig means.
@@ -256,7 +256,7 @@ the allowance is the assistant's drafting of it.
 ## Amendment, 2026-09-24: the node crate reads the words, lowercase exactly
 
 Open problem 25, row i: a declared capability was read three ways. The
-Essentials and PowerShell refused an unknown word and ignored case;
+System Tests and PowerShell refused an unknown word and ignored case;
 `Xmip.Surface` dropped an unknown word without a word and matched case
 exactly. The decision above is unchanged; how and where the words are read
 is now one rule.
@@ -270,7 +270,7 @@ is now one rule.
   `+`, blanks ignored, returned in path order, and any word that is not one
   of the three is REFUSED, naming every such word and the words there are
   (ADR-0055).
-- **The Essentials reads through it**: `--can`, `--nodes` and a published
+- **The System Tests read through it**: `--can`, `--nodes` and a published
   capability record alike. Its own `Stage` copy is gone; every verdict, hop
   and scope uses the node's.
 - **PowerShell and `Xmip.Surface` keep a copy**, because neither reaches
@@ -295,9 +295,9 @@ is now one rule.
 - **The two forms a declaration is said in are the node crate's too**, the
   same day. What a node publishes of itself — `declares receive,send;
   online; …` — and the entry a run lists it by — `edge-01=receive+send` —
-  were written by the Essentials and read again by `Xmip.Surface`. Both are
+  were written by the System Tests and read again by `Xmip.Surface`. Both are
   `node::Capability` now (`evidence`, `from_evidence`, `entry`,
-  `from_entry`), moved from the Essentials, which keeps only the flags it
+  `from_entry`), moved from the System Tests, which keep only the flags they
   starts a node process with; where the record sits, `<node>/capability`, is
   `observe::capability`'s. The surfaces call both through
   `xmip_capability_published_v1` and `xmip_capability_entry_v1` (ADR-0052,
@@ -342,16 +342,16 @@ name, and the name is the role.
   its roles alone. `Stage` stays the stage of the message path and the scope
   words, and declares nothing.
 - **Deleted, with every use:** `Stage::declared`; `xmip_stage_declared_v1`;
-  the Essentials' `--can` flag; `Start-XmipTest -NodeCapability` and the
+  the System Tests' `--can` flag; `Start-XmipTest -NodeCapability` and the
   script module's `ConvertTo-XmipNodeCapability`, `Get-XmipNodeCapability`,
   `Get-XmipNodeCapabilityText`, `Assert-XmipNodeCapability`,
   `Get-XmipNodeCapabilityRefusal` and `Get-XmipNodeCapabilityWarning`;
-  `XMIP_ESSENTIALS_NODE_CAPABILITIES`; `[run].capabilities` and
-  `XMIP_RUN_CAPABILITIES`; the `capability` key of an Essentials node's
+  `XMIP_SYSTEM_TEST_NODE_CAPABILITIES`; `[run].capabilities` and
+  `XMIP_RUN_CAPABILITIES`; the `capability` key of a System Tests node's
   declaration and `Get-XmipTestNode`'s `Capability`.
 - **In their place:** `-NodeRole @{ R1 = 'receiving'; P1 = 'processing';
   S1 = 'sending' }` (or `@{ E1 = 'executing' }`), `--role`,
-  `XMIP_ESSENTIALS_NODE_ROLES`, `[run].roles` and `XMIP_RUN_ROLES`, the
+  `XMIP_SYSTEM_TEST_NODE_ROLES`, `[run].roles` and `XMIP_RUN_ROLES`, the
   declaration's `role` key and `Get-XmipTestNode`'s `Role`, all in role words;
   the evidence reads `declares receiving,sending; online; …`, or `declares no
   role`. `xmip_operate.h` section 7 gains `xmip_role_words_v1`,
@@ -363,7 +363,7 @@ name, and the name is the role.
   binds `RoleWords` and `RoleStages`; the script module's
   `Get-XmipNodeRole.ps1` holds the role functions, `Get-XmipNodeRoleWord`
   among them, and keeps no word list.
-- **Executing keeps its Journey.** In the Essentials a node declaring
+- **Executing keeps its Journey.** In the System Tests a node declaring
   executing hands each pair it received on to itself at process and at send
   (`Roster::target`), so the whole path runs in its one process while the
   other nodes hand on between processes — ADR-0018 clause 10a rehearsed in
@@ -375,7 +375,7 @@ name, and the name is the role.
   three runtime roles — Executor, Reader, Writer — for the same subject. They
   are the node roles now: Executor is receiving, processing, sending or
   executing; Reader is monitoring; Writer is operational; development is the
-  Essentials' (ADR-0028). The section's rule *do not create a role per
+  System Tests' (ADR-0028). The section's rule *do not create a role per
   capability* named receive, process and send hosts among the capabilities it
   kept out of the role model; the owner ruled them in, and the section says
   so. A deployment's roles also pick what its program is built with
@@ -393,7 +393,7 @@ Provenance: the seven roles, the three new ones and Executing as their sum
 for low latency are the owner's, 2026-10-01, quoted above, as is the
 direction to consolidate the declaration into the role. The mapping from
 Executor, Reader and Writer, the collapsing of the three into executing, and
-the Essentials' executing node keeping its pairs are the assistant's
+the System Tests' executing node keeping its pairs are the assistant's
 drafting of them.
 
 ## Amendment, 2026-10-01: the Storage role
@@ -486,13 +486,13 @@ Built 2026-10-03: one fixture per language — `configure::fixture`
 node's roles through `configure::cluster::roles`; every literal cluster and
 node name in code and tests moved onto them, and the snapshot fixtures a
 .NET test holds to a test cluster are allowed by `test/NodeName.Test.ps1`'s
-`$script:Held`, which also catches the `Nn` shape. An Essentials roll's nodes
+`$script:Held`, which also catches the `Nn` shape. A System Tests roll's nodes
 are its cluster file's `[nodes]` (`Roster::of_cluster`), named by
 `XMIP_TEST_CLUSTER`: `Start-XmipTest -Cluster -Nodes -NodeRole` writes the
 run's own (`Write-XmipTestCluster`), and an omitted `-Nodes` takes the test
 cluster's as it is. The node count is deleted — `-Nodes <count>`,
-`XMIP_ESSENTIALS_NODES`, `XMIP_ESSENTIALS_NODE_NAMES`,
-`XMIP_ESSENTIALS_NODE_ROLES`, `roll --roster <level>`,
+`XMIP_SYSTEM_TEST_NODES`, `XMIP_SYSTEM_TEST_NODE_NAMES`,
+`XMIP_SYSTEM_TEST_NODE_ROLES`, `roll --roster <level>`,
 `Get-XmipNodeComplement`, `complement.rs` and `Stress::nodes`.
 
 ## Amendment, 2026-10-12: a node's letter, and the test clusters' nodes
@@ -578,7 +578,7 @@ does not: its target, a device, refuses `persist` and builds no
 
 `doc/getting-started.md`, the first run the root `README.md` links first,
 takes a new user from a fresh clone to a node of their own and the
-Essentials, so it names a cluster and its nodes as a README does: `learning`
+System Tests, so it names a cluster and its nodes as a README does: `learning`
 and `first` for the node it configures, C1, R1, P1 and S1 for the roll.
 `test/NodeName.Test.ps1` allows it beside a README.md and refuses every
 other document still. That the guide counts as help was the assistant's
@@ -598,7 +598,7 @@ was recorded as option C, *later, only if option A's latency is too slow*
 (`deployment-model.md` section 7). **Drafted, for the owner:** option A — a
 database server behind the Storage nodes — is not built, and embedded
 Storage nodes round robin alone each keep a Ledger of their own, so the
-Essentials' D1 and D2 shared nothing; option C is brought forward for
+System Tests' D1 and D2 shared nothing; option C is brought forward for
 embedded Storage nodes, as below, and A stays the choice for a database
 server.
 
@@ -675,7 +675,7 @@ one reading of a plane's identity, which `[operate]` reads through too);
 root's `failover` test (every file dropped arrives once across the
 primary's stop and return, since amendment 2026-11-08) and `wire` test (a call over the wire within a millisecond
 of the same in process), the runtime's and persist's tests, and the
-Essentials at level 1, every node a process (ADR-0028, amendment of this
+System Tests at level 1, every node a process (ADR-0028, amendment of this
 date).
 
 ## Amendment, 2026-11-05: the web GUI runs on a node with the Monitoring role
@@ -906,7 +906,7 @@ from the list; put to him as EX: *Let's go with it, EX*. And of Storage:
   does what its `roles` declare (clause 1). They change where they are
   values: the test clusters, `test/cluster.xmip` (CL1: RX1, RX2, PX1, TX1,
   TX2, EX1, OP1, DS1 and DS2) and `test/other/cluster.xmip` (CL2: RX1, TX1
-  and EX1); the Essentials' own `cluster.xmip`; the snapshot fixtures the
+  and EX1); the System Tests' own `cluster.xmip`; the snapshot fixtures the
   .NET tests hold to them, the second test cluster's renamed
   `cluster-cl2.xmip`; the snapshot the surfaces ship following,
   `CL1-snapshot.xmip`; the example environments under `deploy/dsc`; and
@@ -1150,7 +1150,7 @@ standby tests. **Decided, not built:** `xmip-core-configure` placing a
 cluster's Receive Locations and Send Ports through `place`, reading each
 node's roles by `NodeRole::declared` (`configure::cluster::roles`), and
 refusing what it cannot place where it now leaves it unplaced — which
-changes `xmip-service --slice --bind` and the Essentials, which place by
+changes `xmip-service --slice --bind` and the System Tests, which place by
 it. *Built the same day, with a Work Process placed by its stage: the
 amendment below, a cluster's file places its work through `place`.*
 
@@ -1191,7 +1191,7 @@ the operator's computer.
 **Provenance.** The half of the amendment *placement reads stages, and one
 Rotation turns* that it left decided and not built, on the owner's
 agreement of 2026-11-07; and the first landing piece of the design he
-approved on 2026-11-12, *The Essentials exercises every role*: *a
+approved on 2026-11-12, *[The System Tests] exercise every role*: *a
 Work Process is placed and bound by its stage, and its library is found
 from its configuration*. The design's choice for a Work Process — every node serving
 its stage, not round robin like a Location, its alternative — was kept the
@@ -1228,7 +1228,7 @@ same day.
   `<another>` (storage; offline). Not placed: the Send Port 'To A' of
   'Orders', the Send Port 'To B' of 'Orders'.* `xmip-service --slice
   --bind --nodes` refuses so where it printed slices missing the work, and
-  the Essentials' run, which places by the same `placements`, where it
+  the System Tests' run, which places by the same `placements`, where it
   started nodes without it.
 - **The node starts what is bound.** The execution tree chains a node's
   bound Work Processes after its own, as it chains its Locations, so a node
@@ -1255,7 +1255,7 @@ design (`examples/approval_unit.bpmn`, generated by `process::generate`
 into the runtime's example `approval_unit`, held equal to what the design
 generates now) opened through the C ABI from beside a node's configuration
 and turned — the first test of `xmip_module.h` section 13 over a library a
-node opens. **Not built:** the Essentials' own Work Processes, their units
+node opens. **Not built:** the System Tests' own Work Processes, their units
 and their libraries' paths per environment (the design's next pieces).
 
 ## Amendment, 2026-11-15: a standby waiting for its first whole copy is copying
@@ -1868,7 +1868,7 @@ assistant's, the same day, for the owner to strike.
 
   What decides is what each node declares (clause 1), never how many there
   are or what they are called.
-- **The Essentials' cluster is the plan** (ADR-0028, amendment of this date):
+- **The System Tests' cluster is the plan** (ADR-0028, amendment of this date):
   - RX1 to RX3 declare receiving;
   - EX1 declares processing and works between the receiving and sending
     nodes, the Work Process *Order approval* on it;
@@ -1880,7 +1880,7 @@ assistant's, the same day, for the owner to strike.
   The plan names the processing node EX1, where the designations of
   2026-11-12 give such a node PXn. The letters only remind, and nothing reads
   them (that amendment). The plan is the owner's later word, so EX1 declares
-  processing in the Essentials' file and PX1 is no node of it. The estate's
+  processing in the System Tests' file and PX1 is no node of it. The estate's
   test cluster, `test/cluster.xmip`, keeps PX1.
 - **Order approval and the executing node.** The plan keeps *Order
   approval* on EX1. A Work Process still runs on every node serving its
@@ -1895,5 +1895,5 @@ assistant's, the same day, for the owner to strike.
   where placement says it goes in the file's order. A node renamed can take
   other work. It is recorded in `doc/planning/open-problems.md`.
 
-Held by the Essentials' test of the plan over its own files
+Held by the System Tests' test of the plan over its own files
 (`served::given`).

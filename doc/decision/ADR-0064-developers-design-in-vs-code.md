@@ -50,7 +50,7 @@ Xmip Process vocabulary is phase C's first open item.
 ### 1. Routes first, then transforms, then processes
 
 The owner, from three: routes first — they run already, so a drawn route can
-be seen routing a Message in the Essentials the same day. Transforms follow; the
+be seen routing a Message in the System Tests the same day. Transforms follow; the
 process designer comes after the Xmip Process vocabulary is settled.
 
 ### 2. An Xmip Application holds the design
@@ -80,7 +80,7 @@ a Message at arrival (`arrival.rs`,
 `a_bound_applications_subscription_routes_a_message`). `xmip_validate_v1`
 reads either document and tells them apart by the `[application]` table, so
 every surface validates an Application as it validates a node. Running an
-Application in the Essentials is the next slice.
+Application in the System Tests is the next slice.
 
 ### 3. Its name is Xmip Application
 
@@ -124,7 +124,7 @@ TOML, and the text editor and the designer follow each other both ways.
 
 - The configuration model gains the Xmip Application document and the node's
   binding of it; `configure` parses both, the runtime starts what a node
-  binds, and the Essentials runs Applications instead of hand-written
+  binds, and the System Tests run Applications instead of hand-written
   Subscriptions.
 - The first designer draws an Application's routes: Receive Locations, the
   Subscriptions and their filters (property, operator, value, and/or
@@ -223,7 +223,7 @@ document — its `[application]` header, a binding's `document` path and the
 its name and refuses any other key; `binding_problems` refuses one the
 configuration does not hold and reports its design's problems, the slice
 gives a node only the sections its bindings name, and the runtime reads
-each bound section as the node starts. The Essentials' RoundTrip
+each bound section as the node starts. The System Tests' RoundTrip
 Application is a section of its cluster's `configuration/cluster.xmip`, and
 each node's configuration is sliced from it. The designer's views are
 configure's `views.rs` — one view per kind in the order above, each entry
@@ -501,7 +501,7 @@ the assistant's drafting, for the owner to overrule.
 
 ## Amendment, 2026-11-10: a Send Location sends where its configuration says
 
-Found 2026-11-10, while the Essentials board was made to read as an ERP
+Found 2026-11-10, while the System Tests board was made to read as an ERP
 integration: a Send Location of Kafka, MQTT, NATS and the other brokers sent
 to a topic named after its broker. Since the amendment of 2026-10-28 the
 runtime named every send's target the Location's address in its
@@ -613,7 +613,7 @@ takes those steps, and what a node publishes of a Subscription names its
 integrations where it names the Application that draws it (ADR-0013,
 amendment 2026-11-11); the designer's Route view draws integrations, each
 one path, and the Wizard's *Put together* writes one (amendment
-2026-11-07); the Essentials' RoundTrip Application becomes its
+2026-11-07); the System Tests' RoundTrip Application becomes its
 integrations; and every surface follows, the C ABI, the command line,
 PowerShell and the GUI in that order. Whether a binding
 then names integrations or the Locations they hold is **left open**, the

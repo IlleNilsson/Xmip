@@ -27,7 +27,7 @@ function Read-XmipTestSuiteDeclaration {
             2026-09-20):
 
                 provider = "Example"
-                name     = "Essentials"
+                name     = "System"
                 command  = "Start-ExampleXmipTest"
 
             The command is the third party's, from its own PowerShell

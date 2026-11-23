@@ -18,7 +18,10 @@ The media uses Git LFS. After cloning, run `git lfs pull` to obtain the actual
 files. Narration, flex poses and accessibility notes were updated on 2026-11-07.
 On 2026-11-22 the node roles, the parts around the nodes and the five ways to
 run one plan were added, and the integration path replaced the Application
-section in both formats. Project source references record the documentation
+section in both formats. On 2026-11-23 the story and the deck took the System
+Tests and the Systems Tests, and containers as the sixth way to run the plan;
+the video and its captions still say five ways until that section's narration
+is generated again. Project source references record the documentation
 used, rather than a promise of release readiness.
 
 ## Outreach

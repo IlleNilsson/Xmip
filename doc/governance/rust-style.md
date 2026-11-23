@@ -60,7 +60,7 @@ gate**, for the reason above.
 `test/Rust.Style.Test.ps1`, over every `.rs` file `Get-XmipSourceFile` counts
 under the root crate's `.src`, `module/`, `test/`, `template/` and `sdk/`: a
 crate's programs in `src/bin` too, build output never. Until 2026-11-11 every
-directory called `bin` was skipped as .NET's output, and the Essentials' roll
+directory called `bin` was skipped as .NET's output, and the System Tests' roll
 and node had grown past the gate unread; now only the `bin` beside a .NET
 project is. **The root's `.src` is gated too**, `xmip-service` among it: it
 was no tree the gate read until the same day, when `.src/service/run.rs` had
@@ -212,7 +212,7 @@ seconds where it takes milliseconds (2026-09-26). A debugger's locals need
 
 **The millisecond rule is measured on the optimized build** (the owner,
 2026-11-01): `measured`, every crate at opt-level 3, debug assertions kept
-(section 5c). Every timing program runs in it, and so do the Essentials'
+(section 5c). Every timing program runs in it, and so do the System Tests'
 binaries and the service a roll starts. It is built on `release`, not
 `dev`, since a profile inheriting `dev` would inherit its package overrides.
 Until 2026-11-20 every debug build was at opt-level 3 (`.cargo/config.toml`);
@@ -398,9 +398,9 @@ copies of the runtime it loads (`gui/vscode/.src/runtime.rs`); the runtime
 fixture that names the shared place a test must not write in
 (`runtime/src/fixture/signed.rs`); a Unix socket's far end, whose address is
 its path as a network transport's is a port (ADR-0051,
-`transport/unix-socket/src/lib.rs`); and the Essentials roll's own working
+`transport/unix-socket/src/lib.rs`); and the System Tests roll's own working
 folder, named for its cluster, a program built without `test-support`
-(`test/core/essentials/src/bin/roll.rs`).
+(`test/core/system-test/src/bin/roll.rs`).
 
 ## 6. What this does not enforce
 

@@ -552,10 +552,10 @@ To run the node as a service that starts with the machine, see
 [the portable archive's README](../deploy/package/archive/README.md) and
 `Get-Help -Name Build-XmipService -Full` for its `-Package` parameter.
 
-### Watch Messages move, in the Essentials
+### Watch Messages move, in the System Tests
 
-The **Xmip Essentials** is Xmip's own rehearsal. It starts a cluster of nodes
-as processes on your machine and carries payloads through them, round after
+The **Xmip System Tests** are Xmip's own rehearsal. They start a cluster of nodes
+as processes on your machine and carry payloads through them, round after
 round, over every transport and content contract, the file transport among
 them. It needs no network and no other software.
 
@@ -563,15 +563,15 @@ Start a cluster called `CL1` with three nodes, one per stage: receive, process,
 send.
 
 ```powershell
-Start-XmipTest -Suite Core.Essentials -Cluster CL1 -Test RoundTrip -Nodes RX1, PX1, TX1 `
+Start-XmipTest -Suite Core.System -Cluster CL1 -Test RoundTrip -Nodes RX1, PX1, TX1 `
     -NodeRole @{ RX1 = 'receiving'; PX1 = 'processing'; TX1 = 'sending' } -OnlineNodes RX1
 ```
 
 `-NodeRole` states each node's roles — receiving, processing and sending one
 stage each, or `executing` for all three in one process, the low-latency
 choice ([ADR-0056](decision/ADR-0056-a-node-declares-what-it-can-do.md)).
-Omit `-Nodes` and the run takes every node of the Essentials' own cluster
-file, `test/core/essentials/configuration/cluster.xmip`, whose `[nodes.RX1]
+Omit `-Nodes` and the run takes every node of the System Tests' own cluster
+file, `test/core/system-test/configuration/cluster.xmip`, whose `[nodes.RX1]
 roles = "receiving"` and so on cover the whole path; a node you name with no
 `-NodeRole` takes the roles that file declares for it. A node
 given no role declares none and runs the shared-directory tests whole, which
@@ -580,7 +580,7 @@ records that `RX1` may assume a route to the internet and the others may not
 (ADR-0045): it is the receiving edge, the node that may obtain its server
 certificate over ACME from a public authority (ADR-0033, ADR-0034;
 [built, not in the assembled service](architecture/estate-map.md#certificate-provisioning)).
-The switch permits; nothing in the Essentials reaches out.
+The switch permits; nothing in the System Tests reach out.
 
 It returns at once and builds in the background. Ask how it is going:
 
@@ -592,7 +592,7 @@ It says `building` until the nodes start, then `running`, or `FAILED` with the
 first error. The names `CL1`, `RX1`, `PX1` and `TX1` are yours to choose; this page
 uses `CL1` because the surfaces in a fresh clone are set to follow it.
 
-The Essentials injects faults on purpose, of the kinds real integrations
+The System Tests inject faults on purpose, of the kinds real integrations
 suffer: a reset connection, an unresolved host, content that fails its
 contract. Expect the cluster to be Holding and some leaves Done; the file
 transport is the one path it keeps fault-free.
@@ -600,12 +600,12 @@ transport is the one path it keeps fault-free.
 Watch it on each surface:
 
 ```powershell
-Get-XmipTestResult -Path .local-work/essentials/CL1-snapshot.xmip -Worst
+Get-XmipTestResult -Path .local-work/system-test/CL1-snapshot.xmip -Worst
 Get-XmipHealth -Scope xmip:///CL1
 Get-XmipScope -Scope xmip:///CL1/*
 cargo run --manifest-path module/core/operation/cli/Cargo.toml -- show xmip:///CL1
 cargo run --manifest-path module/core/operation/cli/Cargo.toml -- measure xmip:///CL1
-Start-XmipOperationWeb -Snapshot .local-work/essentials/CL1-snapshot.xmip
+Start-XmipOperationWeb -Snapshot .local-work/system-test/CL1-snapshot.xmip
 ```
 
 The web GUI at <http://127.0.0.1:5087> opens on the Monitor view, the board
@@ -620,7 +620,7 @@ the views say which cluster they are on and move between them (ADR-0052,
 amendment 2026-09-20):
 
 ```powershell
-Start-XmipTest -Suite Core.Essentials -Cluster CL2 -Test RoundTrip -Nodes RX1, PX1 `
+Start-XmipTest -Suite Core.System -Cluster CL2 -Test RoundTrip -Nodes RX1, PX1 `
     -NodeRole @{ RX1 = 'receiving'; PX1 = 'processing,sending' } -OnlineNodes RX1
 Get-XmipTestStatus | Start-XmipOperationWeb
 ```
@@ -641,9 +641,9 @@ executable reads; it answers one cluster per invocation and shows totals,
 because a single reading has no interval to take a rate over.
 
 Every System Process Xmip owns is named `xmip-<what>` and declares its name,
-its location and its purpose, test or runtime (ADR-0053). An Essentials
-process says which cluster and which node it is — `xmip-essentials-CL1-roll`,
-`xmip-essentials-CL1-cluster`, `xmip-essentials-CL1-node-RX1` (amendment
+its location and its purpose, test or runtime (ADR-0053). A System Tests
+process says which cluster and which node it is — `xmip-system-test-CL1-roll`,
+`xmip-system-test-CL1-cluster`, `xmip-system-test-CL1-node-RX1` (amendment
 2026-09-20). `Get-XmipProcess` lists them with what they said, and one line
 stops every one of them, whatever started it:
 
@@ -662,12 +662,12 @@ Stop-XmipOperationWeb
 
 Everything above is test level 1: one computer, every node a process the run
 spawned. Where the run's nodes include one declaring the Storage role —
-every node of the Essentials' file, when `-Nodes` is left out — each is a
+every node of the System Tests' file, when `-Nodes` is left out — each is a
 process of `xmip-service`, the build `Start-XmipTest` makes beside the
-Essentials: DS1 and DS2 keep Xmip Storage, the primary and its standby, and
+System Tests: DS1 and DS2 keep Xmip Storage, the primary and its standby, and
 every other node reaches them over Xmip's mutual TLS on loopback, with a
-certificate from the Essentials' authority, the one the web GUI is served
-under, kept in .local-work/essentials/authority across runs. The rig is the Parties and the company's ERP: it drops real EDIFACT
+certificate from the System Tests' authority, the one the web GUI is served
+under, kept in .local-work/system-test/authority across runs. The rig is the Parties and the company's ERP: it drops real EDIFACT
 documents into their Receive Locations, the nodes route each by its message
 type and recipient to a Send Port, and the rig reads what the Send Ports
 write; beneath each Receive Location, `delivery` says whether every
@@ -677,7 +677,7 @@ Where none declares the Storage role, as with `-Nodes RX1, PX1, TX1` above,
 every node is simulated.
 
 ```powershell
-Start-XmipTest -Suite Core.Essentials -Cluster CL1
+Start-XmipTest -Suite Core.System -Cluster CL1
 Get-XmipTestResult -Test Carried
 Get-XmipHealth -Scope xmip:///CL1/node/RX1/storage
 ```
@@ -686,9 +686,10 @@ Get-XmipHealth -Scope xmip:///CL1/node/RX1/storage
 it answered, and of each standby whether its primary says it follows it now;
 DS1's says which it is, the primary or a standby.
 
-At test level 2 the same cluster file runs with
-real nodes — `xmip-service` on machines of their own — and the same
-scenarios (ADR-0028, amendment 2026-10-21). The templates under `deploy/dsc`
+At test level 2 the Systems Tests run the same cluster file on real nodes —
+`xmip-service` on machines of their own — with the same scenarios,
+`Start-XmipTest -Suite Core.Systems` (ADR-0028, amendments 2026-10-21 and
+2026-11-23). The templates under `deploy/dsc`
 make the machines and put the file's nodes on them, Windows and AlmaLinux
 alike, from one environment file and one command, `Deploy-XmipEnvironment`,
 in either technology (`deploy/dsc/README.md`): `deploy/dsc/msdsc/hyperv` or
@@ -696,12 +697,12 @@ in either technology (`deploy/dsc/README.md`): `deploy/dsc/msdsc/hyperv` or
 what runs inside them, or `deploy/dsc/ansible` for the same in Ansible.
 Each node's slice binds every Receive Location and Send Port of the
 file, placed over the environment's nodes by their roles, on the Parties'
-far end: SFTP the Essentials serves on your computer, port 7422, each
-Location a user of its own there (ADR-0028, amendment 2026-10-22). A
-`-Cluster` or `-Nodes` name that resolves is a real node, asked with the
-operator certificate `-Certificate` names; a name that answers as its node
-is real and never spawned, one that does not answer is REFUSED by name, one
-that does not resolve is simulated. The first lines of the run, its board
+far end: SFTP the System Tests serve on your computer, port 7422, each
+Location a user of its own there (ADR-0028, amendment 2026-10-22). Every
+node of the run, and a `-Cluster` name that resolves, is asked with the
+operator certificate `-Certificate` names: each must answer as its node,
+and one that does not resolve or does not answer is REFUSED by name before
+the run starts, never spawned in its place. The first lines of the run, its board
 and `Get-XmipTestStatus` say which nodes are real. On its machine each node
 presents the certificate its environment gave it, `tls/node.pem`, on its
 operate listener and to the Storage nodes, which serve on port 7443 — the
@@ -721,7 +722,7 @@ one. Each README says each step in full.
    makes them in the environment's private state (`deploy/dsc/README.md`).
 3. **E** On your computer once: WinRM's trusted hosts, the names, and the
    firewall opening that lets the machines reach the far end,
-   `New-NetFirewallRule -DisplayName 'Xmip Essentials, the Parties'' far
+   `New-NetFirewallRule -DisplayName 'Xmip System Tests, the Parties'' far
    end' -Direction Inbound -Protocol TCP -LocalPort 7422 -RemoteAddress
    10.77.0.0/24 -Action Allow` (`deploy/dsc/msdsc/environment/README.md`,
    *Before the first run*).
@@ -744,15 +745,15 @@ one. Each README says each step in full.
 
 ```powershell
 [string[]] $mapped = 'RX1', 'RX2', 'RX3', 'EX1', 'EX2', 'TX1', 'TX2', 'TX3', 'DS1', 'DS2'
-Start-XmipTest -Suite Core.Essentials -Cluster CL1 -Nodes $mapped `
+Start-XmipTest -Suite Core.Systems -Cluster CL1 -Nodes $mapped `
     -Certificate D:\Repos\Xmip\.local-work\environment\tester
 Get-XmipTestStatus
 Get-XmipTestResult -Test Carried
 Get-XmipTestStatus | Start-XmipOperationWeb
 ```
 
-Type exactly the nodes the environment maps: the Essentials places the
-Locations over them as the machines did. It drops a file into every
+Type exactly the nodes the environment maps: the Systems Tests place the
+Locations over them as the machines did. They drop a file into every
 Receive Location's directory on the far end each round; a real receiving
 node fetches it, DS1 keeps it, a real sending node puts it back under its
 name, and each Receive Location's `delivery` says what arrived and how

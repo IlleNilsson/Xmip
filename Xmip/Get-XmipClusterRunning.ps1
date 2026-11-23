@@ -7,13 +7,13 @@
 
 .DESCRIPTION
     One answer to "does this cluster roll or build", for every command that
-    asks: Start-XmipEssentialsRoll refusing a second roll of one cluster,
+    asks: Start-XmipSystemTestRoll refusing a second roll of one cluster,
     the demo readiness check refusing a cluster already taken and stopping
     the roll it started, and Wait-XmipSnapshot deciding whether a snapshot is
     still coming. Read from the run records, never from Get-XmipTestStatus,
     whose rows include runs that have ended — a demo run's verdict, a build
     that FAILED — and which loads the operator module to list them. Apart
-    from Start-XmipEssentialsRoll.ps1 since 2026-11-10, when the demo
+    from Start-XmipSystemTestRoll.ps1 since 2026-11-10, when the demo
     readiness check asked the same question a second way (ADR-0028,
     amendment 2026-11-10).
 
@@ -33,7 +33,7 @@ function Get-XmipClusterRunning {
             removes them, so a record left is a roll that runs.
 
         .PARAMETER Path
-            The Essentials' area the records are in.
+            The System Tests' area the records are in.
 
         .PARAMETER Cluster
             The cluster, by its name.
@@ -52,15 +52,15 @@ function Get-XmipClusterRunning {
         return
     }
 
-    Remove-XmipEssentialsStaleRecord -Path $Path
-    Get-XmipEssentialsRolling -Path $Path -Cluster $Cluster
-    Get-XmipEssentialsBuild -Path $Path |
+    Remove-XmipSystemTestStaleRecord -Path $Path
+    Get-XmipSystemTestRolling -Path $Path -Cluster $Cluster
+    Get-XmipSystemTestBuild -Path $Path |
         Where-Object { $_.State -eq 'building' -and "$($_.Cluster)" -eq $Cluster } |
         ForEach-Object { [int] $_.Id }
 }
 
 
-function Get-XmipEssentialsRolling {
+function Get-XmipSystemTestRolling {
     <#
         .SYNOPSIS
             The pids rolling as a cluster, from the run records in a directory.
@@ -89,7 +89,7 @@ function Get-XmipEssentialsRolling {
 }
 
 
-function Remove-XmipEssentialsStaleRecord {
+function Remove-XmipSystemTestStaleRecord {
     <#
         .SYNOPSIS
             Deletes run records whose roll is no longer running — a roll that
@@ -102,13 +102,13 @@ function Remove-XmipEssentialsStaleRecord {
         [string] $Path
     )
 
-    $layout = Get-XmipEssentialsLayout
+    $layout = Get-XmipSystemTestLayout
 
     foreach ($recorded in @(Get-XmipRollRecord -Path $Path)) {
         $process = Get-Process -Id $recorded.Id -ErrorAction SilentlyContinue
         [bool] $alive = $null -ne $process -and
-            (Get-XmipEssentialsImageKind -Name $process.ProcessName) -eq 'Roll' -and
-            (Test-XmipEssentialsBinary -Process $process -Path $layout.Roll)
+            (Get-XmipSystemTestImageKind -Name $process.ProcessName) -eq 'Roll' -and
+            (Test-XmipSystemTestBinary -Process $process -Path $layout.Roll)
 
         if (-not $alive) {
             Remove-Item -LiteralPath $recorded.File -Force

@@ -3,11 +3,11 @@
 
 <#
 .SYNOPSIS
-    An Essentials roll's run record: where it is and what it says.
+    A System Tests roll's run record: where it is and what it says.
 
 .DESCRIPTION
-    Start-XmipEssentialsRoll writes one record per roll, roll-<pid>.toml, in
-    the roll area; Get-XmipTestStatus reads it, Start-XmipEssentialsRoll asks
+    Start-XmipSystemTestRoll writes one record per roll, roll-<pid>.toml, in
+    the roll area; Get-XmipTestStatus reads it, Start-XmipSystemTestRoll asks
     which rolls a cluster already has and clears the stale ones, and
     Stop-XmipTest deletes it. The name is decided here and nowhere else.
 

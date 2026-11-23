@@ -1,4 +1,4 @@
-# ADR-0028: The Xmip Essentials
+# ADR-0028: The Xmip System Tests and Systems Tests
 
 - Status: Accepted
 - Date: 2026-09-05
@@ -13,7 +13,6 @@
   own; a real node is used where its name resolves, built
 - Amended: 2026-10-22 — every node at level 1 a process of the assembled
   service, driven; a real node driven through the Parties' far end
-- Amended: 2026-11-04 — the Playground is named Essentials, everywhere
 - Amended: 2026-11-10 — Core.Demo, the demo readiness check, a third suite
   of Xmip's own
 - Amended: 2026-11-11 — the roll carries an operator's orders to the nodes it
@@ -23,11 +22,13 @@
 - Amended: 2026-11-12 — a delivery across nodes no longer waits for the
   sending node's scan, measured before and after
 - Amended: 2026-11-12 — what a delivery's time is on the sending node, step
-  by step, read from the Essentials itself
+  by step, read from the System Tests themselves
 - Amended: 2026-11-12 — the claim answered once readable, measured
-- Amended: 2026-11-23 — the Essentials' tests and demo run one fixed
+- Amended: 2026-11-23 — the System Tests and the demo run one fixed
   solution, the plan as processes on one computer; every node of the plan
   is optional
+- Amended: 2026-11-23 — the System Tests, local, and the Systems Tests, on
+  machines: two suites, Core.System and Core.Systems, everywhere
 - Related: ADR-0018 (the Service and the Host Services), ADR-0027 (the operator
   boundary), ADR-0010 (contract and transport boundaries), ADR-0025 (when a
   Module loads), ADR-0052 (the views' "show test clusters" box, its
@@ -37,12 +38,12 @@
 ## In brief
 
 - Theme: Operating Xmip
-- Subject: The Essentials exercises everything, all the time
-- Name: The Xmip Essentials
+- Subject: The System Tests exercise everything, all the time
+- Name: The Xmip System Tests and Systems Tests
 - Order: 5
-- Concepts: Essentials, exercise, verdict; Development node; simulated node, real node, test level; Parties' far end, placing Locations on nodes; demo readiness check, Core.Demo
+- Concepts: System Tests, Systems Tests, internal tests, exercise, verdict; Development node; simulated node, real node, test level; Parties' far end, placing Locations on nodes; demo readiness check, Core.Demo
 
-**`xmip-test-essentials` exercises Xmip continuously.** It spawns Development
+**`xmip-test-system-test` exercises Xmip continuously.** It spawns Development
 nodes as System Processes on one machine — no virtualization — and drives every
 transport and every content contract through them: a Receive Location for each
 transport fed with generated Streams for each contract, a Send Location watched
@@ -51,7 +52,7 @@ routed, delivered, contract held — published as health on its own scope. The
 pair that breaks turns red on the same page as everything else, and is named.
 
 It is a **node role, not a test suite**. `NodeRole::Development` already exists
-beside Operational, Monitoring and Executing; an Essentials node is a Development
+beside Operational, Monitoring and Executing; a System Tests node is a Development
 node and the role is the isolation — it never touches a production node.
 
 It is also **the source of real measurement**: Streams in, Journeys through,
@@ -62,8 +63,8 @@ reads. Until it runs, a throughput card shows a dash.
 
 ROADMAP section 7 lists contract and conformance tests, failure and recovery
 tests, and performance and overload tests, all as things a release does. The
-owner's requirement, 2026-09-05, is the same thing running all the time: *a test
-essentials, constantly activating receive locations, monitoring send, for all
+owner's requirement, 2026-09-05, is the same thing running all the time: *[the System
+Tests], constantly activating receive locations, monitoring send, for all
 transport protocols and content contracts.*
 
 Two facts make it cheap. `xmip-core-transport` already carries http, smtp, tcp,
@@ -73,26 +74,26 @@ nothing external is stood up. And `registration.rs` already generates what a
 System Process needs, so spawning a node is what the runtime does anyway.
 
 The operator boundary landed the day before this record, with a card per stage
-and nothing to count. The Essentials is what counts.
+and nothing to count. The System Tests are what counts.
 
 ## Decision
 
-### 1. One repository, `xmip-test-essentials`
+### 1. One repository, `xmip-test-system-test`
 
 Operations domain, an operational capability. The name is the owner's and the
-proper noun is **Xmip Essentials**, in terminology.md.
+proper noun is **Xmip System Tests**, in terminology.md.
 
 **The provider segment is `test`, not `core`** — the owner's call, 2026-09-05,
 renamed the same day it was created. `core` is what Xmip is; `test` is what
-exercises it, and it is a namespace another provider may join with a essentials
-of their own, `xmip-<theirs>-essentials`, under the estate's rules unchanged.
+exercises it, and it is a namespace another provider may join with System Tests
+of their own, `xmip-<theirs>-system-test`, under the estate's rules unchanged.
 The `xmip.test` root is reserved: there is no `xmip-test` crate, only what sits
 beneath it.
 
 ### 2. It spawns processes
 
 Nodes, generators and watchers run as System Processes on the machine the
-Essentials runs on. Nothing is virtualized and nothing is containerized —
+System Tests run on. Nothing is virtualized and nothing is containerized —
 process isolation is what the operating system provides, and it is what
 Development nodes get. A process that hangs is killed and restarted like any
 other Host Service.
@@ -143,8 +144,8 @@ exclusive-claim, daily-backlog).
 RoundTrip is the first test, not the only one; each asks a different
 question of the same estate over the same adapters, and every roll honors
 a wall-clock maximum and a factor on simulated time. What the scenarios are
-and how the limits work is the Essentials' own manual,
-`test/essentials/README.md`, since 2026-09-12 (ADR-0020 clause 6: a record
+and how the limits work is the System Tests' own manual,
+`test/system-test/README.md`, since 2026-09-12 (ADR-0020 clause 6: a record
 decides, a document describes).
 
 ### 4. A verdict is health, per stage
@@ -160,9 +161,9 @@ Journey through, Send a Message out — the three the stage cards count.
 
 ### 4a. The world does not run green: injected faults
 
-Loopback never fails, so an Essentials of nothing but loopback proves the
-transports work and proves nothing about the monitoring. So the Essentials
-injects the faults a real integration suffers, on all three stages, of three
+Loopback never fails, so System Tests of nothing but loopback prove the
+transports work and proves nothing about the monitoring. So the System Tests
+inject the faults a real integration suffers, on all three stages, of three
 transport-and-content kinds an operator triages by: **transport** (reset,
 timeout, port in use, lost datagram), **addressing** (unresolved host, no route,
 rejected recipient) and **contract** (content that fails its schema). Firing is
@@ -176,7 +177,7 @@ Identity faults are their own axis — clause 4b.
 A Receive Location does not only receive bytes: it **identifies** who is claimed,
 **authenticates** the claim, and **authorizes** what it may do — the invariant
 pipeline of ADR-0019, in that order. A Send Location **presents** an identity to
-the far end (ADR-0033). The Essentials exercises this by driving the estate's
+the far end (ADR-0033). The System Tests exercise this by driving the estate's
 real gates — `identify_transport`, `authenticate`, `authorize` — with stand-in
 implementers over mutual-TLS, so a fault is a genuine `Refusal` or
 `Decision::Denied`, not a fabricated string. Each Receive step publishes as a
@@ -192,34 +193,34 @@ throughput: a Stream is received once, not once per identity step.
 ### 5. The far end is Xmip
 
 Wherever a transport has both a server and a client in `xmip-core-transport`,
-the Essentials uses them as the counterparty. A transport that has only one
+the System Tests use them as the counterparty. A transport that has only one
 side is exercised as far as that side allows and the verdict says so. No
-external broker, server or service is a prerequisite for the Essentials to run.
+external broker, server or service is a prerequisite for the System Tests to run.
 
 ### 6. Measurement comes from it
 
-The Essentials' nodes publish counts per stage into the snapshot. That is
+The System Tests' nodes publish counts per stage into the snapshot. That is
 where the numbers on the operator's page come from before any production
 traffic exists, and it is how a regression in throughput is seen as a number
 rather than felt as a complaint.
 
 ## Consequences
 
-- `xmip-test-essentials` is declared in `architecture.toml` and created through
+- `xmip-test-system-test` is declared in `architecture.toml` and created through
   `Sync-XmipEstate`, from the Rust template, mounted at
-  `test/essentials`.
-- **Xmip Essentials** is a term in terminology.md.
+  `test/system-test`.
+- **Xmip System Tests** is a term in terminology.md.
 - Phases four to nine of startup (ADR-0018) — actually starting processes,
-  loading Modules, accepting work — are what the Essentials needs first and
-  does not have. Its first version spawns nodes that plan and validate, which is
-  what the runtime can do today, and grows with the runtime.
+  loading Modules, accepting work — are what the System Tests need first and
+  do not have. Their first version spawns nodes that plan and validate, which is
+  what the runtime can do today, and grow with the runtime.
 - The 79 declared, empty technology repositories each get exercised the day
   they gain code. The matrix is the definition of done for a transport.
 
 ## Alternatives considered
 
 **Containers or virtual machines per node.** Rejected by the owner: the
-Essentials spins processes, and the operating system already isolates them.
+System Tests spin processes, and the operating system already isolates them.
 Virtualization would add a dependency to the one tool whose job is to have none.
 
 **A test suite run at release.** What ROADMAP section 7 describes. Not rejected
@@ -227,16 +228,16 @@ Virtualization would add a dependency to the one tool whose job is to have none.
 it landed, and it produces no measurement in between.
 
 **Exercising against external systems.** Real Parties, real brokers. Rejected
-as the default: the Essentials has to run on a laptop with no network. Xmip's
+as the default: the System Tests have to run on a laptop with no network. Xmip's
 own transports are the counterparty, and an external system is an optional
 extra target when one is available.
 
 ## Provenance
 
-The requirement and the name are the owner's, 2026-09-05: *a test essentials,
+The requirement and the name are the owner's, 2026-09-05: *[the System Tests],
 constantly activating receive locations, monitoring send, for all transport
 protocols and content contracts*, spinning processes with no virtualization,
-called the Xmip Essentials. Clauses 1 to 6 are the assistant's drafting of it,
+called the Xmip System Tests. Clauses 1 to 6 are the assistant's drafting of it,
 on the instruction to proceed.
 
 ## Amendment, 2026-09-09: difficulty
@@ -247,7 +248,7 @@ The owner: *incorporate higher difficulty, stress on all tests; we need about
 The stress level, the ceiling every transport declares, the tests at every
 level, the half-of-what-is-free budget of 2026-09-11, the far end's move into
 the transport under ADR-0051 and the cluster's node processes are decided
-here and described in `test/essentials/README.md`, where they moved on
+here and described in `test/system-test/README.md`, where they moved on
 2026-09-12.
 
 The decisions, in one line each: **the level** is one axis, `calm`,
@@ -259,7 +260,7 @@ other work, measured again before every round; **the far end** is the
 transport's own; **a node is a process**, and a cluster's nodes are spawned,
 merged and restarted by the roll.
 
-2026-09-19, the owner: what the Essentials spawns is a cluster and its nodes;
+2026-09-19, the owner: what the System Tests spawn is a cluster and its nodes;
 the word fleet is retired **here**.
 
 Retired from the rig, not from the estate. The assistant wrote the same day
@@ -274,15 +275,15 @@ who owns many of a thing.
 What was wrong was borrowing it for a group of test node processes, which
 is a cluster and was already called one. The owner, noticing the word gone
 from the suites: *I used Fleet in an example.* His example stands, in
-ADR-0052 and in the Essentials' README; the word keeps its own meaning
+ADR-0052 and in the System Tests' README; the word keeps its own meaning
 everywhere it had one.
 
 ## Amendment, 2026-09-19: even clusters are spawned as processes
 
 The owner: *even clusters have to be spawned as processes during tests.*
 
-Decision 2 says the Essentials spawns processes. Until this day the cluster
-was not one of them: `xmip-essentials-roll` was both the test and the cluster
+Decision 2 says the System Tests spawn processes. Until this day the cluster
+was not one of them: `xmip-system-test-roll` was both the test and the cluster
 — it declared itself at `xmip:///<Cluster>` and spawned the node processes
 itself. It is now three deep, and each of the three declares itself
 (ADR-0053):
@@ -305,14 +306,14 @@ stops its own nodes before it goes, however it is ended; `Stop-XmipTest` ends
 the tree from the leaves up. Nothing is orphaned: `Get-Process xmip-*` is
 empty afterwards.
 
-The details are `test/essentials/README.md`, as 3a says.
+The details are `test/system-test/README.md`, as 3a says.
 
 ## Amendment, 2026-09-19: a real node is used, a simulated one is the fallback
 
 The owner, the same day: *if there are actual DNS names for clusters and
 nodes, the test shall use them instead of spawning test processes.*
 
-Spawning is not the point of the Essentials; having something to test against
+Spawning is not the point of the System Tests; having something to test against
 is. A simulated node exists because there is no real one, and where a real one
 exists the rig has no business inventing a second.
 
@@ -351,9 +352,9 @@ Two defects, found the same day the cluster became a process of its own.
 
 **What was wrong.** `Get-XmipTestStatus` and `Get-XmipTestNode` judged a
 process by the file on disk: the image the operating system reports it running
-had to be the Essentials binary under `test/essentials/target/debug`, and a
+had to be the System Tests binary under `test/system-test/target/debug`, and a
 process that failed that test was dropped without a word. The owner rebuilt the
-Essentials while his roll was rolling. Twenty-one processes — a roll, its
+System Tests while his roll was rolling. Twenty-one processes — a roll, its
 cluster and its nodes — went on running, and every cmdlet meant to manage
 them answered with nothing. `Get-XmipProcess` found all twenty-one, because it
 asks what each process declared of itself (ADR-0053) rather than what is on
@@ -385,34 +386,34 @@ started and cannot find is a process Xmip cannot stop.**
 - **A process that declared itself is found even when this machine no longer
   calls it by that name**, and that, too, is said.
 
-The lookup lives in `Xmip/Get-XmipEssentialsProcess.ps1`; it moved out of
+The lookup lives in `Xmip/Get-XmipSystemTestProcess.ps1`; it moved out of
 `Xmip/Start-XmipTest.ps1` with this change. `test/XmipTest.Test.ps1` holds the
 tests, over the judgment itself rather than over a running binary — the suite
 still starts nothing.
 
 The other defect of that day, a history file that had never held a point, is
 ADR-0029's: the rule it broke is what a history point is, not what the
-Essentials spawns. It is recorded there.
+System Tests spawn. It is recorded there.
 
-## Amendment, 2026-09-23: the Essentials is core's, and says so
+## Amendment, 2026-09-23: the System Tests are core's, and says so
 
 The owner, reading the estate map: *there is no room for 3rd parties there is
-test/essentials. It should be test/core/essentials so there is room for
-test/3rd party/essentials. Corresponding repos would be
-xmip-core-test-essentials and xmip-<3rd party>-test-essentials.*
+test/system-test. It should be test/core/system-test so there is room for
+test/3rd party/system-test. Corresponding repos would be
+xmip-core-test-system-test and xmip-<3rd party>-test-system-test.*
 
 He is right, and the reason is in the name. A repository is
 `xmip-<provider>-<module>` (repository-model.md, section 2), so
-`xmip-test-essentials` read as *provider `test`, module `essentials`* — and
+`xmip-test-system-test` read as *provider `test`, module `system-test`* — and
 the manifest said as much, calling `test` a provider namespace others may
 join. But that left a second provider only the provider's own slot to take:
-`xmip-<provider>-essentials` claims a module named essentials rather than saying
-is test scaffolding, and the path `test/essentials` had no room at all.
+`xmip-<provider>-system-test` claims a module named system-test rather than saying
+is test scaffolding, and the path `test/system-test` had no room at all.
 
 - **`test` is the kind of work, not the provider.** The repository is
-  `xmip-core-test-essentials`, declared at `xmip.core.test.essentials`,
-  mounted at `test/core/essentials`. A second provider's is
-  `xmip-<theirs>-test-essentials` at `test/<theirs>/essentials`, declared the
+  `xmip-core-test-system-test`, declared at `xmip.core.test.system-test`,
+  mounted at `test/core/system-test`. A second provider's is
+  `xmip-<theirs>-test-system-test` at `test/<theirs>/system-test`, declared the
   same way under their own provider, and every rule here applies to it
   unchanged.
 - **Core's own paths do not move.** A path without a provider in it means
@@ -420,16 +421,16 @@ is test scaffolding, and the path `test/essentials` had no room at all.
   than core mounts under a subtree of its own. The rule is written down now
   rather than invented when the first third-party module arrives.
 - **The rename kept its history.** GitHub redirects the old name, the
-  submodule moved with `git mv`, and the crate is `xmip-core-test-essentials`.
+  submodule moved with `git mv`, and the crate is `xmip-core-test-system-test`.
   Clause 1 above still holds: one repository, optional, ADR-0036.
 
-## Amendment, 2026-09-24: the Essentials stays at test/core/essentials
+## Amendment, 2026-09-24: the System Tests stay at test/core/system-test
 
-For a day the Essentials was moved to `module/core/test/essentials`, on a
+For a day the System Tests were moved to `module/core/test/system-test`, on a
 reading of the owner's *provider before purpose* as putting everything a
 provider ships under `module/`. The owner, 2026-09-24, asked where it belongs,
-and answered: `test/core/essentials`, as placed above. A second provider's is
-`test/<theirs>/essentials`.
+and answered: `test/core/system-test`, as placed above. A second provider's is
+`test/<theirs>/system-test`.
 
 The second bullet above no longer holds, for a different reason. Core's modules
 did move: the owner's rule of 2026-09-23 is that what starts a node mounts with
@@ -450,8 +451,8 @@ owner's rule, capability not name), so a cluster called CT is shown like any
 other, and a run is hidden because it said so when it was started.
 
 - **The declaration.** `Start-XmipTest -Hidden` declares the run hidden. It
-  belongs to the Essentials alone, as `-Cluster` does. The run record says
-  `hidden = true`; `XMIP_ESSENTIALS_HIDDEN` tells the roll, whose cluster and
+  belongs to the System Tests alone, as `-Cluster` does. The run record says
+  `hidden = true`; `XMIP_SYSTEM_TEST_HIDDEN` tells the roll, whose cluster and
   nodes inherit it; the roll's `[run]` table says `hidden = true`
   (`observe::Run::hidden`, crossing section 8's head as `hidden`); the roll,
   its cluster and every node add `hidden = "true"` to their process
@@ -474,7 +475,7 @@ other, and a run is hidden because it said so when it was started.
   `xmip-cli audit --include-hidden` read its records. The views are ADR-0052's
   amendment of the same date.
 - **How the assistant's test cluster is started, always:**
-  `Start-XmipTest -Suite Core.Essentials -Cluster CT -Test RoundTrip
+  `Start-XmipTest -Suite Core.System -Cluster CT -Test RoundTrip
   -Nodes R1, P1, S1 -NodeCapability @{ R1 = 'receive'; P1 = 'process'; S1 =
   'send' } -Hidden`, and stopped with `Stop-XmipTest -Cluster CT
   -IncludeHidden`.
@@ -516,7 +517,7 @@ historical errors.*
 
 ## Amendment, 2026-10-13: the Parties built, and flows named as an ERP's
 
-The owner, 2026-10-13, watching his Essentials run: *You have not
+The owner, 2026-10-13, watching his System Tests run: *You have not
 Implemented more Parties than Party-X. It is better, but not good enough.*
 Of its Locations and Ports, one Application named after the test: *just do
 not make sense*, and, asked whether to name them as an ERP's documents:
@@ -526,7 +527,7 @@ inferred information, which one should see in the operation tools.*
 
 The amendment of 2026-10-06 is built:
 
-- **The Parties are configuration.** The Essentials' `configuration/cluster.xmip`
+- **The Parties are configuration.** The System Tests' `configuration/cluster.xmip`
   declares them as `[[parties]]`, each with `name` and `identities`, in the
   shape `runtime-model.md` gives (ADR-0031, amendment 2026-10-01) —
   `Party-A` to `Party-E` as shipped, renamed there. The parse is placed once,
@@ -534,7 +535,7 @@ The amendment of 2026-10-06 is built:
   `parties`), which open problem 33 named as missing: a Party without a
   name or an identity, a name twice, or an identity two Parties hold is a
   problem every node's binding reports. The cluster designer has a Party
-  view (`configure::views`). Nothing in the Essentials' code or tests names
+  view (`configure::views`). Nothing in the System Tests' code or tests names
   a Party; a test reads them from the file.
 - **Several Parties, each on several transports and streams, both
   directions** (`src/parties.rs`): the Party at a transport's place in the
@@ -558,7 +559,7 @@ The amendment of 2026-10-06 is built:
 - **Drawn and named per Party.** `observe::topology::party::draw` takes the
   Parties and, for each, the transports it is reached over on each side; a
   link counts what its stage counted over the Party's transports and its
-  mood is the worst of the Party's endpoints. The Essentials' ledger counts
+  mood is the worst of the Party's endpoints. The System Tests' ledger counts
   per stage and transport, `<node>/<stage>/<transport>`, which a stage's
   figure sums. A running node still draws `any-party` over every endpoint:
   no Location says which Party it serves until `accept.party` is read. The
@@ -600,10 +601,10 @@ The amendment of 2026-10-06 is built:
   twice and by whom and each never taken.
 
 This supersedes ADR-0052's amendment of 2026-09-29 where it says a
-Essentials cluster has one Party, `party-x`.
+System Tests cluster has one Party, `party-x`.
 
 Proved by `configure`'s `party.rs`, `section.rs` and `views.rs`, `observe`'s
-`topology/party.rs`, and the Essentials' `parties.rs`, `rotation.rs`,
+`topology/party.rs`, and the System Tests' `parties.rs`, `rotation.rs`,
 `identity.rs`, `subscribing.rs`, `topology.rs`, `run.rs`, `drop_box.rs` and
 `drop_box/judged.rs`.
 
@@ -628,8 +629,8 @@ from the start, and the estate's Pester suite since 2026-09-25.
   before anything starts — a choice it cannot run, and a cluster already
   rolling or still building — and writes the run's cluster file there. The
   build and the roll's spawn then run in a pwsh of their own
-  (`Start-XmipEssentialsBuild`), which spawns the roll once cargo has
-  finished (`Start-XmipEssentialsRollProcess`) and writes its run record as
+  (`Start-XmipSystemTestBuild`), which spawns the roll once cargo has
+  finished (`Start-XmipSystemTestRollProcess`) and writes its run record as
   before.
 - **Building is the run's state.** The build writes a record,
   `build-<start time>.toml`, beside the rolls' records, and its output to
@@ -649,7 +650,7 @@ were about `Start-XmipTest`. A first `Write-XmipAudit` in a session still
 holds the console for the operator module's `dotnet build`, seconds rather
 than minutes; that is not this amendment's.
 
-Proved by `test/EssentialsBuild.Test.ps1`.
+Proved by `test/SystemTestBuild.Test.ps1`.
 
 Provenance: the owner's words above. The record's shape, the counted
 progress and the refusal of a second start while building are the
@@ -659,14 +660,14 @@ assistant's drafting, for the owner to overrule.
 
 What the amendment of 2026-10-13 left unbuilt, a Receive Location held to
 the Parties it names, is built in the node (ADR-0019, amendment
-2026-10-19). The Essentials' gates count a Party's identifier and resolve
+2026-10-19). The System Tests' gates count a Party's identifier and resolve
 a claim as a node does, through `configure::party::id` and
 `configure::party::place_holding`, rather than each its own copy. The
 `[run]` table carries no Parties still.
 
 ## Amendment, 2026-10-20: the Parties carry their ids and their identities' mechanism and purpose
 
-Each of the Essentials' `[[parties]]` is written with its `id`, a UUIDv7
+Each of the System Tests' `[[parties]]` is written with its `id`, a UUIDv7
 minted once with it, and each identity as `{ mechanism = "mutual-tls",
 purpose = "receive", value = "CN=…" }` (the owner, 2026-10-19; ADR-0019,
 amendment 2026-10-20). The gates resolve a claim through
@@ -677,9 +678,9 @@ Party by the id it is written with (`Parties::id`), as a node does;
 ## Amendment, 2026-10-21: one file for one computer and for machines of their own
 
 The owner, 2026-10-21: *one TOML file that can be run for tests regardless
-of node faking or actual nodes.* The Essentials' own cluster file,
+of node faking or actual nodes.* The System Tests' own cluster file,
 `configuration/cluster.xmip`, is that file. At test level 1, one computer, its
-nodes are processes the Essentials spawns; at test level 2 the same file's
+nodes are processes the System Tests spawn; at test level 2 the same file's
 nodes run as `xmip-service` on machines of their own — the Hyper-V
 example's XMIP-APP01 to XMIP-APP03 (Windows Server 2025), XMIP-IN01 and
 XMIP-OUT01 (AlmaLinux 10) — and the same scenarios run at both levels. A
@@ -718,18 +719,18 @@ pairs on through, their beats, their orders and each one's embedded store
 beneath it.
 
 **The run's nodes are the file's.** `Start-XmipTest` without `-Nodes`
-spawns every node the Essentials' file declares, with the roles it
+spawns every node the System Tests' file declares, with the roles it
 declares, where the test cluster's `test/cluster.xmip` was taken before; with
 `-Nodes`, a node `-NodeRole` says nothing of takes the roles the file
 declares for it. The run's cluster file is still written from what was
-typed (`Write-XmipTestCluster`, `Read-XmipEssentialsCluster`,
+typed (`Write-XmipTestCluster`, `Read-XmipSystemTestCluster`,
 `Join-XmipNodeRole`). `test/cluster.xmip` stays the estate's tests' cluster.
 
 **A real node is used when its name resolves** — the amendment of
 2026-09-19, built (`src/real.rs`).
 
 - **Only the names typed.** `-Cluster`, and the nodes `-Nodes` named, which
-  `Start-XmipTest` hands the roll as `XMIP_ESSENTIALS_NAMED`; an omitted
+  `Start-XmipTest` hands the roll as `XMIP_SYSTEM_TEST_NAMED`; an omitted
   `-Nodes` takes the file's nodes, names nobody typed, and resolves none.
   Each is resolved by this machine's resolver at the port the file says
   that node is operated on.
@@ -737,7 +738,7 @@ typed (`Write-XmipTestCluster`, `Read-XmipEssentialsCluster`,
 - **One that resolves must answer and declare itself**: over its operate
   listener, inside Xmip's mutual TLS, asked with the tester's operator
   certificate — `Start-XmipTest -Certificate <folder>`,
-  `XMIP_ESSENTIALS_CERTIFICATE`, holding `operator.pem`, `operator.key` and
+  `XMIP_SYSTEM_TEST_CERTIFICATE`, holding `operator.pem`, `operator.key` and
   `anchors.pem` from the cluster's own authority — its publication's scope
   must be `xmip:///<cluster>/node/<name>` and it must say what it can do,
   its `<node>/capability` record, whose roles it then runs by in the run.
@@ -770,35 +771,35 @@ ADR-0015's amendment of the same date.
 
 Provenance: the owner's words above. Declaring the nine nodes in the file,
 the five the example puts on machines, `-Certificate` and its files,
-`XMIP_ESSENTIALS_NAMED`, `<node>/reached`, and observing rather than driving
+`XMIP_SYSTEM_TEST_NAMED`, `<node>/reached`, and observing rather than driving
 a real node until Storage is assembled are the assistant's drafting, for the
 owner to overrule.
 
 ## Amendment, 2026-10-22: at level 1 every node is a process of the assembled service, and the rig drives them
 
-The task given 2026-10-22: the full Essentials run with every node a
+The task given 2026-10-22: the full System Tests run with every node a
 process, R, S, P and L reaching D1 and D2 over the wire, over a real
 loopback connection, through the same code as on a machine; and the
-Essentials driving real nodes, the rig sending them work through their
-Receive Locations, where it observed them.
+System Tests driving real nodes, the rig sending them work through their
+Receive Locations, where they observed them.
 
 **Every node of the run that is not real is started as `xmip-service`**
-where the run is given one (`XMIP_ESSENTIALS_SERVICE`) and one of those
+where the run is given one (`XMIP_SYSTEM_TEST_SERVICE`) and one of those
 nodes declares the Storage role, which the rest reach — every node of the
 file, where `-Nodes` is left out — and simulated where not
 (`src/served.rs`). `Start-XmipTest` builds it as the
 `personal-computer` site builds it — every stage, Xmip Storage and the file
 transport — in a build directory of its own,
-`.local-work/essentials/service/target`, since one shared with the
-Essentials' build left rustc finding two builds of one estate crate, and
-keeps it at `.local-work/essentials/service/<cluster>`, so a later build
-never changes what a running roll's nodes run; the Essentials
+`.local-work/system-test/service/target`, since one shared with the
+System Tests' build left rustc finding two builds of one estate crate, and
+keeps it at `.local-work/system-test/service/<cluster>`, so a later build
+never changes what a running roll's nodes run; the System Tests
 itself and the service are built against the estate as it is on disk, every
 estate crate patched to its working tree as a landing verifies
 (`New-XmipLocalPatch`). The run is the nodes' environment and gives each
 what an environment gives a machine's node, the file unchanged:
 
-- its slice of the Essentials' cluster file under the run's cluster name,
+- its slice of the System Tests' cluster file under the run's cluster name,
   in a folder of its own beneath the run's directory, its data beside it;
 - its certificate, key and anchors from an authority of the run's own
   (`provision::node`, for its name, `127.0.0.1` and `localhost`), which it
@@ -827,7 +828,7 @@ does not killed. A roll killed ends their input with it.
 
 **The rig drives them: Carried** (`src/carried.rs`). Each round it drops a
 file into each bound drop folder, written beside it and renamed in, the
-next of the Essentials' twenty content contracts each time, named
+next of the System Tests' twenty content contracts each time, named
 `<contract>-<number>` (`Contract::file_name`). The cluster file's
 Subscriptions route by that name — `file.name like '<contract>-%'`, what a
 file Receive Location gives every Message it takes — where they read
@@ -876,7 +877,7 @@ elevated step of the owner's (`deploy/dsc/msdsc/environment/README.md`).
 **One placement, placed once** (`configure::placed`): each Application's
 Receive Locations go round robin, in the file's order, over the nodes
 present declaring `receiving` or `executing`, its Send Ports over those
-declaring `sending` or `executing`. The Essentials' `bindings.rs` and its
+declaring `sending` or `executing`. The System Tests' `bindings.rs` and its
 own placement are deleted; the nodes it starts on one computer, its
 simulated process stage and the environment all place by it.
 
@@ -922,7 +923,7 @@ SFTP, the port, one user to a Location, `--bind` and `--nodes`, and
 placing in configure are the assistant's drafting, for the owner to
 overrule.
 
-## Amendment, 2026-10-27: the nodes a run starts are issued under the Essentials' one authority
+## Amendment, 2026-10-27: the nodes a run starts are issued under the System Tests' one authority
 
 **Amends the amendment of 2026-10-22, *at level 1 every node is a process of
 the assembled service*, where each run made an authority of its own.** That
@@ -930,16 +931,16 @@ authority lived in the run's base under the temporary directory and went
 with the run, so a phone given an operator certificate, or a browser told
 to trust the anchor, had to be given them again at every restart. The
 coordinator, preparing the owner's demo of the four operator surfaces,
-2026-10-27: *served nodes take the persistent Essentials authority
-(.local-work/essentials/authority) instead of a per-run one, so a
+2026-10-27: *served nodes take the persistent [System Tests] authority
+(.local-work/system-test/authority) instead of a per-run one, so a
 provisioned phone and a trusted browser survive a restart.*
 
-- **One authority for the Essentials**: `environment::authority`, the
+- **One authority for the System Tests**: `environment::authority`, the
   `authority` folder of the area a roll publishes in — the one
-  `Get-XmipEssentialsLayout` names, which the web host is served under and a
+  `Get-XmipSystemTestLayout` names, which the web host is served under and a
   tester's operator certificate is signed by. Each node a run starts gets a
   fresh certificate under it, as before. `Start-XmipTest` makes the
-  authority where none is kept, through `Initialize-XmipEssentialsAuthority`,
+  authority where none is kept, through `Initialize-XmipSystemTestAuthority`,
   before the run starts a node; that function alone names it, and the run
   reads the name from the authority's certificate, so the name is written
   once (the coordinator, the same day: *no second copy*).
@@ -949,22 +950,7 @@ provisioned phone and a trusted browser survive a restart.*
   date).
 
 Proved by `served::given`'s test: two runs' nodes hold the same anchor, the
-Essentials' authority.
-
-## Amendment, 2026-11-04: the Playground is named Essentials
-
-The owner, 2026-11-04, of the suites Core.Estate and Core.Playground:
-*Core.Playground should be Core.Essentials and Core.Estate should stay*, and
-then: *I guess we can leave the term Playground, we are past that.*
-
-The name goes everywhere, with no alias kept: the suite is `Core.Essentials`;
-the crate is `test/core/essentials` in the repository
-`xmip-core-test-essentials`, its binaries `xmip-essentials-node`,
-`xmip-essentials-cluster` and `xmip-essentials-roll`; the cmdlets are
-`Start-XmipEssentialsRoll`, `Start-XmipEssentialsBuild` and their kin; the
-variables are `XMIP_ESSENTIALS_*`; a run's output is under
-`.local-work/essentials`; and a node's process is named `xmip-essentials-C1`
-and so on (ADR-0053). What the Essentials is and does is unchanged.
+System Tests' authority.
 
 ## Amendment, 2026-11-10: Core.Demo, the demo readiness check
 
@@ -973,7 +959,7 @@ demo runs from `main` (the owner, 2026-11-13: *The demo branch can be merged
 to main and we can continue on the main branch*), so a check proves a tree
 demo-ready: it builds what the demo runs, runs it, says each part passed or
 failed in words with the reason, and stops everything it started. It is a third suite of Xmip's
-own beside `Core.Essentials` and `Core.Estate`, not a cmdlet of its own (the
+own beside `Core.System` and `Core.Estate`, not a cmdlet of its own (the
 owner: as few cmdlets as possible; a new act on a known noun is a
 parameter).
 
@@ -983,12 +969,12 @@ parameter).
   record `demo-<start time>.toml` and its log under `.local-work/demo`. It
   takes `-Cluster`, `-Stress`, `-Hidden` and `-Tester`, its own; an omitted
   `-Stress` is `Realistic`, the stress the demo runs at, and never the
-  Essentials' hardest, which is the rule for a roll asked for by itself
+  System Tests' hardest, which is the rule for a roll asked for by itself
   (ADR-0059). Refused before anything starts: no `-Cluster`, since a test
   never invents a cluster's name; a switch it does not take; a run of the
   check still running, since two would share one web address and one
   desktop app's folder and `gui.toml`; and a cluster that rolls or builds
-  already (`Get-XmipClusterRunning`, the one answer the Essentials' own
+  already (`Get-XmipClusterRunning`, the one answer the System Tests' own
   refusal of a second roll gives too), since a roll the check did not start
   was built from some other tree, at some other stress, and proves nothing
   of this one. Each of Xmip's suites refuses a switch another of them owns —
@@ -999,7 +985,7 @@ parameter).
   host's address and rolls a cluster of its own; the suite carries that as
   a capability, `ByName`, never read from its name (`Get-XmipNamedTestSuite`).
 - **The parts**, in order, each OK, FAILED or SKIPPED with the reason:
-  1. *roll* — the cluster rolled as `Start-XmipTest -Suite Core.Essentials`
+  1. *roll* — the cluster rolled as `Start-XmipTest -Suite Core.System`
      rolls it, from this tree, at the run's stress; the pids of its build and
      its roll are recorded as they appear. The build is load and is waited
      for until it ends. From the roll's spawn its snapshot must be published
@@ -1008,11 +994,11 @@ parameter).
      must then run; the seconds from the spawn to the snapshot are said.
   2. *web* — `Start-XmipOperationWeb` over that snapshot with `-Tester`; its
      address answers https, its certificate reaching the anchor the host
-     was given, which must be the Essentials' authority's. The probe stands
+     was given, which must be the System Tests' authority's. The probe stands
      where a browser stands and reaches the host through .NET's TLS client:
      the runtime's TLS is the host's side (`xmip_operate.h` section 21), no
      TLS client of Xmip's reaches the tooling, and a browser's TLS is never
-     Xmip's. It trusts the Essentials' anchor alone, no operating system's
+     Xmip's. It trusts the System Tests' anchor alone, no operating system's
      store (ADR-0063), and presents no certificate.
   3. *desktop* — `dotnet build` of `Xmip.Operations` for
      `net11.0-windows10.0.19041.0`, the program taken from the one line
@@ -1031,7 +1017,7 @@ parameter).
      open.
   4. *extension* — `Build-XmipService -Extension VsCode` writes the VSIX;
      `xmip-lsp` is built by cargo in the extension's crate through the one
-     patched build the Essentials' binaries are built by
+     patched build the System Tests' binaries are built by
      (`Invoke-XmipPatchedBuild`: every estate crate patched to its working
      tree; ADR-0021, amendment 2026-11-19, ended its clearing of a shared
      build directory's unhashed libraries), found where cargo says it
@@ -1132,11 +1118,11 @@ Dismiss from the Web or Desktop on a served node. Carrying the person the
 act was relayed for beside the tester's proven identity is the operate
 plane's (`plane::Remote::act`, the trust path's), and waits in open problem
 62. And every table of a snapshot merges through **observe's one merge**,
-`Snapshot::merge`; the Essentials' own is deleted with its callers.
+`Snapshot::merge`; the System Tests' own is deleted with its callers.
 
 Tested in observe (`snapshot::tests`: a merge carries the Dead Message
 Queue, the failed Messages, the unheard members and a pause with what it
-held) and in the Essentials (`roll::orders`: an order left before and one
+held) and in the System Tests (`roll::orders`: an order left before and one
 after the watch are both carried to the served node and taken from its
 place; one for a simulated node is left for it).
 
@@ -1145,9 +1131,9 @@ assistant's, 2026-11-11.
 
 ## Amendment, 2026-11-11: a run that reads every node carries the configured flows with real documents
 
-The owner, 2026-11-10 22:40, of the Essentials: *As long as you do not get
+The owner, 2026-11-10 22:40, of the System Tests: *As long as you do not get
 stuck in the 'More game', that is Subscriptions functionality in the real
-world. Do your Essentials test, promotion thing.* And of the demo, the same
+world. Do your [System Tests] test, promotion thing.* And of the demo, the same
 day: ERP names for Receive, Work Process and Send, never test or protocol
 names. A run of `xmip-service` nodes showed test and transport names
 because the roll ran the round trip in its own process beside them (the
@@ -1167,7 +1153,7 @@ contract families the amendment of 2026-10-13 routed by:
   written by hand: orders, order responses, dispatch advices, invoices,
   remittance advices, receiving advices, inventory reports, price
   catalogues for the item master, and multiple payment orders. The company
-  is `ESSENTIALS` in each interchange header, each Party its own name,
+  is `SYSTEM-TEST` in each interchange header, each Party its own name,
   qualifier `ZZZ`. Routing reads only UNB and UNH, so the directory version
   changes nothing of it; trading Parties still often use D.96A to D.01B.
 - **The company's ERP is in the flows**, as configuration only, played by
@@ -1242,7 +1228,7 @@ contract families the amendment of 2026-10-13 routed by:
   topology draws, so the verdict is no configuration (ADR-0052, amendment
   2026-11-11).
 
-Tested in the Essentials (`documents`: every Receive Location has documents
+Tested in the System Tests (`documents`: every Receive Location has documents
 and each is routed to one Send Port, a document is routed by its message
 type and recipient, the unrouted one by none and a Location with none is
 refused; `carried::judged`: a file at another Send Port or with other bytes
@@ -1272,7 +1258,7 @@ Superseding the bullet **What a delivery's time says** of the second
 amendment of 2026-11-11: the sending node now waits on its Send Ports'
 queues in Xmip Storage and reads one the moment another node's Publication
 puts a Journey in it (open problem 46; ADR-0018, amendment 2026-11-12).
-Measured with `Start-XmipTest -Suite Core.Essentials -Cluster C1 -Stress
+Measured with `Start-XmipTest -Suite Core.System -Cluster C1 -Stress
 Realistic -Rounds 3 -Hidden`, and the same with `-Rounds 12`, the audit to
 `.local-work/audit-agent`, each Receive Location's delivery verdict read
 with `Get-XmipTestResult`, the median from drop to arrival, every node a
@@ -1319,7 +1305,7 @@ mostly overlap the publishing node's sync, since the wait is answered once
 the Publication is readable, before it is durable: 0.26 ms after the
 Publication was asked, which was answered in 1.49 ms (the root's timing
 program, `woken.rs`). What the 4 to
-8 ms of the Essentials are is not taken apart: the deliveries compared are
+8 ms of the System Tests is not taken apart: the deliveries compared are
 different documents through different Ports, Locations and transforms on
 nine processes sharing one machine and two Storage nodes, so they are not
 like for like either; the claim's sync, in series after the publishing
@@ -1335,19 +1321,19 @@ quoted figures of several runs as one.
 ## Amendment, 2026-11-12: what a delivery's time is on the sending node, step by step
 
 The amendment above left the 4 to 8 ms across nodes not taken apart in the
-Essentials. Each sending node now times every send step by step, each
+System Tests. Each sending node now times every send step by step, each
 Storage call apart, and each Send Port's record says the median of each
 step over its latest sends, handed in memory and taken from its queue apart
 (ADR-0018, second amendment 2026-11-12, `send_step::Steps`): a roll
 publishes them with the node's other records in its snapshot, so the
-Essentials says what the gap is on every surface that shows a Send Port.
+System Tests say what the gap is on every surface that shows a Send Port.
 Three things were built with it (open problem 46): the wait answers with
 what is due, so no read follows a wake; a Journey behind another of its
 sequence, and a turn its Instance did not take, wait on what holds them
 back; and a Message's place, Journey and Message are read under its claim
 as one request.
 
-Measured with `Start-XmipTest -Suite Core.Essentials -Cluster C1 -Stress
+Measured with `Start-XmipTest -Suite Core.System -Cluster C1 -Stress
 Realistic -Rounds 12 -Hidden`, the audit to `.local-work/audit-agent`, each
 Receive Location's median read with `Get-XmipTestResult`, the steps from the
 snapshot. *Before* is the roll of 09:01 on the code of the amendment above;
@@ -1403,8 +1389,8 @@ is one another node published, one handed in memory the node's own):
 The millisecond rule still fails across nodes, by the claim's sync above
 all; what is left is open problem 46's.
 
-Provenance: the task of 2026-11-12 to break the Essentials' gap down per
-step inside the Essentials and to cut any round trip needing no decision of
+Provenance: the task of 2026-11-12 to break the System Tests' gap down per
+step inside the System Tests and to cut any round trip needing no decision of
 the owner's; the runs, the reading and the steps' timing are the
 assistant's, the same day.
 
@@ -1412,9 +1398,9 @@ assistant's, the same day.
 
 ADR-0018's third amendment of this date answers a claim once readable and
 lets the far end have the send once the claim is durable (open problem 46).
-Measured with `Start-XmipTest -Suite Core.Essentials -Cluster CT -Stress
+Measured with `Start-XmipTest -Suite Core.System -Cluster CT -Stress
 Realistic -Rounds 12 -Hidden`, the assistant's own hidden test cluster on
-the Essentials' cluster file, the audit to `.local-work/audit-agent`, each
+the System Tests' cluster file, the audit to `.local-work/audit-agent`, each
 Receive Location's median read with `Get-XmipTestResult`, the steps from the
 snapshot. The roll of 18:54 ran with a quarter to two fifths of the machine
 busy with other work by its own headroom (a web browser), so its delivery
@@ -1448,7 +1434,7 @@ to replace the absolute times when one runs.
 The third landing piece of the design the owner approved on 2026-11-12,
 *the operation node, the standby's copying, and how the cluster's nodes are
 related* (section 3.3 and section 3.4's served run without a monitoring
-node). It moves two rules out of the rig, and what the Essentials shows is
+node). It moves two rules out of the rig, and what the System Tests show is
 unchanged: a served run and a simulated run draw, roll up and say the same
 words as before.
 
@@ -1480,10 +1466,10 @@ words as before.
   node; the roll keeps its rollup where it was, the cluster process's over
   the simulated nodes, and its drawing and window over the whole run.
 
-Tested: the Essentials' library and spawned suites unchanged and passing;
+Tested: the System Tests' library and spawned suites unchanged and passing;
 the moved rules in their new homes, observe's (`rollup`) and the runtime's
 (`plane::gather`'s tests and `tests/plane/gathered.rs`). Not run: a served
-roll of the Essentials' cluster, which needs the machine alone.
+roll of the System Tests' cluster, which needs the machine alone.
 
 Who decided what. The owner's: the design and its landing order. The
 assistant's, while building, for the owner to change: the roll merging what
@@ -1492,7 +1478,7 @@ gatherer's assembled view, so the board and the Monitor read exactly as
 before; the reach said *real, at* by the roster's members, and a node
 stopped in order said Paused at the severity a pause publishes.
 
-## Amendment, 2026-11-20: the Essentials build in the estate's one workspace, in `measured`
+## Amendment, 2026-11-20: the System Tests build in the estate's one workspace, in `measured`
 
 **Provenance.** The owner, 2026-11-20: *Go with recommendations*, among
 them one Cargo workspace for the estate (ADR-0016, amendment 2026-11-20) and
@@ -1503,7 +1489,7 @@ service a roll starts build in `measured`, and the first three in a build
 directory of their own, was decided by the assistant while building, told
 to the owner.
 
-The amendments above build the Essentials and the service a roll starts
+The amendments above build the System Tests and the service a roll starts
 against the estate as it is on disk through a patch written for the build
 (`New-XmipLocalPatch`, `Invoke-XmipPatchedBuild`), the service in a build
 directory of its own. Since 2026-11-20 the estate is one workspace whose
@@ -1516,13 +1502,13 @@ optimized build the millisecond rule is measured on (ADR-0018, amendment
 is found in the estate's build directory, `<build>/measured`
 (`Get-XmipEstateLayout`'s `Build`), and copied for a roll as before. The
 roll, cluster and node build in a build directory of their own,
-`.local-work/essentials/target`, and are found in its `measured` folder
-(`Get-XmipEssentialsLayout`'s `Target`): a running roll holds its binaries
+`.local-work/system-test/target`, and are found in its `measured` folder
+(`Get-XmipSystemTestLayout`'s `Target`): a running roll holds its binaries
 open, its images being hard links to them, and on Windows a landing's
 timing runs, which build in the estate's build directory, would fail on a
 file held there.
 
-## Amendment, 2026-11-21: the Essentials' sales orders pass a Work Process
+## Amendment, 2026-11-21: the System Tests' sales orders pass a Work Process
 
 **Provenance.** As ADR-0066's amendment of the same day.
 
@@ -1533,7 +1519,7 @@ file says so beside the Subscriptions). What the rig does with it:
 
 - **The judge follows the route through it.** `Documents::routed` reads a
   document's route as a node does, and where a Subscription hands it to a
-  Work Process whose design the rig knows, the Essentials' own, it applies
+  Work Process whose design the rig knows, the System Tests' own, it applies
   what the design assigns before it publishes (`assign::apply`, as the node
   applies it) and routes that Message again, as the node routes what a
   Work Process publishes; the chain is followed no deeper than a node's chain
@@ -1543,13 +1529,13 @@ file says so beside the Subscriptions). What the rig does with it:
   Work Process step of its own, so it publishes the document with the
   context the Work Process would give it (`Documents::processed`), and its
   Subscriptions route it on to the ERP. A served run runs the unit itself.
-- **The unit is placed with its node.** The run copies the Essentials'
+- **The unit is placed with its node.** The run copies the System Tests'
   example `order_approval` beside each served node that opens it, read as
   the node reads its slice (`runtime::start::read`, the execution tree's
   `modules_to_start`; `served::given`); a run whose unit was not built is
   refused, saying how to build it. The roll runs from its image, so the
   image carries every library built as an example in an `examples` folder
-  beside the roll's (`New-XmipEssentialsImage`), where the roll finds what
+  beside the roll's (`New-XmipSystemTestImage`), where the roll finds what
   was built (`file::built`); none is named in the tooling.
 
 ## Amendment, 2026-11-21: the demo check proves what the Desktop opened
@@ -1582,7 +1568,7 @@ Now:
 is tested on (ADR-0056, amendment of this date): *One node covering every
 role works; RX, EX and TX nodes are optional, split as security, firewall
 and load need*; then *Let's get it to work*. The plan runs one way in five,
-and on one computer it gives the far ends as *the Essentials' far ends,
+and on one computer it gives the far ends as *the [System Tests'] far ends,
 processes of their own*. Decided by the assistant while building, for the
 owner to strike:
 
@@ -1592,7 +1578,7 @@ owner to strike:
 - a receiver's own folder;
 - the program's name.
 
-- **The Essentials' cluster file is the plan.** It declares eleven nodes:
+- **The System Tests' cluster file is the plan.** It declares eleven nodes:
   RX1 to RX3 receiving, EX1 processing, EX2 executing, TX1 to TX3 sending,
   OP1 operational and monitoring, DS1 and DS2 storage. PX1 is gone: EX1
   processes. One file still serves every way (amendment 2026-10-21); which
@@ -1611,10 +1597,10 @@ owner to strike:
   `served::given` holds the plan over the shipped files, every node found by
   what it declares.
 - **Its far ends are three senders and three receivers.** They are named in
-  `configuration/external.xmip` beside the cluster's file: the Essentials'
+  `configuration/external.xmip` beside the cluster's file: the System Tests'
   own, outside the cluster, never Xmip's. On one computer each is a process
-  of its own (clause 2): the program `xmip-essentials-external`, run from an
-  image named `xmip-essentials-<cluster>-external-<name>`. The roll starts
+  of its own (clause 2): the program `xmip-system-test-external`, run from an
+  image named `xmip-system-test-<cluster>-external-<name>`. The roll starts
   them beside the nodes it runs as `xmip-service` and uses each once it
   says it is ready. As the run ends, after every file has had its time to
   arrive, the roll ends them by ending their input, before the nodes stop.
@@ -1640,8 +1626,8 @@ owner to strike:
     do, once the roll is gone. The roll's stop says
     each count after *carried*. A drop's recent item names its sender, and
     an arrival's its receiver.
-  - **The tooling knows the program**: `Get-XmipEssentialsLayout`, the
-    Essentials' build, its images, and `Get-XmipEssentialsProcess -Kind
+  - **The tooling knows the program**: `Get-XmipSystemTestLayout`, the
+    System Tests' build, its images, and `Get-XmipSystemTestProcess -Kind
     External`.
 - **Nodes on machines of their own are driven as before**, through the
   Parties' far end the rig serves on the host (amendment 2026-10-22). The
@@ -1651,7 +1637,7 @@ owner to strike:
   machine keeps the roles it ran: the processing node, then the executing
   one.
 
-**Measured** with `Start-XmipTest -Suite Core.Essentials -Cluster C1`, at
+**Measured** with `Start-XmipTest -Suite Core.System -Cluster C1`, at
 Brutal. The audit went to `.local-work/audit-agent`, and every node ran as a
 process of `xmip-service` on one computer. The roll of 15:41 ran 101 rounds
 and was stopped by `Stop-XmipTest`. Other work held up to 90 % of the
@@ -1749,7 +1735,7 @@ day, for the owner to strike:
   (`src/external/remote.rs`); where none does, the Parties' far end is
   served on this computer as before; some and not others is refused.
 - **On its machine a far end is a service**, `xmip-<name>`, the program
-  `xmip-essentials-external --serve`, registered by its own `--install`
+  `xmip-system-test-external --serve`, registered by its own `--install`
   through the runtime's one registration of a service and run under the
   Windows Service Control Manager by the runtime's one dispatcher
   (`registration::apply` and `registration::control_manager`, moved there
@@ -1770,25 +1756,96 @@ day, for the owner to strike:
   one computer serves by (`far_end::serving`) and tells each file put with
   its bytes, which the roll keeps where Carried judges it.
 
-## Amendment, 2026-11-23: the Essentials' tests and demo run one fixed solution, the plan as processes on one computer; every node of the plan is optional
+## Amendment, 2026-11-23: the System Tests and the demo run one fixed solution, the plan as processes on one computer; every node of the plan is optional
 
 **Provenance.** The owner, 2026-11-23, of the six ways to run the node plan:
 *for basic tests and demo, the local process solution is the way to go*,
 and, how a site runs a node being the end user's, *For estate tests and
-demo, there has to be a fixed solution. Essentials tests and demo*; and of
+demo, there has to be a fixed solution. [System Tests] and demo*; and of
 the plan's deck: the nodes numbered 1 to 3 are optional, three of each
 making a good estate test and demo, and *Xmip can run on one node with all
 roles*.
 
-- **The Essentials' tests and demo run one fixed solution: the plan as
-  processes** on one computer, `Start-XmipTest -Suite Core.Essentials` and
+- **The System Tests and the demo run one fixed solution: the plan as
+  processes** on one computer, `Start-XmipTest -Suite Core.System` and
   `Core.Demo`. What an end user chooses for a site — a local process, a
   virtual machine or a container, wherever containers live (ADR-0015,
   amendment 2026-11-23) — never changes it. Hyper-V, KVM, VMware,
-  containers and physical machines prove the machines, systems and hosts
-  the plan runs on, never the Essentials' tests or the demo.
+  containers and physical machines are the Systems Tests' (the amendment
+  below): they prove the machines, systems and hosts the plan runs on,
+  never the System Tests or the demo.
 - **Every node of the plan is optional.** Three receiving, two executing and
   three sending nodes and two Storage nodes are what the tests and the demo
   run, not what Xmip needs: one node with all roles is the smallest Xmip.
   The environment deck, `asset/brand/presentation/Xmip-environment.pptx`,
   says so to end users.
+
+## Amendment, 2026-11-23: the System Tests, local, and the Systems Tests, on machines
+
+**Provenance.** The owner, 2026-11-23, of the name this record carried from
+2026-11-04 to this day, the Essentials: *Essentials is a problem, it
+indicates that it tests the Essentials, not the whole Estate. It was good in
+previous times, not now*; to the name proposed, *System Test*: *Go ahead*;
+then *There has to be one System Test, we can't have Playground and
+Essentials. Setting up the System Test environments is a prerequisite to do
+the test. We can have internal tests and System Tests*; then *System Test
+and Systems Test. System Test is local. Systems Test test systems
+together*; and *You can make it plural, System Tests and Systems Tests*.
+The mapping of the names and the split of the suite are the coordinator's
+drafting, for the owner to strike.
+
+Xmip has two kinds of test, and one rig for the second:
+
+- **The internal tests** are the code's own: cargo's, Pester's and .NET's,
+  which every landing runs. They prove a crate, a cmdlet or a project and
+  never run a cluster.
+- **The System Tests** are local: the cluster file's node plan, every node a
+  process on one computer, every run the same, `Start-XmipTest -Suite
+  Core.System`. No name is resolved; a node's name is the file's, never a
+  machine's. The demo rolls them (`Core.Demo`).
+- **The Systems Tests** test systems together, on machines:
+  `Start-XmipTest -Suite Core.Systems` runs the same cluster file, the same
+  scenarios and the same far ends against an environment's machines. Every
+  node of the run — the nodes `-Nodes` names, or the file's where none is
+  named — must answer over its operate listener as that node of the
+  cluster, asked with the operator certificate `-Certificate` names; one
+  whose name does not resolve, or that does not answer, is REFUSED by name
+  before anything starts, and none is spawned in its place. Setting up the
+  environment is the prerequisite: `Deploy-XmipEnvironment` and its
+  templates, under Hyper-V, KVM, VMware, in containers or on physical
+  machines (ADR-0015, amendments 2026-10-21 and 2026-11-23).
+  `-Certificate` belongs to Core.Systems alone and is required there, and
+  Core.Systems is started by its name alone (`ByName`), never by a pattern,
+  since it needs an environment.
+
+**Which one runs is the suite's, never a name's** (ADR-0053; the owner's
+rule, capability not name). The suite declares it, `Machines` on
+Core.Systems, and `Start-XmipTest` hands the roll
+`XMIP_SYSTEM_TEST_MACHINES` (`environment::machines`, `real::sorted`).
+Until this day the rig resolved every name typed, used a machine where one
+answered and spawned a process where none did; that is gone, with
+`XMIP_SYSTEM_TEST_NAMED`. This supersedes the amendment of 2026-09-19, *a
+real node is used, a simulated one is the fallback*, and the bullets of
+*a real node is used when its name resolves* in the amendment of
+2026-10-21: a name is resolved by Core.Systems alone, and nothing falls
+back.
+
+**The names, everywhere, with no alias kept.** One rig serves both suites,
+so the code's names are singular: the repository
+`xmip-core-test-system-test` mounted at `test/core/system-test`, its crate
+of that name, the binaries `xmip-system-test-roll`, `-cluster`, `-node`
+and `-external`, a process `xmip-system-test-<cluster>-<what>` (ADR-0053),
+the cmdlets `Start-XmipSystemTestRoll` and their kin, the variables
+`XMIP_SYSTEM_TEST_*`, a run's output under `.local-work/system-test` and
+the suites `Core.System` and `Core.Systems`. In prose the names are plural:
+the System Tests, the Systems Tests. Inside a quoted ruling the old name is
+given as the new one in brackets. The Playground — the name before the
+Essentials, and from 2026-11-05 a word for where end users play with
+configuration — is retired in both meanings, and the amendment of
+2026-11-04 that named the Essentials is deleted with it.
+
+Proved by `real.rs`'s tests (on machines a name that does not resolve is
+refused; on one computer none is resolved, every node simulated),
+`test/XmipTest.Test.ps1` (the suites, the certificate's refusals, the
+variable) and `test/Terminology.Test.ps1` (neither old name in the records
+but here).

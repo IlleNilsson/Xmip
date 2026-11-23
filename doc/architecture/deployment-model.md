@@ -186,7 +186,7 @@ for — at run time, in a deployment, and in what its program is built with
 | **Executing** | all three, in one process | everything the three may | a whole Journey with no process hop: the low-latency choice |
 | **Operational** | no stage | change runtime state or operational outcome | claim work, checkpoint, preserve, acknowledge, retry, resume, suspend, terminate, move a Message |
 | **Monitoring** | no stage | inspect runtime state | Message Context, lineage, logs, metrics, health, publication history; the web GUI (ADR-0056, amendment 2026-11-05) |
-| **Development** | no stage | exercise Xmip from outside | the Essentials (ADR-0028) |
+| **Development** | no stage | exercise Xmip from outside | the System Tests (ADR-0028) |
 | **Storage** | no stage | be the doorway to all storage | Xmip Storage: write a Stream chunk, write a Message, claim a Message, hand it on, write an audit record |
 
 **Executing is the sum of receiving, processing and sending** (the owner,
@@ -221,7 +221,7 @@ Work Process requires the process stage and runs on every node that
 satisfies it (`cluster::every`), its turns shared through Xmip Storage. A cluster's
 file is placed so, its Receive Locations and Send Ports round the nodes
 an environment has and its Work Processes on each node serving their
-stage, by the Essentials' run and `xmip-service --slice --bind` alike
+stage, by the System Tests' run and `xmip-service --slice --bind` alike
 (`configure::placed`; ADR-0056, amendment 2026-11-13, *a cluster's file
 places its work through `place`*). **One rotation turns for every round
 robin** (`cluster::Rotation`, the same amendment): Xmip Storage's over
@@ -860,9 +860,9 @@ actual nodes*; ADR-0028, amendment 2026-10-21). Its nodes, their roles, the
 Storage nodes each reaches, by name, the operate listener on the wildcard
 address, and its certificate's paths relative to the configuration — and no
 cluster name, no machine's address, no absolute path. The environment names
-the cluster: the Essentials' run, or `--cluster` on a machine, which the
+the cluster: the System Tests' run, or `--cluster` on a machine, which the
 slice writes where the file names none (`configure::slice_named`). The
-Essentials' own file is such a file, and the example environment runs it;
+System Tests' own file is such a file, and the example environment runs it;
 the estate root's `cargo test --test deploy` slices it for every node it
 declares and reads each slice as `xmip-service` does.
 

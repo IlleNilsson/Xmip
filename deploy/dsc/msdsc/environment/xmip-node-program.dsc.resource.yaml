@@ -3,7 +3,7 @@ type: Xmip.Node/Program
 version: '0.1.0'
 description: >-
   A program in place, the same bytes as its staged source, and registered as
-  its service, xmip-<node>, by its own --install: the Essentials' far end on
+  its service, xmip-<node>, by its own --install: the Systems Tests' far end on
   a machine of its own.
 tags:
   - Xmip

@@ -309,7 +309,7 @@ function Stop-XmipTest {
             # holds its image open; this takes the rest (ADR-0053, amendment
             # 2026-09-20).
             if (-not [string]::IsNullOrWhiteSpace($roll.Cluster)) {
-                Remove-XmipEssentialsImage -Cluster $roll.Cluster -Confirm:$false
+                Remove-XmipSystemTestImage -Cluster $roll.Cluster -Confirm:$false
             }
 
             Write-XmipAudit -Action 'Stop-XmipTest' -Phase Finished -Property @{
@@ -376,7 +376,7 @@ function Stop-XmipDetachedRun {
             was stopped.
 
         .PARAMETER Run
-            The run, from Get-XmipEstateRun or Get-XmipEssentialsBuild.
+            The run, from Get-XmipEstateRun or Get-XmipSystemTestBuild.
     #>
     [CmdletBinding()]
     [OutputType([void])]

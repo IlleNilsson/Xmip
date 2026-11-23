@@ -1237,30 +1237,30 @@ and the test. The snapshot of one process's threads in place of Tool
 Help's, found when the first measurement cost 100 ms a start, is the
 assistant's, for the owner to overrule.
 
-## Amendment, 2026-11-21: a Work Process runs in the Essentials
+## Amendment, 2026-11-21: a Work Process runs in the System Tests
 
 **Provenance.** The owner, 2026-11-21, on the plan of rounds to the demo
-whose second round this is (*a Work Process runs in the Essentials*):
+whose second round this is (*a Work Process runs in the System Tests*):
 *Go ahead.* The design, where its unit lives and how it reaches a node
 were decided by the assistant while building, told to the owner.
 
 Until this amendment a node could open a unit and no configuration of the
 estate named one: the runtime's example unit was turned in its own test,
-and the Essentials, which the demo runs, routed every document straight to
-a Send Port. Now the Essentials' cluster runs one.
+and the System Tests, which the demo runs, routed every document straight to
+a Send Port. Now the System Tests' cluster runs one.
 
-- **The design** is `test/core/essentials/configuration/order-approval.bpmn`,
+- **The design** is `test/core/system-test/configuration/order-approval.bpmn`,
   beside the cluster's file: an Instance per sales order, a task that
   assigns `'approved'` to `Approval` (a new Message generation), a
   `sendTask` that publishes it back through routing, and an end. It calls
   no unit and gives none settings, the two things still decided, not
   built.
-- **The unit** is the Essentials' example `order_approval`, a `cdylib`
+- **The unit** is the System Tests' example `order_approval`, a `cdylib`
   against this build's own `xmip-core-process`, so it builds offline from
   the working tree in the estate's one workspace; a test holds it to what
   `process::generate` makes of the design now, as the runtime's
-  `approval_unit` is held. The Essentials' build builds it beside the roll
-  (`Invoke-XmipEssentialsBuild`).
+  `approval_unit` is held. The System Tests' build builds it beside the roll
+  (`Invoke-XmipSystemTestBuild`).
 - **The configuration** is the generator's `[[modules]]` entry, its library
   named by the module (ADR-0025, amendment 2026-11-21), the Application's
   `[[xmip_applications.work_processes]]` *Order approval* naming its module
@@ -1275,11 +1275,11 @@ a Send Port. Now the Essentials' cluster runs one.
   the deployment's (deploy/dsc), not yet done.
 
 Served, the run's nodes are `xmip-service` and run the unit. The
-Essentials' own simulated node runs no Work Process step, so it publishes
+System Tests' own simulated node runs no Work Process step, so it publishes
 the Message the Work Process would, carrying what the design assigns
 (ADR-0028, amendment 2026-11-21).
 
-A served run on Windows, `Start-XmipTest -Suite Core.Essentials -Cluster
+A served run on Windows, `Start-XmipTest -Suite Core.System -Cluster
 CL1 -Stress Realistic`, the nodes as `xmip-service`, about two minutes in:
 the unit beside EX1 and PX1 alone, both accepting work; on EX1 the
 Subscription *Sales orders* to the Work Process `picked_up = 21`; and every
@@ -1299,7 +1299,7 @@ The first two served runs were refused at their start, each for a cause
 the change now holds: the run read only a slice's own `[[work_processes]]`
 and placed no unit where the bindings gave a node its Work Process, and the
 roll, running from its image, did not find the unit built beside the
-binaries the image links. On Linux no Essentials run starts yet (open
+binaries the image links. On Linux no System Tests run starts yet (open
 problem 88).
 
 ## Amendment, 2026-11-22: a Work Process's queue is read once, and what waits behind a sequence's head is kept by the head

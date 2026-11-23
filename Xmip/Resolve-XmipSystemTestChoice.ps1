@@ -3,27 +3,71 @@
 
 <#
 .SYNOPSIS
-    What Start-XmipTest refuses and warns of for an Essentials roll, before
+    What Start-XmipTest refuses and warns of for a System Tests roll, before
     anything is built or spawned.
 
 .DESCRIPTION
     Part of Start-XmipTest until 2026-09-27, when that file was 474 lines
     against the 400 the estate allows. Start-XmipTest chooses the suite;
-    this checks what was asked of the Essentials; Start-XmipEssentialsRoll
+    this checks what was asked of the System Tests; Start-XmipSystemTestRoll
     builds, spawns and records.
 
     Style: doc/governance/powershell-style.md
 #>
 
 
-function Resolve-XmipEssentialsChoice {
+function Get-XmipMachineChoiceRefusal {
+    <#
+        .SYNOPSIS
+            Why a roll's -Certificate is refused, or the empty string. Pure.
+
+        .DESCRIPTION
+            The Systems Tests ask every node's machine with the operator
+            certificate -Certificate names, so they need one; the System Tests
+            run every node on this computer and ask nothing, so one given them
+            is a choice they cannot honor. Refused before anything is built
+            (ADR-0055 clause 2; ADR-0028, amendment 2026-11-23).
+
+        .PARAMETER Machines
+            Whether the suite chosen runs on an environment's machines.
+
+        .PARAMETER Bound
+            What Start-XmipTest was called with.
+    #>
+    [CmdletBinding()]
+    [OutputType([string])]
+    param(
+        [Parameter()]
+        [bool] $Machines,
+
+        [Parameter(Mandatory)]
+        [System.Collections.IDictionary] $Bound
+    )
+
+    [bool] $given = $Bound.ContainsKey('Certificate')
+
+    if ($Machines -and -not $given) {
+        return ("REFUSED. $script:XmipSystemsTestSuite asks every node's machine with an " +
+            'operator certificate: name its folder with -Certificate.')
+    }
+
+    if ($given -and -not $Machines) {
+        return ("REFUSED. -Certificate belongs to $script:XmipSystemsTestSuite, not " +
+            "$script:XmipSystemTestSuite, which runs every node here and asks no machine.")
+    }
+
+    return ''
+}
+
+
+function Resolve-XmipSystemTestChoice {
     <#
         .SYNOPSIS
             The roll's arguments with -Test resolved to the tests it names,
             or $null after saying in words why the roll is refused.
 
         .PARAMETER Choice
-            What Start-XmipTest hands Start-XmipEssentialsRoll, Bound among it.
+            What Start-XmipTest hands Start-XmipSystemTestRoll, Bound among it.
     #>
     [CmdletBinding()]
     [OutputType([hashtable])]
@@ -33,10 +77,21 @@ function Resolve-XmipEssentialsChoice {
     )
 
     # A switch of another of Xmip's suites, -Tester, is refused by name.
-    [string] $foreign = Get-XmipSuiteSwitchRefusal -Kind roll -Bound $Choice.Bound
+    [hashtable] $switches = @{ Kind = 'roll'; Bound = $Choice.Bound; Chosen = $Choice.Suite }
+    [string] $foreign = Get-XmipSuiteSwitchRefusal @switches
 
     if ($foreign -ne '') {
         Write-Error $foreign
+        return $null
+    }
+
+    # The Systems Tests ask every node's machine with -Certificate's; the
+    # System Tests ask no machine (ADR-0028, amendment 2026-11-23).
+    [hashtable] $where = @{ Machines = [bool] $Choice.Machines; Bound = $Choice.Bound }
+    [string] $machine = Get-XmipMachineChoiceRefusal @where
+
+    if ($machine -ne '') {
+        Write-Error $machine
         return $null
     }
 
@@ -54,7 +109,7 @@ function Resolve-XmipEssentialsChoice {
         $Choice.Test = @()
     }
     else {
-        [string[]] $known = @($script:XmipEssentialsTest.Keys)
+        [string[]] $known = @($script:XmipScenarioOfTest.Keys)
         $Choice.Test = @(Expand-XmipTestName -Test $Choice.Test -Known $known)
     }
 
@@ -84,19 +139,19 @@ function Resolve-XmipEssentialsChoice {
         return $null
     }
 
-    # A node named with no role states the roles the Essentials' own file
+    # A node named with no role states the roles the System Tests' own file
     # declares for it (ADR-0028, amendment 2026-10-21).
     if ($Choice.Bound.ContainsKey('Nodes')) {
         [hashtable] $joined = @{
             Nodes    = $Choice.Nodes
             NodeRole = $Choice.NodeRole
-            Declared = (Read-XmipEssentialsCluster).Role
+            Declared = (Read-XmipSystemTestCluster).Role
         }
         $Choice.NodeRole = Join-XmipNodeRole @joined
     }
 
-    # The nodes named; the Essentials file's are asked where they are read
-    # (Start-XmipEssentialsRoll).
+    # The nodes named; the System Tests file's are asked where they are read
+    # (Start-XmipSystemTestRoll).
     [hashtable] $asked = @{
         Nodes    = $Choice.Nodes
         Test     = $Choice.Test

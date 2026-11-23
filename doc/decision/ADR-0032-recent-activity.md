@@ -66,8 +66,8 @@ history. A scope with nothing recent says so.
 - `xmip-core-observe` gains `Activity`; producers push items as they observe
   them; the file surface and, later, the runtime publish them; the GUIs, CLI and
   ABI read them.
-- The Essentials publishes a Stream and a Message per round — the two ends each
-  RoundTrip drives. It publishes **no Journeys**: it exercises transport and
+- The System Tests publish a Stream and a Message per round — the two ends each
+  RoundTrip drives. They publish **no Journeys**: they exercise transport and
   contract, not processing, so there is no Journey to show until a real node
   runs. The view says so rather than inventing one.
 - Bounded like history, for the same reason: a node runs for weeks, and the list
@@ -93,7 +93,7 @@ it, on the instruction to proceed and to write the decision down.
 
 ## Amendment, 2026-11-11: a run that reads every node publishes Carried's items
 
-The Essentials' roll published the recent activity of the round trip it
+The System Tests' roll published the recent activity of the round trip it
 ran in its own process. A run that reads every node runs no scenario of
 its own (ADR-0028, amendment 2026-11-11), so its activity is what the rig
 did as the Parties and the ERP: each document it dropped, a Stream item at

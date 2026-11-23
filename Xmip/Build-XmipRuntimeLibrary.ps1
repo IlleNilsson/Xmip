@@ -12,7 +12,7 @@
     operator module when it is built (Import-XmipOperatorModule). A landing
     builds that library before anything is tested; a machine no landing had
     built it on gave the operator module none, and every such rule failed:
-    Read-XmipConfiguration, Get-XmipNodeRoleWord, the Essentials' authority
+    Read-XmipConfiguration, Get-XmipNodeRoleWord, the System Tests' authority
     and the rest, which is how the estate's Pester suite first ran on Linux
     (2026-11-20).
 

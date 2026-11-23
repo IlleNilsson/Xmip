@@ -55,7 +55,7 @@ function Test-XmipDemoDesktop {
             'for now; this machine is not Windows.')
     }
 
-    $layout = Get-XmipEssentialsLayout
+    $layout = Get-XmipSystemTestLayout
     [string] $program = Build-XmipDemoDesktop -Project $layout.Desktop
     [string] $folder = Split-Path -Path $program -Parent
     [string] $deployed = Join-Path -Path $folder -ChildPath 'gui.toml'

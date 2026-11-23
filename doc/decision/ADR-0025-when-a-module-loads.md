@@ -205,9 +205,9 @@ as the header's section 7 has always required.
 ## Amendment, 2026-11-21: the host names a module's library, as the header says
 
 **Provenance.** Found by the assistant while a Work Process was made to run
-in the Essentials (ADR-0066, amendment 2026-11-21), and decided while
+in the System Tests (ADR-0066, amendment 2026-11-21), and decided while
 building, told to the owner the same day: one `cluster.xmip` serves the
-Essentials' Windows and Linux nodes alike (the owner's rule that one TOML
+System Tests' Windows and Linux nodes alike (the owner's rule that one TOML
 runs on one computer and on machines of their own), and a `[[modules]]`
 entry named its library by one system's file.
 

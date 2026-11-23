@@ -24,8 +24,8 @@ function Start-XmipOperationWeb {
             certificate, over this machine's loopback as from anywhere — with
             the role the host grants that caller (ADR-0009, amended 2026-10-06
             and 2026-10-21): the role gui.toml or XMIP_ROLE states, else
-            the directory it names, else Observer. Over an Essentials roll the
-            host is told the Essentials' fake directory, which allows the
+            the directory it names, else Observer. Over a System Tests roll the
+            host is told the System Tests' fake directory, which allows the
             tester every role and no one else: the user the host runs as, and
             the subject of the tester's operator certificate, -Tester. A
             browser is never that user for reaching loopback. A browser
@@ -34,18 +34,18 @@ function Start-XmipOperationWeb {
             browser's certificate, and each roll's node names the account the
             run runs as in [operate] relay and lists the tester among its
             operators — that account, and CN=<person> of every operator
-            certificate the Essentials' authority signed before the roll
+            certificate the System Tests' authority signed before the roll
             started — so the node acts for the browser by the browser's own
             role and audits it through the host.
 
             Over a roll, unless -Url or -Certificate says otherwise, the host
             is served https://127.0.0.1:5087 in Xmip's own TLS under the
-            Essentials' authority, .local-work/essentials/authority, made
-            there the first time (Initialize-XmipEssentialsAuthority), and
+            System Tests' authority, .local-work/system-test/authority, made
+            there the first time (Initialize-XmipSystemTestAuthority), and
             verifies a browser's certificate against it. From nothing to acting
             in the browser: New-XmipCertificate -Operator <person> -Path
             <folder>; New-XmipCertificate -Request <folder>/operator.csr
-            -Configuration .local-work/essentials/authority/operator.xmip
+            -Configuration .local-work/system-test/authority/operator.xmip
             -Path <folder>/operator.pem; give the browser that chain with
             operator.key and trust authority.pem; then
             Get-XmipTestStatus | Start-XmipOperationWeb -Tester <person>.
@@ -102,7 +102,7 @@ function Start-XmipOperationWeb {
 
         .PARAMETER Url
             Where to bind. Defaults to http://127.0.0.1:5087, plain http on
-            loopback, and to https://127.0.0.1:5087 over an Essentials roll. Use
+            loopback, and to https://127.0.0.1:5087 over a System Tests roll. Use
             https://0.0.0.0:5443 with -Certificate, -PrivateKey and
             -TrustAnchor to reach it from another device on the network (the
             firewall must also allow the port); https://127.0.0.1:5443 serves
@@ -124,7 +124,7 @@ function Start-XmipOperationWeb {
             trusts no operating system's trust store (ADR-0063).
 
         .PARAMETER Tester
-            The person the Essentials' tester is, as New-XmipCertificate
+            The person the System Tests' tester is, as New-XmipCertificate
             -Operator named them: a browser presenting that operator
             certificate, CN=<person>, acts with every role over a roll.
 
@@ -135,7 +135,7 @@ function Start-XmipOperationWeb {
             Start-XmipOperationWeb
 
         .EXAMPLE
-            Start-XmipTest -Suite Core.Essentials -Cluster CL1 -Stress Harsh -PassThru |
+            Start-XmipTest -Suite Core.System -Cluster CL1 -Stress Harsh -PassThru |
                 Start-XmipOperationWeb
 
         .EXAMPLE
@@ -151,12 +151,12 @@ function Start-XmipOperationWeb {
             Start-XmipOperationWeb -Snapshot /opt/xmip/data/snapshot.xmip
 
         .EXAMPLE
-            $other = '.local-work/essentials/CL2-snapshot.xmip'
+            $other = '.local-work/system-test/CL2-snapshot.xmip'
             Start-XmipOperationWeb -Local xmip-CL1-OP1 -Snapshot $other
 
         .EXAMPLE
             $tls = @{ Certificate = 'node.pem'; PrivateKey = 'node.key'; TrustAnchor = 'ca.pem' }
-            $snapshot = '.local-work/essentials/CL1-snapshot.xmip'
+            $snapshot = '.local-work/system-test/CL1-snapshot.xmip'
             Start-XmipOperationWeb -Url https://0.0.0.0:5443 -Snapshot $snapshot @tls
     #>
     [CmdletBinding(SupportsShouldProcess)]
@@ -252,7 +252,7 @@ function Start-XmipOperationWeb {
             Wait-XmipSnapshot -Path $named
         }
 
-        $layout = Get-XmipEssentialsLayout
+        $layout = Get-XmipSystemTestLayout
         [string[]] $arguments = @("--Kestrel:Endpoints:Http:Url=$Url")
 
         # What the host presents and trusts, named here or left to its document
@@ -277,7 +277,7 @@ function Start-XmipOperationWeb {
         $arguments += @(Get-XmipOperationWebClusterArgument -Local $reaching -Snapshot $following)
 
         if ($following.Count -gt 0) {
-            # A web host over an Essentials roll's file is a test's, and says so
+            # A web host over a System Tests roll's file is a test's, and says so
             # in its declaration (ADR-0053); over anything else it is runtime.
             [string] $area = [System.IO.Path]::GetFullPath($layout.Area)
             $under = [System.StringComparison]::OrdinalIgnoreCase
@@ -285,7 +285,7 @@ function Start-XmipOperationWeb {
                 $following | Where-Object { $_.StartsWith($area, $under) }
             ).Count -gt 0
 
-            # And its roles come from the Essentials' fake directory, which
+            # And its roles come from the System Tests' fake directory, which
             # allows the tester and no one else (ADR-0009, amendments
             # 2026-09-14, 2026-10-06 and 2026-10-21): the user the host runs
             # as, and the subject of the tester's operator certificate, which
@@ -324,8 +324,9 @@ function Start-XmipOperationWeb {
         # not followed unasked. But a host that will not show the roll beside it
         # says so, and says how (the owner's console, twice, 2026-09-19).
         if ($reads.Count -eq 0) {
+            [string[]] $ours = $script:XmipSystemTestSuite, $script:XmipSystemsTestSuite
             [string] $rolling = (Get-XmipTestStatus |
-                    Where-Object -Property Suite -EQ -Value $script:XmipEssentialsSuite |
+                    Where-Object { $_.Suite -in $ours } |
                     ForEach-Object -MemberName Cluster) -join ', '
 
             if ($rolling) {
@@ -348,10 +349,10 @@ function Start-XmipOperationWeb {
 
         Assert-XmipOperationWebFree -Url $Url
 
-        # Over a roll, https under the Essentials' authority, the host's
+        # Over a roll, https under the System Tests' authority, the host's
         # certificate issued anew, unless the call named its own.
         if ($rolls -and $Url.StartsWith('https:') -and -not $Certificate) {
-            $kept = Initialize-XmipEssentialsAuthority -Folder $layout.Authority -Confirm:$false
+            $kept = Initialize-XmipSystemTestAuthority -Folder $layout.Authority -Confirm:$false
             $arguments += "--Xmip:Certificate=$($kept.Certificate)"
             $arguments += "--Xmip:PrivateKey=$($kept.PrivateKey)"
 

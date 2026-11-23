@@ -69,7 +69,7 @@ function Build-XmipDemoServer {
     param()
 
     [hashtable] $building = @{
-        Directory = (Get-XmipEssentialsLayout).Extension
+        Directory = (Get-XmipSystemTestLayout).Extension
         Argument  = @('--bin', 'xmip-lsp', '--message-format=json-render-diagnostics')
     }
     [pscustomobject] $built = Invoke-XmipCargoBuild @building

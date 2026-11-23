@@ -595,7 +595,7 @@ is the assistant's.
 - **Who calls the runtime for it.** Its own section 13 exports
   (`ffi::process`) and the wait a surface's local call learns from the
   node serving it (`plane::deadline`); `xmip-service`
-  (`.src/service/run.rs`); and the Essentials, whose roll, cluster and
+  (`.src/service/run.rs`); and the System Tests, whose roll, cluster and
   nodes declare through one function, `process_audit::declared`, which now
   writes the declaration where each of the three had made the call itself.
   The .NET surfaces and the estate's PowerShell module reached the file
