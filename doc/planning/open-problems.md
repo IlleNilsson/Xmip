@@ -2585,6 +2585,28 @@ dsc; a declared parameter with no default that the step does not give could
 be refused before dsc runs, naming the document, the parameter and the
 module's load as its likely cause.
 
+## 115. A warning from a Windows machine over PowerShell Remoting breaks the environment resource's answer
+
+Found 2026-11-23, the owner's run of the node plan on Hyper-V: a warning
+raised on a Windows machine over PowerShell Remoting, PowerShell Direct
+too, goes to the console's standard output, which no redirect or
+`-WarningAction` catches, so the Xmip.Environment resource answered no JSON
+and dsc stopped the run with *JSON: expected value at line 1 column 1*.
+`Add-Computer`'s "takes effect after you restart" stopped it at the first
+member's domain join although the join had worked, and `Start-Service`'s
+"Waiting for service" would stop the Started step the same way. A fix,
+every remote call of the resource made through one helper that keeps its
+warnings out of the answer, was written and tested on that environment
+(three members joined through it) and is not landed: the owner ended the
+Hyper-V run the same day before it landed.
+
+## 116. A failed deploy step's log keeps dsc's words and not its resource's
+
+Found 2026-11-23 with problem 115: `run.log` keeps dsc's own error, *JSON:
+expected value at line 1 column 1*, and none of what the resource itself
+wrote, so the cause was not in the log and was found only by running the
+resource again with its errors captured.
+
 # Suggested order
 
 Rewritten 2026-09-23, and corrected to what is built on 2026-11-10. The

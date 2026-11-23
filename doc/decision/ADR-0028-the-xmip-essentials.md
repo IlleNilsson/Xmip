@@ -25,6 +25,9 @@
 - Amended: 2026-11-12 — what a delivery's time is on the sending node, step
   by step, read from the Essentials itself
 - Amended: 2026-11-12 — the claim answered once readable, measured
+- Amended: 2026-11-23 — the Essentials' tests and demo run one fixed
+  solution, the plan as processes on one computer; every node of the plan
+  is optional
 - Related: ADR-0018 (the Service and the Host Services), ADR-0027 (the operator
   boundary), ADR-0010 (contract and transport boundaries), ADR-0025 (when a
   Module loads), ADR-0052 (the views' "show test clusters" box, its
@@ -1766,3 +1769,26 @@ day, for the owner to strike:
   its node. The receiver serves its Send Ports with the server the far end on
   one computer serves by (`far_end::serving`) and tells each file put with
   its bytes, which the roll keeps where Carried judges it.
+
+## Amendment, 2026-11-23: the Essentials' tests and demo run one fixed solution, the plan as processes on one computer; every node of the plan is optional
+
+**Provenance.** The owner, 2026-11-23, of the six ways to run the node plan:
+*for basic tests and demo, the local process solution is the way to go*,
+and, how a site runs a node being the end user's, *For estate tests and
+demo, there has to be a fixed solution. Essentials tests and demo*; and of
+the plan's deck: the nodes numbered 1 to 3 are optional, three of each
+making a good estate test and demo, and *Xmip can run on one node with all
+roles*.
+
+- **The Essentials' tests and demo run one fixed solution: the plan as
+  processes** on one computer, `Start-XmipTest -Suite Core.Essentials` and
+  `Core.Demo`. What an end user chooses for a site — a local process, a
+  virtual machine or a container, wherever containers live (ADR-0015,
+  amendment 2026-11-23) — never changes it. Hyper-V, KVM, VMware,
+  containers and physical machines prove the machines, systems and hosts
+  the plan runs on, never the Essentials' tests or the demo.
+- **Every node of the plan is optional.** Three receiving, two executing and
+  three sending nodes and two Storage nodes are what the tests and the demo
+  run, not what Xmip needs: one node with all roles is the smallest Xmip.
+  The environment deck, `asset/brand/presentation/Xmip-environment.pptx`,
+  says so to end users.

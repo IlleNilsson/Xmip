@@ -1530,3 +1530,40 @@ assistant while building, for the owner to strike.
   Hyper-V. Ansible reaches Windows over WinRM, and writes no domain
   controller and no far end. How a Linux host holds the secret and reaches
   the Windows machines is the owner's to choose.
+
+## Amendment, 2026-11-23: containers, a sixth way to run the node plan
+
+**Provenance.** The owner, 2026-11-23: *One plan, five ways is missing
+Container. So it should be six ways*; of what containers Hyper-V runs,
+*Sort out what we can use*, basic tests and demos staying processes on one
+computer (ADR-0028, amendment 2026-11-23); *The end user can place the
+Containers node on any Node or VM cluster as they wish*; and, of the image,
+*Still up to the end user. Local processes, VM machines or containers.
+Containers, wherever they live*. Not built.
+
+**Decided by the owner:** how a node runs is the end user's: a local
+process, a virtual machine or a container, and a container wherever
+containers live, on any machine or VM cluster; so is the image it runs.
+Xmip prescribes no layout of its containers. An image per node, drafted by
+the assistant, was struck by him the same day.
+
+Drafted by the assistant the same day from what each runtime was that day,
+for the owner to strike, what Xmip's containers can run under:
+
+- **On a Windows host**, Linux nodes run in WSL containers, `wslc`, Windows'
+  own since its general availability on 2026-09-29, no third party's engine;
+  `wslc` has no Compose yet. Windows nodes run in Windows Server Core
+  containers on containerd, which Microsoft's script installs with nerdctl:
+  process isolation by default, Hyper-V isolation where a node needs a
+  kernel of its own.
+- **On a Linux host**, Podman, from the system's own repositories;
+  `podman kube play` runs the Kubernetes manifest a site's Kubernetes runs,
+  so one manifest serves both.
+- **At a site**, its Kubernetes; a Windows node there runs on a Windows
+  Server worker in process isolation, since not every orchestrator runs
+  Hyper-V isolation.
+- **Not used:** Docker Desktop, a paid subscription for an organization of
+  more than 250 people or more than US$10 million a year, and a third party
+  where Windows and the systems have their own.
+- **The domain controller stays a machine:** Active Directory runs in no
+  container.
