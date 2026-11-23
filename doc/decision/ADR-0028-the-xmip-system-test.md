@@ -1794,7 +1794,8 @@ together*; and *You can make it plural, System Tests and Systems Tests*.
 The mapping of the names and the split of the suite are the coordinator's
 drafting, for the owner to strike.
 
-Xmip has two kinds of test, and one rig for the second:
+Xmip's tests are of two kinds, the internal tests and the tests of the whole
+estate, and the second runs two ways from one rig:
 
 - **The internal tests** are the code's own: cargo's, Pester's and .NET's,
   which every landing runs. They prove a crate, a cmdlet or a project and
