@@ -98,11 +98,12 @@ at CRF 30, with AAC at 128 kb/s, 48 kHz stereo. A figure is placed as a PNG
 drawn from its SVG by headless Edge, since an SVG inserted through automation
 carries no fallback for viewers without SVG support.
 
-The Python preparation helper requires Python 3.11+ with tomllib. From the root:
+The preparation helper is PowerShell 7, reading the TOML through the estate
+module's one reader. From the root:
 
-```text
-python asset/brand/presentation/tools/prepare.py --validate
-python asset/brand/presentation/tools/prepare.py
+```powershell
+./asset/brand/presentation/tools/prepare.ps1 -Validate
+./asset/brand/presentation/tools/prepare.ps1
 ```
 
 Preparation checks project source references and writes temporary JSON transfer
@@ -122,7 +123,7 @@ Model weights and voice tooling stay outside Git.
 Place regenerated overview-narration-N.wav and overview-narration-N.json files
 in the working area's build/ directory, with N starting at zero. Timing JSON
 is an array of sentence objects containing text, start and duration in seconds.
-Run prepare.py --collect-narration to validate and collect matching audio and
+Run `prepare.ps1 -CollectNarration` to validate and collect matching audio and
 timing, then run preparation again before rendering.
 
 Preparation refuses a story and `audio/timing.toml` with different numbers of
