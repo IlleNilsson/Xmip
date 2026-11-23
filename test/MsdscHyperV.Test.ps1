@@ -29,7 +29,7 @@
       are not there answered absent, a host's refusal kept an error, an
       absent network and machine made, a machine given dynamic memory
       between its least and its most, a Windows 11 machine's TPM given
-      before its media and Space pressed for its first twenty seconds, a
+      before its media and Enter pressed for its first twenty seconds, a
       machine still installing answered by its state alone, a VM with two
       adapters refused, an installed one's media removed.
 
@@ -815,7 +815,7 @@ Describe 'The machine, every Hyper-V command a stub' {
             Should -Be "XMIP-IN01: its MemoryMaximum is $(2GB), not $(3GB)."
     }
 
-    It 'gives a Windows 11 machine its TPM before its media, then presses Space as it starts' {
+    It 'gives a Windows 11 machine its TPM before its media, then presses Enter as it starts' {
         if (-not $IsWindows) {
             # Its answer carries the Administrator secret, which Export-Clixml
             # encrypts only on Windows and only Windows reads: off Windows it
@@ -845,7 +845,7 @@ Describe 'The machine, every Hyper-V command a stub' {
         function Invoke-Command { }
         $script:Slept = 0
         [hashtable] $set = Invoke-HyperVResource -Kind Machine -Operation set -Instance $windows
-        [string[]] $press = @('Msvm_Keyboard of Msvm_ComputerSystem XMIP-DEV01 TypeKey 32') * 40
+        [string[]] $press = @('Msvm_Keyboard of Msvm_ComputerSystem XMIP-DEV01 TypeKey 13') * 40
         $script:Called | Should -Be (@('New-VHD', 'New-VM', 'Set-VM', 'Connect-VMNetworkAdapter',
             'Set-VMNetworkAdapter 00155D4D001E', 'Add-VMDvdDrive 1', 'Add-VMDvdDrive 2',
             'Set-VMFirmware 0,1,2', 'Set-VMKeyProtector', 'Enable-VMTPM',

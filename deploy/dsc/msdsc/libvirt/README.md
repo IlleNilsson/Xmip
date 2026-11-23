@@ -77,7 +77,8 @@ template asks too: an AlmaLinux machine's kickstart on a volume labeled
 key made for it where the environment is deployed from; a Windows machine's
 `autounattend.xml`, its disk on SATA and its adapter an e1000e, which the
 installer has drivers for. A Windows ISO boots only after *Press any key*,
-so for its first twenty seconds Space is sent.
+so for its first twenty seconds Enter is sent: a later press stops the
+Windows Boot Manager's countdown, and only Enter then chooses Windows Setup.
 
 The installation is done when the guest answers at its address, SSH for
 AlmaLinux and WinRM for Windows. Until then `set` leaves it, and its state

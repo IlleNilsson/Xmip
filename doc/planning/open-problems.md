@@ -2572,6 +2572,19 @@ compared with the environment file afterwards, so a changed memory,
 processor count or TPM does not reach a machine already made, where the
 Hyper-V machine resource finds and fixes a machine that differs.
 
+## 114. A deploy from a module loaded before its templates changed fails in dsc's words
+
+Found 2026-11-23, the owner's first run of the node plan on Hyper-V: his
+console had held the Xmip module since before the machine template took
+`dynamicMemory`, and `Import-Module` without `-Force` keeps a loaded module,
+so the run wrote no such parameter and dsc refused the machine step with
+*Parser: Parameter 'dynamicMemory' not found in context*. Reloaded with
+`-Force`, the same run went on. `Invoke-XmipDeployStep` passes the
+parameters a document declares that its step gives, and leaves the rest to
+dsc; a declared parameter with no default that the step does not give could
+be refused before dsc runs, naming the document, the parameter and the
+module's load as its likely cause.
+
 # Suggested order
 
 Rewritten 2026-09-23, and corrected to what is built on 2026-11-10. The

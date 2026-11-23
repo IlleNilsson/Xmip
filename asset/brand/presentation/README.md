@@ -1,13 +1,18 @@
 # Xmip presentation material
 
-The English, self-guided Xmip overview for CEOs, CIOs, developers and operators.
-This directory is the working home for both formats. Revise them together.
+The English, self-guided Xmip overview for CEOs, CIOs, developers and operators,
+and the environment deck beside it. This directory is the working home for the
+overview's both formats. Revise them together.
 
 ## View
 
 - [PowerPoint: 30 slides](Xmip-overview.pptx)
 - [Animated video: about 12 minutes](Xmip-overview.mp4)
 - [Video captions](Xmip-overview.srt)
+- [The environment, PowerPoint: 4 slides](Xmip-environment.pptx): the nodes
+  Xmip's tests and demos run, the functions beside the message path, the
+  machines and six ways to run one plan. Every node in it is optional; Xmip
+  runs on one node with all roles. Its shapes and tables are editable.
 
 The media uses Git LFS. After cloning, run `git lfs pull` to obtain the actual
 files. Narration, flex poses and accessibility notes were updated on 2026-11-07.
@@ -78,6 +83,8 @@ The repository does not track JavaScript or TypeScript publishing recipes.
 A media-authoring session may generate temporary recipes in
 `.ai-interaction/presentation/`, using the presentation skill or a media editor.
 The project sources and approved media in this directory remain the durable inputs.
+The environment deck is drawn the same way, through PowerPoint's COM
+automation from PowerShell 7; the deck itself is its master.
 
 The media of 2026-11-22 were made this way. The deck was edited in PowerPoint
 through its COM automation from PowerShell 7. The narration was generated with

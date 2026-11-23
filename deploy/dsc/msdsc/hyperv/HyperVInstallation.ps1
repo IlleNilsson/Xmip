@@ -98,14 +98,17 @@ function Start-HyperVInstallation {
 function Send-HyperVBootKey {
     <#
     .SYNOPSIS
-    Presses Space in a starting VM's console for its first twenty seconds,
+    Presses Enter in a starting VM's console for its first twenty seconds,
     forty times, half a second apart.
     .DESCRIPTION
     A Windows ISO boots only after "Press any key to boot from CD or DVD",
     and on Hyper-V nobody is there to press one. The empty disk comes first
     in the boot order, so the firmware moves on to the ISO, whose prompt
-    waits about five seconds; Space answers it. Once Windows is on the disk,
-    the disk boots and the prompt is never shown again.
+    waits about five seconds; Enter answers it. A press that comes after
+    the prompt reaches the Windows Boot Manager and stops its countdown, and
+    the menu then waits for a choice: Enter makes it, Windows Setup, where
+    Space left a machine waiting at the menu for good (seen 2026-11-23). Once Windows is
+    on the disk, the disk boots and the prompt is never shown again.
     #>
     [CmdletBinding()]
     [OutputType([void])]
@@ -125,7 +128,7 @@ function Send-HyperVBootKey {
     [hashtable] $press = @{
         InputObject = $keyboard
         MethodName = 'TypeKey'
-        Arguments = @{ keyCode = [uint32] 0x20 }
+        Arguments = @{ keyCode = [uint32] 0x0D }
     }
     for ([int] $pressed = 0; $pressed -lt 40; $pressed++) {
         Invoke-CimMethod @press | Out-Null

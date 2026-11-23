@@ -231,8 +231,9 @@ function Start-LibvirtMachine {
     .SYNOPSIS
     Starts the domain where it is not running. A Windows ISO boots only
     after "Press any key to boot from CD or DVD", so for its first twenty
-    seconds Space is pressed; once Windows is on the disk the disk boots and
-    the prompt is never shown.
+    seconds Enter is pressed: a later press stops the Windows Boot Manager's
+    countdown, and only Enter then chooses Windows Setup. Once Windows is on
+    the disk the disk boots and the prompt is never shown.
     #>
     [CmdletBinding()]
     [OutputType([void])]
@@ -251,7 +252,7 @@ function Start-LibvirtMachine {
     }
     [datetime] $until = [datetime]::UtcNow.AddSeconds(20)
     while ([datetime]::UtcNow -lt $until) {
-        Invoke-Virsh -Argument @('send-key', $name, 'KEY_SPACE') -Quiet | Out-Null
+        Invoke-Virsh -Argument @('send-key', $name, 'KEY_ENTER') -Quiet | Out-Null
         Start-Sleep -Milliseconds 500
     }
 }

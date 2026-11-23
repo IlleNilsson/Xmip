@@ -107,8 +107,9 @@ the disk; every later boot starts from the disk.
   in Windows's answer-file encoding, Base64, which keeps it from a glance,
   not from a reader. A
   Windows ISO boots only after *Press any key to boot from CD or DVD*, so for
-  the first twenty seconds of that start the template presses Space through
-  Hyper-V's virtual keyboard.
+  the first twenty seconds of that start the template presses Enter through
+  Hyper-V's virtual keyboard: a later press stops the Windows Boot
+  Manager's countdown, and only Enter then chooses Windows Setup.
 - **AlmaLinux**: the answer medium is labeled `OEMDRV` and holds `ks.cfg`, a
   kickstart, which the installer reads from a volume of that label without
   being told to. It installs from the DVD's own repositories the environment
@@ -222,7 +223,7 @@ network command a stub: a switch, a NAT and a machine that are not there
 answered absent, a host's refusal kept an error, an absent network and
 machine made, a machine given dynamic memory between its least and its
 most, the gateway and a desktop where the example's machine has one, a
-Windows 11 machine's TPM given before its media and Space
+Windows 11 machine's TPM given before its media and Enter
 pressed for its first twenty seconds, a machine still installing answered
 by its state alone, a VM with two adapters refused, and an installed
 machine's media removed.

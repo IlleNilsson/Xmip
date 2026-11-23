@@ -149,8 +149,10 @@
         name: "{{ xmip_machine.name }}"
         state: running
 
-    # A Windows ISO boots only after "Press any key to boot from CD or DVD".
-    - name: Space pressed for the first twenty seconds of a Windows ISO
+    # A Windows ISO boots only after "Press any key to boot from CD or DVD";
+    # Enter, since a later press stops the Windows Boot Manager's countdown,
+    # and only Enter then chooses Windows Setup (HyperVInstallation.ps1).
+    - name: Enter pressed for the first twenty seconds of a Windows ISO
       ansible.windows.win_powershell:
         parameters:
           Name: "{{ xmip_machine.name }}"
@@ -162,7 +164,7 @@
           $until = [datetime]::UtcNow.AddSeconds(20)
           while ([datetime]::UtcNow -lt $until) {
               Invoke-CimMethod -InputObject $keyboard -MethodName TypeKey -Arguments @{
-                  keyCode = 32 } | Out-Null
+                  keyCode = 13 } | Out-Null
               Start-Sleep -Milliseconds 500
           }
       when: xmip_machine.image.family == 'Windows'

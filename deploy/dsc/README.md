@@ -21,7 +21,10 @@ node runs on which machine is here, never in the cluster's file
 for a Linux host's KVM, and `hyperv.example.toml`, for a Windows host's
 Hyper-V, each the owner's node plan of 2026-11-22, the same 21 machines
 (ADR-0015, amendments 2026-11-22); copy one to `.local-work/deploy/` and
-write in what it leaves empty.
+write in what it leaves empty. The plan is drawn, with its machines and the
+six ways to run it, in
+[the environment deck](../../asset/brand/presentation/Xmip-environment.pptx);
+every node in it is optional, and Xmip runs on one node with all roles.
 
 | Key | Is |
 | --- | --- |
