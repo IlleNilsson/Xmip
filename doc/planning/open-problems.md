@@ -2636,21 +2636,6 @@ dsc; a declared parameter with no default that the step does not give could
 be refused before dsc runs, naming the document, the parameter and the
 module's load as its likely cause.
 
-## 115. A warning from a Windows machine over PowerShell Remoting breaks the environment resource's answer
-
-Found 2026-11-23, the owner's run of the node plan on Hyper-V: a warning
-raised on a Windows machine over PowerShell Remoting, PowerShell Direct
-too, goes to the console's standard output, which no redirect or
-`-WarningAction` catches, so the Xmip.Environment resource answered no JSON
-and dsc stopped the run with *JSON: expected value at line 1 column 1*.
-`Add-Computer`'s "takes effect after you restart" stopped it at the first
-member's domain join although the join had worked, and `Start-Service`'s
-"Waiting for service" would stop the Started step the same way. A fix,
-every remote call of the resource made through one helper that keeps its
-warnings out of the answer, was written and tested on that environment
-(three members joined through it) and is not landed: the owner ended the
-Hyper-V run the same day before it landed.
-
 ## 116. A failed deploy step's log keeps dsc's words and not its resource's
 
 Found 2026-11-23 with problem 115: `run.log` keeps dsc's own error, *JSON:
@@ -4461,3 +4446,26 @@ gui README, `test/RemoteRuntime.Test.ps1` and
 `Xmip.Operate.Native.props` still say the CI builds the runtime and
 Xmip.Operations for iOS on macOS. Needed: each says iOS is built by hand
 on macOS alone, or the job back.
+
+## 115. A warning from a Windows machine over PowerShell Remoting breaks the environment resource's answer — **Resolved**
+
+*Resolved 2026-11-24:* every command the Xmip.Environment resource runs on
+a Windows machine goes through `Invoke-EnvironmentCommand`, which runs it
+there with its warnings, verbose, debug and host streams made output and
+writes them back here as its own, so they reach standard error and the
+answer stays the JSON alone; a domain join and the Started step run as DSC
+runs them against a Windows PowerShell session of the test's computer
+prove it (`test/MsdscEnvironment.Test.ps1`).
+
+Found 2026-11-23, the owner's run of the node plan on Hyper-V: a warning
+raised on a Windows machine over PowerShell Remoting, PowerShell Direct
+too, goes to the console's standard output, which no redirect or
+`-WarningAction` catches, so the Xmip.Environment resource answered no JSON
+and dsc stopped the run with *JSON: expected value at line 1 column 1*.
+`Add-Computer`'s "takes effect after you restart" stopped it at the first
+member's domain join although the join had worked, and `Start-Service`'s
+"Waiting for service" would stop the Started step the same way. A fix,
+every remote call of the resource made through one helper that keeps its
+warnings out of the answer, was written and tested on that environment
+(three members joined through it) and is not landed: the owner ended the
+Hyper-V run the same day before it landed.

@@ -26,6 +26,10 @@
     - An AlmaLinux machine is reached over OpenSSH with the environment's
       key and known_hosts, checked strictly, and DSC is brought to it only
       from a tarball whose SHA-256 is the one named.
+    - A Windows machine is reached through Invoke-EnvironmentCommand alone,
+      and what it warns of stays off the resource's answer: a domain join
+      and the Started step run as DSC runs them, the machine a Windows
+      PowerShell session of this computer's own (Windows; SKIPPED off it).
     - The Xmip resources' own steps that touch nothing but a folder:
       a file in place, the ports a configuration listens on, the staging
       folder, and node.xmip made the node's alone to write on a file of the
@@ -122,6 +126,52 @@ BeforeAll {
             }
         }
         return $result
+    }
+
+    # environment.resource.ps1 set as DSC runs it, the instance on standard
+    # input, its machine a Windows PowerShell session of this computer's own
+    # whose commands -Machine stubs there, given the folder its state is
+    # kept in; PowerShell Remoting writes from it as from PowerShell Direct
+    # and WinRM. Hyper-V is never asked. Answers standard output and error.
+    function Invoke-EnvironmentResourceHere {
+        param(
+            [Parameter(Mandatory = $true)]
+            [string] $Kind,
+
+            [Parameter(Mandatory = $true)]
+            [hashtable] $Instance,
+
+            [Parameter(Mandatory = $true)]
+            [string] $Machine
+        )
+
+        [string] $secret = Join-Path $TestDrive 'administrator.xml'
+        [securestring] $password = ConvertTo-SecureString -String 'Pa55word' -AsPlainText -Force
+        [pscredential]::new('Administrator', $password) | Export-Clixml -LiteralPath $secret
+        $Instance.secretPath = $secret
+        [string] $stub = Join-Path $TestDrive "$Kind.machine.ps1"
+        Set-Content -LiteralPath $stub -Value $Machine
+        [string] $probe = Join-Path $TestDrive "$Kind.probe.ps1"
+        Set-Content -LiteralPath $probe -Value @'
+param($Resource, $Kind, $Stub, $Folder)
+$global:MachineStub = [scriptblock]::Create((Get-Content -LiteralPath $Stub -Raw))
+$global:MachineFolder = $Folder
+function global:Get-VM { }
+function global:New-PSSession {
+    [CmdletBinding()]
+    param($VMName, $ComputerName, $Credential)
+    $session = Microsoft.PowerShell.Core\New-PSSession -UseWindowsPowerShell
+    $null = Invoke-Command -Session $session -ArgumentList $MachineFolder -ScriptBlock $MachineStub
+    $session
+}
+& $Resource -Kind $Kind -Operation set
+'@
+        [string] $resource = Join-Path $script:Template 'environment.resource.ps1'
+        [string] $said = Join-Path $TestDrive "$Kind.err"
+        [string[]] $out = @($Instance | ConvertTo-Json -Depth 5 -Compress |
+                & pwsh -NoLogo -NonInteractive -NoProfile -File $probe $resource $Kind $stub (
+                    [string] $TestDrive) 2> $said)
+        return @{ Out = $out; Error = @(Get-Content -LiteralPath $said) }
     }
 
     if ($script:HasDsc) {
@@ -847,6 +897,81 @@ Describe 'The Xmip resources'' own steps' {
         $state._exist | Should -BeFalse
         $state.answering | Should -BeFalse
         { Set-EnvironmentDomain -Instance $instance -Confirm:$false } | Should -Not -Throw
+    }
+
+    It 'reaches every Windows machine through Invoke-EnvironmentCommand alone' {
+        [type] $function = [Management.Automation.Language.FunctionDefinitionAst]
+        [object[]] $files = @(Get-ChildItem -Path $script:Template -Filter '*.ps1')
+        [string[]] $callers = foreach ($file in $files) {
+            $tree = [Management.Automation.Language.Parser]::ParseFile($file.FullName, [ref] $null,
+                [ref] $null)
+            $tree.FindAll({
+                    param($Node)
+                    $Node -is [Management.Automation.Language.CommandAst] -and
+                    $Node.GetCommandName() -eq 'Invoke-Command'
+                }, $true) | ForEach-Object {
+                $parent = $_.Parent
+                while ($parent -and $parent -isnot $function) {
+                    $parent = $parent.Parent
+                }
+                "$($file.Name) $($parent.Name)"
+            }
+        }
+        $callers | Should -Be @('EnvironmentMachine.ps1 Invoke-EnvironmentCommand')
+    }
+
+    # PowerShell Remoting writes a warning of the machine to this console,
+    # standard output, past every redirection here, and DSC, reading the
+    # resource's JSON there, found none (2026-11-23, a member's domain join).
+    It 'answers its JSON alone while a member warns of its domain join' -Skip:(-not $IsWindows) {
+        [string] $machine = @'
+param($Folder)
+# Nothing restarts: shutdown.exe is a stub, and no program is found by name.
+$env:PATH = ''
+function global:shutdown.exe { }
+function global:Get-CimInstance {
+    param($ClassName)
+    [bool] $joined = Test-Path -LiteralPath "$Folder\joined"
+    [pscustomobject] @{ PartOfDomain = $joined; Domain = 'xmip.test'; DomainRole = 1 }
+}
+function global:Add-Computer {
+    param($DomainName, $Credential, [switch] $Force)
+    New-Item -ItemType File -Path "$Folder\joined" | Out-Null
+    Write-Warning 'The changes will take effect after you restart the computer.'
+}
+'@
+        [hashtable] $instance = @{ name = 'XMIP-IN01'; address = '10.77.0.61'
+            domain = 'xmip.test'; controller = $false }
+        [hashtable] $asked = @{ Kind = 'Domain'; Instance = $instance; Machine = $machine }
+        [hashtable] $said = Invoke-EnvironmentResourceHere @asked
+        $said.Out.Count | Should -Be 1 -Because "standard output was: $($said.Out -join ' | ')"
+        ($said.Out[0] | ConvertFrom-Json -AsHashtable)._exist | Should -BeTrue
+        $said.Error | Should -Contain 'The changes will take effect after you restart the computer.'
+    }
+
+    It 'answers its JSON alone while a node''s service is waited for' -Skip:(-not $IsWindows) {
+        [string] $machine = @'
+param($Folder)
+function global:Get-Service {
+    param($Name, $ErrorAction)
+    [bool] $started = Test-Path -LiteralPath "$Folder\started"
+    [pscustomobject] @{ Status = if ($started) { 'Running' } else { 'Stopped' } }
+}
+function global:Start-Service {
+    param($Name, $ErrorAction)
+    New-Item -ItemType File -Path "$Folder\started" | Out-Null
+    Write-Warning "Waiting for service '$Name' to start..."
+}
+'@
+        [hashtable] $node = @{ node = 'in01'
+            machine = @{ name = 'XMIP-IN01'; address = '10.77.0.61'; family = 'Windows' } }
+        [hashtable] $instance = @{ nodes = @($node); window = 60; login = 'a'; keyPath = 'k'
+            knownHosts = 'h' }
+        [hashtable] $asked = @{ Kind = 'Started'; Instance = $instance; Machine = $machine }
+        [hashtable] $said = Invoke-EnvironmentResourceHere @asked
+        $said.Out.Count | Should -Be 1 -Because "standard output was: $($said.Out -join ' | ')"
+        ($said.Out[0] | ConvertFrom-Json -AsHashtable).services.in01 | Should -Be 'Running'
+        $said.Error | Should -Contain "Waiting for service 'xmip-in01' to start..."
     }
 
     It 'names in node.dsc.yaml no resource one family lacks, so DSC runs it on both' {

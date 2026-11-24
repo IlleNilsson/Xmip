@@ -64,7 +64,9 @@ foreach ($part in $parts) {
 # Standard output is the instance's JSON alone, which DSC reads: every
 # warning, message and stray line goes to standard error, DSC's trace. A
 # restarting machine's "attempting to reconnect" warning and the domain
-# promotion's warnings made it no JSON (2026-11-21).
+# promotion's warnings made it no JSON (2026-11-21). A warning written on a
+# Windows machine is made this side's in Invoke-EnvironmentCommand, since
+# PowerShell Remoting writes it to the console past any redirection here.
 [hashtable] $state = & { switch ($Kind) {
     'Machine' {
         if ($Operation -eq 'set') {

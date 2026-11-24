@@ -78,7 +78,8 @@ function Get-EnvironmentDomain {
         [object[]] $argument = @($Instance.domain, [bool] $Instance.controller)
         # A session that breaks as the machine restarts is a machine not
         # answering yet, never an error.
-        $state._exist = [bool] (Invoke-Command -Session $session -ArgumentList $argument -ErrorAction Stop -ScriptBlock {
+        [hashtable] $asked = @{ Session = $session; ArgumentList = $argument; ErrorAction = 'Stop' }
+        $state._exist = [bool] (Invoke-EnvironmentCommand @asked -ScriptBlock {
                 param($Domain, $Controller)
                 $system = Get-CimInstance -ClassName Win32_ComputerSystem
                 if (-not $Controller) {
@@ -130,9 +131,9 @@ function Set-EnvironmentDomain {
     [pscredential] $administrator = Read-MachineSecret -Path $Instance.secretPath
     [object[]] $argument = @($Instance.domain, [bool] $Instance.controller, $administrator)
     try {
-        # What the promotion warns of reaches standard error through
-        # environment.resource.ps1, which keeps standard output the JSON.
-        Invoke-Command -Session $session -ArgumentList $argument -ScriptBlock {
+        # What the promotion and the join warn of reaches standard error
+        # (Invoke-EnvironmentCommand), standard output kept the JSON.
+        Invoke-EnvironmentCommand -Session $session -ArgumentList $argument -ScriptBlock {
             param($Domain, $Controller, $Administrator)
             $ErrorActionPreference = 'Stop'
             $ProgressPreference = 'SilentlyContinue'

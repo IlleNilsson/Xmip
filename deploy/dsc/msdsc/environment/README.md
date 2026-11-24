@@ -204,7 +204,11 @@ under `C:\ProgramData\Xmip\environment\tools`, since Windows Server ships
 Windows PowerShell alone; over OpenSSH to an AlmaLinux one,
 with the environment's key and its `known_hosts`, checked strictly, so a
 machine whose host key is not the one its kickstart was given is refused
-(`EnvironmentSsh.ps1`). An AlmaLinux machine needs nothing but its sshd:
+(`EnvironmentSsh.ps1`). Every command a Windows machine runs goes through
+`Invoke-EnvironmentCommand`, which brings what it warns of or writes there
+back as standard error here: PowerShell Remoting writes a warning of the
+far side to the console past any redirection, standard output, where DSC
+reads the resource's JSON. An AlmaLinux machine needs nothing but its sshd:
 DSC is brought to it, the `pwsh` and `dsc` tarballs the environment file's
 `[tools.Linux]` names, each checked against its SHA-256, copied once and
 unpacked under `/var/tmp/xmip-environment/tools`, never installed for the

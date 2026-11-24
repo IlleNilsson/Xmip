@@ -73,7 +73,8 @@ function Get-EnvironmentNodeService {
             return 'unreachable'
         }
         try {
-            return [string] (Invoke-Command -Session $session -ArgumentList "xmip-$Node" -ScriptBlock {
+            [hashtable] $asked = @{ Session = $session; ArgumentList = "xmip-$Node" }
+            return [string] (Invoke-EnvironmentCommand @asked -ScriptBlock {
                     param($Name)
                     [string] (Get-Service -Name $Name -ErrorAction SilentlyContinue).Status
                 })
@@ -112,7 +113,7 @@ function Start-EnvironmentNodeService {
     if ($Reach.family -eq 'Windows') {
         $session = New-EnvironmentSession -Instance $Reach
         try {
-            Invoke-Command -Session $session -ArgumentList "xmip-$Node" -ScriptBlock {
+            Invoke-EnvironmentCommand -Session $session -ArgumentList "xmip-$Node" -ScriptBlock {
                 param($Name)
                 Start-Service -Name $Name -ErrorAction SilentlyContinue
             }

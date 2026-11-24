@@ -101,6 +101,57 @@ function New-EnvironmentSession {
     }
 }
 
+function Invoke-EnvironmentCommand {
+    <#
+    .SYNOPSIS
+    A script block run on a Windows machine over its session, answering what
+    it outputs; what it warns of or writes otherwise there comes back as this
+    side's own, which environment.resource.ps1 sends to standard error. Left
+    to PowerShell Remoting, a warning there reaches this host's console,
+    standard output, where DSC reads the JSON, past every redirection and
+    -WarningAction here (2026-11-23, Add-Computer's at a domain join).
+    #>
+    [CmdletBinding()]
+    [OutputType([object])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [System.Management.Automation.Runspaces.PSSession] $Session,
+
+        [Parameter(Mandatory = $true)]
+        [scriptblock] $ScriptBlock,
+
+        [Parameter()]
+        [object[]] $ArgumentList = @()
+    )
+
+    # The block goes as its text, made again there, where Windows PowerShell
+    # may answer; every stream but errors is output there, each record told
+    # apart here by its type and read as its text, all a record keeps across.
+    [object[]] $sent = @([string] $ScriptBlock) + $ArgumentList
+    [string] $record = 'Deserialized.System.Management.Automation.'
+    Invoke-Command -Session $Session -ArgumentList $sent -ScriptBlock {
+        param($Text)
+        & ([scriptblock]::Create($Text)) @args 3>&1 4>&1 5>&1 6>&1
+    } | ForEach-Object {
+        [string[]] $type = if ($null -eq $_) { @() } else { $_.PSObject.TypeNames }
+        if ($type -contains "${record}WarningRecord") {
+            Write-Warning -Message ([string] $_)
+        }
+        elseif ($type -contains "${record}VerboseRecord") {
+            Write-Verbose -Message ([string] $_)
+        }
+        elseif ($type -contains "${record}DebugRecord") {
+            Write-Debug -Message ([string] $_)
+        }
+        elseif ($type -contains "${record}InformationRecord") {
+            Write-Information -MessageData ([string] $_)
+        }
+        else {
+            $_
+        }
+    }
+}
+
 function Assert-EnvironmentToolDigest {
     <#
     .SYNOPSIS
@@ -155,19 +206,21 @@ function Install-EnvironmentWindowsTool {
         [string] $sha256 = Assert-EnvironmentToolDigest -Tool $tool[$name]
         [string] $into = "$Staging\tools\$name"
         [string] $mark = "$into\.sha256"
-        [string] $held = Invoke-Command -Session $Session -ArgumentList $mark -ScriptBlock {
+        [hashtable] $asked = @{ Session = $Session; ArgumentList = $mark }
+        [string] $held = Invoke-EnvironmentCommand @asked -ScriptBlock {
             param($Mark)
             if (Test-Path -LiteralPath $Mark) { (Get-Content -LiteralPath $Mark -Raw).Trim() }
         }
         if ($held -ne $sha256) {
             [string] $zip = "$Staging\tools\$name.zip"
-            Invoke-Command -Session $Session -ArgumentList $into -ScriptBlock {
+            Invoke-EnvironmentCommand -Session $Session -ArgumentList $into -ScriptBlock {
                 param($Into)
                 Remove-Item -LiteralPath $Into -Recurse -Force -ErrorAction SilentlyContinue
                 New-Item -ItemType Directory -Force -Path $Into | Out-Null
             }
             Copy-Item -Path $path -Destination $zip -ToSession $Session -Force
-            Invoke-Command -Session $Session -ArgumentList $zip, $into, $mark, $sha256 -ScriptBlock {
+            [object[]] $unpacked = @($zip, $into, $mark, $sha256)
+            Invoke-EnvironmentCommand -Session $Session -ArgumentList $unpacked -ScriptBlock {
                 param($Zip, $Into, $Mark, $Sha256)
                 Expand-Archive -LiteralPath $Zip -DestinationPath $Into -Force
                 Remove-Item -LiteralPath $Zip -Force
@@ -208,7 +261,7 @@ function Invoke-EnvironmentWinRmDocument {
     try {
         [string] $template = "$Staging\template"
         [string] $files = "$Staging\files"
-        Invoke-Command -Session $session -ArgumentList $template, $files -ScriptBlock {
+        Invoke-EnvironmentCommand -Session $session -ArgumentList $template, $files -ScriptBlock {
             param($Template, $Files)
             Remove-Item -LiteralPath $Template -Recurse -Force -ErrorAction SilentlyContinue
             New-Item -ItemType Directory -Force -Path $Template, $Files | Out-Null
@@ -233,7 +286,7 @@ function Invoke-EnvironmentWinRmDocument {
         # Windows PowerShell may answer at the far end, so the block asks
         # nothing PowerShell 7 alone has; dsc and PowerShell 7 are found in the
         # tools, this folder's resources in the template, on the PATH given.
-        return Invoke-Command -Session $session -ArgumentList $argument -ScriptBlock {
+        return Invoke-EnvironmentCommand -Session $session -ArgumentList $argument -ScriptBlock {
             param($Path, $Template, $Document, $Parameters, $Operation)
             $env:PATH = "$Path;$env:PATH"
             $config = @('config', '--parameters-file', $Parameters, $Operation, '--file',
