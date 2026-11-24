@@ -3267,15 +3267,6 @@ Found 2026-11-24 the same day, older than it: noted in `listening.rs` and
 wider now that DDS, DNS, KNX, SNMP, syslog and UDP are linked, so an
 environment opens TCP where they listen on UDP.
 
-## 174. EDIFACT and X12 convert to nothing
-
-Found 2026-11-24 the same day: Convert does XML to JSON, JSON to XML, CSV
-to JSON and JSON to CSV; no unit turns an EDIFACT or X12 interchange into
-JSON or XML or back, and no node runs a step yet. Needed: the owner's
-decision on an interchange's JSON form, Convert's `edifact` and `x12` both
-ways and streamed, delimiters read from UNA or ISA, and a node that runs
-steps.
-
 ## 175. A finished System Tests roll leaves `Get-XmipTestStatus`
 
 Found 2026-11-24 running the System Tests: `Get-XmipTestStatus` lists a
@@ -4392,3 +4383,15 @@ reads what belongs to this one. Needed: interim answers read past until
 the final one, 101 apart, and one reader for the connection's life;
 tested with the two answers sent together and apart, another exchange
 after them on the connection.
+
+## 174. EDIFACT and X12 convert to nothing — **Resolved**
+
+*Resolved 2026-11-24, ADR-0047, amendment 2026-11-24:* no conversion is
+needed to work on a format. A Stream is realized beside itself by its
+shape, as far as Promote, Work or Demote needs, and the EDIFACT, X12 and
+TRADACOMS shapes realize an interchange as segments named by their tag,
+which the `edi` path reads; Convert gains no EDIFACT or X12 form.
+
+Found 2026-11-24: Convert does XML to JSON, JSON to XML, CSV to JSON and
+JSON to CSV, and no unit turns an EDIFACT or X12 interchange into JSON or
+XML or back.

@@ -98,3 +98,38 @@ document is checked for shape before `xmip-core-configure` reads it.
 The owner's two rulings of 2026-09-10 are quoted in Context. The shape
 reading, the trait and the sentence are the assistant's, put to the owner
 and not contradicted. The instruction to build is the owner's: *sort it all.*
+
+## Amendment, 2026-11-24: a Stream is realized beside itself, as far as the work needs
+
+The owner, 2026-11-24: *There will be a parallel stream that realizes the
+stream*, and *Before Promotion, Work or Demotion the stream has to be
+materialized to some degree*; then, of how far: *Like a huge file that only
+needs moving. Like a huge stream that has to be moved. Like a big message
+that has to be processed.* The runtime model and the Content Selectors said
+promotion runs against a Stream that has deliberately not been
+materialized, and said nothing of where the realization runs.
+
+- **The Stream keeps moving and its realization runs beside it.** What a
+  node receives is carried on as the bytes it arrived as, and a parallel
+  stream realizes it through its shape (clause 2's `shape`), never a copy
+  of the whole made first. A Message's Section still references the
+  original Stream until Transformation, Assignment or serialization makes
+  a new one.
+- **As far as the work needs, and no further.** A Receive Location's
+  processing depth (`runtime-model.md` section 7) bounds it: Transfer
+  realizes nothing, a huge file that only moves; Light reads the metadata
+  alone, a huge Stream that has to be moved; Context realizes the content
+  as far as Promote, Work or Demote reaches, a big Message to process. A
+  Content Selector's evaluation mode, `stream-prefix`, `stream-scan` or
+  `materialized-section`, is how far Promote and Demote reach; Work reaches
+  as far as its Path asks.
+- **No conversion is needed to work on a format.** Each shape realizes its
+  own content, an EDIFACT, X12 or TRADACOMS interchange as segments named by
+  their tag, and Promote, Work and Demote read that realization. Convert
+  gains no EDIFACT or X12 form, and open problem 174 is resolved.
+
+This amendment records the model; no code changed with it.
+
+Provenance: the owner's words above. Reading his three examples as the
+three processing depths, and the correction of "not materialized", are the
+assistant's, put to him and answered *Sounds good*.

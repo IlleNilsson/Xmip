@@ -1183,6 +1183,14 @@ Xmip interprets the content:
 
 Transfer and Light require no Path evaluation, which is what makes them cheap.
 
+**The realization runs beside the Stream** (ADR-0047, amendment
+2026-11-24). The Stream keeps moving as the bytes it arrived as, and a
+parallel stream realizes it through its shape as far as the depth and the
+work need, and no further: Transfer realizes nothing, a huge file that only
+moves; Light reads the metadata alone, a huge Stream that has to be moved;
+Context realizes the content as far as Promote, Work or Demote reaches, a
+big Message to process.
+
 ## 8. Preparation Steps
 
 A **Preparation Step** prepares a Stream before or after normal Content
@@ -1413,10 +1421,11 @@ refused then (ADR-0066, amendment 2026-11-08).
 
 ### Content Selectors, promotion and demotion
 
-Promotion and demotion cannot use Path: promotion runs against a Stream that
-has deliberately not been materialized. Xmip therefore has its own selector
-language for the two, evaluable without materialization because every
-selector declares how far into the Stream it must reach. **Promote** extracts
+Promotion and demotion cannot use Path: a Path needs a document, and
+promotion runs against a Stream realized beside it only as far as its
+selectors reach (section 7). Xmip therefore has its own selector language
+for the two, evaluable without realizing the whole because every selector
+declares how far into the Stream it must reach. **Promote** extracts
 selected properties as far and as fast as needed, then stops; **demote** is
 its send-side counterpart, writing configured properties into the outgoing
 Stream. The language, its four segment kinds and three evaluation modes are
@@ -2658,6 +2667,7 @@ Location — against the next Contract named, and refuse a mismatch; and
 refuse a Transformation, validation or promotion that needs materialized
 content on a Receive Location at `transfer` or `light` depth. Recorded in
 ADR-0031, amendments 2026-10-05 and 2026-10-22. Not built.
+
 ### Validation gates
 
 The `Validation` step in section 5 is the receive gate. It is not the only
