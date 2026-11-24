@@ -69,8 +69,10 @@ function Build-XmipService {
             estate's CI builds it on macOS (.github/workflows/rust.yml, job
             phone-ios). One build at a time, as every cargo runs. -WhatIf
             says the commands. Returns Platform, Triple, Path and Length per
-            library and per xcframework. A landing builds Desktop and
-            Android itself before the module that needs it.
+            library and per xcframework. A landing builds Desktop itself,
+            before module/core/operation/operate, and no Android library:
+            its build of Xmip.Operations packages the two -Remote Android
+            last made, and stops, naming that command, where there are none.
 
         .PARAMETER Site
             A site's name under deploy/site, or the path of a site file.

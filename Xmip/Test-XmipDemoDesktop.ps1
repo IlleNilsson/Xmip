@@ -51,8 +51,7 @@ function Test-XmipDemoDesktop {
     )
 
     if (-not $IsWindows) {
-        throw ('the Desktop operations app is built for Windows alone, as every build is ' +
-            'for now; this machine is not Windows.')
+        throw 'the Desktop operations app is built for Windows alone; this machine is not Windows.'
     }
 
     $layout = Get-XmipSystemTestLayout

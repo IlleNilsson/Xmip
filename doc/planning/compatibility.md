@@ -47,4 +47,7 @@ cross platform* (ADR-0014, amendments 2026-10-13 and 2026-10-19).
 there until the owner lifts Windows only. The owner, 2026-11-02: *Just
 build Windows, we can get back to other OS and target*: the continuous
 integration builds and tests on Windows alone, the desktop GUI is built
-for Windows alone, and the Android, iOS and device builds wait.
+for Windows alone, and the iOS and device builds wait. The phone app is
+built for Android again (the owner, 2026-11-24: *of course Android is a
+Phone App*): `Build-XmipService -Remote Android -Package apk` makes the APK
+a person side-loads.

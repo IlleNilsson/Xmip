@@ -1005,11 +1005,12 @@ whose committed `[patch]` resolves every estate crate to its working tree
 (ADR-0016, amendment 2026-11-20), the first failure stopping the run with
 nothing pushed. It builds what its parts load first — the runtime's library,
 its remote build where `module/core/operation/operate` lands (`Build-XmipService
--Remote Desktop` builds the same by hand; only Windows is built for now), the
-test module's library where the runtime lands — then runs three parts side by
-side, each in a pwsh of its own with its share of the twelve threads it may
-take (Rust 8, .NET 2, Pester 2; a part alone all twelve), the first to fail
-ending the others:
+-Remote Desktop` builds the same by hand; the Android one is built by hand
+alone, `-Remote Android`, and the landing's build of `Xmip.Operations`
+packages the last made), the test module's library where the runtime lands —
+then runs three parts side by side, each in a pwsh of its own with its share
+of the twelve threads it may take (Rust 8, .NET 2, Pester 2; a part alone
+all twelve), the first to fail ending the others:
 
 - **Rust:** the changed crates' `cargo fmt --check`; every member linted
   against the change at once, `cargo clippy --workspace --all-targets

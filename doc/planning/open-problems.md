@@ -3278,19 +3278,6 @@ and the verdict only in its log and its snapshot through
 cluster's snapshot shares the folder. Needed: a finished roll listed from
 its record, as an estate run is, its state and its worst result in words.
 
-## 176. `Build-XmipService -Remote Android -Package apk` publishes a framework the app no longer targets
-
-Found 2026-11-24 bringing the installed surfaces current: the runtime's
-Android build passes, then `dotnet publish` of Xmip.Operations fails
-NETSDK1005, its assets having no target for `net11.0-android`, because
-`Xmip.Operations.csproj` has named only the Windows framework since
-2026-11-02 while `New-XmipApk.ps1` still publishes `--framework
-net11.0-android`. The newest phone app built is from 2026-10-19. The gui
-README and `Build-XmipService`'s help still say a landing builds Android.
-Needed: the owner's word on whether Android is a build target now; then
-either the framework back in the project, or the APK route and its texts
-saying Android is not built.
-
 ## 177. The operator web view renders its head statically under interactive pages
 
 Found 2026-11-24 starting the operator web view: its host logs, four times
@@ -3300,6 +3287,31 @@ while its content renders interactive, because `App.razor` gives
 tab's title then likely stops following in-page navigation. Needed: the
 head rendered as the routes are, and a test that the host starts without
 the warning.
+
+## 178. A landing packages the phone app with the last Android libraries built by hand
+
+Found 2026-11-24 putting Android back into the phone app: a landing of the
+gui module builds Xmip.Operations for Android, since its build names no
+framework, but builds no Android library of the runtime first; it packages
+what `Build-XmipService -Remote Android` last made, so an APK can carry a
+runtime older than the commit, and the build stops where none was ever
+made. Before 2026-11-02 the landing built them first and skipped the phone
+host without the NDK (`Test-XmipChangeTree`, taken out by 875c161; the
+landing's library builds are `Build-XmipLandingLibrary.ps1` now). On a
+Linux test computer the project names Android alone, so the gui module's
+internal tests there need the Android workload, a JDK and the libraries.
+Needed: the landing builds the Android libraries before the gui module
+where the NDK is, and says it skipped them where it is not.
+
+## 179. Eight texts say the estate's CI builds iOS on macOS
+
+Found 2026-11-24 the same day: the CI job `phone-ios` was deleted on
+2026-11-02, while `Build-XmipService.ps1`, `Build-XmipRemoteRuntime.ps1`
+(its help and `Assert-XmipMacOS`'s message), the README, ADR-0014, the
+gui README, `test/RemoteRuntime.Test.ps1` and
+`Xmip.Operate.Native.props` still say the CI builds the runtime and
+Xmip.Operations for iOS on macOS. Needed: each says iOS is built by hand
+on macOS alone, or the job back.
 
 # Suggested order
 
@@ -4395,3 +4407,22 @@ which the `edi` path reads; Convert gains no EDIFACT or X12 form.
 Found 2026-11-24: Convert does XML to JSON, JSON to XML, CSV to JSON and
 JSON to CSV, and no unit turns an EDIFACT or X12 interchange into JSON or
 XML or back.
+
+## 176. `Build-XmipService -Remote Android -Package apk` publishes a framework the app no longer targets — **Resolved**
+
+*Resolved 2026-11-24:* `Xmip.Operations.csproj` names `net11.0-android`
+again, beside Windows on Windows and iOS on macOS (the owner, 2026-11-24:
+*of course Android is a Phone App*), and `Build-XmipService -Remote Android
+-Package apk` makes the APK; its texts say a landing builds the phone host
+for Android from the libraries `-Remote Android` last made.
+
+Found 2026-11-24 bringing the installed surfaces current: the runtime's
+Android build passes, then `dotnet publish` of Xmip.Operations fails
+NETSDK1005, its assets having no target for `net11.0-android`, because
+`Xmip.Operations.csproj` has named only the Windows framework since
+2026-11-02 while `New-XmipApk.ps1` still publishes `--framework
+net11.0-android`. The newest phone app built is from 2026-10-19. The gui
+README and `Build-XmipService`'s help still say a landing builds Android.
+Needed: the owner's word on whether Android is a build target now; then
+either the framework back in the project, or the APK route and its texts
+saying Android is not built.

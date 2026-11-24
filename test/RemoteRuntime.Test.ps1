@@ -12,7 +12,7 @@
     exception. What can be checked without building is checked here: where
     the NDK is found, the cargo command each build is, that the props file
     reads where the build writes and names the command that builds it, and
-    that a landing skips the phone host where the NDK is absent.
+    that a landing builds the Desktop one before the module that needs it.
 #>
 
 BeforeAll {
@@ -268,9 +268,8 @@ Describe 'A landing builds the remote build before the module that needs it' {
         }
     }
 
-    # Only Windows is built for now (the owner, 2026-11-02: *Just build
-    # Windows, we can get back to other OS and target*): the phone host
-    # verifies with no Android build.
+    # The landing builds no Android library: the phone host's build
+    # packages the two Build-XmipService -Remote Android last made.
     It 'builds Desktop before Xmip.Operate, once, and nothing for the phone host' {
         InModuleScope Xmip -Parameters @{ Root = $script:Root } {
             param($Root)
