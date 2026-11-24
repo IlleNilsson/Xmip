@@ -3287,6 +3287,29 @@ and the verdict only in its log and its snapshot through
 cluster's snapshot shares the folder. Needed: a finished roll listed from
 its record, as an estate run is, its state and its worst result in words.
 
+## 176. `Build-XmipService -Remote Android -Package apk` publishes a framework the app no longer targets
+
+Found 2026-11-24 bringing the installed surfaces current: the runtime's
+Android build passes, then `dotnet publish` of Xmip.Operations fails
+NETSDK1005, its assets having no target for `net11.0-android`, because
+`Xmip.Operations.csproj` has named only the Windows framework since
+2026-11-02 while `New-XmipApk.ps1` still publishes `--framework
+net11.0-android`. The newest phone app built is from 2026-10-19. The gui
+README and `Build-XmipService`'s help still say a landing builds Android.
+Needed: the owner's word on whether Android is a build target now; then
+either the framework back in the project, or the APK route and its texts
+saying Android is not built.
+
+## 177. The operator web view renders its head statically under interactive pages
+
+Found 2026-11-24 starting the operator web view: its host logs, four times
+a start, that a section's outlet renders as static server-side rendering
+while its content renders interactive, because `App.razor` gives
+`<HeadOutlet />` no render mode where `<Routes>` is `InteractiveServer`. A
+tab's title then likely stops following in-page navigation. Needed: the
+head rendered as the routes are, and a test that the host starts without
+the warning.
+
 # Suggested order
 
 Rewritten 2026-09-23, and corrected to what is built on 2026-11-10. The
