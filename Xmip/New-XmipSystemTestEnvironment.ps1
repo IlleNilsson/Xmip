@@ -75,9 +75,10 @@ function ConvertTo-XmipTestName {
 
     .DESCRIPTION
     -Nodes names the nodes, and those names are what -NodeRole gives roles to
-    and -OnlineNodes marks online; they become the run's cluster file
-    (Write-XmipTestCluster). There is no count: a node is configuration, and
-    configuration names it (ADR-0056, amendment 2026-10-03).
+    and -NodeCapability gives Node capabilities to; they become the run's
+    cluster file (Write-XmipTestCluster). There is no count: a node is
+    configuration, and configuration names it (ADR-0056, amendments
+    2026-10-03 and 2026-11-24).
 
     Said at the door and before anything is built (ADR-0055), by the one
     function both Start-XmipTest and the environment ask, so they cannot
@@ -86,8 +87,8 @@ function ConvertTo-XmipTestName {
     .PARAMETER Nodes
     What -Nodes was given, or $null where it was not given at all.
 
-    .PARAMETER OnlineNodes
-    What -OnlineNodes was given.
+    .PARAMETER NodeCapability
+    What -NodeCapability was given.
 
     .PARAMETER NodeRole
     What -NodeRole was given.
@@ -108,9 +109,8 @@ function Get-XmipNodeSelectionRefusal {
         [string[]] $Nodes,
 
         [Parameter()]
-        [AllowEmptyCollection()]
         [AllowNull()]
-        [string[]] $OnlineNodes,
+        [hashtable] $NodeCapability,
 
         [Parameter()]
         [AllowNull()]
@@ -129,9 +129,13 @@ function Get-XmipNodeSelectionRefusal {
         return '-NodeRole names nodes; name them all with -Nodes first.'
     }
 
+    if ($NodeCapability -and -not $Named) {
+        return '-NodeCapability names nodes; name them all with -Nodes first.'
+    }
+
     if ($Named) {
-        [string[]] $online = @($OnlineNodes | Where-Object { $null -ne $_ })
-        Assert-XmipNodeName -Nodes $Nodes -OnlineNodes $online
+        [string[]] $capable = @(if ($NodeCapability) { $NodeCapability.Keys })
+        Assert-XmipNodeName -Nodes $Nodes -NodeCapability $capable
         Assert-XmipNodeRole -Nodes $Nodes -NodeRole $NodeRole
     }
 
@@ -150,9 +154,9 @@ function Get-XmipNodeSelectionRefusal {
 function Assert-XmipNodeName {
     <#
         .SYNOPSIS
-            The nodes a person named are well formed, distinct, and the online
-            ones are among them. Throws otherwise; a node is a process, and a
-            process is named once.
+            The nodes a person named are well formed, distinct, and the ones
+            -NodeCapability names are among them. Throws otherwise; a node is
+            a process, and a process is named once.
 
         .DESCRIPTION
             A node's name is the last word of its process name and so a file
@@ -172,10 +176,10 @@ function Assert-XmipNodeName {
 
         [Parameter()]
         [AllowEmptyCollection()]
-        [string[]] $OnlineNodes = @()
+        [string[]] $NodeCapability = @()
     )
 
-    [string[]] $every = @(@($Nodes) + @($OnlineNodes) | Where-Object { $null -ne $_ })
+    [string[]] $every = @(@($Nodes) + @($NodeCapability) | Where-Object { $null -ne $_ })
 
     foreach ($name in $every) {
         if ($name -notmatch '^[A-Za-z][A-Za-z0-9-]*$') {
@@ -194,10 +198,10 @@ function Assert-XmipNodeName {
         throw "A node is named once: $($twice -join ', ') appear more than once in -Nodes."
     }
 
-    [string[]] $strangers = @($OnlineNodes | Where-Object { $_ -notin $Nodes })
+    [string[]] $strangers = @($NodeCapability | Where-Object { $_ -notin $Nodes })
 
     if ($strangers.Count -gt 0) {
-        throw "-OnlineNodes names nodes -Nodes does not: $($strangers -join ', ')."
+        throw "-NodeCapability names nodes -Nodes does not: $($strangers -join ', ')."
     }
 }
 
@@ -228,11 +232,6 @@ function New-XmipSystemTestEnvironment {
 
         [Parameter()]
         [string] $ClusterFile,
-
-        [Parameter()]
-        [AllowNull()]
-        [AllowEmptyCollection()]
-        [string[]] $OnlineNodes,
 
         [Parameter()]
         [string] $Cluster,
@@ -286,17 +285,15 @@ function New-XmipSystemTestEnvironment {
         $environment.XMIP_SYSTEM_TEST_CLUSTER = $Cluster
     }
 
-    # The nodes are cluster.xmip, each one process declaring the
-    # roles its roles key says (ADR-0056, amendment 2026-10-03): the run's
-    # own, written from -Cluster and the nodes -Nodes or the System Tests' own
-    # cluster file names (Write-XmipTestCluster). The
-    # variable is the one every test fixture reads.
-    # With them, which may assume the internet (ADR-0045), by name: none
-    # named is none online, never every node's XMIP_ONLINE.
+    # The nodes are cluster.xmip, each one process declaring the roles its
+    # roles key says and the Node capabilities its capabilities key says,
+    # online among them where it may assume the internet (ADR-0056,
+    # amendments 2026-10-03 and 2026-11-24): the run's own, written from
+    # -Cluster and the nodes -Nodes or the System Tests' own cluster file
+    # names (Write-XmipTestCluster). The variable is the one every test
+    # fixture reads.
     if (-not [string]::IsNullOrWhiteSpace($ClusterFile)) {
         $environment.XMIP_TEST_CLUSTER = $ClusterFile
-        [string[]] $online = @($OnlineNodes | Where-Object { $null -ne $_ })
-        $environment.XMIP_SYSTEM_TEST_ONLINE_NODES = $online -join ','
     }
 
     $invariant = [System.Globalization.CultureInfo]::InvariantCulture

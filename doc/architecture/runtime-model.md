@@ -216,11 +216,14 @@ killed, its machine lost, cut off — is waited for, never replaced, and the
 cluster settles once it is back (the owner, 2026-11-08: *automatic standby
 promotion is off until there is a witness*; ADR-0056, amendment
 2026-11-08). **A primary stopped in order hands over**: it hands on
-everything it wrote and names a standby holding every write its
-successor, which keeps the next epoch and is promoted at once, and the
-former primary follows it on from where it stopped once back (the owner,
-2026-11-23: *That has to be sorted, nothing can be left*; ADR-0056,
-amendment 2026-11-23). One killed loses what it had not handed on, which
+everything it wrote and, its stop drained, names a standby holding every
+write its successor, which keeps the next epoch, has it acknowledged, and
+is promoted at once, what is asked of either held, never refused, across
+the hand-over; and the former primary follows it on from where it stopped
+once back. Only a Storage node listed follows, by the certificate it
+proves (the owner, 2026-11-23: *That has to be sorted, nothing can be
+left*, and 2026-11-24: *Do as you propose*; ADR-0056, amendments
+2026-11-23 and 2026-11-24). One killed loses what it had not handed on, which
 the owner accepted on 2026-10-01. A Storage node's
 stop ends each connection at its next question, the one in hand answered,
 so a node that keeps asking it never holds the stop (ADR-0056, amendment

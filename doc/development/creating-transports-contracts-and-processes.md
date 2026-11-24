@@ -25,6 +25,7 @@ Each guide lives with the subject it describes (ADR-0020 clause 3):
 | A transport (Kafka, MQTT, S3 ...) | `module/core/capability/transport/doc/adding-a-transport.md` |
 | A contract (CSV, JSON, EDIFACT ...) | `module/core/capability/contract/doc/adding-a-contract.md` |
 | A Work Process (its declaration, and what is not built) | `module/platform/configure/doc/node-configuration.md` |
+| A compiled unit in C#, a Promote unit today (ADR-0075) | `module/foundation/abi/doc/writing-a-module-in-dotnet.md` |
 
 What every technology shares — how its repository is named, declared, created,
 mounted and landed — is `doc/architecture/repository-model.md`, sections 2, 7,

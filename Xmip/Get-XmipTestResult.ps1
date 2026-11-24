@@ -31,8 +31,10 @@ function Get-XmipTestResult {
             and its message in Message. A run that passed says OK in words
             and returns nothing; one still running says so and returns
             nothing, since it has no verdict yet. -Suite Core.Internal reads
-            its latest run the same way: the module or part where the
-            verification stopped, and the log that says why.
+            its latest run the same way: one object per crate or .NET project
+            and test that failed, its module's folder in Test, the test in
+            Name and the words that say why in Message, which a run on a test
+            computer brings back with -ComputerName.
 
             -Suite Core.Demo reads the latest run of the demo readiness check:
             one object per part, OK, FAILED or SKIPPED, the reason in Message

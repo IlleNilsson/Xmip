@@ -37,7 +37,12 @@
            Scope="perMachine"
            Compressed="yes">
     <SummaryInformation Description="Xmip, built from site $(var.Site)" />
-    <MajorUpgrade DowngradeErrorMessage="A newer Xmip is installed on this machine." />
+    <!-- A build made again under the same version is installed over the one
+         there, as rpm's upgrade takes one on Linux: each build's product code
+         is its own, and a deployment installs a package whose code is not
+         installed (ADR-0056, amendment 2026-11-24). -->
+    <MajorUpgrade AllowSameVersionUpgrades="yes"
+                  DowngradeErrorMessage="A newer Xmip is installed on this machine." />
     <MediaTemplate EmbedCab="yes" />
 
     <Property Id="ARPURLINFOABOUT" Value="https://github.com/IlleNilsson/Xmip" />

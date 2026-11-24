@@ -34,7 +34,7 @@
           <TableColumnHeader><Label>Rounds</Label><Width>6</Width><Alignment>Right</Alignment></TableColumnHeader>
           <TableColumnHeader><Label>Tests</Label><Width>12</Width></TableColumnHeader>
           <TableColumnHeader><Label>Nodes</Label><Width>12</Width></TableColumnHeader>
-          <TableColumnHeader><Label>Online</Label><Width>12</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Capabilities</Label><Width>12</Width></TableColumnHeader>
           <TableColumnHeader><Label>Real</Label><Width>12</Width></TableColumnHeader>
           <TableColumnHeader><Label>Worst or tally</Label></TableColumnHeader>
         </TableHeaders>
@@ -51,7 +51,7 @@
               <TableColumnItem><ScriptBlock>if ($null -eq $_.Rounds) { '' } elseif ($_.Rounds -eq 0) { 'open' } else { $_.Rounds }</ScriptBlock></TableColumnItem>
               <TableColumnItem><ScriptBlock>if ($_.Tests.Count -eq 0) { 'all' } else { $_.Tests -join ',' }</ScriptBlock></TableColumnItem>
               <TableColumnItem><ScriptBlock>if ($null -eq $_.Nodes) { '' } elseif ($_.Nodes.Count -eq 0) { 'none' } else { $_.Nodes -join ',' }</ScriptBlock></TableColumnItem>
-              <TableColumnItem><ScriptBlock>if ($null -eq $_.OnlineNodes) { '' } elseif ($_.OnlineNodes.Count -eq 0) { 'none' } else { $_.OnlineNodes -join ',' }</ScriptBlock></TableColumnItem>
+              <TableColumnItem><ScriptBlock>if ($null -eq $_.NodeCapability) { '' } elseif ($_.NodeCapability.Count -eq 0) { 'none' } else { $_.NodeCapability -join ',' }</ScriptBlock></TableColumnItem>
               <TableColumnItem><ScriptBlock>if ($null -eq $_.RealNodes -or $_.RealNodes.Count -eq 0) { '' } else { $_.RealNodes -join ',' }</ScriptBlock></TableColumnItem>
               <TableColumnItem><ScriptBlock>if ($_.Kind -in 'pester', 'internal', 'build', 'demo') { $_.Tally } else { $_.Worst }</ScriptBlock></TableColumnItem>
             </TableColumnItems>
@@ -70,7 +70,7 @@
           <TableColumnHeader><Label>Id</Label><Width>7</Width><Alignment>Right</Alignment></TableColumnHeader>
           <TableColumnHeader><Label>Stress</Label><Width>9</Width></TableColumnHeader>
           <TableColumnHeader><Label>Role</Label><Width>19</Width></TableColumnHeader>
-          <TableColumnHeader><Label>Online</Label><Width>6</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Capabilities</Label><Width>14</Width></TableColumnHeader>
           <TableColumnHeader><Label>Rounds</Label><Width>6</Width><Alignment>Right</Alignment></TableColumnHeader>
           <TableColumnHeader><Label>Parent</Label><Width>7</Width><Alignment>Right</Alignment></TableColumnHeader>
           <TableColumnHeader><Label>Started</Label><Width>11</Width></TableColumnHeader>
@@ -83,7 +83,7 @@
               <TableColumnItem><PropertyName>Id</PropertyName></TableColumnItem>
               <TableColumnItem><PropertyName>Stress</PropertyName></TableColumnItem>
               <TableColumnItem><ScriptBlock>if ([string]::IsNullOrEmpty($_.Role)) { 'none' } else { $_.Role }</ScriptBlock></TableColumnItem>
-              <TableColumnItem><PropertyName>Online</PropertyName></TableColumnItem>
+              <TableColumnItem><ScriptBlock>if ($_.Capability.Count -eq 0) { 'none' } else { $_.Capability -join '+' }</ScriptBlock></TableColumnItem>
               <TableColumnItem><ScriptBlock>if ($_.Rounds -eq 0) { 'open' } else { $_.Rounds }</ScriptBlock></TableColumnItem>
               <TableColumnItem><ScriptBlock>if ($null -eq $_.Parent) { 'by hand' } else { $_.Parent }</ScriptBlock></TableColumnItem>
               <TableColumnItem><ScriptBlock>$_.StartTime.ToString('MM-dd HH:mm')</ScriptBlock></TableColumnItem>

@@ -35,7 +35,7 @@ Xmip is licensed under the GNU Affero General Public License, version 3 or later
 
 The license is chosen so that Xmip source remains free and so that modifications are returned to the community, including when a modified version is made available to users over a network rather than distributed as software.
 
-`architecture.toml` declares this license as the repository default. Every Xmip repository carries the full license text, and every crate declares `license = "AGPL-3.0-or-later"`.
+`architecture.toml` declares this license as the repository default. Every Xmip repository carries the full license text, and every crate declares `license = "AGPL-3.0-or-later"` — but the module boundary's. What a developer's module links or compiles into itself is Apache-2.0, so a module stays its author's to license: xmip-core-abi, the headers, the bindings, `Xmip.Module` and the `dotnet new` templates (ADR-0075 clause 6; ADR-0023, amendment 2026-11-24). `test/License.Test.ps1` holds it.
 
 Contributions are accepted under the same license. The license governs the freedoms attached to the source; it does not replace the contribution and review process defined in this document.
 

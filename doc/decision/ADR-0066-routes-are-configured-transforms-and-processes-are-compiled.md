@@ -1380,3 +1380,22 @@ sequence's order, the queue read a few times its length over a page;
 each next handed over as it moves, and a sequence cut past a page read on
 from where it was cut; `tests/measured/work_drain.rs`: the two drains above,
 each under the millisecond).
+
+## Amendment, 2026-11-24: a Promote unit has a table, and a unit may be written in C#
+
+The owner, 2026-11-24, of the packages a developer installs: *Go ahead*
+(ADR-0075). A unit of a Module's own library is loaded through the C ABI, as
+clause 4 decides, and until this amendment the header declared a table for
+the Work Process unit alone. `xmip_module.h` section 14 is the Promote
+unit's, shaped as section 13: a library holds one unit, its descriptor's
+module `promote` and its standard the unit's name; `open` once for each step
+entry, with the stage word and the entry's settings read through the unit's
+declaration, every default filled in, as one JSON object, their transfer
+form; `promote` per Message, the content through an `XmipReader` and each
+value to the host's sink as its kind and bytes. The runtime's loader is
+`ffi/loaded_promotion.rs`. A unit is written in Rust, or in C# over
+`Xmip.Module` and published with NativeAOT (ADR-0075). Running a step entry
+stays decided, not built: a node still refuses a Port or Location that
+attaches one (`configure::step::unrun`), and its startup opens no Promote
+unit's library yet. Prepare, Demote, Transform, Validate as a unit and
+Debatch have no table yet.

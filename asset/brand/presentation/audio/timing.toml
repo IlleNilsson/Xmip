@@ -11,626 +11,419 @@ duration = 1.8
 [[scene.caption]]
 text = "Xmip stands for Cross OS Messaging & Integration Platform."
 start = 1.98
-duration = 4.75
+duration = 4.675
 
 [[scene.caption]]
-text = "It is an open-source messaging and integration platform written in Rust."
-start = 6.91
-duration = 4.975
+text = "It connects the systems an organization runs, and it keeps an account of every message it takes on."
+start = 6.835
+duration = 6.425
 
 [[scene.caption]]
-text = "It is on premises first and cloud installable, so organizations choose where their integration runs."
-start = 12.065
-duration = 6.575
+text = "It is open source, written in Rust, and it runs on your own machines, with or without the internet."
+start = 13.44
+duration = 6.125
 
 [[scene.caption]]
-text = "This is the Xmip project story: what it connects, how it records responsibility, and how people design and operate it."
-start = 18.82
-duration = 7.825
+text = "Let us follow one order through it, then see how it is configured, run, operated and extended."
+start = 19.745
+duration = 6.25
 
 [[scene]]
 file = "scene-02.wav"
 
 [[scene.caption]]
-text = "Xmip is being developed for organizations that need dependable messaging and integration under their own control."
+text = "Xmip answers four people."
 start = 0
-duration = 7.425
+duration = 1.95
 
 [[scene.caption]]
-text = "It carries forward familiar integration concepts while putting deployment and data under organizational control."
-start = 7.605
-duration = 7.5
+text = "The CEO asks whether the business keeps moving when an exchange fails."
+start = 2.13
+duration = 5.025
 
 [[scene.caption]]
-text = "Its central promise is accountability: once a message is accepted, its journey and outcome give operators evidence they can act on."
-start = 15.285
-duration = 8.9
+text = "The CIO asks who controls it and where it runs."
+start = 7.335
+duration = 3.425
+
+[[scene.caption]]
+text = "The developer asks how an integration is built, and the operator asks what went wrong and what to do now."
+start = 10.94
+duration = 6.775
+
+[[scene.caption]]
+text = "Each answer follows."
+start = 17.895
+duration = 1.725
 
 [[scene]]
 file = "scene-03.wav"
 
 [[scene.caption]]
-text = "For a CEO, the question is what happens to the business when a system exchange stops."
+text = "Here is one sales order from a trading partner."
 start = 0
-duration = 5.775
+duration = 3.175
 
 [[scene.caption]]
-text = "Xmip focuses on accountable outcomes, recovery and organizational choice."
-start = 5.955
-duration = 5.425
+text = "A Receive Location accepts it, and Xmip publishes it as a message."
+start = 3.355
+duration = 4.675
 
 [[scene.caption]]
-text = "A practical evaluation connects those principles to a real process, its owner and its business impact."
-start = 11.56
-duration = 6.975
+text = "A Subscription is a filter on what a message holds, and a destination."
+start = 8.21
+duration = 4.775
+
+[[scene.caption]]
+text = "The first sends the order to a Work Process that approves it; the approved order is published again, and a second Subscription sends it to the ERP."
+start = 13.165
+duration = 9.725
+
+[[scene.caption]]
+text = "No filter ever names a node."
+start = 23.07
+duration = 2.5
+
+[[scene.caption]]
+text = "This is the flow Xmip's own System Tests run."
+start = 25.75
+duration = 3.2
 
 [[scene]]
 file = "scene-04.wav"
 
 [[scene.caption]]
-text = "For a CIO, Xmip keeps infrastructure decisions within the organization."
+text = "Acceptance is where responsibility changes hands."
 start = 0
-duration = 5.2
+duration = 3.6
 
 [[scene.caption]]
-text = "Nodes can be placed close to systems, at remote sites or on chosen hosting infrastructure."
-start = 5.38
-duration = 6.4
+text = "Before it, the stream belongs to its sender, and a refusal says where and why."
+start = 3.78
+duration = 5.35
 
 [[scene.caption]]
-text = "Open implementation and recorded architecture make it possible to assess the platform and understand how it evolves."
-start = 11.96
-duration = 7.9
+text = "Once Xmip accepts it, the message is written to storage before anything acts on it."
+start = 9.31
+duration = 5.5
+
+[[scene.caption]]
+text = "Every journey ends Completed, Failed or Dismissed, and a failed delivery is retried."
+start = 14.99
+duration = 5.875
+
+[[scene.caption]]
+text = "A message nothing wanted waits in the Dead Message Queue until its routing is fixed and it is replayed."
+start = 21.045
+duration = 6.525
+
+[[scene.caption]]
+text = "Every step is audited."
+start = 27.75
+duration = 1.85
 
 [[scene]]
 file = "scene-05.wav"
 
 [[scene.caption]]
-text = "Consider an illustrative order travelling from a sales system to a warehouse."
+text = "An integration in Xmip is text you can read."
 start = 0
-duration = 4.875
+duration = 3.2
 
 [[scene.caption]]
-text = "A Receive Location accepts the stream, and Xmip persists a message."
-start = 5.055
-duration = 4.675
+text = "One TOML file describes the cluster: its nodes, its routes, and what each piece of work requires."
+start = 3.38
+duration = 6.9
 
 [[scene.caption]]
-text = "Matching subscriptions open journeys to the destinations that want it."
-start = 9.91
-duration = 4.75
+text = "Teams version it, compare it and review it like code."
+start = 10.46
+duration = 3.425
 
 [[scene.caption]]
-text = "A Send Location attempts delivery to the warehouse."
-start = 14.84
-duration = 3.85
-
-[[scene.caption]]
-text = "That journey gives an interrupted exchange a place and an outcome to investigate."
-start = 18.87
-duration = 5.3
+text = "Every save is validated, then sliced into each node's own part."
+start = 14.065
+duration = 4.65
 
 [[scene]]
 file = "scene-06.wav"
 
 [[scene.caption]]
-text = "Acceptance is the handover of responsibility."
+text = "VS Code is where an integration is drawn."
 start = 0
-duration = 3.275
+duration = 3.875
 
 [[scene.caption]]
-text = "Before it, the sender owns the stream."
-start = 3.455
-duration = 2.575
+text = "The designer draws the same cluster file the text holds, so a change in one is a change in the other."
+start = 4.055
+duration = 6.6
 
 [[scene.caption]]
-text = "After it, Xmip persists a message and records its progress."
-start = 6.21
-duration = 3.925
+text = "Completion, validation and renaming that follows every reference come from Xmip's own language server, written in Rust."
+start = 10.835
+duration = 7.8
 
 [[scene.caption]]
-text = "Keeping refusal distinct from a later delivery failure helps both organizations understand which side should act next."
-start = 10.315
-duration = 7.975
+text = "It speaks the standard Language Server Protocol, so other editors can use Xmip's rules through their own LSP clients."
+start = 18.815
+duration = 7.75
 
 [[scene]]
 file = "scene-07.wav"
 
 [[scene.caption]]
-text = "A subscription expresses which messages a destination wants."
+text = "Where work runs is configuration, never a node's name."
 start = 0
-duration = 4.3
+duration = 4
 
 [[scene.caption]]
-text = "Each match opens a journey, while an unmatched message remains available for replay."
-start = 4.48
-duration = 5.65
+text = "Each node declares its roles: receiving, processing, sending, or executing all three at low latency."
+start = 4.18
+duration = 7.4
 
 [[scene.caption]]
-text = "Operators can pause a subscription without discarding its work, then resume the held messages in the order they arrived."
-start = 10.31
-duration = 7.825
+text = "It also declares its Node capabilities: words for what its environment gives it, such as a firewall opening or an installed module."
+start = 11.76
+duration = 9.05
+
+[[scene.caption]]
+text = "Work names what it requires, and Xmip places it on a node that has it."
+start = 20.99
+duration = 4.65
+
+[[scene.caption]]
+text = "One node with every role works; more nodes are split out as security, firewalls and load need."
+start = 25.82
+duration = 6.6
 
 [[scene]]
 file = "scene-08.wav"
 
 [[scene.caption]]
-text = "Recovery starts with the outcome."
+text = "The work belongs to the cluster, not to a node."
 start = 0
-duration = 2.25
+duration = 3.025
 
 [[scene.caption]]
-text = "A routing issue calls for correction and replay."
-start = 2.43
-duration = 3.15
+text = "Every node reaches Xmip Storage for all storage, and its Ledger holds every stream, message and journey until it is done."
+start = 3.205
+duration = 8.35
 
 [[scene.caption]]
-text = "A failed delivery calls for investigation and retry, or an intentional dismissal."
-start = 5.76
-duration = 6.325
+text = "Nodes work by time-limited claims, so when one dies, another picks its work up."
+start = 11.735
+duration = 5.55
 
 [[scene.caption]]
-text = "Xmip keeps those actions distinct, while configured attempts and backoff handle repeated delivery attempts."
-start = 12.265
-duration = 7.075
+text = "A primary Storage node has standbys that follow every write."
+start = 17.465
+duration = 4.225
+
+[[scene.caption]]
+text = "Stopped in order, it hands its writes over, and a standby takes over at once."
+start = 21.87
+duration = 4.925
+
+[[scene.caption]]
+text = "One that vanishes is waited for, never guessed about."
+start = 26.975
+duration = 3.575
 
 [[scene]]
 file = "scene-09.wav"
 
 [[scene.caption]]
-text = "In Xmip, an integration is one path."
+text = "One plan runs four ways: as local processes, in containers, on virtual machines, and on physical machines."
 start = 0
-duration = 2.975
+duration = 7.8
 
 [[scene.caption]]
-text = "A Receive Location accepts the stream and its Receive Port publishes it."
-start = 3.155
-duration = 5.025
+text = "Virtual machines run on Hyper-V, on KVM with libvirt, or on VMware."
+start = 7.98
+duration = 6.125
 
 [[scene.caption]]
-text = "Subscriptions pick it up and take it, through a Work Process where the route has one, to a Send Port and its Send Location."
-start = 8.36
-duration = 7.775
+text = "The cluster file stays the same; which node runs where belongs to the environment."
+start = 14.285
+duration = 5.575
 
 [[scene.caption]]
-text = "The path only runs forward."
-start = 16.315
-duration = 2.175
+text = "The System Tests prove the flow as processes on one computer, and the Systems Tests prove it on virtual machines, Windows and Linux."
+start = 20.04
+duration = 8.675
 
 [[scene.caption]]
-text = "Replay starts a new journey from an earlier point, linked to the original, and every step writes its audit record."
-start = 18.67
-duration = 7.3
+text = "Each way has its own safety and security trade-offs: Xmip advises, and you choose."
+start = 28.895
+duration = 5.8
 
 [[scene]]
 file = "scene-10.wav"
 
 [[scene.caption]]
-text = "In Visual Studio Code, text editing and graphical designers work with the same configuration."
+text = "Xmip is offline by design."
 start = 0
-duration = 6.5
+duration = 2.15
 
 [[scene.caption]]
-text = "Completion, validation and reference-aware renaming help developers make consistent changes, while Xmip’s language server supplies the rules behind the design."
-start = 6.68
-duration = 10.6
+text = "Packages are built where the internet is reachable, then brought in, and installation, operation and the runtime need no internet at all."
+start = 2.33
+duration = 9.075
+
+[[scene.caption]]
+text = "Nothing at runtime checks a license or downloads a module."
+start = 11.585
+duration = 4.25
+
+[[scene.caption]]
+text = "A node that may reach out says so with the Node capability online; a node that declares nothing is offline."
+start = 16.015
+duration = 7.475
+
+[[scene.caption]]
+text = "The networked option is there when you choose it."
+start = 23.67
+duration = 2.825
 
 [[scene]]
 file = "scene-11.wav"
 
 [[scene.caption]]
-text = "Xmip configuration uses readable TOML that teams can version, compare and review."
+text = "Operators choose their surface: the xmip command line, PowerShell, the web view, the desktop or the phone."
 start = 0
-duration = 6.325
+duration = 7
 
 [[scene.caption]]
-text = "The designer works with that same source."
-start = 6.505
-duration = 2.525
+text = "Each reads one shared operator model, so they cannot disagree, and an MCP client reads Xmip through the command line."
+start = 7.18
+duration = 7.975
 
 [[scene.caption]]
-text = "This makes configuration an engineering artifact the team can understand and maintain together."
-start = 9.21
-duration = 6.55
+text = "Health is said in words: Fine, Paused, Working, Stressed, Exhausted or Done."
+start = 15.335
+duration = 5.45
+
+[[scene.caption]]
+text = "A scope above is Holding when something beneath it needs attention, and it carries that leaf and its evidence."
+start = 20.965
+duration = 6.925
 
 [[scene]]
 file = "scene-12.wav"
 
 [[scene.caption]]
-text = "Some exchanges need business steps as well as delivery."
+text = "A Report presents data Xmip already keeps, such as the Audit and the Dead Messages."
 start = 0
-duration = 4.05
+duration = 5.7
 
 [[scene.caption]]
-text = "Xmip models these as Work Processes, designed in BPMN and compiled into executable units."
-start = 4.23
-duration = 7.225
+text = "A Quest probes an installation first, and its Report presents what it found."
+start = 5.88
+duration = 5.125
 
 [[scene.caption]]
-text = "Their state belongs to the ledger, so waiting work does not hold a thread."
-start = 11.635
-duration = 4.65
+text = "The first is the Regulation Quest, its regulation a parameter, GDPR first: for each requirement, the evidence or the gap, and the action that closes it."
+start = 11.185
+duration = 10.675
 
 [[scene.caption]]
-text = "Compilation and execution exist as components; connecting them into the assembled service remains a project milestone."
-start = 16.465
-duration = 8.4
+text = "It never says compliant; that judgment stays yours."
+start = 22.04
+duration = 3.575
+
+[[scene.caption]]
+text = "The Firewall, Security, Resilience and Dependency Reports sit in the same list, eleven in all, on every surface."
+start = 25.795
+duration = 7.9
 
 [[scene]]
 file = "scene-13.wav"
 
 [[scene.caption]]
-text = "Xmip separates how data travels, how it is represented, and what the integration does with it."
+text = "Xmip is extended through one boundary."
 start = 0
-duration = 6.3
+duration = 2.775
 
 [[scene.caption]]
-text = "Contracts define acceptance rules, while processing expresses business flow."
-start = 6.48
-duration = 5.35
+text = "A module is a library a node opens through the C ABI, written in Rust, or in C# with Xmip's Module package, published as a native library."
+start = 2.955
+duration = 10.925
 
 [[scene.caption]]
-text = "Providers extend individual capabilities through explicit interfaces and a versioned C boundary."
-start = 12.01
-duration = 6.825
+text = "The node cannot tell the two apart, and a template starts a new module with its test."
+start = 14.06
+duration = 5.575
 
 [[scene.caption]]
-text = "That modular architecture lets the platform evolve without treating every change as a replacement."
-start = 19.015
-duration = 6.55
+text = "Code on another machine reaches Xmip only over its HTTP/2 API, inside Xmip's mutual TLS."
+start = 19.815
+duration = 8.825
 
 [[scene]]
 file = "scene-14.wav"
 
 [[scene.caption]]
-text = "Xmip’s technology estate spans file transfer, web communication, message brokers, databases and industrial systems."
+text = "Xmip is open source."
 start = 0
-duration = 8.5
+duration = 2
 
 [[scene.caption]]
-text = "SFTP, HTTP, AMQP, Kafka, PostgreSQL and OPC UA are examples of that scope."
-start = 8.68
-duration = 8.1
+text = "Xmip itself is under the GNU Affero General Public License, version three or later, and it cannot be relicensed or withdrawn."
+start = 2.18
+duration = 9.15
 
 [[scene.caption]]
-text = "A site build chooses the technologies it needs."
-start = 16.96
-duration = 3.325
+text = "Its module boundary, the headers, bindings and packages a module is built against, is under the Apache License, so the module you write stays yours."
+start = 11.51
+duration = 10.1
 
 [[scene.caption]]
-text = "This is the estate’s breadth, with availability depending on the capability and its integration into the service."
-start = 20.465
-duration = 7.05
+text = "Every architectural decision is a record with its reasons, seventy-five so far, and tests hold the rules: the internal tests on every change, the System Tests on one computer, and the Systems Tests on machines."
+start = 21.79
+duration = 14.3
 
 [[scene]]
 file = "scene-15.wav"
 
 [[scene.caption]]
-text = "Trust is explicit at Xmip’s boundaries."
+text = "Xmip is measured, not promised."
 start = 0
-duration = 2.7
+duration = 2.175
 
 [[scene.caption]]
-text = "Parties carry identities, receive locations define what they accept, and outbound exchanges use their own identity."
-start = 2.88
-duration = 8.3
+text = "Its rule: anything it does around a payload that takes more than a millisecond is a defect to find."
+start = 2.355
+duration = 6.35
 
 [[scene.caption]]
-text = "Certificate authentication, protected storage connections and encrypted embedded data give that architecture concrete foundations."
-start = 11.36
-duration = 8.875
+text = "Carrying a file in and out on one node, Xmip's own work measured 430 microseconds at the median of twenty runs, with the storage's syncs counted apart."
+start = 8.885
+duration = 10.475
+
+[[scene.caption]]
+text = "And the honest count: six transports run in the assembled service today, of the eighty-eight declared."
+start = 19.54
+duration = 6.525
 
 [[scene]]
 file = "scene-16.wav"
 
 [[scene.caption]]
-text = "Xmip Storage gives work a persistent home."
+text = "That is Xmip: a message accepted once and accounted for, configuration you can read, work placed by what nodes declare, and the same answer on every surface."
 start = 0
-duration = 3.075
+duration = 10.625
 
 [[scene.caption]]
-text = "A small deployment can host storage within its own node, while other nodes reach it over mutual TLS."
-start = 3.255
-duration = 6.975
+text = "Xmip is in development, not GA yet."
+start = 10.805
+duration = 2.975
 
 [[scene.caption]]
-text = "The ledger holds messages, journeys and pending work, separate from administration and audit concerns."
-start = 10.41
-duration = 6.7
-
-[[scene]]
-file = "scene-17.wav"
-
-[[scene.caption]]
-text = "Xmip’s node roles are receive, execute and send, with Xmip Storage beside them."
-start = 0
-duration = 5.675
-
-[[scene.caption]]
-text = "One node covering every role works; separate receive, execute and send nodes are optional, split as security, firewall and load need."
-start = 5.855
-duration = 9.575
-
-[[scene.caption]]
-text = "One execute node works between receive and send nodes, such as a Work Process."
-start = 15.61
-duration = 5.625
-
-[[scene.caption]]
-text = "Another receives, processes and sends in one node at low latency, and more execute nodes join as the load needs."
-start = 21.415
-duration = 8.15
-
-[[scene.caption]]
-text = "Any external sender can send to any receive node, and any send node to any external receiver."
-start = 29.745
-duration = 6.725
-
-[[scene]]
-file = "scene-18.wav"
-
-[[scene.caption]]
-text = "A Party is defined in Xmip."
-start = 0
-duration = 2.375
-
-[[scene.caption]]
-text = "On receive, it is resolved from the call against its configuration; on send, it is a set configuration."
-start = 2.555
-duration = 7.525
-
-[[scene.caption]]
-text = "Some parts are optional: one internet-connected receive node, a file storage that brings software and packages onto the premises, and remote operators in a web browser or the phone app."
-start = 10.26
-duration = 12.15
-
-[[scene.caption]]
-text = "The developer and operator machines are the only ones with a graphical interface."
-start = 22.59
-duration = 5.175
-
-[[scene.caption]]
-text = "Retention, archiving and events are functions beside the message path."
-start = 27.945
-duration = 5
-
-[[scene]]
-file = "scene-19.wav"
-
-[[scene.caption]]
-text = "The same plan runs six ways: as processes on one computer, on Hyper-V, on Linux with KVM and libvirt, on VMware, in containers, and on physical machines."
-start = 0
-duration = 12.05
-
-[[scene.caption]]
-text = "One cluster file serves all six; which node runs on which machine belongs to the environment, never to the cluster file."
-start = 12.23
-duration = 8.425
-
-[[scene.caption]]
-text = "The System Tests prove the flow and its rules on one computer; the Systems Tests prove it on real Windows and Linux machines and in containers; and physical machines are where an end user runs it."
-start = 20.835
-duration = 12.725
-
-[[scene]]
-file = "scene-20.wav"
-
-[[scene.caption]]
-text = "Xmip’s architecture targets Windows, Linux and Mac computers with one integration model."
-start = 0
-duration = 6.075
-
-[[scene.caption]]
-text = "Site builds select the roles and technologies for a developer machine, an edge gateway or a server."
-start = 6.255
-duration = 6.525
-
-[[scene.caption]]
-text = "Packaging and validation progress separately on each platform."
-start = 12.96
-duration = 4.525
-
-[[scene]]
-file = "scene-21.wav"
-
-[[scene.caption]]
-text = "Offline operation is part of Xmip’s design."
-start = 0
-duration = 3.4
-
-[[scene.caption]]
-text = "Packages can be prepared where dependencies are reachable, then brought into disconnected environments."
-start = 3.58
-duration = 6.575
-
-[[scene.caption]]
-text = "Internet access is an explicit capability, supporting sites where connectivity is restricted, intermittent or deliberately absent."
-start = 10.335
-duration = 8.8
-
-[[scene]]
-file = "scene-22.wav"
-
-[[scene.caption]]
-text = "Operators can choose a command line, PowerShell, desktop or web interface without learning a different platform model."
-start = 0
-duration = 7.825
-
-[[scene.caption]]
-text = "The same scopes and meanings guide investigation."
-start = 8.005
-duration = 3.2
-
-[[scene.caption]]
-text = "Automation and visual inspection become different ways to work with the same operational evidence."
-start = 11.385
-duration = 6.55
-
-[[scene]]
-file = "scene-23.wav"
-
-[[scene.caption]]
-text = "Xmip’s mobile host brings the same cluster health and scope navigation to Android and iPhone targets."
-start = 0
-duration = 7.15
-
-[[scene.caption]]
-text = "It follows nodes remotely in the Observer role."
-start = 7.33
-duration = 3.45
-
-[[scene.caption]]
-text = "Device validation remains a project milestone, while the principle stays the same: understand the affected scope wherever you are."
-start = 10.96
-duration = 8.475
-
-[[scene]]
-file = "scene-24.wav"
-
-[[scene.caption]]
-text = "Health should tell an operator where to look and what to do."
-start = 0
-duration = 3.475
-
-[[scene.caption]]
-text = "Xmip uses named conditions and scope navigation."
-start = 3.655
-duration = 3.65
-
-[[scene.caption]]
-text = "A parent holding points into its children, where the affected resource and its reason help distinguish a deliberate pause from strain or failure."
-start = 7.485
-duration = 9.225
-
-[[scene]]
-file = "scene-25.wav"
-
-[[scene.caption]]
-text = "Current observation and audit answer different questions."
-start = 0
-duration = 3.95
-
-[[scene.caption]]
-text = "Observation shows what is happening now."
-start = 4.13
-duration = 3
-
-[[scene.caption]]
-text = "Audit records actions and outcomes over time."
-start = 7.31
-duration = 3.45
-
-[[scene.caption]]
-text = "Chained program records, verification and journey evidence help the team investigate a specific exchange instead of guessing from disconnected symptoms."
-start = 10.94
-duration = 10.275
-
-[[scene]]
-file = "scene-26.wav"
-
-[[scene.caption]]
-text = "Xmip also exposes read-only access through the Model Context Protocol."
-start = 0
-duration = 5.275
-
-[[scene.caption]]
-text = "Clients can inspect health, measurements, audit and journeys through tools and scoped resources."
-start = 5.455
-duration = 6.05
-
-[[scene.caption]]
-text = "The behavior follows the command line, and each answer is audited, keeping observation connected to established operational controls."
-start = 11.685
-duration = 8.825
-
-[[scene]]
-file = "scene-27.wav"
-
-[[scene.caption]]
-text = "Xmip is open source, so teams can inspect, improve and extend it."
-start = 0
-duration = 4.825
-
-[[scene.caption]]
-text = "The platform is licensed under the GNU Affero General Public License, version three or later."
-start = 5.005
-duration = 6.875
-
-[[scene.caption]]
-text = "Recorded architecture and explicit capability interfaces support that freedom."
-start = 12.06
-duration = 5.6
-
-[[scene.caption]]
-text = "Independent modules loaded across the documented boundary can use their publisher’s chosen license."
-start = 17.84
-duration = 6.875
-
-[[scene]]
-file = "scene-28.wav"
-
-[[scene.caption]]
-text = "The engineering approach connects decisions to implementation and verification."
-start = 0
-duration = 5.35
-
-[[scene.caption]]
-text = "Capability boundaries make ownership clear, while the System Tests and test harnesses exercise behavior and expose evidence."
-start = 5.53
-duration = 8.35
-
-[[scene.caption]]
-text = "For the project team, progress means a demonstrated flow and reproducible results, alongside the design."
-start = 14.06
-duration = 7.575
-
-[[scene]]
-file = "scene-29.wav"
-
-[[scene.caption]]
-text = "Xmip Continuum is the active development stream."
-start = 0
-duration = 3.55
-
-[[scene.caption]]
-text = "The working foundation covers messaging, recovery, storage and program audit."
-start = 3.73
+text = "To try it, the getting-started guide carries a file in and out on your own computer."
+start = 13.96
 duration = 5.475
 
 [[scene.caption]]
-text = "Next milestones bring the broader components into the assembled service and complete deployment validation."
-start = 9.385
-duration = 7.075
-
-[[scene.caption]]
-text = "Linear names the product release model; no Linear release has shipped yet."
-start = 16.64
-duration = 4.65
-
-[[scene]]
-file = "scene-30.wav"
-
-[[scene.caption]]
-text = "Xmip brings the story together: connect systems under your control, define the exchange in readable configuration, and follow its recorded outcome."
-start = 0
-duration = 9.95
-
-[[scene.caption]]
-text = "Leaders assess business continuity and infrastructure choice."
-start = 10.13
-duration = 4.15
-
-[[scene.caption]]
-text = "Developers work in TOML and Visual Studio Code."
-start = 14.46
-duration = 3.875
-
-[[scene.caption]]
-text = "Operators follow health, messages and journeys to investigate and recover the exchange."
-start = 18.515
-duration = 6.225
-
-[[scene.caption]]
-text = "That is the platform this project is building."
-start = 24.92
-duration = 3.15
+text = "Thank you for watching."
+start = 19.615
+duration = 1.9

@@ -36,7 +36,9 @@ pub struct Opened<'a> {
 
 /// Open for `running`, an attempt started and serving nothing, the node
 /// configured at `configuration`, what the program holds while it runs,
-/// telling `tell` of each act its node takes.
+/// telling `tell` of each act its node takes and of each change of what its
+/// own Storage node is, so the node publishes at once (ADR-0056, amendment
+/// 2026-11-24).
 ///
 /// # Errors
 /// What cannot be opened, at accept-work, in words naming it.
@@ -50,6 +52,10 @@ pub fn opened<'a>(
     let place = publication::place(running);
     let publisher = Publisher::new(program, audit, running, place);
     let board = publisher.board(tell);
+    let changed = tell.clone();
+    running.storage().telling(move || {
+        let _ = changed.send(Told::Storage);
+    });
     let operate = running.operate(&board, audit).map_err(refused)?;
     let listening = (!operate.is_empty()).then(|| {
         let each: Vec<String> = operate.iter().map(Listener::address).collect();

@@ -58,6 +58,7 @@ in the TOML configuration.*).
 | Term | Meaning |
 | --- | --- |
 | **Compiled unit** | A function a Module provides, declared in its manifest, `[[modules.manifest.units]]`: its name, its capability — prepare, promote, demote, transform, work-process or validate — the stages it serves, that it works offline, and the settings a call to it gives. Called, it is handed the stage it is called at. |
+| **Promote unit** | A compiled unit of the capability `promote` in a Module's own library: values read out of a Message's content into its context, at receive alone, through the table `xmip_module.h` section 14 declares. A library holds one, its descriptor's module `promote` and its standard the unit's name; opened once for each step entry with its settings, then called per Message. Written in Rust, or in C# over `Xmip.Module` and published with NativeAOT (ADR-0075). The standard unit Promote is the built-in module `xmip`'s. |
 | **Step entry** | A call to a compiled unit with its arguments: an entry of `[[preparation_steps]]`, `[[promotions]]`, `[[demotions]]` or `[[transformations]]`, naming its module, its unit and its settings. A Receive or Send Port or Location attaches entries by name. |
 | **Receive Preparation**, **Process Preparation**, **Send Preparation** | A prepare unit called at the receive, process or send stage. One unit may serve several, *just an enum away what it does in what situation* (the owner, 2026-10-22): decompress on receive, compress on send. Only a prepare unit is a Preparation; *A transformation is not a prepare, just so we are clear.* |
 | **Debatching** | Splitting one Message into a Message per record. On receive — a `debatch` unit attached by `debatch = "<entry>"`, after Prepare and Message creation, before the Contract — and in an Xmip Work Process. All or nothing (the owner, 2026-10-27: *If one fails, they all fail*): each record written as soon as it is complete, routed only once every record is split and validated, in its inbound order, then a Journey of its own carrying the values that keep the records together (ADR-0031, amendment 2026-10-27). One splitting implementation, called from both (the owner, 2026-10-22: *can we go with both?*), `xmip-core-runtime`'s `split`. Built in a Work Process; the receive's is decided, not built (open problem 47). |
@@ -90,18 +91,36 @@ type in the code and **roll** had never been written down here at all.
 | **Role** | What something is permitted or expected to be. A Node has `NodeRole`, eight of them: Receiving, Processing and Sending serve one stage of the message path each; Executing is their sum, all three in one process, the low-latency role; Operational changes runtime state, Monitoring reads it, Development is the System Tests'; Storage is Xmip Storage, the doorway every other node calls for all storage (ADR-0056, amendments 2026-10-01). A node declares its roles and never has one read from its name. An operator has a role at a surface: Observer, Operator, Developer (ADR-0009). Neither has anything to do with a roll. Executor, Reader and Writer were `deployment-model.md`'s names for node roles until 2026-10-01 and are not words any more. |
 
 A node's **capability** is what it declares in ADR-0056's terms — its roles,
-which say the stages of the message path it serves, and whether it is online
-— published at `<node>/capability` and never read from its name. A **stage**
-(receive, process, send) is where a Message is on its path and a segment of a
-scope; a node does not declare a stage, its roles serve them.
+which say the stages of the message path it serves, and its Node
+capabilities — published at `<node>/capability` and never read from its
+name. A **stage** (receive, process, send) is where a Message is on its path
+and a segment of a scope; a node does not declare a stage, its roles serve
+them.
+
+A **Node capability** is a word naming what a node's environment gives it:
+a firewall opening, software installed, a system it reaches —
+`firewall-party-e`, `order-approval-module`. A node's roles are Xmip's; its
+Node capabilities are named by whoever runs it, declared under its own
+`[nodes.<name>] capabilities` in the cluster's file, lowercase letters,
+digits and hyphens. Xmip reads no meaning from one and only matches it,
+with one exception it asks after itself: **online**, a route to the
+internet (ADR-0045); a node declaring nothing is offline. The precedent is
+Azure Pipelines' agent capabilities and the demands a job makes of them,
+Kubernetes' node labels and the selectors a workload places itself by, and
+BizTalk's Hosts, the server groups a handler or an orchestration is bound to
+(ADR-0056, amendment 2026-11-24: *Node capabilities is better*). Never a
+*user capability*.
 
 A **requirement** is what a piece of work needs of the node that takes it,
 in the same terms: the stage it needs served — a Receive Location the
-receive stage, a Send Port the send stage — and whether it needs the online
-capability (`node::Requirement`). **Placement** is the match: among the
-nodes whose capability satisfies the requirement, the next in turn takes
-the work, and where none does it is refused, naming the requirement and
-every node considered (`cluster::place`). The **Rotation** is the one turn
+receive stage, a Send Port the send stage — and the Node capabilities its
+`requires` names, `online` among them where it reaches off the machine
+(`node::Requirement`). **Placement** is the match: among the nodes whose
+capability satisfies the requirement, in the cluster's file's order, the
+next in turn takes the work, and where none does it is refused, naming the
+requirement and every node considered (`cluster::place`). Placement never
+reads a node's name, and a Subscription filters on what a Message holds,
+never on a node. The **Rotation** is the one turn
 every round robin of the cluster takes, Xmip Storage's over the Storage
 nodes and placement's (`cluster::Rotation`). A **member** is a node of the
 cluster as the others reach it — its node, its sync and operate addresses,
@@ -450,9 +469,10 @@ copying the primary's writes behind it; one is promoted only where every
 Storage node listed answers and none is a primary, so a primary that
 vanishes is waited for until there is a witness, while one stopped in
 order hands over to a standby holding every write it took, its
-successor, promoted at once; each promotion raises the **epoch**, and a
+successor, promoted at once, and only a Storage node listed follows, by
+the certificate it proves; each promotion raises the **epoch**, and a
 primary of an earlier one is not asked (ADR-0056, amendments 2026-10-22,
-drafted, 2026-11-08 and 2026-11-23). It always keeps three databases, one to each
+drafted, 2026-11-08, 2026-11-23 and 2026-11-24). It always keeps three databases, one to each
 data domain, whatever the backend: the **runtime database**, which is the
 Ledger; the **administration database** — administration, deployment state,
 cluster membership, operator state, and the Subscriptions each Host Service

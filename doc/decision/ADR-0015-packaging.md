@@ -1567,3 +1567,54 @@ for the owner to strike, what Xmip's containers can run under:
   where Windows and the systems have their own.
 - **The domain controller stays a machine:** Active Directory runs in no
   container.
+
+## Amendment, 2026-11-24: a Windows ISO is booted with Enter, pressed by one script
+
+**Provenance.** The owner, 2026-11-24, of the review's findings on the
+test tooling and the rename: *Do as you propose*. Enter came the day
+before, landed without a record (commit 80623b9).
+
+- **Enter, never Space.** Where the amendments above say Space is pressed
+  at a Windows ISO's prompt, under Hyper-V and libvirt alike, it is Enter:
+  a press that comes after the prompt reaches the Windows Boot Manager and
+  stops its countdown, and Space then left a machine waiting at its menu
+  for three hours (2026-11-23); Enter chooses Windows Setup there. libvirt
+  sends `KEY_ENTER` (`LibvirtInstallation.ps1`).
+- **The Hyper-V press is written once.** `deploy/dsc/machine/HyperVBootKey.ps1`
+  presses Enter in the VM's console forty times, half a second apart:
+  Microsoft DSC's Xmip.HyperV resources dot-source it, and Ansible's
+  `xmip_machine` role reads it on the controller and hands it to the host
+  whole as `win_powershell`'s script, so it asks for no PowerShell 7 there.
+  Of the three rules *What is still written twice, and why* lists, the
+  host's address on the switch and the network's NAT and the TPM's key
+  protector are still Ansible's own copies, left for once the Hyper-V
+  template has run.
+
+Proved by `test/DeployEnvironment.Test.ps1` (one file presses the key, and
+both technologies run it) and `test/MsdscHyperV.Test.ps1` (forty presses of
+Enter, twenty seconds).
+
+## Amendment, 2026-11-24: four ways to run the node plan in the material; every hypervisor and operating system stays a target of its own
+
+**Provenance.** The owner, 2026-11-24, of the overview's slide *One plan,
+six ways to run it*: *Six ways to run it, it does not add up*, the ways
+being *Local processes, Containers, VMs and Physical Machines*, each with
+its place, Xmip advising and the end user choosing. Asked whether an
+operating system is a choice inside each way rather than a way of its own:
+*Yes, for presentation and video. Technically, coding: no. It has to be
+there.* The wording is the assistant's, the same day, for the owner to
+strike.
+
+- **The material presents four ways to run the node plan:** local
+  processes, containers, virtual machines and physical machines. Hyper-V,
+  KVM with libvirt and VMware are the virtual machines' hypervisors, never
+  ways of their own. Each way has its own safety and security trade-offs;
+  Xmip advises, and the end user chooses, as how a node runs is theirs
+  (the amendment of 2026-11-23). The overview deck, its video and the
+  environment deck say so.
+- **Technically nothing merges.** Each hypervisor — Hyper-V, KVM with
+  libvirt, VMware — and each operating system — Windows, Linux, macOS —
+  stays a target of its own, with its own templates, builds and tests, as
+  the amendments above and `deploy/dsc` keep them.
+- This supersedes the count in the amendment of 2026-11-23, *containers, a
+  sixth way to run the node plan*; its decisions on containers stand.

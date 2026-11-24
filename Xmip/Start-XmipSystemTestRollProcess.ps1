@@ -29,7 +29,7 @@ function Start-XmipSystemTestRollProcess {
 
         .PARAMETER Start
             What Start-XmipSystemTestRoll decided: Suite, Cluster, Stress,
-            Test, Rounds, Nodes, NodeRole, OnlineNodes, Path, ClusterFile,
+            Test, Rounds, Nodes, NodeRole, Capability, Path, ClusterFile,
             Named, Seconds, TimeFactor, Hidden, Choice and What.
     #>
     [CmdletBinding()]
@@ -85,7 +85,7 @@ function Start-XmipSystemTestRollProcess {
         nodes        = @($nodes)
         node_names   = if ([bool] $Start.Named) { 'named' } else { 'configured' }
         cluster_file = $clusterFile
-        online       = @($Start.OnlineNodes)
+        capabilities = @(Get-XmipNodeCapabilityEntry -Capability $Start['Capability'])
         duration_s   = [double] $Start.Seconds
         time_factor  = [double] $Start.TimeFactor
         snapshot     = $publication.Snapshot

@@ -560,7 +560,10 @@ Describe 'The Xmip resources'' own steps' {
         $runs.said | Should -Be 'activated: serial 3 of save sha256:00'
     }
 
-    It 'restarts a running node not running the slice it holds, then waits until it is ready' {
+    It 'leaves a running node not running the slice it holds to its Service step to restart' {
+        # ADR-0056, amendment 2026-11-24: the slice restarted the node and
+        # asked it before its certificates and package were placed, on the
+        # program installed then; one restart and one wait come last now.
         Mock -CommandName Test-NodeSlice -MockWith { $true }
         Mock -CommandName Get-NodeSliceAccess -MockWith { @() }
         Mock -CommandName Get-NodeFileState -MockWith { @{ _exist = $true } }
@@ -569,32 +572,25 @@ Describe 'The Xmip resources'' own steps' {
         Mock -CommandName Get-NodeActivation -MockWith { @{ active = $false; said = 'refused' } }
         Mock -CommandName Test-NodeServiceActive -MockWith { $true }
         Mock -CommandName Wait-NodeReadiness -MockWith { }
+        Mock -CommandName Restart-NodeService -MockWith { }
         Mock -CommandName Invoke-DscProgram -MockWith { }
-        if ($IsWindows) {
-            Mock -CommandName Restart-Service -MockWith { }
-        }
         [hashtable] $slice = @{
             configuration = Join-Path $TestDrive 'config'; source = 'node.xmip'
             certificate = 'authority.pem'; node = 'n'; account = 'xmip'
-            program = Join-Path $TestDrive 'installed/xmip-service'; ready = 180
+            program = Join-Path $TestDrive 'installed/xmip-service'
         }
 
         (Get-NodeMachineState -Kind Slice -Instance $slice)._exist | Should -BeFalse
         (Get-NodeMachineState -Kind Slice -Instance $slice).activation | Should -Be 'refused'
         Set-NodeSlice -Instance $slice -Confirm:$false
 
-        if ($IsWindows) {
-            Should -Invoke -CommandName Restart-Service -Times 1 -Exactly
-        }
-        else {
-            Should -Invoke -CommandName Invoke-DscProgram -Times 1 -Exactly -ParameterFilter {
-                $Program -eq 'systemctl' -and $Argument[0] -eq 'restart'
-            }
-        }
-        Should -Invoke -CommandName Wait-NodeReadiness -Times 1 -Exactly
+        Should -Invoke -CommandName Restart-NodeService -Times 0 -Exactly
+        Should -Invoke -CommandName Invoke-DscProgram -Times 0 -Exactly
+        Should -Invoke -CommandName Wait-NodeReadiness -Times 0 -Exactly
+        Get-NodePending -Configuration $slice.configuration | Should -Be 'restart'
     }
 
-    It 'restarts no node that does not run, and waits for none' {
+    It 'leaves no node that does not run a restart' {
         Mock -CommandName Test-NodeSlice -MockWith { $true }
         Mock -CommandName Get-NodeSliceAccess -MockWith { @() }
         Mock -CommandName Get-NodeFileState -MockWith { @{ _exist = $true } }
@@ -605,15 +601,74 @@ Describe 'The Xmip resources'' own steps' {
         Mock -CommandName Wait-NodeReadiness -MockWith { }
         Mock -CommandName Invoke-DscProgram -MockWith { }
         [hashtable] $slice = @{
-            configuration = Join-Path $TestDrive 'config'; source = 'node.xmip'
+            configuration = Join-Path $TestDrive 'stopped-config'; source = 'node.xmip'
             certificate = 'authority.pem'; node = 'n'; account = 'xmip'
-            program = Join-Path $TestDrive 'installed/xmip-service'; ready = 180
+            program = Join-Path $TestDrive 'installed/xmip-service'
         }
 
         Set-NodeSlice -Instance $slice -Confirm:$false
 
         Should -Invoke -CommandName Invoke-DscProgram -Times 0 -Exactly
         Should -Invoke -CommandName Wait-NodeReadiness -Times 0 -Exactly
+        Get-NodePending -Configuration $slice.configuration | Should -BeNullOrEmpty
+    }
+
+    It 'leaves a running node whose certificate was placed a restart, and none that names no node' {
+        Mock -CommandName Test-NodeServiceActive -MockWith { $true }
+        [string] $source = Join-Path $TestDrive 'files/node.pem'
+        New-Item -ItemType Directory -Force -Path (Split-Path $source) | Out-Null
+        Set-Content -LiteralPath $source -Value 'certificate'
+        [string] $configuration = Join-Path $TestDrive 'file-config'
+        [hashtable] $file = @{ path = Join-Path $configuration 'tls/node.pem'; source = $source }
+
+        Set-NodeFile -Instance $file -Confirm:$false
+        Get-NodePending -Configuration $configuration | Should -BeNullOrEmpty
+
+        $file.node = 'n'
+        $file.configuration = $configuration
+        Set-NodeFile -Instance $file -Confirm:$false
+        Get-NodePending -Configuration $configuration | Should -Be 'restart'
+    }
+
+    It 'restarts a node left ''<Pending>'' <Restarts> time(s), waits <Waits>' -ForEach @(
+        @{ Pending = 'restart'; Ran = $true; Restarts = 1; Waits = 1 }
+        @{ Pending = 'ready'; Ran = $true; Restarts = 0; Waits = 1 }
+        @{ Pending = ''; Ran = $true; Restarts = 0; Waits = 0 }
+        @{ Pending = 'restart'; Ran = $false; Restarts = 0; Waits = 0 }
+    ) {
+        $script:ServiceRan = $Ran
+        Mock -CommandName Test-NodeServiceActive -MockWith { $script:ServiceRan }
+        Mock -CommandName Restart-NodeService -MockWith { }
+        Mock -CommandName Start-NodeService -MockWith { }
+        Mock -CommandName Wait-NodeReadiness -MockWith { }
+        [string] $configuration = Join-Path $TestDrive "service-$Pending-$Ran"
+        if ($Pending) {
+            Set-NodePending -Configuration $configuration -Pending $Pending -Confirm:$false
+        }
+        [hashtable] $service = @{
+            name = 'xmip-n'; node = 'n'; configuration = $configuration; ready = 180
+            program = Join-Path $TestDrive 'installed/xmip-service'
+        }
+
+        Set-NodeService -Instance $service -Confirm:$false
+
+        Should -Invoke -CommandName Restart-NodeService -Times $Restarts -Exactly
+        Should -Invoke -CommandName Start-NodeService -Times 1 -Exactly
+        Should -Invoke -CommandName Wait-NodeReadiness -Times $Waits -Exactly
+        Get-NodePending -Configuration $configuration | Should -BeNullOrEmpty
+    }
+
+    It 'finds a running node left a restart out of its desired state' {
+        Mock -CommandName Test-NodeServiceRunning -MockWith { $true }
+        [string] $configuration = Join-Path $TestDrive 'service-state'
+        [hashtable] $service = @{ name = 'xmip-n'; configuration = $configuration }
+        (Get-NodeMachineState -Kind Service -Instance $service)._exist | Should -BeTrue
+        Set-NodePending -Configuration $configuration -Pending 'restart' -Confirm:$false
+        [hashtable] $state = Get-NodeMachineState -Kind Service -Instance $service
+        $state._exist | Should -BeFalse
+        $state.pending | Should -Be 'restart'
+        (Get-NodeMachineState -Kind Service -Instance @{ name = 'xmip-n' })._exist |
+            Should -BeTrue -Because 'a far end''s service names no configuration'
     }
 
     It 'waits for a node it restarted as --readiness says, refused in words past its window' {
@@ -833,19 +888,24 @@ Describe 'The Xmip resources'' own steps' {
         }
         function dnf { $script:Ran.Add("dnf $($args -join ' ')"); $global:LASTEXITCODE = 0 }
         # Not running before the first install; running before the upgrade,
-        # which restarts it, so it is waited for until it is ready.
+        # which restarts it, so its Service step waits for it until it is
+        # ready, and restarts it no more (ADR-0056, amendment 2026-11-24).
         $script:Running = $false
         function Test-NodeServiceActive { param([string] $Name) $script:Running }
         function Stop-NodeService { param([string] $Name) }
         function Wait-NodeReadiness { param([hashtable] $Instance) $script:Ran.Add('ready') }
-        [hashtable] $package = @{ node = 'n'; path = 'xmip.rpm'; cluster = 'c'; account = 'xmip' }
+        [string] $configuration = Join-Path $TestDrive 'package-config'
+        [hashtable] $package = @{ node = 'n'; path = 'xmip.rpm'; cluster = 'c'; account = 'xmip'
+            configuration = $configuration }
         Install-NodePackage -Instance $package -Confirm:$false
+        Get-NodePending -Configuration $configuration | Should -BeNullOrEmpty
         $script:Installed = 'aa'
         $script:Running = $true
         Install-NodePackage -Instance $package -Confirm:$false
         @($script:Ran | Where-Object { $_ -notlike 'rpm -q *' }) |
             Should -Be @('dnf install --assumeyes --disablerepo=* xmip.rpm',
-                'rpm --upgrade --replacepkgs --replacefiles xmip.rpm', 'ready')
+                'rpm --upgrade --replacepkgs --replacefiles xmip.rpm')
+        Get-NodePending -Configuration $configuration | Should -Be 'ready'
     }
 
     It 'quotes every value it hands the machine''s shell as one word' {

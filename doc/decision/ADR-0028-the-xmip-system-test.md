@@ -1760,7 +1760,8 @@ day, for the owner to strike:
 
 ## Amendment, 2026-11-23: the System Tests and the demo run one fixed solution, the plan as processes on one computer; every node of the plan is optional
 
-**Provenance.** The owner, 2026-11-23, of the six ways to run the node plan:
+**Provenance.** The owner, 2026-11-23, of the six ways to run the node plan
+(four ways since 2026-11-24: ADR-0015, amendment of that date):
 *for basic tests and demo, the local process solution is the way to go*,
 and, how a site runs a node being the end user's, *For estate tests and
 demo, there has to be a fixed solution. [System Tests] and demo*; and of
@@ -1903,3 +1904,125 @@ difference, the parameters, what crosses and back, Core.Internal's
 verification alone and its record) and by the estate's Pester suite run on
 a Linux test computer through `Start-XmipTest -Suite Core.Estate
 -ComputerName`.
+
+## Amendment, 2026-11-24: the plan's file says what each node's environment gives it, and the work requires it
+
+**Provenance.** The owner, 2026-11-23: *Configuration rules where payload is
+executed, including promoted values*; 2026-11-24: *I do not want the end
+user to write subscription filters based on node names*, *Node capabilities
+is better* and *An obvious node capability is online, internet access*
+(ADR-0056, amendment of this date). The words the plan's nodes declare are
+the assistant's, the same day, for the owner to strike.
+
+- **The plan says where its payload work runs, never by a node's name.**
+  `configuration/cluster.xmip` declares two nodes' Node capabilities: EX1
+  `order-approval-module`, Order approval's module installed there, and EX2
+  `firewall-party-d`, `firewall-party-e` and `erp-direct`, Party-D's and
+  Party-E's firewall openings and a direct link to the ERP. *Order
+  approval* requires `order-approval-module`, so it runs on EX1 alone, where
+  the amendment of 2026-11-22 found its work on EX2; the Receive Locations
+  of the remittance advices and the inventory reports require their
+  Party's opening, and the two Send Ports to the ERP that carry them require
+  `erp-direct`, so both routes are received and sent on in EX2 by what the
+  file declares, no longer by where they stand in its lists. Every other
+  piece of work goes round the nodes serving its stage, in the file's order
+  (ADR-0056, amendment of this date, open problem 104), and every node of
+  the plan takes work. `served::given` holds it over the shipped files: the
+  executing node runs no Work Process.
+- **A run is started with Node capabilities as it is with roles.**
+  `Start-XmipTest -NodeCapability @{ RX1 = 'online' }` writes each node's
+  `capabilities` into the run's cluster file, and a node named with none
+  takes what the System Tests' own file declares for it; `-OnlineNodes` and
+  `XMIP_SYSTEM_TEST_ONLINE_NODES` are deleted. The roll reads each node's
+  from the run's file, the cluster binary passes them on as
+  `--capabilities`, each node process is told its own by `--capabilities`
+  and publishes them with its roles, and the run's `[run]` lists them,
+  `<node>=online`. `Get-XmipTestNode` says a node's as `Capability`, and
+  `Get-XmipTestStatus` a run's as `NodeCapability`.
+- **The simulated handoff declares every Node capability the file's work
+  requires**, since it serves each stage on its roster's first nodes, which
+  need not be the file's (`subscribing::configured`).
+
+## Amendment, 2026-11-24: the test tooling sends what Git holds, names what failed, and runs cargo once for each mode
+
+**Provenance.** The owner, 2026-11-24, of the review's findings on the test
+computer tooling, Core.Internal, the rename and the Systems Tests: *Do as
+you propose* (open problems 145 to 149). The choices below are the
+worker's drafting, for the owner to strike.
+
+- **A send is what Git would hold** (open problem 145): every file a
+  repository of the estate tracks, `git ls-files --recurse-submodules`, and
+  every untracked file no ignore file of its repository excludes, asked of
+  each repository holding one with `git check-ignore`, never what this
+  clone's own exclude or the account's ignore file names; and the
+  workspace's `Cargo.lock`, which the root's `.gitignore` keeps out of Git
+  until the first release, so the computer builds the versions this one
+  resolved. Where the
+  amendment of 2026-11-23 says the estate's one walk decides, the walk only
+  finds the untracked files; build output still stays out by its
+  `CACHEDIR.TAG`. A receive takes away what is gone and the folders it
+  leaves empty before it unpacks what changed, so a path that turned from a
+  file into a folder, or back, is taken; one that failed once it began
+  makes the next send whole.
+- **One run in a copy at a time, by the folder's lock**: `<folder>/tree.lock`,
+  taken by a probe and a receive while they work and by a start for its
+  run, whose processes hold it until the last of them ends, as they hold
+  their build slot. A second start, or a send while a run works there, is
+  refused at once, where a walk of every process's working folder once
+  missed a start still copying.
+- **The test computer is Linux**, and says so: its shell takes bash, GNU's
+  `find` and `xargs`, util-linux's `flock` and `setsid`, `rsync`, `git` and
+  `pwsh`, and its first probe refuses a computer lacking one, naming it.
+  The computer file's `user` and `host` are refused unless an account's
+  name and a host's name, an alias of ssh's configuration or an IPv4
+  address, and ssh and scp take nothing after `--` as an option. Every line
+  the computer writes is shown, and kept, with its control characters taken
+  out.
+- **Core.Internal runs cargo once for each mode over the crates named**
+  (open problem 147), as a landing does: their format; their lints with
+  every feature; their tests and lints with their default features; their
+  tests with every feature, over those declaring one; then each crate built
+  alone, `cargo check --all-targets -p <crate>`, since one command gives a
+  dependency every feature the crates named ask of it, and a crate that
+  compiles only through another's features is caught only alone. A crate
+  with a `.cargo/config.toml` of its own, the System Tests' rig, is tested
+  in its own folder, where cargo reads it. Core.Internal runs every step to
+  its end, `--no-fail-fast` and `--keep-going`, and every part, where a
+  landing stops at its first failure. On the Linux test computer the
+  transports' 89 crates took 86 s warm before and 81 s after, 52 s of it
+  the five commands and some 29 s the checks of each crate alone. A
+  module's .NET projects are those of
+  its own repository (`Find-XmipModuleProject`), never a nested module's,
+  so the root, which holds none, no longer builds and tests every module's
+  again in the whole suite.
+- **A failure names the crate or project and the test** (open problem
+  146): one reading of what cargo and dotnet say (`Get-XmipToolFailure`):
+  a crate that did not compile or warned, with the first error and its
+  place; each test that failed, with what it panicked at; a file the
+  formatter would change; a project's error and each test that failed. The
+  run's record holds one failure for each, its module, its test and those
+  words, so `Get-XmipTestResult -Suite Core.Internal -ComputerName` brings
+  them back from a test computer, where the part's log stays; the modules
+  no failure names count as passed.
+- **The retired names are looked for in every file the estate tracks**
+  (open problem 148), its submodules' rustdoc, READMEs and fixtures among
+  them, through `git grep --recurse-submodules`, where `test/Terminology.Test.ps1`
+  read the root's `doc/` alone; the fixtures say `SYSTEM-TEST` and
+  `"system-test"` as the rig's own do.
+- **The Systems Tests refuse every node that does not resolve at once**
+  (open problem 149), naming each and the `-Nodes` that run the ones that
+  resolve, before any node is asked (`real::mapped`). The example
+  environments keep the cluster file's OP1 without a machine: the owner's
+  node plan gives the operator's machine no node (the environment deck,
+  slide 3), and mapping one would change his plan, not the tooling; the
+  amendment of 2026-11-23's *REFUSED by name before anything starts* is
+  kept, and said of every such node in one sentence.
+
+Proved by `test/TestComputer.Test.ps1` (what Git would hold sent, a failed
+receive followed by a whole send, a path that turns from a file into a
+folder and back and a run holding the copy, run on Linux by the computer's
+own shell, the refused `user` and `host`, the control characters, the lock
+and the probe, one cargo for each mode and each crate alone, every failure
+named from cargo's and dotnet's words and recorded), `test/Publish-XmipChange.Test.ps1`
+(the landing's Rust and .NET parts), `test/Terminology.Test.ps1` and
+`real.rs`'s tests (every node that does not resolve named at once).

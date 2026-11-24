@@ -21,19 +21,16 @@ Describe 'RocksDB is linked from the one library kept for its version' {
         } $script:Root
         [string] $version = $native.Version
 
-        [hashtable] $locks = @{
-            Path    = Join-Path -Path $script:Root -ChildPath 'module/platform'
-            Filter  = 'Cargo.lock'
-            Recurse = $true
-            Depth   = 2
-        }
+        # The workspace's lock, the one cargo resolves every crate by (ADR-0016,
+        # amendment 2026-11-20). A submodule's own lock, which no build has read
+        # since, is neither held by Git nor sent to a test computer, which this
+        # read until 2026-11-24 (open problem 145).
+        [string] $lock = Join-Path -Path $script:Root -ChildPath 'Cargo.lock'
+        $lock | Should -Exist -Because 'cargo writes the workspace''s lock at its first build'
         [string] $entry = 'name = "librocksdb-sys"\s*\r?\nversion = "[^+"]+\+([^"]+)"'
         [string[]] $resolved = @(
-            Get-ChildItem @locks |
-                ForEach-Object { Get-Content -Raw -LiteralPath $_.FullName } |
-                ForEach-Object {
-                    [regex]::Matches($_, $entry) | ForEach-Object { $_.Groups[1].Value }
-                } |
+            [regex]::Matches((Get-Content -Raw -LiteralPath $lock), $entry) |
+                ForEach-Object { $_.Groups[1].Value } |
                 Sort-Object -Unique
         )
 

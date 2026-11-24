@@ -247,3 +247,15 @@ What stands now:
    the stack of the call that created the module. It is boxed and kept beside
    the instance now (`ffi/host_table.rs`), destroyed after `destroy`, for a
    node's modules and a probe's alike.
+
+## Amendment, 2026-11-24: the boundary is Apache-2.0
+
+Clause 9 said the boundary carries no license exception and the header is
+AGPL-3.0-or-later. Asked whether `Xmip.Module` should be permissive, so that a
+developer may keep a module closed, the owner, 2026-11-24: *Do as you think*.
+Clause 9 is amended: the header, its specification and all of xmip-core-abi —
+what a module links or compiles into itself — are Apache-2.0, and the rest of
+Xmip stays AGPL-3.0-or-later. It is no exception inside one license: the
+repository has a license of its own, and a module stays its author's to
+license (ADR-0061, amendment 2026-11-24; ADR-0075). Clause 2 stands: the
+header is normative and the bindings are not.

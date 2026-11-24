@@ -15,17 +15,20 @@
       asked, readable by its owner alone.
     - Package: the estate's package installed, which runs xmip-service
       --install with the node, the cluster and the account; a node that ran
-      before is waited for until it is ready, as xmip-service --readiness
-      says, before the next node is deployed (NodeService.ps1).
+      before is left to its Service step to wait for (NodeService.ps1).
     - Slice: the node's configuration, node.xmip, as the machine deploying
       the environment sliced and signed it, writable by the node's account
       and the administrators alone (NodeAccess.ps1), and, where the node is
       installed, the configuration it runs, as xmip-service --activation
-      says; the service is restarted when it changed or the node does not
-      run it, and waited for until it is ready.
+      says; a running node whose slice changed or that does not run it is
+      left to its Service step to restart.
     - Opening: a firewall opening for each port xmip-service --listening
       says the node's configuration listens on, and no other.
-    - Service: the node's service running and started with the machine.
+    - Service: the node's service running and started with the machine,
+      after every step that changes what it runs: restarted once where one
+      of them asked it, and a node this deploy restarted waited for once
+      until it is ready, as xmip-service --readiness says, before the next
+      node is deployed (ADR-0056, amendment 2026-11-24).
 
     Every rule about the node is xmip-service's; this only asks it and puts
     files where it reads them.

@@ -82,18 +82,33 @@ Describe 'Terminology: another system is a Party' {
 }
 
 Describe 'Terminology: the System Tests and the Systems Tests' {
-    It 'keeps the retired names out of the records but for the amendment that retired them' {
+    It 'keeps the retired names out of every file the estate tracks but the records of them' {
         # The owner, 2026-11-23: *Essentials is a problem*, and *we can't have
         # Playground and Essentials*. ADR-0028's amendment of that date quotes
-        # both once; nothing else in doc/ may use either (ADR-0028).
-        [string] $ruling = '(?s)## Amendment, 2026-11-23: the System Tests, local, and the ' +
-            'Systems Tests, on machines.*?(?=\n## |\z)'
-        $records = Get-ChildItem -Path $script:DocsRoot -Recurse -Filter *.md
-        [string[]] $uses = foreach ($file in $records) {
-            $text = [regex]::Replace((Get-Content -Raw -LiteralPath $file.FullName), $ruling, '')
-            if ($text -match '(?i)essentials|playground') { $file.FullName }
+        # both once; nothing else the estate or any submodule of it tracks may
+        # use either, rustdoc, READMEs and fixtures alike (ADR-0028; until
+        # 2026-11-24 this read the root's doc/ alone, open problem 148). A
+        # third party's name keeps it: MAUI's package.
+        [string[]] $kept = @(
+            ('(?s)## Amendment, 2026-11-23: the System Tests, local, and the Systems Tests, ' +
+                'on machines.*?(?=\n## |\z)')
+            'Microsoft\.Maui\.Essentials'
+        )
+        [string[]] $named = @(
+            git -C $script:Root grep --recurse-submodules -I -l -i -E 'essentials|playground' |
+                Where-Object { $_ -ne 'test/Terminology.Test.ps1' }
+        )
+        [string[]] $uses = foreach ($file in $named) {
+            [string] $text = Get-Content -Raw -LiteralPath (Join-Path $script:Root $file)
+
+            foreach ($record in $kept) {
+                $text = [regex]::Replace($text, $record, '')
+            }
+
+            if ($text -match '(?i)essentials|playground') { $file }
         }
 
+        $named | Should -Not -BeNullOrEmpty -Because 'the ruling itself is tracked and read'
         $uses | Should -BeNullOrEmpty -Because 'the estate says System Tests and Systems Tests'
     }
 }

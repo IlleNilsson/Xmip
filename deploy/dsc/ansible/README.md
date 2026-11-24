@@ -92,12 +92,16 @@ none of them starts alone, one machine after another. Then each node is
 asked `xmip-service --activation`, and fails the run, in the node's words,
 until it runs the slice it was shipped: a service that started does not
 say its slice took (ADR-0031, amendment 2026-11-12). A node that ran before
-the run, which the run restarts — its slice or certificate changed, or an
-`.rpm` of another build installed over it — is waited for until it is ready
+the run, which the run restarts — its slice or certificate changed, or a
+package of another build installed over it, an `.rpm` or on Windows an MSI
+whose product code is not installed — is restarted once, after the last
+task that changes what it runs, not again where its package's install
+restarted it, and waited for once until it is ready
 before the next host is deployed, as `xmip-service --readiness --within
-<xmip_ready_window>` says in the node's words (`handlers/main.yml`, 180
+<xmip_ready_window>` says in the node's words, asked of the program the
+package installed (`handlers/main.yml`, 180
 seconds by default; the owner, 2026-11-23: *That has to be sorted, nothing
-can be left*; ADR-0056, amendment 2026-11-23): a Storage node restarted
+can be left*; ADR-0056, amendments 2026-11-23 and 2026-11-24): a Storage node restarted
 comes back a standby, and its primary stopped in order before it follows
 ready has no standby to hand over to. The hosts are deployed one at a time
 (`serial: 1`), each host's handlers before the next, so the next Storage

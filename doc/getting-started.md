@@ -564,7 +564,8 @@ send.
 
 ```powershell
 Start-XmipTest -Suite Core.System -Cluster CL1 -Test RoundTrip -Nodes RX1, PX1, TX1 `
-    -NodeRole @{ RX1 = 'receiving'; PX1 = 'processing'; TX1 = 'sending' } -OnlineNodes RX1
+    -NodeRole @{ RX1 = 'receiving'; PX1 = 'processing'; TX1 = 'sending' } `
+    -NodeCapability @{ RX1 = 'online' }
 ```
 
 `-NodeRole` states each node's roles — receiving, processing and sending one
@@ -575,9 +576,12 @@ file, `test/core/system-test/configuration/cluster.xmip`, whose `[nodes.RX1]
 roles = "receiving"` and so on cover the whole path; a node you name with no
 `-NodeRole` takes the roles that file declares for it. A node
 given no role declares none and runs the shared-directory tests whole, which
-`Start-XmipTest` says in words before it starts anything. `-OnlineNodes RX1`
-records that `RX1` may assume a route to the internet and the others may not
-(ADR-0045): it is the receiving edge, the node that may obtain its server
+`Start-XmipTest` says in words before it starts anything. `-NodeCapability
+@{ RX1 = 'online' }` gives `RX1` the Node capability `online`: it may assume a
+route to the internet and the others may not (ADR-0045; ADR-0056, amendment
+2026-11-24). A node's roles are Xmip's; its Node capabilities name what its
+environment gives it, and `online` is the one Xmip asks after itself. `RX1`
+is the receiving edge, the node that may obtain its server
 certificate over ACME from a public authority (ADR-0033, ADR-0034;
 [built, not in the assembled service](architecture/estate-map.md#certificate-provisioning)).
 The switch permits; nothing in the System Tests reach out.
@@ -621,7 +625,7 @@ amendment 2026-09-20):
 
 ```powershell
 Start-XmipTest -Suite Core.System -Cluster CL2 -Test RoundTrip -Nodes RX1, PX1 `
-    -NodeRole @{ RX1 = 'receiving'; PX1 = 'processing,sending' } -OnlineNodes RX1
+    -NodeRole @{ RX1 = 'receiving'; PX1 = 'processing,sending' } -NodeCapability @{ RX1 = 'online' }
 Get-XmipTestStatus | Start-XmipOperationWeb
 ```
 
@@ -753,7 +757,11 @@ Get-XmipTestStatus | Start-XmipOperationWeb
 ```
 
 Type exactly the nodes the environment maps: the Systems Tests place the
-Locations over them as the machines did. They drop a file into every
+Locations over them as the machines did. Without `-Nodes` the run is the
+cluster file's every node, OP1 among them, which the example environments
+give no machine, and it is refused before it starts, naming every node that
+does not resolve and the `-Nodes` that run those that do (ADR-0028,
+amendment 2026-11-24). They drop a file into every
 Receive Location's directory on the far end each round; a real receiving
 node fetches it, DS1 keeps it, a real sending node puts it back under its
 name, and each Receive Location's `delivery` says what arrived and how

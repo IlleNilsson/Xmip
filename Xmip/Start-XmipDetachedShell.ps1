@@ -112,7 +112,10 @@ function ConvertTo-XmipLiteral {
     <#
         .SYNOPSIS
             A value as a single-quoted PowerShell literal, so a path or a name
-            written into a detached run's script is never parsed as code.
+            written into a detached run's script is never parsed as code:
+            every quote PowerShell ends such a literal at doubled, the
+            typographic ones too, by PowerShell's own escaping (the review of
+            2026-11-24: until then only the ASCII apostrophe was).
 
         .PARAMETER Text
             The value.
@@ -125,5 +128,7 @@ function ConvertTo-XmipLiteral {
         [string] $Text
     )
 
-    return "'" + ($Text -replace "'", "''") + "'"
+    [type] $generation = [System.Management.Automation.Language.CodeGeneration]
+
+    return "'" + $generation::EscapeSingleQuotedStringContent($Text) + "'"
 }

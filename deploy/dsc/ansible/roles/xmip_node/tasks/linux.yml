@@ -204,8 +204,9 @@
   when: not (ansible_check_mode and xmip_shipped is changed)
   become: true
 
-# Its `xmip-service --install` restarts the node on the new program, which
-# is then waited for until it is ready (handlers/main.yml).
+# Its `xmip-service --install` restarts the node on the new program, after
+# every file it reads was placed above, so it is not restarted again, and is
+# then waited for until it is ready (handlers/main.yml).
 - name: The package shipped installed over another build, which runs xmip-service --install
   ansible.builtin.command:
     argv: [rpm, --upgrade, --replacepkgs, --replacefiles, "{{ xmip_staging }}/xmip.rpm"]
@@ -217,6 +218,7 @@
   when: >-
     xmip_header is not skipped
     and xmip_header.results[0].stdout != xmip_header.results[1].stdout
+  register: xmip_upgraded
   notify: The Xmip node restarted
   become: true
 

@@ -6,12 +6,12 @@ overview's both formats. Revise them together.
 
 ## View
 
-- [PowerPoint: 30 slides](Xmip-overview.pptx)
-- [Animated video: about 12 minutes](Xmip-overview.mp4)
+- [PowerPoint: 16 slides](Xmip-overview.pptx)
+- [Animated video: about 8 minutes](Xmip-overview.mp4)
 - [Video captions](Xmip-overview.srt)
 - [The environment, PowerPoint: 4 slides](Xmip-environment.pptx): the nodes
   Xmip's tests and demos run, the functions beside the message path, the
-  machines and six ways to run one plan. Every node in it is optional; Xmip
+  machines and four ways to run one plan. Every node in it is optional; Xmip
   runs on one node with all roles. Its shapes and tables are editable.
 
 The media uses Git LFS. After cloning, run `git lfs pull` to obtain the actual
@@ -20,8 +20,14 @@ On 2026-11-22 the node roles, the parts around the nodes and the five ways to
 run one plan were added, and the integration path replaced the Application
 section in both formats. On 2026-11-23 the story, the deck, the video and its
 captions took the System Tests and the Systems Tests, and containers as the
-sixth way to run the plan. Project source references record the documentation
-used, rather than a promise of release readiness.
+sixth way to run the plan. On 2026-11-24 the overview was rebuilt as one
+design in both formats: sixteen scenes, each with one message in large type
+and a figure or a screenshot, current content, recorded figures, and the
+video rendered from the deck's own slides; both decks count four ways to run
+the plan, local processes, containers, virtual machines and physical
+machines, the hypervisors being the virtual machines' (ADR-0015, amendment
+2026-11-24). Project source references record
+the documentation used, rather than a promise of release readiness.
 
 ## Outreach
 
@@ -37,10 +43,12 @@ local working area. Review drafts remain in Outlook and must not be resent.
 
 ## Edit
 
-`story.toml` is the shared editorial source, in TOML. Each section contains
-slide layout text, concise video text, narration, host selection and project
-source references. The PowerPoint is editable; carry textual corrections back
-into the story so the video does not drift from it.
+`story.toml` is the shared editorial source, in TOML. Each section is one
+scene: its one message (`headline`, the slide's title), its body (`screen`),
+its figure (`layout`, `["scene", "<figure>"]`) and the figure's alt text
+(`alt`), its narration, its host selection and its project source references.
+The PowerPoint is editable; carry textual corrections back into the story so
+the video does not drift from it.
 
 `assets/` holds four approved transparent character images: female and male
 hosts, each welcoming and flexing. `audio/` holds their current voice tracks
@@ -87,6 +95,15 @@ A media-authoring session may generate temporary recipes in
 The project sources and approved media in this directory remain the durable inputs.
 The environment deck is drawn the same way, through PowerPoint's COM
 automation from PowerShell 7; the deck itself is its master.
+
+Since 2026-11-24 each scene is drawn once, for both formats. The deck is built
+from the story through PowerPoint's COM automation: the title and body are
+PowerPoint text, the figure is drawn as SVG and placed as a PNG, and the
+speaking host stands beside it. Each slide is then exported without its hosts,
+and the video draws its animated hosts, captions and progress over that
+export, so the two formats cannot drift apart. A title is at least 36 pt, body
+text at least 20 pt, and no text in a figure under 16 pt on the slide. The
+bottom band of every slide is where the video's captions run.
 
 The media of 2026-11-22 were made this way. The deck was edited in PowerPoint
 through its COM automation from PowerShell 7. The narration was generated with

@@ -75,6 +75,15 @@ schema: !embedded
       owner:
         description: 'On Linux, the account that owns a private file.'
         type: string
+      node:
+        description: >-
+          The node that reads the file, its certificate, key or anchors:
+          placed while that node runs, it leaves the node's Service step a
+          restart (ADR-0056, amendment 2026-11-24). Given with configuration.
+        type: string
+      configuration:
+        description: 'That node''s configuration folder, where its Service step finds it.'
+        type: string
       _exist:
         type: boolean
         readOnly: true

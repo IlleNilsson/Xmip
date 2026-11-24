@@ -19,7 +19,7 @@ function Start-XmipTest {
             pwsh of its own, detached, and says OK or FAILED when it ends, as
             Core.Internal, named modules verified as a landing verifies them,
             does, and Core.Demo, the demo readiness check, does part by part.
-            Either of the first two runs on a test computer by -ComputerName.
+            Core.Estate and Core.Internal run on a Linux test computer by -ComputerName.
             A third party's suite is <Provider>.<Name> and joins by a declaration.
 
             The System Tests (ADR-0028) is the estate's integration test over
@@ -59,9 +59,9 @@ function Start-XmipTest {
             Core.Demo takes -Cluster, -Stress, -Hidden and its own -Tester.
 
             Wildcards select a group, exactly as -Test does (the owner,
-            2026-09-19): -Suite * is every suite this estate knows, -Suite
-            *Sys* is the System Tests, a literal name is one suite as before,
-            and Core.Demo is started by its name alone. A pattern matching
+            2026-09-19): -Suite * is every suite but those started by their name
+            alone, Core.Systems, Core.Internal and Core.Demo; -Suite *Sys* is
+            the System Tests, a literal name one suite as before. A pattern matching
             nothing is REFUSED, naming it and the suites there are, before anything starts.
 
             Several suites matched run one after another in the order they
@@ -123,7 +123,7 @@ function Start-XmipTest {
         .PARAMETER Nodes
             The nodes, by name — one process each: -Nodes RX1, PX1, TX1 is three called that
             under one cluster called -Cluster. They are written, with
-            -Cluster and -NodeRole, into the run's own cluster cluster.xmip,
+            -Cluster, -NodeRole and -NodeCapability, into the run's own cluster cluster.xmip,
             <Path>/<Cluster>.xmip, and XMIP_TEST_CLUSTER names it to the
             roll: a node is configuration (ADR-0056, amendment 2026-10-03), and
             there is no count. What each node does is the
@@ -170,10 +170,9 @@ function Start-XmipTest {
             ADR-0056 names two further kinds of capability, authentication and
             runtime, which the System Tests do not model.
 
-        .PARAMETER OnlineNodes
-            Which of the named nodes may assume a route to the internet
-            (ADR-0045) — the online capability of ADR-0056, by name. None
-            unless said; each must be in -Nodes.
+        .PARAMETER NodeCapability
+            Node capabilities per node, as -NodeRole: @{ RX1 = 'online, firewall-x' }, online the
+            internet (ADR-0056, amendment 2026-11-24); unnamed, the System Tests' file's.
 
         .PARAMETER Cluster
             The cluster this roll starts (ADR-0028), by the name you give it
@@ -221,9 +220,9 @@ function Start-XmipTest {
             -Operator named them, handed to Start-XmipOperationWeb -Tester.
 
         .PARAMETER ComputerName
-            Core.Estate's and Core.Internal's: runs the suite detached on the
+            Core.Estate's and Core.Internal's: runs the suite detached on the Linux
             computer .local-work/test-computer/<name>.toml names, never in Git
-            (Read-XmipTestComputer), in a copy of this estate sent there.
+            (Read-XmipTestComputer), in a copy of what Git holds of this estate.
 
         .EXAMPLE
             # Omitted -Nodes: the System Tests' own cluster file's nodes
@@ -244,7 +243,7 @@ function Start-XmipTest {
 
         .EXAMPLE
             Start-XmipTest -Test RoundTrip -Cluster CL2 -Nodes RX1, RX2, PX1, TX1
-                -OnlineNodes RX1, TX1 -NodeRole @{ RX1 = 'receiving'
+                -NodeCapability @{ RX1 = 'online'; TX1 = 'online' } -NodeRole @{ RX1 = 'receiving'
                     RX2 = 'receiving'; PX1 = 'processing'; TX1 = 'sending' }
 
         .EXAMPLE
@@ -319,7 +318,8 @@ function Start-XmipTest {
         [hashtable] $NodeRole,
 
         [Parameter()]
-        [string[]] $OnlineNodes = @(),
+        [AllowNull()]
+        [hashtable] $NodeCapability,
 
         [Parameter()]
         [ValidatePattern('^[A-Za-z][A-Za-z0-9-]*$')]

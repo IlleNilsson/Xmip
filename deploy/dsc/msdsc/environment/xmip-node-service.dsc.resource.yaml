@@ -1,7 +1,10 @@
 $schema: https://aka.ms/dsc/schemas/v3/bundled/resource/manifest.json
 type: Xmip.Node/Service
 version: '0.1.0'
-description: 'The node''s service running and started with the machine: its Windows service or its systemd unit.'
+description: >-
+  The node's service running and started with the machine, its Windows service or its
+  systemd unit, restarted once where a step before changed what it runs and waited for
+  once until it is ready.
 tags:
   - Xmip
 get:
@@ -58,6 +61,33 @@ schema: !embedded
     properties:
       name:
         description: 'The unit, xmip-<node>.'
+        type: string
+      node:
+        description: >-
+          The node, as cluster.xmip declares it; with configuration, program
+          and ready, the node this step restarts once where a step before it
+          changed what it runs, and waits for once until it is ready
+          (ADR-0056, amendment 2026-11-24).
+        type: string
+      configuration:
+        description: >-
+          The node's configuration folder, where the steps before leave what
+          they changed (deploy.pending).
+        type: string
+      program:
+        description: 'The xmip-service the package installed, asked whether the node is ready.'
+        type: string
+      ready:
+        description: >-
+          How long, in seconds, a node this deploy restarted is waited for
+          until it is ready, as xmip-service --readiness says, before the
+          next node is deployed; refused past it, in the node's words.
+        type: integer
+        default: 180
+      pending:
+        description: >-
+          What the steps before left as found: restart, ready, or empty.
+        readOnly: true
         type: string
       _exist:
         type: boolean

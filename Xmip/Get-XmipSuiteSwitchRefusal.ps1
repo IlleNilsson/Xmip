@@ -28,7 +28,7 @@
 # switch belongs to the first kind listed that takes it.
 [System.Collections.Specialized.OrderedDictionary] $script:XmipSuiteSwitch = [ordered]@{
     roll     = @(
-        'Stress', 'Test', 'Rounds', 'Duration', 'TimeFactor', 'Nodes', 'NodeRole', 'OnlineNodes'
+        'Stress', 'Test', 'Rounds', 'Duration', 'TimeFactor', 'Nodes', 'NodeRole', 'NodeCapability'
         'Cluster', 'Certificate', 'LoadBytes', 'Path', 'PassThru', 'Hidden'
     )
     pester   = @('Test', 'Path', 'ComputerName')

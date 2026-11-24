@@ -12,7 +12,7 @@ function Get-XmipTestNode {
             A node is a process running the System Tests' own node binary
             (ADR-0028 clause 2). What it is doing is what it declared where it
             started (ADR-0053), read by the node: its name, stress level, what
-            roles it declared, whether it may assume the internet, its
+            roles and Node capabilities it declared, its
             rounds and interval, the directory it shares with its cluster and
             where it publishes. Parent is the roll the
             node belongs to — the cluster process spawns it and the roll
@@ -25,9 +25,11 @@ function Get-XmipTestNode {
             Role is the roles the node declared (ADR-0056, amendment
             2026-10-01), in the words -NodeRole takes them: 'receiving',
             'processing,sending', 'executing', or empty for a node that
-            declared no role and runs whole tests itself. Online is the online
-            capability of the same record. The System Tests model neither
-            authentication nor runtime capability, so neither is here.
+            declared no role and runs whole tests itself. Capability is the
+            Node capabilities of the same record, 'online' among them where it
+            may assume the internet (ADR-0056, amendment 2026-11-24). The
+            System Tests model neither authentication nor runtime capability,
+            so neither is here.
 
         .PARAMETER Name
             Only nodes whose name matches, wildcards allowed.
@@ -36,7 +38,7 @@ function Get-XmipTestNode {
             Get-XmipTestNode
 
         .EXAMPLE
-            Get-XmipTestNode -Name 'S*' | Where-Object -Property Online -EQ -Value $true
+            Get-XmipTestNode -Name 'S*' | Where-Object -FilterScript { 'online' -in $_.Capability }
 
         .EXAMPLE
             Get-XmipTestNode | Where-Object -Property Role -Match -Value 'sending'
@@ -135,7 +137,10 @@ function ConvertTo-XmipTestNode {
         Id         = $Process.Id
         Stress     = Get-TomlValue -Node $said -Name 'stress'
         Role       = [string](Get-TomlValue -Node $said -Name 'role' -Default '')
-        Online     = [string](Get-TomlValue -Node $said -Name 'online' -Default '') -eq 'true'
+        Capability = [string[]] @(
+            ([string](Get-TomlValue -Node $said -Name 'capabilities' -Default '')) -split '\+' |
+                Where-Object { $_ -ne '' }
+        )
         Rounds     = [int](Get-TomlValue -Node $said -Name 'rounds' -Default 0)
         Interval   = if ($interval) { [timespan]::FromMilliseconds([int] $interval) } else { $null }
         Parent     = if ($ofRoll) { $above } else { $null }

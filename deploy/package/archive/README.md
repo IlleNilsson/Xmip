@@ -62,14 +62,13 @@ cluster_name = "<cluster>"
 
 [nodes.<node>]
 roles = "storage"
-
-[nodes.<node>.service]
-online = false
 ```
 
 Only a node with the `storage` role keeps its own storage; a node without
 it, and without `[storage] nodes` naming the nodes that do, is refused as
-it starts.
+it starts. The node is offline: it declares no Node capability, and
+`capabilities = ["online"]` under `[nodes.<node>]` would give it the
+internet (ADR-0056, amendment 2026-11-24).
 
 The node's local operate endpoint always starts, named `xmip-<node>`: a
 named pipe on Windows, `/run/xmip/xmip-<node>/xmip-<node>.sock` on Linux and

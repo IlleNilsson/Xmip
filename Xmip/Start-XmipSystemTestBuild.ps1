@@ -142,18 +142,18 @@ function New-XmipSystemTestBuildRecord {
 
     # Read by key: a key a caller left out is empty, never an error.
     return [ordered]@{
-        suite    = [string] $Start['Suite']
-        cluster  = [string] $Start['Cluster']
-        pid      = $Id
-        started  = $Started.ToUniversalTime().ToString('o')
-        stress   = ([string] $Start['Stress']).ToLowerInvariant()
-        tests    = @($Start['Test'] | Where-Object { $null -ne $_ })
-        rounds   = [int] $Start['Rounds']
-        nodes    = @($Start['Nodes'] | Where-Object { $null -ne $_ })
-        online   = @($Start['OnlineNodes'] | Where-Object { $null -ne $_ })
-        snapshot = [string] $Start['Snapshot']
-        log      = [string] $Start['Log']
-        hidden   = [bool] $Start['Hidden']
+        suite        = [string] $Start['Suite']
+        cluster      = [string] $Start['Cluster']
+        pid          = $Id
+        started      = $Started.ToUniversalTime().ToString('o')
+        stress       = ([string] $Start['Stress']).ToLowerInvariant()
+        tests        = @($Start['Test'] | Where-Object { $null -ne $_ })
+        rounds       = [int] $Start['Rounds']
+        nodes        = @($Start['Nodes'] | Where-Object { $null -ne $_ })
+        capabilities = @(Get-XmipNodeCapabilityEntry -Capability $Start['Capability'])
+        snapshot     = [string] $Start['Snapshot']
+        log          = [string] $Start['Log']
+        hidden       = [bool] $Start['Hidden']
     }
 }
 

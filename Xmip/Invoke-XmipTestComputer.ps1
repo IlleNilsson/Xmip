@@ -15,17 +15,22 @@
     cmdlet answers crosses as PowerShell's own serialization, the form its
     remoting crosses computers in, and its words are shown as it says them.
 
-    Over ssh a shell runs $script:XmipTestComputerShell: it receives a send
-    into the mirror, or makes the copy, <folder>/xmip, the mirror as sent
-    with what runs left in it kept, gives a run the environment it builds in
-    and one of the computer's build slots, and starts pwsh in the copy. The
-    slot is a lock on ~/slot<n>.lock, which every builder there takes, held
-    by the run's own processes until the last of them ends. Where every slot
-    is taken the start waits, as every builder there waits, saying once a
-    minute who holds them; a wait whose console has gone ends at that line,
-    since it cannot be written, so nothing starts later on its own (the
-    owner, 2026-09-12: nothing starts itself). What the computer says is
-    shown here as it says it, prefixed with its name.
+    Over ssh a shell runs $script:XmipTestComputerShell, so the computer is
+    Linux: bash, GNU's find and xargs, util-linux's flock and setsid, rsync,
+    git and pwsh, which its first probe asks for, refusing a computer that
+    lacks one by name. It receives a send into the mirror, or makes the
+    copy, <folder>/xmip, the mirror as sent with what runs left in it kept,
+    gives a run the environment it builds in and one of the computer's build
+    slots, and starts pwsh in the copy. One run works in a copy at a time:
+    the folder's lock, <folder>/tree.lock, refuses a second start and a send
+    while a run holds it. The slot is a lock on ~/slot<n>.lock, which every
+    builder there takes; both are held by the run's own processes until the
+    last of them ends. Where every slot is taken the start waits, as every
+    builder there waits, saying once a minute who holds them; a wait whose
+    console has gone ends at that line, since it cannot be written, so
+    nothing starts later on its own (the owner, 2026-09-12: nothing starts
+    itself). What the computer says is shown here as it says it, prefixed
+    with its name, every control character taken out.
 
     Style: doc/governance/powershell-style.md
 #>
@@ -39,18 +44,48 @@
 set -eu
 folder=$HOME/$1; asked=$2; slots=$3; work=$4; given=${5:-}
 mirror=$folder/mirror; tree=$folder/xmip
+[ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
+export PATH="$HOME/.local/bin:$PATH"
+# One run in a copy at a time: the folder's lock, taken by a probe and a
+# receive while they work and by a start for its run, whose own processes
+# hold it until the last of them ends, as a build slot is held. A second
+# start, or a send while a run works there, is refused at once.
+locked() {
+  mkdir -p "$folder"
+  exec 8>"$folder/tree.lock"
+  flock -n 8 && return 0
+  echo "REFUSED. A run is going on in $tree: stop it, or name another computer file" \
+    "with a folder of its own." >&2
+  exit 5
+}
 case $asked in
 probe)
-  mkdir -p "$folder"
+  # A test computer is Linux: what this shell and the runs it starts use.
+  missing=
+  for tool in bash tar rsync flock setsid find xargs git pwsh; do
+    command -v "$tool" > /dev/null 2>&1 || missing="$missing $tool"
+  done
+  [ -d /proc/self/fd ] || missing="$missing /proc"
+  xargs -d '\n' true < /dev/null 2> /dev/null || missing="$missing GNU-xargs"
+  if [ -n "$missing" ]; then
+    echo "REFUSED. $(uname -s) here lacks what a test computer needs:$missing. A test" \
+      "computer is Linux, with util-linux's flock and setsid, rsync, git and pwsh." >&2
+    exit 6
+  fi
+  locked
   if [ -d "$mirror" ]; then echo held; else echo none; fi
   exit 0 ;;
 receive)
+  locked
   if [ "$given" = whole ]; then rm -rf "$mirror"; fi
   mkdir -p "$mirror"
-  if [ -s "$folder/send.tar" ]; then tar -xf "$folder/send.tar" -C "$mirror"; fi
+  # What is gone first, then every folder left empty, then what changed: a
+  # path that turned from a file into a folder, or back, is taken either way.
   if [ -s "$folder/gone.txt" ]; then
     (cd "$mirror" && xargs -d '\n' rm -f -- < "$folder/gone.txt")
   fi
+  find "$mirror" -mindepth 1 -depth -type d -empty -delete
+  if [ -s "$folder/send.tar" ]; then tar -xf "$folder/send.tar" -C "$mirror"; fi
   rm -f "$folder/send.tar" "$folder/gone.txt"
   exit 0 ;;
 esac
@@ -58,8 +93,6 @@ if [ "$asked" = observe ] && [ ! -d "$tree" ]; then
   echo "REFUSED. Nothing was ever started here: $tree is not there." >&2
   exit 7
 fi
-[ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
-export PATH="$HOME/.local/bin:$PATH"
 export CARGO_TARGET_DIR="$folder/target"
 export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
 # Local endpoints in the folder, never under /run/user/<uid>, which the
@@ -77,15 +110,8 @@ if [ "$asked" = observe ]; then
   cd "$tree"
   exec pwsh -NoProfile -NonInteractive -Command "$run" < /dev/null
 fi
+locked
 mkdir -p "$tree"
-# One run in a copy at a time: a start never rewrites a tree a run works in.
-for p in /proc/[0-9]*; do
-  case "$(readlink "$p/cwd" 2>/dev/null)" in "$tree"|"$tree"/*)
-    echo "REFUSED. A run is going on in $tree, pid ${p#/proc/}: stop it, or name" \
-      "another computer file with a folder of its own." >&2
-    exit 5 ;;
-  esac
-done
 rsync -a --delete --filter="P /$work/" --filter='P /.git/' --filter='P obj/' \
   --filter='P bin/Debug/' --filter='P bin/Release/' --filter='P node_modules/' \
   "$mirror/" "$tree/" > "$folder/rsync.log"
@@ -123,6 +149,14 @@ exec setsid --wait pwsh -NoProfile -NonInteractive -Command "$run" < /dev/null
 
 # What starts the line carrying a cmdlet's answer, among the lines it said.
 [string] $script:XmipTestComputerAnswer = 'xmip-answer '
+
+# The shell's exit code where a run holds the folder's lock: refused before
+# anything there changed (the shell's `exit 5`).
+[int] $script:XmipTestComputerBusy = 5
+
+# What is taken out of every line the computer writes before it is kept or
+# shown: the control characters, C0, delete and C1, but the tab.
+[string] $script:XmipTestComputerUnprintable = '[\p{Cc}-[\t]]'
 
 
 function Invoke-XmipTestComputer {
@@ -273,21 +307,25 @@ function Invoke-XmipTestComputerShell {
     [string] $work = Split-Path -Leaf -Path (Get-XmipEstateLayout).Work
     [string] $remote = ("bash -c ""`$(echo $packed | base64 -d)"" xmip " +
         "$($Computer.Folder) $Asked $($Computer.Slots) $work $Given").TrimEnd()
-    [string[]] $argument = @(Get-XmipTestComputerOption -Computer $Computer) +
+    # No option after `--`, whatever the account or the host begins with.
+    [string[]] $argument = @(Get-XmipTestComputerOption -Computer $Computer) + '--' +
         "$($Computer.User)@$($Computer.Host)" + $remote
 
     [System.Collections.Generic.List[string]] $out = @()
     [System.Collections.Generic.List[string]] $err = @()
     [bool] $show = $Asked -in 'start', 'observe'
 
-    # What a cmdlet says there is shown as it says it, all but its answer.
+    # What a cmdlet says there is shown as it says it, all but its answer and
+    # any control character, which this console would obey: a title, a link,
+    # a write to the clipboard.
     & ssh @argument 2>&1 | ForEach-Object {
+        [string] $line = "$_" -replace $script:XmipTestComputerUnprintable, ''
+
         if ($_ -is [System.Management.Automation.ErrorRecord]) {
-            $err.Add("$_")
+            $err.Add($line)
             return
         }
 
-        [string] $line = "$_"
         $out.Add($line)
 
         if ($show -and -not $line.StartsWith($script:XmipTestComputerAnswer, 'Ordinal')) {
@@ -314,83 +352,4 @@ function Get-XmipTestComputerOption {
     )
 
     return @('-i', $Computer.Key, '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=10')
-}
-
-
-function Assert-XmipTestComputerAnswer {
-    <#
-        .SYNOPSIS
-            Refuses, in the computer's own words, an answer whose exit code
-            is not zero.
-
-        .PARAMETER Doing
-            What was asked, for the words.
-    #>
-    [CmdletBinding()]
-    [OutputType([void])]
-    param(
-        [Parameter(Mandatory)]
-        [pscustomobject] $Computer,
-
-        [Parameter(Mandatory)]
-        [pscustomobject] $Answer,
-
-        [Parameter(Mandatory)]
-        [string] $Doing
-    )
-
-    if ($Answer.Code -eq 0) {
-        return
-    }
-
-    [string] $said = (@($Answer.Err) + @($Answer.Out | Select-Object -Last 3)) -join ' '
-
-    if ($said -match '^\s*REFUSED') {
-        throw $said.Trim()
-    }
-
-    throw "FAILED. $($Computer.Name) could not $Doing (exit $($Answer.Code)): $said"
-}
-
-
-function Read-XmipTestComputerAnswer {
-    <#
-        .SYNOPSIS
-            What a cmdlet answered on the computer, as objects, from the one
-            line among what it wrote that carries its answer; a failure
-            refused in the computer's words.
-
-        .PARAMETER Doing
-            The cmdlet, for the words of a failure.
-    #>
-    [CmdletBinding()]
-    [OutputType([object])]
-    param(
-        [Parameter(Mandatory)]
-        [pscustomobject] $Computer,
-
-        [Parameter(Mandatory)]
-        [pscustomobject] $Answer,
-
-        [Parameter(Mandatory)]
-        [string] $Doing
-    )
-
-    [string] $sent = ''
-
-    foreach ($line in @($Answer.Out)) {
-        if ($line.StartsWith($script:XmipTestComputerAnswer, [StringComparison]::Ordinal)) {
-            $sent = $line.Substring($script:XmipTestComputerAnswer.Length)
-        }
-    }
-
-    Assert-XmipTestComputerAnswer -Computer $Computer -Answer $Answer -Doing "run $Doing"
-
-    if ($sent -eq '') {
-        return
-    }
-
-    [string] $text = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($sent))
-
-    return [System.Management.Automation.PSSerializer]::Deserialize($text)
 }

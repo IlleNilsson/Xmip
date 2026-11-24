@@ -109,8 +109,8 @@ step gives its name the machine's address, and the roll finds it by it.
    its service and is never made;
 2. its slice, `node.xmip`, in the package's config folder, and the
    authority's certificate in `authority/authority.pem` beside it, as they
-   were shipped; the service restarted when they changed and the package is
-   installed only when a file changed. `node.xmip` is the node's alone to
+   were shipped; a node that runs and whose file changed is left to its
+   Service step to restart (6). `node.xmip` is the node's alone to
    write (ADR-0031, amendment 2026-11-06, point 4): on Windows it inherits
    nothing, SYSTEM and the administrators hold it in full and the node's
    account may modify it, the virtual account's SID computed as Windows
@@ -121,33 +121,43 @@ step gives its name the machine's address, and the roll finds it by it.
    once the node runs it as its active configuration, as `xmip-service
    --activation` says in the node's words (`activation`): a service that
    started does not say so, since a correctly signed slice the node cannot
-   start is refused and the node runs the last one that ran; set restarts
-   the node then, which tries the slice again (ADR-0031, amendment
-   2026-11-12), and waits until it is ready, as below;
+   start is refused and the node runs the last one that ran; set leaves the
+   node to its Service step to restart then, which tries the slice again
+   (ADR-0031, amendment 2026-11-12);
 3. its certificate, key and anchors from the cluster's own authority,
    `tls/node.pem`, `tls/node.key` and `tls/anchors.pem`, as the file's
-   `[operate]` names them, the key private;
+   `[operate]` names them, the key private; one placed while the node runs
+   is left to its Service step to restart;
 4. the estate's package, the portable archive (the MSI once it is built) or
    the `.rpm`, told the node, the cluster
    and the account, whose `xmip-service --install` lays the node out by the
    slice already there, gives the account what it reads and writes, and
-   registers and starts the node's service as that account. A node that
-   ran before, which the slice or the package restarted, is waited for until
-   it is ready before the next machine is deployed, as `xmip-service
-   --readiness --within <ready>` says in the node's words: it runs its slice
-   and its Xmip Storage stands Fine, a Storage node the primary or a standby
-   ready and following (`NodeService.ps1`, `Wait-NodeReadiness`; the owner,
-   2026-11-23: *That has to be sorted, nothing can be left*; ADR-0056,
-   amendment 2026-11-23). A Storage node restarted comes back a standby,
-   and its primary stopped in order before it follows ready has no standby
-   to hand over to; past `ready` seconds, 180 unless the document's
-   parameter says, the set is refused in the node's words and no next
-   node is deployed;
+   registers and starts the node's service as that account. A node that ran
+   before is restarted by that install after every file above was placed,
+   and left to its Service step to wait for, not to restart again;
 5. a firewall opening for exactly the ports `xmip-service --listening` says
    its configuration listens on, and none it no longer does — none for the
    far end, which a node reaches and never serves;
-6. its service running and started with the machine, `Xmip.Node/Service`:
-   the Windows service automatic, the systemd unit enabled. DSC refuses a
+6. its service running and started with the machine, `Xmip.Node/Service`,
+   after every step that changes what it runs: one step that changed what
+   a running node runs leaves `deploy.pending` in its configuration folder,
+   `restart` or, from the package, `ready`; this step restarts a node left
+   `restart`, once, and waits once for a node this deploy restarted until it
+   is ready before the next machine is deployed, as `xmip-service
+   --readiness --within <ready>` says in the node's words, asked of the
+   program the package installed: it runs its slice and its Xmip Storage
+   stands Fine, a Storage node the primary or a standby ready and following
+   (`NodeService.ps1`, `Set-NodeService` and `Wait-NodeReadiness`; the
+   owner, 2026-11-23: *That has to be sorted, nothing can be left*;
+   ADR-0056, amendments 2026-11-23 and 2026-11-24). A Storage node restarted
+   comes back a standby, and its primary stopped in order before it follows
+   ready has no standby to hand over to; past `ready` seconds, 180 unless
+   the document's parameter says, the set is refused in the node's words and
+   no next node is deployed. Until 2026-11-24 the slice restarted the node
+   and asked it before its certificates and package were placed, on the
+   program installed then, and a node whose slice and package both changed
+   was restarted twice. The Windows service is automatic, the systemd unit
+   enabled. DSC refuses a
    document naming a resource its machine has none of, a condition
    notwithstanding, so the built-in `Microsoft.Windows/Service`, which DSC
    has on Windows alone, cannot be named in a document both families run

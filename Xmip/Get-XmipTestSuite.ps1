@@ -189,12 +189,13 @@ function Get-XmipNamedTestSuite {
 
             The match is a wildcard, as -Test's is and as Get-XmipTestNode
             -Name's is (the owner, 2026-09-19: "Filter the -Suite as the -Test
-            parameter"), so -Suite * is every suite this estate knows and
-            -Suite *Sys* is the System Tests. A literal name holds no wildcard
-            character and selects exactly one suite, so nothing an operator
-            typed before this means anything else now. A suite started by
-            name alone (ByName: Core.Demo) is never selected by a pattern,
-            so -Suite * means what it meant before it came (2026-11-10).
+            parameter"), so -Suite * is every suite this estate knows but
+            those started by name alone and -Suite *Sys* is the System Tests.
+            A literal name holds no wildcard character and selects exactly one
+            suite, so nothing an operator typed before this means anything
+            else now. A suite started by name alone (ByName, New-XmipTestSuite)
+            is never selected by a pattern, so -Suite * means what it meant
+            before such a suite came (2026-11-10).
 
         .PARAMETER Name
             The suite a caller asked for: a name, or a pattern naming a group.

@@ -2,7 +2,7 @@
 #requires -Version 7.7.0
 # What installing one machine on a libvirt host does, for both technologies:
 # virsh on the system connection; the machine's media put in the pool whole,
-# its domain defined and started, Space pressed for a Windows ISO; and its
+# its domain defined and started, Enter pressed for a Windows ISO; and its
 # installation completed, its media taken out, its answer medium deleted and
 # its domain's record written, naming the technology that made it. Microsoft
 # DSC's Xmip.Libvirt resources dot-source it and Ansible's xmip_machine role

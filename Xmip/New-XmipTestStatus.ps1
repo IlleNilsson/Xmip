@@ -19,7 +19,7 @@
 
 # Every property of a row beside Suite, Kind, State and Id.
 [string[]] $script:XmipTestStatusProperty = @(
-    'Cluster', 'StartTime', 'Stress', 'Tests', 'Rounds', 'Nodes', 'OnlineNodes',
+    'Cluster', 'StartTime', 'Stress', 'Tests', 'Rounds', 'Nodes', 'NodeCapability',
     'RealNodes', 'Worst', 'Tally', 'Passed', 'Failed', 'Skipped', 'Fault', 'Snapshot',
     'Path', 'Record', 'Log', 'Hidden', 'ComputerName'
 )
@@ -47,7 +47,8 @@ function New-XmipTestStatus {
 
         .PARAMETER Property
             The rest, by name: Cluster, StartTime, Stress, Tests, Rounds,
-            Nodes, OnlineNodes, RealNodes, Worst, Tally, Passed, Failed,
+            Nodes, NodeCapability (each node's Node capabilities,
+            <node>=online+erp-direct), RealNodes, Worst, Tally, Passed, Failed,
             Skipped, Fault, Snapshot, Path, Record, Log, Hidden and
             ComputerName, the test computer it runs on, null for this one. A
             name not given is null.

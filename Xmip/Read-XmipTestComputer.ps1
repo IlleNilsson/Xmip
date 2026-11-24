@@ -13,7 +13,8 @@
     sent there is kept beside it, in <name>/ (Send-XmipTestComputerEstate).
     Start-XmipTest, Get-XmipTestStatus, Stop-XmipTest and Get-XmipTestResult
     reach it through Invoke-XmipTestComputer (the owner, 2026-11-23: "Do what
-    you recommend").
+    you recommend"). The computer is Linux (Invoke-XmipTestComputer), reached
+    from any computer with OpenSSH's ssh, scp and tar.
 
     Style: doc/governance/powershell-style.md
 #>
@@ -87,7 +88,7 @@ function New-XmipTestComputer {
     <#
         .SYNOPSIS
             A computer's file, read, as Read-XmipTestComputer returns it: its
-            folder and key checked, the defaults filled in.
+            folder, account, host and key checked, the defaults filled in.
 
         .PARAMETER Read
             What Read-XmipToml read of the file.
@@ -124,6 +125,21 @@ function New-XmipTestComputer {
         throw "REFUSED. $File says slots = ${slots}: at least one build runs there at once."
     }
 
+    # The account and the host are written into ssh's and scp's command
+    # line, so neither is anything either reads as an option, `-oProxyCommand`.
+    [string] $address = [string](Get-TomlValue -Node $Read -Name 'host')
+    [string] $account = [string](Get-TomlValue -Node $Read -Name 'user')
+
+    if ($account -notmatch '^[A-Za-z0-9_][A-Za-z0-9._-]*$') {
+        throw ("REFUSED. $File says user = '$account': an account's name, of letters, " +
+            "digits, '.', '_' and '-', never beginning with '-'.")
+    }
+
+    if ($address -notmatch '^[A-Za-z0-9]([A-Za-z0-9.-]*[A-Za-z0-9])?$') {
+        throw ("REFUSED. $File says host = '$address': a host's name, an alias of ssh's " +
+            'configuration or an IPv4 address.')
+    }
+
     [string] $key = [string](Get-TomlValue -Node $Read -Name 'key')
 
     if ($key.StartsWith('~')) {
@@ -136,8 +152,8 @@ function New-XmipTestComputer {
 
     return [pscustomobject]@{
         Name   = $Name
-        Host   = [string](Get-TomlValue -Node $Read -Name 'host')
-        User   = [string](Get-TomlValue -Node $Read -Name 'user')
+        Host   = $address
+        User   = $account
         Key    = $key
         Folder = $folder
         Slots  = $slots

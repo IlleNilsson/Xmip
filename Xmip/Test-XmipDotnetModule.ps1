@@ -147,8 +147,10 @@ function Test-XmipEventBinding {
 function Test-XmipDotnetModule {
     <#
         .SYNOPSIS
-            Builds a .NET module and runs whatever tests it carries. True when
-            everything passed.
+            Builds a .NET module and runs whatever tests it carries: what
+            failed, as Xmip.PartFailure, the project and each test that
+            failed (ConvertTo-XmipDotnetFailure); nothing when everything
+            passed.
 
         .DESCRIPTION
             ADR-0014 puts the PowerShell module and the GUIs in .NET, and
@@ -172,7 +174,7 @@ function Test-XmipDotnetModule {
             The module path, for reporting.
     #>
     [CmdletBinding()]
-    [OutputType([bool])]
+    [OutputType('Xmip.PartFailure')]
     param(
         [Parameter(Mandatory)]
         [string] $Path,
@@ -181,7 +183,7 @@ function Test-XmipDotnetModule {
         [string] $Name
     )
 
-    [System.IO.FileInfo[]] $project = @(Find-XmipFile -Path $Path -Filter '*.csproj')
+    [System.IO.FileInfo[]] $project = @(Find-XmipModuleProject -Path $Path)
 
     # Built into a temporary directory, never into the project's own bin/.
     #
@@ -208,8 +210,10 @@ function Test-XmipDotnetModule {
                 'build', $csproj.FullName, '--output', $into, '--verbosity', 'quiet', '--nologo'
             )
 
-            if (-not (Invoke-XmipTool -Tool dotnet -Argument $building).Passed) {
-                return $false
+            $built = Invoke-XmipTool -Tool dotnet -Argument $building
+
+            if (-not $built.Passed) {
+                return ConvertTo-XmipDotnetFailure -Ran $built -Name $Name -Project $csproj.BaseName
             }
         }
     }
@@ -227,12 +231,17 @@ function Test-XmipDotnetModule {
 
         [string[]] $testing = @('test', $csproj.FullName, '--verbosity', 'quiet', '--nologo')
 
-        if (-not (Invoke-XmipTool -Tool dotnet -Argument $testing).Passed) {
-            return $false
+        $tested = Invoke-XmipTool -Tool dotnet -Argument $testing
+
+        if (-not $tested.Passed) {
+            return ConvertTo-XmipDotnetFailure -Ran $tested -Name $Name -Project $csproj.BaseName
         }
     }
 
-    return (Test-XmipPesterSuite -Path $Path -Name $Name -Built ($project.Count -gt 0))
+    if (-not (Test-XmipPesterSuite -Path $Path -Name $Name -Built ($project.Count -gt 0))) {
+        New-XmipPartFailure -Module $Name -Test 'its Pester files' -Message (
+            'failed, or there was nothing to build or test; the part''s log says which')
+    }
 }
 
 

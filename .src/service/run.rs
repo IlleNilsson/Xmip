@@ -11,10 +11,13 @@
 //!
 //! While it serves, the service waits to be told ([`Told`]), using no
 //! processor: by a stop — the Service Control Manager's, a signal from
-//! systemd or launchd, the console's Ctrl+C — and by the node's act watch
+//! systemd or launchd, the console's Ctrl+C — by the node's act watch
 //! that it took an act asked of it through Xmip Storage
-//! (`xmip_runtime::act_watch`). Each wakes it the moment it arrives; only the
-//! publication's round, [`publication::EVERY`], wakes it otherwise.
+//! (`xmip_runtime::act_watch`), and by its own Storage node of several that
+//! what it is changed (`StorageNode::telling`; ADR-0056, amendment
+//! 2026-11-24), which a deployment waiting for it to be ready reads at once.
+//! Each wakes it the moment it arrives; only the publication's round,
+//! [`publication::EVERY`], wakes it otherwise.
 
 use std::process::ExitCode;
 use std::sync::mpsc::{Receiver, RecvTimeoutError, Sender};
@@ -46,6 +49,9 @@ pub enum Told {
     Stop(StoppedBy),
     /// Its act watch took an act asked of it.
     Acted,
+    /// What its own Storage node of several is changed: promoted, standing
+    /// by, handed its first frame, copied or caught up.
+    Storage,
 }
 
 /// How a run ended.
@@ -171,7 +177,8 @@ pub fn serve(
 }
 
 /// Serve `running` until `told` says who stopped it: publish at once after
-/// an act its act watch took, and otherwise when the round is due.
+/// an act its act watch took or a change of its own Storage node, and
+/// otherwise when the round is due.
 fn served(
     program: &str,
     audit: &ProgramAudit,
@@ -197,8 +204,9 @@ fn served(
 }
 
 /// What `told` says within `within`, every message waiting heard at once,
-/// so a burst of changes is one look: whether an act was taken — or who
-/// stopped the node.
+/// so a burst of changes is one look: whether an act was taken or its own
+/// Storage node changed, either published at once — or who stopped the
+/// node.
 fn hear(told: &Receiver<Told>, within: Duration) -> Result<bool, StoppedBy> {
     let first = match told.recv_timeout(within) {
         Ok(first) => first,
@@ -209,7 +217,7 @@ fn hear(told: &Receiver<Told>, within: Duration) -> Result<bool, StoppedBy> {
     for heard in std::iter::once(first).chain(told.try_iter()) {
         match heard {
             Told::Stop(by) => return Err(by),
-            Told::Acted => acted = true,
+            Told::Acted | Told::Storage => acted = true,
         }
     }
     Ok(acted)

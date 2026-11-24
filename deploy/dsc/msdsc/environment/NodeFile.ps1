@@ -3,7 +3,9 @@
 
 <#
     The files a node machine is given (node.resource.ps1, kind File): the
-    cluster's cluster.xmip and the node's certificate, its key private.
+    cluster's cluster.xmip and the node's certificate, its key private. One
+    the node reads, naming the node and its configuration folder, changed
+    while the node runs leaves its Service step a restart (NodeService.ps1).
 
     Style: doc/governance/powershell-style.md
 #>
@@ -98,6 +100,7 @@ function Set-NodeFile {
     }
 
     Copy-Item -LiteralPath $Instance.source -Destination $Instance.path -Force
+    Request-NodeFileRestart -Instance $Instance
 
     if ($IsWindows) {
         return
@@ -116,5 +119,27 @@ function Set-NodeFile {
     if ($Instance.Contains('owner') -and $Instance.owner) {
         Invoke-DscProgram -Program 'chown' -Argument @($Instance.owner, $Instance.path) |
             Out-Null
+    }
+}
+
+function Request-NodeFileRestart {
+    <#
+    .SYNOPSIS
+    Where the file placed is one the node -Instance.node reads, its
+    certificate, key or anchors, and that node runs, leave its Service step
+    a restart, so it presents and trusts what was placed once every step
+    that changes what it runs is done (ADR-0056, amendment 2026-11-24).
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [hashtable] $Instance
+    )
+
+    if (-not $Instance['node'] -or -not $Instance['configuration']) {
+        return
+    }
+    if (Test-NodeServiceActive -Name "xmip-$($Instance.node)") {
+        Set-NodePending -Configuration $Instance.configuration -Pending 'restart' -Confirm:$false
     }
 }

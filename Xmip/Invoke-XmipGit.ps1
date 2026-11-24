@@ -40,6 +40,15 @@
 
     .PARAMETER Test
     Return success as a boolean instead of output, and never throw.
+
+    .PARAMETER Given
+    What git reads on its standard input, for a command given `--stdin`;
+    PowerShell ends it with this system's line end, so a caller separating
+    paths by NUL (`-z`) ends the last with one too.
+
+    .PARAMETER Answer
+    The exit codes that are an answer rather than a failure: 0, and 1 too for
+    `check-ignore`, whose 1 says nothing given is ignored.
 #>
 function Invoke-XmipGit {
     [CmdletBinding()]
@@ -52,12 +61,22 @@ function Invoke-XmipGit {
         [string[]] $Arguments,
 
         [Parameter()]
-        [switch] $Test
+        [switch] $Test,
+
+        [Parameter()]
+        [AllowEmptyString()]
+        [string] $Given,
+
+        [Parameter()]
+        [int[]] $Answer = @(0)
     )
 
     [string[]] $where = if ('' -ne $At) { @('-C', $At) } else { @() }
-    [object[]] $said = @(& git @where @Arguments 2>&1)
-    [bool] $succeeded = 0 -eq $LASTEXITCODE
+    [object[]] $said = @(
+        if ($PSBoundParameters.ContainsKey('Given')) { $Given | & git @where @Arguments 2>&1 }
+        else { & git @where @Arguments 2>&1 }
+    )
+    [bool] $succeeded = $LASTEXITCODE -in $Answer
 
     if ($Test) {
         return $succeeded

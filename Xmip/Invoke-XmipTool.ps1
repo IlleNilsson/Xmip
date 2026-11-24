@@ -38,7 +38,9 @@ function Invoke-XmipTool {
     <#
         .SYNOPSIS
             Runs cargo or dotnet with the arguments given and says whether it
-            passed, and what it said where -Output Keep asks for it.
+            passed, and what it said where -Output Keep asks for it; where it
+            failed, what failed (Failure, Get-XmipToolFailure) and the last
+            lines that say why (Telling).
 
         .PARAMETER Tool
             `cargo` or `dotnet`.
@@ -95,6 +97,7 @@ function Invoke-XmipTool {
     # manager (ADR-0014, amendment 2026-11-15).
     Initialize-XmipRuntimeDirectory
 
+    # Every line is kept whatever is shown, so a failure is read from them.
     [System.Collections.Generic.List[string]] $said = @()
     [string] $hung = ''
     [datetime] $started = Get-Date
@@ -104,10 +107,10 @@ function Invoke-XmipTool {
         # this function's.
         & $Tool @given 2>&1 | ForEach-Object {
             [string] $line = "$_"
+            $said.Add($line)
 
-            switch ($Output) {
-                'Show' { Write-Host "$Prefix$line" }
-                'Keep' { $said.Add($line) }
+            if ($Output -eq 'Show') {
+                Write-Host "$Prefix$line"
             }
 
             if ($Tool -eq 'cargo' -and -not $hung -and $line -match $script:XmipHungTest) {
@@ -128,9 +131,20 @@ function Invoke-XmipTool {
         $passed = $false
     }
 
+    [string[]] $lines = $said.ToArray()
+
+    # What failed, read from what the tool said (Get-XmipToolFailure), and the
+    # last of its lines that say why, for a failure nothing more names.
     [pscustomobject]@{
-        Passed = $passed
-        Said   = [string[]] $said.ToArray()
+        Passed  = $passed
+        Said    = [string[]] @(if ($Output -eq 'Keep') { $lines })
+        Failure = @(if (-not $passed) { Get-XmipToolFailure -Tool $Tool -Line $lines })
+        Telling = [string[]] @(
+            if (-not $passed) {
+                $lines | Where-Object { $_ -match $script:XmipToolTelling } |
+                    Select-Object -Last $script:XmipToolTold
+            }
+        )
     }
 }
 

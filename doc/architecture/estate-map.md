@@ -465,7 +465,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 408312 lines of production
+Where each repository mounts and what it holds: 412540 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -730,12 +730,12 @@ hold no source to count.
 │   │   │   ├── asn1                             686
 │   │   │   └── file                             318
 │   │   └── operation/
-│   │       ├── operate                        52154  C# 32097 · Rust 20057
+│   │       ├── operate                        52249  C# 32163 · Rust 20086
 │   │       ├── cli                            11898
-│   │       ├── observe                         7949
+│   │       ├── observe                         7954
 │   │       │   ├── otlp                         591
 │   │       │   └── prometheus                   332
-│   │       ├── gui                             7915
+│   │       ├── gui                             7916
 │   │       │   └── vscode                      3424
 │   │       ├── powershell                      3806  C# 3806 · PowerShell 0
 │   │       ├── audit                           3670
@@ -760,7 +760,7 @@ hold no source to count.
 │   │           ├── postgresql                    62
 │   │           └── mssql                         59
 │   ├── foundation/
-│   │   ├── abi                                 6386  Rust 3273 · C# 2733 · PowerShell 380
+│   │   ├── abi                                 8353  C# 4644 · Rust 3329 · PowerShell 380
 │   │   ├── core                                4694
 │   │   ├── message                             2093
 │   │   │   ├── avro                             300
@@ -778,24 +778,24 @@ hold no source to count.
 │   │   │   ├── text                              59
 │   │   │   ├── edi-tradacoms                     56
 │   │   │   └── binary                            38
+│   │   ├── node                                1393
 │   │   ├── event                               1392
-│   │   ├── node                                1262
 │   │   ├── context                             1149
 │   │   ├── journey                              751
 │   │   ├── stream                               382
 │   │   └── party                                193
 │   └── platform/
-│       ├── runtime                            51043
-│       ├── persist                            24751
+│       ├── runtime                            51927
+│       ├── persist                            25713
 │       │   ├── rocksdb                          323
 │       │   ├── sqlite                           288
 │       │       declared, not built 1
 │       │       postgresql
-│       ├── configure                           5600
-│       └── cluster                             5067
+│       ├── configure                           5718
+│       └── cluster                             5090
 └── test/
     └── core/
-        ├── system-test                        18853
+        ├── system-test                        18895
         └── module                                83
 ```
 

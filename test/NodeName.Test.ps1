@@ -26,8 +26,7 @@
     - a configured name in text a test writes: cluster_name, node_name,
       [nodes.<name>];
     - a parameter or flag that names a cluster or nodes: -Cluster, -Nodes,
-      -OnlineNodes, -Node, -Name, --cluster, --name, --nodes, --node,
-      --online;
+      -Node, -Name, --cluster, --name, --nodes, --node, --capabilities;
     - one of the names the owner types (CLn, RXn, PXn, TXn, EXn, OPn, DSn,
       CT), the one-letter ones they replaced (Cn, Rn, Pn, Sn, Ln, On, Dn),
       the Nn a test once numbered its nodes with, or the struck ones
@@ -94,7 +93,7 @@ BeforeAll {
     # a node's name stands.
     [string] $role = 'operational|monitoring|receiving|processing|sending|executing|' +
         'development|storage|receive|process|send'
-    [string] $flag = '-Cluster|-Nodes|-OnlineNodes|-Node|--cluster|--nodes|--node|--online'
+    [string] $flag = '-Cluster|-Nodes|-Node|--cluster|--nodes|--node|--capabilities'
 
     # Where a name stands, each place named for the failure message. Every
     # name is captured as n; the first place to find a name on a line says it.

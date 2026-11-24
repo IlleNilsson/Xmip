@@ -210,13 +210,15 @@ and is the estate's memory of every past defect. It runs detached, so the
 prompt is yours meanwhile; `Get-XmipTestResult -Suite Core.Estate` says what
 failed. `Start-XmipTest -Suite Core.Internal -Test <module>` verifies the
 modules named as a landing verifies each, their format, lints and tests and
-their .NET projects, without landing anything. Either runs on another
-computer, a Linux one beside a Windows one, with `-ComputerName <name>`:
-the estate is sent there as a difference and runs in a copy of its own,
-and `Get-XmipTestStatus`, `Get-XmipTestResult` and `Stop-XmipTest` take the
-same `-ComputerName`. The computer is `.local-work/test-computer/<name>.toml`,
-which says `host`, `user` and `key`, and may say `folder` and `slots`; it is
-this machine's and never in Git.
+their .NET projects, without landing anything, and names every crate or
+project and test that failed. Either runs on a Linux computer beside this
+one with `-ComputerName <name>`: what Git would hold of the estate is sent
+there as a difference, never what an ignore file excludes, and runs in a
+copy of its own, one run at a time, and `Get-XmipTestStatus`,
+`Get-XmipTestResult` and `Stop-XmipTest` take the same `-ComputerName`. The
+computer is `.local-work/test-computer/<name>.toml`, which says `host`,
+`user` and `key`, and may say `folder` and `slots`; it is this machine's and
+never in Git.
 
 **The toolchain**, as of 2026-10-19 (ADR-0021, amendment 2026-10-19).
 PowerShell Core 7.7.0 or newer, with PSToml, powershell-yaml and posh-git, and Pester 6, each at its latest release.
@@ -353,7 +355,10 @@ is what machinery, `.local-work/` is where.
 ## License
 
 Xmip is licensed under the GNU Affero General Public License, version 3 or
-later.
+later — all of it but the module boundary: what a developer's module links
+or compiles into itself, xmip-core-abi with `Xmip.Module` and the `dotnet
+new` templates in it, is Apache-2.0, so the module stays its author's
+(ADR-0075 clause 6; ADR-0023, amendment 2026-11-24).
 
 That license grants the right to use, study, modify, redistribute and fork
 Xmip. This project does not restrict those rights and does not seek to.
@@ -375,8 +380,9 @@ support and the publisher's responsibility. Xmip neither endorses nor
 maintains them.
 
 The boundary is the ABI (ADR-0061). A module loaded through it is a separate
-work; a module linked into Xmip at build time is part of Xmip, and is
-AGPL-3.0-or-later.
+work, and what it compiles in of the boundary is Apache-2.0; a module linked
+into Xmip at build time, or linking any of the rest of it, is part of Xmip,
+and is AGPL-3.0-or-later (ADR-0061, amendment 2026-11-24).
 
 ## Contributions
 

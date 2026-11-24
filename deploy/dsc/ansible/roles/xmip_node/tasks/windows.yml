@@ -124,6 +124,14 @@
     src: "{{ xmip_package }}"
     dest: "{{ xmip_staging }}\\xmip.msi"
 
+# Installed where the MSI's own product code is not, so a package of
+# another build is installed over the one there — its MajorUpgrade removes
+# that one, the same version again included — as Linux upgrades an .rpm of
+# another build. Until 2026-11-24 the node's service found it installed,
+# and no new build reached a node that ran. Its `xmip-service --install`
+# restarts the node on the new program after every file above was placed,
+# so it is not restarted again, and it is then waited for until it is ready
+# (handlers/main.yml; ADR-0056, amendment 2026-11-24).
 - name: The package installed, which runs xmip-service --install
   ansible.windows.win_package:
     path: "{{ xmip_staging }}\\xmip.msi"
@@ -131,8 +139,9 @@
       - XMIP_NODE={{ xmip_node_name }}
       - XMIP_CLUSTER={{ xmip_cluster_name }}
       - XMIP_ACCOUNT={{ xmip_account }}
-    creates_service: "xmip-{{ xmip_node_name }}"
     state: present
+  register: xmip_installed_windows
+  notify: The Xmip node restarted
 
 # The file is the node's alone to write: its account's and the
 # administrators' (ADR-0031, amendment 2026-11-06, point 4), the starter

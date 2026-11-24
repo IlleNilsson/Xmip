@@ -24,6 +24,10 @@
 //! - `woken.rs`: a Journey one node publishes into a queue, or hands on
 //!   into one, is told to another node waiting on that queue over the wire
 //!   within a millisecond of the write's answer (open problem 46).
+//! - `switchover.rs`: a primary Storage node stopped in order, measured on
+//!   three Storage nodes as they are deployed — on-disk engines, the
+//!   platform's key store — while a node writes under load, and printed
+//!   (open problem 143; ADR-0056, amendment 2026-11-24).
 //!
 //! What it starts and opens is the other programs' own, shared, not
 //! copied: the service's `started.rs`, and the Storage tests' `node.rs`
@@ -50,6 +54,7 @@ mod node;
 
 mod carried;
 mod publication;
+mod switchover;
 mod told;
 mod wire;
 mod woken;

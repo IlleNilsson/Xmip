@@ -220,3 +220,17 @@ Character Encoding unit, is reached the same way since that day, through
 `codec::charset`, the estate's one decoding of the WHATWG encodings.
 
 Provenance: the coordinator's plan of 2026-11-13; the assistant's wording.
+
+## Amendment, 2026-11-24: the switch moved; online is a Node capability
+
+The owner, 2026-11-24: *An obvious node capability is online, internet
+access*. Clause 3's switch, `[service] online`, is deleted, with every use.
+A node with internet access declares the Node capability `online` in its
+cluster's file, `[nodes.<name>] capabilities = ["online"]`, and one that
+declares nothing is offline, so offline stays the default. Work that
+reaches off the machine requires it as any other Node capability, and it is
+the one Xmip asks after itself (ADR-0056, amendment of this date). The
+System Tests' `-OnlineNodes`, `XMIP_SYSTEM_TEST_ONLINE_NODES` and the node
+binary's `--online` went with it: `Start-XmipTest -NodeCapability` writes a
+node's Node capabilities into the run's cluster file. `XMIP_ONLINE` stays,
+the test process's own switch for a test that needs the internet.

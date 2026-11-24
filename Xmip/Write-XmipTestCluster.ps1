@@ -72,20 +72,22 @@ function Read-XmipTestCluster {
     $declared = Get-XmipClusterNodeRole -Document $document
 
     return [pscustomobject]@{
-        Path  = $Path
-        Name  = $name
-        Nodes = $declared.Nodes
-        Role  = $declared.Role
-        Scope = "xmip:///$name"
+        Path       = $Path
+        Name       = $name
+        Nodes      = $declared.Nodes
+        Role       = $declared.Role
+        Capability = $declared.Capability
+        Scope      = "xmip:///$name"
     }
 }
 
 function Get-XmipClusterNodeRole {
     <#
         .SYNOPSIS
-            The nodes a cluster's cluster.xmip declares, in ordinal order, and
-            the roles each declares as written: the module's one reading of
-            a cluster's [nodes].
+            The nodes a cluster's cluster.xmip declares, in ordinal order, the
+            roles each declares as written, and the Node capabilities each
+            declares (ADR-0056, amendment 2026-11-24): the module's one
+            reading of a cluster's [nodes].
 
         .PARAMETER Document
             cluster.xmip, as Read-XmipConfiguration read it.
@@ -101,13 +103,16 @@ function Get-XmipClusterNodeRole {
     [string[]] $names = @(Get-TomlKey -Node $declared)
     [Array]::Sort($names, [StringComparer]::Ordinal)
     $role = [ordered]@{}
+    $capability = [ordered]@{}
 
     foreach ($node in $names) {
         $own = Get-TomlValue -Node $declared -Name $node
         $role[$node] = [string] (Get-TomlValue -Node $own -Name 'roles')
+        $words = Get-TomlValue -Node $own -Name 'capabilities' -Default @()
+        $capability[$node] = [string[]] @($words)
     }
 
-    return [pscustomobject]@{ Nodes = $names; Role = $role }
+    return [pscustomobject]@{ Nodes = $names; Role = $role; Capability = $capability }
 }
 
 function Read-XmipSystemTestCluster {
@@ -174,6 +179,120 @@ function Join-XmipNodeRole {
     return $joined
 }
 
+function ConvertTo-XmipNodeCapability {
+    <#
+        .SYNOPSIS
+            The Node capabilities a value of -NodeCapability says, as words:
+            'online, erp-direct', 'online+erp-direct' or @('online',
+            'erp-direct'). Whether each is a Node capability is the node
+            crate's to say (node::Capability::node_capabilities), as the run
+            reads its cluster file before anything starts.
+
+        .PARAMETER Capability
+            One node's value.
+    #>
+    [CmdletBinding()]
+    [OutputType([string[]])]
+    param(
+        [Parameter()]
+        [AllowNull()]
+        [object] $Capability
+    )
+
+    return [string[]] @(
+        @($Capability) | Where-Object { $null -ne $_ } |
+            ForEach-Object { ([string] $_) -split '[,+]' } |
+            ForEach-Object { $_.Trim() } |
+            Where-Object { $_ -ne '' }
+    )
+}
+
+function Get-XmipNodeCapabilityEntry {
+    <#
+        .SYNOPSIS
+            Each node's Node capabilities as a run's record lists them,
+            <node>=online+erp-direct, as node::Capability::declared_entry
+            writes them; a node declaring none is left out.
+
+        .PARAMETER Capability
+            The Node capabilities per node, as Read-XmipTestCluster reads
+            them.
+    #>
+    [CmdletBinding()]
+    [OutputType([string[]])]
+    param(
+        [Parameter()]
+        [AllowNull()]
+        [System.Collections.IDictionary] $Capability
+    )
+
+    if ($null -eq $Capability) {
+        return [string[]] @()
+    }
+
+    return [string[]] @(
+        foreach ($node in @($Capability.Keys)) {
+            [string[]] $words = @($Capability[$node] | Where-Object { $null -ne $_ })
+
+            if ($words.Count -gt 0) {
+                "$node=$($words -join '+')"
+            }
+        }
+    )
+}
+
+function Join-XmipNodeCapability {
+    <#
+        .SYNOPSIS
+            The Node capabilities each of -Nodes declares in a run: what
+            -NodeCapability states for it, else what the System Tests' file
+            declares, else none (ADR-0056, amendment 2026-11-24).
+
+        .PARAMETER Nodes
+            The run's nodes.
+
+        .PARAMETER NodeCapability
+            What -NodeCapability stated per node, or $null.
+
+        .PARAMETER Declared
+            What the System Tests' file declares per node (Read-XmipSystemTestCluster).
+    #>
+    [CmdletBinding()]
+    [OutputType([hashtable])]
+    param(
+        [Parameter()]
+        [AllowNull()]
+        [AllowEmptyCollection()]
+        [string[]] $Nodes = @(),
+
+        [Parameter()]
+        [AllowNull()]
+        [hashtable] $NodeCapability,
+
+        [Parameter(Mandatory)]
+        [System.Collections.IDictionary] $Declared
+    )
+
+    [hashtable] $joined = @{}
+
+    foreach ($node in @($Nodes | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })) {
+        [string[]] $stated = @(
+            if ($null -ne $NodeCapability -and $NodeCapability.ContainsKey($node)) {
+                ConvertTo-XmipNodeCapability -Capability $NodeCapability[$node]
+            }
+            elseif ($Declared.Contains($node)) {
+                $Declared[$node] | Where-Object { $null -ne $_ }
+            }
+        )
+
+        if ($stated.Count -gt 0) {
+            $joined[$node] = $stated
+        }
+    }
+
+    return $joined
+}
+
 function Write-XmipTestCluster {
     <#
         .SYNOPSIS
@@ -185,8 +304,10 @@ function Write-XmipTestCluster {
             <Path>/<Cluster>.xmip: [service] with the cluster's name, and
             one [nodes.<node>] per node, with roles where -NodeRole states
             them, in node::NodeRole's words as ConvertTo-XmipNodeRole says
-            them. A node -NodeRole does not name declares nothing. Replaced
-            on every run, so the file is what was typed this time.
+            them, and capabilities where -NodeCapability states its Node
+            capabilities (ADR-0056, amendment 2026-11-24). A node neither
+            names declares nothing. Replaced on every run, so the file is what
+            was typed this time.
 
         .PARAMETER Cluster
             The cluster's name, as -Cluster gave it.
@@ -196,6 +317,10 @@ function Write-XmipTestCluster {
 
         .PARAMETER NodeRole
             What -NodeRole stated per node.
+
+        .PARAMETER NodeCapability
+            The Node capabilities per node, as Join-XmipNodeCapability joins
+            them.
 
         .PARAMETER Path
             The run's directory.
@@ -215,6 +340,10 @@ function Write-XmipTestCluster {
         [AllowNull()]
         [hashtable] $NodeRole,
 
+        [Parameter()]
+        [AllowNull()]
+        [hashtable] $NodeCapability,
+
         [Parameter(Mandatory)]
         [string] $Path
     )
@@ -223,7 +352,21 @@ function Write-XmipTestCluster {
 
     foreach ($node in @($Nodes | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })) {
         [string] $roles = Get-XmipNodeRole -Name $node -NodeRole $NodeRole
-        $declared[$node] = if ($roles -ne '') { [ordered]@{ roles = $roles } } else { [ordered]@{} }
+        $own = [ordered]@{}
+
+        if ($roles -ne '') {
+            $own.roles = $roles
+        }
+
+        if ($null -ne $NodeCapability -and $NodeCapability.ContainsKey($node)) {
+            [string[]] $words = @(ConvertTo-XmipNodeCapability -Capability $NodeCapability[$node])
+
+            if ($words.Count -gt 0) {
+                $own.capabilities = $words
+            }
+        }
+
+        $declared[$node] = $own
     }
 
     $document = [ordered]@{

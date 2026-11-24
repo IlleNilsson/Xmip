@@ -7,6 +7,9 @@
   test ACME server only; every trait stays in its capability
 - Amended: 2026-11-13 — the SDK is a Capability, by the message-path test;
   its mount stays at `sdk/`
+- Amended: 2026-11-24 — the packages a developer installs, and their
+  registries, are ADR-0075's; what a module compiles into itself, the
+  module boundary, is Apache-2.0
 - Related: ADR-0012 (the module boundary and the C ABI), ADR-0016 (submodule
   composition: what starts Xmip mounts without a provider), ADR-0021 (latest
   everywhere until the first release), ADR-0023 (AGPL-3.0-or-later, and no
@@ -228,3 +231,49 @@ the assistant's.
    another Capability breaks no layer rule, and the SDK has no Technology
    children; `test/Layer.Test.ps1` admits the dependency by its rules and
    lists it no more (ADR-0058, amendment of this date).
+
+## Amendment, 2026-11-24: the packages a developer installs are ADR-0075's
+
+The owner, 2026-11-24, asked *So what nuget or other packages do you
+recommend to external developers?*, and of the answer: *Go ahead*. Decision
+5's registry, left open by the amendment of 2026-09-24, is settled for the
+packages a developer outside the estate installs: NuGet's `Xmip.Module`,
+`Xmip.Templates`, `Xmip.Testing` and `Xmip.Client`, the PowerShell Gallery's
+`Xmip`, the VS Code extension on both extension registries, `xmip-module` on
+crates.io and the C header and libraries as release downloads, each name
+reserved before anything is published (ADR-0075). The SDK's simulators are
+not among them, and decision 5 stays open for them.
+
+## Amendment, 2026-11-24: what a module compiles into itself is Apache-2.0
+
+Asked whether `Xmip.Module` should be permissive, so that a developer may
+keep a module closed, the owner, 2026-11-24: *Do as you think*. Decision 6
+said a module loaded through the C ABI is a separate work its provider may
+license as they choose; yet a module compiles the boundary's own code into
+itself — the header's shapes, `Xmip.Abi` and `Xmip.Module` in a .NET
+module's library — and that code was AGPL-3.0-or-later, so the choice
+decision 6 promised rested on a reading of the AGPL rather than on a
+license that grants it.
+
+- **Apache-2.0: everything a developer's code links or compiles into
+  itself.** All of xmip-core-abi — the C headers, the specification, the
+  Rust crate and its `ffi` shapes, the event bindings, `Xmip.Abi`,
+  `Xmip.Module`, `Xmip.Module.Entry`, the `Xmip.Templates` package and the
+  content `dotnet new` writes into a developer's project, and their tests:
+  xmip-core-abi is the one repository of the boundary, and the .NET
+  repository template, xmip-template-dotnet, stays AGPL-3.0-or-later like
+  the estate repositories it generates. `Xmip.Testing`, `Xmip.Client` and
+  crates.io's `xmip-module`, when built, are Apache-2.0 too (ADR-0075).
+  Apache-2.0 for its patent grant, and because the AGPL-3.0 estate may keep
+  using Apache-2.0 code: the runtime links the abi crate as before.
+- **AGPL-3.0-or-later: everything else** — the runtime, the node, the
+  capabilities and their technologies, the transports, the tools. A module
+  that links any of it is part of Xmip, as decision 6 says.
+- **The boundary links nothing of the rest**: the abi crate depends on no
+  Xmip crate and its .NET projects on no Xmip project outside it
+  (`test/License.Test.ps1`).
+- **Not yet permissive**: a Rust provider's contract compiles
+  `contract::export_contract!` from xmip-core-contract, AGPL-3.0-or-later;
+  its permissive route is the `xmip-module` crate ADR-0075 names, not built.
+
+ADR-0023's one license and ADR-0012 clause 9 are amended the same day.

@@ -38,8 +38,10 @@ other. Each node in either is built for its own target.
 **The runtime semantics are identical on all of them.** What varies is which
 Modules are linked and loaded, which persistence and observability providers
 are configured, and which capabilities exist across the cluster — the union
-of what its nodes declare, in ADR-0056's four kinds: online, feature,
-authentication and runtime. A target is a packaging and configuration
+of what its nodes declare, in ADR-0056's kinds: feature, authentication and
+runtime, and the Node capabilities whoever runs a node names for its
+environment, `online` among them (amendment 2026-11-24). A target is a
+packaging and configuration
 choice, never a different product.
 
 The laws that hold everywhere:
@@ -208,17 +210,23 @@ Hosted worker      Receiving + Operational, or Processing + Sending
 
 These are deployment choices, not separate runtime models.
 
-**Work is placed by the stages a node's roles serve** (the owner,
-2026-11-07; ADR-0056, amendment 2026-11-13). A Receive Location requires
-the receive stage served and a Send Port the send stage, and work that
-must reach off the machine requires the online capability too
-(`node::Requirement`); a node satisfies it where one of its roles serves
-that stage, executing serving every stage (`Capability::satisfies`).
-Among the nodes that satisfy it, the next in turn takes it
-(`cluster::place`); where none does, it is refused, naming the
-requirement and every node considered, never left unplaced. A
-Work Process requires the process stage and runs on every node that
-satisfies it (`cluster::every`), its turns shared through Xmip Storage. A cluster's
+**Work is placed by the stages a node's roles serve, and by its Node
+capabilities** (the owner, 2026-11-07 and 2026-11-24; ADR-0056,
+amendments 2026-11-13 and 2026-11-24). A Receive Location requires the
+receive stage served and a Send Port the send stage, and any of them, a
+Work Process too, may require Node capabilities in its `requires` — words
+naming what a node's environment gives it, a firewall opening, software
+installed, `online` for a route off the machine (`node::Requirement`); a
+node satisfies it where one of its roles serves that stage, executing
+serving every stage, and it declares each of those words in its
+`[nodes.<name>] capabilities` (`Capability::satisfies`). Among the nodes
+that satisfy it, in the file's order, the next in turn takes it
+(`cluster::place`), work requiring more taking its turns apart; where none
+does, it is refused, naming the requirement and every node considered,
+never left unplaced. A Work Process requires the process stage and runs on
+every node that satisfies it (`cluster::every`), its turns shared through
+Xmip Storage. A Subscription filters on what a Message holds, never on a
+node. A cluster's
 file is placed so, its Receive Locations and Send Ports round the nodes
 an environment has and its Work Processes on each node serving their
 stage, by the System Tests' run and `xmip-service --slice --bind` alike
@@ -714,11 +722,13 @@ listed answers and none is a primary: a primary that vanishes — killed,
 its machine lost, cut off — is waited for, never replaced, and automatic
 failover returns with a witness (the owner, 2026-11-08; ADR-0056,
 amendment 2026-11-08; open problem 45). A primary stopped in order hands
-over: every write handed on, it names a standby holding every one its
-successor, which keeps the next epoch and is promoted at once, and the
-former primary follows it on from where it stopped once it is back (the
-owner, 2026-11-23; ADR-0056, amendment 2026-11-23). A stays the choice for
-a database server.
+over: every write handed on, its stop drained, it names a standby holding
+every one its successor, which keeps the next epoch and is promoted at
+once, the former primary not asked once it acknowledged that epoch, and
+the former primary follows it on from where it stopped once it is back;
+only a Storage node listed follows, by the certificate it proves (the
+owner, 2026-11-23 and 2026-11-24; ADR-0056, amendments 2026-11-23 and
+2026-11-24). A stays the choice for a database server.
 
 **Rejected: option B**, an embedded engine on a shared disk. RocksDB is not
 supported on network file systems.
@@ -840,11 +850,13 @@ Xmip Storage, and no Storage node before every one its cluster lists
 (ADR-0015 and ADR-0056, amendments 2026-11-11) — and running the slice it
 was shipped, as `xmip-service --activation` says, since a correctly signed
 slice a node cannot start is refused and the node runs the last one that
-ran (ADR-0031, amendment 2026-11-12). A node the deploy restarts is waited
-for until it is ready, as `xmip-service --readiness` says, before the next
-is restarted: a Storage node restarted comes back a standby, and its
-primary, stopped in order, hands over to a standby ready and following at
-once (ADR-0056, amendment 2026-11-23). Each slice has
+ran (ADR-0031, amendment 2026-11-12). A node the deploy restarts is
+restarted once, after the last step that changes what it runs, and waited
+for once until it is ready, as `xmip-service --readiness` says by what it
+published since its start now, before the next is restarted: a Storage
+node restarted comes back a standby, and its primary, stopped in order,
+hands over to a standby ready and following at once (ADR-0056, amendments
+2026-11-23 and 2026-11-24). Each slice has
 every Receive Location and Send Port the file designs placed over the
 environment's nodes by `xmip-core-configure`'s one placement and bound on
 the far end the environment names (ADR-0028, amendment 2026-10-22), and

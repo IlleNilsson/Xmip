@@ -12,12 +12,13 @@ using namespace System.Collections.Generic
     The computer keeps a mirror of the estate as last sent, <folder>/mirror
     under that account's home, and this machine keeps the list of what it
     sent, <name>/sent.tsv beside the computer's file: each file's path, size
-    and time written. A send walks this tree's metadata alone, the estate's
-    one walk (Find-XmipFile, which leaves build output out by what it holds,
-    never by its name), packs what is new or changed with tar, copies it with
-    scp and names what is gone; the first send, or a mirror that is not there
-    any more, sends everything once. OpenSSH's own ssh, scp and tar, which
-    Windows carries, and nothing else (the owner, 2026-11-23).
+    and time written. A send lists what Git would hold, never what any ignore
+    file excludes (Get-XmipEstateSent), packs what is new or changed with
+    tar, copies it with scp and names what is gone; the first send, a mirror
+    that is not there any more, or a receive that failed once it began, sends
+    everything once. OpenSSH's own ssh, scp and tar, which Windows carries,
+    here; the computer is Linux (Invoke-XmipTestComputer) (the owner,
+    2026-11-23).
 
     It was a bash script outside the estate until 2026-11-23, in a folder a
     restart clears.
@@ -117,50 +118,32 @@ function Send-XmipTestComputerDifference {
         $copied += 'send.tar'
     }
 
-    Copy-XmipTestComputerFile -Computer $Computer -Name $copied
     [string] $how = if ($whole) { 'whole' } else { 'difference' }
-    $received = Invoke-XmipTestComputerShell -Computer $Computer -Asked receive -Given $how
-    Assert-XmipTestComputerAnswer -Computer $Computer -Answer $received -Doing 'receive it'
-    Remove-Item -LiteralPath $packed -Force -ErrorAction Ignore
+    $received = $null
+
+    try {
+        Copy-XmipTestComputerFile -Computer $Computer -Name $copied
+        $received = Invoke-XmipTestComputerShell -Computer $Computer -Asked receive -Given $how
+        Assert-XmipTestComputerAnswer -Computer $Computer -Answer $received -Doing 'receive it'
+    }
+    catch {
+        # A receive that began and failed leaves the mirror between two sends,
+        # so the next send is whole; one refused for a run there changed nothing.
+        if ($null -ne $received -and $received.Code -ne $script:XmipTestComputerBusy) {
+            Remove-Item -LiteralPath $listed -Force -ErrorAction Ignore
+        }
+
+        throw
+    }
+    finally {
+        Remove-Item -LiteralPath $packed -Force -ErrorAction Ignore
+    }
+
     Write-XmipLineFeedFile -Path $listed -Line $now
 
     [string] $what = if ($whole) { 'the whole estate, once' } else { 'the difference' }
     Write-Host ("Sent $what to $($Computer.Name): $($difference.Changed.Count) changed, " +
         "$($difference.Gone.Count) gone.")
-}
-
-
-function Get-XmipEstateSent {
-    <#
-        .SYNOPSIS
-            What a send compares: each file of the estate as one line, its
-            path from the root with forward slashes, its size and the time it
-            was written, tab between.
-
-        .DESCRIPTION
-            The estate's one walk, Find-XmipFile, leaves build output, git's
-            own folder and the working areas out; a submodule's .git, a file
-            naming where its repository is on this machine, is left out too,
-            since the copy there is one repository of its own.
-
-        .PARAMETER Root
-            The estate's root.
-    #>
-    [CmdletBinding()]
-    [OutputType([string])]
-    param(
-        [Parameter(Mandatory)]
-        [string] $Root
-    )
-
-    [string] $full = [System.IO.Path]::GetFullPath($Root)
-
-    Find-XmipFile -Path $full -Filter '*' |
-        Where-Object { $_.Name -ne '.git' } |
-        ForEach-Object {
-            [string] $path = [System.IO.Path]::GetRelativePath($full, $_.FullName).Replace('\', '/')
-            "$path`t$($_.Length)`t$($_.LastWriteTimeUtc.Ticks)"
-        }
 }
 
 
@@ -234,9 +217,10 @@ function Copy-XmipTestComputerFile {
         [string[]] $Name
     )
 
-    # By name from the folder itself: scp reads a drive letter as a host.
-    [string[]] $argument = @(Get-XmipTestComputerOption -Computer $Computer) + '-q' + $Name +
-        "$($Computer.User)@$($Computer.Host):$($Computer.Folder)/"
+    # By name from the folder itself: scp reads a drive letter as a host. No
+    # option after `--`, whatever a name or the destination begins with.
+    [string[]] $argument = @(Get-XmipTestComputerOption -Computer $Computer) + '-q' + '--' +
+        $Name + "$($Computer.User)@$($Computer.Host):$($Computer.Folder)/"
     Push-Location -LiteralPath $Computer.State
 
     try {

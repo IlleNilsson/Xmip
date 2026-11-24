@@ -40,8 +40,9 @@
 //! (`activation.rs`): what a deployment asks after it restarts a node.
 //! `--readiness` says whether the node is ready — it runs that slice and
 //! its Xmip Storage stands Fine, a Storage node the primary or a standby
-//! ready and following — waiting `--within` seconds for it where given
-//! (`ready.rs`; ADR-0056, amendment 2026-11-23): what a deployment asks
+//! ready and following, by what it published since its start now — waiting
+//! `--within` seconds for it where given, told as it publishes (`ready.rs`;
+//! ADR-0056, amendments 2026-11-23 and 2026-11-24): what a deployment asks
 //! before it restarts the next node.
 //!
 //! `--definition` prints what this platform's service manager is told about

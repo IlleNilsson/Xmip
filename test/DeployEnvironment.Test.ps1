@@ -559,6 +559,29 @@ Describe 'Ansible' {
             'when: not ansible_check_mode or \(xmip_record.stdout \| from_json\).defined')
     }
 
+    It 'presses a Windows ISO''s boot key through the one script both technologies run' {
+        # 2026-11-24: the Hyper-V press was written twice, so changing Space to
+        # Enter the day before took two edits (ADR-0015, amendment 2026-11-24).
+        [string] $machine = Join-Path $script:Root 'deploy/dsc/machine/HyperVBootKey.ps1'
+        [string] $tasks = Get-Content -Raw -LiteralPath (Join-Path $script:Root (
+                'deploy/dsc/ansible/roles/xmip_machine/tasks/hyperv-machine.yml'))
+
+        $tasks | Should -Match "xmip_boot_key: .+/HyperVBootKey\.ps1"
+        $tasks | Should -Match 'Send-HyperVBootKey -Name \$Name'
+        Get-Content -Raw -LiteralPath (Join-Path $script:Root (
+                'deploy/dsc/msdsc/hyperv/HyperVResource.ps1')) |
+            Should -Match 'machine/HyperVBootKey\.ps1'
+        [string[]] $pressing = @(
+            Get-ChildItem -LiteralPath (Join-Path $script:Root 'deploy/dsc') -Recurse -File |
+                Where-Object { $_.Extension -in '.ps1', '.yml', '.yaml' } |
+                Select-String -Pattern 'Msvm_Keyboard' -List |
+                ForEach-Object { [System.IO.Path]::GetFileName($_.Path) }
+        )
+        $pressing | Should -Be @('HyperVBootKey.ps1')
+        # Ansible runs it on the host in Windows PowerShell.
+        Get-Content -Raw -LiteralPath $machine | Should -Not -Match '#requires'
+    }
+
     It 'writes no network, pool, domain or kickstart in any task: the machine folder does' {
         [string[]] $found = @(Get-ChildItem -LiteralPath (
                 Join-Path $script:Root 'deploy/dsc/ansible') -Recurse -File -Filter '*.yml' |

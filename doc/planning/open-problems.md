@@ -2518,6 +2518,17 @@ Receive Location or Send Port to another node, though placement says it
 follows the file's order and nothing reads a name (`configure::placed`,
 `configure::cluster::capabilities`).
 
+Built 2026-11-24 (ADR-0056, amendment 2026-11-24): `configure::cluster`
+reads the order of `[nodes]` from the document itself
+(`configure::document::keys`, through `toml_edit`), so `cluster::nodes`,
+`roles`, `capabilities`, the slices and the observers a slice lists follow
+the file, and `placed::placements` goes round the nodes in the file's order
+whatever order it is handed them in. The workspace's `toml` keeps no order
+still: `preserve_order` would differ by which crates a build holds. The
+test fixture keeps its places in the order of their names, which every test
+counts by. Held by configure's tests, which failed before the fix with the
+nodes in their names' order where the file wrote another.
+
 ## 105. A node started with `--console` panics after its stop once nobody reads its output
 
 Found 2026-11-22 in the served rolls of the System Tests' cluster: a node
@@ -2724,6 +2735,489 @@ concern, two homes.
 Found 2026-11-23 the same day: `Core.Internal` and a landing on the same
 computer both write their part logs and the runtime copy under
 `.local-work/landing`, so running both at once overwrites the landing's.
+
+## 128. A topology test of the operator GUI fails under full parallelism
+
+Found 2026-11-24 building Node capabilities: on Windows
+`TopologySelectionTest.ASelectedLinkIsReadAgainFromEachPublicationAndClearedOnlyWhenItIsGone`
+fails when xUnit runs every test at once, *Expected: "now: 6 handoffs…"
+Actual: "6 handoffs…"*, a bUnit wait timing out before the republished
+file is read. It passes alone and with two threads. Not proven to be load
+alone.
+
+## 129. The oauth2 and OPA technologies' reach off the machine is wired to nothing
+
+Found 2026-11-24 the same day: both technologies' builders carry an online
+setting that nothing in production sets, before Node capabilities and
+after. Their READMEs say they reach off the machine only where the node
+declares the Node capability `online`; nothing passes it to them yet.
+
+## 130. A `requires` word in the designer has no definition to go to
+
+Found 2026-11-24 the same day: the VS Code designer offers `requires` on
+work and `capabilities` on a node, but a required word has no
+go-to-definition and no choices drawn from the words the nodes declare.
+
+## 131. A node's service configuration ignores a key it does not know
+
+Found 2026-11-24 the same day: `ServiceConfiguration` refuses no unknown
+key, so a `[service] online = true` left in a file from before Node
+capabilities is ignored in silence, where a key Xmip no longer reads should
+be refused in words naming it.
+
+## 132. PowerShell lists a cluster's nodes in their names' order
+
+Found 2026-11-24 the same day: `Get-XmipClusterNodeRole` sorts the nodes
+by name, so a run's cluster file and the default `-Nodes` list come in
+names' order, not the file's. Placement no longer depends on it (open
+problem 104), but what the tester sees differs from the file.
+
+## 133. The operator GUI's module cannot be verified on Linux
+
+Found 2026-11-24 running the internal tests on Linux: `Xmip.Operations`
+targets Windows and phones through MAUI, and its build there stops at
+NETSDK1147, the `maui-tizen` workload not installed, so `Core.Internal`
+of `module/core/operation/gui` cannot pass on a Linux computer and the
+module's other projects go unverified there.
+
+## 134. Two Storage nodes can be primaries in one epoch after a stop in order
+
+Found 2026-11-24 by the review of the switchover, twice, by two reviewers
+apart; not yet proven by a test. A primary stopped in order waits for its
+successor's `Kept` only up to the silence bound (1 s) and stops whatever
+it heard (`standby/succession.rs`). With two Storage nodes the successor
+asks nobody, its former primary excused (`standby/finding.rs`). Where the
+successor keeps the next epoch later than that, the former primary can
+restart, win the tie and be promoted in that epoch first; the successor is
+then promoted in it too, neither steps down, and nodes write to both. A
+third frame closes it: the former primary acknowledges `Kept`, and the
+successor excuses it only once it has read that, asking as usual
+otherwise.
+
+Built 2026-11-24 (ADR-0056, amendment 2026-11-24): the stopping primary
+answers its successor's `Kept` with `Shipped::Acknowledged(epoch)`, and the
+successor excuses it from its question only once it read that; without it
+the successor asks it as every other Storage node listed. Held by persist's
+`standby/tests/handover.rs`, the successor's durable writes held past the
+silence while the former primary came back and was promoted in the epoch:
+before, *two primaries of epoch 2*; after, the successor follows the one
+back.
+
+## 135. Any node's certificate may follow a Storage primary and be named its successor
+
+Found 2026-11-24 by the same review: the Storage plane admits every read
+and write to a node's certificate whatever its roles
+(`server/admitted.rs`), `Follow` among them, and a stopping primary names
+as successor the place a follower says it holds (`standby/succession.rs`).
+A node of another role following names itself, every standby defers to
+it, and the cluster waits seconds for a primary as before the switchover;
+the same admission hands it whole copies. Needed: `follow` admitted only
+to a listed Storage node by its proven identity, its place worked out by
+the primary, and `place` gone from `Follow`.
+
+Built 2026-11-24 (ADR-0056, amendment 2026-11-24): each Storage node keeps
+the leaf certificate every one listed presented as it asked it its
+standing, its host checked by the TLS client (`standby::proven`); the
+Storage plane admits `follow` to a Storage node's standing alone, a caller
+whose leaf is one of those, each listed asked again once where none
+matches; its place is that one's, worked out by the primary, and `place` is
+gone from `Follow`. Held by `handover.rs`: a certificate of the same
+authority and host that no Storage node listed presents is refused, *REFUSED
+… it is none of the Storage nodes listed, by the certificate it proved*,
+where before it was handed frames.
+
+## 136. A stop in order that did not drain still names a successor
+
+Found 2026-11-24 by the same review; not yet proven by a test: an
+operation lent longer than the Storage timeout (5 s) can write after
+`Stopped` is sent and be acknowledged to its node, while the former
+primary keeps no positions and is copied whole on its return, so that
+acknowledged write is lost. A primary hands over only where its stop
+drained and synced.
+
+Built 2026-11-24 (ADR-0056, amendment 2026-11-24): a stop whose bound an
+operation outlasted closes its databases to writes, each refused under its
+database's lock (`Copies::close`), and names no successor; one that drained
+and synced names it as before. Not naming one alone would not have saved
+the write: the former primary, keeping no positions, is copied whole on its
+return. Held by `handover.rs`: an operation lent past the bound writes
+after the stop and is refused, where before it was acknowledged and the
+successor named.
+
+## 137. `--readiness` takes a snapshot the previous process left for the running one's
+
+Found 2026-11-24 by the same review, three reviewers: the runtime's
+`readiness` reads the node's last publication with no start number and no
+age (`running/activation/readiness.rs`). After a kill, a crash or a forced
+stop the old snapshot still says Storage Fine, the deploy restarts the
+next Storage node at once, and the outage open problem 92 closed comes
+back.
+
+Built 2026-11-24 (ADR-0056, amendment 2026-11-24): a start is numbered as
+its process's first act, before any attempt can refuse it, and readiness
+and activation take a publication only where its records were observed at
+or after the start its node's start file keeps (`running::activation`,
+`published`). Held by the runtime's `tests/running/ready.rs`: a
+publication left before a later start numbered is not ready, *published
+before its start now*; before, it was.
+
+## 138. The Microsoft DSC deploy waits for a node before it installs its program
+
+Found 2026-11-24 by the same review: the Slice step restarts a running
+node and waits for its readiness (`NodeMachine.ps1`), and it runs before
+the Certificate, Key, Anchors and Package steps (`node.dsc.yaml`). A node
+on a build from before `--readiness` refuses the argument and the deploy
+stops before the step that would upgrade it; a node on the new build is
+restarted twice. Ansible on Windows never upgrades an installed node's
+package. One restart and one wait per node, after the last step that
+changes what it runs.
+
+Built 2026-11-24 (ADR-0056, amendment 2026-11-24): Microsoft DSC's Slice
+and the certificate's, key's and anchors' File steps only place, leaving a
+running node `restart` in `deploy.pending` beside its configuration; the
+Package step's install leaves a node that ran `ready`; the Service step,
+last, restarts once a node left `restart` and waits once for one this
+deploy restarted, on the program the package installed. Ansible's restart
+handler skips a node its package's upgrade restarted, and on Windows a
+package whose own product code is not installed is installed over the one
+there, the MSI's `MajorUpgrade` taking the same version again. Held by
+`test/MsdscEnvironment.Test.ps1`.
+
+## 139. A stopping primary refuses every wait while its successor is still a standby
+
+Found 2026-11-24 by the same review: the primary refuses waits as its stop
+begins (`standby/succession.rs`), so every Send and Work Process step's
+watch rests its whole 1 s bound and writes fail through the drain, 150 to
+264 ms on Hyper-V (open problem 108). The successor can hold them on its
+`settled` signal from its `Kept` until it serves, the refusal naming it.
+
+Built 2026-11-24 (ADR-0056, amendment 2026-11-24): the stopping primary
+holds an operation until it handed over, then refuses it naming its
+successor, and refuses the waits on its queues then, not as its stop
+begins; the successor holds operations, and the standing a node asks on a
+kept connection, from its `Kept` until it serves; and a node whose every
+Storage node refused asks once more those that said they are standbys, so
+the order it asked them in never fails it. Held by `handover.rs`: a write
+asked while the primary drains is answered, where before *no Storage node
+answered*.
+
+## 140. `--readiness` asks again every 250 ms where it could be told
+
+Found 2026-11-24 by the same review: `xmip-service --readiness` sleeps
+between looks (`.src/service/ready.rs`), the node publishes every 250 ms,
+and an idle primary sends a new follower its first frame after a 100 ms
+beat: up to about 600 ms a restarted node, each look admitting and parsing
+the configuration again, where the amendment says "never a sleep". A beat
+at once to a new follower, a publication at once on a Storage standing
+change, and the wait following the node's board.
+
+Built 2026-11-24 (ADR-0056, amendment 2026-11-24): a primary hands a new
+follower a beat at once; a Storage node tells its node each change of what
+it is (`StorageNode::telling`), and `xmip-service` publishes at once
+(`Told::Storage`); `--readiness --within` reads the node's file, trust and
+place once, and its publication again as the operating system says the
+folder it publishes in changed (`running::activation::awaited`,
+`directory_watch`), not the node's board, which only a node with
+`[operate]` has. Held by `standby/tests/costs.rs`: a standby following an
+idle primary on is following, and its node told, within a second of a
+ten-second beat, where before it was handed nothing for the beat.
+
+## 141. A successor syncs every database again and writes three times before it serves
+
+Found 2026-11-24 by the same review: after it has synced, the successor
+syncs all three databases again and makes three durable writes one after
+another before serving. One sync and one durable write.
+
+Built 2026-11-24 (ADR-0056, amendment 2026-11-24): the successor syncs
+each database it wrote once and keeps its epoch in one durable write;
+following no longer syncs every database again as it ends, and promotion
+gives up the positions by writes not synced on their own, durable in order
+with its first sync as the primary. Held by `costs.rs`: one durable write
+between the stop and serving, where before four.
+
+## 142. A node keeps one connection to each standby, so a switchover costs others a handshake
+
+Found 2026-11-24 by the same review: every thread of a node but the one
+holding the kept connection opens a new one to the successor at a
+switchover, a full handshake each (open problem 119).
+
+Built 2026-11-24 (ADR-0056, amendment 2026-11-24): a client keeps as many
+connections to each following standby as it held to the primary at once,
+those kept asked again and new ones opened on a thread of their own, never
+the wait's. TLS session resumption stays off (ADR-0033, amendment
+2026-11-10), so open problem 119 stays open. Held by `costs.rs`: three or
+more kept where four threads ask the primary, where before one.
+
+## 143. The switchover's figures are of in-memory Storage
+
+Found 2026-11-24 by the same review: the 0.49 ms and 0.20 ms were measured
+on in-memory engines and key store with two nodes and no load, leaving out
+every fsync, every key-encryption key read and a third node's handshake;
+the writer's 4.2 to 4.8 ms is the test's own retry pace, where the
+runtime's callers rest a second. A figure of a deployed node is needed
+before either is quoted.
+
+Built 2026-11-24 (ADR-0056, amendment 2026-11-24): the root's timing
+program measures a deployed-like switchover (`.src/test/measured/
+switchover.rs`): three Storage nodes, RocksDB and SQLite on disk, the
+platform's key store, certificates kept across restarts, four threads of a
+node writing all along and one waiting, six stops in order. On Windows,
+before the change: the successor served 25.0 ms after the stop began
+(median 30.5 ms), the writers waited at most 28.1 ms (32.8 ms), and 733
+writes and 180 waits were refused across the six stops; after it, in two
+runs, 10.6 to 16.1 ms (14.3 to 19.1 ms), 13.3 to 18.7 ms (17.8 to 20.1 ms),
+and none refused. Persist's own program measures the hand-over in memory;
+its writer now asks again at once where refused and is never refused, so
+its wait is no retry pace: 0.70 to 1.02 ms, where 6.34 ms before. A
+technology depends on its parent, never the reverse, so the deployed-like
+figure is the root's, where every engine is linked.
+
+## 144. A Storage handover leaves no record an operator can find
+
+Found 2026-11-24 by the same review: neither a hand-over nor a promotion
+writes an audit record or raises an Event; one in-memory sentence, written
+over by the next, and the epoch are all that say it happened. Readiness and
+the switchover reach no ABI, CLI, PowerShell or GUI surface, and the
+Resilience Report is not built.
+
+## 145. A send to a test computer ignores `.gitignore`
+
+Found 2026-11-24 by the same review: the walk skips a few folder names and
+reads no `.gitignore` (`Send-XmipTestComputerEstate.ps1`,
+`Get-XmipSourceFile.ps1`), so what Git ignores, `.claude/` with its local
+settings among it today and `.env`, `*.db` or `logs/` where they appear, is
+sent and kept there. It sends what Git would hold: tracked files and
+untracked ones not ignored.
+
+Built 2026-11-24 (ADR-0028, amendment 2026-11-24): a send lists what Git
+would hold (`Get-XmipEstateSent`), every tracked file by one `git ls-files
+--recurse-submodules` and every untracked one its repository's `git
+check-ignore` does not exclude, asked of the repositories side by side,
+and the workspace's own `Cargo.lock`, so the computer builds what this one
+resolved; here 413 files are no longer sent, 282 submodules' ignored
+`Cargo.lock`, the logs and build output, in 11 s where the walk alone took
+2 to 9 s. A receive takes
+away what is gone and the folders left empty before it unpacks, a failed
+one makes the next send whole, and the folder's lock refuses a second
+start and a send while a run holds the copy. `user` and `host` are refused
+unless names, ssh and scp read nothing after `--` as an option, the far
+lines lose their control characters, and the probe refuses a computer that
+is not Linux, naming what it lacks. `test/NativeLibrary.Test.ps1` reads the
+workspace's lock, where it read the submodules' ignored ones, which no
+longer travel. Held by `test/TestComputer.Test.ps1`, nine of whose tests
+failed on the code before.
+
+## 146. A failed run of the internal tests names only its part
+
+Found 2026-11-24 by the same review: `Core.Internal` records "Rust" or
+".NET" failed with 0 passed (`Test-XmipChangeTree.ps1`), never the crate
+or the test, and with `-ComputerName` the logs that say it stay on the
+other computer with no cmdlet to bring them back.
+
+Built 2026-11-24 (ADR-0028, amendment 2026-11-24): `Invoke-XmipTool` keeps
+what cargo or dotnet said and reads what failed in it
+(`Get-XmipToolFailure`): a crate that did not compile or warned, with the
+first error and its place, each test that failed, with what it panicked
+at, a file the formatter would change, a project's error and each failing
+test. The parts return each as `Xmip.PartFailure`, read back to the
+crate's folder; Core.Internal runs every step and part to its end and
+records one failure for each, its module, test and those words, so
+`Get-XmipTestResult -ComputerName` brings them back; the modules no failure
+names count as passed. The part's log stays on the computer that ran it.
+
+## 147. The internal tests run cargo once for each crate
+
+Found 2026-11-24 by the same review: `Test-XmipRustChange.ps1` runs test,
+clippy and test with every feature for each of 281 members, each call
+loading the whole workspace: some 560 to 840 calls, 5 to 14 minutes before
+any compiling (not measured). One call for each mode over the members
+named.
+
+Built 2026-11-24 (ADR-0028, amendment 2026-11-24): `Test-XmipRustChange`
+runs one cargo for each mode over the crates named, the landing's and
+Core.Internal's alike, then `cargo check --all-targets` of each crate alone,
+which keeps a crate that compiles only through another's features caught; a
+crate with a cargo configuration of its own is run in its folder. Measured
+on the Linux test computer, Core.Internal of the transports' 89 crates:
+before, 673 s on a cold build and 86 s warm; after, 549 s on the first
+build with the crates' features unified and 81 s warm, of which the 89
+checks alone take some 29 s (52 s without them). One cargo costs about
+0.3 s there, so the 5 to 14 minutes were not; the checks are the owner's
+to keep or drop.
+
+## 148. The System Tests' retired name is left in 81 tracked files of the submodules
+
+Found 2026-11-24 by the same review: the rename to the System Tests did
+not reach the transports' and operation's submodules, mostly their
+rustdoc and READMEs and once a metadata value of a test's Message source
+that still names the rig by its retired name. The terminology test reads
+only the root's `doc/`.
+
+Built 2026-11-24 (ADR-0028, amendment 2026-11-24): the prose of 79 files in
+the capability and operation submodules says the System Tests, or the
+Systems Tests where it spoke of machines of their own, and the fixtures the
+rig's own words: the EDI interchanges `SYSTEM-TEST`, the archive metadata
+and an MSSQL login's application `system-test`, their assertions with
+them. `test/Terminology.Test.ps1` reads every file the estate and its
+submodules track (`git grep --recurse-submodules`), ADR-0028's ruling and
+MAUI's own package name excepted.
+
+## 149. `Core.Systems` without `-Nodes` is refused for both example environments
+
+Found 2026-11-24 by the same review: the System Tests' cluster file
+declares OP1, which no machine of either example environment maps, and
+`Core.Systems` refuses a node that does not answer.
+
+Built 2026-11-24 (ADR-0028, amendment 2026-11-24): the rig resolves every
+node of the run before it asks any, and refuses every one that does not
+resolve in one sentence, naming the `-Nodes` that run those that do
+(`real::mapped`). OP1 stays without a machine in both example
+environments: the owner's node plan gives the operator's machine no node,
+and mapping one is his to choose. Held by `real.rs`'s tests.
+
+## 150. A node opens no Promote unit a module library holds
+
+Found 2026-11-24 building the packages for developers (ADR-0075): a
+library holding a Promote unit is opened by the runtime's loader in a test
+(`ffi/loaded_promotion.rs`), but a node refuses a `promote` claim
+(`Libraries::open`) and runs no step entry (`configure::step::unrun`). A
+loaded Promote unit is to become a unit a node opens beside the linked
+standard units, its settings read from the module's declaration.
+
+## 151. Only the Promote unit and the Work Process have a table across the module boundary
+
+Found 2026-11-24 the same day: Prepare, Demote, Transform, Validate as a
+unit and Debatch have no table in `xmip_module.h` and no class in
+`Xmip.Module`; a .NET Work Process unit needs the process's turn form
+across the boundary; Rust has no export macro for a Promote unit.
+
+## 152. No landing builds a .NET module or the template's content
+
+Found 2026-11-24 the same day: the proof that a module made from
+`dotnet new xmip-module` promotes through the C ABI runs only on purpose
+(an ignored test reading a library path from the environment), and no
+landing builds the template's projects, so either can break unseen.
+
+## 153. The PowerShell module and the GUIs reach a remote node through the native library
+
+Found 2026-11-24 the same day: they reach another machine's node through
+`xmip_operate.h`'s remote operator, so a machine with no installation
+needs Xmip's native library, where ADR-0075 says code on another machine
+reaches Xmip only over the operator API on HTTP/2 with no native library.
+
+## 154. The template's `Xmip.Module` version is written by hand apart from the package's
+
+Found 2026-11-24 the same day: the template names `Xmip.Module` 0.1.0 in
+another repository than `Xmip.Module.csproj`, and nothing holds the two
+equal.
+
+Built 2026-11-24: `Xmip.Templates` moved beside `Xmip.Module` in
+xmip-core-abi (`dotnet/Xmip.Templates`), both packages taking one version,
+`XmipPackageVersion` in `dotnet/Directory.Build.props`, and the template's
+module naming `Xmip.Module` at `XMIP_MODULE_VERSION`, which the pack writes
+as that version; `test/DeveloperPackage.Test.ps1` holds it (ADR-0075; the
+owner, 2026-11-24: *Ok*).
+
+## 155. A Rust provider's module still compiles AGPL code into itself
+
+Found 2026-11-24 making the module boundary Apache-2.0 (ADR-0061,
+amendment 2026-11-24): a Rust provider's contract compiles
+`contract::export_contract!` from `xmip-core-contract`, which stays
+AGPL-3.0-or-later, so a Rust module is not yet its author's to license as
+a .NET one now is. Its permissive route is the crates.io `xmip-module`
+crate ADR-0075 names, not built.
+
+## 156. Eclipse and Visual Studio have no Xmip extension
+
+The owner, 2026-11-24: *if possible include Eclipse and Visual Studio ...
+If it is easy, do it.* It is not easy: Xmip's configuration rules live in
+its language server, which speaks the Language Server Protocol, but each
+editor needs a client extension of its own (Eclipse through LSP4E, in
+Java; Visual Studio through a VSIX language client, in C#), and the
+graphical designer is a VS Code webview with no counterpart in either.
+Their text support is the cheaper half: one thin client each over the
+same server.
+
+## 157. A deployed switchover still spends milliseconds on a handshake and the key stores
+
+Found 2026-11-24 building open problems 134 to 143: a deployed-like
+switchover on Windows (three Storage nodes, on-disk engines, the platform
+key store, four writers) serves again 10.6 to 16.1 ms after the stop. Two
+parts of that are not load: the third node's handshake, 2.7 to 4.5 ms
+(open problem 119), and opening the key stores through DPAPI, 1.4 to
+2.9 ms and 22 ms the first time. By the millisecond rule both are
+defects.
+
+## 158. A stop just after a node is told it follows still costs a handshake
+
+Found 2026-11-24 the same day: a node opens its further connections to a
+standby a few milliseconds after it learns the standby follows, so a stop
+in that window costs a handshake, 6.0 ms in memory.
+
+## 159. Giving up positions sometimes waits for a SQLite checkpoint
+
+Found 2026-11-24 the same day: an unsynced SQLite commit can checkpoint
+for 2.3 to 3.1 ms, so a stopping primary's giving up of its positions
+takes about 5 ms where it takes 0.2 ms otherwise.
+
+## 160. A follow from an unknown certificate makes the primary handshake with every listed node
+
+Found 2026-11-24 the same day: refusing a follow whose certificate matches
+no listed Storage node, the primary refreshes what it has seen by a
+handshake with each listed node, multiplying a caller's effort by the
+number of listed nodes. It is to be bounded.
+
+## 161. A failover test lost files once under the whole parallel run on Linux
+
+Found 2026-11-24 the same day: `failover::every_file_dropped_arrives_once…`
+missed files 20 to 23 and 25 to 39 once in a full Linux run of the
+internal tests and passed in every rerun, alone and whole.
+
+## 162. A test computer's folder can make a socket path too long
+
+Found 2026-11-24 the same day: a test computer's folder named in its
+computer file becomes part of a Unix socket path, and `w/switchover2`
+pushed one past 107 bytes, so a run failed without saying why. The
+tooling is to refuse or shorten such a path in words.
+
+## 163. A test computer's answer is rebuilt by PowerShell's CLIXML reader
+
+Found 2026-11-24 building open problems 145 to 149: what a test computer
+answers is still deserialized here as CLIXML, which rebuilds objects from
+what the other computer wrote. Answering as JSON would leave nothing to
+rehydrate.
+
+## 164. The internal tests with every feature still unify features across crates
+
+Found 2026-11-24 the same day: only the default build is checked for each
+crate alone; the test run with every feature unifies the features of all
+the crates named, so a crate that builds with every feature only through
+another's is not caught.
+
+## 165. A send to a test computer takes 11 to 25 seconds on a busy machine
+
+Found 2026-11-24 the same day: the walk takes 1.9 s idle and some 200
+`git check-ignore` processes add about 2 s; under load the whole send
+takes 11 to 25 s. The ssh sessions, the module import per remote command,
+the walk itself and the 5 s slot poll are untouched.
+
+## 166. A send runs whichever `tar` comes first on the path
+
+Found 2026-11-24 the same day, older than it: started from Git Bash, GNU
+tar read `D:` in the archive's path as a host and the send failed.
+
+## 167. A Pester failure of the internal tests is named only in its part's log
+
+Found 2026-11-24 the same day: cargo and dotnet failures are recorded one
+per crate or project and test, but a Pester failure, the root's or a
+module's, is named only in the part's log, the run's record carrying its
+last lines.
+
+## 168. The Systems Tests could take their nodes from the environment file
+
+Found 2026-11-24 the same day: the Systems Tests resolve the nodes the
+System Tests' cluster file names and refuse every unmapped one, where the
+environment file already says which nodes its machines run.
 
 # Suggested order
 

@@ -1,6 +1,6 @@
 # What Xmip has decided
 
-Seventy-four decisions, read as one document.
+Seventy-five decisions, read as one document.
 
 **Generated from the records by `New-XmipDecisionIndex`.** Every summary
 below is the `## In brief` section of the record it links to, so the two
@@ -557,6 +557,23 @@ below record the first ruling and are superseded by the amendment at the
 end; 3, 6, 7 and 9 stand.*
 
 → [A provider builds against the capabilities; the SDK simulates, in full](ADR-0061-a-provider-builds-against-the-sdk.md)
+
+### What an external developer installs to extend Xmip, test with it and reach it, and from where
+
+**Four NuGet packages, in this order: `Xmip.Module`, with which a developer
+writes every kind of extension Xmip has a seam for, and `Xmip.Templates`,
+`dotnet new xmip-module`, first; `Xmip.Testing` second; `Xmip.Client`
+third. Beside them the PowerShell Gallery's `Xmip` module, the VS Code
+extension on both extension registries, `xmip-module` on crates.io for Rust
+module authors, and the C header and libraries as release downloads. Code on
+the installation's machine may use the C ABI; code on any other machine
+reaches Xmip only over its operator API on HTTP/2. What a developer's code
+links or compiles into itself is Apache-2.0, so a module stays its author's;
+the rest of Xmip stays AGPL-3.0-or-later. Every name is reserved before
+anything is published. Module and Templates are built; nothing is
+published.**
+
+→ [Packages for developers, in full](ADR-0075-packages-for-developers.md)
 
 ---
 
@@ -1117,6 +1134,7 @@ You have a word. This gives you the decision that governs it.
 | alive | [A node has one address](ADR-0067-a-node-has-one-address.md) |
 | American English | [Languages beyond American English are an opportunity](ADR-0073-languages-beyond-american-english-are-an-opportunity.md) |
 | Anonymous, federated, highAssurance, sharedSecret | [Identity classes and runtime isolation](ADR-0022-identity-classes-and-runtime-isolation.md) |
+| Apache-2.0 | [Packages for developers](ADR-0075-packages-for-developers.md) |
 | archive target | [Packaging and distribution](ADR-0015-packaging.md) |
 | archiving | [Xmip retains and archives, it does not delete](ADR-0040-xmip-retains-and-archives-it-does-not-delete.md) |
 | arm64, embedded, IoT | [Packaging and distribution](ADR-0015-packaging.md) |
@@ -1164,6 +1182,7 @@ You have a word. This gives you the decision that governs it.
 | Disposition | [The Journey model](ADR-0013-journey-model.md) |
 | Documentation, one document per subject | [The documentation structure](ADR-0020-documentation-structure.md) |
 | door, an operator's act's | [The operator surfaces](ADR-0014-operator-surfaces.md) |
+| dotnet new template | [Packages for developers](ADR-0075-packages-for-developers.md) |
 | Durable, a Publication | [The Service and the Host Services](ADR-0018-service-and-host.md) |
 | encryption at rest | [Xmip encrypts its own traffic and its own storage](ADR-0063-xmip-encrypts-its-traffic-and-its-storage.md) |
 | encryption in transit | [Xmip encrypts its own traffic and its own storage](ADR-0063-xmip-encrypts-its-traffic-and-its-storage.md) |
@@ -1228,11 +1247,13 @@ You have a word. This gives you the decision that governs it.
 | Naming, modules and repositories | [Module and repository naming](ADR-0011-module-naming.md) |
 | Naming, overloaded words | [Overloaded words stay qualified](ADR-0035-overloaded-words-stay-qualified.md) |
 | native Module | [A Module may bring a versioned runtime](ADR-0039-a-module-may-bring-a-versioned-runtime.md) |
+| NativeAOT | [Packages for developers](ADR-0075-packages-for-developers.md) |
 | near end | [A transport brings its own far end](ADR-0051-a-transport-brings-its-own-far-end.md) |
 | no deletion | [Xmip retains and archives, it does not delete](ADR-0040-xmip-retains-and-archives-it-does-not-delete.md) |
 | Node address | [A node has one address](ADR-0067-a-node-has-one-address.md) |
 | node capability | [A node declares what it can do](ADR-0056-a-node-declares-what-it-can-do.md) |
 | node role | [A node declares what it can do](ADR-0056-a-node-declares-what-it-can-do.md) |
+| NuGet | [Packages for developers](ADR-0075-packages-for-developers.md) |
 | Observation point | [Observation has history](ADR-0029-observation-has-history.md) |
 | Observation, and why it is lossy | [The operator surfaces](ADR-0014-operator-surfaces.md) |
 | Observer, a read-only role | [Security roles versus Actor capabilities](ADR-0009-security-roles-vs-actor-capabilities.md) |
@@ -1242,9 +1263,11 @@ You have a word. This gives you the decision that governs it.
 | online, the switch | [Offline is the default](ADR-0045-offline-is-the-default.md) |
 | operate | [A node has one address](ADR-0067-a-node-has-one-address.md) |
 | operation | [Logic is the method](ADR-0043-logic-is-the-method.md) |
+| operator API | [Packages for developers](ADR-0075-packages-for-developers.md) |
 | Operator boundary, `xmip_operate.h` | [The operator boundary](ADR-0027-the-operator-boundary.md) |
 | optional repository | [The System Tests are optional scaffolding](ADR-0036-system-test-is-optional-scaffolding.md) |
 | outcome | [Logic is the method](ADR-0043-logic-is-the-method.md) |
+| package | [Packages for developers](ADR-0075-packages-for-developers.md) |
 | packaging online | [Offline is the default](ADR-0045-offline-is-the-default.md) |
 | part | [A message technology is the shape of content](ADR-0047-a-message-technology-is-the-shape-of-content.md) |
 | Parties' far end, placing Locations on nodes | [The Xmip System Tests and Systems Tests](ADR-0028-the-xmip-system-test.md) |
@@ -1272,6 +1295,7 @@ You have a word. This gives you the decision that governs it.
 | Receive Location, Receive Port | [Entities as Actors](ADR-0008-xmip-entities-as-actors.md), [Identity, Parties and direction](ADR-0019-identity-parties-and-direction.md) |
 | Refactoring freely, pre-alpha | [Pre-alpha refactor discipline](ADR-0005-pre-alpha-refactor-discipline.md) |
 | refusal at the door | [Bad input is refused at the door](ADR-0055-bad-input-is-refused-at-the-door.md) |
+| registry | [Packages for developers](ADR-0075-packages-for-developers.md) |
 | Regulated, enterprise, standard profiles | [Identity classes and runtime isolation](ADR-0022-identity-classes-and-runtime-isolation.md) |
 | regulation | [A Quest probes, and the regulation is a parameter](ADR-0072-a-quest-probes-and-the-regulation-is-a-parameter.md) |
 | Remote operation, WinRM, SSH | [The operator surfaces](ADR-0014-operator-surfaces.md) |
@@ -1351,7 +1375,9 @@ You have a word. This gives you the decision that governs it.
 | Xmip URI as a resource | [Xmip is reached over MCP through the command line](ADR-0071-xmip-is-reached-over-mcp-through-the-command-line.md) |
 | Xmip URI, scope | [The operator boundary](ADR-0027-the-operator-boundary.md) |
 | xmip- | [Every System Process Xmip owns says whose it is](ADR-0053-every-system-process-xmip-owns-says-whose-it-is.md) |
+| Xmip.Module | [Packages for developers](ADR-0075-packages-for-developers.md) |
 | Xmip.Surface | [The operator surfaces share one model](ADR-0052-the-operator-surfaces-share-one-model.md) |
+| Xmip.Templates | [Packages for developers](ADR-0075-packages-for-developers.md) |
 | XML reader, the one | [A technology shares through its capability](ADR-0044-a-technology-shares-through-its-capability.md) |
 
 Concepts with **no decision recorded yet**, and where they live instead:
@@ -1450,3 +1476,4 @@ is nowhere else.
 | [0072](ADR-0072-a-quest-probes-and-the-regulation-is-a-parameter.md) | A Quest probes, and the regulation is a parameter | |
 | [0073](ADR-0073-languages-beyond-american-english-are-an-opportunity.md) | Languages beyond American English are an opportunity | **Proposed** |
 | [0074](ADR-0074-the-runtime-stays-in-rust.md) | The runtime stays in Rust | |
+| [0075](ADR-0075-packages-for-developers.md) | Packages for developers | |

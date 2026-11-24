@@ -21,8 +21,10 @@ using namespace System.Collections.Generic
     environment are its own; XMIP_TOOL_SHARE tells Invoke-XmipTool its share
     of the machine's twelve (Get-XmipToolShare). Its lines go to
     `.local-work/landing/part-<name>.log`. The first part to fail ends the
-    others, every process beneath them with them, and is named with the
-    lines that say why. The timing programs run after, alone.
+    others, every process beneath them with them, and is named with what
+    failed in it, each crate or project and test, and the lines that say why;
+    for Core.Internal every part runs to its end (-Whole). The timing
+    programs run after, alone.
 
     Style: doc/governance/powershell-style.md
 #>
@@ -31,15 +33,21 @@ using namespace System.Collections.Generic
 function Invoke-XmipLandingPart {
     <#
         .SYNOPSIS
-            Runs the parts side by side and says, for each, whether it passed
-            and how long it took.
+            Runs the parts side by side and says, for each, whether it passed,
+            how long it took, its log and what failed in it (Failure, each
+            Xmip.PartFailure, the part's own last lines where it named none).
 
         .PARAMETER Part
             Each a hashtable: Name, Command (a function of this module),
             Argument (its parameters) and Environment (variables the part
             sees in place of this session's). A command passes when it
-            returns nothing or $true; $false, or a string naming what failed,
-            fails it.
+            returns nothing or $true; $false, a string naming what failed or
+            an Xmip.PartFailure (New-XmipPartFailure) fails it.
+
+        .PARAMETER Whole
+            Every part runs to its end, one's failure stopping no other, for
+            Core.Internal, which names every failure; a landing ends the
+            rest at the first.
     #>
     [CmdletBinding()]
     [OutputType([pscustomobject])]
@@ -49,7 +57,10 @@ function Invoke-XmipLandingPart {
 
         [Parameter(Mandatory)]
         [AllowEmptyCollection()]
-        [hashtable[]] $Part
+        [hashtable[]] $Part,
+
+        [Parameter()]
+        [switch] $Whole
     )
 
     if ($Part.Count -eq 0) {
@@ -132,15 +143,32 @@ function Invoke-XmipLandingPart {
 
         $entry = $running | Where-Object { $_.Job.Id -eq $done.Id } | Select-Object -First 1
         [object[]] $said = @(Receive-Job -Job $done -ErrorAction SilentlyContinue 2>&1)
-        [string[]] $why = @($said | Where-Object { $_ -is [string] -and $_ })
-        [bool] $passed = $done.State -eq 'Completed' -and $why.Count -eq 0 -and
+        [object[]] $failure = @(ConvertTo-XmipPartFailure -Said $said)
+        [bool] $passed = $done.State -eq 'Completed' -and $failure.Count -eq 0 -and
             @($said | Where-Object { $_ -is [bool] -and -not $_ }).Count -eq 0
         Remove-Job -Job $done -Force
         Remove-Item -LiteralPath "$($entry.Log).pid" -ErrorAction SilentlyContinue
         $running.Remove($entry) | Out-Null
 
         [timespan] $took = (Get-Date) - $started
-        $verdicts.Add([pscustomobject]@{ Name = $entry.Name; Passed = $passed; Took = $took })
+        [string[]] $telling = @(
+            if (-not $passed) {
+                Get-Content -LiteralPath $entry.Log -ErrorAction SilentlyContinue |
+                    Select-String -Pattern $script:XmipToolTelling |
+                    Select-Object -Last $script:XmipToolTold | ForEach-Object { $_.Line }
+            }
+        )
+
+        # A part that failed and named nothing is named by its own last lines.
+        if (-not $passed -and $failure.Count -eq 0) {
+            $failure = @(New-XmipPartFailure -Test $entry.Name -Message (
+                    "$($entry.Name) failed: $($telling -join ' | ')"))
+        }
+
+        $verdicts.Add([pscustomobject]@{
+                Name = $entry.Name; Passed = $passed; Took = $took; Log = $entry.Log
+                Failure = $failure
+            })
 
         if ($passed) {
             [string] $ok = 'OK       {0}, {1:N1} min' -f $entry.Name, $took.TotalMinutes
@@ -148,12 +176,14 @@ function Invoke-XmipLandingPart {
             continue
         }
 
-        [string] $what = if ($why.Count -gt 0) { ": $($why -join '; ')" } else { '' }
-        [string] $said = 'FAILED   {0}{1}, {2:N1} min' -f $entry.Name, $what, $took.TotalMinutes
-        Write-Host $said -ForegroundColor Red
-        Get-Content -LiteralPath $entry.Log -ErrorAction SilentlyContinue |
-            Select-String -Pattern '^(error|warning)|FAILED|panicked|\[-\]|could not compile' |
-            Select-Object -Last 20 | ForEach-Object { Write-Host "         $($_.Line)" }
+        [string] $headline = 'FAILED   {0}, {1:N1} min' -f $entry.Name, $took.TotalMinutes
+        Write-Host $headline -ForegroundColor Red
+        $failure | ForEach-Object { Write-Host "         $($_.Module) $($_.Test): $($_.Message)" }
+        $telling | ForEach-Object { Write-Host "         $_" }
+
+        if ($Whole) {
+            continue
+        }
 
         # The first failure ends the rest: nothing more is worth waiting for.
         foreach ($other in $running) {
@@ -161,7 +191,10 @@ function Invoke-XmipLandingPart {
             Stop-Job -Job $other.Job
             Remove-Job -Job $other.Job -Force
             Remove-Item -LiteralPath "$($other.Log).pid" -ErrorAction SilentlyContinue
-            $verdicts.Add([pscustomobject]@{ Name = $other.Name; Passed = $false; Took = $took })
+            $verdicts.Add([pscustomobject]@{
+                    Name = $other.Name; Passed = $false; Took = $took; Log = $other.Log
+                    Failure = @()
+                })
             [string] $stopped = "STOPPED  $($other.Name), after $($entry.Name) failed"
             Write-Host $stopped -ForegroundColor Yellow
         }
@@ -170,6 +203,68 @@ function Invoke-XmipLandingPart {
     }
 
     $verdicts
+}
+
+
+function New-XmipPartFailure {
+    <#
+        .SYNOPSIS
+            One failure a part of the landing names, Xmip.PartFailure:
+            Module, the crate's or module's folder, empty where it is not
+            known; Test, the test, the target or the step; Message, the words
+            that say why.
+    #>
+    [CmdletBinding()]
+    [OutputType('Xmip.PartFailure')]
+    param(
+        [Parameter()]
+        [AllowEmptyString()]
+        [string] $Module = '',
+
+        [Parameter()]
+        [AllowEmptyString()]
+        [string] $Test = '',
+
+        [Parameter()]
+        [AllowEmptyString()]
+        [string] $Message = ''
+    )
+
+    return [pscustomobject]@{
+        PSTypeName = 'Xmip.PartFailure'
+        Module     = $Module
+        Test       = $Test
+        Message    = $Message
+    }
+}
+
+
+function ConvertTo-XmipPartFailure {
+    <#
+        .SYNOPSIS
+            The failures among what a part's command returned: each
+            Xmip.PartFailure, as it crossed from the part's pwsh, and each
+            string naming what failed.
+
+        .PARAMETER Said
+            What the part's job returned.
+    #>
+    [CmdletBinding()]
+    [OutputType('Xmip.PartFailure')]
+    param(
+        [Parameter(Mandatory)]
+        [AllowEmptyCollection()]
+        [object[]] $Said
+    )
+
+    foreach ($one in $Said) {
+        if ($one -is [string] -and $one) {
+            New-XmipPartFailure -Module $one
+        }
+        elseif ($null -ne $one -and $one -isnot [bool] -and $one.PSObject.Properties['Module']) {
+            New-XmipPartFailure -Module $one.Module -Test $one.Test -Message $one.Message
+        }
+    }
 }
 
 

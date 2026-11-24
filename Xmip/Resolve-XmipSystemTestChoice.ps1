@@ -95,7 +95,7 @@ function Resolve-XmipSystemTestChoice {
         return $null
     }
 
-    foreach ($name in 'Test', 'Nodes', 'OnlineNodes', 'NodeRole', 'Cluster') {
+    foreach ($name in 'Test', 'Nodes', 'NodeCapability', 'NodeRole', 'Cluster') {
         if (-not $Choice.ContainsKey($name)) {
             $Choice[$name] = $null
         }
@@ -113,14 +113,9 @@ function Resolve-XmipSystemTestChoice {
         $Choice.Test = @(Expand-XmipTestName -Test $Choice.Test -Known $known)
     }
 
-    if ($Choice.OnlineNodes.Count -gt 0 -and -not $Choice.Bound.ContainsKey('Nodes')) {
-        Write-Error '-OnlineNodes names nodes; name them all with -Nodes first.'
-        return $null
-    }
-
     [hashtable] $selection = @{
         Nodes          = $Choice.Nodes
-        OnlineNodes    = $Choice.OnlineNodes
+        NodeCapability = $Choice.NodeCapability
         NodeRole       = $Choice.NodeRole
         Test           = $Choice.Test
         Named          = $Choice.Bound.ContainsKey('Nodes')

@@ -107,7 +107,7 @@ function ConvertTo-XmipSystemTestBuild {
             Tests       = @(Get-TomlValue -Node $Record -Name 'tests' -Default @())
             Rounds      = [int](Get-TomlValue -Node $Record -Name 'rounds' -Default 0)
             Nodes       = @(Get-TomlValue -Node $Record -Name 'nodes' -Default @())
-            OnlineNodes = @(Get-TomlValue -Node $Record -Name 'online' -Default @())
+            NodeCapability = @(Get-TomlValue -Node $Record -Name 'capabilities' -Default @())
             Tally       = $tally
             Fault       = $fault
             Snapshot    = [string](Get-TomlValue -Node $Record -Name 'snapshot' -Default '')

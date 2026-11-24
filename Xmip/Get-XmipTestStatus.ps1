@@ -182,7 +182,10 @@ function Get-XmipTestStatus {
         [object[]] $mine = @(
             $nodes | Where-Object { Test-XmipTestNodeOfRoll -Node $_ -Roll $whose }
         )
-        [object[]] $online = @($mine | Where-Object { $_.Online })
+        [string[]] $capable = @(
+            $mine | Where-Object { $_.Capability.Count -gt 0 } |
+                ForEach-Object { "$($_.Name)=$($_.Capability -join '+')" } | Sort-Object
+        )
 
         # The suite the run was started with, from the record that carries it,
         # said the one way whatever spelling started it: a record written
@@ -220,7 +223,7 @@ function Get-XmipTestStatus {
                 }
                 Rounds      = [int](Get-TomlValue -Node $record -Name 'rounds' -Default 0)
                 Nodes       = @($mine | ForEach-Object { $_.Name } | Sort-Object)
-                OnlineNodes = @($online | ForEach-Object { $_.Name } | Sort-Object)
+                NodeCapability = $capable
                 RealNodes   = if ($null -ne $run) { @($run.RealNodes) } else { @() }
                 Worst       = if ($null -ne $worst) { $worst.State } else { $null }
                 Tally       = 'running'

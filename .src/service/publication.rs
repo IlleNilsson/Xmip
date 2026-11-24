@@ -28,6 +28,13 @@
 //! again [`AGAIN`] later. One still refused a round later is audited as
 //! the failure to `publish` (ADR-0062), once, not at every round, and said
 //! once it publishes again.
+//!
+//! **At once as its Storage node changes** (open problem 140; ADR-0056,
+//! amendment 2026-11-24): its own Storage node of several tells the service
+//! each change of what it is — promoted, standing by, handed its first
+//! frame, copied or caught up (`run::Told::Storage`) — so a deployment
+//! waiting for it to be ready (`--readiness --within`) reads it then, not a
+//! round later.
 
 use std::path::PathBuf;
 use std::sync::Arc;

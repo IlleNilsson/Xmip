@@ -6,7 +6,8 @@ function Start-XmipTestNode {
     <#
         .SYNOPSIS
             Starts emulated Xmip nodes by hand — the ones you name, at the
-            stress you say, online or not — without a roll.
+            stress you say, with the Node capabilities you give them — without
+            a roll.
 
         .DESCRIPTION
             Each node is one process of the System Tests' node binary (ADR-0028
@@ -27,10 +28,12 @@ function Start-XmipTestNode {
             The level each node runs at; it sets the claim's injected breach
             rate, none at Calm.
 
-        .PARAMETER OnlineNodes
-            Which of the named nodes may assume a route to the internet
-            (ADR-0045), by name. None unless said; each node publishes the
-            word in its own health.
+        .PARAMETER NodeCapability
+            The Node capabilities each node declares, stated per node, as
+            Start-XmipTest takes them: @{ RX1 = 'online' }, online among them
+            where it may assume a route to the internet (ADR-0045; ADR-0056,
+            amendment 2026-11-24). None unless said; each must be in -Nodes,
+            and each node publishes them in its own health.
 
         .PARAMETER Rounds
             Rounds before a node exits on its own. 0, the default, runs until
@@ -52,7 +55,7 @@ function Start-XmipTestNode {
             Return one Xmip.TestNode object per node started.
 
         .EXAMPLE
-            Start-XmipTestNode -Nodes RX1, PX1, TX1 -OnlineNodes RX1, TX1
+            Start-XmipTestNode -Nodes RX1, PX1, TX1 -NodeCapability @{ RX1 = 'online' }
 
             The names are the tester's and mean nothing to Xmip: a node
             started here declares no stage, whatever it is called.
@@ -72,7 +75,8 @@ function Start-XmipTestNode {
         [string] $Stress = 'Calm',
 
         [Parameter()]
-        [string[]] $OnlineNodes = @(),
+        [AllowNull()]
+        [hashtable] $NodeCapability,
 
         [Parameter()]
         [ValidateRange(0, [int]::MaxValue)]
@@ -102,7 +106,8 @@ function Start-XmipTestNode {
         $Shared = Join-Path -Path $Path -ChildPath 'shared'
     }
 
-    Assert-XmipNodeName -Nodes $Nodes -OnlineNodes $OnlineNodes
+    [string[]] $capable = @(if ($NodeCapability) { $NodeCapability.Keys })
+    Assert-XmipNodeName -Nodes $Nodes -NodeCapability $capable
 
     [string[]] $running = @(Get-XmipTestNode | ForEach-Object { $_.Name })
     [string[]] $taken = @($Nodes | Where-Object { $_ -in $running })
@@ -112,8 +117,11 @@ function Start-XmipTestNode {
         return
     }
 
-    [string] $online = if ($OnlineNodes.Count -gt 0) { " ($($OnlineNodes -join ', ') online)" }
-    [string] $what = "Start $($Stress.ToLowerInvariant()) node(s) $($Nodes -join ', ')$online"
+    [string[]] $entries = @(Get-XmipNodeCapabilityEntry -Capability (
+            Join-XmipNodeCapability -Nodes $Nodes -NodeCapability $NodeCapability -Declared @{}
+        ))
+    [string] $declared = if ($entries.Count -gt 0) { " ($($entries -join ', '))" }
+    [string] $what = "Start $($Stress.ToLowerInvariant()) node(s) $($Nodes -join ', ')$declared"
 
     if (-not $PSCmdlet.ShouldProcess("emulated nodes in $Path", $what)) {
         return
@@ -124,7 +132,10 @@ function Start-XmipTestNode {
     Remove-Item -LiteralPath (Join-Path -Path $Shared -ChildPath 'stop') -Force -ErrorAction Ignore
 
     foreach ($nodeName in $Nodes) {
-        [bool] $isOnline = $nodeName -in $OnlineNodes
+        [bool] $stated = $null -ne $NodeCapability -and $NodeCapability.ContainsKey($nodeName)
+        [string[]] $words = @(
+            if ($stated) { ConvertTo-XmipNodeCapability -Capability $NodeCapability[$nodeName] }
+        )
 
         $launch = @{
             FilePath               = $binary
@@ -139,8 +150,12 @@ function Start-XmipTestNode {
                 '--rounds', "$Rounds"
                 '--snapshot', (Join-Path -Path $Path -ChildPath "$nodeName.xmip")
                 '--interval-ms', "$([int] $Interval.TotalMilliseconds)"
-                '--online', $(if ($isOnline) { 'true' } else { 'false' })
             )
+        }
+
+        # A node declaring none is told nothing: it declares nothing, offline.
+        if ($words.Count -gt 0) {
+            $launch.ArgumentList += @('--capabilities', ($words -join '+'))
         }
 
         # What it starts audits where the tooling does (ADR-0062).

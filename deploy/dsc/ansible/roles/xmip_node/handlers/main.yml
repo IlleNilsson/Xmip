@@ -3,7 +3,10 @@
 # never mid-flight (module/platform/configure/doc/cluster-configuration.md,
 # Activation). Only a node that runs is restarted: one that does not, as
 # before the environment's nodes are started together, is started by
-# started.yml with the others.
+# started.yml with the others. Handlers run after every task, so a node is
+# restarted once, after the last task that changes what it runs: not again
+# where its package's install restarted it, which came after every file it
+# reads was placed (ADR-0056, amendment 2026-11-24).
 
 - name: Restart the Xmip node
   ansible.windows.win_powershell:
@@ -15,14 +18,18 @@
       if ($Ansible.Changed) {
           Restart-Service -Name $Name
       }
-  when: ansible_facts['os_family'] == 'Windows'
+  when: >-
+    ansible_facts['os_family'] == 'Windows'
+    and (xmip_installed_windows | default({})) is not changed
   listen: Restart the Xmip node
 
 - name: Restart the Xmip node on Linux
   ansible.builtin.command:
     argv: [systemctl, try-restart, "xmip-{{ xmip_node_name }}"]
   changed_when: true
-  when: ansible_facts['os_family'] != 'Windows'
+  when: >-
+    ansible_facts['os_family'] != 'Windows'
+    and (xmip_upgraded | default({})) is not changed
   become: true
   listen: Restart the Xmip node
 
@@ -39,10 +46,11 @@
 # Storage node restarted comes back a standby, and its primary stopped in
 # order before it follows ready has no standby to hand over to (the owner,
 # 2026-11-23: "That has to be sorted, nothing can be left"; ADR-0056,
-# amendment 2026-11-23). Ready is the node's own word, `xmip-service
-# --readiness`, asked again as the node publishes, never a sleep, and past
-# xmip_ready_window seconds the run fails in the node's words. After the
-# restarts above: handlers run in the order written here.
+# amendments 2026-11-23 and 2026-11-24). Ready is the node's own word,
+# `xmip-service --readiness`, told as the node publishes, never a sleep, and
+# past xmip_ready_window seconds the run fails in the node's words. Asked
+# once, after the restarts above, of the program the package installed:
+# handlers run in the order written here, after every task.
 - name: The Xmip node ready before the next is deployed
   ansible.builtin.command:
     argv:

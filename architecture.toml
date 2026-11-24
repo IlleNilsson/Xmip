@@ -51,6 +51,9 @@ Platform = "Platform-wide runtime services."
 primaryLanguage = "rust"
 edition = "2024"
 primaryCrateMatchesRepository = true
+# Every crate's but the module boundary's: xmip-core-abi, with Xmip.Module
+# and the .NET templates in it, is Apache-2.0, what a module compiles into
+# itself (ADR-0075 clause 6; test/License.Test.ps1 holds it).
 license = "AGPL-3.0-or-later"
 automaticVerification = false
 
@@ -337,7 +340,7 @@ maturity = "scaffolded"
 dependency = ["xmip-core-library-codec"]
 
   [xmip.core.abi]
-  description = "The interface into Xmip: configuration, runtime, observing, eventing, auditing. C header, specification and language bindings, a definition with no verb (ADR-0058, clause 1). Used by operate and the operator surfaces over it, and the boundary loadable Modules plug into."
+  description = "The interface into Xmip: configuration, runtime, observing, eventing, auditing. C header, specification and language bindings, a definition with no verb (ADR-0058, clause 1). Used by operate and the operator surfaces over it, and the boundary loadable Modules plug into, a .NET Module's units through Xmip.Module (ADR-0075)."
   architecturalDomain = "Foundation"
   repositoryRole = "common-architecture"
   maturity = "scaffolded"

@@ -11,11 +11,15 @@
     which every landing runs (ADR-0028, amendment 2026-11-23). Core.Estate is
     the root's Pester files; Core.Internal is the landing's own verification
     of the modules named (Test-XmipChangeTree -Alone): what their tests load,
-    built first; each crate's format, its lints with every feature, its tests
-    and lints with its default features and its tests with every feature;
-    each module's .NET projects, extension shell and Event bindings. Not the
-    root crate, the workspace's lints or the timing programs, which a landing
-    adds for the change as a whole. It runs as Core.Estate runs, detached,
+    built first; the crates' format, their lints with every feature, their
+    tests and lints with their default features and their tests with every
+    feature, one cargo command for each over every crate named, then each
+    crate built alone (Test-XmipRustChange); each module's .NET projects,
+    extension shell and Event bindings. Every step runs to its end, so a
+    failure names every crate or project and test that failed, with the
+    words that say why, in the run's record. Not the root crate, the
+    workspace's lints or the timing programs, which a landing adds for the
+    change as a whole. It runs as Core.Estate runs, detached,
     its record and log under .local-work/estate, so Get-XmipTestStatus,
     Get-XmipTestResult and Stop-XmipTest read and stop it the same way, here
     or on a test computer (-ComputerName). Its whole suite is every module,
@@ -124,7 +128,7 @@ function Get-XmipInternalTest {
         Get-XmipSubmodule -Root $RepositoryRoot | ForEach-Object { $_.Path } | Where-Object {
             [string] $folder = Join-Path -Path $RepositoryRoot -ChildPath $_
             -not (Test-Path -LiteralPath (Join-Path $folder 'Cargo.toml')) -and
-                $null -ne (Find-XmipFile -Path $folder -Filter '*.csproj' | Select-Object -First 1)
+                $null -ne (Find-XmipModuleProject -Path $folder | Select-Object -First 1)
         }
     )
 
@@ -201,12 +205,16 @@ function Complete-XmipInternalRun {
     <#
         .SYNOPSIS
             Writes a finished run of Core.Internal's verdict into its record:
-            OK where every module named verified, FAILED naming the module or
-            the part where the verification stopped.
+            OK where every module named verified; FAILED with one failure for
+            each crate or project and test that failed, its module as `file`,
+            the test as `path` and the words that say why as `message`, so
+            Get-XmipTestResult reads them here and, with -ComputerName, from
+            a test computer, where the part's log stays; the modules no
+            failure names counted as passed.
 
         .PARAMETER Verdict
-            What Test-XmipChangeTree returned: Verified, Skipped and Failed;
-            $null where it threw.
+            What Test-XmipChangeTree returned: Verified, Skipped, Failed and
+            Failure; $null where it threw.
 
         .PARAMETER Fault
             What it threw, or empty.
@@ -246,8 +254,20 @@ function Complete-XmipInternalRun {
 
     [string] $stopped = if ($null -ne $Verdict) { [string] $Verdict.Failed } else { '' }
     [string] $parts = (Get-XmipEstateLayout -Root $Path).Landing
+    [object[]] $named = @(
+        if ($null -ne $Verdict -and $Verdict.PSObject.Properties['Failure']) { $Verdict.Failure }
+    )
     [object[]] $failure = @(
-        if ($stopped -ne '') {
+        foreach ($one in $named) {
+            [ordered]@{
+                file    = if ($one.Module) { $one.Module } else { $one.Part }
+                path    = if ($one.Test) { $one.Test } else { $one.Part }
+                message = "$($one.Message) ($($one.Part); its log: $($one.Log))"
+            }
+        }
+
+        # Stopped before any part named what failed: what it stopped at.
+        if ($named.Count -eq 0 -and $stopped -ne '') {
             [ordered]@{
                 file    = $stopped
                 path    = $stopped
@@ -255,7 +275,7 @@ function Complete-XmipInternalRun {
                     "that failed, its own log under $parts.")
             }
         }
-        elseif ($null -eq $Verdict) {
+        elseif ($named.Count -eq 0 -and $null -eq $Verdict) {
             if ($Fault -eq '') {
                 $Fault = 'Test-XmipChangeTree returned nothing.'
             }
@@ -267,7 +287,7 @@ function Complete-XmipInternalRun {
     [hashtable] $counted = @{
         State   = if ($failure.Count -eq 0) { 'OK' } else { 'FAILED' }
         Passed  = if ($null -ne $Verdict) { @($Verdict.Verified).Count } else { 0 }
-        Failed  = $failure.Count
+        Failed  = @($failure | ForEach-Object { $_.file } | Sort-Object -Unique).Count
         Skipped = if ($null -ne $Verdict) { @($Verdict.Skipped).Count } else { 0 }
         Seconds = ((Get-Date) - $Started).TotalSeconds
         Fault   = $Fault

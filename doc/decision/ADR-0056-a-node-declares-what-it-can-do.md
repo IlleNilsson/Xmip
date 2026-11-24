@@ -2049,3 +2049,340 @@ Working. Held by the service:
   former primary is back.
 
 Held by the deploy's Pester tests (`test/MsdscEnvironment.Test.ps1`).
+
+## Amendment, 2026-11-24: a node declares its Node capabilities, and work requires them; online is one
+
+**Provenance.** The owner, 2026-11-23, of where payload work runs:
+*Configuration rules where payload is executed, including promoted values.
+Any payload work is shared depending on how the configuration is*; and *Any
+node which has the receive role can carry receive functionality and do
+promotion. Where the created message goes from there is up to routing
+(configuration filtered by properties + promotion, like BizTalk)*. The
+owner, 2026-11-24, choosing how the configuration says it: *I think we need
+some kind of sub role that is user specified. For instance I have a RX, EX
+or TX node that has their roles. But any of them might have environmental
+possibilities like firewall openings or software installed that makes or
+breaks a journey ... I do not want the end user to write subscription
+filters based on node names*; of the word, *I don't like the wording User
+capabilities, Node capabilities is better*; and *An obvious node capability
+is online, internet access*. The build and the details below are the
+assistant's, the same day.
+
+It settles what the amendment of 2026-11-22 left drafted, a rule keeping a
+Work Process on the processing nodes while one is present: that rule is not
+taken, and the configuration says where its work runs instead. It amends the
+amendment of 2026-11-13, *a cluster's file places its work through `place`*,
+under which a cluster's file said nothing of where its work runs and the
+System Tests' file said so, *placed, never written here*: the file now says
+what each node's environment gives it and what each piece of work requires
+of it, and never which node.
+
+- **A node declares its Node capabilities.** Beside its roles, which are
+  Xmip's, `[nodes.<name>] capabilities = ["firewall-party-e", "online"]`
+  names what its environment gives it: a firewall opening, software
+  installed, a system it reaches. Each is a word of lowercase letters,
+  digits and hyphens, opening and closing with a letter or a digit, none
+  twice, refused in words otherwise (`node::Capability::node_capabilities`,
+  the one rule). Xmip reads no meaning from one and only matches it. The
+  slice gives a node its own as its top-level `capabilities`; a cluster's
+  shared top declares none, as it declares no roles.
+- **Work requires them.** A Receive Location, Work Process or Send Port may
+  name in `requires` the Node capabilities a node must declare to take it
+  (`configure::port::REQUIRES`). Its requirement is its stage served and
+  every one of those words declared (`node::Requirement::requiring`,
+  `Capability::satisfies`). A Receive Location or Send Port goes round the
+  nodes satisfying it, one turn each; a Work Process runs on every node
+  satisfying it, its turns shared through Xmip Storage. Where `requires` is
+  absent, work is placed as before. Promotion and the other steps stay with
+  the Location or Port they are attached to, and where a Message goes is
+  routing's: a Subscription filters on what a Message holds, never on a
+  node.
+- **One rotation for each requirement.** Placement keeps a rotation for
+  each distinct requirement, so work requiring more never moves the turn of
+  work requiring less (`configure::placed::placements`). With one rotation
+  for each kind, the System Tests' two Receive Locations bound to the
+  executing node would have taken two of the plan's receiving node's turns,
+  and RX1 would have received nothing.
+- **Placement goes round the nodes in the file's order** (open problem 104).
+  A TOML table keeps its keys in its names' order, so `configure::cluster`
+  reads the order of `[nodes]` from the document itself
+  (`configure::document::keys`, `toml_edit`), and `placements` goes round
+  the nodes in the file's order whatever order it is handed them in. The
+  workspace's `toml` keeps no order still: `preserve_order` would differ by
+  which crates a build holds, since Cargo unifies a feature only across the
+  crates built together.
+- **A refusal names what each node declares.** Work no node satisfies is
+  refused as before, and where it requires Node capabilities each node
+  considered says what it declares: *REFUSED: no node satisfies work
+  requiring serving Work Process, order-approval-module; considered EX2
+  (executing; declares firewall-party-d, firewall-party-e, erp-direct). Not
+  placed: the Work Process 'Order approval' of 'Order to cash'.* A word that
+  is no Node capability in a `requires` is a problem of the Application
+  (`XmipApplication::problems`) and refused where the work is placed.
+
+**Online is a Node capability.** The owner's word of 2026-11-24 ends
+clause 2's online capability as a kind of its own:
+
+- **Declared as any other.** A node with internet access declares
+  `capabilities = ["online"]`; one that declares nothing is offline, so
+  offline stays the default (ADR-0045). `[service] online`, the online field
+  of `node::Capability` and of `node::Requirement`, `with_online` and
+  `is_online` are deleted, with every use.
+- **The one Xmip asks after itself.** Every other Node capability is named
+  by whoever runs the node; `online` (`node::ONLINE`) is the one
+  Xmip's own code requires, through the same match
+  (`Requirement::online()`). Work that reaches off the machine says
+  `requires = ["online"]`.
+- **Published with the roles.** A node's capability record says its Node
+  capabilities, *declares receiving; Node capabilities online,
+  erp-direct; …*, or *no Node capability*, so a member read back from its
+  row carries them, and a surface shows them where it showed online or
+  offline. `xmip_capability_published_v1` hands a surface the words,
+  borrowed from the evidence, where it handed one byte, and the JSON forms
+  say `capabilities` where they said `online` (`xmip_operate.h` sections 7
+  and 10). A run's `[run]` lists each node's, `<node>=online+erp-direct`,
+  where it listed the online nodes (`XMIP_RUN_CAPABILITIES`).
+- **The System Tests take them as configuration.** `Start-XmipTest
+  -NodeCapability @{ RX1 = 'online' }`, shaped as `-NodeRole`, writes each
+  node's `capabilities` into the run's cluster file, and a node named with
+  none takes what the System Tests' own file declares for it.
+  `-OnlineNodes`, `XMIP_SYSTEM_TEST_ONLINE_NODES`, the cluster's `--online`
+  and the node's `--online` are deleted; a node process is told its own by
+  `--capabilities`. `XMIP_ONLINE` stays: it is the test process's switch for
+  a test that needs the internet, never a node's.
+
+The precedent: Azure Pipelines' agents declare capabilities and a job's
+demands are matched against them; Kubernetes places a workload by the
+labels its nodes carry; BizTalk binds a handler or an orchestration to a
+Host, a group of servers. None names a server in a filter.
+
+**The System Tests' plan says it** (ADR-0028, amendment of this date): EX1
+declares `order-approval-module`, and *Order approval* requires it, so it
+runs on EX1 alone; EX2 declares `firewall-party-d`, `firewall-party-e` and
+`erp-direct`, and the two routes it takes in one node require them.
+
+Held by tests:
+
+- node: the word rule; `satisfies` with Node capabilities and `online`;
+  the evidence reading its Node capabilities back; a run's entry of them.
+- cluster: work requiring Node capabilities only on a node declaring them,
+  and the refusal's words.
+- configure: the nodes in the file's order, which failed before the fix
+  with the nodes in their names' order, and in placement; `capabilities`
+  read and refused; `requires` placed, its own rotation, and refused.
+- operate: the export's Node capabilities and the run's line, through the
+  ABI and in `Xmip.Operate`, `Xmip.Surface` and `Xmip.Gui`.
+- System Tests: the plan over its own files (`served::given`), the
+  executing node running no Work Process; the roster carrying Node
+  capabilities across `--nodes` and `--capabilities`.
+- Pester: `-NodeCapability` written into the run's cluster file, and refused
+  for a node not named.
+
+## Amendment, 2026-11-24: a hand-over is acknowledged, only a Storage node listed follows, and a deploy restarts each node once
+
+**Provenance.** The review of 2026-11-24 of the switchover (the amendment of
+2026-11-23) found it could leave two primaries in one epoch, let any node's
+certificate follow a primary and name itself the successor, hand over where
+a stop had not drained, and call a node ready by what an earlier process of
+it said; that the Microsoft DSC deploy asked a node whether it was ready
+before installing the program that knows the question, restarting a node
+twice; and that a stop refused every operation through its drain, the
+successor synced and wrote more than it needed, a node opened new
+connections as the successor took over, readiness was asked again and
+again, and the figures were of Storage in memory (open problems 134 to 143).
+The assistant proposed a fix for each; the owner, 2026-11-24: *Do as you
+propose*. The build is the assistant's, the same day.
+
+**At most one primary in an epoch, whatever a disk does** (open problem
+134). The amendment of 2026-11-23 excused the stopping primary from the
+successor's question on the grounds that its stop waited for the successor
+to keep its epoch; that wait is bounded by the silence, and a successor
+slower than it — a disk stalled, a machine paused — left the former primary
+free to come back, find the epoch not kept yet, and be promoted in it, the
+successor promoted in it after.
+
+- **The former primary acknowledges the epoch kept.** Having read the
+  successor's `Succeeding::Kept`, the stopping primary answers it on the
+  same connection, `Shipped::Acknowledged(epoch)`: a third frame. Once it
+  has read that epoch kept, it can never be promoted in it: started again
+  it finds it kept.
+- **The successor excuses it only once it read that.** Without it — the
+  primary's stop ended past the silence, the connection gone — the
+  successor asks it as it asks every other Storage node listed, and is
+  promoted only where none is a primary and none other holds that epoch.
+
+**Only a Storage node listed follows, by the certificate it proves** (open
+problem 135). A Storage node presents its node's one certificate both as a
+server, at the address listed, and as a client. Each keeps the leaf every
+one listed presented as it asked it its standing, its host checked against
+the address listed by the TLS client (`standby::proven`). The Storage plane
+admits `follow` to a standing of its own, a Storage node's, only where the
+caller's leaf is one of those, asking each listed again once where none
+matches, as one renews its certificate; the place is that one's, worked
+out by the primary. `Follow` carries no place any more. A node of another
+role — a certificate of the same authority, for the same host even — is
+refused in words, and is handed no write, no whole copy and no data key.
+
+**A stop names a successor only where it drained** (open problem 136). An
+operation lent past the stop's bound may still write: its databases take no
+write more from then (`Copies::close`), so nothing it writes after is
+acknowledged that the standbys were not handed, and the stop names no
+successor (`Shipped::Stopped` with none): the cluster settles as ever.
+
+**Ready by its start now** (open problem 137). A publication whose records
+were observed before the start its node's start file keeps — the node's
+Clock in nanoseconds when it numbered that start, above the one kept before
+(amendment 2026-11-20) — is an earlier process's, and says nothing of
+whether the node is ready, nor what it runs: a process killed, crashed or
+stopped past its service manager's bound leaves its last publication saying
+its Storage stands Fine. A start is numbered as the process's first act,
+before any attempt can refuse it, where until this day it was numbered as
+the node began serving.
+
+**A deploy restarts each node once, and waits once, after the last step
+that changes what it runs** (open problem 138).
+
+- *Microsoft DSC.* The Slice step and the certificate's, key's and
+  anchors' File steps only place, and where the node runs leave its Service
+  step a restart (`deploy.pending` in its configuration folder,
+  `restart`); the Package step's install restarts a node that ran, after
+  every file was placed, and leaves it `ready`. The Service step, last,
+  restarts a node left `restart` once, and waits once for a node this
+  deploy restarted, as `xmip-service --readiness` says, asked of the
+  program the package installed. Until this day the Slice step restarted
+  the node and asked it before its certificates and package were placed,
+  so a node on a build without `--readiness` stopped the deploy before the
+  step that would upgrade it, and a node whose slice and package both
+  changed was restarted twice.
+- *Ansible.* The restart handler skips a node its package's upgrade
+  restarted after every file was placed; one readiness handler follows. On
+  Windows a package whose own product code is not installed is installed
+  over the one there (the MSI's `MajorUpgrade`, the same version again
+  included), where an installed node's service made the package count as
+  installed.
+
+**What a switchover costs** (open problems 139 to 142).
+
+- **Held, never refused across the hand-over.** An operation asked of a
+  stopping primary is held until its stop has said who succeeds it, its
+  loan given back first so the drain does not wait for it, then refused in
+  words naming the successor; the successor holds every operation, and the
+  standing asked on a node's kept connection, from its `Kept` until it
+  serves. Where every Storage node refused, a node asks once more those
+  that said they are standbys, so its request is answered whichever it
+  asked first, and every wait on the stopping primary's queues is refused as
+  it hands over, not as its stop begins.
+- **Told, never asked again and again.** A primary hands a new follower a
+  beat at once, so it is following before there is a write to hand it; a
+  Storage node tells its node each change of what it is
+  (`StorageNode::telling`), and `xmip-service` publishes at once
+  (`Told::Storage`); `xmip-service --readiness --within` reads the node's
+  file, its trust and where it publishes once, and its publication again as
+  the operating system says the folder changed (`runtime::directory_watch`).
+- **One sync and one durable write.** The successor syncs each database it
+  wrote once, keeps its epoch in one durable write, and gives up its
+  positions by writes not synced on their own, durable in order with its
+  first sync as the primary; following no longer syncs every database
+  again as it ends. Until this day: up to six syncs and four durable writes.
+- **No handshake for another thread.** A node keeps as many connections to
+  each standby as it held to the primary at once, opened on a thread of
+  their own. TLS session resumption, which would make each new connection
+  cheaper, stays off: a resumed handshake checks no certificate again
+  (ADR-0033, amendment 2026-11-10), and open problem 119 stays open.
+
+**Measured** (open problem 143) on Windows in the optimized build, the
+machine shared with other workers' builds, before the change in one run and
+after it in two, the fastest of five and the median:
+
+| | before | after |
+| --- | --- | --- |
+| In memory, two Storage nodes, 25 stops: the standby serving as the primary, from the stop's start, no node asking | 0.63 ms, 0.74 ms | 0.44 to 0.61 ms, 0.49 to 0.66 ms |
+| the same, a node writing all along | 1.96 ms, 2.16 ms | 0.53 to 0.74 ms, 0.60 to 0.85 ms |
+| that node's longest wait across the stop | 6.34 ms, 7.10 ms | 0.70 to 1.02 ms, 0.83 to 1.17 ms |
+| Deployed-like, three Storage nodes on disk, four writers, six stops: the successor serving | 25.0 ms, 30.5 ms | 10.6 to 16.1 ms, 14.3 to 19.1 ms |
+| the writers' longest wait across the stop | 28.1 ms, 32.8 ms | 13.3 to 18.7 ms, 17.8 to 20.1 ms |
+| writes and waits refused across the six stops | 733 and 180 | none, both runs |
+| one write, before the first stop | 2.74 ms | 2.27 to 2.53 ms |
+
+The deployed-like figure is the root's timing program's
+(`.src/test/measured/switchover.rs`): three Storage nodes, each its runtime
+database in RocksDB and its administration and audit databases in SQLite on
+disk, its data keys under the platform's key store (DPAPI on Windows), its
+certificate kept across its restarts, four threads of a node writing a
+kilobyte each all along and one waiting, over six stops in order of a
+rolling restart, each Storage node restarted only once every other follows
+ready and the writes have gone on. A technology depends on its parent,
+never the reverse, so persist links no engine: its own timing program
+measures the hand-over in memory, and is held there. In memory the node
+writing all along now writes a hundred times after its standby follows
+before the stop, as a deploy's restart of the next node takes its time;
+stopped the moment its standby followed, as the program stopped until this
+day, it waited 6.0 ms, its connections to the new standby being opened on a
+thread of their own, which that stop races.
+
+Where the deployed-like 11 to 17 ms go, read once by probes in the code,
+since taken out: the drain, writes under way finishing with their syncs,
+1.8 to 3.0 ms; the successor's syncs, 1.2 to 1.3 ms, and its epoch's
+durable write, 1.7 to 2.1 ms; the third Storage node asked over a new
+connection, a full handshake, 2.7 to 4.5 ms; the positions given up, 0.2
+ms, or some 5 ms where SQLite's commit checkpointed its log; and the three
+stores opened, each data key unwrapped by DPAPI, 1.4 to 2.9 ms. The syncs
+are load; the handshake and the unwraps are not, and are recorded.
+
+**What it costs.** One frame more each way at a hand-over, and two thread
+wakes in turn more, which the timing program holds (four, where it held
+two); a node keeps as many connections to each standby as it holds to the
+primary, each one more idle connection the standby serves; a refused
+`follow` from a certificate no Storage node presented when last asked has
+the primary ask each Storage node listed again once. Three or more Storage
+nodes sharing one certificate cannot be told apart, and none follows: each
+needs its own, as every deployment template gives it; two sharing one still
+can, the primary's own place set aside, as the root's service tests have
+them.
+
+**Not closed.** Open problems 119 (every new connection a full handshake),
+120, 123 and 144 stay open; open problem 122, *a primary handing on a whole
+copy* over its bound on Windows, still fails persist's timing program
+there (1.65 ms).
+
+Held by persist's `standby/tests/handover.rs` (one primary of the epoch
+with the successor's disk held past the silence; a certificate no Storage
+node listed presents refused; a stop an operation outlasts taking no write
+and naming no successor; a write asked through the drain answered) and
+`costs.rs` (a beat at once and the node told; one durable write; the
+connections kept), run against the code before the change on Windows
+(`cargo test -p xmip-core-persist --features test-support --lib`):
+
+```text
+test storage::standby::tests::handover::a_successor_keeping_its_epoch_past_the_silence_leaves_one_primary_of_the_epoch ... FAILED
+two primaries of epoch 2: the primary Storage node, epoch 2, no standby following, 23 writes held / the primary Storage node, epoch 2, no standby following, 23 writes held
+test storage::standby::tests::handover::only_a_storage_node_listed_follows_by_the_certificate_it_proves_and_its_place_is_its_own ... FAILED
+refused in words
+test storage::standby::tests::handover::a_stop_an_operation_outlasts_takes_no_write_after_it_and_names_no_successor ... FAILED
+a write after the stop's bound was acknowledged, its successor named: the primary Storage node, epoch 1, no standby following, 9 writes held; stopped in order, handing over to 127.0.0.1:58369, which kept epoch 2
+test storage::standby::tests::handover::a_write_asked_while_the_primary_drains_is_answered_by_its_successor ... FAILED
+refused across the stop: Err(Unreachable { reason: "no Storage node answered: 127.0.0.1:58362: a standby Storage node, epoch 1, ready; 127.0.0.1:58355: the primary Storage node, epoch 1, …" })
+test storage::standby::tests::costs::a_standby_following_an_idle_primary_on_is_handed_a_frame_at_once ... FAILED
+handed nothing for a beat: a standby Storage node of the primary at 127.0.0.1:58359, epoch 1, ready, handed nothing yet, 8 writes held
+test storage::standby::tests::costs::a_successor_syncs_each_database_once_and_makes_one_durable_write_before_it_serves ... FAILED
+assertion `left == right` failed: durable writes but its epoch's
+  left: 4
+ right: 1
+test storage::standby::tests::costs::a_node_keeps_as_many_connections_to_a_standby_as_it_holds_to_the_primary ... FAILED
+1 connection(s) kept to the standby
+```
+
+The last, run again, passed once by chance with one writer, and holds
+three writers since. After the change persist's 242 tests pass, the
+standby tests five times over. The runtime's `tests/running/ready.rs` (a
+publication of an earlier start never ready), against the code before
+(`cargo test -p xmip-core-runtime --all-features --test running`):
+
+```text
+test ready::a_publication_of_an_earlier_start_never_says_the_node_is_ready ... FAILED
+ready by a publication of an earlier start: "activated: serial 1795489177101439800 of save sha256:e3b0…, the first this node ran; the Xmip Storage its program opened, Streams in chunks of 62 KiB"
+```
+
+and the deploy's Pester tests (`test/MsdscEnvironment.Test.ps1`: the
+Slice step leaving a restart, a certificate placed leaving one, the Service
+step restarting once and waiting once, the package leaving `ready`).

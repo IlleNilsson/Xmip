@@ -27,12 +27,11 @@ pub fn starter(cluster: &str, node: &str, operator: &str) -> String {
          cluster_name = {cluster}\n\
          \n\
          # One node, so it keeps Xmip Storage itself: only a node with the\n\
-         # storage role stores (ADR-0056, amendment 2026-10-20).\n\
+         # storage role stores (ADR-0056, amendment 2026-10-20). Offline: it\n\
+         # declares no Node capability; capabilities = [\"online\"] gives it\n\
+         # the internet (ADR-0056, amendment 2026-11-24).\n\
          [nodes.{node_key}]\n\
          roles = \"storage\"\n\
-         \n\
-         [nodes.{node_key}.service]\n\
-         online = false\n\
          \n\
          # Who operates it: the account that installed it. A caller no list\n\
          # names holds no role (ADR-0009, amendment 2026-11-07); add others\n\
@@ -76,7 +75,10 @@ mod tests {
         let (document, _, _) = read.expect("reads");
         assert_eq!(document.service.node_name, node);
         assert_eq!(document.service.cluster_name, cluster.name);
-        assert!(!document.service.online);
+        assert!(
+            document.capabilities.is_empty(),
+            "offline: no Node capability"
+        );
         assert_eq!(
             document.roles.as_deref(),
             Some("storage"),

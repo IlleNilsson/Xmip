@@ -151,22 +151,19 @@
 
     # A Windows ISO boots only after "Press any key to boot from CD or DVD";
     # Enter, since a later press stops the Windows Boot Manager's countdown,
-    # and only Enter then chooses Windows Setup (HyperVInstallation.ps1).
+    # and only Enter then chooses Windows Setup. The one press both
+    # technologies run, deploy/dsc/machine/HyperVBootKey.ps1, read on the
+    # controller and handed to the host whole (ADR-0015, amendment 2026-11-24).
     - name: Enter pressed for the first twenty seconds of a Windows ISO
       ansible.windows.win_powershell:
         parameters:
           Name: "{{ xmip_machine.name }}"
         script: |
-          param($Name)
-          $vm = Get-CimInstance -Namespace root\virtualization\v2 -ClassName Msvm_ComputerSystem |
-              Where-Object { $_.ElementName -eq $Name }
-          $keyboard = Get-CimAssociatedInstance -InputObject $vm -ResultClassName Msvm_Keyboard
-          $until = [datetime]::UtcNow.AddSeconds(20)
-          while ([datetime]::UtcNow -lt $until) {
-              Invoke-CimMethod -InputObject $keyboard -MethodName TypeKey -Arguments @{
-                  keyCode = 13 } | Out-Null
-              Start-Sleep -Milliseconds 500
-          }
+          param([string] $Name)
+          {{ lookup('ansible.builtin.file', xmip_boot_key) }}
+          Send-HyperVBootKey -Name $Name
+      vars:
+        xmip_boot_key: "{{ xmip_machine_definition | dirname }}/HyperVBootKey.ps1"
       when: xmip_machine.image.family == 'Windows'
 
     - name: Its installation, until it answers from its disk

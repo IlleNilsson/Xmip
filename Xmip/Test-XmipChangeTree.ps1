@@ -10,9 +10,11 @@ function Test-XmipChangeTree {
             its independent parts side by side, and says what failed.
 
         .DESCRIPTION
-            Returns what verified, what could not be verified here, and what
-            failed (a module, or a part: Rust, .NET, Pester; empty when
-            nothing failed). Nothing is pushed here.
+            Returns what verified, what could not be verified here, what
+            failed (Failed, the first failure's module, or its part: Rust,
+            .NET, Pester; empty when nothing failed) and every failure
+            (Failure, each crate or project and test with the words that say
+            why, its part and the part's log). Nothing is pushed here.
 
             The estate is one Cargo workspace (ADR-0016, amendment
             2026-11-20), so every crate already builds against every working
@@ -42,7 +44,9 @@ function Test-XmipChangeTree {
             With -Alone it verifies the modules named and nothing else, for
             Core.Internal (Start-XmipInternalSuite): not the root crate, the
             timing programs' lints or the timing programs, and nothing of it
-            is recorded as a landing's, its time or its failure.
+            is recorded as a landing's, its time or its failure; every part
+            and every step runs to its end, so every failure is named and
+            every module no failure names is verified.
     #>
     [CmdletBinding()]
     [OutputType([pscustomobject])]
@@ -76,9 +80,12 @@ function Test-XmipChangeTree {
 
     [List[string]] $skipped = [List[string]]::new()
     [List[string]] $verified = [List[string]]::new()
+    [object[]] $failure = @()
 
     if ($NoVerify) {
-        return [pscustomobject]@{ Verified = @($Ordered); Skipped = @(); Failed = '' }
+        return [pscustomobject]@{
+            Verified = @($Ordered); Skipped = @(); Failed = ''; Failure = @()
+        }
     }
 
     # Where cargo builds: the estate's one rule (Get-XmipEstateLayout, Build).
@@ -100,7 +107,7 @@ function Test-XmipChangeTree {
             [string] $path = Join-Path -Path $RepositoryRoot -ChildPath $module
             [string] $manifest = Join-Path -Path $path -ChildPath 'Cargo.toml'
             [bool] $cargo = Test-Path -LiteralPath $manifest
-            [bool] $projects = @(Find-XmipFile -Path $path -Filter '*.csproj').Count -gt 0
+            [bool] $projects = @(Find-XmipModuleProject -Path $path).Count -gt 0
             [bool] $consuming = $Consumer -contains $module
             [bool] $other = $projects -or
                 (Test-Path -LiteralPath (Join-Path $path 'extension/package.json')) -or
@@ -175,6 +182,7 @@ function Test-XmipChangeTree {
                         Argument    = @{
                             RepositoryRoot = $RepositoryRoot
                             Module         = $dotnet.ToArray()
+                            Alone          = [bool] $Alone
                         }
                         Environment = $reading
                     })
@@ -213,12 +221,18 @@ function Test-XmipChangeTree {
             Write-Host $plan -ForegroundColor Cyan
 
             [object[]] $verdicts = @(
-                Invoke-XmipLandingPart -RepositoryRoot $RepositoryRoot -Part $parts
+                Invoke-XmipLandingPart -RepositoryRoot $RepositoryRoot -Part $parts -Whole:$Alone
             )
-            $failed = @(
-                $verdicts | Where-Object { -not $_.Passed } |
-                    Select-Object -First 1 -ExpandProperty Name
-            ) -join ''
+
+            # Each failure with its part and the part's log; the landing is
+            # stopped at the first one's module, else its part.
+            $failure = @(foreach ($verdict in @($verdicts | Where-Object { -not $_.Passed })) {
+                    $verdict.Failure | Select-Object -Property *, @{ n = 'Part'; e = {
+                            $verdict.Name } }, @{ n = 'Log'; e = { $verdict.Log } }
+                })
+            $failed = @($failure | Select-Object -First 1 | ForEach-Object {
+                    if ($_.Module) { $_.Module } else { $_.Part }
+                }) -join ''
 
             foreach ($verdict in @($verdicts | Where-Object { $_.Passed -and -not $Alone })) {
                 [hashtable] $took = @{ Name = $verdict.Name; Duration = $verdict.Took }
@@ -253,11 +267,20 @@ function Test-XmipChangeTree {
             }
         }
 
+        # Every part ran to its end: what verified is every module named that
+        # no failure names; none where what the parts load did not build.
         if ($failed -and $Alone) {
-            Write-Host "FAILED. Stopping at $failed." -ForegroundColor Red
+            if ($failure.Count -eq 0) {
+                $verified.Clear()
+            }
+
+            [string] $counted = "FAILED. $failed and $($failure.Count) failure(s) in all."
+            Write-Host $counted -ForegroundColor Red
+            [string[]] $failing = @($failure | ForEach-Object { $_.Module })
 
             return [pscustomobject]@{
-                Verified = @(); Skipped = $skipped.ToArray(); Failed = $failed
+                Verified = @($verified | Where-Object { $_ -notin $failing })
+                Skipped  = $skipped.ToArray(); Failed = $failed; Failure = $failure
             }
         }
 
@@ -278,7 +301,7 @@ function Test-XmipChangeTree {
             Write-Error $stopped -ErrorAction Continue
 
             return [pscustomobject]@{
-                Verified = @(); Skipped = $skipped.ToArray(); Failed = $failed
+                Verified = @(); Skipped = $skipped.ToArray(); Failed = $failed; Failure = $failure
             }
         }
     }
@@ -288,103 +311,7 @@ function Test-XmipChangeTree {
         $env:XMIP_MODULE_LIBRARY = $previousModule
     }
 
-    [pscustomobject]@{ Verified = $verified.ToArray(); Skipped = $skipped.ToArray(); Failed = '' }
-}
-
-function Build-XmipLandingLibrary {
-    <#
-        .SYNOPSIS
-            Builds what the landing's parts load, once, from the working
-            tree, and names it to them; the module whose build failed, or
-            nothing.
-
-        .DESCRIPTION
-            The runtime's library, which Xmip.Operate copies for every .NET
-            project and the root's `test/` loads through Xmip.Surface, named
-            by XMIP_RUNTIME_LIBRARY and copied for the parts that read it, so
-            the Rust part may build over the original while they run; the
-            runtime's remote build where `operate` lands, whose tests load
-            it; the test module's library where the runtime lands, whose
-            tests open it (XMIP_MODULE_LIBRARY). A failed build fails the
-            landing: a stale library is never tested in its place.
-    #>
-    [CmdletBinding()]
-    [OutputType([string])]
-    param(
-        [Parameter(Mandatory)]
-        [string] $RepositoryRoot,
-
-        [Parameter(Mandatory)]
-        [AllowEmptyCollection()]
-        [string[]] $Ordered,
-
-        [Parameter()]
-        [switch] $Runtime
-    )
-
-    [string] $built = Join-Path -Path $env:CARGO_TARGET_DIR -ChildPath 'debug'
-
-    if ($Runtime) {
-        $library = Get-XmipPackageProgram | Where-Object -Property Kind -EQ 'Library'
-
-        if (-not (Build-XmipTestLibrary -RepositoryRoot $RepositoryRoot -Module $library.Folder)) {
-            return $library.Folder
-        }
-
-        # Just built where cargo builds, so it is found and named, not built again.
-        $env:XMIP_RUNTIME_LIBRARY = Build-XmipRuntimeLibrary -Root $RepositoryRoot
-        [string] $landing = (Get-XmipEstateLayout -Root $RepositoryRoot).Landing
-        [string] $copy = Join-Path -Path $landing -ChildPath 'runtime/debug'
-        $null = New-Item -ItemType Directory -Path $copy -Force
-        Copy-Item -LiteralPath $env:XMIP_RUNTIME_LIBRARY -Destination $copy -Force
-    }
-
-    if ($Ordered -contains 'module/core/operation/operate') {
-        try {
-            $null = Build-XmipRemoteRuntime -Root $RepositoryRoot -Platform Desktop
-        }
-        catch {
-            Write-Host $_.Exception.Message -ForegroundColor Red
-            return 'module/core/operation/operate'
-        }
-    }
-
-    if ($Ordered -contains 'module/platform/runtime') {
-        [hashtable] $module = @{ RepositoryRoot = $RepositoryRoot; Module = 'test/core/module' }
-
-        if (-not (Build-XmipTestLibrary @module)) {
-            return 'test/core/module'
-        }
-
-        [string] $file = if ($IsWindows) { 'xmip_core_test_module.dll' }
-        else { 'libxmip_core_test_module.so' }
-        $env:XMIP_MODULE_LIBRARY = Join-Path -Path $built -ChildPath $file
-    }
-}
-
-function Build-XmipTestLibrary {
-    <#
-        .SYNOPSIS
-            Builds one module's library from the working tree into the shared
-            build directory, for the tests that load it.
-    #>
-    [CmdletBinding()]
-    [OutputType([bool])]
-    param(
-        [Parameter(Mandatory)]
-        [string] $RepositoryRoot,
-
-        [Parameter(Mandatory)]
-        [string] $Module
-    )
-
-    Write-Host "== $Module's library, for the tests that load it" -ForegroundColor Cyan
-    Push-Location -LiteralPath (Join-Path -Path $RepositoryRoot -ChildPath $Module)
-
-    try {
-        (Invoke-XmipTool -Tool cargo -Argument @('build')).Passed
-    }
-    finally {
-        Pop-Location
+    [pscustomobject]@{
+        Verified = $verified.ToArray(); Skipped = $skipped.ToArray(); Failed = ''; Failure = @()
     }
 }

@@ -4,7 +4,9 @@
 # amendment 2026-11-06, point 4), with the certificate of the authority
 # that signed it, its certificate from the cluster's own authority, the estate's package, which
 # installs and starts its service, the firewall openings its configuration
-# listens on, and its service running. The node never slices
+# listens on, and its service running, restarted once and waited for once
+# after the last step that changes what it runs (ADR-0056, amendment
+# 2026-11-24). The node never slices
 # (ADR-0031, amendment 2026-11-06). Applied on the node machine itself by Xmip.Environment/Machine
 # (machine.dsc.yaml), which copies this folder and the files
 # below to the machine's staging folder first; README.md says how.
@@ -61,8 +63,9 @@ parameters:
     type: int
     description: >-
       How long, in seconds, a node this document restarted is waited for
-      until it is ready, before the next node is deployed (ADR-0056,
-      amendment 2026-11-23).
+      until it is ready, by its Service step once every step that changes
+      what it runs is done, before the next node is deployed (ADR-0056,
+      amendments 2026-11-23 and 2026-11-24).
     defaultValue: 180
 resources:
   - name: Account
@@ -81,7 +84,6 @@ resources:
       node: "[parameters('node')]"
       account: "[parameters('account')]"
       program: "[parameters('layout').program]"
-      ready: "[parameters('ready')]"
   - name: Certificate
     type: Xmip.Node/File
     requireVersion: ^0.1
@@ -89,6 +91,8 @@ resources:
       path: "[path(parameters('layout').configuration, 'tls', 'node.pem')]"
       source: "[path(parameters('staging'), 'files', 'node.pem')]"
       private: false
+      node: "[parameters('node')]"
+      configuration: "[parameters('layout').configuration]"
   - name: Key
     type: Xmip.Node/File
     requireVersion: ^0.1
@@ -99,6 +103,8 @@ resources:
       source: "[path(parameters('staging'), 'files', 'node.key')]"
       private: true
       owner: "[if(equals(parameters('family'), 'Linux'), parameters('account'), '')]"
+      node: "[parameters('node')]"
+      configuration: "[parameters('layout').configuration]"
   - name: Anchors
     type: Xmip.Node/File
     requireVersion: ^0.1
@@ -106,6 +112,8 @@ resources:
       path: "[path(parameters('layout').configuration, 'tls', 'anchors.pem')]"
       source: "[path(parameters('staging'), 'files', 'anchors.pem')]"
       private: false
+      node: "[parameters('node')]"
+      configuration: "[parameters('layout').configuration]"
   - name: Package
     type: Xmip.Node/Package
     requireVersion: ^0.1
@@ -122,7 +130,6 @@ resources:
       configuration: "[parameters('layout').configuration]"
       names: "[parameters('names')]"
       program: "[parameters('layout').program]"
-      ready: "[parameters('ready')]"
 
   - name: Opening
     type: Xmip.Node/Opening
@@ -133,10 +140,20 @@ resources:
       program: "[parameters('layout').program]"
       configuration: "[path(parameters('layout').configuration, 'node.xmip')]"
       node: "[parameters('node')]"
+  # The last step that changes what the node runs: a node one of the steps
+  # before changed while it ran is restarted here once, where its package's
+  # install did not restart it already, and waited for once until it is
+  # ready, on the program the package installed (ADR-0056, amendment
+  # 2026-11-24).
   - name: Service
     type: Xmip.Node/Service
     requireVersion: ^0.1
     dependsOn:
       - "[resourceId('Xmip.Node/Package', 'Package')]"
+      - "[resourceId('Xmip.Node/Opening', 'Opening')]"
     properties:
       name: "[concat('xmip-', parameters('node'))]"
+      node: "[parameters('node')]"
+      configuration: "[parameters('layout').configuration]"
+      program: "[parameters('layout').program]"
+      ready: "[parameters('ready')]"

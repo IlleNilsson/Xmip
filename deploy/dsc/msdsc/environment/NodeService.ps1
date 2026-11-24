@@ -3,9 +3,16 @@
 
 <#
     The node's service on its machine (node.resource.ps1): whether it runs
-    and starts with the machine, started and stopped, and a node this deploy
-    restarted waited for until it is ready, as xmip-service --readiness says,
-    before the next node is deployed (ADR-0056, amendment 2026-11-23).
+    and starts with the machine, started and stopped, and restarted once and
+    waited for once, after the last step that changes what it runs: the
+    steps before it leave what they changed in deploy.pending beside the
+    node's configuration, `restart` where a file the node reads changed and
+    `ready` where its package's install restarted it, and the Service step
+    restarts a node that asks it and waits until it is ready, as
+    xmip-service --readiness says, before the next node is deployed
+    (ADR-0056, amendments 2026-11-23 and 2026-11-24). Until 2026-11-24 the
+    Slice step restarted a node and asked it, before its certificates and
+    its package were placed, on the program installed then.
     Dot-sourced by node.resource.ps1 and by test/MsdscEnvironment.Test.ps1.
 
     Style: doc/governance/powershell-style.md
@@ -34,18 +41,128 @@ function Test-NodeServiceActive {
     return $LASTEXITCODE -eq 0
 }
 
+$script:NodePendingFile = 'deploy.pending'
+
+function Get-NodePending {
+    <#
+    .SYNOPSIS
+    What this deploy left for the node's Service step in its configuration
+    folder: `restart` where a file the node reads changed while it ran,
+    `ready` where its package's install restarted it; nothing where neither.
+    #>
+    [CmdletBinding()]
+    [OutputType([string])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $Configuration
+    )
+
+    [string] $path = Join-Path -Path $Configuration -ChildPath $script:NodePendingFile
+    if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
+        return ''
+    }
+    return (Get-Content -LiteralPath $path -Raw).Trim()
+}
+
+function Set-NodePending {
+    <#
+    .SYNOPSIS
+    Leave the node's Service step what changed: `restart`, a file the node
+    reads, which a restart after it takes; `ready`, a restart that took
+    every file placed before it, so the node is waited for and not restarted
+    again. Only a node that runs is left either: one that does not is
+    started by the package or the Service step, by what is placed.
+    #>
+    [CmdletBinding(SupportsShouldProcess = $true)]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $Configuration,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateSet('restart', 'ready')]
+        [string] $Pending
+    )
+
+    [string] $path = Join-Path -Path $Configuration -ChildPath $script:NodePendingFile
+    if ($PSCmdlet.ShouldProcess($path, "Leave the node's Service step '$Pending'")) {
+        $null = New-Item -ItemType Directory -Force -Path $Configuration
+        Set-Content -LiteralPath $path -Value $Pending
+    }
+}
+
+function Set-NodeService {
+    <#
+    .SYNOPSIS
+    The node's service running and started with the machine, after every
+    step that changes what it runs: restarted once where a file it reads
+    changed since it started, started where it does not run, and, where it
+    ran before this deploy and was restarted by it, waited for once until it
+    is ready (Wait-NodeReadiness). One that did not run is started waiting
+    for nothing, its environment's nodes started together after
+    (Xmip.Environment/Started).
+    #>
+    [CmdletBinding(SupportsShouldProcess = $true)]
+    param(
+        [Parameter(Mandatory = $true)]
+        [hashtable] $Instance
+    )
+
+    if (-not $PSCmdlet.ShouldProcess($Instance.name, 'Run, restarting it where it asks')) {
+        return
+    }
+
+    [string] $pending = if ($Instance['configuration']) {
+        Get-NodePending -Configuration $Instance.configuration
+    }
+    else {
+        ''
+    }
+    [bool] $ran = Test-NodeServiceActive -Name $Instance.name
+    if ($ran -and $pending -eq 'restart') {
+        Restart-NodeService -Name $Instance.name
+    }
+    Start-NodeService -Name $Instance.name -Confirm:$false
+    if ($ran -and $pending) {
+        Wait-NodeReadiness -Instance $Instance
+    }
+    if ($pending) {
+        Remove-Item -LiteralPath (
+            Join-Path -Path $Instance.configuration -ChildPath $script:NodePendingFile)
+    }
+}
+
+function Restart-NodeService {
+    <#
+    .SYNOPSIS
+    Restart the node's service, which runs: its Windows service, its
+    systemd unit.
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $Name
+    )
+
+    if ($IsWindows) {
+        Restart-Service -Name $Name
+        return
+    }
+    Invoke-DscProgram -Program 'systemctl' -Argument @('restart', $Name) | Out-Null
+}
+
 function Wait-NodeReadiness {
     <#
     .SYNOPSIS
     Wait until the node this deploy restarted is ready, before the next node
     is deployed, as xmip-service --readiness says in the node's own words:
     it runs its slice and its Xmip Storage stands Fine, a Storage node the
-    primary or a standby ready and following, asked again as the node
-    publishes, never a sleep (the owner, 2026-11-23: "That has to be
-    sorted, nothing can be left"; ADR-0056, amendment 2026-11-23). A
+    primary or a standby ready and following, told as the node publishes,
+    never a sleep (the owner, 2026-11-23: "That has to be sorted, nothing
+    can be left"; ADR-0056, amendments 2026-11-23 and 2026-11-24). A
     Storage node restarted comes back a standby, and its primary stopped in
-    order before it follows ready has no standby to hand over to. Refused
-    past -Instance.ready seconds.
+    order before it follows ready has no standby to hand over to. Asked once,
+    by the Service step, of the program the package installed. Refused past
+    -Instance.ready seconds.
     #>
     [CmdletBinding()]
     param(

@@ -461,37 +461,51 @@ Describe 'The landing''s Rust part verifies in the one workspace' {
     }
 
     It 'lints every member against a change with consumers, each crate alone with its defaults' {
+        # One cargo for each mode over the crates, then each built alone
+        # (ADR-0028, amendment 2026-11-24).
         InModuleScope Xmip -Parameters @{ Root = $script:Both } {
             Mock Write-Host { }
             Mock Invoke-XmipTool { [pscustomobject]@{ Passed = $true; Said = @() } }
 
             Test-XmipRustChange -RepositoryRoot $Root -Module @('m') -Consumer |
                 Should -BeNullOrEmpty
-            Should -Invoke Invoke-XmipTool -Times 1 -Exactly -ParameterFilter {
-                ($Argument -join ' ') -eq 'clippy --all-targets --all-features --workspace'
+
+            foreach ($once in 'clippy --all-targets --all-features --workspace',
+                'fmt --check -p xmip-m -p xmip', 'test -p xmip-m -p xmip',
+                'check --all-targets -p xmip-m', 'check --all-targets -p xmip') {
+                Should -Invoke Invoke-XmipTool -Times 1 -Exactly -ParameterFilter {
+                    ($Argument -join ' ') -eq $once
+                }
             }
-            Should -Invoke Invoke-XmipTool -Times 2 -Exactly -ParameterFilter {
-                ($Argument -join ' ') -eq 'test'
-            }
             Should -Invoke Invoke-XmipTool -Times 1 -Exactly -ParameterFilter {
-                ($Argument -join ' ') -eq 'fmt --check -p xmip-m -p xmip'
+                $Argument[0] -eq 'test'
             }
         }
     }
 
-    It 'names the step that failed' {
+    It 'names the crate and the step that failed, and stops there' {
         InModuleScope Xmip -Parameters @{ Root = $script:Both } {
             Mock Write-Host { }
             Mock Invoke-XmipTool {
-                [bool] $passed = ($Argument -join ' ') -ne 'clippy --all-targets'
-                [pscustomobject]@{ Passed = $passed; Said = @() }
+                [bool] $passed = ($Argument -join ' ') -ne 'clippy --all-targets -p xmip-r -p xmip'
+                [pscustomobject]@{
+                    Passed = $passed; Said = @(); Telling = @()
+                    Failure = @(if (-not $passed) {
+                            New-XmipToolFailure -Package 'xmip-r' -Message 'warns'
+                        })
+                }
             }
 
-            Test-XmipRustChange -RepositoryRoot $Root -Module @('r') |
-                Should -Be 'r, its lints'
+            $failed = @(Test-XmipRustChange -RepositoryRoot $Root -Module @('r'))
+            $failed.Count | Should -Be 1
+            $failed[0].Module | Should -Be 'r'
+            $failed[0].Message | Should -Be 'the lints: warns'
+            Should -Invoke Invoke-XmipTool -Times 0 -Exactly -ParameterFilter {
+                $Argument[0] -eq 'check'
+            }
             # A crate declaring no feature was tested whole by its default run.
             Should -Invoke Invoke-XmipTool -Times 0 -Exactly -ParameterFilter {
-                ($Argument -join ' ') -eq 'test --all-features'
+                $Argument -contains '--all-features' -and $Argument[0] -eq 'test'
             }
         }
     }
@@ -534,10 +548,33 @@ Describe 'The landing''s Rust part verifies in the one workspace' {
         # sit beside a Cargo.toml, and only cargo ran for them.
         InModuleScope Xmip -Parameters @{ Root = $script:Both } {
             Mock Write-Host { }
-            Mock Test-XmipDotnetModule { $false }
+            Mock Test-XmipDotnetModule {
+                New-XmipPartFailure -Module $Name -Test 'X' -Message 'did not build'
+            }
 
-            Test-XmipDotnetChange -RepositoryRoot $Root -Module @('m', 'r') | Should -Be 'm'
+            $failed = @(Test-XmipDotnetChange -RepositoryRoot $Root -Module @('m', 'r'))
+            "$($failed.Module) $($failed.Test): $($failed.Message)" |
+                Should -Be 'm X: did not build'
             Should -Invoke Test-XmipDotnetModule -Times 1 -Exactly
+        }
+    }
+
+    It 'names the project and each test that failed, from what dotnet said' {
+        # 2026-11-24: the .NET part named its module and nothing more (open
+        # problem 146).
+        InModuleScope Xmip {
+            $ran = [pscustomobject]@{
+                Passed  = $false; Telling = @('error: x')
+                Failure = @(New-XmipToolFailure -Test 'Xmip.Surface.Test.ReadsIt' -Message 'differ')
+            }
+            [hashtable] $named = @{ Name = 'm'; Project = 'Xmip.Surface.Test' }
+            $failed = @(ConvertTo-XmipDotnetFailure -Ran $ran @named)
+            "$($failed.Module)|$($failed.Test)|$($failed.Message)" |
+                Should -Be 'm|Xmip.Surface.Test Xmip.Surface.Test.ReadsIt|differ'
+
+            $ran.Failure = @()
+            (ConvertTo-XmipDotnetFailure -Ran $ran -Name 'm' -Project 'X').Message |
+                Should -Be 'failed: error: x'
         }
     }
 }
@@ -1069,6 +1106,28 @@ Describe 'The dependency tree verifies whole before anything lands' {
                     ForEach-Object { [System.IO.Path]::GetRelativePath($Root, $_.FullName) }
             )
             ($found -replace '\\', '/') | Should -Be @('module/foundation/d/Cargo.toml')
+        }
+    }
+
+    It 'takes no project of a dotnet new template''s content, and still walks its files' {
+        # Xmip.Templates (ADR-0075): a template's projects reference a package
+        # the estate has not published, and are what a developer's start as.
+        $tree = Join-Path -Path $TestDrive -ChildPath 'templated/module/foundation/abi/dotnet'
+        $content = Join-Path -Path $tree -ChildPath 'Xmip.Templates/content/xmip-module'
+        $null = New-Item -ItemType Directory -Path (Join-Path $content '.template.config') -Force
+        $null = New-Item -ItemType Directory -Path (Join-Path $content 'Unit') -Force
+        [string] $package = Join-Path -Path $tree -ChildPath 'Xmip.Templates/Xmip.Templates.csproj'
+        Set-Content -LiteralPath $package -Value '<Project />'
+        Set-Content -LiteralPath (Join-Path $content 'Unit/Unit.csproj') -Value '<Project />'
+
+        InModuleScope Xmip -Parameters @{ Root = $tree } {
+            param($Root)
+
+            [string[]] $projects = @(
+                Find-XmipFile -Path $Root -Filter '*.csproj' | ForEach-Object -MemberName Name
+            )
+            $projects | Should -Be @('Xmip.Templates.csproj')
+            @(Find-XmipFile -Path $Root -Filter 'Unit.csproj').Count | Should -Be 1
         }
     }
 

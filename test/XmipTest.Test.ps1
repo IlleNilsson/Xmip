@@ -333,7 +333,6 @@ Describe 'The environment a roll is started with' {
             $environment.XMIP_SYSTEM_TEST_STRESS | Should -Be 'harsh'
             $environment.XMIP_SYSTEM_TEST_AREA | Should -Be 'a'
             $environment.Keys | Should -Not -Contain 'XMIP_ONLINE'
-            $environment.Keys | Should -Not -Contain 'XMIP_SYSTEM_TEST_ONLINE_NODES'
             $environment.Keys | Should -Not -Contain 'XMIP_TEST_CLUSTER'
             $environment.Keys | Should -Not -Contain 'XMIP_SYSTEM_TEST_MAX_SECONDS'
             $environment.Keys | Should -Not -Contain 'XMIP_SYSTEM_TEST_SCENARIOS'
@@ -341,17 +340,14 @@ Describe 'The environment a roll is started with' {
         }
     }
 
-    It 'says the tests, the cluster file, the online nodes and the limits as the roll parses them' {
+    It 'says the tests, the cluster file and the limits as the roll parses them' {
         InModuleScope Xmip -Parameters $script:Named {
             param($Cluster, $Stage)
 
-            [string] $r = $Stage.receiving
-            [string] $s = $Stage.sending
             $chosen = @{
                 Stress      = 'Brutal'
                 Test        = @('roundtrip', 'HeavyLoad')
                 ClusterFile = $Cluster.Path
-                OnlineNodes = @($r, $s)
                 Cluster     = $Cluster.Name
                 Duration    = [timespan]::FromMinutes(15)
                 TimeFactor  = 9.5e-6
@@ -363,7 +359,8 @@ Describe 'The environment a roll is started with' {
 
             $environment.XMIP_SYSTEM_TEST_SCENARIOS | Should -Be 'round-trip,heavy-load'
             $environment.XMIP_TEST_CLUSTER | Should -Be $Cluster.Path
-            $environment.XMIP_SYSTEM_TEST_ONLINE_NODES | Should -Be "$r,$s"
+            $environment.Keys | Should -Not -Contain 'XMIP_SYSTEM_TEST_ONLINE_NODES' -Because (
+                'a node is online by the Node capability its cluster file declares')
             $environment.XMIP_SYSTEM_TEST_CLUSTER | Should -Be $Cluster.Name
             $environment.XMIP_SYSTEM_TEST_MAX_SECONDS | Should -Be '900'
             $environment.XMIP_SYSTEM_TEST_TIME_FACTOR | Should -Be '9.5E-06'
@@ -439,7 +436,7 @@ Describe 'The environment a roll is started with' {
         }
     }
 
-    It 'refuses a node named twice, an online node not named, and a name no file can carry' {
+    It 'refuses a node named twice, Node capabilities of a node not named, and a bad name' {
         InModuleScope Xmip -Parameters $script:Named {
             param($Cluster, $Stage)
 
@@ -448,12 +445,12 @@ Describe 'The environment a roll is started with' {
 
             { Assert-XmipNodeName -Nodes $r, $r.ToLowerInvariant() } |
                 Should -Throw -ExpectedMessage '*named once*'
-            { Assert-XmipNodeName -Nodes $r -OnlineNodes $p } |
+            { Assert-XmipNodeName -Nodes $r -NodeCapability $p } |
                 Should -Throw -ExpectedMessage '*-Nodes does not*'
             { Assert-XmipNodeName -Nodes '1st' } |
                 Should -Throw -ExpectedMessage '*starting with a letter*'
             { Assert-XmipNodeName -Nodes $r } | Should -Not -Throw
-            { Assert-XmipNodeName -Nodes $r, "$p-2" -OnlineNodes "$p-2" } |
+            { Assert-XmipNodeName -Nodes $r, "$p-2" -NodeCapability "$p-2" } |
                 Should -Not -Throw
 
             # A node's name is the last word of its process name and so a
@@ -765,16 +762,39 @@ Describe 'The environment a roll is started with' {
         $door | Should -Match '(?m)^\s*cluster_file\s+= \$clusterFile\s*$'
     }
 
-    It 'refuses an online node that was not named a node' {
+    It 'refuses Node capabilities for a node that was not named a node' {
         [string] $r = $script:Stage.receiving
         [string] $p = $script:Stage.processing
 
-        { Start-XmipTest -Nodes $r -OnlineNodes $p -ErrorAction Stop } |
+        { Start-XmipTest -Nodes $r -NodeCapability @{ $p = 'online' } -ErrorAction Stop } |
             Should -Throw -ExpectedMessage '*-Nodes does not*'
-        { Start-XmipTest -OnlineNodes $r -ErrorAction Stop } |
+        { Start-XmipTest -NodeCapability @{ $r = 'online' } -ErrorAction Stop } |
             Should -Throw -ExpectedMessage '*name them all*'
-        { Start-XmipTestNode -Nodes $r -OnlineNodes $p -ErrorAction Stop } |
+        { Start-XmipTestNode -Nodes $r -NodeCapability @{ $p = 'online' } -ErrorAction Stop } |
             Should -Throw -ExpectedMessage '*-Nodes does not*'
+    }
+
+    It 'writes each node''s Node capabilities into the run''s cluster file, online among them' {
+        InModuleScope Xmip -Parameters $script:Named {
+            param($Cluster, $Stage)
+
+            [string] $r = $Stage.receiving
+            [string] $s = $Stage.sending
+            [string] $area = Join-Path -Path $TestDrive -ChildPath 'capable'
+            [hashtable] $stated = @{ $r = 'online, firewall-party-x' }
+            [hashtable] $capable =
+                Join-XmipNodeCapability -Nodes $r, $s -Declared @{} -NodeCapability $stated
+            [hashtable] $typed = @{
+                Cluster = $Cluster.Name; Nodes = @($r, $s); NodeCapability = $capable; Path = $area
+            }
+            [string] $file = Write-XmipTestCluster @typed
+            $read = Read-XmipTestCluster -Path $file
+
+            @($read.Capability[$r]) | Should -Be @('online', 'firewall-party-x')
+            @($read.Capability[$s]) | Should -BeNullOrEmpty
+            Get-XmipNodeCapabilityEntry -Capability $read.Capability |
+                Should -Be "$r=online+firewall-party-x"
+        }
     }
 
     It 'reads every variable the roll documents' {
@@ -1026,7 +1046,7 @@ Describe 'What a node was started with' {
         # The node binary declares its flags where it starts (ADR-0053), read
         # back by the node through the runtime's library. Until 2026-09-27 this
         # module parsed the node's command line with a copy of its defaults
-        # and of the words --online takes.
+        # and of the words its flags take.
         InModuleScope Xmip -Parameters $script:Named {
             param($Cluster, $Stage)
 
@@ -1038,17 +1058,17 @@ Describe 'What a node was started with' {
             $self = Get-Process -Id $PID
             [hashtable] $declared = @{
                 $PID = [ordered]@{
-                    name        = "xmip-system-test-$($Cluster.Name)-node-$p"
-                    location    = $location
-                    purpose     = 'test'
-                    node        = $p
-                    shared      = 'D:\a b\shared'
-                    stress      = 'harsh'
-                    rounds      = '0'
-                    snapshot    = "D:\a b\$p.xmip"
-                    interval_ms = '500'
-                    role        = 'processing,sending'
-                    online      = 'true'
+                    name         = "xmip-system-test-$($Cluster.Name)-node-$p"
+                    location     = $location
+                    purpose      = 'test'
+                    node         = $p
+                    shared       = 'D:\a b\shared'
+                    stress       = 'harsh'
+                    rounds       = '0'
+                    snapshot     = "D:\a b\$p.xmip"
+                    interval_ms  = '500'
+                    role         = 'processing,sending'
+                    capabilities = 'online+erp-direct'
                 }
             }
 
@@ -1061,7 +1081,7 @@ Describe 'What a node was started with' {
             $node.Snapshot | Should -Be "D:\a b\$p.xmip"
             $node.Interval | Should -Be ([timespan]::FromMilliseconds(500))
             $node.Role | Should -Be 'processing,sending'
-            $node.Online | Should -BeTrue
+            $node.Capability | Should -Be @('online', 'erp-direct')
             $node.Location | Should -Be $location
         }
     }
@@ -1072,7 +1092,7 @@ Describe 'What a node was started with' {
 
             $node.Name | Should -BeNullOrEmpty
             $node.Interval | Should -BeNullOrEmpty
-            $node.Online | Should -BeFalse
+            $node.Capability | Should -BeNullOrEmpty
             $node.Role | Should -Be ''
         }
     }

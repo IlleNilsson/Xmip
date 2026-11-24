@@ -54,6 +54,24 @@ Describe 'Invoke-XmipGit' {
         $answers | Should -Be @($false, $true)
     }
 
+    It 'hands git its standard input, and takes an exit code that is an answer' {
+        # check-ignore says 1 where nothing given is ignored (2026-11-24, the
+        # send to a test computer, Get-XmipEstateSent).
+        Set-Content -LiteralPath (Join-Path $script:Repository '.gitignore') -Value '*.log'
+
+        $said = & (Get-Module Xmip) {
+            param($At)
+
+            # PowerShell ends what it hands git with this system's line end.
+            [hashtable] $ask = @{ At = $At; Arguments = @('check-ignore', '--stdin') }
+            Invoke-XmipGit @ask -Given "a.log`nb.txt" -Answer 0, 1
+            Invoke-XmipGit @ask -Given 'b.txt' -Answer 0, 1
+            { Invoke-XmipGit @ask -Given 'b.txt' } | Should -Throw -ExpectedMessage '*failed*'
+        } $script:Repository
+
+        $said | Should -Be @('a.log')
+    }
+
     It 'is the only place the module runs git' {
         [string] $module = Join-Path $script:Root 'Xmip'
         [string[]] $callers = @(

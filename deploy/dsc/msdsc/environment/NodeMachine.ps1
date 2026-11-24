@@ -61,7 +61,16 @@ function Get-NodeMachineState {
             $state._exist = $opened -eq ($state.ports -join ',')
         }
         'Service' {
-            $state._exist = Test-NodeServiceRunning -Name $Instance.name
+            # A node a step before asked to restart, or restarted, is out of
+            # its desired state until this step restarted it and waited.
+            [string] $pending = if ($Instance['configuration']) {
+                Get-NodePending -Configuration $Instance.configuration
+            }
+            else {
+                ''
+            }
+            $state.pending = $pending
+            $state._exist = (Test-NodeServiceRunning -Name $Instance.name) -and -not $pending
         }
         'Program' {
             $state = Get-NodeProgramState -Instance $Instance
@@ -122,7 +131,7 @@ function Set-NodeMachineState {
             Set-NodeOpened -Instance $Instance
         }
         'Service' {
-            Start-NodeService -Name $Instance.name
+            Set-NodeService -Instance $Instance
         }
         'Program' {
             Install-NodeProgram -Instance $Instance
@@ -261,12 +270,13 @@ function Set-NodeSlice {
     .SYNOPSIS
     Put the shipped slice and its authority's certificate where the node
     reads them, make node.xmip writable by the node's account and the
-    administrators alone, and restart its service where it is installed and
-    a file changed, or where it does not run the slice it holds, so it runs
-    by it: a changed slice takes effect when the node starts again, and one
-    the node refused as it started is tried again (ADR-0031, amendment
-    2026-11-12). Placed before the package, the slice is what xmip-service
-    --install reads.
+    administrators alone, and, where the node runs and a file changed or it
+    does not run the slice it holds, leave its Service step a restart: a
+    changed slice takes effect when the node starts again, and one the node
+    refused as it started is tried again (ADR-0031, amendment 2026-11-12),
+    once, after its certificates and its package are placed (ADR-0056,
+    amendment 2026-11-24). Placed before the package, the slice is what
+    xmip-service --install reads.
     #>
     [CmdletBinding(SupportsShouldProcess = $true)]
     param(
@@ -299,19 +309,11 @@ function Set-NodeSlice {
         return
     }
 
-    # Only a node that runs is restarted, and then waited for until it is
-    # ready: one that does not, as before its package is installed again, is
-    # started by the package and the service after it, by the program the
-    # package brings.
-    [string] $name = "xmip-$($Instance.node)"
-    if (-not (Test-NodeServiceActive -Name $name)) {
-        return
+    # Only a node that runs is restarted, by its Service step, once every
+    # step that changes what it runs is done: one that does not, as before
+    # its package is installed again, is started by the package and the
+    # service after it, by the program the package brings.
+    if (Test-NodeServiceActive -Name "xmip-$($Instance.node)") {
+        Set-NodePending -Configuration $Instance.configuration -Pending 'restart' -Confirm:$false
     }
-    if ($IsWindows) {
-        Restart-Service -Name $name
-    }
-    else {
-        Invoke-DscProgram -Program 'systemctl' -Argument @('restart', $name) | Out-Null
-    }
-    Wait-NodeReadiness -Instance $Instance
 }

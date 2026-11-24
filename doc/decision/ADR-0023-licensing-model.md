@@ -2,6 +2,8 @@
 
 - Status: Accepted
 - Date: 2026-08-27
+- Amended: 2026-11-24 — the module boundary, what a module compiles into
+  itself, is Apache-2.0; everything else stays AGPL-3.0-or-later
 - Related: ADR-0012 (the module boundary)
 
 ## In brief
@@ -77,3 +79,21 @@ the product.
 Nextcloud ship. It funds the work and it removes the procurement objection.
 Rejected because the right that makes it possible is the same right that makes
 relicensing possible, and giving that right up is the guarantee Xmip is offering.
+
+## Amendment, 2026-11-24: the module boundary is Apache-2.0
+
+Asked whether `Xmip.Module` should be permissive, so that a developer may
+keep a module closed, the owner, 2026-11-24: *Do as you think*. What a
+developer's module links or compiles into itself is Apache-2.0 — xmip-core-abi,
+the boundary, with `Xmip.Module` and the `dotnet new` templates in it — and
+`Xmip.Testing`, `Xmip.Client` and crates.io's `xmip-module` will be (ADR-0075;
+ADR-0061, amendment 2026-11-24). Everything else — the runtime, the node, the
+capabilities, the transports, the tools — stays AGPL-3.0-or-later, and this
+record's reason stands for it: the platform cannot be closed.
+
+It is still one license per piece of code and no dual licensing: nothing is
+offered under a second license, and no right to relicense the platform is
+held back. Apache-2.0 gives a patent grant, and the AGPL-3.0 estate may keep
+using Apache-2.0 code, so the runtime links the boundary as before. The
+Consequences' bullet *The boundary is unaffected* no longer holds: the header
+is Apache-2.0 (ADR-0012, amendment 2026-11-24).

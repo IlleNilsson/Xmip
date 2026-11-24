@@ -30,10 +30,10 @@ function Get-XmipSystemTestChoice {
 
     [hashtable] $chosen = @{}
 
-    # -Nodes and -NodeRole reach the roll as the run's cluster file
-    # (Write-XmipTestCluster), never as variables of their own.
+    # -Nodes, -NodeRole and -NodeCapability reach the roll as the run's
+    # cluster file (Write-XmipTestCluster), never as variables of their own.
     [string[]] $optional = @(
-        'OnlineNodes', 'Cluster', 'Duration', 'TimeFactor', 'LoadBytes', 'Hidden', 'Certificate'
+        'Cluster', 'Duration', 'TimeFactor', 'LoadBytes', 'Hidden', 'Certificate'
     )
 
     foreach ($name in $optional) {
@@ -51,7 +51,7 @@ function Get-XmipSystemTestChoice {
 # nothing (Resolve-XmipSystemTestChoice reads Bound for which were given).
 [string[]] $script:XmipRollHanded = @(
     'Suite', 'Stress', 'Test', 'Rounds', 'Duration', 'TimeFactor', 'Nodes', 'NodeRole',
-    'OnlineNodes', 'Cluster', 'Path', 'PassThru'
+    'NodeCapability', 'Cluster', 'Path', 'PassThru'
 )
 
 
@@ -146,7 +146,7 @@ function Start-XmipSystemTestRoll {
         .PARAMETER NodeRole
             As Start-XmipTest takes it, already checked there.
 
-        .PARAMETER OnlineNodes
+        .PARAMETER NodeCapability
             As Start-XmipTest takes it, already checked there.
 
         .PARAMETER Cluster
@@ -196,7 +196,7 @@ function Start-XmipSystemTestRoll {
         [hashtable] $NodeRole,
 
         [Parameter(Mandatory = $false)]
-        [string[]] $OnlineNodes,
+        [hashtable] $NodeCapability,
 
         [Parameter(Mandatory = $false)]
         [string] $Cluster,
@@ -232,8 +232,7 @@ function Start-XmipSystemTestRoll {
         ", the nodes of $((Get-XmipSystemTestLayout).Configuration)"
     }
     elseif ($Nodes.Count -eq 0) { ', no nodes' } else { ", nodes $($Nodes -join ', ')" }
-    [string] $online = if ($OnlineNodes.Count -gt 0) { " ($($OnlineNodes -join ', ') online)" }
-    [string] $what = "roll at $($Stress.ToLowerInvariant())$of$for$with$online as cluster $Cluster"
+    [string] $what = "roll at $($Stress.ToLowerInvariant())$of$for$with as cluster $Cluster"
 
     if (-not $Caller.ShouldProcess("the Xmip System Tests in $Path", "Start a $what")) {
         return
@@ -260,18 +259,23 @@ function Start-XmipSystemTestRoll {
     # the System Tests' own, one file for one computer and for machines of
     # their own (ADR-0028, amendment 2026-10-21): the run's file is written
     # from -Cluster and the nodes -Nodes names, each with the roles -NodeRole
-    # or, where it says none, the System Tests' file declares; omitted, its
+    # and the Node capabilities -NodeCapability states or, where it says none,
+    # the System Tests' file declares (amendment 2026-11-24); omitted, its
     # every node. XMIP_TEST_CLUSTER names it to the roll, and the run record
     # says the nodes it declares. The Systems Tests resolve every one of them
     # on the environment's machines; the System Tests resolve none.
     $declared = Read-XmipSystemTestCluster
     [string[]] $typed = if ($boundNodes) { @($Nodes) } else { @($declared.Nodes) }
     [hashtable] $joined = @{ Nodes = $typed; NodeRole = $NodeRole; Declared = $declared.Role }
+    [hashtable] $capable = @{
+        Nodes = $typed; NodeCapability = $NodeCapability; Declared = $declared.Capability
+    }
     [hashtable] $written = @{
-        Cluster  = $Cluster
-        Nodes    = $typed
-        NodeRole = Join-XmipNodeRole @joined
-        Path     = $Path
+        Cluster        = $Cluster
+        Nodes          = $typed
+        NodeRole       = Join-XmipNodeRole @joined
+        NodeCapability = Join-XmipNodeCapability @capable
+        Path           = $Path
     }
     [string] $clusterFile = Write-XmipTestCluster @written
     $choice.Machines = $Machines
@@ -316,7 +320,7 @@ function Start-XmipSystemTestRoll {
         Rounds      = $Rounds
         Nodes       = @($Nodes)
         NodeRole    = $NodeRole
-        OnlineNodes = @($OnlineNodes)
+        Capability  = $configured.Capability
         Path        = $Path
         ClusterFile = $clusterFile
         Named       = $boundNodes

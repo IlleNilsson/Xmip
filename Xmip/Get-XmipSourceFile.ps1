@@ -41,6 +41,12 @@
 [string] $script:XmipDotnetOutput = 'bin'
 [string] $script:XmipDotnetProject = '*.csproj'
 
+# A `dotnet new` template's content, known by the folder the template engine
+# reads, `.template.config`: what a developer's projects start as, never a
+# project of the estate, so a walk for projects does not enter it. Its files
+# are still counted and sent (Xmip.Templates; ADR-0075).
+[string] $script:XmipTemplateConfig = '.template.config'
+
 # The trees the estate composes into: ADR-0016. `template/` is Rust the estate
 # ships and every new repository is generated from, so it is counted like the
 # rest rather than treated as an example. `sdk/` is what a provider builds
@@ -120,7 +126,9 @@ function Find-XmipFile {
             named in $script:XmipSourceSkip is pruned before it is entered,
             and so is one holding cargo's CACHEDIR.TAG, whatever its name,
             and a bin beside a .NET project, which is that project's build
-            output; a Rust crate's src/bin is walked. A built tree is walked
+            output; a Rust crate's src/bin is walked. A walk for .NET projects
+            does not enter a `dotnet new` template's content, a folder holding
+            .template.config. A built tree is walked
             as fast as a clean one; a link is not followed, as Get-ChildItem
             -Recurse does not. Depth first, each directory's files before its
             subdirectories, both in name order.
@@ -176,6 +184,11 @@ function Find-XmipFileBelow {
             Where-Object {
                 $_.Name -ne $script:XmipDotnetOutput -or
                     $Directory.GetFiles($script:XmipDotnetProject).Count -eq 0
+            } |
+            Where-Object {
+                $Filter -ne $script:XmipDotnetProject -or
+                    -not [System.IO.Directory]::Exists(
+                        (Join-Path -Path $_.FullName -ChildPath $script:XmipTemplateConfig))
             } |
             Where-Object { -not $_.Attributes.HasFlag([System.IO.FileAttributes]::ReparsePoint) } |
             Where-Object {

@@ -426,8 +426,11 @@ Xmip is AGPL-3.0-or-later. There is no commercial license, no dual license
 and no contributor agreement that could enable one
 ([ADR-0023](doc/decision/ADR-0023-licensing-model.md)). The platform cannot
 be relicensed or withdrawn. Modules written against the C ABI are your own
-work under your own terms. Organizations whose policy excludes AGPL will find
-that policy engaged; the record acknowledges this.
+work under your own terms: what a module links or compiles into itself — the
+C headers, the bindings, `Xmip.Module` and the `dotnet new` templates — is
+Apache-2.0 ([ADR-0075](doc/decision/ADR-0075-packages-for-developers.md),
+clause 6). Organizations whose policy excludes AGPL will find that policy
+engaged for the platform itself; the record acknowledges this.
 
 ### A responsible adoption path
 
@@ -616,10 +619,12 @@ listens on, and its service
 `xmip-service`'s — `--slice --cluster --bind --nodes`, `--listening`, `--install
 --account`, `--activation`, whether the node runs the slice it was shipped
 (ADR-0031, amendment 2026-11-12), and `--readiness --within`, whether a node
-the deploy restarted is ready, so the next is restarted only once it is: a
+the deploy restarted is ready by what it published since its start now,
+told as it publishes, so the next is restarted only once it is: a
 Storage node the primary, or a standby ready and following that its
-primary's stop in order hands over to at once (ADR-0056, amendment
-2026-11-23) — and `cargo test --test deploy` reads the System Tests' cluster
+primary's stop in order hands over to at once; each node restarted once and
+asked once, after the last step that changes what it runs (ADR-0056,
+amendments 2026-11-23 and 2026-11-24) — and `cargo test --test deploy` reads the System Tests' cluster
 file, which the example environment runs, as `xmip-service` reads it for
 every node it declares. That file is the same on one computer and on the
 machines (ADR-0028, amendment 2026-10-21).
@@ -744,12 +749,19 @@ Configuration is TOML on disk; JSON is used only on the wire
 ([ADR-0031](doc/decision/ADR-0031-configuration-is-toml-json-is-transport.md)).
 `xmip validate <file>` checks a node configuration without starting anything.
 
-A node is offline unless its configuration says `online = true`
-([ADR-0045](doc/decision/ADR-0045-offline-is-the-default.md)). An online node
-may reach the internet for duties that require it, such as certificate
-provisioning at a public edge
+A node is offline unless its cluster's file declares the Node capability
+`online` for it, `capabilities = ["online"]`
+([ADR-0045](doc/decision/ADR-0045-offline-is-the-default.md); ADR-0056,
+amendment 2026-11-24). An online node may reach the internet for duties that
+require it, such as certificate provisioning at a public edge
 ([built, not in the assembled service](doc/architecture/estate-map.md#certificate-provisioning)). Online access is a declared choice, never a
 side effect of deployment.
+
+A node's roles are Xmip's; its **Node capabilities** name what its
+environment gives it — a firewall opening, software installed, `online` —
+and a Receive Location, Work Process or Send Port that `requires` one is
+placed only on a node declaring it. Subscriptions filter on what a Message
+holds, never on a node.
 
 The `xmip` command line answers `xmip health <scope>`, `measure`,
 `list` and `show` over a scope, `xmip validate <file>`, `xmip
@@ -833,7 +845,7 @@ over as many node processes as you name.
 
 ```powershell
 Start-XmipTest -Suite Core.System -Cluster CL1 -Test HeavyLoad, LowLatency `
-    -Stress Harsh -Nodes RX1, RX2, PX1, TX1 -OnlineNodes RX1 `
+    -Stress Harsh -Nodes RX1, RX2, PX1, TX1 -NodeCapability @{ RX1 = 'online' } `
     -NodeRole @{ RX1 = 'receiving'; RX2 = 'receiving'; PX1 = 'processing'; TX1 = 'sending' }
 Get-XmipTestStatus
 Get-XmipTestResult -Test HeavyLoad -Worst
@@ -936,38 +948,51 @@ Start-XmipTest -Suite Core.Internal -Test module/foundation/core  # as a landing
 Start-XmipTest -Suite Core.Estate -ComputerName build1  # on the computer build1.toml names
 Get-XmipTestStatus -ComputerName build1               # running, OK or FAILED there
 Start-XmipTest -Suite Core.System -Cluster CL1 -Test RoundTrip  # omit -Nodes: dealt
-Start-XmipTest -Suite * -Cluster CL1                   # every suite but Core.Demo, run by name
+Start-XmipTest -Suite * -Cluster CL1                   # Core.System and Core.Estate; the rest by name
 Start-XmipTest -Suite Core.Demo -Cluster CL1 -Stress Realistic -Tester alice@example.org
 ```
 
-Five kinds of test. `Publish-XmipChange` runs the first three where a
-change touched them, and never the System Tests or the demo readiness check:
+Two kinds of test (ADR-0028, amendment 2026-11-23): the internal tests, the
+code's own, which `Publish-XmipChange` runs where a change touched them, and
+the tests of the whole estate, run two ways from one rig, the System Tests and
+the Systems Tests, which it never runs; the demo readiness check rolls the
+System Tests:
 
-| Suite | Runs | Command |
-| --- | --- | --- |
-| A module's own | its crate or project | `cargo test` in the module; `dotnet test <path to the *.Test.csproj>`; `Invoke-Pester module/core/operation/powershell/tests`; or, as a landing verifies it, its format, lints and tests and its .NET projects, detached: `Start-XmipTest -Suite Core.Internal -Test <module>`, then `Get-XmipTestStatus`, `Get-XmipTestResult -Suite Core.Internal`, `Stop-XmipTest -Suite Core.Internal` |
-| The System Tests' own | `test/core/system-test` | `cargo test` in `test/core/system-test` |
-| The estate's | the style rules, the manifest, the record, the estate module, one Pester file each under `test/` | `Start-XmipTest -Suite Core.Estate`, then `Get-XmipTestStatus`, `Get-XmipTestResult -Suite Core.Estate`, `Stop-XmipTest -Suite Core.Estate` |
-| The System Tests | Xmip end to end, every transport by every contract, as a cluster you name, every node a process on this computer | `Start-XmipTest -Suite Core.System -Cluster <name>`, then `Get-XmipTestStatus`, `Get-XmipTestResult -Worst`, `Stop-XmipTest` |
-| The Systems Tests | the same on an environment's machines, set up first with `Deploy-XmipEnvironment`, every node one that answers there | `Start-XmipTest -Suite Core.Systems -Cluster <name> -Nodes <the mapped nodes> -Certificate <folder>`, then as above |
-| The demo readiness check | what the owner's demo runs: a roll of the cluster you name, the web operations tool over it, the Desktop operations app over the same snapshot, the VS Code extension and its language server | `Start-XmipTest -Suite Core.Demo -Cluster <name> -Stress Realistic -Tester <person>`, then `Get-XmipTestStatus`, `Get-XmipTestResult -Suite Core.Demo`, `Stop-XmipTest -Suite Core.Demo` |
+| Kind | Suite | Runs | Command |
+| --- | --- | --- | --- |
+| Internal | A module's own | its crate or project | `cargo test` in the module; `dotnet test <path to the *.Test.csproj>`; `Invoke-Pester module/core/operation/powershell/tests`; or, as a landing verifies it, its format, lints and tests and its .NET projects, detached, every crate or project and test that failed named in the run's record: `Start-XmipTest -Suite Core.Internal -Test <module>`, then `Get-XmipTestStatus`, `Get-XmipTestResult -Suite Core.Internal`, `Stop-XmipTest -Suite Core.Internal` |
+| Internal | The System Tests' own | `test/core/system-test` | `cargo test` in `test/core/system-test` |
+| Internal | The estate's | the style rules, the manifest, the record, the estate module, one Pester file each under `test/` | `Start-XmipTest -Suite Core.Estate`, then `Get-XmipTestStatus`, `Get-XmipTestResult -Suite Core.Estate`, `Stop-XmipTest -Suite Core.Estate` |
+| The whole estate | The System Tests | Xmip end to end, every transport by every contract, as a cluster you name, every node a process on this computer | `Start-XmipTest -Suite Core.System -Cluster <name>`, then `Get-XmipTestStatus`, `Get-XmipTestResult -Worst`, `Stop-XmipTest` |
+| The whole estate | The Systems Tests | the same on an environment's machines, set up first with `Deploy-XmipEnvironment`, every node one that answers there; every node of the run whose name does not resolve is refused in one sentence, naming the `-Nodes` that resolve (the example environments give the cluster file's OP1 no machine) | `Start-XmipTest -Suite Core.Systems -Cluster <name> -Nodes <the mapped nodes> -Certificate <folder>`, then as above |
+| The whole estate | The demo readiness check | what the owner's demo runs: a roll of the cluster you name, the web operations tool over it, the Desktop operations app over the same snapshot, the VS Code extension and its language server | `Start-XmipTest -Suite Core.Demo -Cluster <name> -Stress Realistic -Tester <person>`, then `Get-XmipTestStatus`, `Get-XmipTestResult -Suite Core.Demo`, `Stop-XmipTest -Suite Core.Demo` |
 
-The internal tests, `Core.Estate` and `Core.Internal`, run on another
-computer too, a Linux one beside a Windows one, with `-ComputerName <name>`
+The internal tests, `Core.Estate` and `Core.Internal`, run on a Linux
+computer too, beside this one, with `-ComputerName <name>`
 on `Start-XmipTest`, `Get-XmipTestStatus`, `Get-XmipTestResult` and
 `Stop-XmipTest`. The computer is `.local-work/test-computer/<name>.toml`,
 this machine's and never in Git: `host`, `user` and `key`, the address ssh
-connects to, the account and the private key's path, and where they differ
+connects to (a host's name, an alias of ssh's configuration or an IPv4
+address), the account and the private key's path, and where they differ
 from the defaults, `folder`, where the estate is copied under that account's
 home (`xmip-test`), and `slots`, how many builds run there at once (2, each
 holding a lock on `~/slot<n>.lock`; where every slot is taken the start
 waits, saying once a minute who holds them, and a wait whose console has
 gone starts nothing). OpenSSH's `ssh` and `scp` and `tar` carry
-it: the estate is sent as a difference into a mirror there, copied into a
-tree of its own that is one Git repository of what the estate holds, and
-that computer's own `Start-XmipTest` runs the suite detached in it. One run
-works in a copy at a time, and a start while one does is refused; runs side
-by side take a computer file each, the same `host` and a `folder` of its own.
+it from here; there it takes bash, GNU's `find` and `xargs`, util-linux's
+`flock` and `setsid`, `rsync`, `git` and `pwsh`, and its first probe refuses
+a computer lacking one, naming it. The estate is sent as a difference of
+what Git would hold, tracked files and untracked ones no ignore file
+excludes, and the workspace's `Cargo.lock`, so it builds what this computer
+resolved, into a mirror there, copied into a tree of its own that is one Git
+repository of what the estate holds, and that computer's own
+`Start-XmipTest` runs the suite detached in it; what it says is shown here
+with every control character taken out. One run works in a copy at a time,
+by the folder's lock, which the run holds: a start or a send while it runs
+is refused at once; runs side by side take a computer file each, the same
+`host` and a `folder` of its own. A failed run of `Core.Internal` names
+every crate or project and test that failed, with the words that say why,
+in its record, so `Get-XmipTestResult -ComputerName` brings them back.
 
 What it runs before anything is pushed, in the estate's one Cargo workspace,
 whose committed `[patch]` resolves every estate crate to its working tree
@@ -985,11 +1010,16 @@ ending the others:
   --all-features` (a warning fails every cargo build under the estate root:
   `[build] warnings = "deny"` in `.cargo/config.toml`), and every timing
   program's lint, `cargo clippy --workspace --all-features --test measured`;
-  then each changed crate, leaves first, and the root crate whenever a module
-  lands, in its own folder: `cargo test` and `cargo clippy --all-targets` with
-  its default features, then `cargo test --all-features`. A change that is
-  only comments, Markdown or `doc/` lints the changed crates alone: it cannot
-  change what a consumer does.
+  then the changed crates and the root crate whenever a module lands, one
+  cargo command for each mode over them all: `cargo test` and `cargo clippy
+  --all-targets` with their default features, then `cargo test
+  --all-features` over those declaring a feature; then each built alone,
+  `cargo check --all-targets -p <crate>`, which catches a crate that compiles
+  only through another's features (ADR-0028, amendment 2026-11-24). A crate
+  with a `.cargo/config.toml` of its own is tested and linted in its own
+  folder, where cargo reads it. A change that is only comments, Markdown or
+  `doc/` lints the changed crates alone: it cannot change what a consumer
+  does.
 - **.NET:** every changed or consuming module's projects, `dotnet build` of
   each and `dotnet test` of every `*.Test.csproj`, and its Pester tests,
   against a copy of the runtime library; a changed crate's TypeScript shell;
@@ -1128,7 +1158,8 @@ record; propose a new one or an amendment.
 
 A document whose subject is one module lives with that module
 ([ADR-0020](doc/decision/ADR-0020-documentation-structure.md), clause 3), in
-its `doc/` folder: the ABI specification (`module/foundation/abi`), identity
+its `doc/` folder: the ABI specification and writing a Module in .NET
+(`module/foundation/abi`), identity
 per technology (`module/core/capability/authenticate`), adding a transport
 (`module/core/capability/transport`), adding a contract
 (`module/core/capability/contract`), the node configuration document
@@ -1151,6 +1182,22 @@ authoritative.
 5. Keep dependencies explicit and within the direction rules of
    `architecture.toml`.
 6. Add the test for the behavior or the defect before landing the change.
+
+### Packages for developers
+
+What a developer outside the estate installs is
+[ADR-0075](doc/decision/ADR-0075-packages-for-developers.md): on NuGet
+`Xmip.Module` and `Xmip.Templates` first, `Xmip.Testing` second,
+`Xmip.Client` third; the PowerShell Gallery's `Xmip`, the VS Code extension
+on both extension registries, `xmip-module` on crates.io, and the C header
+and libraries as release downloads. `dotnet new xmip-module` gives a Module
+whose units are C#, published with NativeAOT as a library a node opens
+through the C ABI as it opens a Rust one
+(`module/foundation/abi/doc/writing-a-module-in-dotnet.md`). Code on the
+installation's machine may use the C ABI; code on another machine reaches
+Xmip over its operator API on HTTP/2. Built: `Xmip.Module` and
+`Xmip.Templates`, packed locally; nothing is published, and the names are
+reserved first.
 
 ### The estate module
 
