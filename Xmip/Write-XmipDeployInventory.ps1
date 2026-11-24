@@ -25,6 +25,9 @@ function Write-XmipDeployInventory {
               lists them, with what every node is given.
             - xmip_name_server: the machine at the network's DNS server,
               where one of the machines is.
+            - xmip_gateway: the network's gateway machine, where the file
+              names one, with the network's prefix and the one script it
+              runs, deploy/dsc/machine/WindowsGateway.ps1.
 
             Every group is written, empty where nothing is in it, so a play
             to one plays to none rather than a pattern Ansible warns of.
@@ -154,6 +157,13 @@ function Write-XmipDeployInventory {
     }
     $children['xmip_name_server'] = @{
         hosts = if ($null -ne $Read.NameServer) { @{ $Read.NameServer.name = @{} } } else { @{} }
+    }
+    $children['xmip_gateway'] = @{
+        hosts = if ($null -ne $Read.Gateway) { @{ $Read.Gateway.machine.name = @{} } } else { @{} }
+        vars = [ordered] @{
+            xmip_network_prefix = $Read.Common.network.prefix
+            xmip_gateway_script = Join-Path $Estate 'deploy/dsc/machine/WindowsGateway.ps1'
+        }
     }
     [hashtable] $inventory = @{
         all = [ordered] @{

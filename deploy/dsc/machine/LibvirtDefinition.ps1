@@ -61,16 +61,21 @@ function ConvertTo-LibvirtText {
 function Get-LibvirtMacAddress {
     <#
     .SYNOPSIS
-    A machine's static MAC on KVM, colon-separated as libvirt writes it.
+    A machine's static MAC on KVM, colon-separated as libvirt writes it;
+    -Uplink, a gateway machine's second adapter's (MachineAnswer.ps1).
     #>
     [CmdletBinding()]
     [OutputType([string])]
     param(
         [Parameter(Mandatory = $true)]
-        [string] $Address
+        [string] $Address,
+
+        [Parameter()]
+        [switch] $Uplink
     )
 
-    [string] $raw = Get-MachineMacAddress -Address $Address -Prefix $script:LibvirtMacPrefix
+    [hashtable] $asked = @{ Address = $Address; Prefix = $script:LibvirtMacPrefix }
+    [string] $raw = Get-MachineMacAddress @asked -Uplink:$Uplink
     return ($raw -replace '(..)(?!$)', '$1:').ToLowerInvariant()
 }
 
@@ -110,9 +115,11 @@ function Get-LibvirtNetworkDefinition {
     .SYNOPSIS
     The network's definition as libvirt reads it, from the instance.
     .DESCRIPTION
-    $Instance: name, bridge, gateway, prefixLength, machines (each name and
-    address: a DHCP host and a DNS host) and names (each name and its
-    addresses: DNS hosts the environment adds).
+    $Instance: name, bridge, gateway, prefixLength, nat, machines (each name
+    and address: a DHCP host and a DNS host) and names (each name and its
+    addresses: DNS hosts the environment adds). It forwards with NAT where
+    nat says, the host the way out; otherwise it is isolated, a gateway
+    machine the way out, or none.
     #>
     [CmdletBinding()]
     [OutputType([string])]
@@ -145,7 +152,7 @@ function Get-LibvirtNetworkDefinition {
     return @(
         '<network>'
         "  <name>$network</name>"
-        "  <forward mode='nat'/>"
+        if ([bool] $Instance['nat']) { "  <forward mode='nat'/>" }
         "  <bridge name='$bridge' stp='on' delay='0'/>"
         '  <dns>'
         $dns
@@ -186,7 +193,8 @@ function Get-LibvirtMachineDefinition {
     The machine's domain as libvirt reads it. A Windows guest is given the
     SATA disk and e1000e adapter its installer has drivers for, and Hyper-V's
     interface and clock, which KVM gives; an AlmaLinux guest virtio, the
-    guest agent's channel and the balloon.
+    guest agent's channel and the balloon. A gateway machine's second
+    adapter is on the uplink, a bridge of the host's.
     .DESCRIPTION
     The domain boots its disk first, then the DVD: the empty disk does not
     boot, so the firmware moves on to the ISO, which installs onto the disk,
@@ -206,6 +214,9 @@ function Get-LibvirtMachineDefinition {
     [string] $disk = if ($windows) { "dev='sda' bus='sata'" } else { "dev='vda' bus='virtio'" }
     [string] $model = if ($windows) { 'e1000e' } else { 'virtio' }
     [string] $mac = Get-LibvirtMacAddress -Address $Instance['address']
+    # A gateway machine's second adapter, on the uplink, a bridge of the host's.
+    [string] $uplink = ConvertTo-LibvirtText -Value ([string] $Instance['network']['uplink'])
+    [string] $outside = Get-LibvirtMacAddress -Address $Instance['address'] -Uplink
     [string[]] $guest = @(Get-LibvirtGuestDevice -Instance $Instance)
     [string[]] $feature = @()
     [string[]] $clock = @()
@@ -251,6 +262,10 @@ function Get-LibvirtMachineDefinition {
         "    <interface type='network'>"
         "      <source network='$(ConvertTo-LibvirtText -Value $Instance['network'].name)'/>"
         "      <mac address='$mac'/><model type='$model'/></interface>"
+        if ($uplink) {
+            "    <interface type='bridge'><source bridge='$uplink'/>"
+            "      <mac address='$outside'/><model type='$model'/></interface>"
+        }
         "    <serial type='pty'/><console type='pty'/>"
         "    <graphics type='vnc' listen='127.0.0.1'/>"
         "    <video><model type='virtio'/></video>"

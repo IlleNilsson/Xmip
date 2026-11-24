@@ -2,10 +2,12 @@
 #requires -Version 7.7.0
 # The Xmip.Libvirt/Network and Xmip.Libvirt/Pool kinds (libvirt.resource.ps1).
 #
-# Network: a libvirt network with NAT, the host its gateway, whose DHCP gives
-# each machine its address by its static MAC and whose DNS answers each
-# machine's name and every name the environment adds (the cluster's and its
-# nodes'), so no DNS server of the environment's own is needed.
+# Network: a libvirt network, with NAT through the host where the
+# environment says and isolated where a gateway machine is its way out or
+# none is, whose DHCP gives each machine its address by its static MAC and
+# whose DNS answers each machine's name and every name the environment adds
+# (the cluster's and its nodes'), so no DNS server of the environment's own
+# is needed.
 #
 # Pool: a directory pool libvirt keeps, where each machine's disk, its answer
 # medium and the installation images are volumes any machine can read.
@@ -51,9 +53,9 @@ function Get-LibvirtNetworkSummary {
     <#
     .SYNOPSIS
     What of a network definition the environment decides, as one comparable
-    string: the forward mode, the bridge, the gateway and prefix, the DHCP
-    hosts and the DNS hosts, sorted. What libvirt adds itself (a UUID, the
-    bridge's MAC, defaults) is left out.
+    string: the forward mode, none where it is isolated, the bridge, the
+    gateway and prefix, the DHCP hosts and the DNS hosts, sorted. What
+    libvirt adds itself (a UUID, the bridge's MAC, defaults) is left out.
     #>
     [CmdletBinding()]
     [OutputType([string])]
@@ -64,7 +66,7 @@ function Get-LibvirtNetworkSummary {
 
     [Xml.XmlElement] $network = $Xml.DocumentElement
     [string[]] $line = @(
-        "forward $($network.SelectSingleNode('forward/@mode').Value)"
+        "forward $(@($network.SelectNodes('forward/@mode') | ForEach-Object { $_.Value }))"
         "bridge $($network.SelectSingleNode('bridge/@name').Value)"
         "ip $($network.SelectSingleNode('ip/@address').Value)/" +
             "$($network.SelectSingleNode('ip/@prefix').Value)"

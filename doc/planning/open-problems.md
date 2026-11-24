@@ -3299,6 +3299,20 @@ slice that makes an authority writes it only to a device-local folder,
 or refuses without `--authority`, and a test that slicing leaves the
 configuration's folder as it found it.
 
+## 182. The domain controller as the network's way out has not run on a machine
+
+Found 2026-11-24 building it (ADR-0015, amendment 2026-11-24): the
+templates make the gateway machine's second adapter, its NAT and what
+keeps that adapter out of DNS, NetBIOS and inbound traffic, tested with
+mocks alone. Unknown until the first Hyper-V run: whether Netlogon
+registers the uplink's address again every hour (`DnsAvoidRegisterRecords`
+is not set; each later run finds and removes such a record), whether
+`netsh routing ip nat` and its dump on Windows Server 2025 match the
+2008 R2 reference the template reads, and whether answers coming back
+through the NAT pass the uplink's inbound block rule. Needed: a run on
+the Hyper-V environment with a machine whose `internet` says so reaching
+past the network, each of the three observed and recorded.
+
 # Suggested order
 
 Rewritten 2026-09-23, and corrected to what is built on 2026-11-10. The

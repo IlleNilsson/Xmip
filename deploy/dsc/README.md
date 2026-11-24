@@ -11,7 +11,7 @@ DSC V3 or Ansible, not a mix*):
 | --- | --- |
 | `msdsc/` | Microsoft DSC v3, the standalone `dsc`: `libvirt` and `hyperv` make the machines, `environment` what runs inside them, PowerShell 7 resources behind manifests |
 | `ansible/` | ansible-core: the role `xmip_machine` makes the machines, `xmip_name` the names, `xmip_node` each node |
-| `machine/` | what a machine is, for both: the network, pool and domain definitions, the kickstart, the Windows answer file and the answer medium, what the hypervisor gives its guest (its memory and chrony's clock), each step of a libvirt machine's installation and how the Windows machines' secret is read, plain PowerShell 7 that DSC's resources dot-source and Ansible's role asks through `machine.ps1` |
+| `machine/` | what a machine is, for both: the network, pool and domain definitions, the kickstart, the Windows answer file and the answer medium, what the hypervisor gives its guest (its memory and chrony's clock), each step of a libvirt machine's installation and how the Windows machines' secret is read, plain PowerShell 7 that DSC's resources dot-source and Ansible's role asks through `machine.ps1`; and what runs on a Windows host or machine under Windows PowerShell, which both hand over whole: the key a Windows ISO's prompt is answered with, the uplink found (`HyperVUplink.ps1`) and the gateway machine made (`WindowsGateway.ps1`) |
 
 ## The environment file
 
@@ -48,7 +48,9 @@ every node in it is optional, and Xmip runs on one node with all roles.
 | `[packages.<family>]` | the package a node is installed from, `path`: the `.rpm` for Linux, the portable archive for Windows (the MSI once it is built); and `modules`, a folder of the module libraries the cluster's file names, built for that system, carried beside every node's configuration |
 | `[tools.<family>]` | msdsc only: what DSC is brought to each machine of the family it applies a document on, the nodes' and the DNS server, with, `pwsh` and `dsc`, each `path` and `sha256`: tarballs for Linux, zips for Windows |
 | `[network]`, `[images.<name>]`, `[[machines]]` | the network, the installation images, and each machine with the `nodes` it runs: one at most, since a package lays one node out in one folder; every Storage node the cluster's file lists on a machine of its own |
-| `internet` | in `[network]`, whether its machines reach past it, through the gateway and its NAT, every one where it is left out; on a machine, its own. A machine that does not is installed with no gateway and reaches the network alone, the host on it included |
+| `internet` | in `[network]`, whether its machines reach past it, through the gateway, every one where it is left out; on a machine, its own. A machine that does not is installed with no gateway and reaches the network alone, the host on it included |
+| `gateway`, `nat` | in `[network]`: the host's address on the network, where it reaches the machines, and their gateway where no `gateway_machine` is named; and whether the host translates the network's prefix out, NAT, its way out then. On libvirt a network without `nat` is isolated |
+| `gateway_machine`, `uplink` | in `[network]`, optional: a Windows machine of the environment that is the network's way out in the host's place, NAT on it out of a second adapter on `uplink` — on Hyper-V an external switch onto one of the host's adapters, on libvirt a bridge of the host's — behind the owner's firewall (*The way out*, below). Each machine whose `internet` says so is given its address as its gateway; it is given none on the network. Refused: a name that is no Windows machine of the environment, no `uplink`, and `nat` beside it, since a network has one way out. The examples name XMIP-DC01 and leave `uplink` for your copy |
 | `memory_gb`, `dynamic_memory` | on a machine: the memory it starts with and installs with, in GiB, static; and `{ minimum_gb, maximum_gb }`, in steps of 2 MiB, `minimum_gb <= memory_gb <= maximum_gb`: on Hyper-V the least and the most it is given as it uses it; on libvirt `maximum_gb` is the domain's memory, of which its virtio balloon starts with `memory_gb` and gives back up to the most as the machine runs short, the host given back every page it frees; libvirt has no least. Windows has no balloon driver of its own, so on libvirt a Windows machine's `dynamic_memory` is refused and its memory is static |
 | `environment` | on a Linux image: the kickstart's environment group, `minimal-environment` where it names none; one with a desktop starts to its graphical target |
 | `tpm` | on an image: `true` gives its machines a virtual TPM 2.0, as Windows 11's Setup asks; on libvirt swtpm's, refused where the host has no `swtpm`. Left out, none. `secureBootTemplate` is Hyper-V's: libvirt's firmware enrolls both of Microsoft's certificate authorities |
@@ -57,6 +59,74 @@ A path not rooted is the estate's. The YAML each tool reads is written
 from this file into the run folder, `.local-work/deploy/<name>/`: DSC's
 `<step>.parameters.yaml` and Ansible's `inventory.yml`. It is generated,
 never configuration (CONTRIBUTING).
+
+## The way out
+
+Where `[network]` names a `gateway_machine`, that machine is the network's
+way out, in the examples the domain controller, XMIP-DC01 (ADR-0015,
+amendment 2026-11-24; the owner, 2026-11-24: *the VM DSC can be a gateway
+to internet for those machines that needs it*, *A good choice would be the
+DC*). A domain controller on two networks is a known cause of DNS and
+Active Directory trouble; the owner, told so: *The DC would be behind my
+firewall*. So its second adapter, the uplink, is on his network behind his
+firewall, addressed by its DHCP, and the templates keep it out of the
+domain, each by Microsoft's own setting, every one in
+`machine/WindowsGateway.ps1`, which both technologies run on the machine:
+
+- It registers no address in DNS, and both adapters ask the machine's own
+  DNS server at the network's address, the one it listens on, where
+  promoting it left them asking the loopback; a gateway machine that runs
+  no DNS server has its uplink ask what its network's adapter asks:
+  `Set-DnsClient -RegisterThisConnectionsAddress $false`
+  ([Set-DnsClient](https://learn.microsoft.com/powershell/module/dnsclient/set-dnsclient))
+  and `Set-DnsClientServerAddress`
+  ([Set-DnsClientServerAddress](https://learn.microsoft.com/powershell/module/dnsclient/set-dnsclientserveraddress)).
+- The DNS server listens on the network's address alone, and every record
+  of the machine's name, of its zone's own name and of `gc` that holds an
+  outside address is removed: `Set-DnsServerSetting` with
+  `ListeningIPAddress`
+  ([Set-DnsServerSetting](https://learn.microsoft.com/powershell/module/dnsserver/set-dnsserversetting)),
+  the three steps of [Avoid registering unwanted NICs in DNS on a
+  multihomed domain
+  controller](https://learn.microsoft.com/troubleshoot/windows-server/networking/unwanted-nic-registered-dns-mulithomed-dc)
+  (2026-02-12), and its *delete the existing unwanted Host A record*.
+- No NetBIOS over TCP/IP on it:
+  [SetTcpipNetbios](https://learn.microsoft.com/windows/win32/cimwin32prov/settcpipnetbios-method-in-class-win32-networkadapterconfiguration),
+  2, of `Win32_NetworkAdapterConfiguration`.
+- Nothing in through it: the uplink is a Public network
+  ([Set-NetConnectionProfile](https://learn.microsoft.com/powershell/module/netconnection/set-netconnectionprofile)),
+  and one inbound rule on its interface, whatever profile it is given,
+  blocks everything arriving on it
+  ([New-NetFirewallRule](https://learn.microsoft.com/powershell/module/netsecurity/new-netfirewallrule)
+  `-InterfaceAlias`); *explicit block rules take precedence over any
+  conflicting allow rules*
+  ([Windows Firewall rules](https://learn.microsoft.com/windows/security/operating-system-security/network-security/windows-firewall/rules)).
+  A rule on the interface, never the Public profile's: Windows Server 2025
+  domain controllers have been reported to give their own network the
+  Public profile after a restart, and a profile that let nothing in would
+  then shut the domain out.
+- NAT for the network's prefix: Routing and Remote Access, whose Routing
+  role service Microsoft documents as a NAT router a Hyper-V virtual
+  machine may run, installed by `Install-RemoteAccess -VpnType
+  RoutingOnly` ([Remote
+  Access](https://learn.microsoft.com/windows-server/remote/remote-access/remote-access),
+  [Install-RemoteAccess](https://learn.microsoft.com/powershell/module/remoteaccess/install-remoteaccess),
+  Windows Server 2025), its NAT the uplink in full and the network's
+  adapter private, by `netsh routing ip nat`
+  ([its reference](https://learn.microsoft.com/previous-versions/windows/it-pro/windows-server-2008-R2-and-2008/cc754535(v=ws.10)),
+  no PowerShell command covering it), read back from its dump. WinNAT,
+  `New-NetNat`, the host's own NAT, is not used there: Microsoft documents
+  it for a host's internal switch, its virtual machines and containers, one
+  per host ([Set up a NAT
+  network](https://learn.microsoft.com/windows-server/virtualization/hyper-v/setup-nat-network)).
+
+Each machine whose `internet` says so is given the gateway machine's
+address as its gateway, every other none, as before. The step runs after
+the domain's controller, whose DNS server it settles, and before the names.
+Not yet run on a machine: whether Netlogon registers the uplink's address
+again in its hourly registration, which each later run then finds and
+removes, and whether RRAS's NAT passes the replies the inbound rule lets
+through, the first Hyper-V run shows.
 
 ## The command
 
@@ -94,6 +164,8 @@ The keys are kept as long as the folder is: a person reaches a machine with
 **msdsc** applies each document on its own, with the parameters it
 declares: the network and the pool; each machine, one installation at a
 time, applied again every thirty seconds until it answers from its disk;
+the network's way out through its gateway machine, where the file names
+one, `msdsc/environment/gateway.dsc.yaml`, after the domain's controller;
 the names, where one of the machines is the network's DNS server; each of
 the Systems Tests' far ends on the machine whose `external` names it,
 `msdsc/environment/far-end.dsc.yaml`, its program placed and registered as
@@ -115,7 +187,8 @@ among it, is sent to its `files` for each run of the document and removed
 once `dsc` has run.
 
 **ansible** writes `inventory.yml` and runs `ansible/environment.yml`: the
-machines, one installation at a time, the names, the nodes, one machine at
+machines, one installation at a time, the way out through the gateway
+machine (the role `xmip_gateway`), the names, the nodes, one machine at
 a time, and last every node started together, as msdsc does. Each step of
 a libvirt machine's installation is `machine/LibvirtInstallation.ps1`'s,
 the code msdsc's machine resource runs, asked through `machine.ps1`. A node
@@ -155,6 +228,15 @@ On the Linux host, the WSL AlmaLinux guest included, KVM and libvirt as
 - on Windows, for Hyper-V, once and elevated: the Hyper-V switch's NAT,
   which the first run makes. The Windows machines are reached through
   PowerShell Direct, which the Hyper-V Administrators group allows.
+- where the file names a `gateway_machine`, once, the uplink: on Hyper-V an
+  external switch onto the host's adapter on your network, elevated,
+  `New-VMSwitch -Name <uplink> -NetAdapterName <the host's adapter>
+  -AllowManagementOS $true`, the host keeping its own way out through it;
+  on libvirt a bridge of the host's holding that adapter, made with the
+  system's own network tools. Its name is your copy's `uplink`, never this
+  folder's. A template finds it, refuses one that is not there or not
+  external, and never makes, changes or removes it: it takes a host
+  adapter.
 
 ## Starting again from nothing
 

@@ -79,6 +79,11 @@ schema: !embedded
       nat:
         description: 'Whether the network has outbound NAT.'
         type: boolean
+      uplink:
+        description: >-
+          The external switch a gateway machine's second adapter is on, found
+          and never made; empty where no machine is the network's gateway.
+        type: string
       findings:
         readOnly: true
         type: array

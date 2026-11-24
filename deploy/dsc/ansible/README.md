@@ -22,8 +22,9 @@ playbook.
 
 | File | Is |
 | --- | --- |
-| `environment.yml` | the playbook: the machines, the names on the DNS server, every node, one machine at a time, then every node started together |
+| `environment.yml` | the playbook: the machines, the way out through the gateway machine, the names on the DNS server, every node, one machine at a time, then every node started together |
 | `roles/xmip_machine` | the machines on their hypervisor, one installation at a time: `tasks/libvirt.yml` on a Linux host, `tasks/hyperv.yml` on a Windows one |
+| `roles/xmip_gateway` | on the network's gateway machine, where the environment file names one: NAT out of its uplink, which is kept out of the domain, `deploy/dsc/machine/WindowsGateway.ps1` handed whole to `win_powershell` |
 | `roles/xmip_name` | on the DNS server, a Windows DNS server: the zone, and an A record for the cluster and for each node |
 | `roles/xmip_node` | one node on its machine: `tasks/windows.yml` and `tasks/linux.yml`, the same steps on each system |
 
@@ -44,7 +45,15 @@ it uses Microsoft's `microsoft.hyperv` (`hv_vswitch`, `hv_vhd`, `hv_vm`,
 `hv_memory`, `hv_processor`, `hv_hard_disk`, `hv_network_adapter`,
 `hv_vm_boot`, `hv_dvd_drive`, `hv_vm_state`) and
 `ansible.windows.win_powershell` for the host's address and NAT, which no
-module covers. What a network, a pool, a domain, a kickstart or an answer
+module covers; a gateway machine is given its second adapter, `Uplink`, on
+the uplink, an external switch `deploy/dsc/machine/HyperVUplink.ps1` finds
+on the host, handed to it whole, and never makes. On libvirt the network
+forwards with NAT only where the file's `nat` says, and is isolated where a
+gateway machine is the way out. The role `xmip_gateway` then makes that
+machine the way out (`deploy/dsc/README.md`, *The way out*): the one script
+Microsoft DSC's `Xmip.Environment/Gateway` runs, read on the controller and
+handed whole as `win_powershell`'s script, which under `--check` reads and
+says whether it would change. What a network, a pool, a domain, a kickstart or an answer
 medium is, is never written here: it is asked of `deploy/dsc/machine`,
 the code Microsoft DSC's machine resources use, through `machine.ps1` on the
 controller. Each AlmaLinux machine's kickstart gives it the host key made
@@ -202,7 +211,11 @@ read runs under `--check` and every command that changes says it would,
 that firewalld's service is made permanent alone and the running firewall
 asked and reloaded after it, that the package's headers are compared
 before it is upgraded, and that a recap that would change or was not
-reached answers not in its desired state; `test/DeployMachine.Test.ps1`
+reached answers not in its desired state; `test/DeployGateway.Test.ps1`
+that the inventory names the gateway machine in `xmip_gateway`, played
+after the machines and before the names, and that the scripts handed to
+`win_powershell` are the ones Microsoft DSC's resources run;
+`test/DeployMachine.Test.ps1`
 holds the installation's steps both technologies share; the root
 crate's `cargo test --test deploy` holds that the role asks `xmip-service`
 for the slice, the cluster and the ports, binds the Locations and keeps no

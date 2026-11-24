@@ -2,7 +2,8 @@
 # One machine on Hyper-V, xmip_machine: a generation 2 VM in its folder,
 # <root>\<name>, with its new dynamic disk, its memory (static, or dynamic
 # where the machine says), processors and
-# adapter with its static MAC, Secure Boot by its image's template, and its
+# adapter with its static MAC, a gateway machine its uplink beside it,
+# Secure Boot by its image's template, and its
 # ISO and answer medium in two DVD drives; started, waited for until it
 # answers from its disk, its drives then removed, its answer medium deleted
 # and its folder's installed file written, so it is never installed again.
@@ -94,6 +95,18 @@
         mac_address: "{{ xmip_plan.mac }}"
         dynamic_mac_address: false
         state: present
+
+    # A gateway machine's second adapter, on the uplink the environment
+    # names, its MAC static too: its way out, and the network's.
+    - name: Its uplink, where it is the network's gateway
+      microsoft.hyperv.hv_network_adapter:
+        vm_name: "{{ xmip_machine.name }}"
+        name: "{{ xmip_plan.uplink.name }}"
+        switch_name: "{{ xmip_machine.network.uplink }}"
+        mac_address: "{{ xmip_plan.uplink.mac }}"
+        dynamic_mac_address: false
+        state: present
+      when: xmip_machine.network.uplink | default('') | length > 0
 
     - name: Secure Boot by its image's template
       microsoft.hyperv.hv_vm_boot:

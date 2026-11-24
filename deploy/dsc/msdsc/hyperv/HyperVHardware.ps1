@@ -5,10 +5,12 @@
 # its machine names, its processors, no automatic checkpoints, the
 # environment's name in its notes), its devices (the machine's disk at
 # SCSI 0:0, one adapter on the environment's switch with a static MAC made
-# from its address, two DVD drives) and its firmware (Secure Boot with the
-# template its image names, the disk booted first, then the two drives, and
-# a virtual TPM where its image asks for one). It changes only while the VM
-# is off; the disk is never replaced and an adapter never removed.
+# from its address, and a gateway machine a second, Uplink, on the uplink,
+# two DVD drives) and its firmware (Secure Boot with the template its image
+# names, the disk booted first, then the two drives, then its own adapter,
+# never the uplink's, and a virtual TPM where its image asks for one). It
+# changes only while the VM is off; the disk is never replaced and an
+# adapter never removed.
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
@@ -111,18 +113,76 @@ function Get-HyperVDeviceFinding {
         Write-Output -InputObject (
             "${name}: does not hold $(Get-HyperVMachineDisk -Instance $Instance) at SCSI 0:0.")
     }
-    [string] $switch = $Instance['network'].name
-    [string] $mac = Get-MachineMacAddress -Address $Instance['address'] -Prefix (
-        $script:HyperVMacPrefix)
-    [object[]] $adapters = @($Vm.NetworkAdapters)
-    if ($adapters.Count -ne 1 -or $adapters[0].SwitchName -ne $switch -or
-        $adapters[0].MacAddress -ne $mac) {
-        Write-Output -InputObject "${name}: has not one adapter, on $switch, with the MAC $mac."
-    }
+    Get-HyperVAdapterFinding -Instance $Instance -Vm $Vm
     [int[]] $dvd = @($Vm.DVDDrives | Where-Object { $_.ControllerNumber -eq 0 } |
         ForEach-Object { $_.ControllerLocation } | Sort-Object)
     if (($dvd -join ',') -ne "$script:HyperVInstallLocation,$script:HyperVAnswerLocation") {
         Write-Output -InputObject "${name}: has not its two DVD drives at SCSI 0:1 and 0:2."
+    }
+}
+
+function Get-HyperVAdapterPlan {
+    <#
+    .SYNOPSIS
+    The adapters the machine needs, each its switch, its static MAC and the
+    VM's adapters it is held by: Own, on the environment's switch, and
+    Uplink, a gateway machine's second, on the uplink, whose switch is
+    empty where the machine is none.
+    #>
+    [CmdletBinding()]
+    [OutputType([hashtable])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [hashtable] $Instance,
+
+        [Parameter(Mandatory = $true)]
+        [object] $Vm
+    )
+
+    [hashtable] $mac = @{ Address = $Instance['address']; Prefix = $script:HyperVMacPrefix }
+    [object[]] $adapters = @($Vm.NetworkAdapters)
+    return @{
+        Own = @{ Switch = $Instance['network']['name']; Mac = Get-MachineMacAddress @mac
+            Held = @($adapters | Where-Object { $_.Name -ne $script:HyperVUplinkAdapter }) }
+        Uplink = @{ Switch = [string] $Instance['network']['uplink']
+            Mac = Get-MachineMacAddress @mac -Uplink
+            Held = @($adapters | Where-Object { $_.Name -eq $script:HyperVUplinkAdapter }) }
+    }
+}
+
+function Get-HyperVAdapterFinding {
+    <#
+    .SYNOPSIS
+    How the VM's adapters differ from the machine's: its own on the switch
+    with its static MAC, and a gateway machine's Uplink on the uplink with
+    its own; an Uplink on a machine that is no gateway.
+    #>
+    [CmdletBinding()]
+    [OutputType([string])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [hashtable] $Instance,
+
+        [Parameter(Mandatory = $true)]
+        [object] $Vm
+    )
+
+    [string] $name = $Instance['name']
+    [hashtable] $plan = Get-HyperVAdapterPlan -Instance $Instance -Vm $Vm
+    foreach ($side in @(@{ Plan = $plan.Own; Said = 'one adapter' }
+            @{ Plan = $plan.Uplink; Said = "one adapter $script:HyperVUplinkAdapter" })) {
+        [object[]] $held = $side.Plan.Held
+        if (-not $side.Plan.Switch) {
+            if ($held.Count -gt 0) {
+                Write-Output -InputObject "${name}: has an adapter $script:HyperVUplinkAdapter."
+            }
+            continue
+        }
+        if ($held.Count -ne 1 -or $held[0].SwitchName -ne $side.Plan.Switch -or
+            $held[0].MacAddress -ne $side.Plan.Mac) {
+            Write-Output -InputObject ("${name}: has not $($side.Said), on " +
+                "$($side.Plan.Switch), with the MAC $($side.Plan.Mac).")
+        }
     }
 }
 
@@ -164,8 +224,8 @@ function Set-HyperVHardware {
     Gives a VM that is off the settings, devices and firmware its machine
     needs. A VM that is not off is refused, never stopped; so is one that
     does not hold the machine's disk, which is never replaced, and one with
-    more than one adapter, which would give each the machine's MAC: an
-    adapter is never removed.
+    more than one adapter of its own, which would give each the machine's
+    MAC, or an Uplink it is not given: an adapter is never removed.
     #>
     [CmdletBinding(SupportsShouldProcess = $true)]
     [OutputType([void])]
@@ -182,9 +242,14 @@ function Set-HyperVHardware {
     if (-not (Test-HyperVMachineDisk -Instance $Instance -Vm $vm)) {
         throw "REFUSED: ${name} does not hold its disk at SCSI 0:0; a disk is never replaced."
     }
-    [int] $adapters = @($vm.NetworkAdapters).Count
-    if ($adapters -gt 1) {
-        throw "REFUSED: ${name} has $adapters adapters, not one; an adapter is never removed."
+    [hashtable] $plan = Get-HyperVAdapterPlan -Instance $Instance -Vm $vm
+    [int] $uplink = $plan.Uplink.Held.Count
+    [bool] $unasked = $uplink -gt 0 -and -not $plan.Uplink.Switch
+    if ($plan.Own.Held.Count -gt 1 -or $uplink -gt 1 -or $unasked) {
+        [string] $wanted = if ($plan.Uplink.Switch) { "one and one $script:HyperVUplinkAdapter" }
+        else { 'one' }
+        throw ("REFUSED: ${name} has $(@($vm.NetworkAdapters).Count) adapters, not $wanted; " +
+            'an adapter is never removed.')
     }
     if (-not $PSCmdlet.ShouldProcess($name, 'Set its settings, devices and firmware')) {
         return
@@ -213,8 +278,9 @@ function Set-HyperVHardware {
 function Set-HyperVDevice {
     <#
     .SYNOPSIS
-    Gives the VM its one adapter on the switch with its static MAC, and its
-    two DVD drives where they are missing.
+    Gives the VM its one adapter on the switch with its static MAC, a
+    gateway machine its Uplink on the uplink with its own, each by its name,
+    and its two DVD drives where they are missing.
     #>
     [CmdletBinding()]
     [OutputType([void])]
@@ -227,14 +293,20 @@ function Set-HyperVDevice {
     )
 
     [string] $name = $Instance['name']
-    [string] $switch = $Instance['network'].name
-    if (@($Vm.NetworkAdapters).Count -eq 0) {
-        Add-VMNetworkAdapter -VMName $name -SwitchName $switch
+    [hashtable] $plan = Get-HyperVAdapterPlan -Instance $Instance -Vm $Vm
+    # The name New-VM and Add-VMNetworkAdapter give an adapter named none.
+    [hashtable] $own = $plan.Own
+    $own['Name'] = if ($own.Held.Count -gt 0) { $own.Held[0].Name } else { 'Network Adapter' }
+    [hashtable] $uplink = $plan.Uplink
+    $uplink['Name'] = $script:HyperVUplinkAdapter
+    foreach ($side in @($own, $uplink | Where-Object { $_.Switch })) {
+        [hashtable] $adapter = @{ VMName = $name; Name = $side.Name }
+        if ($side.Held.Count -eq 0) {
+            Add-VMNetworkAdapter @adapter -SwitchName $side.Switch
+        }
+        Connect-VMNetworkAdapter @adapter -SwitchName $side.Switch
+        Set-VMNetworkAdapter @adapter -StaticMacAddress $side.Mac
     }
-    Connect-VMNetworkAdapter -VMName $name -SwitchName $switch
-    [string] $mac = Get-MachineMacAddress -Address $Instance['address'] -Prefix (
-        $script:HyperVMacPrefix)
-    Set-VMNetworkAdapter -VMName $name -StaticMacAddress $mac
     foreach ($location in $script:HyperVInstallLocation, $script:HyperVAnswerLocation) {
         if (@($Vm.DVDDrives | Where-Object {
             $_.ControllerNumber -eq 0 -and $_.ControllerLocation -eq $location
@@ -248,8 +320,8 @@ function Set-HyperVFirmware {
     <#
     .SYNOPSIS
     Turns Secure Boot on with the image's template, boots the disk first,
-    then the two DVD drives, then the network, and turns on the virtual TPM
-    where the image asks for one.
+    then the two DVD drives, then the network, never the uplink, and turns
+    on the virtual TPM where the image asks for one.
     #>
     [CmdletBinding()]
     [OutputType([void])]
@@ -264,7 +336,8 @@ function Set-HyperVFirmware {
         Get-VMHardDiskDrive @controller -ControllerLocation $script:HyperVDiskLocation
         Get-VMDvdDrive @controller -ControllerLocation $script:HyperVInstallLocation
         Get-VMDvdDrive @controller -ControllerLocation $script:HyperVAnswerLocation
-        Get-VMNetworkAdapter -VMName $name
+        Get-VMNetworkAdapter -VMName $name | Where-Object {
+            $_.Name -ne $script:HyperVUplinkAdapter }
     )
     [hashtable] $firmware = @{
         VMName = $name

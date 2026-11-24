@@ -21,8 +21,8 @@ a VM is theirs (ADR-0015, amendment 2026-11-11).
 
 | Resource | Is |
 | --- | --- |
-| `Xmip.HyperV/Network` | an internal switch, the host's address on it, the machines' gateway, and outbound NAT for the network's prefix |
-| `Xmip.HyperV/Machine` | one machine, a generation 2 VM installed unattended from its ISO |
+| `Xmip.HyperV/Network` | an internal switch, the host's address on it, the machines' gateway, and outbound NAT for the network's prefix; or, where a gateway machine is the way out, no NAT and the uplink found, an external switch, never made |
+| `Xmip.HyperV/Machine` | one machine, a generation 2 VM installed unattended from its ISO, a gateway machine with its second adapter on the uplink |
 
 Each answers what is not there yet as absent — `_exist` false, and a
 finding that says so — never as a failure, so `get` and `test` read a host
@@ -40,7 +40,7 @@ the most Hyper-V gives it, the most the plan's figure:
 
 | Machine | Operating system | Role | Memory | CPUs | Disk | Address |
 | --- | --- | --- | --- | --- | --- | --- |
-| XMIP-DC01 | Windows Server 2025 | domain controller and DNS | 2, 1-4 GiB | 2 | 64 GiB | 10.77.0.10 |
+| XMIP-DC01 | Windows Server 2025 | domain controller, DNS and the network's gateway | 2, 1-4 GiB | 2 | 64 GiB | 10.77.0.10 |
 | XMIP-FS01 | Windows Server 2025 | file storage, optional | 1, 0.5-2 GiB | 2 | 64 GiB | 10.77.0.20 |
 | XMIP-DS01 | AlmaLinux 10 | Xmip node DS1, Xmip Storage, primary | 2, 0.5-4 GiB | 2 | 32 GiB | 10.77.0.81 |
 | XMIP-DS02 | Windows Server 2025 | Xmip node DS2, Xmip Storage, standby | 1, 0.5-4 GiB | 2 | 64 GiB | 10.77.0.82 |
@@ -64,11 +64,15 @@ the most Hyper-V gives it, the most the plan's figure:
 
 They share an internal switch, `Xmip`, on 10.77.0.0/24. The host is
 10.77.0.1 on it, the one manual IPv4 address of the switch's host adapter,
-with outbound NAT; the domain is `xmip.test`, and XMIP-DC01's address is
-the DNS server every machine is given. Only XMIP-RX01 is given the host as
-its gateway, its `internet` saying so where the network's says none does:
-every other machine is installed with no gateway, and reaches the network
-alone, the host on it included. The plan's Linux developer machine takes
+with no NAT of its own; the domain is `xmip.test`, and XMIP-DC01's address
+is the DNS server every machine is given. XMIP-DC01 is the network's way
+out, its `gateway_machine`: a second adapter, `Uplink`, on the external
+switch your copy's `uplink` names, behind your firewall, with NAT on it
+(`deploy/dsc/README.md`, *The way out*). Only XMIP-RX01 is given XMIP-DC01
+as its gateway, its `internet` saying so where the network's says none
+does: every other machine is installed with no gateway, and reaches the
+network alone, the host on it included. Name no `gateway_machine` and set
+`nat = true`, and the host is the way out again. The plan's Linux developer machine takes
 the image `AlmaLinux10Desktop`, the same DVD installing
 `workstation-product-environment`. The far ends run on their machines in
 the plan; the Systems Tests serve them on the host still, until they are
@@ -83,13 +87,17 @@ files Hyper-V keeps in that folder, with the memory it starts with, static,
 or dynamic between the least and the most its `dynamic_memory` names, its
 CPUs, no automatic checkpoints and the environment's name in its notes; its one
 adapter on the switch with a static MAC made from its address (00-15-5D and
-the address's last three octets); Secure Boot on with the template its image
+the address's last three octets), and the gateway machine a second,
+`Uplink`, on the uplink, its MAC the same with its first octet 02, a
+locally administered address no vendor's adapter holds, which your
+network's DHCP addresses; Secure Boot on with the template its image
 names — `MicrosoftWindows` for Windows, `MicrosoftUEFICertificateAuthority`
 for AlmaLinux — and a virtual TPM where its image asks for one (Windows 11).
-Two DVD drives, and the boot order disk first, then the two drives. The
-hardware is set only while the VM is off: one running and differing is
-refused, never stopped, and so is one with more than one adapter, since
-each would be given the machine's MAC: an adapter is never removed.
+Two DVD drives, and the boot order disk first, then the two drives, then
+its own adapter, never the uplink. The hardware is set only while the VM is
+off: one running and differing is refused, never stopped, and so is one
+with more than one adapter of its own, since each would be given the
+machine's MAC, or an `Uplink` it is not given: an adapter is never removed.
 
 On its first start the VM holds its ISO, checked against the SHA-256 the
 parameters give, and an answer medium this template writes for it, an ISO
@@ -162,10 +170,27 @@ Copy-Item -LiteralPath $example -Destination 'D:\Repos\Xmip\.local-work\deploy\h
 ```
 
 In the copy, write in `linux_account`, the account the kickstart creates on
-the AlmaLinux machines, `secret` and what the nodes are given
-(`deploy/dsc/README.md`), and strike the machines you do not want. The
+the AlmaLinux machines, `secret`, `[network] uplink` and what the nodes are
+given (`deploy/dsc/README.md`), and strike the machines you do not want. The
 AlmaLinux machines' account is given the environment's own SSH key, which
 `Deploy-XmipEnvironment` makes.
+
+The uplink XMIP-DC01's second adapter is on is an external switch onto the
+host's adapter on your network, behind your firewall. It takes that
+adapter, the host keeping its own way out through it, so it is yours to
+make, once, in an elevated Xmip PowerShell Console, and the template finds
+it, refuses one that is not there or not external, and never makes, changes
+or removes it. The names are your own, written in the copy alone:
+
+```powershell
+Get-NetAdapter -Physical
+New-VMSwitch -Name '<uplink>' -NetAdapterName '<the host''s adapter on your network>' -AllowManagementOS $true
+```
+
+Without it, name no `gateway_machine` and set `nat = true`: the host is the
+network's way out. A XMIP-DC01 made before its copy named the uplink is
+running with one adapter, and its hardware changes only while it is off:
+the run refuses it, never stopping it, until you shut it down once.
 
 ## Running it
 
@@ -200,12 +225,13 @@ controller.
 | `machine.dsc.yaml` | one machine, `Xmip.HyperV/Machine` |
 | `hyperv.resource.ps1` | the resources' entry, run by DSC with the kind and the operation |
 | `HyperVResource.ps1` | what the entry runs: the state each operation answers, and the parts below |
-| `HyperVNetwork.ps1` | the switch, the host's address and NAT |
+| `HyperVNetwork.ps1` | the switch, the host's address and NAT, and the uplink found |
 | `HyperVMachine.ps1` | the machine: its folder, disk and VM, and where it is |
 | `HyperVHardware.ps1` | the VM's settings, devices and firmware |
 | `HyperVInstallation.ps1` | the installation from the ISO |
 | `xmip-hyperv-*.dsc.resource.yaml` | the resource manifests |
-| `../../machine/HyperVDefinition.ps1` | the machine's folder files, static MAC, drives' places and answer medium, shared with Ansible's template |
+| `../../machine/HyperVDefinition.ps1` | the machine's folder files, static MAC, the uplink adapter's name and MAC, drives' places and answer medium, shared with Ansible's template |
+| `../../machine/HyperVUplink.ps1` | the uplink, one external switch, found; handed to the host whole by Ansible's template |
 | `../../machine/MachineAnswer.ps1` | the install answers and the answer medium, shared with the libvirt template |
 | `../../machine/MachineGuest.ps1` | what the hypervisor gives its guest, its dynamic memory and chrony's clock line, shared with the libvirt template |
 | `../../machine/autounattend.template.xml` | the Windows answer `MachineAnswer.ps1` fills in |
@@ -221,8 +247,11 @@ echo, this table of machines against it, the install answers and the answer
 medium, and the resources' `get`, `test` and `set` with every Hyper-V and
 network command a stub: a switch, a NAT and a machine that are not there
 answered absent, a host's refusal kept an error, an absent network and
-machine made, a machine given dynamic memory between its least and its
-most, the gateway and a desktop where the example's machine has one, a
+machine made, an uplink that is not one external switch refused and never
+made, a gateway machine given its `Uplink` and never booted from it, an
+`Uplink` on any other machine refused, a machine given dynamic memory
+between its least and its most, the gateway and a desktop where the
+example's machine has one, a
 Windows 11 machine's TPM given before its media and Enter
 pressed for its first twenty seconds, a machine still installing answered
 by its state alone, a VM with two adapters refused, and an installed

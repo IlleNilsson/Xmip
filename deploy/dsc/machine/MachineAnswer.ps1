@@ -19,7 +19,9 @@ function Get-MachineMacAddress {
     .SYNOPSIS
     The static MAC a machine is given: its hypervisor's prefix (Hyper-V's
     00155D, KVM's 525400) and the last three octets of its address, so a
-    kickstart can match its adapter by MAC.
+    kickstart can match its adapter by MAC. -Uplink: the MAC of a gateway
+    machine's second adapter, on the uplink, the same with its first octet
+    02, a locally administered address no vendor's adapter holds.
     #>
     [CmdletBinding()]
     [OutputType([string])]
@@ -29,11 +31,18 @@ function Get-MachineMacAddress {
 
         [Parameter(Mandatory = $true)]
         [ValidatePattern('^[0-9A-F]{6}$')]
-        [string] $Prefix
+        [string] $Prefix,
+
+        [Parameter()]
+        [switch] $Uplink
     )
 
     [byte[]] $bytes = ([ipaddress]::Parse($Address)).GetAddressBytes()
-    return '{0}{1:X2}{2:X2}{3:X2}' -f $Prefix, $bytes[1], $bytes[2], $bytes[3]
+    [string] $mac = '{0}{1:X2}{2:X2}{3:X2}' -f $Prefix, $bytes[1], $bytes[2], $bytes[3]
+    if ($Uplink) {
+        return '02' + $mac.Substring(2)
+    }
+    return $mac
 }
 
 function ConvertTo-UnattendPassword {

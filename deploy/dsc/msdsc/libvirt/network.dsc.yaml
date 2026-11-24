@@ -1,7 +1,8 @@
 # The network and pool an environment's machines share on one libvirt host:
-# a network with NAT whose DHCP and DNS give each machine its address and
-# name and answer the names the environment adds, and a directory pool for
-# the machines' disks, images and answer media. README.md says how to run it.
+# a network, with NAT where the environment says, whose DHCP and DNS give
+# each machine its address and name and answer the names the environment
+# adds, and a directory pool for the machines' disks, images and answer
+# media. README.md says how to run it.
 $schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
 directives:
   version: ^3.4.0-preview.3
@@ -16,7 +17,8 @@ parameters:
     type: object
     description: >-
       name (the network's in libvirt), bridge (at most fifteen characters),
-      gateway (the host's address on it) and prefixLength.
+      gateway (the host's address on it), prefixLength and enableNat (NAT
+      through the host; isolated without).
   machines:
     type: array
     description: Each machine, its name and address.
@@ -31,6 +33,7 @@ resources:
       bridge: "[parameters('network').bridge]"
       gateway: "[parameters('network').gateway]"
       prefixLength: "[parameters('network').prefixLength]"
+      nat: "[parameters('network').enableNat]"
       machines: "[parameters('machines')]"
       names: "[parameters('names')]"
   - name: Pool

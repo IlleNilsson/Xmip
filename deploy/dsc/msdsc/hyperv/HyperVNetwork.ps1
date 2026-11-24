@@ -5,7 +5,9 @@
 # switch; the host's address on the switch's adapter, "vEthernet (<switch>)",
 # the machines' gateway and that adapter's one manual IPv4 address; and
 # outbound NAT for the network's prefix, named for the environment, or none
-# where the environment turns it off.
+# where the environment turns it off. Where a gateway machine is the
+# network's way out, the uplink its second adapter is on is an external
+# switch the owner made, found and never made (HyperVUplink.ps1).
 #
 # What is not there yet is found absent, never refused: each question lists
 # what the host has and looks for the instance in it, so only the host's own
@@ -128,6 +130,7 @@ function Get-HyperVNetworkFinding {
             "${name}: the host's address on it is not $gateway alone."
         }
         Get-HyperVNatFinding -Instance $Instance
+        Get-HyperVUplinkFinding -Name ([string] $Instance['uplink'])
     )
     return @($finding | Where-Object { -not [string]::IsNullOrEmpty($_) })
 }
@@ -157,7 +160,9 @@ function Set-HyperVNetwork {
     .SYNOPSIS
     Makes the internal switch where it is absent, gives the host its address
     on it and the NAT the environment says. A switch of the name that is
-    not one internal switch is refused, never changed: machines may be on it.
+    not one internal switch is refused, never changed: machines may be on it;
+    so is an uplink that is not one external switch, which takes a host
+    adapter and is the owner's to make.
     #>
     [CmdletBinding(SupportsShouldProcess = $true)]
     [OutputType([void])]
@@ -171,6 +176,10 @@ function Set-HyperVNetwork {
     [bool] $absent = $switch -eq "${name}: absent."
     if (-not $absent -and -not [string]::IsNullOrEmpty($switch)) {
         throw "REFUSED: $switch It is not changed."
+    }
+    [string] $uplink = Get-HyperVUplinkFinding -Name ([string] $Instance['uplink'])
+    if (-not [string]::IsNullOrEmpty($uplink)) {
+        throw "REFUSED: $uplink"
     }
     if (-not $PSCmdlet.ShouldProcess($name, 'Make the switch, the host address and NAT')) {
         return

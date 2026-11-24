@@ -22,13 +22,16 @@
       AlmaLinux machine's kickstart gives its host name, static address,
       key and Hyper-V's clock, the environment its image names and a desktop
       started to it; each a gateway where the machine reaches past the
-      network, XMIP-RX01 alone, and none elsewhere; the answer medium is an
-      ISO with the label its installer reads.
+      network, XMIP-RX01 alone, through XMIP-DC01, and none elsewhere; the
+      answer medium is an ISO with the label its installer reads.
     - The resources' get, test and set, every Hyper-V and network command a
       stub over a host held in memory: a switch, a NAT and a machine that
       are not there answered absent, a host's refusal kept an error, an
-      absent network and machine made, a machine given dynamic memory
-      between its least and its most, a Windows 11 machine's TPM given
+      absent network and machine made, an uplink that is not one external
+      switch refused and never made, a gateway machine given its Uplink and
+      never booted from it, an Uplink on any other machine refused, a
+      machine given dynamic memory between its least and its most, a
+      Windows 11 machine's TPM given
       before its media and Enter pressed for its first twenty seconds, a
       machine still installing answered by its state alone, a VM with two
       adapters refused, an installed one's media removed.
@@ -215,8 +218,14 @@ BeforeAll {
             AutomaticCheckpointsEnabled = $false; Notes = $Instance['environment']
             HardDrives = @(New-FakeDrive -Location 0 -Path $disk)
             DVDDrives = @(New-FakeDrive -Location 1 -Path ''; New-FakeDrive -Location 2 -Path '')
-            NetworkAdapters = @([pscustomobject] @{
+            NetworkAdapters = @([pscustomobject] @{ Name = 'Network Adapter'
                 SwitchName = $Instance['network'].name; MacAddress = $mac })
+        }
+        if ([string] $Instance['network']['uplink']) {
+            $script:Fake.Vm[-1].NetworkAdapters += [pscustomobject] @{ Name = 'Uplink'
+                SwitchName = $Instance['network']['uplink']
+                MacAddress = Get-MachineMacAddress -Address $Instance['address'] -Prefix (
+                    $script:HyperVMacPrefix) -Uplink }
         }
         $script:Fake.Firmware = [pscustomobject] @{ SecureBoot = 'On'
             SecureBootTemplate = $Instance['image'].secureBootTemplate
@@ -294,9 +303,22 @@ BeforeAll {
             DynamicMemoryEnabled = $true; MemoryMinimum = 512MB; MemoryMaximum = 1TB
             AutomaticCheckpointsEnabled = $true; Notes = ''
             HardDrives = @(New-FakeDrive -Location 0 -Path $VHDPath); DVDDrives = @()
-            NetworkAdapters = @([pscustomobject] @{
+            NetworkAdapters = @([pscustomobject] @{ Name = 'Network Adapter'
                 SwitchName = $SwitchName; MacAddress = '000000000000' })
         }
+    }
+
+    # An adapter of the VM by its name, as Hyper-V's commands take it.
+    function Get-FakeAdapter {
+        param([string] $Name)
+        return @($script:Fake.Vm[0].NetworkAdapters | Where-Object { $_.Name -eq $Name })[0]
+    }
+
+    function Add-VMNetworkAdapter {
+        param([string] $VMName, [string] $Name = 'Network Adapter', [string] $SwitchName)
+        $script:Called.Add("Add-VMNetworkAdapter $Name $SwitchName")
+        $script:Fake.Vm[0].NetworkAdapters += [pscustomobject] @{ Name = $Name
+            SwitchName = $SwitchName; MacAddress = '000000000000' }
     }
 
     function Set-VM {
@@ -320,15 +342,15 @@ BeforeAll {
     }
 
     function Connect-VMNetworkAdapter {
-        param([string] $VMName, [string] $SwitchName)
-        $script:Called.Add('Connect-VMNetworkAdapter')
-        $script:Fake.Vm[0].NetworkAdapters[0].SwitchName = $SwitchName
+        param([string] $VMName, [string] $Name, [string] $SwitchName)
+        $script:Called.Add("Connect-VMNetworkAdapter $Name".Replace(' Network Adapter', ''))
+        (Get-FakeAdapter -Name $Name).SwitchName = $SwitchName
     }
 
     function Set-VMNetworkAdapter {
-        param([string] $VMName, [string] $StaticMacAddress)
+        param([string] $VMName, [string] $Name, [string] $StaticMacAddress)
         $script:Called.Add("Set-VMNetworkAdapter $StaticMacAddress")
-        $script:Fake.Vm[0].NetworkAdapters[0].MacAddress = $StaticMacAddress
+        (Get-FakeAdapter -Name $Name).MacAddress = $StaticMacAddress
     }
 
     function Get-VMNetworkAdapter {
@@ -500,7 +522,9 @@ Describe 'The example environment' {
         $network.gateway | Should -Be '10.77.0.1'
         $network.prefixLength | Should -Be 24
         $network.prefix | Should -Be '10.77.0.0/24'
-        $network.nat | Should -BeTrue
+        # XMIP-DC01 is the way out, over the uplink the owner's copy names.
+        $network.nat | Should -BeFalse
+        $network.uplink | Should -Be 'Uplink'
     }
 
     It 'gives each machine its own values' {
@@ -519,11 +543,25 @@ Describe 'The example environment' {
     }
 
     It 'gives the one machine whose internet says so a gateway, and every other none' {
-        # The owner's node plan: XMIP-RX01 alone reaches past the network.
+        # The owner's node plan: XMIP-RX01 alone reaches past the network,
+        # through XMIP-DC01 (the owner, 2026-11-24: "A good choice would be
+        # the DC"); the host keeps its address on the switch.
         [string[]] $out = @($script:Machine | Where-Object { $_.network.gateway } |
             ForEach-Object { $_.name })
         $out | Should -Be @('XMIP-RX01')
+        @($script:Machine | Where-Object { $_.network.gateway })[0].network.gateway |
+            Should -Be '10.77.0.10'
         $script:Example['network']['gateway'] | Should -Be '10.77.0.1'
+    }
+
+    It 'gives XMIP-DC01 alone a second adapter, on the uplink' {
+        [string[]] $up = @($script:Machine | Where-Object { $_.network.uplink } |
+            ForEach-Object { $_.name })
+        $up | Should -Be @('XMIP-DC01')
+        if ($script:HasDsc) {
+            $script:Evaluated['XMIP-DC01']['Machine'].properties.network.uplink |
+                Should -Be 'Uplink'
+        }
     }
 
     It 'gives every machine dynamic memory, from its memory_gb up to its most' {
@@ -633,8 +671,8 @@ Describe 'The install answers' {
             [string] $hostName = "$($machine.name.ToLowerInvariant()).xmip.test"
             $kickstart | Should -Match "--device=$mac --bootproto=static --ip=$($machine.address) "
             # A gateway where the machine reaches past the network, none where not.
-            [string] $route = if ($machine.network.gateway) { '--gateway=10\.77\.0\.1 ' } else {
-                '' }
+            [string] $route = if ($machine.network.gateway) { '--gateway=10\.77\.0\.10 ' }
+            else { '' }
             $kickstart | Should -Match "--netmask=255\.255\.255\.0 $route--nameserver="
             $kickstart | Should -Match "--hostname=$([regex]::Escape($hostName)) "
             $kickstart | Should -Match ([regex]::Escape("sshkey --username=account `"$key`""))
@@ -747,6 +785,32 @@ Describe 'The network, every Hyper-V and network command a stub' {
         { Invoke-HyperVResource -Kind Network -Operation set -Instance $script:Network } |
             Should -Throw -ExpectedMessage 'REFUSED: Xmip: not one internal switch (External)*'
         $script:Called | Should -BeNullOrEmpty
+    }
+
+    It 'finds an uplink that is not one external switch, refuses it and never makes it' {
+        # The uplink takes a host adapter: the owner's to make (HyperVUplink.ps1).
+        [hashtable] $gateway = $script:Network.Clone()
+        $gateway['nat'] = $false
+        $gateway['uplink'] = 'Outside'
+        [string[]] $found = @((Invoke-HyperVResource -Kind Network -Operation get -Instance (
+                    $gateway)).findings)
+        @($found -like 'Outside: not one external switch (absent)*New-VMSwitch*') |
+            Should -HaveCount 1
+        Add-FakeSwitch -Name 'Outside' -Type 'Internal'
+        { Invoke-HyperVResource -Kind Network -Operation set -Instance $gateway } |
+            Should -Throw -ExpectedMessage 'REFUSED: Outside: not one external switch (Internal)*'
+        $script:Called | Should -BeNullOrEmpty
+    }
+
+    It 'makes the network beside an external uplink, with no NAT of the host''s' {
+        [hashtable] $gateway = $script:Network.Clone()
+        $gateway['nat'] = $false
+        $gateway['uplink'] = 'Outside'
+        Add-FakeSwitch -Name 'Outside' -Type 'External'
+        (Invoke-HyperVResource -Kind Network -Operation set -Instance $gateway)._inDesiredState |
+            Should -BeTrue
+        $script:Called | Should -Be @('New-VMSwitch Xmip Internal',
+            'New-NetIPAddress vEthernet (Xmip) 10.77.0.1/24')
     }
 }
 
@@ -871,12 +935,43 @@ Describe 'The machine, every Hyper-V command a stub' {
 
     It 'refuses a VM with two adapters, never giving both its MAC, and changes nothing' {
         Add-FakeMachine -Instance $script:Linux -State 'Off'
-        $script:Fake.Vm[0].NetworkAdapters += [pscustomobject] @{
+        $script:Fake.Vm[0].NetworkAdapters += [pscustomobject] @{ Name = 'Network Adapter'
             SwitchName = 'Default Switch'; MacAddress = '00155D000001' }
         Get-HyperVHardwareFinding -Instance $script:Linux -Vm $script:Fake.Vm[0] |
             Should -Be 'XMIP-IN01: has not one adapter, on Xmip, with the MAC 00155D4D003D.'
         { Invoke-HyperVResource -Kind Machine -Operation set -Instance $script:Linux } |
             Should -Throw -ExpectedMessage 'REFUSED: XMIP-IN01 has 2 adapters, not one*'
+        $script:Called | Should -BeNullOrEmpty
+    }
+
+    It 'gives a gateway machine its Uplink, its own MAC, and never boots from it' {
+        Add-FakeMachine -Instance $script:Linux -State 'Off'
+        $script:Linux['network']['uplink'] = 'Outside'
+        Get-HyperVHardwareFinding -Instance $script:Linux -Vm $script:Fake.Vm[0] | Should -Be (
+            'XMIP-IN01: has not one adapter Uplink, on Outside, with the MAC 02155D4D003D.')
+        function Set-VMFirmware {
+            param([string] $VMName, [string] $EnableSecureBoot, [string] $SecureBootTemplate,
+                [object[]] $BootOrder)
+            $script:Booted = @($BootOrder | Where-Object {
+                    $null -ne $_.PSObject.Properties['Name'] } | ForEach-Object { $_.Name })
+        }
+        Set-HyperVHardware -Instance $script:Linux -Confirm:$false
+        $script:Called | Should -Be @('Set-VM', 'Connect-VMNetworkAdapter',
+            'Set-VMNetworkAdapter 00155D4D003D', 'Add-VMNetworkAdapter Uplink Outside',
+            'Connect-VMNetworkAdapter Uplink', 'Set-VMNetworkAdapter 02155D4D003D')
+        $script:Booted | Should -Be @('Network Adapter')
+        Get-HyperVHardwareFinding -Instance $script:Linux -Vm $script:Fake.Vm[0] |
+            Should -BeNullOrEmpty
+    }
+
+    It 'refuses an Uplink on a machine that is no gateway, never removing it' {
+        $script:Linux['network']['uplink'] = 'Outside'
+        Add-FakeMachine -Instance $script:Linux -State 'Off'
+        $script:Linux['network']['uplink'] = ''
+        Get-HyperVHardwareFinding -Instance $script:Linux -Vm $script:Fake.Vm[0] |
+            Should -Be 'XMIP-IN01: has an adapter Uplink.'
+        { Set-HyperVHardware -Instance $script:Linux -Confirm:$false } |
+            Should -Throw -ExpectedMessage 'REFUSED: XMIP-IN01 has 2 adapters, not one;*'
         $script:Called | Should -BeNullOrEmpty
     }
 

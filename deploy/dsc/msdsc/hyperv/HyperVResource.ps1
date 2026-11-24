@@ -9,6 +9,7 @@ $ErrorActionPreference = 'Stop'
 
 . (Join-Path -Path $PSScriptRoot -ChildPath '../../machine/HyperVDefinition.ps1')
 . (Join-Path -Path $PSScriptRoot -ChildPath '../../machine/HyperVBootKey.ps1')
+. (Join-Path -Path $PSScriptRoot -ChildPath '../../machine/HyperVUplink.ps1')
 foreach ($part in 'HyperVNetwork.ps1', 'HyperVMachine.ps1', 'HyperVHardware.ps1',
     'HyperVInstallation.ps1') {
     . (Join-Path -Path $PSScriptRoot -ChildPath $part)

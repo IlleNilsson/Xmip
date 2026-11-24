@@ -1,7 +1,8 @@
 ---
 # The machines on a Linux host's KVM, through libvirt's system connection:
-# a network with NAT whose DHCP and DNS give each machine its address and
-# name and answer the names the environment adds, a directory pool for the
+# a network, with NAT where the environment says, whose DHCP and DNS give
+# each machine its address and name and answer the names the environment
+# adds, a directory pool for the
 # disks, images and answer media, then each machine (libvirt-machine.yml),
 # one installation at a time. The definitions are deploy/dsc/machine's,
 # the ones Microsoft DSC's Xmip.Libvirt resources hand libvirt.
@@ -16,6 +17,7 @@
       bridge: "{{ xmip_network.bridge }}"
       gateway: "{{ xmip_network.gateway }}"
       prefixLength: "{{ xmip_network.prefixLength }}"
+      nat: "{{ xmip_network.enableNat }}"
       machines: "{{ xmip_network_machines }}"
       names: "{{ xmip_names }}"
   register: xmip_network_definition

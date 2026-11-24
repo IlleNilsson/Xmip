@@ -1,10 +1,12 @@
 ---
 # An Xmip environment, its machines and the node each runs (README.md):
 # the machines made on the host their hypervisor runs on, one installation
-# at a time; the names of the cluster and its nodes on the DNS server, where
-# the environment has one; then each node on its machine, Windows and
-# AlmaLinux alike, one machine at a time in the order the environment file
-# lists them. Deploy-XmipEnvironment writes the inventory from that file:
+# at a time; the network's way out through its gateway machine, where the
+# environment names one; the names of the cluster and its nodes on the DNS
+# server, where the environment has one; then each node on its machine,
+# Windows and AlmaLinux alike, one machine at a time in the order the
+# environment file lists them. Deploy-XmipEnvironment writes the inventory
+# from that file:
 # which node runs on which machine is the environment's, never
 # cluster.xmip's (ADR-0028 and ADR-0015, amendments 2026-10-21).
 
@@ -13,6 +15,12 @@
   gather_facts: false
   roles:
     - xmip_machine
+
+- name: The network's way out, through its gateway machine
+  hosts: xmip_gateway
+  gather_facts: false
+  roles:
+    - xmip_gateway
 
 - name: The cluster's and the nodes' names
   hosts: xmip_name_server

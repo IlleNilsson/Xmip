@@ -7,7 +7,8 @@ function Get-XmipDeployStep {
         .SYNOPSIS
             Microsoft DSC's documents to apply, in order, each with the
             values of the parameters it declares: the network, each machine,
-            the domain's controller where the file names one, the names
+            the domain's controller where the file names one, the network's
+            gateway machine where it names one, the names
             where one of the machines is the environment's DNS server, each
             other Windows machine joined to the domain, each of the
             System Tests' far ends on its machine, then each node on its
@@ -72,6 +73,16 @@ function Get-XmipDeployStep {
             Value = @{ common = $reach; machine = $Read.Domain.controller
                 domain = $Read.Domain.name; controller = $true }
             Install = $true
+        }
+    }
+    # The network's way out through its gateway machine, once a controller
+    # it is runs its DNS server, which then listens on the network alone.
+    if ($null -ne $Read.Gateway) {
+        @{
+            Name = 'gateway'
+            Document = Join-Path $environment 'gateway.dsc.yaml'
+            Value = @{ common = $reach; machine = $Read.Gateway.machine
+                prefix = $Read.Common.network.prefix; domain = $Read.Common.domainName }
         }
     }
     if ($null -ne $Read.NameServer -and $Read.Names.Count -gt 0) {

@@ -1,8 +1,10 @@
 # The network an environment's machines share on one Hyper-V host: an
 # internal virtual switch, the host's address on it, which is the machines'
-# gateway, and outbound NAT for that prefix. It asks for elevation as a
-# whole: a switch's host address and NAT are an administrator's to set.
-# Deploy-XmipEnvironment applies it first; README.md says how.
+# gateway, and outbound NAT for that prefix; or, where a gateway machine is
+# the way out, the uplink its second adapter is on, an external switch the
+# owner made. It asks for elevation as a whole: a switch's host address and
+# NAT are an administrator's to set. Deploy-XmipEnvironment applies it
+# first; README.md says how.
 $schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
 directives:
   version: ^3.4.0-preview.3
@@ -15,7 +17,9 @@ parameters:
     type: object
     description: >-
       name (the switch's), prefix (the network in CIDR notation), gateway
-      (the host's address on the switch), prefixLength and enableNat.
+      (the host's address on the switch), prefixLength, enableNat and uplink
+      (the external switch a gateway machine's second adapter is on, empty
+      where none is).
 resources:
   - name: Network
     type: Xmip.HyperV/Network
@@ -26,3 +30,4 @@ resources:
       gateway: "[parameters('network').gateway]"
       prefixLength: "[parameters('network').prefixLength]"
       nat: "[parameters('network').enableNat]"
+      uplink: "[parameters('network').uplink]"

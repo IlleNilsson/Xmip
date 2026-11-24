@@ -59,6 +59,7 @@ schema: !embedded
       - bridge
       - gateway
       - prefixLength
+      - nat
     properties:
       name:
         description: 'The network''s name in libvirt.'
@@ -71,6 +72,11 @@ schema: !embedded
         type: string
       prefixLength:
         type: integer
+      nat:
+        description: >-
+          Whether it forwards with NAT, the host the way out; isolated
+          otherwise, where a gateway machine is the way out, or none is.
+        type: boolean
       machines:
         description: >-
           Each machine, its name and address: a DHCP host by its static MAC,

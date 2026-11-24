@@ -180,6 +180,11 @@ function Read-XmipTestEnvironment {
             dsc = @{ path = Join-Path $Folder 'dsc.zip'; sha256 = '01' }
         }
     }
+    # The uplink a gateway machine's second adapter is on, which the owner's
+    # copy names.
+    if ($environment['network'].Contains('gateway_machine')) {
+        $environment['network']['uplink'] = 'Uplink'
+    }
     # The System Tests' far end's program, for a machine that runs one.
     $environment['far_ends'] = @{
         Linux = @{ program = Join-Path $Folder 'xmip-system-test-external' }

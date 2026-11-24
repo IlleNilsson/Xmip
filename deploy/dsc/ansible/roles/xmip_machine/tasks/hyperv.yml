@@ -1,7 +1,8 @@
 ---
 # The machines on a Windows host's Hyper-V, the host reached from the
 # controller over WinRM: an internal switch, the host's address on it and
-# NAT, then each machine (hyperv-machine.yml), one installation at a time.
+# NAT, or the uplink a gateway machine reaches past the network through,
+# then each machine (hyperv-machine.yml), one installation at a time.
 # Microsoft's microsoft.hyperv modules wherever one fits; the address and
 # the NAT, which no module covers, through ansible.windows.win_powershell.
 # What each machine is, is deploy/dsc/machine's, asked on the controller.
@@ -35,6 +36,27 @@
           New-NetNat -Name $Name -InternalIPInterfaceAddressPrefix $Prefix | Out-Null
           $Ansible.Changed = $true
       }
+
+# The uplink takes a host adapter, so it is the owner's to make: found,
+# never made, by the one script both technologies run,
+# deploy/dsc/machine/HyperVUplink.ps1, read on the controller and handed to
+# the host whole.
+- name: The uplink, one external switch, where a gateway machine is the way out
+  ansible.windows.win_powershell:
+    parameters:
+      Name: "{{ xmip_network.uplink }}"
+    script: |
+      param([string] $Name)
+      {{ lookup('ansible.builtin.file', xmip_uplink) }}
+      $Ansible.Changed = $false
+      [string] $finding = Get-HyperVUplinkFinding -Name $Name
+      if ($finding) {
+          throw "REFUSED: $finding"
+      }
+  vars:
+    xmip_uplink: "{{ xmip_machine_definition | dirname }}/HyperVUplink.ps1"
+  check_mode: false
+  when: xmip_network.uplink | default('') | length > 0
 
 - name: Each machine, one installation at a time
   ansible.builtin.include_tasks: hyperv-machine.yml

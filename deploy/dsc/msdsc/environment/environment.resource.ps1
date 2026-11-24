@@ -21,6 +21,9 @@
     - Domain, on the machine DSC is run on: the environment's Active
       Directory domain, its controller the first domain controller of a new
       forest, every other Windows machine joined (EnvironmentDomain.ps1).
+    - Gateway, on the machine DSC is run on: the network's way out through
+      its gateway machine, NAT out of its uplink, which is kept out of the
+      domain (EnvironmentGateway.ps1, deploy/dsc/machine/WindowsGateway.ps1).
     - Started, on the machine DSC is run on: every node of the environment
       running, started together, since none of a cluster's nodes accepts
       work until its Xmip Storage does (EnvironmentStarted.ps1).
@@ -35,7 +38,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet('Machine', 'Slice', 'Name', 'Domain', 'Started')]
+    [ValidateSet('Machine', 'Slice', 'Name', 'Domain', 'Gateway', 'Started')]
     [string] $Kind,
 
     [Parameter(Mandatory = $true)]
@@ -54,7 +57,7 @@ Set-StrictMode -Version Latest
 else {
     @('../../machine/MachineSecret.ps1', 'Program.ps1', 'EnvironmentSsh.ps1',
         'EnvironmentMachine.ps1', 'EnvironmentSlice.ps1', 'EnvironmentName.ps1',
-        'EnvironmentDomain.ps1', 'EnvironmentStarted.ps1')
+        'EnvironmentDomain.ps1', 'EnvironmentGateway.ps1', 'EnvironmentStarted.ps1')
 }
 foreach ($part in $parts) {
     . (Join-Path -Path $PSScriptRoot -ChildPath $part)
@@ -93,6 +96,12 @@ foreach ($part in $parts) {
             Set-EnvironmentDomain -Instance $instance -Confirm:$false
         }
         Get-EnvironmentDomain -Instance $instance
+    }
+    'Gateway' {
+        if ($Operation -eq 'set') {
+            Set-EnvironmentGateway -Instance $instance -Confirm:$false
+        }
+        Get-EnvironmentGateway -Instance $instance
     }
     'Started' {
         if ($Operation -eq 'set') {

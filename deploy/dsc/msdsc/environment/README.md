@@ -187,6 +187,7 @@ alike. The Windows PowerShell adapter is used nowhere here.
 | a far end's program, placed and registered as its service by its own `--install` | `Xmip.Node/Program` |
 | the names | `Xmip.Environment/Name` |
 | the Active Directory domain, its controller promoted and each other Windows machine joined | `Xmip.Environment/Domain` |
+| the network's way out, NAT on its gateway machine out of its uplink, which is kept out of the domain | `Xmip.Environment/Gateway` |
 | a document applied on another machine | `Xmip.Environment/Machine` |
 | every node started together | `Xmip.Environment/Started` |
 
@@ -230,8 +231,9 @@ administrator rights — every method of `Xmip.Environment/Name`,
 `Xmip.Node/File`, `Xmip.Node/Opening` and `Xmip.Node/Slice`, which read
 what only an administrator may, and the set of `Xmip.Node/Account`,
 `Xmip.Node/Package` and `Xmip.Node/Service`; `Xmip.Environment/Machine`,
-`Xmip.Environment/Slice`, `Xmip.Environment/Domain` and
-`Xmip.Environment/Started` run unelevated on this machine.
+`Xmip.Environment/Slice`, `Xmip.Environment/Domain`,
+`Xmip.Environment/Gateway` and `Xmip.Environment/Started` run unelevated on
+this machine.
 
 `Xmip.Environment/Domain` is no document applied on the machine but works
 from this one, inside the session `Xmip.Environment/Machine` opens: the
@@ -243,7 +245,32 @@ ComputerManagementDsc, are Windows PowerShell DSC resources, which DSC v3
 runs only through its Windows PowerShell adapter, which no document here
 uses. Promoting and joining each restart the machine; one that does not
 answer while it restarts is not yet in its desired state, never an error,
-so the run sets it again until it is. `Xmip.Node/Package` compares an installed `.rpm` with the
+so the run sets it again until it is.
+
+`Xmip.Environment/Gateway` works from this machine in the same session: it
+makes the machine the network's `[network] gateway_machine` names, XMIP-DC01
+in the examples, the network's way out (the owner, 2026-11-24: *the VM DSC
+can be a gateway to internet for those machines that needs it*, *A good
+choice would be the DC*, *The DC would be behind my firewall*). What the
+machine is given is `deploy/dsc/machine/WindowsGateway.ps1`'s, the one
+script Ansible's `xmip_gateway` role hands to `win_powershell` too, sent
+whole into the session: its second adapter, the uplink, the one beside the
+adapter holding its address, registers nothing in DNS and asks the
+machine's own DNS server at the network's address, as its network's
+adapter does too, has no NetBIOS over TCP/IP, is a Public network,
+and an inbound rule on that interface, `Xmip-Uplink-Inbound`, blocks
+everything arriving on it whatever profile it is given; where the machine
+runs the DNS Server service, it listens on the network's address alone and
+every A or AAAA record of the machine's name, of the zone's own name and of
+`gc` that holds an address outside the network is removed; and Routing and
+Remote Access's Routing, `Install-RemoteAccess -VpnType RoutingOnly`, holds
+NAT with the uplink translated in full and the network's adapter private
+(`netsh routing ip nat`), read back from netsh's own dump. A machine
+without its second adapter is refused: the adapter is the hypervisor's to
+give, and the hypervisor's template gives it. `deploy/dsc/README.md` says
+why each, with Microsoft's documentation.
+
+`Xmip.Node/Package` compares an installed `.rpm` with the
 shipped one by its header's SHA-256, so a build made again under the same
 version reaches the machine too, installed over the one there by rpm's own
 upgrade.
@@ -253,13 +280,14 @@ upgrade.
 | `machine.dsc.yaml` | one node machine, from the host: its slice made, then `node.dsc.yaml` applied there |
 | `names.dsc.yaml` | the names, from the host: `name.dsc.yaml` applied on the DNS server |
 | `domain.dsc.yaml` | the domain, from the host: one Windows machine promoted or joined (`EnvironmentDomain.ps1`) |
+| `gateway.dsc.yaml` | the network's way out, from the host: its gateway machine made so (`EnvironmentGateway.ps1`, `../../machine/WindowsGateway.ps1`) |
 | `node.dsc.yaml` | one node, on its machine |
 | `name.dsc.yaml` | the names, on the DNS server |
 | `started.dsc.yaml` | every node started together, from the host |
 | `far-end.dsc.yaml` | one of the Systems Tests' far ends, from the host: `far-end-program.dsc.yaml` applied on its machine |
 | `far-end-program.dsc.yaml` | one far end, on its machine: its certificate, its program placed and registered, its firewall opening and its service |
 | `node.resource.ps1`, `NodeMachine.ps1`, `NodeFile.ps1`, `NodeOpening.ps1`, `NodeAccess.ps1`, `NodePackage.ps1`, `NodeProgram.ps1`, `NodeService.ps1` | the `Xmip.Node` resources |
-| `environment.resource.ps1`, `EnvironmentMachine.ps1`, `EnvironmentSsh.ps1`, `EnvironmentSlice.ps1`, `EnvironmentName.ps1`, `EnvironmentStarted.ps1` | the `Xmip.Environment` resources |
+| `environment.resource.ps1`, `EnvironmentMachine.ps1`, `EnvironmentSsh.ps1`, `EnvironmentSlice.ps1`, `EnvironmentName.ps1`, `EnvironmentDomain.ps1`, `EnvironmentGateway.ps1`, `EnvironmentStarted.ps1` | the `Xmip.Environment` resources |
 | `*.dsc.resource.yaml` | their manifests, YAML as every configuration here: JSON is what the resources speak, never what a person writes (the owner, 2026-11-02); the embedded schema tagged `!embedded`, the form DSC's YAML reader takes |
 
 ## Before the first run
@@ -326,7 +354,8 @@ The environment file names each, `deploy/dsc/README.md`.
 
 `Deploy-XmipEnvironment -Path <environment file>`, with `technology =
 "msdsc"`: after the machines, it applies `domain.dsc.yaml` to the
-`domain_controller` where the file names one, `names.dsc.yaml` where one of
+`domain_controller` where the file names one, `gateway.dsc.yaml` to the
+network's `gateway_machine` where it names one, `names.dsc.yaml` where one of
 the machines is the DNS server, `domain.dsc.yaml` to each other Windows
 machine where there is a domain, then `machine.dsc.yaml` once for each node in
 the order the file lists the machines, and last `started.dsc.yaml`, with
@@ -413,7 +442,11 @@ the tools, every mapped node declared by the cluster's file, and every node
 machine told the environment's nodes and the far end it binds to; the
 resource manifests found by DSC; a tool whose SHA-256 differs refused
 before anything is sent; and the resources' own steps with the machine's
-commands stubbed, the slice asked with `--bind` and `--nodes`. The root's
+commands stubbed, the slice asked with `--bind` and `--nodes`.
+`test/DeployGateway.Test.ps1` holds the gateway machine: the file's reading
+and its refusals, the step's place, and `WindowsGateway.ps1` with every
+Windows command a stub over a machine held in memory, a fresh one found
+differing in each rule, made so and then found as it is. The root's
 `cargo test --test deploy` holds that every node an example maps is one the
 cluster's file declares, that every mapped node's slice, its Locations
 placed and bound on the far end, reads as `xmip-service` reads it, and that

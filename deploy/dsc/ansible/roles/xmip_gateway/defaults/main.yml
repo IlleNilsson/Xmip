@@ -1,0 +1,11 @@
+---
+# The network's way out through its gateway machine (README.md): the
+# machine the environment file's [network] gateway_machine names, reached
+# over WinRM as every Windows machine is. Deploy-XmipEnvironment's inventory
+# gives both values.
+#
+# The network in CIDR notation, which the gateway translates.
+xmip_network_prefix: ""
+# deploy/dsc/machine/WindowsGateway.ps1 on the controller, the one script
+# both technologies run on the gateway machine.
+xmip_gateway_script: ""

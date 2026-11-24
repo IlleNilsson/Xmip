@@ -1653,3 +1653,86 @@ http without it; as2, as4, peppol, msmq and webdav ride on it and are
 linked the same way, since turning one's `tls` on turns HTTPS on for all of
 them. Their secure schemes are refused until a site can choose TLS for
 HTTP.
+
+## Amendment, 2026-11-24: the domain controller is the network's way out
+
+**Provenance.** The owner, 2026-11-24, of how the machines of a Hyper-V
+test environment reach the internet: *the VM DSC can be a gateway to
+internet for those machines that needs it*, and *A good choice would be the
+DC*; told that a domain controller on two networks is a known cause of DNS
+and Active Directory trouble (KB 272294, and community advice to route on a
+member server instead): *The DC would be behind my firewall*. How the
+templates carry it was decided by the assistant while building it, the same
+day, for the owner to strike. Written and held by its tests; not yet run on
+a machine.
+
+- **One way out, named by the file.** `[network] gateway_machine` names a
+  Windows machine of the environment, XMIP-DC01 in both examples, and
+  `[network] uplink` the switch or bridge its second adapter is on: on
+  Hyper-V an external switch onto one of the host's adapters, on libvirt a
+  bridge of the host's, its name written in the owner's own copy, never in
+  a tracked file. Each machine whose `internet` says so is given the
+  gateway machine's address as its gateway in place of the host's, every
+  other none, as the first amendment of 2026-11-22 had it; the gateway
+  machine is given none on the network, its way out the uplink's, addressed
+  by the owner's network. Refused before anything is made: a name that is
+  no Windows machine of the environment, no uplink, and the host's `nat`
+  beside it, since a network has one way out. Where no `gateway_machine`
+  is named the host is the way out through its own NAT, as before: that
+  option stays.
+- **The uplink is the owner's to make.** It takes a host adapter, so the
+  templates find it and never make, change or remove it:
+  `deploy/dsc/machine/HyperVUplink.ps1`, which `Xmip.HyperV/Network`
+  dot-sources and Ansible's `xmip_machine` hands to the host whole, refuses
+  one that is not one external switch, naming the command that makes it.
+  The gateway machine's second adapter, `Uplink` on Hyper-V and a bridge
+  interface on libvirt, has a static MAC, its first adapter's with the
+  first octet 02, a locally administered address, and is never booted
+  from; an `Uplink` on any other machine is refused, never removed, as an
+  adapter never is (the first amendment of 2026-11-11). On libvirt the
+  network forwards with NAT only where `nat` says and is isolated
+  otherwise, where it always forwarded.
+- **The uplink kept out of the domain**, each by Microsoft's own setting,
+  in one script both technologies run on the machine,
+  `deploy/dsc/machine/WindowsGateway.ps1`: Microsoft DSC sends it whole into
+  the machine's session from the new `Xmip.Environment/Gateway`
+  (`gateway.dsc.yaml`, applied after the domain's controller and before the
+  names), and Ansible's new role `xmip_gateway`, played after the machines
+  and before the names, hands it whole to `win_powershell`. The uplink
+  registers nothing in DNS, and both adapters ask the machine's own DNS
+  server at the network's address, the one it listens on, where promoting
+  it left them asking the loopback; it has no
+  NetBIOS over TCP/IP; it is a Public network, and one inbound rule on its
+  interface blocks everything arriving on it whatever its profile — a rule
+  rather than the Public profile's setting, since Windows Server 2025
+  domain controllers have been reported to give their own network the
+  Public profile after a restart. Where the machine runs the DNS Server
+  service, it listens on the network's address alone, and every record of
+  the machine's name, of its zone's own name and of `gc` holding an
+  outside address is removed, the steps of Microsoft's *Avoid registering
+  unwanted NICs in DNS on a multihomed domain controller* (2026-02-12). A
+  machine without its second adapter is refused: the adapter is the
+  hypervisor's to give.
+- **NAT is Routing and Remote Access's.** Its Routing role service,
+  `Install-RemoteAccess -VpnType RoutingOnly`, which Microsoft documents as
+  a NAT router a Hyper-V virtual machine may run, with `netsh routing ip
+  nat` translating the uplink in full and the network's adapter private,
+  read back from netsh's own dump; no PowerShell command covers that NAT.
+  WinNAT, `New-NetNat`, the host's own NAT, is not used on the machine:
+  Microsoft documents it for a host's internal switch, its virtual machines
+  and containers, one per host. `deploy/dsc/README.md`, *The way out*,
+  cites each.
+- **Not yet known**, until the first Hyper-V run: whether Netlogon's hourly
+  registration puts the uplink's address back into DNS (its setting,
+  `DnsAvoidRegisterRecords`, is not taken; each later run finds such a
+  record and removes it); whether `netsh routing ip nat` and its dump are
+  on Windows Server 2025 what the Windows Server 2008 R2 reference says;
+  and whether the replies RRAS translates pass the inbound rule. From a
+  Linux host the Windows machines are not made yet (the third amendment of
+  2026-11-22), so there the host's NAT stays the way out until they are.
+
+Proved by `test/DeployGateway.Test.ps1` (the file's reading and refusals,
+the step's place, the inventory, and the script with every Windows command
+a stub over a machine held in memory), `test/MsdscHyperV.Test.ps1` (the
+uplink found and never made, the gateway machine's two adapters) and
+`test/MsdscLibvirt.Test.ps1` (the isolated network, the bridge interface).

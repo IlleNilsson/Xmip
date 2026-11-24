@@ -1,0 +1,34 @@
+---
+# On the gateway machine: NAT for the network's prefix out of its second
+# adapter, the uplink, onto the owner's network behind his firewall, that
+# adapter registering nothing in DNS, with no NetBIOS and letting nothing
+# in, and its DNS server, where it runs one, listening on the network alone
+# (the owner, 2026-11-24: "A good choice would be the DC"). What it is, is
+# deploy/dsc/machine/WindowsGateway.ps1's, the one script both technologies
+# run, read on the controller and handed whole as win_powershell's script
+# (ADR-0015, amendment 2026-11-24). Under --check it reads and says whether
+# it would change, and changes nothing.
+
+- name: Refuse a gateway left without its prefix or its script
+  ansible.builtin.assert:
+    that:
+      - xmip_network_prefix | length > 0
+      - xmip_gateway_script | length > 0
+    fail_msg: >-
+      REFUSED: xmip_network_prefix and xmip_gateway_script name the network
+      and deploy/dsc/machine/WindowsGateway.ps1.
+
+- name: The network's way out, through this machine
+  ansible.windows.win_powershell:
+    parameters:
+      Address: "{{ ansible_host }}"
+      Prefix: "{{ xmip_network_prefix }}"
+    script: |
+      [CmdletBinding(SupportsShouldProcess)]
+      param([string] $Address, [string] $Prefix)
+      {{ lookup('ansible.builtin.file', xmip_gateway_script) }}
+      [string[]] $finding = @(Get-WindowsGatewayFinding -Address $Address -Prefix $Prefix)
+      $Ansible.Changed = $finding.Count -gt 0
+      if ($Ansible.Changed -and $PSCmdlet.ShouldProcess($Address, 'Make the way out')) {
+          Set-WindowsGateway -Address $Address -Prefix $Prefix -Confirm:$false
+      }

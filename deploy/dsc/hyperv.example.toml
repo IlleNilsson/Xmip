@@ -1,8 +1,8 @@
 # An Xmip environment on a Windows host's Hyper-V: what Deploy-XmipEnvironment
 # reads (deploy/dsc/README.md). Copy it to .local-work/deploy/hyperv.toml and
-# write in linux_account, secret, slicer, the packages and, for msdsc, the
-# tools. msdsc runs in an elevated Xmip PowerShell Console on
-# the host; ansible from a Linux controller, the WSL guest.
+# write in linux_account, secret, slicer, the packages, the network's uplink
+# and, for msdsc, the tools. msdsc runs in an elevated Xmip PowerShell
+# Console on the host; ansible from a Linux controller, the WSL guest.
 #
 # XMIP-DC01, the domain controller, is the network's DNS server: the names of
 # the cluster and its nodes are given it. Which node runs on which machine is
@@ -99,14 +99,29 @@ dsc = { path = "", sha256 = "" }
 [network]
 name = "Xmip"
 prefix = "10.77.0.0/24"
+# The host's address on the switch, where it reaches the machines: their
+# gateway too where no gateway_machine is named.
 gateway = "10.77.0.1"
 # XMIP-DC01, the domain controller, answers the environment's names.
 dns_server = "10.77.0.10"
-nat = true
-# Whether a machine reaches past the network, through the gateway and its
-# NAT: none does here but the one whose own internet says so, XMIP-RX01. A
-# machine that does not is installed with no gateway and reaches the
-# network alone, the host on it included. Left out, every machine does.
+# The machine the network reaches past it through, a Windows machine of the
+# environment: XMIP-DC01, NAT on it out of a second adapter on uplink, which
+# registers nothing in DNS, has no NetBIOS and lets nothing in (the owner,
+# 2026-11-24: "A good choice would be the DC", "The DC would be behind my
+# firewall"). Left out, the host is the gateway, through nat.
+gateway_machine = "XMIP-DC01"
+# The external switch XMIP-DC01's second adapter is on, onto one of the
+# host's adapters, behind your firewall: made once by you, found and never
+# made by the template (deploy/dsc/msdsc/hyperv/README.md). Write in its
+# name in your copy.
+uplink = ""
+# The host's own NAT for the network, where no gateway_machine is named: a
+# network has one way out.
+nat = false
+# Whether a machine reaches past the network, through the gateway: none does
+# here but the one whose own internet says so, XMIP-RX01. A machine that
+# does not is installed with no gateway and reaches the network alone, the
+# host on it included. Left out, every machine does.
 internet = false
 
 [images.WindowsServer2025]
@@ -157,7 +172,7 @@ tpm = false
 # what it uses between its least and its most, the plan's figure; a machine
 # without it keeps its memory_gb, static. Windows Server is Server Core.
 
-# domain controller and DNS for every machine
+# domain controller and DNS for every machine, and the network's gateway
 [[machines]]
 name = "XMIP-DC01"
 address = "10.77.0.10"

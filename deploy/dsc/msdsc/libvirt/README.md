@@ -15,7 +15,7 @@ network, a pool or a domain is libvirt's.
 
 | Resource | Is |
 | --- | --- |
-| `Xmip.Libvirt/Network` | a network with NAT, the host its gateway; its DHCP gives each machine its address by its static MAC, its DNS answers each machine's name and the names the environment adds |
+| `Xmip.Libvirt/Network` | a network with NAT, the host its gateway, where `nat` says, isolated where a gateway machine is the way out or none is; its DHCP gives each machine its address by its static MAC, its DNS answers each machine's name and the names the environment adds |
 | `Xmip.Libvirt/Pool` | a directory pool for the machines' disks, images and answer media |
 | `Xmip.Libvirt/Machine` | one machine, a domain installed unattended from its ISO |
 
@@ -26,8 +26,11 @@ network, a pool or a domain is libvirt's.
 the Hyper-V example's 21 machines on 10.77.0.0/24, machine for machine, with
 the same names, addresses, systems, nodes and far ends
 (`deploy/dsc/msdsc/environment/README.md`). XMIP-DC01, the domain
-controller, is the network's DNS server; XMIP-RX01 alone reaches past the
-network; XMIP-DEV02 is AlmaLinux with a desktop. An AlmaLinux machine starts
+controller, is the network's DNS server and its way out, its
+`gateway_machine`, with a second adapter on the bridge your copy's `uplink`
+names (`deploy/dsc/README.md`, *The way out*), and the network is isolated;
+XMIP-RX01 alone reaches past the network, through it; XMIP-DEV02 is
+AlmaLinux with a desktop. An AlmaLinux machine starts
 with 2 GiB and is given up to the plan's figure; a Windows machine has the
 plan's floor, static: 2 GiB for Windows Server, 4 GiB for Windows 11
 (ADR-0015, amendment 2026-11-22).
@@ -35,7 +38,9 @@ plan's floor, static: 2 GiB for Windows Server, 4 GiB for Windows 11
 From a Linux host the Windows machines wait on two things the owner
 decides: their Administrator secret, which only Windows reads
 (`deploy/dsc/machine/MachineSecret.ps1`), and how msdsc reaches them, since
-PowerShell on Linux has no WinRM client.
+PowerShell on Linux has no WinRM client. Until they are made, XMIP-DC01 is
+not either: name no `gateway_machine` and set `nat = true`, and the host is
+the network's way out, through libvirt's NAT.
 
 ## What each machine is given
 
@@ -46,7 +51,9 @@ checked against it and uploaded only where the pool does not hold it yet, so
 a DVD's gigabytes are read once, not once per machine. A
 domain with UEFI and Secure Boot, the enrolled keys, its memory and CPUs, its
 adapter on the network with a static MAC made from its address (52-54-00 and
-the address's last three octets), and two DVD drives; a TPM 2.0 from
+the address's last three octets), the gateway machine a second on the
+uplink, a bridge of the host's, its MAC the same with its first octet 02,
+and two DVD drives; a TPM 2.0 from
 `swtpm` where its image says `tpm = true`, as Windows 11's does, refused
 where the host has no `swtpm`. It boots its disk first, then the DVD: the
 empty disk does not boot, so the firmware moves on to the ISO, which
@@ -100,7 +107,11 @@ sudo systemctl enable --now virtqemud.socket virtnetworkd.socket virtstoraged.so
 ```
 
 then sign in again. The rest, none of it with sudo, is
-`deploy/dsc/README.md`'s *Before the first run*.
+`deploy/dsc/README.md`'s *Before the first run*. Where the file names a
+`gateway_machine`, its `uplink` is a bridge of the host's holding its
+adapter on your network, made once with the system's own network tools, as
+your network wants it; the templates name it and never make it, and
+libvirt refuses to start a domain whose bridge is not there.
 
 ## Running it
 
@@ -131,8 +142,10 @@ a medium or the answer medium is still in the pool, and its record naming
 the technology that made it, so the other technology is refused there.
 
 `test/MsdscLibvirt.Test.ps1` holds what can be held without libvirt: the
-network's and the domain's definitions, their memory, balloon, TPM and
-Windows' interface and clock; an AlmaLinux machine's answer given KVM's
+network's and the domain's definitions, the network isolated without
+`nat`, the gateway machine's second adapter on the uplink's bridge, their
+memory, balloon, TPM and Windows' interface and clock; an AlmaLinux
+machine's answer given KVM's
 clock; the example as `Deploy-XmipEnvironment` reads it, the Hyper-V
 example's plan machine for machine, every machine's domain defined, and a
 Windows machine's dynamic memory refused; the machine's `set` while it

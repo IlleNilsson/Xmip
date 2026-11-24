@@ -5,23 +5,25 @@
     The Microsoft DSC v3 template for libvirt (deploy/dsc/msdsc/libvirt)
     without libvirt: what can be held on any machine.
 
-    - The network's definition: NAT, the bridge, the gateway, a DHCP host
-      per machine by its static MAC, and one DNS host per address holding
-      every name it answers; its summary ignores what libvirt adds.
+    - The network's definition: NAT where the environment says, isolated
+      otherwise, the bridge, the gateway, a DHCP host per machine by its
+      static MAC, and one DNS host per address holding every name it
+      answers; its summary ignores what libvirt adds.
     - The domain's definition: UEFI with Secure Boot, the disk first, the
       DVD drives on SATA, virtio for AlmaLinux and SATA and e1000e for
       Windows; its memory, the most of a dynamic one with memory_gb its
       balloon's start, static where it says no more; the balloon for
       AlmaLinux and none for Windows, which gets Hyper-V's interface and
       clock; a TPM where its image asks, refused where the host has no
-      swtpm.
+      swtpm; a gateway machine's second adapter on the uplink, a bridge.
     - The answer: an AlmaLinux machine's kickstart keeps KVM's clock,
       ptp_kvm loaded at every start.
     - The example, deploy/dsc/libvirt.example.toml, as
       Deploy-XmipEnvironment reads it: the network, then each machine, each
       with every parameter its document declares; the Hyper-V example's
       node plan, machine for machine, a Windows machine's memory static; a
-      gateway on XMIP-RX01 alone and a desktop on XMIP-DEV02; dynamic
+      gateway on XMIP-RX01 alone, XMIP-DC01, the one machine on the
+      uplink, and a desktop on XMIP-DEV02; dynamic
       memory on a Windows machine refused.
     - The machine's set while it installs, virsh a stub: it is left to
       install and nothing is written, since DSC reads what the resource
@@ -55,6 +57,7 @@ BeforeAll {
         bridge = 'virbr-xmip'
         gateway = '10.77.0.1'
         prefixLength = 24
+        nat = $true
         machines = @(
             @{ name = 'XMIP-IN01'; address = '10.77.0.61' }
             @{ name = 'XMIP-APP01'; address = '10.77.0.51' }
@@ -91,6 +94,17 @@ Describe 'The network' {
         [object] $dhcp = $network.SelectSingleNode("//dhcp/host[@name='XMIP-IN01']")
         $dhcp.mac | Should -Be '52:54:00:4d:00:3d'
         $dhcp.ip | Should -Be '10.77.0.61'
+    }
+
+    It 'is isolated where a gateway machine is the way out, the host''s NAT off' {
+        [hashtable] $isolated = $script:Network.Clone()
+        $isolated['nat'] = $false
+        [xml] $network = Get-LibvirtNetworkDefinition -Instance $isolated
+        $network.SelectSingleNode('/network/forward') | Should -BeNullOrEmpty
+        $network.network.ip.address | Should -Be '10.77.0.1'
+        Get-LibvirtNetworkSummary -Xml $network | Should -Not -Be (
+            Get-LibvirtNetworkSummary -Xml ([xml] (Get-LibvirtNetworkDefinition -Instance (
+                        $script:Network))))
     }
 
     It 'answers every name of an address in one DNS host' {
@@ -131,6 +145,19 @@ Describe 'The domain' {
         [xml] $domain = Get-LibvirtMachineDefinition -Instance (New-Machine -Family 'Windows')
         $domain.SelectSingleNode("//disk[@device='disk']/target").bus | Should -Be 'sata'
         $domain.SelectSingleNode('//interface/model').type | Should -Be 'e1000e'
+        $domain.SelectSingleNode("//interface[@type='bridge']") | Should -BeNullOrEmpty
+    }
+
+    It 'gives a gateway machine a second adapter on the uplink, a bridge, its MAC its own' {
+        [hashtable] $machine = New-Machine -Family 'Windows'
+        $machine['network']['uplink'] = 'br-outside'
+        [xml] $domain = Get-LibvirtMachineDefinition -Instance $machine
+        [Xml.XmlElement] $uplink = $domain.SelectSingleNode("//interface[@type='bridge']")
+        $uplink.source.bridge | Should -Be 'br-outside'
+        $uplink.mac.address | Should -Be '02:54:00:4d:00:3d'
+        $uplink.model.type | Should -Be 'e1000e'
+        $domain.SelectSingleNode("//interface[@type='network']/mac").address |
+            Should -Be '52:54:00:4d:00:3d'
     }
 
     It 'gives a TPM where the image asks for one, refused where the host has no swtpm' {
@@ -246,7 +273,8 @@ Describe 'The example, as Deploy-XmipEnvironment reads it' {
             'operators') {
             "$($script:Example[$key])" | Should -Be "$($hyperv[$key])" -Because $key
         }
-        foreach ($key in 'prefix', 'gateway', 'dns_server', 'nat', 'internet') {
+        foreach ($key in 'prefix', 'gateway', 'dns_server', 'gateway_machine', 'nat',
+            'internet') {
             "$($script:Example['network'][$key])" | Should -Be "$($hyperv['network'][$key])"
         }
         [object[]] $kvm = @($script:Example['machines'])
@@ -282,6 +310,12 @@ Describe 'The example, as Deploy-XmipEnvironment reads it' {
             ForEach-Object { $_.Value })
         @($machines | Where-Object { $_.network.gateway } | ForEach-Object { $_.name }) |
             Should -Be @('XMIP-RX01')
+        # Through XMIP-DC01, the one machine on the uplink (ADR-0015,
+        # amendment 2026-11-24).
+        @($machines | Where-Object { $_.network.gateway })[0].network.gateway |
+            Should -Be '10.77.0.10'
+        @($machines | Where-Object { $_.network.uplink } | ForEach-Object { $_.name }) |
+            Should -Be @('XMIP-DC01')
         @($machines | Where-Object { $_.image['environment'] } | ForEach-Object { $_.name }) |
             Should -Be @('XMIP-DEV02')
         foreach ($machine in $machines) {

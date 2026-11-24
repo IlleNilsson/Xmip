@@ -18,6 +18,9 @@ foreach ($part in 'MachineAnswer.ps1', 'MachineGuest.ps1') {
 # Hyper-V's MAC prefix: the adapter's static MAC ends in the address's last
 # three octets (MachineAnswer.ps1).
 $script:HyperVMacPrefix = '00155D'
+# The name of a gateway machine's second adapter, on the uplink; the first
+# keeps the name New-VM gives it.
+$script:HyperVUplinkAdapter = 'Uplink'
 # The package of the guest services on Hyper-V, which the kickstart installs.
 $script:HyperVGuestPackage = 'hyperv-daemons'
 # Hyper-V's clock as chrony's source (MachineGuest.ps1): the guest's hv_utils
@@ -127,7 +130,8 @@ function Get-HyperVMachinePlan {
     .SYNOPSIS
     Everything a template needs to make one machine on Hyper-V beyond the
     host's own commands: its folder's files, its MAC, the drives' places,
-    and the port it answers on once installed.
+    and the port it answers on once installed; and a gateway machine's
+    second adapter, its name and MAC, on the uplink.
     #>
     [CmdletBinding()]
     [OutputType([hashtable])]
@@ -137,11 +141,13 @@ function Get-HyperVMachinePlan {
     )
 
     [bool] $windows = $Instance['image'].family -eq 'Windows'
+    [hashtable] $mac = @{ Address = $Instance['address']; Prefix = $script:HyperVMacPrefix }
     return @{
         disk = Get-HyperVMachineDisk -Instance $Instance
         answer = Get-HyperVMachineFile -Instance $Instance -Name 'answer.iso'
         installed = Get-HyperVMachineFile -Instance $Instance -Name 'installed'
-        mac = Get-MachineMacAddress -Address $Instance['address'] -Prefix $script:HyperVMacPrefix
+        mac = Get-MachineMacAddress @mac
+        uplink = @{ name = $script:HyperVUplinkAdapter; mac = Get-MachineMacAddress @mac -Uplink }
         location = @{
             disk = $script:HyperVDiskLocation
             install = $script:HyperVInstallLocation

@@ -1,0 +1,94 @@
+$schema: https://aka.ms/dsc/schemas/v3/bundled/resource/manifest.json
+type: Xmip.Environment/Gateway
+version: '0.1.0'
+description: >-
+  The network's way out through its gateway machine: NAT for the network's
+  prefix out of its uplink, which registers nothing in DNS, has no NetBIOS
+  and lets nothing in, its DNS server listening on the network alone; the
+  machine reached as Xmip.Environment/Machine reaches it.
+tags:
+  - Xmip
+get:
+  executable: pwsh
+  args:
+    - -NoLogo
+    - -NonInteractive
+    - -NoProfile
+    - -File
+    - ./environment.resource.ps1
+    - -Kind
+    - Gateway
+    - -Operation
+    - get
+  input: stdin
+test:
+  executable: pwsh
+  args:
+    - -NoLogo
+    - -NonInteractive
+    - -NoProfile
+    - -File
+    - ./environment.resource.ps1
+    - -Kind
+    - Gateway
+    - -Operation
+    - test
+  input: stdin
+  return: state
+set:
+  executable: pwsh
+  args:
+    - -NoLogo
+    - -NonInteractive
+    - -NoProfile
+    - -File
+    - ./environment.resource.ps1
+    - -Kind
+    - Gateway
+    - -Operation
+    - set
+  input: stdin
+  implementsPretest: true
+  return: state
+exitCodes:
+  '0': Success
+  '1': Error
+schema: !embedded
+    $schema: https://json-schema.org/draft/2020-12/schema
+    type: object
+    required:
+      - name
+      - address
+      - prefix
+      - domain
+      - secretPath
+    properties:
+      name:
+        type: string
+        description: 'The gateway machine, as the hypervisor names it.'
+      address:
+        type: string
+        description: 'Its address on the network, where it is reached over WinRM.'
+      prefix:
+        type: string
+        description: 'The network in CIDR notation, which it translates.'
+      domain:
+        type: string
+        description: 'The environment''s DNS domain, whose controller it may be.'
+      secretPath:
+        type: string
+        description: 'The Administrator''s secret, Export-Clixml.'
+      answering:
+        type: boolean
+        readOnly: true
+        description: 'Whether the machine answered.'
+      findings:
+        type: array
+        readOnly: true
+        description: 'How the machine differs from the network''s gateway, in words.'
+      _exist:
+        type: boolean
+        readOnly: true
+      _inDesiredState:
+        type: boolean
+        readOnly: true

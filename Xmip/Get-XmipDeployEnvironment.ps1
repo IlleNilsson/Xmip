@@ -143,6 +143,7 @@ function Get-XmipDeployEnvironment {
             'the Windows host''s address as the controller reaches it.')
     }
     Add-XmipDeployDomain -Environment $Environment -Read $read
+    Add-XmipDeployGateway -Environment $Environment -Read $read
     if ($nodes.Count -gt 0) {
         $read['Node'] = Get-XmipDeployNodeValue -Environment $Environment -Estate $Estate -Run (
             $Run) -Read $read
