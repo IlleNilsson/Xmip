@@ -23,9 +23,10 @@ using namespace System.Collections.Generic
     for iOS 15, joined by xcodebuild into xmip_core_operate.xcframework
     there, which Xmip.Operations links whole.
 
-    Built here once, for Build-XmipService -Remote, for the landing before
-    it verifies module/core/operation/operate and module/core/operation/gui, and for
-    the CI's phone-ios job (.github/workflows/rust.yml).
+    Built here once, for Build-XmipService -Remote, iOS by hand on macOS
+    alone, and for the landing before it verifies
+    module/core/operation/operate (Desktop) and module/core/operation/gui
+    (Android).
 
     Style: doc/governance/powershell-style.md
 #>
@@ -191,8 +192,8 @@ function Assert-XmipMacOS {
 
     if (-not $IsMacOS) {
         throw ('REFUSED: the runtime builds for iOS only on macOS, where Apple''s ' +
-            'tools (the iOS SDK, xcodebuild) run. The estate''s CI builds it there: ' +
-            '.github/workflows/rust.yml, job phone-ios.')
+            'tools (the iOS SDK, xcodebuild) run. It is built by hand there alone: ' +
+            'Build-XmipService -Remote iOS.')
     }
 }
 

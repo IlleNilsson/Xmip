@@ -4,7 +4,7 @@
 <#
 .SYNOPSIS
     What the landing's parts load, built once from the working tree before
-    they run: the runtime's library, its remote build and the test module's
+    they run: the runtime's library, its remote builds and the test module's
     library.
 
 .DESCRIPTION
@@ -13,6 +13,14 @@
 
     Style: doc/governance/powershell-style.md
 #>
+
+# The runtime's remote build a module's build reads, by the module: the
+# Desktop one Xmip.Operate's tests load, the Android ones the phone host,
+# Xmip.Operations, packages (Build-XmipRemoteRuntime.ps1).
+[hashtable] $script:XmipRemoteBuildFor = @{
+    'module/core/operation/operate' = 'Desktop'
+    'module/core/operation/gui'     = 'Android'
+}
 
 function Build-XmipLandingLibrary {
     <#
@@ -27,9 +35,15 @@ function Build-XmipLandingLibrary {
             by XMIP_RUNTIME_LIBRARY and copied for the parts that read it, so
             the Rust part may build over the original while they run; the
             runtime's remote build where `operate` lands, whose tests load
-            it; the test module's library where the runtime lands, whose
+            it, and its Android build where the phone host's module lands,
+            which Xmip.Operations packages, never the last one built by
+            hand; the test module's library where the runtime lands, whose
             tests open it (XMIP_MODULE_LIBRARY). A failed build fails the
             landing: a stale library is never tested in its place.
+
+        .PARAMETER Ordered
+            The modules the landing verifies here, in its order: none it
+            skipped (Get-XmipLandingSkipReason).
     #>
     [CmdletBinding()]
     [OutputType([string])]
@@ -62,13 +76,18 @@ function Build-XmipLandingLibrary {
         Copy-Item -LiteralPath $env:XMIP_RUNTIME_LIBRARY -Destination $copy -Force
     }
 
-    if ($Ordered -contains 'module/core/operation/operate') {
+    # Each before any part runs, in the landing's order; the first that
+    # fails names the module that needs it.
+    [string[]] $remote = @($Ordered | Where-Object { $script:XmipRemoteBuildFor.ContainsKey($_) })
+
+    foreach ($reader in $remote) {
         try {
-            $null = Build-XmipRemoteRuntime -Root $RepositoryRoot -Platform Desktop
+            [string] $platform = $script:XmipRemoteBuildFor[$reader]
+            $null = Build-XmipRemoteRuntime -Root $RepositoryRoot -Platform $platform
         }
         catch {
             Write-Host $_.Exception.Message -ForegroundColor Red
-            return 'module/core/operation/operate'
+            return $reader
         }
     }
 
@@ -83,6 +102,33 @@ function Build-XmipLandingLibrary {
         else { 'libxmip_core_test_module.so' }
         $env:XMIP_MODULE_LIBRARY = Join-Path -Path $built -ChildPath $file
     }
+}
+
+function Get-XmipLandingSkipReason {
+    <#
+        .SYNOPSIS
+            Why the landing cannot verify a module here, because what its
+            build reads cannot be built here, in one sentence; nothing where
+            it can.
+
+        .DESCRIPTION
+            The phone host's module builds Xmip.Operations for Android, which
+            packages the runtime's Android build, and that build needs the
+            Android NDK, an optional prerequisite (prerequisite.toml,
+            android-ndk).
+    #>
+    [CmdletBinding()]
+    [OutputType([string])]
+    param(
+        [Parameter(Mandatory)]
+        [string] $Module
+    )
+
+    if ($script:XmipRemoteBuildFor[$Module] -eq 'Android' -and -not (Find-XmipAndroidNdk)) {
+        return "$Module builds the phone host for Android, and the Android NDK is absent here."
+    }
+
+    ''
 }
 
 function Build-XmipTestLibrary {

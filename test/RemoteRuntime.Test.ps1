@@ -5,14 +5,15 @@
     The runtime's remote build (ADR-0014, amendment 2026-10-14), built once in
     Build-XmipRemoteRuntime.ps1: the Desktop one Xmip.Operate's tests load,
     the Android ones Xmip.Operations packages through Xmip.Operate.Native.props,
-    and the iOS xcframework it links, made only on macOS (the CI's phone-ios
-    job).
+    and the iOS xcframework it links, made by hand on macOS alone
+    (Build-XmipService -Remote iOS there).
     Before 2026-10-14 a hand-run script built the ARM64 one and nothing built
     the x86_64 one, so the phone build failed on a missing file with a raw zip
     exception. What can be checked without building is checked here: where
     the NDK is found, the cargo command each build is, that the props file
     reads where the build writes and names the command that builds it, and
-    that a landing builds the Desktop one before the module that needs it.
+    that a landing builds the Desktop one and the Android ones before the
+    module that needs each, and skips the phone host where the NDK is absent.
 #>
 
 BeforeAll {
@@ -264,13 +265,16 @@ Describe 'A landing builds the remote build before the module that needs it' {
             }
             Mock Test-XmipMeasuredProgram { $true }
             Mock Build-XmipRemoteRuntime { }
+            Mock Build-XmipRuntimeLibrary { 'runtime-library' }
             Mock Write-Host { }
+            Mock Find-XmipAndroidNdk { 'ndk-bin' }
         }
     }
 
-    # The landing builds no Android library: the phone host's build
-    # packages the two Build-XmipService -Remote Android last made.
-    It 'builds Desktop before Xmip.Operate, once, and nothing for the phone host' {
+    # Until 2026-11-24 the landing built no Android library, and the phone
+    # host's build packaged the two -Remote Android had last made (open
+    # problem 178).
+    It 'builds Desktop before Xmip.Operate and Android before the phone host, once each' {
         InModuleScope Xmip -Parameters @{ Root = $script:Root } {
             param($Root)
 
@@ -279,10 +283,50 @@ Describe 'A landing builds the remote build before the module that needs it' {
 
             $tree.Verified.Count | Should -Be 2
             $tree.Skipped | Should -BeNullOrEmpty
-            Should -Invoke Build-XmipRemoteRuntime -Times 1 -Exactly
+            Should -Invoke Build-XmipRemoteRuntime -Times 2 -Exactly
             Should -Invoke Build-XmipRemoteRuntime -Times 1 -Exactly -ParameterFilter {
                 $Platform -eq 'Desktop'
             }
+            Should -Invoke Build-XmipRemoteRuntime -Times 1 -Exactly -ParameterFilter {
+                $Platform -eq 'Android'
+            }
+        }
+    }
+
+    It 'skips the phone host in one line, and builds no Android library, without the NDK' {
+        InModuleScope Xmip -Parameters @{ Root = $script:Root } {
+            param($Root)
+            Mock Find-XmipAndroidNdk { '' }
+
+            $tree = Test-XmipChangeTree -RepositoryRoot $Root -Ordered @(
+                'module/core/operation/operate', 'module/core/operation/gui')
+
+            $tree.Verified -join ', ' | Should -Be 'module/core/operation/operate'
+            $tree.Skipped -join ', ' | Should -Be 'module/core/operation/gui'
+            Should -Invoke Write-Host -Times 1 -Exactly -ParameterFilter {
+                $Object -eq ('SKIPPED. module/core/operation/gui builds the phone host for ' +
+                    'Android, and the Android NDK is absent here.')
+            }
+            Should -Invoke Build-XmipRemoteRuntime -Times 1 -Exactly
+            Should -Invoke Build-XmipRemoteRuntime -Times 0 -ParameterFilter {
+                $Platform -eq 'Android'
+            }
+        }
+    }
+
+    It 'fails the phone host whose Android build failed, and runs no part' {
+        InModuleScope Xmip -Parameters @{ Root = $script:Root } {
+            param($Root)
+            Mock Build-XmipRemoteRuntime { throw 'FAILED: cargo' } -ParameterFilter {
+                $Platform -eq 'Android'
+            }
+            Mock Write-XmipAudit { }
+
+            $tree = Test-XmipChangeTree -RepositoryRoot $Root -Ordered @(
+                'module/core/operation/gui') 2>$null
+
+            $tree.Failed | Should -Be 'module/core/operation/gui'
+            Should -Invoke Invoke-XmipLandingPart -Times 0
         }
     }
 

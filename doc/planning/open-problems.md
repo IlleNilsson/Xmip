@@ -3288,30 +3288,31 @@ tab's title then likely stops following in-page navigation. Needed: the
 head rendered as the routes are, and a test that the host starts without
 the warning.
 
-## 178. A landing packages the phone app with the last Android libraries built by hand
+## 180. A System Tests far end can take over five seconds to say it is ready
 
-Found 2026-11-24 putting Android back into the phone app: a landing of the
-gui module builds Xmip.Operations for Android, since its build names no
-framework, but builds no Android library of the runtime first; it packages
-what `Build-XmipService -Remote Android` last made, so an APK can carry a
-runtime older than the commit, and the build stops where none was ever
-made. Before 2026-11-02 the landing built them first and skipped the phone
-host without the NDK (`Test-XmipChangeTree`, taken out by 875c161; the
-landing's library builds are `Build-XmipLandingLibrary.ps1` now). On a
-Linux test computer the project names Android alone, so the gui module's
-internal tests there need the Android workload, a JDK and the libraries.
-Needed: the landing builds the Android libraries before the gui module
-where the NDK is, and says it skipped them where it is not.
+Found 2026-11-24 when the owner started the System Tests while two builds
+ran here: the far end EXTTX1 declared itself and said nothing within the
+roll's five seconds, so the roll was refused, "never said it is ready,
+said nothing; its audit says why", and no audit of the far end says why.
+Run again nine minutes later, it rolled FINE. Alone, the same far end says
+ready in 63 ms without a process directory and 200 to 420 ms with one, so
+declaring itself costs it hundreds of milliseconds (the millisecond rule).
+Needed: the far end's audit of where its start went, its declaration
+measured and cut to the millisecond, and the roll's refusal naming what
+the far end last did.
 
-## 179. Eight texts say the estate's CI builds iOS on macOS
+## 181. Slicing without `--authority` writes a private key beside the cluster file
 
-Found 2026-11-24 the same day: the CI job `phone-ios` was deleted on
-2026-11-02, while `Build-XmipService.ps1`, `Build-XmipRemoteRuntime.ps1`
-(its help and `Assert-XmipMacOS`'s message), the README, ADR-0014, the
-gui README, `test/RemoteRuntime.Test.ps1` and
-`Xmip.Operate.Native.props` still say the CI builds the runtime and
-Xmip.Operations for iOS on macOS. Needed: each says iOS is built by hand
-on macOS alone, or the job back.
+Found 2026-11-24 checking that a fresh `xmip-service` slices the System
+Tests' cluster file: `--slice` with no `--authority` made a self-signed
+authority, its private key among it, in an `authority` folder beside
+`test/core/system-test/configuration/cluster.xmip`, where the file's
+`[nodes.OP1.provision.operator] authority = "authority"` points. That
+folder is tracked and nothing ignores it, so the next landing would have
+committed the key; it was moved out by hand before one ran. Needed: a
+slice that makes an authority writes it only to a device-local folder,
+or refuses without `--authority`, and a test that slicing leaves the
+configuration's folder as it found it.
 
 # Suggested order
 
@@ -4426,3 +4427,37 @@ README and `Build-XmipService`'s help still say a landing builds Android.
 Needed: the owner's word on whether Android is a build target now; then
 either the framework back in the project, or the APK route and its texts
 saying Android is not built.
+
+## 178. A landing packages the phone app with the last Android libraries built by hand — **Resolved**
+
+*Resolved 2026-11-24:* a landing that verifies the gui module builds the
+runtime's Android libraries first, through `Build-XmipRemoteRuntime` as
+`Build-XmipService -Remote Android` does, and where the Android NDK is
+absent it skips that module, in one line (`Get-XmipLandingSkipReason`).
+
+Found 2026-11-24 putting Android back into the phone app: a landing of the
+gui module builds Xmip.Operations for Android, since its build names no
+framework, but builds no Android library of the runtime first; it packages
+what `Build-XmipService -Remote Android` last made, so an APK can carry a
+runtime older than the commit, and the build stops where none was ever
+made. Before 2026-11-02 the landing built them first and skipped the phone
+host without the NDK (`Test-XmipChangeTree`, taken out by 875c161; the
+landing's library builds are `Build-XmipLandingLibrary.ps1` now). On a
+Linux test computer the project names Android alone, so the gui module's
+internal tests there need the Android workload, a JDK and the libraries.
+Needed: the landing builds the Android libraries before the gui module
+where the NDK is, and says it skipped them where it is not.
+
+## 179. Eight texts say the estate's CI builds iOS on macOS — **Resolved**
+
+*Resolved 2026-11-24:* each says iOS is built by hand on macOS alone,
+`Build-XmipService -Remote iOS` there, and so does a ninth, the comment on
+the iOS `MainApplication.cs` in the gui module; no CI job came back.
+
+Found 2026-11-24 the same day: the CI job `phone-ios` was deleted on
+2026-11-02, while `Build-XmipService.ps1`, `Build-XmipRemoteRuntime.ps1`
+(its help and `Assert-XmipMacOS`'s message), the README, ADR-0014, the
+gui README, `test/RemoteRuntime.Test.ps1` and
+`Xmip.Operate.Native.props` still say the CI builds the runtime and
+Xmip.Operations for iOS on macOS. Needed: each says iOS is built by hand
+on macOS alone, or the job back.

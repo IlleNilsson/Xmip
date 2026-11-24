@@ -23,10 +23,12 @@ function Test-XmipChangeTree {
 
             1. What the parts load, built once from the working tree into the
                shared build directory: the runtime's library, its remote
-               build where `operate` lands, the test module's library where
-               the runtime does. The .NET and Pester parts read a copy of the
+               build where `operate` lands and its Android build where the
+               phone host's module does, the test module's library where the
+               runtime does. The .NET and Pester parts read a copy of the
                runtime's library, so the Rust part may build over the
-               original while they run.
+               original while they run. Where the Android NDK is absent, the
+               phone host's module is skipped, in one line.
             2. The parts, side by side (Invoke-XmipLandingPart): Rust, every
                changed crate and the root crate in the workspace, every
                consumer linted against the change (Test-XmipRustChange);
@@ -80,6 +82,7 @@ function Test-XmipChangeTree {
 
     [List[string]] $skipped = [List[string]]::new()
     [List[string]] $verified = [List[string]]::new()
+    [List[string]] $checked = [List[string]]::new()
     [object[]] $failure = @()
 
     if ($NoVerify) {
@@ -115,9 +118,15 @@ function Test-XmipChangeTree {
 
             # Cannot be verified here and did not fail are different answers:
             # skipped, or landed unverified under -All.
-            if (-not $cargo -and -not $projects) {
-                [string] $why = "SKIPPED. $module has no Cargo.toml and no project to verify."
-                Write-Host $why -ForegroundColor DarkGray
+            [string] $why = if (-not $cargo -and -not $projects) {
+                "$module has no Cargo.toml and no project to verify."
+            }
+            else {
+                Get-XmipLandingSkipReason -Module $module
+            }
+
+            if ($why) {
+                Write-Host "SKIPPED. $why" -ForegroundColor DarkGray
 
                 if ($All) {
                     $verified.Add($module)
@@ -141,11 +150,12 @@ function Test-XmipChangeTree {
             }
 
             $verified.Add($module)
+            $checked.Add($module)
         }
 
-        # 1. What the parts load.
+        # 1. What the parts load, for the modules verified here.
         [hashtable] $loads = @{
-            RepositoryRoot = $RepositoryRoot; Ordered = $Ordered; Runtime = $loadsRuntime
+            RepositoryRoot = $RepositoryRoot; Ordered = $checked.ToArray(); Runtime = $loadsRuntime
         }
         [string] $failed = Build-XmipLandingLibrary @loads
 

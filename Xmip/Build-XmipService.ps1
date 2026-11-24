@@ -65,14 +65,14 @@ function Build-XmipService {
             only on macOS and REFUSED elsewhere: a static library for
             aarch64-apple-ios and aarch64-apple-ios-sim into
             .ai-interaction/target-ios, joined by xcodebuild into the
-            xmip_core_operate.xcframework Xmip.Operations links; the
-            estate's CI builds it on macOS (.github/workflows/rust.yml, job
-            phone-ios). One build at a time, as every cargo runs. -WhatIf
-            says the commands. Returns Platform, Triple, Path and Length per
-            library and per xcframework. A landing builds Desktop itself,
-            before module/core/operation/operate, and no Android library:
-            its build of Xmip.Operations packages the two -Remote Android
-            last made, and stops, naming that command, where there are none.
+            xmip_core_operate.xcframework Xmip.Operations links, built by
+            hand on macOS alone. One build at a time, as every cargo runs.
+            -WhatIf says the commands. Returns Platform, Triple, Path and
+            Length per library and per xcframework. A landing builds Desktop
+            itself before module/core/operation/operate, and Android before
+            module/core/operation/gui, whose Xmip.Operations packages it;
+            where the Android NDK is absent it skips that module, in one
+            line.
 
         .PARAMETER Site
             A site's name under deploy/site, or the path of a site file.
