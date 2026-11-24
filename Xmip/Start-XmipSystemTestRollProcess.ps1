@@ -53,6 +53,9 @@ function Start-XmipSystemTestRollProcess {
             'while this one built.')
     }
 
+    # The cluster's ended rolls were listed from their records until now.
+    Remove-XmipSystemTestStaleRecord -Path $path -Cluster $cluster
+
     $publication = Get-XmipSystemTestPublication -Roll $layout.Roll -Cluster $cluster -Path $path
 
     # The nodes a run starts as xmip-service are issued under the System Tests'

@@ -43,9 +43,11 @@ function Get-XmipTestResult {
             on a check that has not run.
 
         .PARAMETER Path
-            The snapshot file, or a directory holding exactly one
-            `<cluster>-snapshot.xmip`; with more than one cluster there, name
-            the file. Defaults to `.local-work/system-test` under the
+            The snapshot file, or a directory: the snapshot of the roll
+            started last there, running or ended, as Get-XmipTestStatus lists
+            it, else its one `<cluster>-snapshot.xmip`; with more than one
+            cluster there and no roll listed, name the file. Defaults to
+            `.local-work/system-test` under the
             repository. For -Suite Core.Estate alone, the directory of its
             run records, `.local-work/estate` unless said.
 
@@ -181,8 +183,15 @@ function Get-XmipTestResult {
         $Path = (Get-XmipSystemTestLayout).Area
     }
 
+    # A directory is read for the latest shown roll's snapshot, running or
+    # ended, and for its one cluster's where no record names one.
     if (Test-Path -LiteralPath $Path -PathType Container) {
-        $Path = Resolve-XmipClusterFile -Directory $Path -Kind 'snapshot'
+        [string] $latest = Get-XmipLatestRollSnapshot -Path $Path
+        $Path = if ($latest -ne '') {
+            $latest
+        } else {
+            Resolve-XmipClusterFile -Directory $Path -Kind 'snapshot'
+        }
     }
 
     if (-not (Test-Path -LiteralPath $Path)) {

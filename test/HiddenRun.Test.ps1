@@ -81,6 +81,11 @@ Describe 'A run declares itself hidden and is listed only when asked' {
             Mock Get-XmipTestNode { }
             Mock Get-XmipSystemTestProcess { $script:Two }
             Mock Get-XmipRollRecord {
+                # Asked for every record: no roll here has ended.
+                if ($Id -eq 0) {
+                    return
+                }
+
                 # The first declared itself hidden; the second declared
                 # nothing.
                 [bool] $hidden = $Id -eq $script:Two[0].Id
@@ -125,6 +130,11 @@ Describe 'A run declares itself hidden and is listed only when asked' {
             Mock Get-XmipTestNode { }
             Mock Get-XmipSystemTestProcess { $script:One }
             Mock Get-XmipRollRecord {
+                # Asked for every record: no roll here has ended.
+                if ($Id -eq 0) {
+                    return
+                }
+
                 [PSCustomObject]@{
                     Id     = $Id
                     File   = "roll-$Id.toml"

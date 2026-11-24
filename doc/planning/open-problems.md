@@ -3252,17 +3252,6 @@ Found 2026-11-24 the same day, older than it: noted in `listening.rs` and
 wider now that DDS, DNS, KNX, SNMP, syslog and UDP are linked, so an
 environment opens TCP where they listen on UDP.
 
-## 175. A finished System Tests roll leaves `Get-XmipTestStatus`
-
-Found 2026-11-24 running the System Tests: `Get-XmipTestStatus` lists a
-roll only while its process lives, so a Core.System run that ended FINE
-shows nothing, where a Core.Estate, Core.Internal or Core.Demo run stays
-listed with OK or FAILED and its tally. The roll's record is still there,
-and the verdict only in its log and its snapshot through
-`Get-XmipTestResult -Path`, which refuses without `-Path` while an older
-cluster's snapshot shares the folder. Needed: a finished roll listed from
-its record, as an estate run is, its state and its worst result in words.
-
 ## 177. The operator web view renders its head statically under interactive pages
 
 Found 2026-11-24 starting the operator web view: its host logs, four times
@@ -4483,3 +4472,24 @@ every remote call of the resource made through one helper that keeps its
 warnings out of the answer, was written and tested on that environment
 (three members joined through it) and is not landed: the owner ended the
 Hyper-V run the same day before it landed.
+
+## 175. A finished System Tests roll leaves `Get-XmipTestStatus` — **Resolved**
+
+*Resolved 2026-11-24:* a roll whose process is gone is listed from the run
+record it left, State ended, Worst its last snapshot's worst result in
+words, or Fault that it ended before it published one, a snapshot older
+than the roll being an earlier roll's; the record stays until its cluster
+is started again, where any start cleared every ended roll's.
+`Get-XmipTestResult` given a directory reads the snapshot of the roll
+started last there, and refuses between clusters only where no record
+names one; `Stop-XmipTest` refuses an ended roll, whose pid may since be
+another process's (`test/XmipTest.Test.ps1`).
+
+Found 2026-11-24 running the System Tests: `Get-XmipTestStatus` lists a
+roll only while its process lives, so a Core.System run that ended FINE
+shows nothing, where a Core.Estate, Core.Internal or Core.Demo run stays
+listed with OK or FAILED and its tally. The roll's record is still there,
+and the verdict only in its log and its snapshot through
+`Get-XmipTestResult -Path`, which refuses without `-Path` while an older
+cluster's snapshot shares the folder. Needed: a finished roll listed from
+its record, as an estate run is, its state and its worst result in words.

@@ -152,7 +152,7 @@ function Wait-XmipDemoRoll {
     [double] $seconds = [math]::Round(((Get-Date) - $spawned).TotalSeconds, 1)
 
     $published = Get-XmipTestStatus -Cluster $cluster -IncludeHidden |
-        Where-Object { $_.Kind -eq 'roll' -and $_.Id -eq $Roll.Id } |
+        Where-Object { $_.Kind -eq 'roll' -and $_.State -eq 'running' -and $_.Id -eq $Roll.Id } |
         Select-Object -First 1
 
     if ($null -eq $published) {

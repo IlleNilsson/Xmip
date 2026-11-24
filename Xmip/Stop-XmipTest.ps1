@@ -238,8 +238,9 @@ function Stop-XmipTest {
             }
         }
 
-        # An estate run that has ended is listed, and there is nothing of it
-        # to stop: it is chosen only by its id, and then refused in words.
+        # A run that has ended is listed, an estate run's and a roll's alike,
+        # and there is nothing of it to stop: it is chosen only by its id,
+        # and then refused in words.
         # A run named by its id is found whether hidden or not; a filter picks
         # among the shown runs unless -IncludeHidden (ADR-0028, amendment
         # 2026-09-30), by the one rule over what each run declared.
@@ -282,9 +283,14 @@ function Stop-XmipTest {
             # what it started may still run, and is stopped as if it ran.
             [bool] $left = $roll.Kind -eq 'demo' -and "$($roll.Fault)" -ne ''
 
-            if ($detached -and -not $left -and $roll.State -notin 'running', 'building') {
-                Write-Error ("REFUSED: the $($roll.Suite) run $number has ended " +
-                    "($($roll.State)); there is nothing to stop.")
+            # A roll that ended is listed from its record, and its pid may
+            # since be another process's.
+            [bool] $ended = $roll.State -notin 'running', 'building'
+
+            if ((($detached -and -not $left) -or $roll.Kind -eq 'roll') -and $ended) {
+                [string] $verdict = if ($roll.State -ne 'ended') { " ($($roll.State))" }
+                Write-Error ("REFUSED: the $($roll.Suite) run $number has ended" +
+                    "$verdict; there is nothing to stop.")
                 continue
             }
 

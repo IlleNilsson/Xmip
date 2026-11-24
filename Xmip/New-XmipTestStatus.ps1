@@ -40,7 +40,7 @@ function New-XmipTestStatus {
             demo readiness check (Get-XmipDemoRun).
 
         .PARAMETER State
-            running, building, OK or FAILED, in words.
+            running, building, ended, OK or FAILED, in words.
 
         .PARAMETER Id
             The run's process id.

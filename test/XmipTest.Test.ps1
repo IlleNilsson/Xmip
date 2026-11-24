@@ -1363,9 +1363,105 @@ Describe 'A cluster rolls once' {
                 'pid = 4343'
             )
 
+            # Both rolls run; a record whose roll ended rolls nothing.
+            Mock -CommandName Test-XmipRollAlive -MockWith { $true }
             @(Get-XmipSystemTestRolling -Path $Area -Cluster $one) | Should -Be @(4242)
             @(Get-XmipSystemTestRolling -Path $Area -Cluster $ten) | Should -Be @(4343)
             @(Get-XmipSystemTestRolling -Path $Area -Cluster $Name).Count | Should -Be 0
+
+            Mock -CommandName Test-XmipRollAlive -MockWith { $false }
+            @(Get-XmipSystemTestRolling -Path $Area -Cluster $one).Count | Should -Be 0
+            Remove-Item -LiteralPath (Join-Path $Area 'roll-4242.toml'), (Join-Path $Area 'roll-4343.toml')
+        }
+    }
+}
+
+Describe 'A roll that ended is listed from its record' {
+    # Open problem 175: a roll left Get-XmipTestStatus with its process, and
+    # its verdict was in its log and its snapshot alone.
+    It 'says it ended and its worst in words, until its cluster starts again' {
+        [hashtable] $given = @{
+            Name  = $script:Cluster.Name
+            Scope = $script:Cluster.Scope
+            Node  = $script:Stage.receiving
+        }
+
+        InModuleScope Xmip -Parameters $given {
+            param($Name, $Scope, $Node)
+
+            [string] $area = Join-Path $TestDrive 'ended'
+            $null = New-Item -ItemType Directory -Force -Path $area
+            [string] $ended = "${Name}E"
+            [string] $other = "${Name}F"
+            [string] $published = Join-Path $area "$ended-snapshot.xmip"
+            [string] $snapshot = @"
+source = "System Tests"
+node = "$Scope"
+
+[run]
+cluster = "$ended"
+tests = ["Carried"]
+real = ["$Node"]
+
+[[records]]
+scope = "$Scope/node/$Node/receive/Sales orders from Party-A/delivery"
+state = "stressed"
+severity = 60
+evidence = "a document no Subscription takes was dropped this turn"
+observed_unix_nanos = 1789208338038783900
+"@
+            Set-Content -LiteralPath $published -Encoding utf8 -Value $snapshot
+            Set-Content -LiteralPath (Join-Path $area "$other-snapshot.xmip") -Encoding utf8 -Value $snapshot
+            [datetime] $began = (Get-Item -LiteralPath $published).LastWriteTime.AddMinutes(-5)
+
+            foreach ($roll in @(@{ Id = 4646; Cluster = $ended }, @{ Id = 4747; Cluster = $other })) {
+                Set-Content -LiteralPath (Join-Path $area "roll-$($roll.Id).toml") -Encoding utf8 -Value @(
+                    'suite = "Core.System"'
+                    "cluster = `"$($roll.Cluster)`""
+                    "pid = $($roll.Id)"
+                    "started = `"$($began.AddSeconds($roll.Id - 4646).ToString('o'))`""
+                    'nodes = ["RX1", "TX1"]'
+                    "snapshot = '$(Join-Path $area "$($roll.Cluster)-snapshot.xmip")'"
+                )
+            }
+
+            # No roll runs: both records are rolls that ended.
+            Mock -CommandName Get-XmipSystemTestProcess -MockWith { }
+            Mock -CommandName Get-XmipTestNode -MockWith { }
+
+            $row = Get-XmipTestStatus -Path $area -Cluster $ended
+            $row.Kind | Should -Be 'roll'
+            $row.State | Should -Be 'ended'
+            $row.Id | Should -Be 4646
+            $row.Worst | Should -Be 'stressed' -Because 'the worst of the snapshot it published'
+            @($row.Nodes) | Should -Be @('RX1', 'TX1')
+            $row.Fault | Should -BeNullOrEmpty
+
+            # A snapshot older than the roll is an earlier roll's.
+            (Get-Item -LiteralPath $published).LastWriteTime = $began.AddMinutes(-1)
+            $early = Get-XmipTestStatus -Path $area -Cluster $ended
+            $early.Worst | Should -BeNullOrEmpty
+            $early.Fault | Should -BeLike '*ended before it published*'
+
+            # Two clusters' snapshots in one area: the roll started last says which.
+            Get-XmipLatestRollSnapshot -Path $area |
+                Should -Be (Join-Path $area "$other-snapshot.xmip")
+            (Get-XmipTestResult -Path $area -Worst).State | Should -Be 'stressed'
+            Mock -CommandName Get-XmipLatestRollSnapshot -MockWith { '' }
+            { Get-XmipTestResult -Path $area -ErrorAction Stop } |
+                Should -Throw -ExpectedMessage '*2 clusters*'
+
+            # Nothing of it is stopped: its pid may be another process's now.
+            Mock -CommandName Get-XmipTestStatus -MockWith {
+                [PSCustomObject]@{ Id = 4646; Kind = 'roll'; State = 'ended'; Suite = 'Core.System' }
+            }
+            { Stop-XmipTest -Id 4646 -ErrorAction Stop } |
+                Should -Throw -ExpectedMessage '*REFUSED*run 4646 has ended; there is nothing*'
+
+            # Starting its cluster again clears its record, and no other's.
+            Remove-XmipSystemTestStaleRecord -Path $area -Cluster $ended
+            Test-Path -LiteralPath (Join-Path $area 'roll-4646.toml') | Should -BeFalse
+            Test-Path -LiteralPath (Join-Path $area 'roll-4747.toml') | Should -BeTrue
         }
     }
 }

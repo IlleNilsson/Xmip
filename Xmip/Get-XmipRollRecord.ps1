@@ -7,9 +7,11 @@
 
 .DESCRIPTION
     Start-XmipSystemTestRoll writes one record per roll, roll-<pid>.toml, in
-    the roll area; Get-XmipTestStatus reads it, Start-XmipSystemTestRoll asks
-    which rolls a cluster already has and clears the stale ones, and
-    Stop-XmipTest deletes it. The name is decided here and nowhere else.
+    the roll area; Get-XmipTestStatus reads it, and lists the roll from it
+    after the roll ended, Start-XmipSystemTestRoll asks which rolls a cluster
+    already has and clears that cluster's ended ones as it starts it again,
+    and Stop-XmipTest deletes it. The name is decided here and nowhere else.
+    Get-XmipTestResult reads the snapshot the latest shown one names.
 
     Style: doc/governance/powershell-style.md
 #>
@@ -75,4 +77,44 @@ function Get-XmipRollRecord {
             Record = $read.Record
         }
     }
+}
+
+
+function Get-XmipLatestRollSnapshot {
+    <#
+        .SYNOPSIS
+            The snapshot of the roll started last in a roll area, running or
+            ended, among the ones shown — never an assistant's hidden run
+            (ADR-0028, amendment 2026-09-30). Empty where no record names one.
+
+        .PARAMETER Path
+            The roll area.
+    #>
+    [CmdletBinding()]
+    [OutputType([string])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $Path
+    )
+
+    Import-XmipOperatorModule
+    $rules = [Xmip.Surface.RuntimeLibrary]::Rules
+
+    $latest = @(
+        Get-XmipRollRecord -Path $Path |
+            Where-Object {
+                $rules.Shown([bool](Get-TomlValue -Node $_.Record -Name 'hidden' -Default $false), $false)
+            } |
+            Sort-Object -Property {
+                [datetimeoffset]::Parse(
+                    [string](Get-TomlValue -Node $_.Record -Name 'started' -Default '0001-01-01T00:00:00Z'),
+                    [cultureinfo]::InvariantCulture).UtcDateTime
+            }
+    ) | Select-Object -Last 1
+
+    if ($null -eq $latest) {
+        return ''
+    }
+
+    return [string](Get-TomlValue -Node $latest.Record -Name 'snapshot' -Default '')
 }

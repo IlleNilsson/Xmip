@@ -29,8 +29,9 @@ function Get-XmipClusterRunning {
             Nothing when the cluster is free.
 
         .DESCRIPTION
-            Records whose roll has ended are removed first, as every start
-            removes them, so a record left is a roll that runs.
+            A record whose roll has ended is no roll that runs: it stays,
+            for Get-XmipTestStatus to list the ended roll, until its
+            cluster is started again.
 
         .PARAMETER Path
             The System Tests' area the records are in.
@@ -52,7 +53,6 @@ function Get-XmipClusterRunning {
         return
     }
 
-    Remove-XmipSystemTestStaleRecord -Path $Path
     Get-XmipSystemTestRolling -Path $Path -Cluster $Cluster
     Get-XmipSystemTestBuild -Path $Path |
         Where-Object { $_.State -eq 'building' -and "$($_.Cluster)" -eq $Cluster } |
@@ -63,9 +63,8 @@ function Get-XmipClusterRunning {
 function Get-XmipSystemTestRolling {
     <#
         .SYNOPSIS
-            The pids rolling as a cluster, from the run records in a directory.
-            Stale records are removed before this is asked, so a record here is
-            a roll that runs.
+            The pids rolling as a cluster, from the run records in a
+            directory whose roll still runs.
     #>
     [CmdletBinding()]
     [OutputType([int])]
@@ -82,35 +81,89 @@ function Get-XmipSystemTestRolling {
             Get-TomlValue -Node $recorded.Record -Name 'cluster' -Default ''
         )
 
-        if ($rolledAs -eq $Cluster) {
+        if ($rolledAs -eq $Cluster -and (Test-XmipRollAlive -Recorded $recorded)) {
             $recorded.Id
         }
     }
 }
 
 
+function Test-XmipRollAlive {
+    <#
+        .SYNOPSIS
+            Whether the roll a run record names still runs: its pid is a
+            System Tests roll, started when the record says, and not another
+            process later given the same id.
+
+        .PARAMETER Recorded
+            One record, from Get-XmipRollRecord.
+    #>
+    [CmdletBinding()]
+    [OutputType([bool])]
+    param(
+        [Parameter(Mandatory)]
+        [pscustomobject] $Recorded
+    )
+
+    $process = Get-Process -Id $Recorded.Id -ErrorAction SilentlyContinue
+
+    if ($null -eq $process -or
+        (Get-XmipSystemTestImageKind -Name $process.ProcessName) -ne 'Roll' -or
+        -not (Test-XmipSystemTestBinary -Process $process -Path (Get-XmipSystemTestLayout).Roll)) {
+        return $false
+    }
+
+    [string] $started = [string](Get-TomlValue -Node $Recorded.Record -Name 'started' -Default '')
+
+    if ($started -eq '') {
+        return $true
+    }
+
+    [datetime] $said = [datetime]::Parse($started, [cultureinfo]::InvariantCulture,
+        [System.Globalization.DateTimeStyles]::RoundtripKind)
+
+    # A roll another session started elevated may not show this one when it
+    # began; its kind and binary already vouch for it.
+    try {
+        [datetime] $began = $process.StartTime
+    }
+    catch {
+        return $true
+    }
+
+    return [math]::Abs(($began.ToUniversalTime() - $said.ToUniversalTime()).TotalSeconds) -lt 5
+}
+
+
 function Remove-XmipSystemTestStaleRecord {
     <#
         .SYNOPSIS
-            Deletes run records whose roll is no longer running — a roll that
-            reached its rounds or its ceiling leaves one behind.
+            Deletes the run records of a cluster's rolls that have ended, as
+            that cluster is started again: until then Get-XmipTestStatus
+            lists an ended roll from its record.
+
+        .PARAMETER Path
+            The System Tests' area the records are in.
+
+        .PARAMETER Cluster
+            The cluster being started.
     #>
     [CmdletBinding()]
     [OutputType([void])]
     param(
         [Parameter(Mandatory)]
-        [string] $Path
+        [string] $Path,
+
+        [Parameter(Mandatory)]
+        [string] $Cluster
     )
 
-    $layout = Get-XmipSystemTestLayout
-
     foreach ($recorded in @(Get-XmipRollRecord -Path $Path)) {
-        $process = Get-Process -Id $recorded.Id -ErrorAction SilentlyContinue
-        [bool] $alive = $null -ne $process -and
-            (Get-XmipSystemTestImageKind -Name $process.ProcessName) -eq 'Roll' -and
-            (Test-XmipSystemTestBinary -Process $process -Path $layout.Roll)
+        [string] $rolledAs = [string](
+            Get-TomlValue -Node $recorded.Record -Name 'cluster' -Default ''
+        )
 
-        if (-not $alive) {
+        if ($rolledAs -eq $Cluster -and -not (Test-XmipRollAlive -Recorded $recorded)) {
             Remove-Item -LiteralPath $recorded.File -Force
         }
     }
