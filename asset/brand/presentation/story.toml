@@ -16,10 +16,10 @@ scene_padding_seconds = 2
 [[section]]
 title = "Xmip"
 headline = "Cross OS Messaging & Integration Platform"
-screen = "Accountable messaging and integration, under your control.\nOpen source, written in Rust. Xmip is said “Smip”."
+screen = "Accountable messaging and integration, under your control.\nOpen source. Xmip is said “Smip”."
 voice = "female"
 power = "both"
-narration = "Welcome to Xmip. Xmip stands for Cross OS Messaging & Integration Platform. It connects the systems an organization runs, and it keeps an account of every message it takes on. It is open source, written in Rust, and it runs on your own machines, with or without the internet. Let us follow one order through it, then see how it is configured, run, operated and extended."
+narration = "Welcome to Xmip. Xmip stands for Cross OS Messaging & Integration Platform. It connects the systems an organization runs, and it keeps an account of every message it takes on. It is open source, and it runs on your own machines, with or without the internet. Let us follow one order through it, then see how it is configured, run, operated and extended."
 sources = ["README.md", "CONTRIBUTING.md"]
 note = ""
 layout = ["cover"]
@@ -28,22 +28,22 @@ alt = "The Xmip logo, and the two hosts, female on the left and male on the righ
 [[section]]
 title = "Who it is for"
 headline = "Four people, four answers"
-screen = "Xmip connects the systems you run and keeps an account of every message it accepts."
+screen = "Each asks a different question. Xmip answers all four."
 voice = "male"
 power = false
 narration = "Xmip answers four people. The CEO asks whether the business keeps moving when an exchange fails. The CIO asks who controls it and where it runs. The developer asks how an integration is built, and the operator asks what went wrong and what to do now. Each answer follows."
 sources = ["README.md"]
 note = ""
 layout = ["scene", "four"]
-alt = "Four cards. CEO: does the business keep moving when an exchange fails? Every accepted message is kept, and every outcome is recorded. CIO: who controls it, and where does it run? On your machines, offline first, open source. Developer: how do I build an integration? Readable TOML, a designer in VS Code, modules in Rust or C#. Operator: what went wrong, and what do I do now? Health in words, the evidence, retry and replay."
+alt = "Four cards. CEO: does the business keep moving when an exchange fails? Every accepted message is kept, and every outcome is recorded. CIO: who controls it, and where does it run? On your machines, offline first, open source. Developer: how do I build an integration? Readable TOML, a designer in VS Code, modules in many languages. Operator: what went wrong, and what do I do now? Health in words, the evidence, retry and replay."
 
 [[section]]
 title = "One order through Xmip"
 headline = "One order, routed by what it holds"
-screen = "Received once, published once, and delivered to every system that wants it."
+screen = "Received once, routed by what it holds, and delivered to every system that wants it."
 voice = "female"
 power = false
-narration = "Here is one sales order from a trading partner. A Receive Location accepts it, and Xmip publishes it as a message. A Subscription is a filter on what a message holds, and a destination. The first sends the order to a Work Process that approves it; the approved order is published again, and a second Subscription sends it to the ERP. No filter ever names a node. This is the flow Xmip's own System Tests run."
+narration = "Here is one sales order from a customer, Party-A in the file. A Receive Location accepts it, and Xmip publishes it as a message. A Subscription is a filter on what a message holds, and a destination. The first sends the order to a Work Process that approves it; the approved order is published again, and a second Subscription takes it to a Send Port, which delivers it to the ERP, the business system that takes orders. No filter ever names a node, one running Xmip program. This is the flow Xmip's own System Tests run."
 sources = ["doc/terminology.md", "test/core/system-test/configuration/cluster.xmip", "doc/decision/ADR-0013-journey-model.md"]
 note = "The flow is the System Tests' own"
 layout = ["scene", "order"]
@@ -55,7 +55,7 @@ headline = "Accepted once, never lost"
 screen = "Before acceptance the sender owns it. After, Xmip keeps it and records every step."
 voice = "male"
 power = false
-narration = "Acceptance is where responsibility changes hands. Before it, the stream belongs to its sender, and a refusal says where and why. Once Xmip accepts it, the message is written to storage before anything acts on it. Every journey ends Completed, Failed or Dismissed, and a failed delivery is retried. A message nothing wanted waits in the Dead Message Queue until its routing is fixed and it is replayed. Every step is audited."
+narration = "Acceptance is where responsibility changes hands. Before it, the stream, the raw bytes that arrive, belongs to its sender, and a refusal says where and why. Once Xmip accepts it, it becomes a message, written to storage before anything acts on it. Each delivery to a destination is a journey, and every journey ends Completed, Failed, or Dismissed by an operator; a failed delivery is retried. A message nothing wanted waits in the Dead Message Queue until its routing is fixed and it is replayed. Every step is audited."
 sources = ["README.md", "doc/terminology.md", "doc/decision/ADR-0013-journey-model.md"]
 note = ""
 layout = ["scene", "accept"]
@@ -64,14 +64,14 @@ alt = "A dashed lime line marks acceptance. On the sender's side, a Stream arriv
 [[section]]
 title = "Configuration you can read"
 headline = "Configuration you can read and review"
-screen = "One TOML file describes the cluster: its nodes, its routes, and what each piece of work requires."
+screen = "One TOML file, plain readable text, describes the cluster: its nodes, its routes, and what each piece of work requires."
 voice = "male"
 power = true
-narration = "An integration in Xmip is text you can read. One TOML file describes the cluster: its nodes, its routes, and what each piece of work requires. Teams version it, compare it and review it like code. Every save is validated, then sliced into each node's own part."
+narration = "An integration in Xmip is text you can read. One TOML file, a plain-text configuration format, describes the cluster: its nodes, its routes, and what each piece of work requires. Teams version it, compare it and review it like code. Every save is validated, then sliced into each node's own part."
 sources = ["CONTRIBUTING.md", "doc/terminology.md", "test/core/system-test/configuration/cluster.xmip"]
 note = ""
 layout = ["scene", "toml"]
-alt = "An excerpt of the System Tests' cluster.xmip: the node EX1 declares the role processing and the Node capability order-approval-module; the Work Process Order approval requires order-approval-module; the Subscription Approved sales orders has the Send Port Sales orders to ERP as its destination."
+alt = "An excerpt of the System Tests' cluster.xmip: the node EX1 declares the role processing and the Node capability order-approval-module; the Work Process Order approval requires order-approval-module; the Subscription Approved sales orders has the Send Port Sales orders to ERP as its destination. and its filter ends Approval = 'approved'. Below: EX1 is only this node's name in the file; Xmip reads its roles and capabilities, never its name."
 accessibility_notes = "The male host gently flexes their arms to emphasize configuration you can read in TOML."
 
 [[section]]
@@ -80,7 +80,7 @@ headline = "Draw it in VS Code, keep it as text"
 screen = "The designer and the file are one. Xmip's rules live in its language server, which any LSP editor can use."
 voice = "female"
 power = true
-narration = "VS Code is where an integration is drawn. The designer draws the same cluster file the text holds, so a change in one is a change in the other. Completion, validation and renaming that follows every reference come from Xmip's own language server, written in Rust. It speaks the standard Language Server Protocol, so other editors can use Xmip's rules through their own LSP clients."
+narration = "VS Code is where an integration is drawn. The designer draws the same cluster file the text holds, so a change in one is a change in the other. Completion, validation and renaming that follows every reference come from Xmip's own language server. It speaks the standard Language Server Protocol, so other editors can use Xmip's rules through their own LSP clients."
 sources = ["doc/decision/ADR-0064-developers-design-in-vs-code.md"]
 note = ""
 layout = ["scene", "designer"]
@@ -93,11 +93,11 @@ headline = "Configuration places work, never a name"
 screen = "Nodes declare what they have. Work says what it requires. Xmip matches the two."
 voice = "female"
 power = false
-narration = "Where work runs is configuration, never a node's name. Each node declares its roles: receiving, processing, sending, or executing all three at low latency. It also declares its Node capabilities: words for what its environment gives it, such as a firewall opening or an installed module. Work names what it requires, and Xmip places it on a node that has it. One node with every role works; more nodes are split out as security, firewalls and load need."
+narration = "Where work runs is configuration, never a node's name. Here are three receiving nodes, a processing node, an executing node that receives, processes and sends at low latency, and three sending nodes. Each declares its roles, and its Node capabilities: words for what its environment gives it, such as a firewall opening or an installed module. Work that requires nothing goes to any node with the role; work that names what it requires goes only to a node that has it. One node with every role works; more nodes are split out as security, firewalls and load need."
 sources = ["doc/terminology.md", "doc/decision/ADR-0056-a-node-declares-what-it-can-do.md", "test/core/system-test/configuration/cluster.xmip"]
 note = ""
 layout = ["scene", "place"]
-alt = "Left, three pieces of work and what each requires: the Work Process Order approval requires order-approval-module; the Receive Location for Party-E's remittance advices requires firewall-party-e; the Send Port of remittance advices to the ERP requires erp-direct. Right, the nodes: RX1 to RX3 receiving; EX1 processing, declaring order-approval-module; EX2 executing, declaring firewall-party-d, firewall-party-e and erp-direct; TX1 to TX3 sending. Lime curves join each piece of work to the node that declares what it requires."
+alt = "Left, five pieces of work: Receive Locations that require nothing; a Work Process that requires order-approval-module; Receive Locations that require firewall-party-d or firewall-party-e; the Send Port Remittances to ERP, which requires erp-direct; Send Ports that require nothing. Right, the nodes, each led by its role with its name in the file beside it: receiving nodes, RX1 to RX3; a processing node, EX1, declaring order-approval-module; an executing node, EX2, declaring firewall-party-d, firewall-party-e and erp-direct; sending nodes, TX1 to TX3. Gray lines place the work requiring nothing by role alone, the Receive Locations on the receiving nodes and the Send Ports on the sending nodes, and both on the executing node, which serves every stage; lime lines place each piece of work that requires something on the node that declares it. A key below says gray is by role, lime by role and what it requires."
 
 [[section]]
 title = "Xmip Storage"
@@ -109,7 +109,7 @@ narration = "The work belongs to the cluster, not to a node. Every node reaches 
 sources = ["doc/terminology.md", "doc/decision/ADR-0056-a-node-declares-what-it-can-do.md", "doc/architecture/deployment-model.md"]
 note = ""
 layout = ["scene", "storage"]
-alt = "A receiving, an executing and a sending node each reach Xmip Storage by time-limited claims. Inside Xmip Storage, a primary holding the Ledger, administration and audit hands every write to a standby that follows it. Below, two cases: stopped in order, the primary hands its writes over and the standby takes over at once; vanished, it is waited for, never guessed, so there is no second primary."
+alt = "A receiving, a processing and a sending node each reach Xmip Storage by time-limited claims. Inside Xmip Storage, a primary holding the Ledger, administration and audit hands every write to a standby that follows it. Below, two cases: stopped in order, the primary hands its writes over and the standby takes over at once; vanished, it is waited for, never guessed, so there is no second primary."
 
 [[section]]
 title = "One plan, four ways"
@@ -130,19 +130,19 @@ headline = "No internet needed to install or run"
 screen = "Packages are built where the internet is. Install, operate and run with none."
 voice = "male"
 power = false
-narration = "Xmip is offline by design. Packages are built where the internet is reachable, then brought in, and installation, operation and the runtime need no internet at all. Nothing at runtime checks a license or downloads a module. A node that may reach out says so with the Node capability online; a node that declares nothing is offline. The networked option is there when you choose it."
+narration = "Xmip is offline by design. Packages are built where the internet is reachable, then brought in, and installation, operation and the runtime need no internet at all. Nothing at runtime checks a license or downloads a module. A node that may reach out says so with the Node capability online; a node without it is offline. The networked option is there when you choose it."
 sources = ["doc/decision/ADR-0045-offline-is-the-default.md", "doc/decision/ADR-0056-a-node-declares-what-it-can-do.md"]
 note = ""
 layout = ["scene", "offline"]
-alt = "Three steps. One, prepare: where the internet is reachable, build the package. Two, bring it in: the package carries everything an installation needs. Three, install and run: no internet, nothing fetched. Below, the line capabilities equals online: only a node that declares the Node capability online may reach out; a node that declares nothing is offline."
+alt = "Three steps. One, prepare: where the internet is reachable, build the package. Two, bring it in: the package carries everything an installation needs. Three, install and run: no internet, nothing fetched. Below, the line capabilities equals online: only a node that declares the Node capability online may reach out; a node without it is offline."
 
 [[section]]
 title = "Operating Xmip"
 headline = "Every surface gives the same answer"
-screen = "The xmip command line, PowerShell, web, desktop, phone and MCP read one operator model."
+screen = "The xmip command line, PowerShell, web, desktop and phone read one operator model; MCP clients come through the command line."
 voice = "female"
 power = true
-narration = "Operators choose their surface: the xmip command line, PowerShell, the web view, the desktop or the phone. Each reads one shared operator model, so they cannot disagree, and an MCP client reads Xmip through the command line. Health is said in words: Fine, Paused, Working, Stressed, Exhausted or Done. A scope above is Holding when something beneath it needs attention, and it carries that leaf and its evidence."
+narration = "Operators choose their surface: the xmip command line, PowerShell, the web view, the desktop or the phone. Each reads one shared operator model, so they cannot disagree, and an MCP client, the Model Context Protocol that AI assistants speak, reads Xmip through the command line. Health is said in words: Fine, Paused, Working, Stressed, Exhausted or Done. A group is Holding when something inside it needs attention, and it shows that item and its evidence."
 sources = ["doc/decision/ADR-0014-operator-surfaces.md", "doc/decision/ADR-0052-the-operator-surfaces-share-one-model.md", "doc/decision/ADR-0041-health-is-a-mood-and-does-not-propagate.md", "doc/decision/ADR-0071-xmip-is-reached-over-mcp-through-the-command-line.md"]
 note = ""
 layout = ["scene", "operate"]
@@ -155,56 +155,56 @@ headline = "Reports present, Quests probe"
 screen = "Every Report is in one list. A Quest finds evidence and gaps; it never says compliant."
 voice = "male"
 power = false
-narration = "A Report presents data Xmip already keeps, such as the Audit and the Dead Messages. A Quest probes an installation first, and its Report presents what it found. The first is the Regulation Quest, its regulation a parameter, GDPR first: for each requirement, the evidence or the gap, and the action that closes it. It never says compliant; that judgment stays yours. The Firewall, Security, Resilience and Dependency Reports sit in the same list, eleven in all, on every surface."
+narration = "A Report presents data Xmip already keeps, such as the Audit and the Dead Messages. A Quest probes an installation first, and its Report presents what it found. The first is the Regulation Quest, its regulation a parameter, GDPR, Europe's data protection regulation, first: for each requirement, the evidence or the gap, and the action that closes it. It never says compliant; that judgment stays yours. The Firewall, Security, Resilience and Dependency Reports sit in the same list, eleven in all, on every surface."
 sources = ["module/core/operation/report/doc/reports.md", "doc/decision/ADR-0072-a-quest-probes-and-the-regulation-is-a-parameter.md", "doc/terminology.md"]
 note = ""
 layout = ["scene", "reports"]
-alt = "The Reports list, each with its kind. Audit and Dead Messages are Reports. Regulation with GDPR, Firewall, Security, Resilience and Dependency are probing reports. A document icon marks a Report; a magnifier marks a probing report. Below: eleven Reports in one list, on every surface."
+alt = "The Reports list, each with its kind. Audit and Dead Messages are Reports. Regulation with GDPR, Firewall, Security, Resilience and Dependency are probing reports. A document icon marks a Report; a magnifier marks a probing report. Below: seven of the eleven Reports, one list on every surface; a magnifier marks one a Quest probes first."
 
 [[section]]
 title = "Extending Xmip"
-headline = "Extend it in Rust or C#"
-screen = "A module is a library a node opens through one C ABI."
+headline = "Extend it in the language you know"
+screen = "Your Work Processes, Transformations and other units cross one C ABI. The Xmip Designer generates Rust."
 voice = "male"
 power = false
-narration = "Xmip is extended through one boundary. A module is a library a node opens through the C ABI, written in Rust, or in C# with Xmip's Module package, published as a native library. The node cannot tell the two apart, and a template starts a new module with its test. Code on another machine reaches Xmip only over its HTTP/2 API, inside Xmip's mutual TLS."
-sources = ["doc/decision/ADR-0075-packages-for-developers.md", "doc/decision/ADR-0061-a-provider-builds-against-the-sdk.md"]
+narration = "Xmip is extended through one boundary, its C ABI, the binary interface every language can call. Your Work Processes, Transformations, Prepare steps and other units are libraries a node opens: write them in Rust, in C# with Xmip's Module package, in C or C++ against the C header, or in any language that exports a C function, and the node cannot tell one from another. The Xmip Designer generates Rust from a design. Events, Xmip's notices of what happened, cross the same boundary, bound for C, C++, Java, Python and C#. Code on another machine reaches Xmip over its HTTP/2 API, inside Xmip's mutual TLS."
+sources = ["module/foundation/abi/README.md", "doc/decision/ADR-0075-packages-for-developers.md", "doc/decision/ADR-0061-a-provider-builds-against-the-sdk.md", "doc/decision/ADR-0065-events-are-subscribed-from-any-language.md"]
 note = ""
 layout = ["scene", "extend"]
-alt = "Four NuGet packages: Xmip.Module, a unit in C#; Xmip.Templates, a new module; Xmip.Testing, test a flow; Xmip.Client, Events and Reports. Two paths reach a node: on the same machine, the C ABI; from another machine, HTTP/2 inside mutual TLS. The node cannot tell a C# module from a Rust one."
+alt = "Your units, in four kinds of language, each reaching a node through one C ABI: Rust, by hand or by the Xmip Designer; C#, with Xmip.Module; C and C++, with the C header xmip_module.h; any language that exports a C function. Below: Events are bound for C, C++, Java, Python and C# through the same ABI."
 
 [[section]]
 title = "Open source"
 headline = "Open source, with its reasons on record"
-screen = "Xmip is AGPL-3.0-or-later; the module boundary is Apache-2.0. Your module stays yours."
+screen = "Xmip's core is written in Rust. It is AGPL-3.0-or-later; the module boundary is Apache-2.0."
 voice = "female"
 power = true
-narration = "Xmip is open source. Xmip itself is under the GNU Affero General Public License, version three or later, and it cannot be relicensed or withdrawn. Its module boundary, the headers, bindings and packages a module is built against, is under the Apache License, so the module you write stays yours. Every architectural decision is a record with its reasons, seventy-five so far, and tests hold the rules: the internal tests on every change, the System Tests on one computer, and the Systems Tests on machines."
+narration = "Xmip's core is written in Rust, and Xmip is open source. Xmip itself is under the GNU Affero General Public License, version three or later, and it cannot be relicensed or withdrawn. Its module boundary, the headers, bindings and packages a module is built against, is under the Apache License, so the module you write stays yours. Every architectural decision is a record with its reasons, seventy-five so far, and tests hold the rules on every change."
 sources = ["CONTRIBUTING.md", "README.md", "doc/decision/ADR-0023-licensing-model.md", "doc/decision/ADR-0061-a-provider-builds-against-the-sdk.md", "doc/decision/ADR-0028-the-xmip-system-test.md"]
 note = "Xmip AGPL-3.0-or-later; the module boundary Apache-2.0 (decided 2026-11-24)"
 layout = ["scene", "open"]
-alt = "Four cards. AGPL: Xmip itself, version 3 or later; it cannot be relicensed or withdrawn. Apache-2.0: the module boundary, the headers, bindings and packages a module builds against, so your module stays yours. 75: decision records, each with its reasons. 3 kinds of tests: internal tests on every change, the System Tests on one computer, the Systems Tests on machines."
+alt = "Four cards. AGPL: Xmip itself, version 3 or later; it cannot be relicensed or withdrawn. Apache-2.0: the module boundary, the headers, bindings and packages a module builds against, so your module stays yours. 75: decision records, each with its reasons. Tests three ways: internal tests, the System Tests on one computer, the Systems Tests on machines."
 accessibility_notes = "The female host gently flexes their arms to emphasize open-source freedom."
 
 [[section]]
 title = "Measured"
 headline = "Measured, not promised"
-screen = "More than a millisecond around a payload is a defect, not a timeout to raise."
+screen = "More than a millisecond beyond the load is a defect to find, not a timeout to raise."
 voice = "male"
 power = false
-narration = "Xmip is measured, not promised. Its rule: anything it does around a payload that takes more than a millisecond is a defect to find. Carrying a file in and out on one node, Xmip's own work measured 430 microseconds at the median of twenty runs, with the storage's syncs counted apart. And the honest count: six transports run in the assembled service today, of the eighty-eight declared."
+narration = "Xmip is measured, not promised. Its rule: anything it does around a message that takes more than a millisecond, beyond the load it carries, is a defect to find. Carrying a file in and out on one node, Xmip's own work measured 430 microseconds at the median of twenty runs, with the storage device's own sync time counted apart. And fifty-two transports run in a node today, of the eighty-eight declared, each proven carrying a file through it."
 sources = ["CONTRIBUTING.md", "doc/decision/ADR-0018-service-and-host.md", "README.md"]
 note = "Figures as recorded; a quiet machine, 2026-11-09"
 layout = ["scene", "measured"]
-alt = "Three figures. 430 microseconds: Xmip's own work per file, file in to file out on one node, the median of twenty runs on a quiet machine, 2026-11-09. 2.4 milliseconds: the storage's two syncs for that same file, counted apart. 6 of 88: transports running in the assembled service today, file, FTP, HTTP, SFTP, TCP and UDP; the rest are declared. Recorded in ADR-0018 and the README."
+alt = "Three figures. 430 microseconds: Xmip's own work per file, file in to file out on one node, the median of twenty runs on a quiet machine, 2026-11-09. 2.4 milliseconds: the storage device's own sync time for that same file, counted apart. 52 of 88: transports a node runs today, each proven carrying a file through it. Recorded in the decision records and the README."
 
 [[section]]
 title = "Xmip in one view"
 headline = "Xmip: integration you can account for"
-screen = "CEO: every outcome on record\nCIO: your machines, offline first\nDeveloper: TOML, VS Code, Rust or C#\nOperator: health in words, retry, replay"
+screen = "CEO: every outcome on record\nCIO: your machines, offline first\nDeveloper: TOML, VS Code, many languages\nOperator: health in words, retry, replay"
 voice = "female"
 power = "both"
-narration = "That is Xmip: a message accepted once and accounted for, configuration you can read, work placed by what nodes declare, and the same answer on every surface. Xmip is in development, not GA yet. To try it, the getting-started guide carries a file in and out on your own computer. Thank you for watching."
+narration = "That is Xmip: a message accepted once and accounted for, configuration you can read, work placed by what nodes declare, and the same answer on every surface. Xmip is in development; it is not GA, generally available, yet. To try it, the getting-started guide carries a file in and out on your own computer. Thank you for watching."
 sources = ["README.md", "doc/getting-started.md"]
 note = "In development, not GA yet. Start with the getting-started guide."
 layout = ["closing"]

@@ -12,10 +12,12 @@
 use std::path::Path;
 use std::time::{Duration, Instant};
 
+use super::folder::{dropped, named};
 use super::{Ending, exited, heard, lines, spawned, stop, test_cluster, told, watched};
 
-/// An order, as a trading Party sends one.
-const ORDERS: &str = "UNB+UNOC:3+PARTY-A:ZZZ+SYSTEM-TEST:ZZZ+261111:0905+A0001'\n\
+/// An order, as a trading Party sends one: the order `approved.rs` carries
+/// through the System Tests' Work Process too.
+pub(crate) const ORDERS: &str = "UNB+UNOC:3+PARTY-A:ZZZ+SYSTEM-TEST:ZZZ+261111:0905+A0001'\n\
 UNH+1+ORDERS:D:24A:UN'\nBGM+220+PO-A-4711+9'\nDTM+137:20261111:102'\n\
 NAD+BY+PARTY-A::ZZZ'\nLIN+1++4006381333931:SRS'\nQTY+21:120:PCE'\nUNS+S'\n\
 UNT+8+1'\nUNZ+1+A0001'\n";
@@ -32,11 +34,6 @@ UNH+1+IFTSTA:D:24A:UN'\nBGM+77+ST-9001+9'\nUNT+3+1'\nUNZ+1+A9001'\n";
 /// What bounds a file's way from its drop to its Send Port's folder: a
 /// bound on the test, never on Xmip.
 const CARRY: Duration = Duration::from_secs(20);
-
-/// A path as a configuration names it.
-fn named(path: &Path) -> String {
-    path.display().to_string().replace('\\', "/")
-}
 
 /// The node, its own Storage node, routing what `drop` takes to `orders`
 /// or `invoices` by the document's own words.
@@ -111,7 +108,7 @@ local = "{local}"
 }
 
 /// The files whole in `folder`, by name: none a send is still writing.
-fn sent(folder: &Path) -> Vec<String> {
+pub(crate) fn sent(folder: &Path) -> Vec<String> {
     let mut names: Vec<String> = std::fs::read_dir(folder).map_or_default(|entries| {
         entries
             .filter_map(Result::ok)
@@ -121,13 +118,6 @@ fn sent(folder: &Path) -> Vec<String> {
     });
     names.sort();
     names
-}
-
-/// `text` dropped into `drop` as `name`, written beside and renamed in.
-fn dropped(directory: &Path, drop: &Path, name: &str, text: &str) {
-    let beside = directory.join(format!("{name}.part"));
-    std::fs::write(&beside, text).expect("written");
-    std::fs::rename(&beside, drop.join(name)).expect("dropped");
 }
 
 #[test]

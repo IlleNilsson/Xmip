@@ -2287,6 +2287,16 @@ unit, and the runtime's `approval_unit` waits for a second Message of its
 Instance, which no Correlation keys. Which test it is, and where its unit
 comes from, is open.
 
+Built 2026-11-24 (the owner: "go through each item and sort it or ask me";
+ADR-0066, amendment 2026-11-24): the root builds the System Tests' unit from
+their one source as its example `order_approval_unit`, a wrapper and no
+second generated copy, and its service test `approved.rs` starts
+`xmip-service` with a file Receive Location, the Work Process *Order
+approval* and a file Send Port to the ERP, the module, the Work Process and
+its Subscriptions read from the System Tests' cluster file: a sales order
+dropped in passes the unit and reaches the ERP's folder whole, as every
+landing now sees.
+
 ## 89. A unit test of the System Tests wait twenty seconds for timeouts
 
 Found 2026-11-21, when it stopped a landing: the System Tests'
@@ -3218,6 +3228,64 @@ last lines.
 Found 2026-11-24 the same day: the Systems Tests resolve the nodes the
 System Tests' cluster file names and refuse every unmapped one, where the
 environment file already says which nodes its machines run.
+
+## 169. The cloud transports take their key from nothing a Location gives them
+
+Found 2026-11-24 linking the transports into the assembled service: the
+ten cloud transports (AWS Kinesis, S3, SNS and SQS; Azure Blob, Event Grid,
+Event Hubs and Service Bus; Google Cloud Storage and Pub/Sub) take their
+credential only in code and refuse a Location's `secret`, so none is
+linked. Each is to read its key or token from its Location's secret, as
+MQTT, IMAP and the SQL transports read a password. An S3, Azure Blob or
+Google Cloud Storage Send Location also names its object after its whole
+endpoint.
+
+## 170. Five transports cannot take a node's single send
+
+Found 2026-11-24 the same day: CoAP, DHCP and mDNS lose the scheme their
+sends need, and their far ends want more than one send: CoAP waits for an
+empty closing POST, DHCP expects a request where a node sends a reply,
+mDNS and SSDP query the sender back, and BACnet waits for an empty closing
+message.
+
+## 171. No feature turns on TLS for HTTP in the assembled service
+
+Found 2026-11-24 the same day: HTTP and what rides on it (AS2, AS4, Peppol,
+MSMQ, WebDAV) are linked without TLS, as HTTP was, and turning TLS on for
+one turns it on for all, so https, as2s, as4s, msmqs and webdavs are
+refused in the service. Real AS4 and Peppol access points use HTTPS.
+
+## 172. An SMB or NFS Send Location names every file after its server
+
+Found 2026-11-24 the same day: neither uses the name the Message carries,
+as file and SFTP do, so each file lands under one name, the server's
+address, over the last.
+
+## 173. `--listening` reports a UDP Location's port as TCP
+
+Found 2026-11-24 the same day, older than it: noted in `listening.rs` and
+wider now that DDS, DNS, KNX, SNMP, syslog and UDP are linked, so an
+environment opens TCP where they listen on UDP.
+
+## 174. EDIFACT and X12 convert to nothing
+
+Found 2026-11-24 the same day: Convert does XML to JSON, JSON to XML, CSV
+to JSON and JSON to CSV; no unit turns an EDIFACT or X12 interchange into
+JSON or XML or back, and no node runs a step yet. Needed: the owner's
+decision on an interchange's JSON form, Convert's `edifact` and `x12` both
+ways and streamed, delimiters read from UNA or ISA, and a node that runs
+steps.
+
+## 175. A finished System Tests roll leaves `Get-XmipTestStatus`
+
+Found 2026-11-24 running the System Tests: `Get-XmipTestStatus` lists a
+roll only while its process lives, so a Core.System run that ended FINE
+shows nothing, where a Core.Estate, Core.Internal or Core.Demo run stays
+listed with OK or FAILED and its tally. The roll's record is still there,
+and the verdict only in its log and its snapshot through
+`Get-XmipTestResult -Path`, which refuses without `-Path` while an older
+cluster's snapshot shares the folder. Needed: a finished roll listed from
+its record, as an estate run is, its state and its worst result in words.
 
 # Suggested order
 

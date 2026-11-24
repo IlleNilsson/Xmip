@@ -249,27 +249,82 @@ pub fn transport_identifiers() -> Vec<Box<dyn TransportIdentifier>> {
     identifiers
 }
 
-/// The transports this build carries, each by its own declaration.
+/// Each transport this build carries, by the feature that links it.
+macro_rules! linked {
+    ($($feature:literal => $technology:ty),* $(,)?) => {{
+        let mut transports: Vec<LinkedTransport> = Vec::new();
+        $(
+            #[cfg(feature = $feature)]
+            transports.push(LinkedTransport::of::<$technology>());
+        )*
+        transports
+    }};
+}
+
+/// The transports this build carries, each by its own declaration, in the
+/// order of their names: every one written whose far end a node in a
+/// process of its own reaches, each proven carrying a file through the
+/// service (`.src/test/service/linked.rs`; ADR-0015, amendment 2026-11-24).
 #[allow(
     unused_mut,
     clippy::vec_init_then_push,
     reason = "each push is a feature this build may leave out"
 )]
 pub fn transports() -> Vec<LinkedTransport> {
-    let mut transports = Vec::new();
-    #[cfg(feature = "transport-file")]
-    transports.push(LinkedTransport::of::<xmip_transport_file::FileTransport>());
-    #[cfg(feature = "transport-ftp")]
-    transports.push(LinkedTransport::of::<xmip_transport_ftp::FtpTransport>());
-    #[cfg(feature = "transport-http")]
-    transports.push(LinkedTransport::of::<xmip_transport_http::HttpTransport>());
-    #[cfg(feature = "transport-sftp")]
-    transports.push(LinkedTransport::of::<xmip_transport_sftp::SftpTransport>());
-    #[cfg(feature = "transport-tcp")]
-    transports.push(LinkedTransport::of::<xmip_transport_tcp::TcpTransport>());
-    #[cfg(feature = "transport-udp")]
-    transports.push(LinkedTransport::of::<xmip_transport_udp::UdpTransport>());
-    transports
+    linked![
+        "transport-activemq" => xmip_transport_activemq::ActiveMqTransport,
+        "transport-amqp" => xmip_transport_amqp::AmqpTransport,
+        "transport-as2" => xmip_transport_as2::As2Transport,
+        "transport-as4" => xmip_transport_as4::As4Transport,
+        "transport-cotp" => xmip_transport_cotp::CotpTransport,
+        "transport-db2" => xmip_transport_db2::Db2Transport,
+        "transport-dds" => xmip_transport_dds::DdsTransport,
+        "transport-dicom" => xmip_transport_dicom::DicomTransport,
+        "transport-dnp3" => xmip_transport_dnp3::Dnp3Transport,
+        "transport-dns" => xmip_transport_dns::DnsTransport,
+        "transport-ethernet-ip" => xmip_transport_ethernet_ip::EtherNetIpTransport,
+        "transport-file" => xmip_transport_file::FileTransport,
+        "transport-ftp" => xmip_transport_ftp::FtpTransport,
+        "transport-http" => xmip_transport_http::HttpTransport,
+        "transport-ibm-mq" => xmip_transport_ibm_mq::IbmMqTransport,
+        "transport-iec-60870-5-104" => xmip_transport_iec_60870_5_104::Iec104Transport,
+        "transport-iec-61850" => xmip_transport_iec_61850::Iec61850Transport,
+        "transport-imap" => xmip_transport_imap::ImapTransport,
+        "transport-kafka" => xmip_transport_kafka::KafkaTransport,
+        "transport-knx" => xmip_transport_knx::KnxTransport,
+        "transport-mariadb" => xmip_transport_mariadb::MariaDbTransport,
+        "transport-mllp" => xmip_transport_mllp::MllpTransport,
+        "transport-modbus" => xmip_transport_modbus::ModbusTransport,
+        "transport-mqtt" => xmip_transport_mqtt::MqttTransport,
+        "transport-msmq" => xmip_transport_msmq::MsmqTransport,
+        "transport-mssql" => xmip_transport_mssql::MssqlTransport,
+        "transport-mysql" => xmip_transport_mysql::MySqlTransport,
+        "transport-named-pipe" => xmip_transport_named_pipe::NamedPipeTransport,
+        "transport-nats" => xmip_transport_nats::NatsTransport,
+        "transport-nats-jetstream" => xmip_transport_nats_jetstream::JetStreamTransport,
+        "transport-nfs" => xmip_transport_nfs::NfsTransport,
+        "transport-opc-ua" => xmip_transport_opc_ua::OpcUaTransport,
+        "transport-oracle" => xmip_transport_oracle::OracleTransport,
+        "transport-peppol" => xmip_transport_peppol::PeppolTransport,
+        "transport-pop3" => xmip_transport_pop3::Pop3Transport,
+        "transport-postgresql" => xmip_transport_postgresql::PostgresTransport,
+        "transport-rabbitmq" => xmip_transport_rabbitmq::RabbitMqTransport,
+        "transport-redis-streams" => xmip_transport_redis_streams::RedisStreamsTransport,
+        "transport-redpanda" => xmip_transport_redpanda::RedpandaTransport,
+        "transport-s7comm" => xmip_transport_s7comm::S7Transport,
+        "transport-secs-gem" => xmip_transport_secs_gem::SecsGemTransport,
+        "transport-sftp" => xmip_transport_sftp::SftpTransport,
+        "transport-smb" => xmip_transport_smb::SmbTransport,
+        "transport-smtp" => xmip_transport_smtp::SmtpTransport,
+        "transport-snmp" => xmip_transport_snmp::SnmpTransport,
+        "transport-sqlite" => xmip_transport_sqlite::SqliteTransport,
+        "transport-syslog" => xmip_transport_syslog::SyslogTransport,
+        "transport-tcp" => xmip_transport_tcp::TcpTransport,
+        "transport-udp" => xmip_transport_udp::UdpTransport,
+        "transport-unix-socket" => xmip_transport_unix_socket::UnixSocketTransport,
+        "transport-webdav" => xmip_transport_webdav::WebDavTransport,
+        "transport-websocket" => xmip_transport_websocket::WebSocketTransport,
+    ]
 }
 
 #[cfg(test)]

@@ -1399,3 +1399,25 @@ stays decided, not built: a node still refuses a Port or Location that
 attaches one (`configure::step::unrun`), and its startup opens no Promote
 unit's library yet. Prepare, Demote, Transform, Validate as a unit and
 Debatch have no table yet.
+
+## Amendment, 2026-11-24: every landing runs Order approval in xmip-service
+
+The owner, 2026-11-24, comparing Xmip with its competitors: *go through
+each item and sort it or ask me*. Sorted: the assembled service runs
+Work Processes, which it did in the System Tests' served runs alone, a
+landing running no test that carried a Message through a loaded unit in a
+running node (open problem 87).
+
+The root crate builds the System Tests' unit too, from their one source
+(`test/core/system-test/examples/order_approval.rs`, which
+`process::generate` makes of `order-approval.bpmn` and their test holds to
+it), as its example `order_approval_unit`: a wrapper naming the process
+capability as the generated source does, never a second generated copy.
+The root's service test `approved.rs` copies the library beside a node's
+configuration, reads the module, the Work Process and its two
+Subscriptions from the System Tests' cluster file, and drops a sales order
+in: `xmip-service` opens the unit through the C ABI as it starts, the
+Work Process marks the order `Approval = 'approved'` and publishes it
+again, and it reaches the ERP's folder whole, nothing else routing there. A unit's
+settings and its calls through the standard units are still decided, not
+built.

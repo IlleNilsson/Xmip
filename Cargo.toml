@@ -369,6 +369,16 @@ name = "database"
 path = ".src/test/database.rs"
 required-features = ["persist"]
 
+# The System Tests' Work Process unit *Order approval*, built here too from
+# their one source, which xmip-service's test `approved.rs` opens beside a
+# node's configuration (ADR-0066, amendment 2026-11-24). Its own name, so a
+# build of both packages at once writes two libraries, never one twice.
+[[example]]
+name = "order_approval_unit"
+path = ".src/example/order_approval_unit.rs"
+crate-type = ["cdylib"]
+required-features = ["process"]
+
 [features]
 # Nothing by default. A plain `cargo build` is the assembly library with the
 # modules every node has; xmip-service is built from a site (deploy/site) by
@@ -451,18 +461,72 @@ authorize-location = ["authorize", "dep:xmip-authorize-location"]
 # (`xmip_runtime::linked::Linked`); a Location naming one the build left out
 # is refused as the node starts. A site links the ones it names
 # (deploy/site). Each is chosen by the scheme a Location's address is
-# entered with — a path or file://, ftp:// and ftps://, http:// and
-# https://, sftp://, tcp://, udp:// (ADR-0064, amendment 2026-10-28). tcp
-# terminates TLS where its Location says `tls = true`, with the node's
-# `[provision.receive]` certificate. sftp takes files from and puts them on
-# an SFTP server, each under its name: the Parties' far end the System Tests
-# serve nodes on machines of their own (ADR-0028, amendment 2026-10-22).
+# entered with, the schemes its own `Configured::SCHEMES` declares — a path
+# or file://, ftp:// and ftps://, tcp://, as2://, mllp:// and the rest
+# (ADR-0064, amendment 2026-10-28). Every transport written whose far end a
+# node in a process of its own reaches is here, each proven carrying a file
+# through the node to the far end its crate stands
+# (`.src/test/service/linked.rs`; ADR-0015, amendment 2026-11-24); why each
+# other is not is architecture.toml's `linked-transports`. tcp terminates
+# TLS where its Location says `tls = true`, with the node's
+# `[provision.receive]` certificate. HTTP and what rides on it — as2, as4,
+# peppol, msmq, webdav — are linked without TLS, as http's crate leaves it
+# off by default, so their secure schemes are refused. sftp takes files
+# from and puts them on an SFTP server, each under its name: the Parties'
+# far end the System Tests serve nodes on machines of their own (ADR-0028,
+# amendment 2026-10-22).
+transport-activemq = ["dep:xmip-transport-activemq"]
+transport-amqp = ["dep:xmip-transport-amqp"]
+transport-as2 = ["dep:xmip-transport-as2"]
+transport-as4 = ["dep:xmip-transport-as4"]
+transport-cotp = ["dep:xmip-transport-cotp"]
+transport-db2 = ["dep:xmip-transport-db2"]
+transport-dds = ["dep:xmip-transport-dds"]
+transport-dicom = ["dep:xmip-transport-dicom"]
+transport-dnp3 = ["dep:xmip-transport-dnp3"]
+transport-dns = ["dep:xmip-transport-dns"]
+transport-ethernet-ip = ["dep:xmip-transport-ethernet-ip"]
 transport-file = ["dep:xmip-transport-file"]
 transport-ftp = ["dep:xmip-transport-ftp", "xmip-transport-ftp/tls"]
 transport-http = ["dep:xmip-transport-http"]
+transport-ibm-mq = ["dep:xmip-transport-ibm-mq"]
+transport-iec-60870-5-104 = ["dep:xmip-transport-iec-60870-5-104"]
+transport-iec-61850 = ["dep:xmip-transport-iec-61850"]
+transport-imap = ["dep:xmip-transport-imap"]
+transport-kafka = ["dep:xmip-transport-kafka"]
+transport-knx = ["dep:xmip-transport-knx"]
+transport-mariadb = ["dep:xmip-transport-mariadb"]
+transport-mllp = ["dep:xmip-transport-mllp"]
+transport-modbus = ["dep:xmip-transport-modbus"]
+transport-mqtt = ["dep:xmip-transport-mqtt"]
+transport-msmq = ["dep:xmip-transport-msmq"]
+transport-mssql = ["dep:xmip-transport-mssql"]
+transport-mysql = ["dep:xmip-transport-mysql"]
+transport-named-pipe = ["dep:xmip-transport-named-pipe"]
+transport-nats = ["dep:xmip-transport-nats"]
+transport-nats-jetstream = ["dep:xmip-transport-nats-jetstream"]
+transport-nfs = ["dep:xmip-transport-nfs"]
+transport-opc-ua = ["dep:xmip-transport-opc-ua"]
+transport-oracle = ["dep:xmip-transport-oracle"]
+transport-peppol = ["dep:xmip-transport-peppol"]
+transport-pop3 = ["dep:xmip-transport-pop3"]
+transport-postgresql = ["dep:xmip-transport-postgresql"]
+transport-rabbitmq = ["dep:xmip-transport-rabbitmq"]
+transport-redis-streams = ["dep:xmip-transport-redis-streams"]
+transport-redpanda = ["dep:xmip-transport-redpanda"]
+transport-s7comm = ["dep:xmip-transport-s7comm"]
+transport-secs-gem = ["dep:xmip-transport-secs-gem"]
 transport-sftp = ["dep:xmip-transport-sftp"]
+transport-smb = ["dep:xmip-transport-smb"]
+transport-smtp = ["dep:xmip-transport-smtp"]
+transport-snmp = ["dep:xmip-transport-snmp"]
+transport-sqlite = ["dep:xmip-transport-sqlite"]
+transport-syslog = ["dep:xmip-transport-syslog"]
 transport-tcp = ["dep:xmip-transport-tcp", "xmip-transport-tcp/tls"]
 transport-udp = ["dep:xmip-transport-udp"]
+transport-unix-socket = ["dep:xmip-transport-unix-socket"]
+transport-webdav = ["dep:xmip-transport-webdav"]
+transport-websocket = ["dep:xmip-transport-websocket"]
 
 # The route technologies xmip-service links and hands to the node it starts
 # (`xmip_runtime::linked::Linked::sources`): each the source a Subscription
@@ -557,12 +621,58 @@ xmip-send = { package = "xmip-core-send", git = "https://github.com/IlleNilsson/
 xmip-stream = { package = "xmip-core-stream", git = "https://github.com/IlleNilsson/xmip-core-stream", branch = "main" }
 xmip-transform = { package = "xmip-core-transform", git = "https://github.com/IlleNilsson/xmip-core-transform", branch = "main", optional = true }
 xmip-transport = { package = "xmip-core-transport", git = "https://github.com/IlleNilsson/xmip-core-transport", branch = "main" }
+xmip-transport-activemq = { package = "xmip-core-transport-activemq", git = "https://github.com/IlleNilsson/xmip-core-transport-activemq", branch = "main", optional = true }
+xmip-transport-amqp = { package = "xmip-core-transport-amqp", git = "https://github.com/IlleNilsson/xmip-core-transport-amqp", branch = "main", optional = true }
+xmip-transport-as2 = { package = "xmip-core-transport-as2", git = "https://github.com/IlleNilsson/xmip-core-transport-as2", branch = "main", optional = true }
+xmip-transport-as4 = { package = "xmip-core-transport-as4", git = "https://github.com/IlleNilsson/xmip-core-transport-as4", branch = "main", optional = true }
+xmip-transport-cotp = { package = "xmip-core-transport-cotp", git = "https://github.com/IlleNilsson/xmip-core-transport-cotp", branch = "main", optional = true }
+xmip-transport-db2 = { package = "xmip-core-transport-db2", git = "https://github.com/IlleNilsson/xmip-core-transport-db2", branch = "main", optional = true }
+xmip-transport-dds = { package = "xmip-core-transport-dds", git = "https://github.com/IlleNilsson/xmip-core-transport-dds", branch = "main", optional = true }
+xmip-transport-dicom = { package = "xmip-core-transport-dicom", git = "https://github.com/IlleNilsson/xmip-core-transport-dicom", branch = "main", optional = true }
+xmip-transport-dnp3 = { package = "xmip-core-transport-dnp3", git = "https://github.com/IlleNilsson/xmip-core-transport-dnp3", branch = "main", optional = true }
+xmip-transport-dns = { package = "xmip-core-transport-dns", git = "https://github.com/IlleNilsson/xmip-core-transport-dns", branch = "main", optional = true }
+xmip-transport-ethernet-ip = { package = "xmip-core-transport-ethernet-ip", git = "https://github.com/IlleNilsson/xmip-core-transport-ethernet-ip", branch = "main", optional = true }
 xmip-transport-file = { package = "xmip-core-transport-file", git = "https://github.com/IlleNilsson/xmip-core-transport-file", branch = "main", optional = true }
 xmip-transport-ftp = { package = "xmip-core-transport-ftp", git = "https://github.com/IlleNilsson/xmip-core-transport-ftp", branch = "main", optional = true }
 xmip-transport-http = { package = "xmip-core-transport-http", git = "https://github.com/IlleNilsson/xmip-core-transport-http", branch = "main", optional = true }
+xmip-transport-ibm-mq = { package = "xmip-core-transport-ibm-mq", git = "https://github.com/IlleNilsson/xmip-core-transport-ibm-mq", branch = "main", optional = true }
+xmip-transport-iec-60870-5-104 = { package = "xmip-core-transport-iec-60870-5-104", git = "https://github.com/IlleNilsson/xmip-core-transport-iec-60870-5-104", branch = "main", optional = true }
+xmip-transport-iec-61850 = { package = "xmip-core-transport-iec-61850", git = "https://github.com/IlleNilsson/xmip-core-transport-iec-61850", branch = "main", optional = true }
+xmip-transport-imap = { package = "xmip-core-transport-imap", git = "https://github.com/IlleNilsson/xmip-core-transport-imap", branch = "main", optional = true }
+xmip-transport-kafka = { package = "xmip-core-transport-kafka", git = "https://github.com/IlleNilsson/xmip-core-transport-kafka", branch = "main", optional = true }
+xmip-transport-knx = { package = "xmip-core-transport-knx", git = "https://github.com/IlleNilsson/xmip-core-transport-knx", branch = "main", optional = true }
+xmip-transport-mariadb = { package = "xmip-core-transport-mariadb", git = "https://github.com/IlleNilsson/xmip-core-transport-mariadb", branch = "main", optional = true }
+xmip-transport-mllp = { package = "xmip-core-transport-mllp", git = "https://github.com/IlleNilsson/xmip-core-transport-mllp", branch = "main", optional = true }
+xmip-transport-modbus = { package = "xmip-core-transport-modbus", git = "https://github.com/IlleNilsson/xmip-core-transport-modbus", branch = "main", optional = true }
+xmip-transport-mqtt = { package = "xmip-core-transport-mqtt", git = "https://github.com/IlleNilsson/xmip-core-transport-mqtt", branch = "main", optional = true }
+xmip-transport-msmq = { package = "xmip-core-transport-msmq", git = "https://github.com/IlleNilsson/xmip-core-transport-msmq", branch = "main", optional = true }
+xmip-transport-mssql = { package = "xmip-core-transport-mssql", git = "https://github.com/IlleNilsson/xmip-core-transport-mssql", branch = "main", optional = true }
+xmip-transport-mysql = { package = "xmip-core-transport-mysql", git = "https://github.com/IlleNilsson/xmip-core-transport-mysql", branch = "main", optional = true }
+xmip-transport-named-pipe = { package = "xmip-core-transport-named-pipe", git = "https://github.com/IlleNilsson/xmip-core-transport-named-pipe", branch = "main", optional = true }
+xmip-transport-nats = { package = "xmip-core-transport-nats", git = "https://github.com/IlleNilsson/xmip-core-transport-nats", branch = "main", optional = true }
+xmip-transport-nats-jetstream = { package = "xmip-core-transport-nats-jetstream", git = "https://github.com/IlleNilsson/xmip-core-transport-nats-jetstream", branch = "main", optional = true }
+xmip-transport-nfs = { package = "xmip-core-transport-nfs", git = "https://github.com/IlleNilsson/xmip-core-transport-nfs", branch = "main", optional = true }
+xmip-transport-opc-ua = { package = "xmip-core-transport-opc-ua", git = "https://github.com/IlleNilsson/xmip-core-transport-opc-ua", branch = "main", optional = true }
+xmip-transport-oracle = { package = "xmip-core-transport-oracle", git = "https://github.com/IlleNilsson/xmip-core-transport-oracle", branch = "main", optional = true }
+xmip-transport-peppol = { package = "xmip-core-transport-peppol", git = "https://github.com/IlleNilsson/xmip-core-transport-peppol", branch = "main", optional = true }
+xmip-transport-pop3 = { package = "xmip-core-transport-pop3", git = "https://github.com/IlleNilsson/xmip-core-transport-pop3", branch = "main", optional = true }
+xmip-transport-postgresql = { package = "xmip-core-transport-postgresql", git = "https://github.com/IlleNilsson/xmip-core-transport-postgresql", branch = "main", optional = true }
+xmip-transport-rabbitmq = { package = "xmip-core-transport-rabbitmq", git = "https://github.com/IlleNilsson/xmip-core-transport-rabbitmq", branch = "main", optional = true }
+xmip-transport-redis-streams = { package = "xmip-core-transport-redis-streams", git = "https://github.com/IlleNilsson/xmip-core-transport-redis-streams", branch = "main", optional = true }
+xmip-transport-redpanda = { package = "xmip-core-transport-redpanda", git = "https://github.com/IlleNilsson/xmip-core-transport-redpanda", branch = "main", optional = true }
+xmip-transport-s7comm = { package = "xmip-core-transport-s7comm", git = "https://github.com/IlleNilsson/xmip-core-transport-s7comm", branch = "main", optional = true }
+xmip-transport-secs-gem = { package = "xmip-core-transport-secs-gem", git = "https://github.com/IlleNilsson/xmip-core-transport-secs-gem", branch = "main", optional = true }
 xmip-transport-sftp = { package = "xmip-core-transport-sftp", git = "https://github.com/IlleNilsson/xmip-core-transport-sftp", branch = "main", optional = true }
+xmip-transport-smb = { package = "xmip-core-transport-smb", git = "https://github.com/IlleNilsson/xmip-core-transport-smb", branch = "main", optional = true }
+xmip-transport-smtp = { package = "xmip-core-transport-smtp", git = "https://github.com/IlleNilsson/xmip-core-transport-smtp", branch = "main", optional = true }
+xmip-transport-snmp = { package = "xmip-core-transport-snmp", git = "https://github.com/IlleNilsson/xmip-core-transport-snmp", branch = "main", optional = true }
+xmip-transport-sqlite = { package = "xmip-core-transport-sqlite", git = "https://github.com/IlleNilsson/xmip-core-transport-sqlite", branch = "main", optional = true }
+xmip-transport-syslog = { package = "xmip-core-transport-syslog", git = "https://github.com/IlleNilsson/xmip-core-transport-syslog", branch = "main", optional = true }
 xmip-transport-tcp = { package = "xmip-core-transport-tcp", git = "https://github.com/IlleNilsson/xmip-core-transport-tcp", branch = "main", optional = true }
 xmip-transport-udp = { package = "xmip-core-transport-udp", git = "https://github.com/IlleNilsson/xmip-core-transport-udp", branch = "main", optional = true }
+xmip-transport-unix-socket = { package = "xmip-core-transport-unix-socket", git = "https://github.com/IlleNilsson/xmip-core-transport-unix-socket", branch = "main", optional = true }
+xmip-transport-webdav = { package = "xmip-core-transport-webdav", git = "https://github.com/IlleNilsson/xmip-core-transport-webdav", branch = "main", optional = true }
+xmip-transport-websocket = { package = "xmip-core-transport-websocket", git = "https://github.com/IlleNilsson/xmip-core-transport-websocket", branch = "main", optional = true }
 # xmip-service's console stop on every platform: Ctrl+C and Ctrl+Break in a
 # Windows console, SIGINT, SIGTERM and SIGHUP on Linux and macOS, which is how
 # systemd and launchd stop a service. Its unsafe is its own; this crate has none.

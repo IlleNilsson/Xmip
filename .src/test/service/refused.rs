@@ -6,8 +6,10 @@
 use super::*;
 
 /// The scheme of a transport technology that is no feature of the root
-/// crate, `xmip-core-transport-smb`'s.
-pub(crate) const UNLINKED: &str = "smb://";
+/// crate, `xmip-core-transport-zigbee`'s: no node reaches a radio it
+/// drives (architecture.toml, `linked-transports`). It was smb's until
+/// 2026-11-24, when smb was linked.
+pub(crate) const UNLINKED: &str = "zigbee://";
 
 /// How long a refusal may take: a node refused never accepts work, so one
 /// still running after this was not refused, and is killed.

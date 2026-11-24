@@ -157,14 +157,14 @@ fn a_signed_slice_the_node_cannot_start_leaves_its_active_configuration_running_
     assert!(s1 < serial(&older) && serial(&older) < s2);
 
     // 3. Deployed: the node is not refused; the first configuration's tcp
-    // Receive Location takes what is sent, the candidate's is smb.
+    // Receive Location takes what is sent, the candidate's is unlinked.
     ran(&configuration, &directory, &receive);
     let (health, said) = standing(&directory);
     assert_eq!(health, Health::Stressed, "{said}");
     for words in [
         "candidate refused",
         "refused at validate-startup",
-        "no transport for smb://",
+        &format!("no transport for {UNLINKED}"),
         &format!("active configuration, serial {s1} of save"),
     ] {
         assert!(said.contains(words), "{words}: {said}");

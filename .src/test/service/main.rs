@@ -41,6 +41,16 @@
 //!   the `edi` path language, an EDIFACT document dropped in goes to the
 //!   Send Port its message type and recipient name, whole, and one no
 //!   Subscription takes goes nowhere.
+//! - `linked.rs`: one file dropped in is sent over every transport the
+//!   build links at once, each to the far end its own crate stands
+//!   (`far_ends.rs`), and every far end takes it whole; a POP3 Location
+//!   collects a maildrop's mail (ADR-0015, amendment 2026-11-24).
+//! - `approved.rs`: a sales order passes the System Tests' Work Process
+//!   *Order approval*, its unit opened through the C ABI as the service
+//!   starts, on its way to the ERP (ADR-0066, amendment 2026-11-24).
+//!
+//! `folder.rs` names a folder as a configuration does and drops a file in
+//! it, for every test here that does.
 //!
 //! A test that measures how long Xmip takes is not here: it is in the
 //! root's timing program, `measured` (`.src/test/measured`), which the
@@ -68,11 +78,17 @@ use started::*;
 mod refused;
 use refused::*;
 
+mod folder;
+
 mod accepted;
 mod activation;
+#[cfg(all(feature = "process", feature = "route-content", feature = "path-edi"))]
+mod approved;
 mod authority;
 mod door;
 mod failover;
+mod far_ends;
+mod linked;
 mod operate;
 #[cfg(all(feature = "route-content", feature = "path-edi"))]
 mod routed;

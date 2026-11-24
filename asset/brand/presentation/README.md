@@ -131,6 +131,13 @@ JSON here is an interchange format; the tracked editorial source is TOML.
 It does not reuse a voice track when its transcript differs from the story.
 
 For replacement narration, retain the approved pronunciation and voice character.
+How the voice says a written term is `pronunciation.toml`, beside the story:
+each acronym or technical term the narration uses, its spoken form as
+practitioners say it aloud, a project's own stated pronunciation first and
+cited, the common convention otherwise and marked so. It is applied to the
+narration before synthesis only, the longest term first and only as a whole
+word; the slides and the captions keep the written form. A narration that uses
+a term the lexicon lacks gets the term added before it is narrated.
 The current tracks use Kokoro-82M-v1.0-ONNX, fp32, af_heart (female) and
 am_fenrir (male), generated at speed 1. Keep the natural generated cadence;
 regenerate caption and scene timing to follow the speech instead of stretching

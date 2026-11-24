@@ -170,7 +170,11 @@ takes them (judgment, with the survey behind it):
 1. A node that runs: phases 4-9, a technology in a node, a real Receive
    Location — built in the runtime on 2026-09-28 and driven by its tests;
    the executable that starts one outside a test is next. Every row below
-   depends on it.
+   depends on it. Built 2026-11-24 for transports and Work Processes: the
+   assembled service runs 52 of the 88 declared transports, where it ran
+   six, each proven carrying a file through a node to its own far end, and
+   a Work Process unit through the C ABI (README, *Security and assurance*;
+   `estate-map.md`, `linked-transports` and `process-execution`).
 2. Transformation. BizTalk estates are thousands of XSLT 1.0 maps; CData sells
    reusing them and Microsoft ships a map converter. All seventeen `transform`
    technologies are reserved.
@@ -203,7 +207,8 @@ takes them (judgment, with the survey behind it):
 control plane; refusals that carry place and reason; `never_satisfiable`;
 identity isolation that fails closed at startup; the breadth of industrial
 transports (OPC UA, IEC 61850, Modbus, PROFINET, M-Bus), which no iPaaS here
-covers. Tamper-evident audit is no longer unique, so it must be matched, not
+covers — the first three in a node since 2026-11-24, the last two reaching
+no device a node drives yet. Tamper-evident audit is no longer unique, so it must be matched, not
 claimed.
 
 **Deliberately not:** a hosted control plane; metering or telemetry that phones

@@ -83,11 +83,15 @@ fn a_node_it_cannot_start_is_refused_with_exit_code_two() {
     let text = xmip_runtime::fixture::unsigned(&configuration);
     // A transport no build of xmip-service links: a feature of its own for
     // it would make this node start (sftp was this test's until it was
-    // linked, 2026-10-22, and the node then ran on instead of being refused).
+    // linked, 2026-10-22, and smb until 2026-11-24, and each time the node
+    // then ran on instead of being refused).
     xmip_runtime::fixture::write_signed(&configuration, &text.replacen("tcp://", UNLINKED, 1));
 
     let said = refused(&configuration, &directory);
-    assert!(said.contains("no transport for smb://"), "{said}");
+    assert!(
+        said.contains(&format!("no transport for {UNLINKED}")),
+        "{said}"
+    );
     // No slice ever ran here, so nothing else does (ADR-0031, amendment
     // 2026-11-12).
     assert!(

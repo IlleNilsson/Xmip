@@ -143,10 +143,11 @@ Journey recorded, to a Work Process, a Send Port or a Send Port Group. The terms
   Send Port has no Processing. A node declares and plans its Work Processes
   ([built, in the assembled service](doc/architecture/estate-map.md#process-declaration)); compiling
   one at design time and running it are
-  [built, not in the assembled service](doc/architecture/estate-map.md#process-execution): a BPMN 2.0
+  [built, in the assembled service](doc/architecture/estate-map.md#process-execution): a BPMN 2.0
   design compiles to a Work Process unit a node loads through the C ABI, and
   the node's Work Process step takes a turn of each Instance from the Ledger,
-  holding no thread while it waits (ADR-0066, amendment 2026-10-22).
+  holding no thread while it waits (ADR-0066, amendments 2026-10-22 and
+  2026-11-24).
   *Audited: the start, each step's outcome, and the answer.*
 - **Assignment.** Setting values in a Message's context, from a literal or
   from another value, in order. It belongs to a Work Process alone and
@@ -257,7 +258,7 @@ whether delivery completed, and why work stopped when it did not.
 | --- | --- | --- |
 | Correctness under failure | Persist before execution; checkpoint each Journey ([runtime-model.md](doc/architecture/runtime-model.md)). | A restart resumes durable work instead of reconstructing intent from logs. |
 | Throughput and predictable resource use | Rust throughout the message path. | Memory safety without a garbage-collected hot path. |
-| Extensibility | A versioned C ABI, one trait table per capability, and a host that opens a Module at run time ([ADR-0012](doc/decision/ADR-0012-module-boundary.md), [ADR-0057](doc/decision/ADR-0057-a-vtable-is-a-promise-only-a-loader-is-a-saving.md)). | A Module is written in Rust, or in .NET unless excluded, and in another language only when configuration invites its runtime ([ADR-0018](doc/decision/ADR-0018-service-and-host.md)); it is kept in its own repository, and opened as a shared library the host holds to the trait version the loading capability asked for ([built, not in the assembled service](doc/architecture/estate-map.md#module-loading): the loader drives the contract table alone, `xmip-service` is built without it, and every other technology is linked, so adding one means rebuilding the service with `Build-XmipService`). A .NET Module on threads in the Xmip Host Service, and another runtime's in a process of its own unless configuration invites it in, are [decided, not built](doc/architecture/estate-map.md#other-runtime-module). |
+| Extensibility | A versioned C ABI, one trait table per capability, and a host that opens a Module at run time ([ADR-0012](doc/decision/ADR-0012-module-boundary.md), [ADR-0057](doc/decision/ADR-0057-a-vtable-is-a-promise-only-a-loader-is-a-saving.md)). | A Module is written in Rust, or in .NET unless excluded, and in another language only when configuration invites its runtime ([ADR-0018](doc/decision/ADR-0018-service-and-host.md)); it is kept in its own repository, and opened as a shared library the host holds to the trait version the loading capability asked for ([built, in the assembled service](doc/architecture/estate-map.md#module-loading): `xmip-service` opens the libraries a node's configuration names as it starts, a Work Process unit's table the one the message path calls, and every other technology is linked, so adding one means rebuilding the service with `Build-XmipService`). A .NET Module on threads in the Xmip Host Service, and another runtime's in a process of its own unless configuration invites it in, are [decided, not built](doc/architecture/estate-map.md#other-runtime-module). |
 | Acceptance | A Stream is accepted only when well-formed and, where a Contract is named, conformant ([ADR-0042](doc/decision/ADR-0042-a-contract-holds-well-formedness-always-and-conformance-when-named.md); [decided, not built](doc/architecture/estate-map.md#arrival-validation)). | Responsibility transfers to Xmip at one explicit point, and durability follows it. |
 | Operational consistency | The `xmip` command line, PowerShell and both GUIs read one shared operator model ([ADR-0014](doc/decision/ADR-0014-operator-surfaces.md), [ADR-0052](doc/decision/ADR-0052-the-operator-surfaces-share-one-model.md)). | A scope, a Status and its evidence mean the same thing on every surface. |
 | Safe observation | The runtime publishes snapshots asynchronously; observation never queries the message path ([ADR-0027](doc/decision/ADR-0027-the-operator-boundary.md)). | Monitoring cannot slow or stop what it watches. |
@@ -338,8 +339,9 @@ runtime, the operator surfaces and the System Tests are operational, and since
 2026-09-19 the runtime opens a Module for real: it loads the shared library,
 resolves `xmip_create_module_v1`, refuses a descriptor the loading capability's trait
 version does not admit, and configures, starts and stops the contract
-table through it — the same code for a C Module and a Rust one
-([built, not in the assembled service](doc/architecture/estate-map.md#module-loading)); no Location
+table through it, and turns a Work Process unit's — the same code for a C
+Module and a Rust one
+([built, in the assembled service](doc/architecture/estate-map.md#module-loading)); no Location
 calls a loaded contract yet. Technologies are still linked rather
 than loaded, and most technology
 repositories are scaffolded and not yet written. The manifest records that
@@ -416,9 +418,13 @@ service. Xmip is developed in Sweden and is source-available, which is
 relevant where data sovereignty is regulated. Its AS4 and Peppol transports
 are protocol software for the operator of a certified access point, which is
 what European e-invoicing runs on; certification itself belongs to the
-operator, and neither is linked into the node yet: the assembled service
-runs six transports — file, FTP, HTTP, SFTP, TCP and UDP — of the 88
-declared (market-position.md, section 8).
+operator. The assembled service runs both, without TLS until a site can
+choose it for HTTP, and 50 transports more: 52 of the 88 declared, among
+them MLLP for HL7, SMTP, WebSocket, Kafka, MQTT, AMQP, IBM MQ, OPC UA,
+Modbus and the SQL databases, each proven carrying a file through a node to
+its own far end
+([built, in the assembled service](doc/architecture/estate-map.md#linked-transports),
+which names every one and why each other is not).
 
 ### Licensing
 

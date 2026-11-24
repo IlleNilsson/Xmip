@@ -211,14 +211,16 @@ Describe 'Every site becomes a build, or is refused where its target says' {
         Set-Content -LiteralPath $path -Value @(
             'target = "server"'
             'roles = ["receiving"]'
-            'technologies = ["xmip-core-transport-file", "xmip-core-transport-smtp"]'
+            'technologies = ["xmip-core-transport-smtp", "xmip-core-transport-aws-s3"]'
         )
 
         $plan = Resolve-XmipTestSite -Site $path
 
-        $plan.Technologies | Should -Be @('xmip-core-transport-file', 'xmip-core-transport-smtp')
-        $plan.Features | Should -Contain 'transport-file'
-        $plan.Unlinked | Should -Contain 'xmip-core-transport-smtp'
+        $plan.Technologies | Should -Be @('xmip-core-transport-smtp', 'xmip-core-transport-aws-s3')
+        $plan.Features | Should -Contain 'transport-smtp'
+        # Presenting no key a Location gives it, aws-s3 is not linked
+        # (architecture.toml, linked-transports).
+        $plan.Unlinked | Should -Contain 'xmip-core-transport-aws-s3'
     }
 
     # Site chooses (the owner, 2026-10-20; ADR-0015, amendment 2026-10-20):

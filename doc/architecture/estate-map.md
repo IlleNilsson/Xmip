@@ -136,6 +136,49 @@ neither the role nor `[storage] nodes` is refused as it starts. Records:
 ADR-0015 (amendments 2026-10-01 and 2026-10-20), ADR-0056 (amendment
 2026-10-20), ADR-0063, ADR-0070 (amendment 2026-10-10).
 
+#### `linked-transports`
+
+**The transports a node runs.** `xmip-service` links 52 of the 88 declared
+transports, each a `transport-<technology>` feature of the root crate a site
+names: activemq, amqp, as2, as4, cotp, db2, dds, dicom, dnp3, dns,
+ethernet-ip, file, ftp, http, ibm-mq, iec-60870-5-104, iec-61850, imap, kafka,
+knx, mariadb, mllp, modbus, mqtt, msmq, mssql, mysql, named-pipe, nats,
+nats-jetstream, nfs, opc-ua, oracle, peppol, pop3, postgresql, rabbitmq,
+redis-streams, redpanda, s7comm, secs-gem, sftp, smb, smtp, snmp, sqlite,
+syslog, tcp, udp, unix-socket, webdav and websocket. One node of the root's
+service test (`linked.rs`) sends one file dropped into it over every one of
+them at once, each to the far end its own crate stands (ADR-0051), and every
+far end takes it whole, a Unix domain socket's on Linux and macOS alone; pop3
+only collects, and a node collects a maildrop's mail through it; file is
+carried by every other test of the service, and sftp by the System Tests' far
+ends; ftp's far end logs in by a password a node presents through a secret
+alone, which the test sets none of. The HTTP technologies are linked without
+TLS, as http's crate leaves it off, so https, as2s, as4s, msmqs and webdavs
+are refused. Not linked: aws and azure, what their vendors' transports speak
+and no transports; aws-kinesis, aws-s3, aws-sns, aws-sqs, azure-blob,
+azure-event-grid, azure-event-hubs, azure-service-bus, google-cloud-storage
+and google-pub-sub, which present a key, a signature or a token no Location
+gives them; bacnet, coap, dhcp, mdns and ssdp, whose far end or Send Location
+cannot take a node's one send; and bluetooth, can-bus, canopen, ethercat,
+ethernet, hart, io-link, iso-tp, j1939, lorawan, m-bus, obd-ii, profinet,
+serial, thread, uds, wireless-hart, wireless-m-bus and zigbee, whose far end
+lives inside one process and whose device no node reaches here. Records:
+ADR-0015 (amendment 2026-11-24), ADR-0051, ADR-0064 (amendment 2026-10-28).
+
+#### `module-loading`
+
+**Opening a Module at run time.** The loader opens a shared library, resolves
+`xmip_create_module_v1`, checks its trait version and configures, starts and
+stops its contract table, and opens a work process table as the flow of the
+Work Processes naming its units (section 13); the work process table is the
+one the message path calls, and no Location calls a loaded contract yet. It is
+the runtime's `dynamic-loading` feature, which `xmip-service` is built with: a
+node opens the libraries its configuration names as it starts, as the root's
+service test `approved.rs` holds of a Work Process unit; every other
+technology is linked by feature, so adding one means running
+`Build-XmipService` again. Records: ADR-0025, ADR-0057, ADR-0066 (amendments
+2026-10-22, 2026-11-24).
+
 #### `operator-acts-through-storage`
 
 **An operator's act written to Xmip Storage, honored by every node.** A pause,
@@ -163,6 +206,30 @@ section 7.
 Processes are read, validated and planned into the execution tree as a node
 starts, and a Subscription may lead to one; each is published as planned, not
 started. Records: ADR-0018, ADR-0064.
+
+#### `process-execution`
+
+**Compiling a Work Process at design time, and running it.** A BPMN 2.0 design
+compiles to a Work Process program and a unit crate exporting it through
+`xmip_module.h` section 13 (`xmip-core-process`, `xmip-core-process-bpmn`);
+the runtime's Work Process step takes a turn of each Instance from the Ledger,
+held by `tests/ledger/work_process.rs` (a Batch in the order received, two
+clients at once never overtaking, a node killed mid-process finishing from the
+Ledger) and the two crates' tests. A unit is opened from its library as the
+node starts, through the runtime's `dynamic-loading` feature, which
+`xmip-service` is built with, its library named as the node's own system names
+it (`xmip_module.h` section 1). The System Tests run one: every sales order
+passes the Work Process *Order approval*
+(`test/core/system-test/configuration/order-approval.bpmn`, its unit the
+System Tests' example `order_approval`) on its way to the ERP. So does every
+landing: the root's service test `approved.rs` hands `xmip-service` that unit,
+built by the root from the same source as its example `order_approval_unit`,
+with the module, the Work Process and its two Subscriptions read from the
+System Tests' cluster file, and a sales order dropped in reaches the ERP's
+folder whole only through it. A unit's settings and calls through the standard
+units are decided, not built. Records: ADR-0066 (amendments 2026-10-22,
+2026-11-21, 2026-11-24), ADR-0025 (amendment 2026-11-21), runtime-model.md
+section 22.
 
 #### `program-audit`
 
@@ -273,38 +340,6 @@ carried across an air gap — requested on the node, signed where the authority
 is kept, imported — its node saying in its health when the next request is
 due. Open problem 27. Records: ADR-0034 (amendments 2026-10-15 and
 2026-10-22), ADR-0033 (amendment 2026-10-13).
-
-#### `module-loading`
-
-**Opening a Module at run time.** The loader opens a shared library, resolves
-`xmip_create_module_v1`, checks its trait version and configures, starts and
-stops its contract table, and opens a work process table as the flow of the
-Work Processes naming its units (section 13); the work process table is the
-one the message path calls. It is the runtime's `dynamic-loading` feature,
-which `xmip-service` is built with: a node opens the libraries its
-configuration names as it starts; every other technology is linked by feature,
-so adding one means running `Build-XmipService` again. Records: ADR-0025,
-ADR-0057, ADR-0066 (amendment 2026-10-22).
-
-#### `process-execution`
-
-**Compiling a Work Process at design time, and running it.** A BPMN 2.0 design
-compiles to a Work Process program and a unit crate exporting it through
-`xmip_module.h` section 13 (`xmip-core-process`, `xmip-core-process-bpmn`);
-the runtime's Work Process step takes a turn of each Instance from the Ledger,
-held by `tests/ledger/work_process.rs` (a Batch in the order received, two
-clients at once never overtaking, a node killed mid-process finishing from the
-Ledger) and the two crates' tests. A unit is opened from its library as the
-node starts, through the runtime's `dynamic-loading` feature, which
-`xmip-service` is built with, its library named as the node's own system names
-it (`xmip_module.h` section 1). The System Tests run one: every sales order
-passes the Work Process *Order approval*
-(`test/core/system-test/configuration/order-approval.bpmn`, its unit the
-System Tests' example `order_approval`) on its way to the ERP. A unit's
-settings and calls through the standard units are decided, not built; no test
-a landing runs carries a Message through a loaded unit in a running node (open
-problem 87). Records: ADR-0066 (amendments 2026-10-22, 2026-11-21), ADR-0025
-(amendment 2026-11-21), runtime-model.md section 22.
 
 #### `regulation-quest`
 
@@ -465,7 +500,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 412540 lines of production
+Where each repository mounts and what it holds: 412586 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -503,7 +538,7 @@ hold no source to count.
 │   │   │   │   ├── sftp                        1830
 │   │   │   │   ├── serial                      1736
 │   │   │   │   ├── mssql                       1653
-│   │   │   │   ├── snmp                        1446
+│   │   │   │   ├── snmp                        1454
 │   │   │   │   ├── nats-jetstream              1390
 │   │   │   │   ├── oracle                      1360
 │   │   │   │   ├── as4                         1348
@@ -543,15 +578,15 @@ hold no source to count.
 │   │   │   │   ├── cotp                         836
 │   │   │   │   ├── dhcp                         824
 │   │   │   │   ├── wireless-hart                821
+│   │   │   │   ├── smtp                         813
 │   │   │   │   ├── peppol                       788
 │   │   │   │   ├── thread                       787
 │   │   │   │   ├── zigbee                       783
-│   │   │   │   ├── smtp                         782
 │   │   │   │   ├── knx                          750
 │   │   │   │   ├── syslog                       741
 │   │   │   │   ├── iec-60870-5-104              733
 │   │   │   │   ├── iso-tp                       721
-│   │   │   │   ├── websocket                    699
+│   │   │   │   ├── websocket                    706
 │   │   │   │   ├── mdns                         698
 │   │   │   │   ├── dds                          693
 │   │   │   │   ├── io-link                      693

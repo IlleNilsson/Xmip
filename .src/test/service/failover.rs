@@ -19,6 +19,7 @@ use std::time::{Duration, Instant};
 
 use std::sync::mpsc::Receiver;
 
+use super::folder::named;
 use super::{Ending, endpoint, exited, heard, lines, spawned, stop, test_cluster, told, watched};
 
 /// The files dropped before the primary stops, and as many after.
@@ -50,11 +51,6 @@ id = "onward"
 destination = { send-port = "Out" }
 filter = "xmip.transport.mechanism = 'circumstance'"
 "#;
-
-/// A path as a configuration names it.
-pub(super) fn named(path: &Path) -> String {
-    path.display().to_string().replace('\\', "/")
-}
 
 /// The local endpoint the node `node` configured beneath `directory` is
 /// called: named by the test's own directory, so two tests starting the

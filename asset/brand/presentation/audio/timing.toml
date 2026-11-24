@@ -11,21 +11,21 @@ duration = 1.8
 [[scene.caption]]
 text = "Xmip stands for Cross OS Messaging & Integration Platform."
 start = 1.98
-duration = 4.675
+duration = 4.75
 
 [[scene.caption]]
 text = "It connects the systems an organization runs, and it keeps an account of every message it takes on."
-start = 6.835
+start = 6.91
 duration = 6.425
 
 [[scene.caption]]
-text = "It is open source, written in Rust, and it runs on your own machines, with or without the internet."
-start = 13.44
-duration = 6.125
+text = "It is open source, and it runs on your own machines, with or without the internet."
+start = 13.515
+duration = 5.225
 
 [[scene.caption]]
 text = "Let us follow one order through it, then see how it is configured, run, operated and extended."
-start = 19.745
+start = 18.92
 duration = 6.25
 
 [[scene]]
@@ -60,33 +60,33 @@ duration = 1.725
 file = "scene-03.wav"
 
 [[scene.caption]]
-text = "Here is one sales order from a trading partner."
+text = "Here is one sales order from a customer, Party-A in the file."
 start = 0
-duration = 3.175
+duration = 4.15
 
 [[scene.caption]]
 text = "A Receive Location accepts it, and Xmip publishes it as a message."
-start = 3.355
+start = 4.33
 duration = 4.675
 
 [[scene.caption]]
 text = "A Subscription is a filter on what a message holds, and a destination."
-start = 8.21
+start = 9.185
 duration = 4.775
 
 [[scene.caption]]
-text = "The first sends the order to a Work Process that approves it; the approved order is published again, and a second Subscription sends it to the ERP."
-start = 13.165
-duration = 9.725
+text = "The first sends the order to a Work Process that approves it; the approved order is published again, and a second Subscription takes it to a Send Port, which delivers it to the ERP, the business system that takes orders."
+start = 14.14
+duration = 14.1
 
 [[scene.caption]]
-text = "No filter ever names a node."
-start = 23.07
-duration = 2.5
+text = "No filter ever names a node, one running Xmip program."
+start = 28.42
+duration = 4.05
 
 [[scene.caption]]
 text = "This is the flow Xmip's own System Tests run."
-start = 25.75
+start = 32.65
 duration = 3.2
 
 [[scene]]
@@ -98,28 +98,28 @@ start = 0
 duration = 3.6
 
 [[scene.caption]]
-text = "Before it, the stream belongs to its sender, and a refusal says where and why."
+text = "Before it, the stream, the raw bytes that arrive, belongs to its sender, and a refusal says where and why."
 start = 3.78
-duration = 5.35
+duration = 7
 
 [[scene.caption]]
-text = "Once Xmip accepts it, the message is written to storage before anything acts on it."
-start = 9.31
-duration = 5.5
+text = "Once Xmip accepts it, it becomes a message, written to storage before anything acts on it."
+start = 10.96
+duration = 6.125
 
 [[scene.caption]]
-text = "Every journey ends Completed, Failed or Dismissed, and a failed delivery is retried."
-start = 14.99
-duration = 5.875
+text = "Each delivery to a destination is a journey, and every journey ends Completed, Failed, or Dismissed by an operator; a failed delivery is retried."
+start = 17.265
+duration = 10.15
 
 [[scene.caption]]
 text = "A message nothing wanted waits in the Dead Message Queue until its routing is fixed and it is replayed."
-start = 21.045
+start = 27.595
 duration = 6.525
 
 [[scene.caption]]
 text = "Every step is audited."
-start = 27.75
+start = 34.3
 duration = 1.85
 
 [[scene]]
@@ -131,18 +131,18 @@ start = 0
 duration = 3.2
 
 [[scene.caption]]
-text = "One TOML file describes the cluster: its nodes, its routes, and what each piece of work requires."
+text = "One TOML file, a plain-text configuration format, describes the cluster: its nodes, its routes, and what each piece of work requires."
 start = 3.38
-duration = 6.9
+duration = 9.65
 
 [[scene.caption]]
 text = "Teams version it, compare it and review it like code."
-start = 10.46
+start = 13.21
 duration = 3.425
 
 [[scene.caption]]
 text = "Every save is validated, then sliced into each node's own part."
-start = 14.065
+start = 16.815
 duration = 4.65
 
 [[scene]]
@@ -151,21 +151,21 @@ file = "scene-06.wav"
 [[scene.caption]]
 text = "VS Code is where an integration is drawn."
 start = 0
-duration = 3.875
+duration = 3.475
 
 [[scene.caption]]
 text = "The designer draws the same cluster file the text holds, so a change in one is a change in the other."
-start = 4.055
+start = 3.655
 duration = 6.6
 
 [[scene.caption]]
-text = "Completion, validation and renaming that follows every reference come from Xmip's own language server, written in Rust."
-start = 10.835
-duration = 7.8
+text = "Completion, validation and renaming that follows every reference come from Xmip's own language server."
+start = 10.435
+duration = 6.85
 
 [[scene.caption]]
 text = "It speaks the standard Language Server Protocol, so other editors can use Xmip's rules through their own LSP clients."
-start = 18.815
+start = 17.465
 duration = 7.75
 
 [[scene]]
@@ -177,23 +177,23 @@ start = 0
 duration = 4
 
 [[scene.caption]]
-text = "Each node declares its roles: receiving, processing, sending, or executing all three at low latency."
+text = "Here are three receiving nodes, a processing node, an executing node that receives, processes and sends at low latency, and three sending nodes."
 start = 4.18
-duration = 7.4
+duration = 9.775
 
 [[scene.caption]]
-text = "It also declares its Node capabilities: words for what its environment gives it, such as a firewall opening or an installed module."
-start = 11.76
-duration = 9.05
+text = "Each declares its roles, and its Node capabilities: words for what its environment gives it, such as a firewall opening or an installed module."
+start = 14.135
+duration = 9.575
 
 [[scene.caption]]
-text = "Work names what it requires, and Xmip places it on a node that has it."
-start = 20.99
-duration = 4.65
+text = "Work that requires nothing goes to any node with the role; work that names what it requires goes only to a node that has it."
+start = 23.89
+duration = 8.05
 
 [[scene.caption]]
 text = "One node with every role works; more nodes are split out as security, firewalls and load need."
-start = 25.82
+start = 32.12
 duration = 6.6
 
 [[scene]]
@@ -276,13 +276,13 @@ start = 11.585
 duration = 4.25
 
 [[scene.caption]]
-text = "A node that may reach out says so with the Node capability online; a node that declares nothing is offline."
+text = "A node that may reach out says so with the Node capability online; a node without it is offline."
 start = 16.015
-duration = 7.475
+duration = 6.85
 
 [[scene.caption]]
 text = "The networked option is there when you choose it."
-start = 23.67
+start = 23.045
 duration = 2.825
 
 [[scene]]
@@ -294,19 +294,19 @@ start = 0
 duration = 7
 
 [[scene.caption]]
-text = "Each reads one shared operator model, so they cannot disagree, and an MCP client reads Xmip through the command line."
+text = "Each reads one shared operator model, so they cannot disagree, and an MCP client, the Model Context Protocol that AI assistants speak, reads Xmip through the command line."
 start = 7.18
-duration = 7.975
+duration = 11.675
 
 [[scene.caption]]
 text = "Health is said in words: Fine, Paused, Working, Stressed, Exhausted or Done."
-start = 15.335
+start = 19.035
 duration = 5.45
 
 [[scene.caption]]
-text = "A scope above is Holding when something beneath it needs attention, and it carries that leaf and its evidence."
-start = 20.965
-duration = 6.925
+text = "A group is Holding when something inside it needs attention, and it shows that item and its evidence."
+start = 24.665
+duration = 6.4
 
 [[scene]]
 file = "scene-12.wav"
@@ -322,65 +322,70 @@ start = 5.88
 duration = 5.125
 
 [[scene.caption]]
-text = "The first is the Regulation Quest, its regulation a parameter, GDPR first: for each requirement, the evidence or the gap, and the action that closes it."
+text = "The first is the Regulation Quest, its regulation a parameter, GDPR, Europe's data protection regulation, first: for each requirement, the evidence or the gap, and the action that closes it."
 start = 11.185
-duration = 10.675
+duration = 13.025
 
 [[scene.caption]]
 text = "It never says compliant; that judgment stays yours."
-start = 22.04
+start = 24.39
 duration = 3.575
 
 [[scene.caption]]
 text = "The Firewall, Security, Resilience and Dependency Reports sit in the same list, eleven in all, on every surface."
-start = 25.795
+start = 28.145
 duration = 7.9
 
 [[scene]]
 file = "scene-13.wav"
 
 [[scene.caption]]
-text = "Xmip is extended through one boundary."
+text = "Xmip is extended through one boundary, its C ABI, the binary interface every language can call."
 start = 0
-duration = 2.775
+duration = 7.05
 
 [[scene.caption]]
-text = "A module is a library a node opens through the C ABI, written in Rust, or in C# with Xmip's Module package, published as a native library."
-start = 2.955
-duration = 10.925
+text = "Your Work Processes, Transformations, Prepare steps and other units are libraries a node opens: write them in Rust, in C# with Xmip's Module package, in C or C++ against the C header, or in any language that exports a C function, and the node cannot tell one from another."
+start = 7.23
+duration = 18.3
 
 [[scene.caption]]
-text = "The node cannot tell the two apart, and a template starts a new module with its test."
-start = 14.06
-duration = 5.575
+text = "The Xmip Designer generates Rust from a design."
+start = 25.71
+duration = 3.375
 
 [[scene.caption]]
-text = "Code on another machine reaches Xmip only over its HTTP/2 API, inside Xmip's mutual TLS."
-start = 19.815
-duration = 8.825
+text = "Events, Xmip's notices of what happened, cross the same boundary, bound for C, C++, Java, Python and C#."
+start = 29.265
+duration = 8.75
+
+[[scene.caption]]
+text = "Code on another machine reaches Xmip over its HTTP/2 API, inside Xmip's mutual TLS."
+start = 38.195
+duration = 8.525
 
 [[scene]]
 file = "scene-14.wav"
 
 [[scene.caption]]
-text = "Xmip is open source."
+text = "Xmip's core is written in Rust, and Xmip is open source."
 start = 0
-duration = 2
+duration = 3.875
 
 [[scene.caption]]
 text = "Xmip itself is under the GNU Affero General Public License, version three or later, and it cannot be relicensed or withdrawn."
-start = 2.18
-duration = 9.15
+start = 4.055
+duration = 8.875
 
 [[scene.caption]]
 text = "Its module boundary, the headers, bindings and packages a module is built against, is under the Apache License, so the module you write stays yours."
-start = 11.51
+start = 13.11
 duration = 10.1
 
 [[scene.caption]]
-text = "Every architectural decision is a record with its reasons, seventy-five so far, and tests hold the rules: the internal tests on every change, the System Tests on one computer, and the Systems Tests on machines."
-start = 21.79
-duration = 14.3
+text = "Every architectural decision is a record with its reasons, seventy-five so far, and tests hold the rules on every change."
+start = 23.39
+duration = 8.4
 
 [[scene]]
 file = "scene-15.wav"
@@ -391,19 +396,19 @@ start = 0
 duration = 2.175
 
 [[scene.caption]]
-text = "Its rule: anything it does around a payload that takes more than a millisecond is a defect to find."
+text = "Its rule: anything it does around a message that takes more than a millisecond, beyond the load it carries, is a defect to find."
 start = 2.355
-duration = 6.35
+duration = 7.95
 
 [[scene.caption]]
-text = "Carrying a file in and out on one node, Xmip's own work measured 430 microseconds at the median of twenty runs, with the storage's syncs counted apart."
-start = 8.885
-duration = 10.475
+text = "Carrying a file in and out on one node, Xmip's own work measured 430 microseconds at the median of twenty runs, with the storage device's own sync time counted apart."
+start = 10.485
+duration = 12.1
 
 [[scene.caption]]
-text = "And the honest count: six transports run in the assembled service today, of the eighty-eight declared."
-start = 19.54
-duration = 6.525
+text = "And fifty-two transports run in a node today, of the eighty-eight declared, each proven carrying a file through it."
+start = 22.765
+duration = 7.3
 
 [[scene]]
 file = "scene-16.wav"
@@ -414,16 +419,16 @@ start = 0
 duration = 10.625
 
 [[scene.caption]]
-text = "Xmip is in development, not GA yet."
+text = "Xmip is in development; it is not GA, generally available, yet."
 start = 10.805
-duration = 2.975
+duration = 4.95
 
 [[scene.caption]]
 text = "To try it, the getting-started guide carries a file in and out on your own computer."
-start = 13.96
+start = 15.935
 duration = 5.475
 
 [[scene.caption]]
 text = "Thank you for watching."
-start = 19.615
+start = 21.59
 duration = 1.9

@@ -7,15 +7,16 @@ and designed in VS Code, and what is designed is compiled at design time
 into a native Module the node loads (ADR-0066); no repository is created
 for it. Declaring one is
 [built, in the assembled service](../architecture/estate-map.md#process-declaration); compiling and
-running one are [built, not in the assembled service](../architecture/estate-map.md#process-execution):
+running one are [built, in the assembled service](../architecture/estate-map.md#process-execution):
 a BPMN 2.0 design, drawn in the VS Code designer, compiles to a Work Process
 unit crate, and module/core/capability/process/doc/getting-started.md takes
 one from the drawing to a node.
 
-None of them reaches a node by being installed beside it: `xmip-service`
-links every technology it runs, and adding one means building it again with
-`Build-XmipService`
-([built, not in the assembled service](../architecture/estate-map.md#module-loading); each guide
+A Work Process unit reaches a node as a library beside its configuration,
+which the node opens as it starts; a transport or a contract does not:
+`xmip-service` links every technology it runs, and adding one means
+building it again with `Build-XmipService`
+([built, in the assembled service](../architecture/estate-map.md#module-loading); each guide
 below says what to change).
 
 Each guide lives with the subject it describes (ADR-0020 clause 3):

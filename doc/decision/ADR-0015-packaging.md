@@ -1618,3 +1618,38 @@ strike.
   the amendments above and `deploy/dsc` keep them.
 - This supersedes the count in the amendment of 2026-11-23, *containers, a
   sixth way to run the node plan*; its decisions on containers stand.
+
+## Amendment, 2026-11-24: the service links every transport a node in another process reaches
+
+**Provenance.** The owner, 2026-11-24, comparing Xmip with its
+competitors, asked what turns more of its checkboxes green, then: *go
+through each item and sort it or ask me*. Sorted: the node links the
+transports that are written and tested. The criterion and the TLS line
+below are the drafting's, and the owner's to strike.
+
+**A transport is linked where a node reaches its far end.** All 86
+transports are written and pass their own tests; aws and azure are what
+their vendors' transports speak, not transports. One is linked into
+`xmip-service` the way every technology is (the amendments of 2026-10-01
+and 2026-10-19), a `transport-<technology>` feature of the root crate in
+`.src/service/built.rs`'s one list, where a node in a process of its own
+sends to the far end its crate stands (ADR-0051) and the far end takes
+what it sent whole: the root's service test `linked.rs` drops one file
+into one node, which sends it over every linked transport at once, and a
+POP3 Location, which only collects, collects a maildrop's mail. 52 of the
+88 are linked, 46 of them on this day. Those that are not, and why, are
+`architecture.toml`'s `linked-transports`: ten cloud transports whose far
+end checks a key, a signature or a token no Location can give them; five
+whose far end or Send Location cannot take a node's one send; and nineteen
+whose far end lives in one process alone, behind a device no node reaches
+here. Three were mended to be linked, each with the test that failed
+before: an SMTP Send Location names its recipient, `to`, and sends to it
+where it sent to its relay's address; WebSocket's and SNMP's send to their
+whole address, which their sends read their scheme from.
+
+**TLS stays off for HTTP.** The http crate leaves HTTPS off by default, so
+an edge device carries no TLS stack it never opens, and the service links
+http without it; as2, as4, peppol, msmq and webdav ride on it and are
+linked the same way, since turning one's `tls` on turns HTTPS on for all of
+them. Their secure schemes are refused until a site can choose TLS for
+HTTP.

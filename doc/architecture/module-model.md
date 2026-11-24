@@ -152,13 +152,14 @@ Modules may also be Rust crates compiled in, where a site's target calls
 for a purpose-compiled runtime — the ABI exists so that the dynamic case is
 possible, not so that it is mandatory.
 
-**Today installing one does require rebuilding.** The loader opens a
-library and drives its contract table, the only table with a host side, and
-`xmip-service` is built without it
-([built, not in the assembled service](estate-map.md#module-loading)): every
-technology a node runs is linked into `xmip-service` by feature, so adding
-one is a new feature of the root crate and `Build-XmipService` again, after
-which the node's TOML names it.
+**Today installing a technology does require rebuilding.** The loader
+opens a library and drives its contract table, the only table with a host
+side, and a Work Process unit's, and `xmip-service` is built with it
+([built, in the assembled service](estate-map.md#module-loading)): its
+node opens a Work Process unit as it starts, but every technology a node
+runs is linked into `xmip-service` by feature, so adding one is a new
+feature of the root crate and `Build-XmipService` again, after which the
+node's TOML names it.
 
 ## 6. The manifest
 
@@ -268,9 +269,9 @@ provides reusable capability to whatever may call it.
 
 **Modules load at startup, eager or delayed per ADR-0025. Extensions are
 verified at startup where possible and loaded only when execution requires
-them.** The registries are not built: a loaded Module's contract table is
-the one the runtime drives
-([built, not in the assembled service](estate-map.md#module-loading)).
+them.** The registries are not built: a loaded Module's contract table and
+a Work Process unit's are the ones the runtime drives
+([built, in the assembled service](estate-map.md#module-loading)).
 
 ## 9. Execution thread
 

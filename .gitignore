@@ -86,6 +86,8 @@ xmip-repositories/
 .DS_Store
 Thumbs.db
 Desktop.ini
+# The lock an Office program keeps beside a document it has open.
+~$*
 
 # Logs
 *.log

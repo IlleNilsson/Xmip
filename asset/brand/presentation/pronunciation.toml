@@ -1,0 +1,284 @@
+# How the narration's voice says a written term. The owner, 2026-11-24: "You really
+# have to work on the pronunciation of acronyms, they are bad", and "So just listen to
+# tech podcasts": the form practitioners say aloud, a project's own stated
+# pronunciation first.
+#
+# narrate.mjs applies this to each section's narration before synthesis only; the
+# slides and the captions keep the written form. The longest written term wins where
+# two overlap, and a term matches only as a whole word. kokoro-js 1.x has no inline
+# phoneme markup (its text normalizer reads brackets and parentheses as punctuation
+# before phonemizing), so every spoken form is spelled in words the voice reads.
+#
+# basis = "source": the project or its owner states how it is said, cited in `source`.
+# basis = "convention": how practitioners commonly say it; the owner corrects these.
+
+[[term]]
+written = "Xmip"
+spoken = "Smip"
+ignore_case = true
+basis = "source"
+source = "asset/brand/presentation/README.md: Pronounce Xmip as Smip, one syllable"
+
+[[term]]
+written = "C#"
+spoken = "C sharp"
+basis = "source"
+source = "Microsoft, A tour of the C# language: C# (pronounced See Sharp)"
+
+[[term]]
+written = "C++"
+spoken = "C plus plus"
+basis = "source"
+source = "Bjarne Stroustrup's FAQ, How do you pronounce C++: see plus plus"
+
+[[term]]
+written = "FHIR"
+spoken = "fire"
+basis = "source"
+source = "HL7 FHIR overview: FHIR, pronounced fire"
+
+[[term]]
+written = "GNU"
+spoken = "Guh noo"
+basis = "source"
+source = "gnu.org, What is GNU: pronounced as one syllable with a hard g"
+
+[[term]]
+written = "TOML"
+spoken = "Tom ul"
+basis = "convention"
+
+[[term]]
+written = "JSON"
+spoken = "Jay son"
+basis = "convention"
+
+[[term]]
+written = "YAML"
+spoken = "Yam ul"
+basis = "convention"
+
+[[term]]
+written = "EDIFACT"
+spoken = "Ed ih fact"
+basis = "convention"
+
+[[term]]
+written = "GUI"
+spoken = "gooey"
+basis = "convention"
+
+[[term]]
+written = "OAuth"
+spoken = "oh auth"
+basis = "convention"
+
+[[term]]
+written = "NuGet"
+spoken = "new get"
+basis = "convention"
+
+[[term]]
+written = ".NET"
+spoken = "dot net"
+basis = "convention"
+
+[[term]]
+written = "VS Code"
+spoken = "V S Code"
+basis = "convention"
+
+[[term]]
+written = "C ABI"
+spoken = "C A B I"
+basis = "convention"
+
+[[term]]
+written = "ABI"
+spoken = "A B I"
+basis = "convention"
+
+[[term]]
+written = "API"
+spoken = "A P I"
+basis = "convention"
+
+[[term]]
+written = "AI"
+spoken = "A I"
+basis = "convention"
+
+[[term]]
+written = "HTTP/2"
+spoken = "H T T P 2"
+basis = "convention"
+
+[[term]]
+written = "HTTP"
+spoken = "H T T P"
+basis = "convention"
+
+[[term]]
+written = "TLS"
+spoken = "T L S"
+basis = "convention"
+
+[[term]]
+written = "MCP"
+spoken = "M C P"
+basis = "convention"
+
+[[term]]
+written = "LSP"
+spoken = "L S P"
+basis = "convention"
+
+[[term]]
+written = "CLI"
+spoken = "C L I"
+basis = "convention"
+
+[[term]]
+written = "BPMN"
+spoken = "B P M N"
+basis = "convention"
+
+[[term]]
+written = "ERP"
+spoken = "E R P"
+basis = "convention"
+
+[[term]]
+written = "GDPR"
+spoken = "G D P R"
+basis = "convention"
+
+[[term]]
+written = "CEO"
+spoken = "C E O"
+basis = "convention"
+
+[[term]]
+written = "CIO"
+spoken = "C I O"
+basis = "convention"
+
+[[term]]
+written = "GA"
+spoken = "G A"
+basis = "convention"
+
+[[term]]
+written = "ADR"
+spoken = "A D R"
+basis = "convention"
+
+[[term]]
+written = "AGPL"
+spoken = "A G P L"
+basis = "convention"
+
+[[term]]
+written = "SFTP"
+spoken = "S F T P"
+basis = "convention"
+
+[[term]]
+written = "FTP"
+spoken = "F T P"
+basis = "convention"
+
+[[term]]
+written = "TCP"
+spoken = "T C P"
+basis = "convention"
+
+[[term]]
+written = "UDP"
+spoken = "U D P"
+basis = "convention"
+
+[[term]]
+written = "AS2"
+spoken = "A S 2"
+basis = "convention"
+
+[[term]]
+written = "AS4"
+spoken = "A S 4"
+basis = "convention"
+
+[[term]]
+written = "HL7"
+spoken = "H L 7"
+basis = "convention"
+
+[[term]]
+written = "X12"
+spoken = "X 12"
+basis = "convention"
+
+[[term]]
+written = "DPAPI"
+spoken = "D P A P I"
+basis = "convention"
+
+[[term]]
+written = "KVM"
+spoken = "K V M"
+basis = "convention"
+
+[[term]]
+written = "Hyper-V"
+spoken = "Hyper V"
+basis = "convention"
+
+[[term]]
+written = "libvirt"
+spoken = "lib virt"
+basis = "convention"
+
+[[term]]
+written = "VMware"
+spoken = "V M ware"
+basis = "convention"
+
+[[term]]
+written = "macOS"
+spoken = "Mac O S"
+basis = "convention"
+
+[[term]]
+written = "OS"
+spoken = "O S"
+basis = "convention"
+
+[[term]]
+written = "NativeAOT"
+spoken = "Native A O T"
+basis = "convention"
+
+[[term]]
+written = "RX"
+spoken = "R X"
+basis = "convention"
+
+[[term]]
+written = "EX"
+spoken = "E X"
+basis = "convention"
+
+[[term]]
+written = "TX"
+spoken = "T X"
+basis = "convention"
+
+[[term]]
+written = "µs"
+spoken = "microseconds"
+basis = "convention"
+
+[[term]]
+written = "&"
+spoken = "and"
+basis = "convention"
