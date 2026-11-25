@@ -19,18 +19,12 @@ start = 6.91
 duration = 4.975
 
 [[scene.caption]]
-text = """\
-It is on premises first and cloud installable, so organizations choose where \
-their integration runs.\
-"""
+text = "It is on premises first and cloud installable, so organizations choose where their integration runs."
 start = 12.065
 duration = 6.575
 
 [[scene.caption]]
-text = """\
-This is the Xmip project story: what it connects, how it records \
-responsibility, and how people design and operate it.\
-"""
+text = "This is the Xmip project story: what it connects, how it records responsibility, and how people design and operate it."
 start = 18.82
 duration = 7.825
 
@@ -38,26 +32,17 @@ duration = 7.825
 file = "scene-02.wav"
 
 [[scene.caption]]
-text = """\
-Xmip is being developed for organizations that need dependable messaging \
-and integration under their own control.\
-"""
+text = "Xmip is being developed for organizations that need dependable messaging and integration under their own control."
 start = 0
 duration = 7.425
 
 [[scene.caption]]
-text = """\
-It carries forward familiar integration concepts while putting deployment \
-and data under organizational control.\
-"""
+text = "It carries forward familiar integration concepts while putting deployment and data under organizational control."
 start = 7.605
 duration = 7.5
 
 [[scene.caption]]
-text = """\
-Its central promise is accountability: once a message is accepted, its \
-journey and outcome give operators evidence they can act on.\
-"""
+text = "Its central promise is accountability: once a message is accepted, its journey and outcome give operators evidence they can act on."
 start = 15.285
 duration = 8.9
 
@@ -65,10 +50,7 @@ duration = 8.9
 file = "scene-03.wav"
 
 [[scene.caption]]
-text = """\
-For a CEO, the question is what happens to the business when a system \
-exchange stops.\
-"""
+text = "For a CEO, the question is what happens to the business when a system exchange stops."
 start = 0
 duration = 5.775
 
@@ -78,10 +60,7 @@ start = 5.955
 duration = 5.425
 
 [[scene.caption]]
-text = """\
-A practical evaluation connects those principles to a real process, its \
-owner and its business impact.\
-"""
+text = "A practical evaluation connects those principles to a real process, its owner and its business impact."
 start = 11.56
 duration = 6.975
 
@@ -94,18 +73,12 @@ start = 0
 duration = 5.2
 
 [[scene.caption]]
-text = """\
-Nodes can be placed close to systems, at remote sites or on chosen hosting \
-infrastructure.\
-"""
+text = "Nodes can be placed close to systems, at remote sites or on chosen hosting infrastructure."
 start = 5.38
 duration = 6.4
 
 [[scene.caption]]
-text = """\
-Open implementation and recorded architecture make it possible to assess \
-the platform and understand how it evolves.\
-"""
+text = "Open implementation and recorded architecture make it possible to assess the platform and understand how it evolves."
 start = 11.96
 duration = 7.9
 
@@ -113,61 +86,112 @@ duration = 7.9
 file = "scene-05.wav"
 
 [[scene.caption]]
-text = """\
-Consider an illustrative order travelling from a sales system to a \
-warehouse.\
-"""
+text = "Consider an order from placement to confirmed delivery."
 start = 0
-duration = 4.875
+duration = 3.825
 
 [[scene.caption]]
-text = "A Receive Location accepts the stream, and Xmip persists a message."
-start = 5.055
-duration = 4.675
+text = "The sales system sends the order as a Stream, and Xmip accepts a Message."
+start = 4.005
+duration = 4.85
 
 [[scene.caption]]
-text = "Matching subscriptions open journeys to the destinations that want it."
-start = 9.91
-duration = 4.75
+text = "The payment system confirms money received, or an accepted promise to pay under the agreed terms."
+start = 9.035
+duration = 6.425
 
 [[scene.caption]]
-text = "A Send Location attempts delivery to the warehouse."
-start = 14.84
-duration = 3.85
+text = "A Work Process coordinates the business steps and waits for the responses the order needs."
+start = 15.64
+duration = 5.9
 
 [[scene.caption]]
-text = """\
-That journey gives an interrupted exchange a place and an outcome to \
-investigate.\
-"""
-start = 18.87
-duration = 5.3
+text = "If goods must be made, the factory receives a production request and returns progress and completion."
+start = 21.72
+duration = 6.6
+
+[[scene.caption]]
+text = "If goods are in stock, the warehouse reserves, picks and packs them instead."
+start = 28.5
+duration = 4.825
+
+[[scene.caption]]
+text = "When the goods are ready, the shipping system arranges dispatch and returns the shipment reference."
+start = 33.505
+duration = 5.85
+
+[[scene.caption]]
+text = "Carrier updates then report collection, transit and delivery."
+start = 39.535
+duration = 4.2
+
+[[scene.caption]]
+text = "A delay or failed delivery becomes a visible exception for follow-up, while a delivery confirmation completes the flow."
+start = 43.915
+duration = 7.875
+
+[[scene.caption]]
+text = "Correlation connects the responses to the right order, and recorded state preserves progress across waits and restarts."
+start = 51.97
+duration = 7.775
+
+[[scene.caption]]
+text = "That is orchestration: one order, many systems, and a visible outcome."
+start = 59.925
+duration = 5.05
 
 [[scene]]
 file = "scene-06.wav"
 
 [[scene.caption]]
-text = "Acceptance is the handover of responsibility."
+text = "Before an order enters the business flow, the caller must follow the transport protocol and the configured Contract."
 start = 0
-duration = 3.275
+duration = 7.3
 
 [[scene.caption]]
-text = "Before it, the sender owns the stream."
-start = 3.455
-duration = 2.575
+text = "Otherwise the rule is clear."
+start = 7.48
+duration = 1.975
 
 [[scene.caption]]
-text = "After it, Xmip persists a message and records its progress."
-start = 6.21
-duration = 3.925
+text = "Stop."
+start = 9.635
+duration = 1.075
 
 [[scene.caption]]
-text = """\
-Keeping refusal distinct from a later delivery failure helps both \
-organizations understand which side should act next.\
-"""
-start = 10.315
-duration = 7.975
+text = "This request is refused."
+start = 10.89
+duration = 2.05
+
+[[scene.caption]]
+text = "Malformed protocol traffic, or content that violates the required Contract, must not be forwarded as a valid order."
+start = 13.12
+duration = 8.25
+
+[[scene.caption]]
+text = "A refusal is audited, with a response to the caller where the protocol permits."
+start = 21.55
+duration = 5.35
+
+[[scene.caption]]
+text = "The sender must correct the request."
+start = 27.08
+duration = 2.3
+
+[[scene.caption]]
+text = "Required validation must never be silently bypassed: if it cannot run, the Location must not start."
+start = 29.56
+duration = 7.175
+
+[[scene.caption]]
+text = "After acceptance, Xmip takes responsibility for the Message and its recorded progress."
+start = 36.915
+duration = 5.7
+
+[[scene.caption]]
+text = "A refusal at the boundary is different from a delivery failure later in the Journey."
+start = 42.795
+duration = 5.375
 
 [[scene]]
 file = "scene-07.wav"
@@ -178,18 +202,12 @@ start = 0
 duration = 4.3
 
 [[scene.caption]]
-text = """\
-Each match opens a journey, while an unmatched message remains available \
-for replay.\
-"""
+text = "Each match opens a journey, while an unmatched message remains available for replay."
 start = 4.48
 duration = 5.65
 
 [[scene.caption]]
-text = """\
-Operators can pause a subscription without discarding its work, then \
-resume the held messages in the order they arrived.\
-"""
+text = "Operators can pause a subscription without discarding its work, then resume the held messages in the order they arrived."
 start = 10.31
 duration = 7.825
 
@@ -207,18 +225,12 @@ start = 2.43
 duration = 3.15
 
 [[scene.caption]]
-text = """\
-A failed delivery calls for investigation and retry, or an intentional \
-dismissal.\
-"""
+text = "A failed delivery calls for investigation and retry, or an intentional dismissal."
 start = 5.76
 duration = 6.325
 
 [[scene.caption]]
-text = """\
-Xmip keeps those actions distinct, while configured attempts and backoff \
-handle repeated delivery attempts.\
-"""
+text = "Xmip keeps those actions distinct, while configured attempts and backoff handle repeated delivery attempts."
 start = 12.265
 duration = 7.075
 
@@ -226,41 +238,40 @@ duration = 7.075
 file = "scene-09.wav"
 
 [[scene.caption]]
-text = "An Xmip Application describes the integration itself."
+text = "In Xmip, an integration is one path."
 start = 0
-duration = 3.95
+duration = 2.975
 
 [[scene.caption]]
-text = "A binding places that application on a node and supplies its environment."
-start = 4.13
-duration = 5.15
+text = "A Receive Location accepts the stream and its Receive Port publishes it."
+start = 3.155
+duration = 5.025
 
 [[scene.caption]]
-text = """\
-This separation lets developers reason about the business exchange while \
-deployment choices determine which systems, addresses and machines \
-participate.\
-"""
-start = 9.46
-duration = 10
+text = "Subscriptions pick it up and take it, through a Work Process where the route has one, to a Send Port and its Send Location."
+start = 8.36
+duration = 7.775
+
+[[scene.caption]]
+text = "The path only runs forward."
+start = 16.315
+duration = 2.175
+
+[[scene.caption]]
+text = "Replay starts a new journey from an earlier point, linked to the original, and every step writes its audit record."
+start = 18.67
+duration = 7.3
 
 [[scene]]
 file = "scene-10.wav"
 
 [[scene.caption]]
-text = """\
-In Visual Studio Code, text editing and graphical designers work with the \
-same configuration.\
-"""
+text = "In Visual Studio Code, text editing and graphical designers work with the same configuration."
 start = 0
 duration = 6.5
 
 [[scene.caption]]
-text = """\
-Completion, validation and reference-aware renaming help developers make \
-consistent changes, while Xmip’s language server supplies the rules behind \
-the design.\
-"""
+text = "Completion, validation and reference-aware renaming help developers make consistent changes, while Xmip’s language server supplies the rules behind the design."
 start = 6.68
 duration = 10.6
 
@@ -278,10 +289,7 @@ start = 6.505
 duration = 2.525
 
 [[scene.caption]]
-text = """\
-This makes configuration an engineering artifact the team can understand and \
-maintain together.\
-"""
+text = "This makes configuration an engineering artifact the team can understand and maintain together."
 start = 9.21
 duration = 6.55
 
@@ -294,10 +302,7 @@ start = 0
 duration = 4.05
 
 [[scene.caption]]
-text = """\
-Xmip models these as Work Processes, designed in BPMN and compiled into \
-executable units.\
-"""
+text = "Xmip models these as Work Processes, designed in BPMN and compiled into executable units."
 start = 4.23
 duration = 7.225
 
@@ -306,46 +311,26 @@ text = "Their state belongs to the ledger, so waiting work does not hold a threa
 start = 11.635
 duration = 4.65
 
-[[scene.caption]]
-text = """\
-Compilation and execution exist as components; connecting them into the \
-assembled service remains a project milestone.\
-"""
-start = 16.465
-duration = 8.4
-
 [[scene]]
 file = "scene-13.wav"
 
 [[scene.caption]]
-text = """\
-Xmip separates how data travels, how it is represented, and what the \
-integration does with it.\
-"""
+text = "Xmip separates how data travels, how it is represented, and what the integration does with it."
 start = 0
 duration = 6.3
 
 [[scene.caption]]
-text = """\
-Contracts define acceptance rules, while processing expresses business \
-flow.\
-"""
+text = "Contracts define acceptance rules, while processing expresses business flow."
 start = 6.48
 duration = 5.35
 
 [[scene.caption]]
-text = """\
-Providers extend individual capabilities through explicit interfaces and a \
-versioned C boundary.\
-"""
+text = "Providers extend individual capabilities through explicit interfaces and a versioned C boundary."
 start = 12.01
 duration = 6.825
 
 [[scene.caption]]
-text = """\
-That modular architecture lets the platform evolve without treating every \
-change as a replacement.\
-"""
+text = "That modular architecture lets the platform evolve without treating every change as a replacement."
 start = 19.015
 duration = 6.55
 
@@ -353,30 +338,24 @@ duration = 6.55
 file = "scene-14.wav"
 
 [[scene.caption]]
-text = """\
-Xmip’s technology estate spans file transfer, web communication, message \
-brokers, databases and industrial systems.\
-"""
+text = "Xmip carries Streams across its transport technologies, from business systems to the edge."
 start = 0
-duration = 8.5
+duration = 5.7
 
 [[scene.caption]]
-text = "SFTP, HTTP, AMQP, Kafka, PostgreSQL and OPC UA are examples of that scope."
-start = 8.68
-duration = 8.1
+text = "A Stream is immutable data received by or produced within Xmip."
+start = 5.88
+duration = 4.8
 
 [[scene.caption]]
-text = "A site build chooses the technologies it needs."
-start = 16.96
-duration = 3.325
+text = "SFTP, HTTP, AMQP, Kafka, PostgreSQL and OPC UA are examples of transport choices."
+start = 10.86
+duration = 8.65
 
 [[scene.caption]]
-text = """\
-This is the estate’s breadth, with availability depending on the \
-capability and its integration into the service.\
-"""
-start = 20.465
-duration = 7.05
+text = "A site build selects the technologies it needs, with availability demonstrated through each module's tests."
+start = 19.69
+duration = 6.975
 
 [[scene]]
 file = "scene-15.wav"
@@ -387,18 +366,12 @@ start = 0
 duration = 2.7
 
 [[scene.caption]]
-text = """\
-Parties carry identities, receive locations define what they accept, and \
-outbound exchanges use their own identity.\
-"""
+text = "Parties carry identities, receive locations define what they accept, and outbound exchanges use their own identity."
 start = 2.88
 duration = 8.3
 
 [[scene.caption]]
-text = """\
-Certificate authentication, protected storage connections and encrypted \
-embedded data give that architecture concrete foundations.\
-"""
+text = "Certificate authentication, protected storage connections and encrypted embedded data give that architecture concrete foundations."
 start = 11.36
 duration = 8.875
 
@@ -411,18 +384,12 @@ start = 0
 duration = 3.075
 
 [[scene.caption]]
-text = """\
-A small deployment can host storage within its own node, while other nodes \
-reach it over mutual TLS.\
-"""
+text = "A small deployment can host storage within its own node, while other nodes reach it over mutual TLS."
 start = 3.255
 duration = 6.975
 
 [[scene.caption]]
-text = """\
-The ledger holds messages, journeys and pending work, separate from \
-administration and audit concerns.\
-"""
+text = "The ledger holds messages, journeys and pending work, separate from administration and audit concerns."
 start = 10.41
 duration = 6.7
 
@@ -435,18 +402,12 @@ start = 0
 duration = 4.1
 
 [[scene.caption]]
-text = """\
-Executing brings the message stages together in one process, while other \
-roles serve storage, observation and operation.\
-"""
+text = "Executing brings the message stages together in one process, while other roles serve storage, observation and operation."
 start = 4.28
 duration = 8.55
 
 [[scene.caption]]
-text = """\
-Site builds select the target and technologies; configuration determines \
-what the node starts.\
-"""
+text = "Site builds select the target and technologies; configuration determines what the node starts."
 start = 13.01
 duration = 6.45
 
@@ -459,10 +420,7 @@ start = 0
 duration = 6.075
 
 [[scene.caption]]
-text = """\
-Site builds select the roles and technologies for a developer machine, an \
-edge gateway or a server.\
-"""
+text = "Site builds select the roles and technologies for a developer machine, an edge gateway or a server."
 start = 6.255
 duration = 6.525
 
@@ -480,18 +438,12 @@ start = 0
 duration = 3.4
 
 [[scene.caption]]
-text = """\
-Packages can be prepared where dependencies are reachable, then brought \
-into disconnected environments.\
-"""
+text = "Packages can be prepared where dependencies are reachable, then brought into disconnected environments."
 start = 3.58
 duration = 6.575
 
 [[scene.caption]]
-text = """\
-Internet access is an explicit capability, supporting sites where \
-connectivity is restricted, intermittent or deliberately absent.\
-"""
+text = "Internet access is an explicit capability, supporting sites where connectivity is restricted, intermittent or deliberately absent."
 start = 10.335
 duration = 8.8
 
@@ -499,10 +451,7 @@ duration = 8.8
 file = "scene-20.wav"
 
 [[scene.caption]]
-text = """\
-Operators can choose a command line, PowerShell, desktop or web interface \
-without learning a different platform model.\
-"""
+text = "Operators can choose a command line, PowerShell, desktop or web interface without learning a different platform model."
 start = 0
 duration = 7.825
 
@@ -512,10 +461,7 @@ start = 8.005
 duration = 3.2
 
 [[scene.caption]]
-text = """\
-Automation and visual inspection become different ways to work with the \
-same operational evidence.\
-"""
+text = "Automation and visual inspection become different ways to work with the same operational evidence."
 start = 11.385
 duration = 6.55
 
@@ -523,10 +469,7 @@ duration = 6.55
 file = "scene-21.wav"
 
 [[scene.caption]]
-text = """\
-Xmip’s mobile host brings the same cluster health and scope navigation to \
-Android and iPhone targets.\
-"""
+text = "Xmip’s mobile host brings the same cluster health and scope navigation to Android and iPhone targets."
 start = 0
 duration = 7.15
 
@@ -536,12 +479,9 @@ start = 7.33
 duration = 3.45
 
 [[scene.caption]]
-text = """\
-Device validation remains a project milestone, while the principle stays the \
-same: understand the affected scope wherever you are.\
-"""
+text = "Understand the affected scope wherever you are."
 start = 10.96
-duration = 8.475
+duration = 3.3
 
 [[scene]]
 file = "scene-22.wav"
@@ -557,10 +497,7 @@ start = 3.655
 duration = 3.65
 
 [[scene.caption]]
-text = """\
-A parent holding points into its children, where the affected resource and \
-its reason help distinguish a deliberate pause from strain or failure.\
-"""
+text = "A parent holding points into its children, where the affected resource and its reason help distinguish a deliberate pause from strain or failure."
 start = 7.485
 duration = 9.225
 
@@ -583,11 +520,7 @@ start = 7.31
 duration = 3.45
 
 [[scene.caption]]
-text = """\
-Chained program records, verification and journey evidence help the team \
-investigate a specific exchange instead of guessing from disconnected \
-symptoms.\
-"""
+text = "Chained program records, verification and journey evidence help the team investigate a specific exchange instead of guessing from disconnected symptoms."
 start = 10.94
 duration = 10.275
 
@@ -595,28 +528,174 @@ duration = 10.275
 file = "scene-24.wav"
 
 [[scene.caption]]
+text = "Xmip Events let other programs react to what happens in an integration."
+start = 0
+duration = 4.825
+
+[[scene.caption]]
+text = "Subscribers select the outcomes and scopes they need, under the identity of a proven Party."
+start = 5.005
+duration = 6.15
+
+[[scene.caption]]
+text = "The same Event model supports programs through the C interface and delivery over the wire through Xmip transports."
+start = 11.335
+duration = 7.1
+
+[[scene.caption]]
+text = "Events carry references and metadata, keeping the business payload in its own place."
+start = 18.615
+duration = 5.45
+
+[[scene.caption]]
+text = "Subscriptions and deliveries are authorized and audited."
+start = 24.245
+duration = 3.875
+
+[[scene.caption]]
+text = "This gives applications a common way to follow activity and build reactions around it."
+start = 28.3
+duration = 5.95
+
+[[scene]]
+file = "scene-25.wav"
+
+[[scene.caption]]
+text = "Retention and Archiving give Messages and their Streams a deliberate lifecycle."
+start = 0
+duration = 5.525
+
+[[scene.caption]]
+text = "Retention keeps a Message and its immutable Stream data available for inspection and replay during the configured window."
+start = 5.705
+duration = 7.825
+
+[[scene.caption]]
+text = "When that window passes, Archiving hands the retained data to the chosen archive."
+start = 13.71
+duration = 5.6
+
+[[scene.caption]]
+text = "The selected archive stores the retained Streams and their metadata in its configured representation."
+start = 19.49
+duration = 6.55
+
+[[scene.caption]]
+text = "The archive owner decides how long to keep it and when to dispose of it."
+start = 26.22
+duration = 4.975
+
+[[scene.caption]]
+text = "Xmip does not purge the archive."
+start = 31.375
+duration = 2.35
+
+[[scene.caption]]
+text = "The capabilities are exercised in the Essentials; connecting the lifecycle to the assembled node remains an integration step."
+start = 33.905
+duration = 8.55
+
+[[scene]]
+file = "scene-26.wav"
+
+[[scene.caption]]
+text = "Publishing information to a data warehouse follows Xmip's Stream and Message model."
+start = 0
+duration = 5.5
+
+[[scene.caption]]
+text = "A Subscription selects Messages for the analytics flow."
+start = 5.68
+duration = 3.975
+
+[[scene.caption]]
+text = "A Work Process can transform their content into the target representation, and a Send Location delivers the resulting Stream through its configured transport."
+start = 9.835
+duration = 10.275
+
+[[scene.caption]]
+text = "Another Subscription can serve the operational system from the same Publication."
+start = 20.29
+duration = 5.525
+
+[[scene.caption]]
+text = "Teams define the warehouse mapping and loading behavior."
+start = 25.995
+duration = 3.9
+
+[[scene.caption]]
+text = "The resulting Stream carries the information to the analytics destination."
+start = 30.075
+duration = 4.875
+
+[[scene.caption]]
+text = "Parquet archiving provides a separate handoff of retained Stream bytes and metadata for downstream processing."
+start = 35.13
+duration = 7.5
+
+[[scene]]
+file = "scene-27.wav"
+
+[[scene.caption]]
+text = "Xmip brings Reports together in one list."
+start = 0
+duration = 3
+
+[[scene.caption]]
+text = "Some present data that already exists, such as audit records."
+start = 3.18
+duration = 4.175
+
+[[scene.caption]]
+text = "Others present findings from a Quest, which probes an installation without changing it."
+start = 7.535
+duration = 5.5
+
+[[scene.caption]]
+text = "The Regulation Quest takes the regulation as a parameter, with GDPR first and an open set for additional modules."
+start = 13.215
+duration = 8.375
+
+[[scene.caption]]
+text = "Its Report shows a summary, a row for each requirement, and the evidence or gap behind that row."
+start = 21.77
+duration = 6.7
+
+[[scene.caption]]
+text = "Gaps include proposed actions, which the operator chooses and applies."
+start = 28.65
+duration = 4.95
+
+[[scene.caption]]
+text = "Xmip supplies evidence for review."
+start = 33.78
+duration = 2.5
+
+[[scene.caption]]
+text = "The customer makes the legal judgment about compliance."
+start = 36.46
+duration = 3.7
+
+[[scene]]
+file = "scene-28.wav"
+
+[[scene.caption]]
 text = "Xmip also exposes read-only access through the Model Context Protocol."
 start = 0
 duration = 5.275
 
 [[scene.caption]]
-text = """\
-Clients can inspect health, measurements, audit and journeys through tools \
-and scoped resources.\
-"""
+text = "Clients can inspect health, measurements, audit and journeys through tools and scoped resources."
 start = 5.455
 duration = 6.05
 
 [[scene.caption]]
-text = """\
-The behavior follows the command line, and each answer is audited, keeping \
-observation connected to established operational controls.\
-"""
+text = "The behavior follows the command line, and each answer is audited, keeping observation connected to established operational controls."
 start = 11.685
 duration = 8.825
 
 [[scene]]
-file = "scene-25.wav"
+file = "scene-29.wav"
 
 [[scene.caption]]
 text = "Xmip is open source, so teams can inspect, improve and extend it."
@@ -624,10 +703,7 @@ start = 0
 duration = 4.825
 
 [[scene.caption]]
-text = """\
-The platform is licensed under the GNU Affero General Public License, \
-version three or later.\
-"""
+text = "The platform is licensed under the GNU Affero General Public License, version three or later."
 start = 5.005
 duration = 6.875
 
@@ -637,77 +713,61 @@ start = 12.06
 duration = 5.6
 
 [[scene.caption]]
-text = """\
-Independent modules loaded across the documented boundary can use their \
-publisher’s chosen license.\
-"""
+text = "Independent modules loaded across the documented boundary can use their publisher’s chosen license."
 start = 17.84
 duration = 6.875
 
 [[scene]]
-file = "scene-26.wav"
+file = "scene-30.wav"
 
 [[scene.caption]]
-text = """\
-The engineering approach connects decisions to implementation and \
-verification.\
-"""
+text = "The engineering approach connects decisions to implementation and verification."
 start = 0
 duration = 5.35
 
 [[scene.caption]]
-text = """\
-Capability boundaries make ownership clear, while the Essentials and test \
-harnesses exercise behavior and expose evidence.\
-"""
+text = "Capability boundaries make ownership clear, while the Essentials and test harnesses exercise behavior and expose evidence."
 start = 5.53
 duration = 8.275
 
 [[scene.caption]]
-text = """\
-For the project team, progress means a demonstrated flow and reproducible \
-results, alongside the design.\
-"""
+text = "For the project team, progress means a demonstrated flow and reproducible results, alongside the design."
 start = 13.985
 duration = 7.575
 
 [[scene]]
-file = "scene-27.wav"
+file = "scene-31.wav"
 
 [[scene.caption]]
-text = "Xmip Continuum is the active development stream."
+text = "Xmip uses two names to distinguish how the project evolves and how it is released."
 start = 0
-duration = 3.55
+duration = 5.35
 
 [[scene.caption]]
-text = """\
-The working foundation covers messaging, recovery, storage and program \
-audit.\
-"""
-start = 3.73
-duration = 5.475
+text = "Continuum is the continuously evolving project stream, represented by the main branch."
+start = 5.53
+duration = 5.95
 
 [[scene.caption]]
-text = """\
-Next milestones bring the broader components into the assembled service \
-and complete deployment validation.\
-"""
-start = 9.385
-duration = 7.075
+text = "It holds the accepted architecture, documentation, tests and code."
+start = 11.66
+duration = 4.925
 
 [[scene.caption]]
-text = "Linear names the product release model; no Linear release has shipped yet."
-start = 16.64
-duration = 4.65
+text = "Linear is a stabilized release line derived from a specific Continuum state."
+start = 16.765
+duration = 5.35
+
+[[scene.caption]]
+text = "A Linear release is versioned, tested, documented and reproducible."
+start = 22.295
+duration = 5.05
 
 [[scene]]
-file = "scene-28.wav"
+file = "scene-32.wav"
 
 [[scene.caption]]
-text = """\
-Xmip brings the story together: connect systems under your control, define \
-the exchange in readable configuration, and follow its recorded outcome.\
-"""
+text = "Xmip brings the story together: connect systems under your control, define the exchange in readable configuration, and follow its recorded outcome."
 start = 0
 duration = 9.95
 
@@ -722,14 +782,16 @@ start = 14.46
 duration = 3.875
 
 [[scene.caption]]
-text = """\
-Operators follow health, messages and journeys to investigate and recover \
-the exchange.\
-"""
+text = "Operators follow health, messages and journeys to investigate and recover the exchange."
 start = 18.515
 duration = 6.225
 
 [[scene.caption]]
-text = "That is the platform this project is building."
+text = "This is Xmip."
 start = 24.92
-duration = 3.15
+duration = 1.575
+
+[[scene.caption]]
+text = "Built to connect systems and record responsibility."
+start = 26.675
+duration = 3.75

@@ -180,94 +180,138 @@ assessment.\
 ]
 
 [[section]]
-title = "An order through Xmip"
-headline = "One business exchange, visible responsibility"
+title = "An order, orchestrated"
+headline = "From order placed to delivery confirmed"
 screen = """\
-Sales system → Receive Location\nMessage → Subscription → Journey\nSend \
-Location → Warehouse\
+Order placed → payment or promise to pay\n\
+Factory produces OR warehouse picks\n\
+Dispatch → delivery monitored → outcome recorded\
 """
 voice = "female"
 power = false
 narration = """\
-Consider an illustrative order travelling from a sales system to a \
-warehouse. A Receive Location accepts the stream, and Xmip persists a \
-message. Matching subscriptions open journeys to the destinations that \
-want it. A Send Location attempts delivery to the warehouse. That journey \
-gives an interrupted exchange a place and an outcome to investigate.\
+Consider an order from placement to confirmed delivery. The sales system sends the \
+order as a Stream, and Xmip accepts a Message. The payment system confirms money \
+received, or an accepted promise to pay under the agreed terms. A Work Process \
+coordinates the business steps and waits for the responses the order needs. If goods \
+must be made, the factory receives a production request and returns progress and \
+completion. If goods are in stock, the warehouse reserves, picks and packs them \
+instead. When the goods are ready, the shipping system arranges dispatch and returns \
+the shipment reference. Carrier updates then report collection, transit and \
+delivery. A delay or failed delivery becomes a visible exception for follow-up, \
+while a delivery confirmation completes the flow. Correlation connects the responses \
+to the right order, and recorded state preserves progress across waits and restarts. \
+That is orchestration: one order, many systems, and a visible outcome.\
 """
 sources = [
-  "README.md",
-  "doc/terminology.md"
-]
-note = "Illustrative business flow"
-layout = [
-  "journey",
-  "An order through Xmip",
-  [
-    [
-      "01",
-      "Receive",
-      "A sales system hands a Stream to a Receive Location."
-    ],
-    [
-      "02",
-      "Accept and route",
-      "Xmip persists a Message. Matching Subscriptions open Journeys."
-    ],
-    [
-      "03",
-      "Deliver",
-      "A Send Location carries the order to the warehouse."
-    ]
-  ],
-  """\
-Illustrative order flow. Each destination has a Journey with its own \
-progress and outcome.\
+"doc/architecture/runtime-model.md",
+"doc/terminology.md",
+"""\
+doc/decision/ADR-0066-routes-are-configured-transforms-and-processes-are-compiled.md\
 """
 ]
+note = "Illustrative business flow; connected systems perform the business tasks."
+layout = [
+"orchestration",
+"An order, orchestrated",
+[
+[
+"Order placed",
+"Sales system"
+],
+[
+"Payment agreed",
+"Paid or promise to pay"
+],
+[
+"Factory produces",
+"Progress → ready"
+],
+[
+"Warehouse ships",
+"Reserve → pick → pack"
+],
+[
+"Dispatch",
+"Shipment reference"
+],
+[
+"Delivery monitored",
+"Transit → delivered"
+]
+],
+"Work Process: correlate responses, preserve state, wait and resume.",
+"Delayed or failed delivery → exception and follow-up"
+]
+accessibility_notes = """\
+The order flows to payment or an accepted promise to pay. Fulfillment branches to \
+factory production or warehouse picking, then rejoins at dispatch. Carrier updates \
+lead to confirmed delivery or an exception for follow-up. Xmip coordinates responses \
+and waits using the order correlation.\
+"""
 
 [[section]]
-title = "Acceptance and accountability"
-headline = "A clear handover of responsibility"
+title = "Stop at the acceptance boundary"
+headline = "STOP: the caller must follow the rules"
 screen = """\
-Before acceptance: sender responsibility\nAfter acceptance: a persisted \
-Message\nRefusal and failure remain distinct\
+Transport protocol + configured Contract\n\
+Refused request → audit and caller correction\n\
+Accepted Message → business flow\
 """
 voice = "male"
 power = false
 narration = """\
-Acceptance is the handover of responsibility. Before it, the sender owns \
-the stream. After it, Xmip persists a message and records its progress. \
-Keeping refusal distinct from a later delivery failure helps both \
-organizations understand which side should act next.\
+Before an order enters the business flow, the caller must follow the transport \
+protocol and the configured Contract. Otherwise the rule is clear. Stop. This \
+request is refused. Malformed protocol traffic, or content that violates the \
+required Contract, must not be forwarded as a valid order. A refusal is audited, \
+with a response to the caller where the protocol permits. The sender must correct \
+the request. Required validation must never be silently bypassed: if it cannot run, \
+the Location must not start. After acceptance, Xmip takes responsibility for the \
+Message and its recorded progress. A refusal at the boundary is different from a \
+delivery failure later in the Journey.\
 """
 sources = [
-  "README.md",
-  "doc/architecture/estate-map.md"
+"doc/architecture/runtime-model.md",
+"doc/architecture/estate-map.md",
+"doc/decision/ADR-0013-journey-model.md"
 ]
-note = ""
+note = "Required validation before acceptance. No silent bypass."
 layout = [
-  "split",
-  "The acceptance boundary",
-  [
-    [
-      "Before acceptance",
-      "Sender responsibility",
-      """\
-The Stream belongs to its sender. A refused arrival has not become Xmip’s \
-responsibility.\
+"split",
+"Stop at the acceptance boundary",
+[
+[
+"Before acceptance",
+"STOP — request refused",
+"""\
+The caller must follow the protocol and configured Contract. Audit the refusal; the \
+caller corrects the request.\
 """
-    ],
-    [
-      "After acceptance",
-      "Persisted Message",
-      """\
-Xmip records the accepted content and its progress through the platform.\
+],
+[
+"After acceptance",
+"Accepted Message",
+"""\
+Xmip takes responsibility for the accepted Message and records its progress through \
+the business flow.\
 """
-    ]
-  ],
-  "A refusal and a later delivery failure call for different actions."
 ]
+],
+"Required validation before acceptance. No silent bypass."
+]
+accessibility_notes = """\
+STOP marks a refused request at the acceptance boundary. The refusal is separate \
+from an accepted Message entering the business flow. A caller error does not stop \
+service for other callers.\
+"""
+implementation_note = """\
+Architecture rule: protocol refusals are handled per caller and audited. The cited \
+estate map records that a Location naming a Contract refuses to start while runtime \
+arrival Contract enforcement is unavailable. The presentation describes the required \
+boundary and does not claim that an unavailable validator is silently skipped or \
+already integrated.\
+"""
 
 [[section]]
 title = "Subscriptions and routing"
@@ -410,42 +454,46 @@ step.\
 title = "Configuration in VS Code"
 headline = "Design where developers already work"
 screen = """\
-Text and graphical design share one file\nCompletion, validation and \
-reference-aware rename\nRules come from Xmip’s language server\
+Text and graphical design share one TOML document\n\
+Completion, validation and reference-aware rename\n\
+Rules come from Xmip’s language server\
 """
 voice = "male"
 power = true
 narration = """\
-In Visual Studio Code, text editing and graphical designers work with the \
-same configuration. Completion, validation and reference-aware renaming help \
-developers make consistent changes, while Xmip’s language server supplies \
-the rules behind the design.\
+In Visual Studio Code, text editing and graphical designers work with the same \
+configuration. Completion, validation and reference-aware renaming help developers \
+make consistent changes, while Xmip’s language server supplies the rules behind the \
+design.\
 """
 sources = [
-  "doc/decision/ADR-0064-developers-design-in-vs-code.md"
+"doc/decision/ADR-0064-developers-design-in-vs-code.md"
 ]
 note = ""
 accessibility_notes = """\
-The male host gently flexes their arms to emphasize configuration in Visual \
-Studio Code.\
+The male host gently flexes their arms to emphasize configuration in Visual Studio \
+Code.\
 """
 layout = [
-  "feature",
-  "Configuration\nin VS Code",
-  [
-    [
-      "One source",
-      "Text editing and graphical design share cluster.xmip."
-    ],
-    [
-      "Helpful tools",
-      "Completion, validation, lookups and reference-aware renaming."
-    ],
-    [
-      "Shared rules",
-      "Xmip’s Rust language server owns the design rules."
-    ]
-  ]
+"feature",
+"""\
+Configuration\n\
+in VS Code\
+""",
+[
+[
+"One source",
+"Text editing and graphical design share cluster.xmip."
+],
+[
+"Helpful tools",
+"Completion, validation, lookups and reference-aware renaming."
+],
+[
+"Shared rules",
+"Xmip’s Rust language server owns the design rules."
+]
+]
 ]
 
 [[section]]
@@ -493,48 +541,46 @@ layout = [
 title = "Work Processes"
 headline = "Business flow with durable state"
 screen = """\
-Step-by-step business flow\nBPMN designs compile to Work Process \
-units\nExecution state belongs to the Ledger\
+Step-by-step business flow\n\
+BPMN designs compile to Work Process units\n\
+Execution state belongs to the Ledger\
 """
 voice = "female"
 power = false
 narration = """\
-Some exchanges need business steps as well as delivery. Xmip models these \
-as Work Processes, designed in BPMN and compiled into executable units. \
-Their state belongs to the ledger, so waiting work does not hold a thread. \
-Compilation and execution exist as components; connecting them into the \
-assembled service remains a project milestone.\
+Some exchanges need business steps as well as delivery. Xmip models these as Work \
+Processes, designed in BPMN and compiled into executable units. Their state belongs \
+to the ledger, so waiting work does not hold a thread.\
 """
 sources = [
-  "doc/architecture/estate-map.md",
-  """\
+"doc/architecture/estate-map.md",
+"""\
 doc/decision/ADR-0066-routes-are-configured-transforms-and-processes-are-compiled.md\
 """
 ]
-note = "Components built; assembled-service integration ahead"
+note = "BPMN design, compiled execution and durable state"
 layout = [
-  "journey",
-  "Work Processes",
-  [
-    [
-      "01",
-      "Define",
-      "Describe business steps in a BPMN design."
-    ],
-    [
-      "02",
-      "Compile",
-      "Turn the design into a Work Process unit."
-    ],
-    [
-      "03",
-      "Run and wait",
-      "Produce a Message, finish without one or wait for something named."
-    ]
-  ],
-  """\
-BPMN compilation and execution exist as components; integration into the \
-assembled service is a project milestone.\
+"journey",
+"Work Processes",
+[
+[
+"01",
+"Define",
+"Describe business steps in a BPMN design."
+],
+[
+"02",
+"Compile",
+"Turn the design into a Work Process unit."
+],
+[
+"03",
+"Run and wait",
+"Produce a Message, finish without one or wait for something named."
+]
+],
+"""\
+Work Process state belongs to the Ledger; waiting work does not hold a thread.\
 """
 ]
 
@@ -590,56 +636,58 @@ Route Messages and express business flow through defined capabilities.\
 
 [[section]]
 title = "The technology estate"
-headline = "From business systems to the edge"
+headline = "Streams across transport technologies"
 screen = """\
-Files and file transfer\nWeb, brokers and databases\nIndustrial and edge \
-communication\
+Streams in and out\n\
+Web, brokers and databases\n\
+Industrial and edge communication\
 """
 voice = "female"
 power = false
 narration = """\
-Xmip’s technology estate spans file transfer, web communication, message \
-brokers, databases and industrial systems. SFTP, HTTP, AMQP, Kafka, \
-PostgreSQL and OPC UA are examples of that scope. A site build chooses the \
-technologies it needs. This is the estate’s breadth, with availability \
-depending on the capability and its integration into the service.\
+Xmip carries Streams across its transport technologies, from business systems to the \
+edge. A Stream is immutable data received by or produced within Xmip. SFTP, HTTP, \
+AMQP, Kafka, PostgreSQL and OPC UA are examples of transport choices. A site build \
+selects the technologies it needs, with availability demonstrated through each \
+module's tests.\
 """
 sources = [
-  "doc/architecture/estate-map.md"
+"doc/architecture/runtime-model.md",
+"doc/architecture/estate-map.md"
 ]
 note = "Technology estate; capability availability varies"
 layout = [
-  "catalog",
-  "Across the technology estate",
-  [
-    [
-      "Files and transfer",
-      "Files, SFTP"
-    ],
-    [
-      "Web communication",
-      "HTTP"
-    ],
-    [
-      "Message brokers",
-      "AMQP, Kafka"
-    ],
-    [
-      "Databases",
-      "PostgreSQL"
-    ],
-    [
-      "Industrial systems",
-      "OPC UA"
-    ],
-    [
-      "Independent content",
-      "Representation and Contracts"
-    ]
-  ],
-  """\
-Examples from the technology estate; a site build selects its \
-technologies. Availability varies by capability.\
+"catalog",
+"Across the technology estate",
+[
+[
+"Streams and transport",
+"Streams over SFTP"
+],
+[
+"Web communication",
+"HTTP"
+],
+[
+"Message brokers",
+"AMQP, Kafka"
+],
+[
+"Databases",
+"PostgreSQL"
+],
+[
+"Industrial systems",
+"OPC UA"
+],
+[
+"Independent content",
+"Representation and Contracts"
+]
+],
+"""\
+Examples from the technology estate; a site build selects its technologies. \
+Availability varies by capability.\
 """
 ]
 
@@ -906,41 +954,43 @@ meaning across the surfaces.\
 title = "Operations in your phone"
 headline = "Cluster awareness wherever you are"
 screen = """\
-Cluster health and scope navigation\nRemote observation in the mobile \
-design\
+Cluster health and scope navigation\n\
+Remote observation in the mobile design\
 """
 voice = "female"
 power = true
 narration = """\
-Xmip’s mobile host brings the same cluster health and scope navigation to \
-Android and iPhone targets. It follows nodes remotely in the Observer role. \
-Device validation remains a project milestone, while the principle stays the \
-same: understand the affected scope wherever you are.\
+Xmip’s mobile host brings the same cluster health and scope navigation to Android \
+and iPhone targets. It follows nodes remotely in the Observer role. Understand the \
+affected scope wherever you are.\
 """
 sources = [
-  "doc/decision/ADR-0014-operator-surfaces.md"
+"doc/decision/ADR-0014-operator-surfaces.md"
 ]
-note = "Mobile design; device validation remains ahead"
+note = "Cluster health and remote observation"
 accessibility_notes = """\
 The female host gently flexes their arms to emphasize phone-based operations.\
 """
 layout = [
-  "feature",
-  "Operations\nin your phone",
-  [
-    [
-      "Start with the cluster",
-      "The mobile design starts with cluster health."
-    ],
-    [
-      "Find what needs attention",
-      "Drill into the affected scope."
-    ],
-    [
-      "Carry the same model",
-      "Observe nodes remotely using the shared operational vocabulary."
-    ]
-  ]
+"feature",
+"""\
+Operations\n\
+in your phone\
+""",
+[
+[
+"Start with the cluster",
+"The mobile design starts with cluster health."
+],
+[
+"Find what needs attention",
+"Drill into the affected scope."
+],
+[
+"Carry the same model",
+"Observe nodes remotely using the shared operational vocabulary."
+]
+]
 ]
 
 [[section]]
@@ -1025,6 +1075,248 @@ recorded sequence.\
     ]
   ],
   "Use Messages and Journeys to investigate a specific exchange."
+]
+
+
+[[section]]
+title = "Events"
+headline = "Subscribe to what happens"
+screen = """\
+One Event model across languages\n\
+Filter by outcome, scope and Party\n\
+Authorized delivery with audit\
+"""
+voice = "female"
+power = false
+narration = """\
+Xmip Events let other programs react to what happens in an integration. Subscribers \
+select the outcomes and scopes they need, under the identity of a proven Party. The \
+same Event model supports programs through the C interface and delivery over the wire \
+through Xmip transports. Events carry references and metadata, keeping the business \
+payload in its own place. Subscriptions and deliveries are authorized and audited. \
+This gives applications a common way to follow activity and build reactions around it.\
+"""
+sources = [
+  "doc/decision/ADR-0065-events-are-subscribed-from-any-language.md",
+  "doc/architecture/runtime-model.md",
+]
+note = """\
+Event capabilities and language bindings are built. Node integration follows the \
+current roadmap.\
+"""
+layout = [
+  "three",
+  "Events",
+  [
+    [
+      "One model",
+      "Across languages",
+      "C, C++, .NET, Java and Python can subscribe through the shared interface."
+    ],
+    [
+      "Focused delivery",
+      "Relevant outcomes",
+      "Select Event types, outcomes and scopes. Events carry references and metadata."
+    ],
+    [
+      "Accountability",
+      "Proven identity",
+      """\
+Each subscriber is a proven Party. Authorization controls access and deliveries are \
+audited.\
+"""
+    ],
+  ],
+  """\
+Event capabilities and language bindings are built. Node integration follows the \
+current roadmap.\
+"""
+]
+
+[[section]]
+title = "Retention and Archiving"
+headline = "Keep it live, then hand it on"
+screen = """\
+Retain Messages and their Streams\n\
+Archive after configured windows\n\
+The archive owner controls disposal\
+"""
+voice = "male"
+power = false
+narration = """\
+Retention and Archiving give Messages and their Streams a deliberate lifecycle. \
+Retention keeps a Message and its immutable Stream data available for inspection and \
+replay during the configured window. When that window passes, Archiving hands the \
+retained data to the chosen archive. The selected archive stores the retained \
+Streams and their metadata in its configured representation. The archive owner \
+decides how long to keep it and when to dispose of it. Xmip does not purge the \
+archive. The capabilities are exercised in the Essentials; connecting the lifecycle \
+to the assembled node remains an integration step.\
+"""
+sources = [
+"doc/architecture/runtime-model.md",
+"doc/decision/ADR-0040-xmip-retains-and-archives-it-does-not-delete.md",
+"doc/architecture/estate-map.md",
+"architecture.toml"
+]
+note = """\
+Retention and archive capabilities are built; the assembled node lifecycle remains \
+to be connected.\
+"""
+layout = [
+"three",
+"Retention and Archiving",
+[
+[
+"Retention",
+"Keep available",
+"""\
+Retain Messages and their Streams for inspection and replay during the configured \
+window.\
+"""
+],
+[
+"Archiving",
+"Configured handoff",
+"""\
+After the window, hand retained Stream data and metadata to the chosen archive.\
+"""
+],
+[
+"Ownership",
+"Control stays with you",
+"""\
+The archive owner decides what happens next, including disposal. Xmip does not purge \
+it.\
+"""
+]
+],
+"""\
+Retention and archive capabilities are built; the assembled node lifecycle remains \
+to be connected.\
+"""
+]
+
+[[section]]
+title = "Publishing to data warehouses"
+headline = "Publish Streams to analytics destinations"
+screen = """\
+Select Messages for the analytics flow\n\
+Transform into the target representation\n\
+Send the resulting Stream\
+"""
+voice = "female"
+power = false
+narration = """\
+Publishing information to a data warehouse follows Xmip's Stream and Message model. \
+A Subscription selects Messages for the analytics flow. A Work Process can transform \
+their content into the target representation, and a Send Location delivers the \
+resulting Stream through its configured transport. Another Subscription can serve \
+the operational system from the same Publication. Teams define the warehouse mapping \
+and loading behavior. The resulting Stream carries the information to the analytics \
+destination. Parquet archiving provides a separate handoff of retained Stream bytes \
+and metadata for downstream processing.\
+"""
+sources = [
+"doc/architecture/runtime-model.md",
+"doc/decision/ADR-0013-journey-model.md",
+"doc/decision/ADR-0064-developers-design-in-vs-code.md",
+"doc/decision/ADR-0040-xmip-retains-and-archives-it-does-not-delete.md",
+"architecture.toml"
+]
+note = """\
+Integration use case. Parquet archives retain Stream bytes and metadata for \
+downstream processing.\
+"""
+layout = [
+"three",
+"Publishing to data warehouses",
+[
+[
+"Select",
+"Analytics flow",
+"""\
+Select Messages for analytics independently of the operational destination.\
+"""
+],
+[
+"Shape",
+"Target data model",
+"""\
+Transform Stream content into the target representation. Define the warehouse \
+loading behavior.\
+"""
+],
+[
+"Deliver",
+"Configured destination",
+"""\
+A Send Location delivers the resulting Stream through its configured transport.\
+"""
+]
+],
+"""\
+Integration use case. Parquet archives retain Stream bytes and metadata for \
+downstream processing.\
+"""
+]
+
+[[section]]
+title = "Regulations, Reports and Quests"
+headline = "Evidence for informed decisions"
+screen = """\
+Reports present existing data\n\
+Quests probe for evidence and gaps\n\
+The operator chooses the action\
+"""
+voice = "male"
+power = false
+narration = """\
+Xmip brings Reports together in one list. Some present data that already exists, such \
+as audit records. Others present findings from a Quest, which probes an installation \
+without changing it. The Regulation Quest takes the regulation as a parameter, with \
+GDPR first and an open set for additional modules. Its Report shows a summary, a row \
+for each requirement, and the evidence or gap behind that row. Gaps include proposed \
+actions, which the operator chooses and applies. Xmip supplies evidence for review. \
+The customer makes the legal judgment about compliance.\
+"""
+sources = [
+  "doc/decision/ADR-0072-a-quest-probes-and-the-regulation-is-a-parameter.md",
+  "doc/architecture/observability-model.md",
+  "doc/architecture/estate-map.md",
+]
+note = """\
+The Regulation Quest probes configuration today. It does not certify regulatory \
+compliance.\
+"""
+layout = [
+  "three",
+  "Regulations, Reports and Quests",
+  [
+    [
+      "Reports",
+      "One list",
+      "See which Reports use existing data and which require a Quest to probe first."
+    ],
+    [
+      "Regulation Quest",
+      "Evidence and gaps",
+      """\
+GDPR first. Drill from the summary into requirements, findings and proposed actions.\
+"""
+    ],
+    [
+      "Operator",
+      "Decides and acts",
+      """\
+A Quest changes nothing. The operator applies actions; the customer judges compliance.\
+"""
+    ],
+  ],
+  """\
+The Regulation Quest probes configuration today. It does not certify regulatory \
+compliance.\
+"""
 ]
 
 [[section]]
@@ -1165,104 +1457,103 @@ design.\
 ]
 
 [[section]]
-title = "Project stage and next milestones"
-headline = "Continuum is the development stream"
+title = "Continuum and Linear"
+headline = "How Xmip evolves and is released"
 screen = """\
-Working foundation: messaging, recovery, Storage and audit\nNext: complete \
-service integration and deployment hardening\nContinuum today; Linear for \
-product releases\
+Continuum: the evolving project stream\n\
+Linear: a stabilized release line\n\
+Versioned, tested and reproducible releases\
 """
 voice = "female"
 power = false
 narration = """\
-Xmip Continuum is the active development stream. The working foundation \
-covers messaging, recovery, storage and program audit. Next milestones \
-bring the broader components into the assembled service and complete \
-deployment validation. Linear names the product release model; no Linear \
-release has shipped yet.\
+Xmip uses two names to distinguish how the project evolves and how it is released. \
+Continuum is the continuously evolving project stream, represented by the main \
+branch. It holds the accepted architecture, documentation, tests and code. Linear is \
+a stabilized release line derived from a specific Continuum state. A Linear release \
+is versioned, tested, documented and reproducible.\
 """
 sources = [
-  "doc/architecture/estate-map.md",
-  "doc/governance/release-model.md",
-  "README.md"
+"doc/architecture/estate-map.md",
+"doc/governance/release-model.md",
+"README.md"
 ]
-note = """\
-Platform packaging is progressing; Android and iOS device validation \
-remains ahead\
-"""
+note = "Continuum describes evolution. Linear describes release."
 layout = [
-  "three",
-  "Project stage and milestones",
-  [
-    [
-      "Working foundation",
-      "Continuum today",
-      "Receive, route and send. Recovery, Storage and program audit."
-    ],
-    [
-      "Integration",
-      "Connect the components",
-      """\
-Bring Work Process execution, dynamic loading and Contract validation into \
-the assembled service.\
-"""
-    ],
-    [
-      "Release preparation",
-      "Toward Linear",
-      """\
-Complete platform packaging, mobile validation and deployment hardening.\
-"""
-    ]
-  ],
-  """\
-Continuum is the development stream. Linear names the product release \
-model.\
-"""
+"three",
+"Continuum and Linear",
+[
+[
+"Project stream",
+"Continuum",
+"Accepted architecture, documentation, tests and code on main."
+],
+[
+"Release line",
+"Linear",
+"A stabilized line derived from a specific Continuum state."
+],
+[
+"Reproducibility",
+"Defined release",
+"Versioned, tested and documented, with pinned build dependencies."
+]
+],
+"Continuum describes evolution. Linear describes release."
 ]
 
 [[section]]
 title = "Xmip in one view"
-headline = "Connect systems\nRecord responsibility"
+headline = """\
+Connect systems\n\
+Record responsibility\
+"""
 screen = """\
-Business continuity and infrastructure choice\nTOML configuration and VS \
-Code design\nHealth, Messages, Journeys and recovery\
+Business continuity and infrastructure choice\n\
+TOML configuration and VS Code design\n\
+Health, Messages, Journeys and recovery\
 """
 voice = "female"
 power = "both"
 narration = """\
-Xmip brings the story together: connect systems under your control, define \
-the exchange in readable configuration, and follow its recorded outcome. \
-Leaders assess business continuity and infrastructure choice. Developers \
-work in TOML and Visual Studio Code. Operators follow health, messages and \
-journeys to investigate and recover the exchange. That is the platform \
-this project is building.\
+Xmip brings the story together: connect systems under your control, define the \
+exchange in readable configuration, and follow its recorded outcome. Leaders assess \
+business continuity and infrastructure choice. Developers work in TOML and Visual \
+Studio Code. Operators follow health, messages and journeys to investigate and \
+recover the exchange. This is Xmip. Built to connect systems and record \
+responsibility.\
 """
 sources = [
-  "README.md",
-  "doc/getting-started.md"
+"README.md",
+"doc/getting-started.md"
 ]
 note = ""
 layout = [
-  "closing",
-  "Xmip connects systems\nand records responsibility",
-  "Design the exchange.\nRun it. Follow its outcome.",
-  [
-    [
-      "CEO",
-      "Business continuity and choice"
-    ],
-    [
-      "CIO",
-      "Infrastructure and data control"
-    ],
-    [
-      "Developer",
-      "TOML and VS Code"
-    ],
-    [
-      "Operator",
-      "Health, evidence and recovery"
-    ]
-  ]
+"closing",
+"""\
+Xmip connects systems\n\
+and records responsibility\
+""",
+"""\
+Design the exchange.\n\
+Run it. Follow its outcome.\
+""",
+[
+[
+"CEO",
+"Business continuity and choice"
+],
+[
+"CIO",
+"Infrastructure and data control"
+],
+[
+"Developer",
+"TOML and VS Code"
+],
+[
+"Operator",
+"Health, evidence and recovery"
+]
+]
 ]
