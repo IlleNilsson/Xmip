@@ -3221,29 +3221,6 @@ environment opens TCP where they listen on UDP.
 
 Wider 2026-11-25: BACnet/IP, CoAP, DHCP, mDNS and SSDP are linked and listen on UDP too.
 
-## 177. The operator web view renders its head statically under interactive pages
-
-Found 2026-11-24 starting the operator web view: its host logs, four times
-a start, that a section's outlet renders as static server-side rendering
-while its content renders interactive, because `App.razor` gives
-`<HeadOutlet />` no render mode where `<Routes>` is `InteractiveServer`. A
-tab's title then likely stops following in-page navigation. Needed: the
-head rendered as the routes are, and a test that the host starts without
-the warning.
-
-## 180. A System Tests far end can take over five seconds to say it is ready
-
-Found 2026-11-24 when the owner started the System Tests while two builds
-ran here: the far end EXTTX1 declared itself and said nothing within the
-roll's five seconds, so the roll was refused, "never said it is ready,
-said nothing; its audit says why", and no audit of the far end says why.
-Run again nine minutes later, it rolled FINE. Alone, the same far end says
-ready in 63 ms without a process directory and 200 to 420 ms with one, so
-declaring itself costs it hundreds of milliseconds (the millisecond rule).
-Needed: the far end's audit of where its start went, its declaration
-measured and cut to the millisecond, and the roll's refusal naming what
-the far end last did.
-
 ## 182. The domain controller as the network's way out has not run on a machine
 
 Found 2026-11-24 building it (ADR-0015, amendment 2026-11-24): the
@@ -3391,6 +3368,21 @@ Found 2026-11-25 with 192: `RemoteBuildTest` needs operate's remote native
 library built first, `cargo build --lib -p xmip-core-operate
 --no-default-features --features remote`, which no test run makes. Needed:
 the run builds it, or the test says in words that it is absent.
+## 205. A writer's first audit record still reads the file back to its chain
+
+Found 2026-11-25 resolving 180: a writer's first record in a process finds
+its chain's last record by searching the audit file back from its end, now
+at the disk's reading speed but growing with the file. Needed: each
+writer's chain head kept beside the file, so a first record costs the same
+in any file.
+
+## 206. A newly built program's first start on Windows waits before its first line
+
+Found 2026-11-25 resolving 180: the first start of a newly built image took
+0.4 to 4 s on Windows before its first line, the operating system's, paid
+once per build, since each far end's image is a hard link to it. Needed:
+what Windows does in that time measured and named, and whether a signed or
+excluded image is spared it.
 # Suggested order
 
 Rewritten 2026-09-23, and corrected to what is built on 2026-11-10. The
@@ -4693,3 +4685,69 @@ acts on a Work Process Journey.
 Found 2026-11-25 with 191: a flow leading back to an earlier wait passes the
 program check and runs under the engine's loop guard, but no test runs one,
 as an order shipped in parts needs. Needed: that test.
+
+## 177. The operator web view renders its head statically under interactive pages — **Resolved**
+
+*Resolved 2026-11-25:* `App.razor` renders `<HeadOutlet
+@rendermode="InteractiveServer" />` as it renders `<Routes>`, Blazor's own
+render mode, so the head is a component of the one circuit over its SignalR
+connection and each view's `PageTitle` sets the tab's title as the operator
+moves (the owner, 2026-11-25: "The web view is .NET Blazor. Just use it.
+SignalR if you need it."). Proven by `WebHeadTest` in `Xmip.Gui.Test`: the
+web host started as ASP.NET Core tests one, its own `Program` over an
+in-memory server (`Microsoft.AspNetCore.Mvc.Testing` 11.0.0), serves the
+Monitor with the circuit's marker before the title in its head and logs no
+section warning, both failing before; and bUnit draws the head beside the
+host's routes and finds the title following the Monitor, the Topology and
+the Configuration.
+
+Found 2026-11-24 starting the operator web view: its host logs, four times
+a start, that a section's outlet renders as static server-side rendering
+while its content renders interactive, because `App.razor` gives
+`<HeadOutlet />` no render mode where `<Routes>` is `InteractiveServer`. A
+tab's title then likely stops following in-page navigation. Needed: the
+head rendered as the routes are, and a test that the host starts without
+the warning.
+
+## 180. A System Tests far end can take over five seconds to say it is ready — **Resolved**
+
+*Resolved 2026-11-25:* measured, the time went to the far end's first audit
+record, not to its declaration: to go on with its writer's audit chain, the
+file sink read the audit file back from its end and parsed every window, so
+a far end whose writer the file had not met for megabytes, or ever, as no
+CL1 far end had in `.local-work/audit`, took 1.5 to 3 s in a 7 MB file, and
+longer under load, until the roll killed it before the record was on the
+disk. The sink now finds the writer's last record by the line that names
+it (`audit_record::writer_line`, the record's own, searched with memchr,
+already in every program through quick-xml) and parses that one table: a
+first record 4 MB back went from 360 ms to 4.4 ms on Windows and from 133
+ms to 7.8 ms on Linux (fastest of five), within a millisecond of the disk's
+own reading of the file and durable write, held by the file sink's timing
+program. A declaration writes its file and makes the directory only where
+the write finds none, one call to the file system for two (0.8 ms on
+Windows, 0.05 ms on Linux). The far end says where its start went: what
+declaring itself took in its start record (`declared_ms`), and the time
+from its first line to its start on the disk in its stop record
+(`started_ms`). The roll waits for a far end to say it is ready, or anything
+else, or end, never for a time, and a refusal says how the far end ended
+and its last words. From launch to ready over a 7 MB audit its writer had
+not met, a median of 731 ms before and 53 ms after on Windows under 70%
+load, and 161 ms and 18 ms on Linux; over an empty audit 27 and 25 ms, and
+10 and 10 ms. What is left is the operating system's: a newly built image's
+first start spent 0.4 to 4 s before its first line on Windows, paid once
+per build, since each far end's image is a hard link to it. Proven by the
+chain's window tests and timing program, `declared`'s test, the readiness
+tests in `running.rs`, one of them, a far end ready after five seconds,
+failing before, and the spawned far end tests: its audit says where its
+start went, and one that ends unready is refused naming its last words.
+
+Found 2026-11-24 when the owner started the System Tests while two builds
+ran here: the far end EXTTX1 declared itself and said nothing within the
+roll's five seconds, so the roll was refused, "never said it is ready,
+said nothing; its audit says why", and no audit of the far end says why.
+Run again nine minutes later, it rolled FINE. Alone, the same far end says
+ready in 63 ms without a process directory and 200 to 420 ms with one, so
+declaring itself costs it hundreds of milliseconds (the millisecond rule).
+Needed: the far end's audit of where its start went, its declaration
+measured and cut to the millisecond, and the roll's refusal naming what
+the far end last did.
