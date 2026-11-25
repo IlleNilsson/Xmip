@@ -6,9 +6,9 @@ overview's both formats. Revise them together.
 
 ## View
 
-- [PowerPoint: 16 slides](Xmip-overview.pptx)
-- [Animated video: about 9.5 minutes](Xmip-overview.mp4)
-- [Video captions](Xmip-overview.srt)
+- [PowerPoint: 16 slides](Xmip-overview_en-US.pptx)
+- [Animated video: about 9.5 minutes](Xmip-overview_en-US.mp4)
+- [Video captions](Xmip-overview_en-US.srt)
 - [The environment, PowerPoint: 4 slides](Xmip-environment.pptx): the nodes
   Xmip's tests and demos run, the functions beside the message path, the
   machines and four ways to run one plan. Every node in it is optional; Xmip
