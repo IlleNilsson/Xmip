@@ -39,15 +39,15 @@ alt = "Four cards. CEO: does the business keep moving when an exchange fails? Ev
 
 [[section]]
 title = "One order through Xmip"
-headline = "One order, routed by what it holds"
-screen = "Received once, routed by what it holds, and delivered to every system that wants it."
+headline = "One order, followed to completion"
+screen = "One Instance per order counts the lines ordered, delivered and accepted, until all are accepted."
 voice = "female"
 power = false
-narration = "Here is one sales order from a customer, Party-A in the file. A Receive Location accepts it, and Xmip publishes it as a message. A Subscription is a filter on what a message holds, and a destination. The first sends the order to a Work Process that approves it; the approved order is published again, and a second Subscription takes it to a Send Port, which delivers it to the ERP, the business system that takes orders. No filter ever names a node, one running Xmip program. This is the flow Xmip's own System Tests run."
-sources = ["doc/terminology.md", "test/core/system-test/configuration/cluster.xmip", "doc/decision/ADR-0013-journey-model.md"]
-note = "The flow is the System Tests' own"
+narration = "Here is one order, followed to completion: an example flow like one Xmip's own tests run; the System Tests, which exercise the whole product, run a shorter one. A client's order arrives at a Receive Location, where Xmip takes messages in, and a Subscription, a filter on what a message holds, starts a Work Process Instance, one run of the flow, for this order alone. The Instance notes the order and keeps values of its own: the lines ordered, delivered and accepted. Every later message about the order carries its number, and a Correlation on that number brings each one to the same Instance. Goods may ship in parts: as the warehouse ships, the transporter delivers and the client answers, each part is counted, and a refused or returned part comes off the count, to be delivered again or credited. Until every line is accepted, the Instance waits again; then it confirms the order to the ERP, the business system that takes orders, and completes. If thirty days pass first, it fails as overdue. Operators see each Work Process's newest Instances, what each waits for and its values, and can dismiss a failed one or retry it once its cause is fixed."
+sources = ["doc/terminology.md", "doc/architecture/runtime-model.md", "doc/decision/ADR-0066-routes-are-configured-transforms-and-processes-are-compiled.md", "module/core/capability/process/doc/process-instances.md"]
+note = "An example flow; the System Tests run a shorter one"
 layout = ["scene", "order"]
-alt = "The order's path in two rows. Party-A sends a sales order, EDIFACT ORDERS, to the Receive Location Sales orders from Party-A. The Subscription Sales orders, for orders not approved, hands it to the Work Process Order approval, which marks it approved as a new generation. The Subscription Approved sales orders takes it to the Send Port Sales orders to ERP, and on to the ERP. Below: a Subscription is a filter on what the message holds, and a destination; no filter names a node."
+alt = "A timeline of one order's messages, each from its party into the one Instance for order 4711, with the values the Instance keeps of its own beside them. Client: orders 3 lines; Ordered 3. Warehouse: ships a part. Transporter: delivers 2 lines; Delivered 2. Client: accepts 2; Accepted 2. Client: refuses or returns; counted back. Then: every line accepted? If not, a lime arrow leads back to wait again for the next part. Below, two outcomes: all accepted, confirmed; 30 days, failed, overdue. Beneath them, the operator's Instances view: correlation Order 4711, state waiting, values Ordered 3, Delivered 2, Accepted 2. A note says this is an example flow, and the System Tests run a shorter one."
 
 [[section]]
 title = "Acceptance and recovery"
@@ -192,11 +192,11 @@ headline = "Measured, not promised"
 screen = "More than a millisecond beyond the load is a defect to find, not a timeout to raise."
 voice = "male"
 power = false
-narration = "Xmip is measured, not promised. Its rule: anything it does around a message that takes more than a millisecond, beyond the load it carries, is a defect to find. Carrying a file in and out on one node, Xmip's own work measured 430 microseconds at the median of twenty runs, with the storage device's own sync time counted apart. And fifty-two transports run in a node today, of the eighty-eight declared, each proven carrying a file through it."
-sources = ["CONTRIBUTING.md", "doc/decision/ADR-0018-service-and-host.md", "README.md"]
-note = "Figures as recorded; a quiet machine, 2026-11-09"
+narration = "Xmip is measured, not promised. Its rule: anything it does around a message that takes more than a millisecond, beyond the load it carries, is a defect to find. Carrying a file in and out on one node, Xmip's own work measured 430 microseconds at the median of twenty runs, with the storage device's own sync time counted apart. And seventy transports run in a node today, of the eighty-eight declared, each proven sending a file to its far end, nine of them on Linux alone."
+sources = ["CONTRIBUTING.md", "doc/decision/ADR-0018-service-and-host.md", "doc/decision/ADR-0015-packaging.md", "README.md"]
+note = "Timings on a quiet machine, 2026-11-09; transports as of 2026-11-25"
 layout = ["scene", "measured"]
-alt = "Three figures. 430 microseconds: Xmip's own work per file, file in to file out on one node, the median of twenty runs on a quiet machine, 2026-11-09. 2.4 milliseconds: the storage device's own sync time for that same file, counted apart. 52 of 88: transports a node runs today, each proven carrying a file through it. Recorded in the decision records and the README."
+alt = "Three figures. 430 microseconds: Xmip's own work per file, file in to file out on one node, the median of twenty runs on a quiet machine, 2026-11-09. 2.4 milliseconds: the storage device's own sync time for that same file, counted apart. 70 of 88: transports a node runs today, each proven sending a file to its far end, nine of them on Linux alone. Recorded in the decision records and the README."
 
 [[section]]
 title = "Xmip in one view"

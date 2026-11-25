@@ -7,7 +7,7 @@ overview's both formats. Revise them together.
 ## View
 
 - [PowerPoint: 16 slides](Xmip-overview.pptx)
-- [Animated video: about 8 minutes](Xmip-overview.mp4)
+- [Animated video: about 9.5 minutes](Xmip-overview.mp4)
 - [Video captions](Xmip-overview.srt)
 - [The environment, PowerPoint: 4 slides](Xmip-environment.pptx): the nodes
   Xmip's tests and demos run, the functions beside the message path, the
@@ -26,7 +26,18 @@ and a figure or a screenshot, current content, recorded figures, and the
 video rendered from the deck's own slides; both decks count four ways to run
 the plan, local processes, containers, virtual machines and physical
 machines, the hypervisors being the virtual machines' (ADR-0015, amendment
-2026-11-24). Project source references record
+2026-11-24). On 2026-11-25 *One order through Xmip* became one order followed
+to completion, an example flow like one Xmip's own tests run and longer than
+the System Tests': a Work Process Instance per order counting, in values of
+its own, the lines ordered, delivered and accepted, every party's message
+brought to it by a Correlation on the order number, goods shipped in parts, a
+deadline of thirty days, and the operator's Instances view (ADR-0066,
+amendment 2026-11-25; the owner, 2026-11-25: "In the presentation and video,
+the work steps are too simplistic" and "Better scenario, a completion. Goods
+can be shipped in parts"); and *Measured* counts 70 of the 88 transports
+(ADR-0015, amendment 2026-11-25). The two scenes were voiced again, the other
+fourteen tracks kept as they were, and the deck, the video and its captions
+built again. Project source references record
 the documentation used, rather than a promise of release readiness.
 
 ## Outreach

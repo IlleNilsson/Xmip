@@ -60,34 +60,44 @@ duration = 1.725
 file = "scene-03.wav"
 
 [[scene.caption]]
-text = "Here is one sales order from a customer, Party-A in the file."
+text = "Here is one order, followed to completion: an example flow like one Xmip's own tests run; the System Tests, which exercise the whole product, run a shorter one."
 start = 0
-duration = 4.15
+duration = 11.15
 
 [[scene.caption]]
-text = "A Receive Location accepts it, and Xmip publishes it as a message."
-start = 4.33
-duration = 4.675
+text = "A client's order arrives at a Receive Location, where Xmip takes messages in, and a Subscription, a filter on what a message holds, starts a Work Process Instance, one run of the flow, for this order alone."
+start = 11.33
+duration = 13.525
 
 [[scene.caption]]
-text = "A Subscription is a filter on what a message holds, and a destination."
-start = 9.185
-duration = 4.775
+text = "The Instance notes the order and keeps values of its own: the lines ordered, delivered and accepted."
+start = 25.035
+duration = 6.65
 
 [[scene.caption]]
-text = "The first sends the order to a Work Process that approves it; the approved order is published again, and a second Subscription takes it to a Send Port, which delivers it to the ERP, the business system that takes orders."
-start = 14.14
-duration = 14.1
+text = "Every later message about the order carries its number, and a Correlation on that number brings each one to the same Instance."
+start = 31.865
+duration = 7.575
 
 [[scene.caption]]
-text = "No filter ever names a node, one running Xmip program."
-start = 28.42
-duration = 4.05
+text = "Goods may ship in parts: as the warehouse ships, the transporter delivers and the client answers, each part is counted, and a refused or returned part comes off the count, to be delivered again or credited."
+start = 39.62
+duration = 13.275
 
 [[scene.caption]]
-text = "This is the flow Xmip's own System Tests run."
-start = 32.65
-duration = 3.2
+text = "Until every line is accepted, the Instance waits again; then it confirms the order to the ERP, the business system that takes orders, and completes."
+start = 53.075
+duration = 10.025
+
+[[scene.caption]]
+text = "If thirty days pass first, it fails as overdue."
+start = 63.28
+duration = 3.5
+
+[[scene.caption]]
+text = "Operators see each Work Process's newest Instances, what each waits for and its values, and can dismiss a failed one or retry it once its cause is fixed."
+start = 66.96
+duration = 10.45
 
 [[scene]]
 file = "scene-04.wav"
@@ -406,9 +416,9 @@ start = 10.485
 duration = 12.1
 
 [[scene.caption]]
-text = "And fifty-two transports run in a node today, of the eighty-eight declared, each proven carrying a file through it."
+text = "And seventy transports run in a node today, of the eighty-eight declared, each proven sending a file to its far end, nine of them on Linux alone."
 start = 22.765
-duration = 7.3
+duration = 9.875
 
 [[scene]]
 file = "scene-16.wav"
