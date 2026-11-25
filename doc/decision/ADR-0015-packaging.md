@@ -1554,8 +1554,11 @@ for the owner to strike, what Xmip's containers can run under:
   own since its general availability on 2026-09-29, no third party's engine;
   `wslc` has no Compose yet. Windows nodes run in Windows Server Core
   containers on containerd, which Microsoft's script installs with nerdctl:
-  process isolation by default, Hyper-V isolation where a node needs a
-  kernel of its own.
+  process isolation where the host's Windows build is the image's, as on a
+  Windows Server host of that build; Hyper-V isolation where it is not, as
+  on a Windows 11 host, whose default it is, and where a node needs a
+  kernel of its own (the owner, 2026-11-25, of the isolation each host
+  takes: *Go as you suggest*).
 - **On a Linux host**, Podman, from the system's own repositories;
   `podman kube play` runs the Kubernetes manifest a site's Kubernetes runs,
   so one manifest serves both.
