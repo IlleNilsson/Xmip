@@ -3378,6 +3378,18 @@ it) and the transport takes whatever its link hands it, IP among it, each a
 Stream; and the transport says a read of its link returns at once, which a
 kernel link's does not. Needed: the Location's EtherType filtered, and the
 waiting said per link.
+
+## 208. A suite run on another computer loads the runtime it built before
+
+Found 2026-11-25 landing ADR-0015's isolation amendment: `Start-XmipTest
+-ComputerName` sends the estate's change but builds no runtime there, so
+pluto's Core.Estate loaded the operate library its morning run had built,
+without that day's `xmip_publication_instances_v1`, and 391 tests failed
+before testing anything; the operator module's key, counting a target that
+had not changed, kept the stale copy, and `Get-XmipTestStatus` and
+`Stop-XmipTest` failed the same way, so the run could not be stopped by its
+own command. Needed: a run on another computer builds the runtime its parts
+load, as a landing does, or refuses in words, naming what is stale.
 # Suggested order
 
 Rewritten 2026-09-23, and corrected to what is built on 2026-11-10. The
