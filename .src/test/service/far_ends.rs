@@ -63,6 +63,9 @@ pub(crate) struct Standing {
     /// What it is sent, and its far end takes: [`DOCUMENT`], or what its
     /// protocol carries whole where it carries a shape of its own.
     pub(crate) document: &'static str,
+    /// The secret its Send Port names, and the password it holds, which its
+    /// far end requires, where it requires one.
+    pub(crate) secret: Option<(String, String)>,
 }
 
 impl Standing {
@@ -88,12 +91,20 @@ impl Standing {
             settings,
             at_close,
             document: DOCUMENT,
+            secret: None,
         }
     }
 
     /// Sent `document` in place of [`DOCUMENT`].
     const fn sent(mut self, document: &'static str) -> Self {
         self.document = document;
+        self
+    }
+
+    /// Its far end requiring `password`, which its Send Port presents as
+    /// the secret `linked.<name>`.
+    fn secured(mut self, password: &str) -> Self {
+        self.secret = Some((format!("linked.{}", self.name), password.to_string()));
         self
     }
 
@@ -128,8 +139,18 @@ fn stood<T: Loopback + Configured>(loopback: T) -> Option<Box<dyn FarEnd>> {
 /// The far end `$loopback` stands where this build links `$feature`, its
 /// Send Port `$name` at `$address` with the settings listed, each value a
 /// TOML text or integer, written as it is listed; sent `$document` where
-/// one is named, [`DOCUMENT`] else.
+/// one is named, [`DOCUMENT`] else. A far end written `|$password|
+/// $loopback` requires a password drawn for it, its Send Port's secret.
 macro_rules! standing {
+    ($all:ident, $feature:literal, $name:literal, |$password:ident| $loopback:expr,
+     $($rest:tt)*) => {
+        #[cfg(feature = $feature)]
+        {
+            let ($password, mut one) = (crate::linked::drawn(), Vec::new());
+            standing! {one, $feature, $name, $loopback, $($rest)*}
+            $all.extend(one.into_iter().map(|one: Standing| one.secured(&$password)));
+        }
+    };
     ($all:ident, $feature:literal, $name:literal, $loopback:expr, $address:literal,
      [$($key:literal = $value:literal),*], $at_close:literal) => {
         standing! {$all, $feature, $name, $loopback, $address, [$($key = $value),*],
@@ -162,10 +183,13 @@ pub(crate) fn every(
 ) -> Vec<Standing> {
     let mut all = Vec::new();
     standing! {all, "transport-activemq", "activemq",
-    stood(xmip_transport_activemq::ActiveMqTransport::loopback()),
-    "activemq://{far}", ["destination" = "/queue/probe"], false}
+    |password| stood(xmip_transport_activemq::ActiveMqTransport::loopback()
+        .logging_in(xmip_transport::Login::new("probe", &password))),
+    "activemq://{far}", ["destination" = "/queue/probe", "user" = "probe"], false}
     standing! {all, "transport-amqp", "amqp",
-    stood(xmip_transport_amqp::AmqpTransport::loopback()), "amqp://{far}", [], false}
+    |password| stood(xmip_transport_amqp::AmqpTransport::loopback()
+        .logging_in(xmip_transport::Login::new("probe", &password))),
+    "amqp://{far}", ["user" = "probe"], false}
     standing! {all, "transport-as2", "as2",
     stood(xmip_transport_as2::As2Transport::loopback()),
     "as2://{far}/as2", ["as2_id" = "Buyer", "to_party_id" = "Seller"], false}
@@ -273,8 +297,9 @@ pub(crate) fn every(
     "postgresql://{far}/probe/inbox/payload", ["database" = "probe", "user" = "probe"],
     false}
     standing! {all, "transport-rabbitmq", "rabbitmq",
-    stood(xmip_transport_rabbitmq::RabbitMqTransport::loopback()),
-    "rabbitmq://{far}", ["queue" = "probe"], false}
+    |password| stood(xmip_transport_rabbitmq::RabbitMqTransport::loopback()
+        .logging_in(xmip_transport::Login::new("probe", &password))),
+    "rabbitmq://{far}", ["queue" = "probe", "user" = "probe"], false}
     standing! {all, "transport-redis-streams", "redis-streams",
     stood(xmip_transport_redis_streams::RedisStreamsTransport::loopback()),
     "redis://{far}", ["stream" = "probe"], false}
@@ -290,8 +315,9 @@ pub(crate) fn every(
     standing! {all, "transport-serial", "serial", terminal::line(),
     "serial://{far}", ["baud" = 9600], false}
     standing! {all, "transport-smb", "smb",
-    stood(xmip_transport_smb::SmbTransport::loopback()),
-    "smb://{far}", ["share" = "xmip"], false}
+    |password| stood(xmip_transport_smb::SmbTransport::loopback()
+        .admitting(xmip_transport::Login::new("probe", &password))),
+    "smb://{far}", ["share" = "xmip", "user" = "probe"], false}
     standing! {all, "transport-smtp", "smtp",
     stood(xmip_transport_smtp::SmtpTransport::loopback()),
     "smtp://{far}", ["from" = "xmip@example.com", "to" = "round-trip@example.com"], true}

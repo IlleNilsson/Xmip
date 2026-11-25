@@ -1871,7 +1871,7 @@ dependency = ["xmip-core-library-codec"]
 
 
   [xmip.core.library.ntlm]
-  description = "The NTLM message layout of MS-NLMP: NEGOTIATE, CHALLENGE and AUTHENTICATE read and written, and the NTLMv2 client challenge inside a response. One layout where the identity gates and the SMB transport each carried a reader of their own until 2026-09-24. What a gate makes of a message stays with the gate."
+  description = "The NTLM message layout of MS-NLMP: NEGOTIATE, CHALLENGE and AUTHENTICATE read and written, the NTLMv2 client challenge inside a response, and the NTLMv2 response, computed once for the ntlm gate and the SMB transport; one layout, where the gates and SMB each carried their own until 2026-09-24. What a gate makes of a message stays with the gate."
   architecturalDomain = "Library"
   repositoryRole = "common-architecture"
   maturity = "scaffolded"

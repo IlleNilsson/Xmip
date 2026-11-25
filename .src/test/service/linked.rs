@@ -16,12 +16,20 @@
 //! A POP3 Location only collects, so it is proven receiving: the node's
 //! Receive Location collects a maildrop this test serves, and the node
 //! carries the mail to a file Send Port.
+//!
+//! A far end that can require a login does: AMQP's, `RabbitMQ`'s,
+//! `ActiveMQ`'s and SMB's, and the POP3 maildrop, each admit only a password
+//! drawn for it, which the node presents as the secret its Location names,
+//! set on the node through its local operate endpoint once it started, as
+//! `Set-XmipSecret` sets one (ADR-0019, amendment 2026-11-25).
 
 use std::collections::BTreeMap;
 use std::fmt::Write as _;
 use std::path::Path;
 use std::sync::mpsc;
 use std::time::{Duration, Instant};
+
+use xmip_runtime::plane::{Outcome, Remote};
 
 #[cfg(feature = "transport-pop3")]
 use super::far_ends::DOCUMENT;
@@ -46,6 +54,9 @@ fn configuration(directory: &Path, inbox: &Path, standing: &[Standing]) -> Strin
             "\n[[applications.send_ports]]\nname = {name}\nnode = {node}\naddress = {address}"
         );
         written.expect("a String takes it");
+        if let Some((secret, _)) = &one.secret {
+            writeln!(ports, "secret = {}", quoted(secret)).expect("a String takes it");
+        }
         if !one.settings.is_empty() {
             ports.push_str("[applications.send_ports.settings]\n");
         }
@@ -73,11 +84,34 @@ fn configuration(directory: &Path, inbox: &Path, standing: &[Standing]) -> Strin
          [[xmip_applications]]\nname = \"Linked\"\n\n\
          [[xmip_applications.receive_ports]]\nname = \"Linked\"\n\n\
          [[xmip_applications.receive_locations]]\nname = \"In\"\nreceive_port = \"Linked\"\n\
-         depth = \"light\"\n{declared}\n[operate]\nlocal = {}\n",
+         depth = \"light\"\n{declared}\n[operate]\nlocal = {}\n{}",
         quoted(node),
         quoted(&named(inbox)),
         quoted(&super::endpoint(directory)),
+        super::operating(),
     )
+}
+
+/// A password drawn for one far end, never written down: from the operating
+/// system's random source.
+pub(crate) fn drawn() -> String {
+    let bytes = xmip_codec::random::array::<8>();
+    format!("drawn-{}", xmip_codec::hex::encode(&bytes))
+}
+
+/// Each of `secrets`, a name and its password, set on the node configured
+/// in `directory` through its local operate endpoint, as `Set-XmipSecret`
+/// sets one, so a Location naming it presents it as it next connects.
+fn set(directory: &Path, secrets: &[(String, String)]) {
+    let clock = std::sync::Arc::new(xmip_core::SystemClock);
+    let surface =
+        Remote::local(&super::endpoint(directory), Duration::ZERO, clock).expect("a local surface");
+    for (name, value) in secrets {
+        let (outcome, said) = surface
+            .set_secret(0, &super::node_scope(), (name, "password", value))
+            .expect("the node answers");
+        assert_eq!(outcome, Outcome::Taken, "{name}: {said}");
+    }
 }
 
 /// The node configured in `directory`, started, once it accepts work.
@@ -126,6 +160,11 @@ pub(crate) fn carried(test: &str, standing: impl FnOnce(&Path) -> Vec<Standing>)
     let standing = standing(&directory);
     let (child, mut ending, said) =
         started(&directory, &configuration(&directory, &inbox, &standing));
+    let secrets: Vec<_> = standing
+        .iter()
+        .filter_map(|one| one.secret.clone())
+        .collect();
+    set(&directory, &secrets);
 
     let (took, taking) = mpsc::channel();
     let (mut first, mut last) = (Vec::new(), Vec::new());
@@ -168,7 +207,8 @@ pub(crate) fn carried(test: &str, standing: impl FnOnce(&Path) -> Vec<Standing>)
 }
 
 /// A POP3 Receive Location collects the one mail a maildrop this test
-/// serves holds, and the node carries it to a file Send Port, whole.
+/// serves holds, logging in with the password the secret it names holds,
+/// and the node carries it to a file Send Port, whole.
 #[cfg(feature = "transport-pop3")]
 #[test]
 fn a_pop3_receive_location_collects_a_maildrop_through_the_node() {
@@ -177,16 +217,21 @@ fn a_pop3_receive_location_collects_a_maildrop_through_the_node() {
     std::fs::create_dir_all(&out).expect("a send folder");
     let listener = std::net::TcpListener::bind("127.0.0.1:0").expect("a maildrop's port");
     let at = listener.local_addr().expect("its address").to_string();
+    let password = drawn();
+    let check = xmip_net::login::only("probe", password.clone());
     let maildrop = std::thread::spawn(move || {
-        xmip_transport_pop3::Session::accept(&listener, vec![DOCUMENT.into()], Some(BOUND))
+        let mail = vec![DOCUMENT.into()];
+        xmip_transport_pop3::Session::accept(&listener, mail, check, Some(BOUND))
             .and_then(xmip_transport_pop3::Session::serve)
     });
     let (cluster, node) = (&test_cluster().name, &test_cluster().node(0).name);
     let text = format!(
         "roles = \"executing, storage\"\n\n[service]\nname = \"xmip-{node}\"\n\
          cluster_name = \"{cluster}\"\nnode_name = \"{node}\"\n\n\
+         [tuning]\nreceive_backoff = \"50ms\"\n\n\
          [[applications]]\nname = \"Mail\"\n\n\
          [[applications.receive_locations]]\nname = \"In\"\nnode = {}\naddress = {}\n\
+         secret = \"linked.pop3\"\n\
          [applications.receive_locations.settings]\nuser = \"probe\"\n\
          [applications.receive_locations.accept]\nmechanism = [\"circumstance\"]\n\
          transport = \"claimed\"\n\n\
@@ -198,14 +243,16 @@ fn a_pop3_receive_location_collects_a_maildrop_through_the_node() {
          [[xmip_applications.subscriptions]]\nid = \"onward\"\n\
          destination = {{ send-port = \"Out\" }}\n\
          filter = \"xmip.transport.mechanism = 'circumstance'\"\n\n\
-         [operate]\nlocal = {}\n",
+         [operate]\nlocal = {}\n{}",
         quoted(node),
         quoted(&format!("pop3://{at}")),
         quoted(node),
         quoted(&named(&out)),
         quoted(&super::endpoint(&directory)),
+        super::operating(),
     );
     let (child, mut ending, said) = started(&directory, &text);
+    set(&directory, &[("linked.pop3".to_string(), password)]);
     let (changed, _watch) = watched(&out);
     let sent = || {
         std::fs::read_dir(&out).map_or_default(|entries| {

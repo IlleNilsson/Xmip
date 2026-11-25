@@ -1121,3 +1121,59 @@ Provenance: the rules and the scope are the owner's, 2026-11-10; the names
 what was proven or vouched for, binding possession to the arrival by the
 signed `messageDigest`, and the System Tests' one Party are the assistant's,
 2026-11-11, for the owner to overrule.
+
+## Amendment, 2026-11-25: AMQP, RabbitMQ, ActiveMQ, POP3 and SMB present the Location's secret
+
+The owner, 2026-11-25: *Go ahead with bigger things*. The amendment of
+2026-10-29 left the other technologies that log in refusing a Location
+that names a secret as the node starts, and the amendment of 2026-11-10
+brought IMAP and MQTT across. Five more present it now, each reading it as
+it connects, logs in or sets up a session, never as the node starts and
+never per Message on a kept connection, through `transport::secured`:
+
+- **AMQP and `RabbitMQ`**: the password of SASL PLAIN, beside the
+  Location's `user`, a setting new to both and declared once
+  (`amqp::presenting::USER`); who a Location logs in as is kept once for
+  both, `amqp::Presenting`. A Location that names no `user` logs in as the
+  broker's default guest, as before; one that names a `user` and no secret
+  presents it with an empty password, as IMAP's does.
+- **`ActiveMQ`**: STOMP's `passcode`, beside its `login`, the Location's
+  `user`, a setting new to it; a Location that names no `user` presents no
+  login, as before.
+- **POP3**: `PASS` for its required `user`, the maildrop lock's check
+  logging in with it too.
+- **SMB**: the `NTLMv2` response to the server's challenge (MS-NLMP 3.3.2)
+  for the Location's `user` in its `domain`, the blob made at the node's
+  Clock. The response is computed once, in `xmip-core-library-ntlm`
+  (`ntlm::response`: the NT hash, the response key `NTOWFv2`, the
+  `NTProofStr`), moved there from the `ntlm` gate, which verifies with it.
+  A Location that names no secret logs on as a guest, as before.
+- **A secret named without a user is refused as the node starts** where
+  the user may be left out — AMQP, `RabbitMQ` and `ActiveMQ`, as MQTT's
+  was — by one refusal written once, `transport::secured::without_user`.
+- **Xmip's own far ends require the login.** AMQP's `Session` closed a
+  wrong login with 403 `ACCESS_REFUSED`, and `ActiveMQ`'s answered `ERROR`
+  `not authorized`, already. POP3's `Session` is handed a
+  `net::login::Check`, as the FTP server is (amendment 2026-11-01), answers
+  a `PASS` it does not admit `-ERR [AUTH]` (RFC 3206), and serves nothing
+  before a login; SMB's, given a login, admits only an AUTHENTICATE for its
+  user whose proof that password makes, answering `STATUS_LOGON_FAILURE`.
+  The root's service test carries a file through a node to each of the
+  five far ends, each requiring a password drawn for it, which the node
+  presents as the secret its Location names, set through the node's local
+  operate endpoint.
+
+Not built: SMB message signing, so a server that requires it — Windows 11,
+version 24H2, and Windows Server 2025 by default — refuses the session
+still (amendment 2026-11-10); and S3's and the vendors' technologies'
+secrets.
+
+Decided by the assistant while building, for the owner to overrule: the
+`user` of AMQP, `RabbitMQ` and `ActiveMQ` is optional, and left out keeps
+what a Location did before, guest or no login; a secret named without one
+is refused; SMB sends `Z(24)` as its LM response beside the `NTLMv2` one,
+as MS-NLMP 3.1.5.1.2 has a client do, and its far end compares the user
+as Windows does, ignoring case; the far ends of AMQP, `RabbitMQ`,
+`ActiveMQ` and SMB are given the login they expect as a `transport::Login`
+(`logging_in`, SMB's `admitting`), where AMQP's and `RabbitMQ`'s took
+`Credentials`, and POP3's a `net::login::Check`, as FTP's is.

@@ -514,7 +514,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 417929 lines of production
+Where each repository mounts and what it holds: 418669 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -539,14 +539,14 @@ hold no source to count.
 ├── module/
 │   ├── core/
 │   │   ├── capability/
-│   │   │   ├── transport                       9789
-│   │   │   │   ├── amqp                        2733
+│   │   │   ├── transport                       9802
+│   │   │   │   ├── amqp                        2861
 │   │   │   │   ├── opc-ua                      2505
 │   │   │   │   ├── db2                         2481
 │   │   │   │   ├── http                        2245
 │   │   │   │   ├── nfs                         2170
+│   │   │   │   ├── smb                         2167
 │   │   │   │   ├── kafka                       2055
-│   │   │   │   ├── smb                         2019
 │   │   │   │   ├── ibm-mq                      1958
 │   │   │   │   ├── serial                      1850
 │   │   │   │   ├── ftp                         1839
@@ -558,9 +558,10 @@ hold no source to count.
 │   │   │   │   ├── as4                         1348
 │   │   │   │   ├── dns                         1268
 │   │   │   │   ├── s7comm                      1238
+│   │   │   │   ├── activemq                    1215
 │   │   │   │   ├── secs-gem                    1215
 │   │   │   │   ├── imap                        1198
-│   │   │   │   ├── mqtt                        1189
+│   │   │   │   ├── mqtt                        1184
 │   │   │   │   ├── canopen                     1155
 │   │   │   │   ├── webdav                      1137
 │   │   │   │   ├── dicom                       1122
@@ -569,12 +570,12 @@ hold no source to count.
 │   │   │   │   ├── ethercat                     995
 │   │   │   │   ├── m-bus                        989
 │   │   │   │   ├── as2                          984
+│   │   │   │   ├── pop3                         967
 │   │   │   │   ├── aws-sns                      959
 │   │   │   │   ├── aws-s3                       958
 │   │   │   │   ├── azure-blob                   951
 │   │   │   │   ├── ethernet-ip                  941
 │   │   │   │   ├── hart                         930
-│   │   │   │   ├── activemq                     926
 │   │   │   │   ├── uds                          910
 │   │   │   │   ├── aws-kinesis                  905
 │   │   │   │   ├── j1939                        898
@@ -584,7 +585,6 @@ hold no source to count.
 │   │   │   │   ├── redis-streams                880
 │   │   │   │   ├── lorawan                      878
 │   │   │   │   ├── azure-service-bus            872
-│   │   │   │   ├── pop3                         869
 │   │   │   │   ├── file                         865
 │   │   │   │   ├── google-pub-sub               863
 │   │   │   │   ├── aws-sqs                      854
@@ -621,7 +621,7 @@ hold no source to count.
 │   │   │   │   ├── bacnet                       462
 │   │   │   │   ├── mllp                         461
 │   │   │   │   ├── azure                        451
-│   │   │   │   ├── rabbitmq                     430
+│   │   │   │   ├── rabbitmq                     451
 │   │   │   │   ├── unix-socket                  359
 │   │   │   │   ├── named-pipe                   335
 │   │   │   │   ├── mariadb                      308
@@ -639,7 +639,7 @@ hold no source to count.
 │   │   │   │   ├── kerberos                     796
 │   │   │   │   ├── ldap                         781
 │   │   │   │   ├── oauth2                       597
-│   │   │   │   ├── ntlm                         591
+│   │   │   │   ├── ntlm                         579
 │   │   │   │   ├── digest                       448
 │   │   │   │   ├── scram                        393
 │   │   │   │   ├── windows                      377
@@ -775,7 +775,7 @@ hold no source to count.
 │   │   │   ├── sql                             1304
 │   │   │   ├── postgresql                       963
 │   │   │   ├── jose                             881
-│   │   │   ├── ntlm                             806
+│   │   │   ├── ntlm                             866
 │   │   │   ├── asn1                             686
 │   │   │   └── file                             318
 │   │   └── operation/

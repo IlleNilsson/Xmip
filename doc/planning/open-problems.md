@@ -1221,7 +1221,10 @@ What remains of the first part:
   `Set-XmipSecret` and never read back out (ADR-0019, ADR-0015, ADR-0063,
   ADR-0064 and ADR-0014, amendments 2026-10-29); SFTP presents a password
   or a key, FTP, FTPS, HTTP and HTTPS a password, IMAP and MQTT a password
-  with the Location's user (ADR-0019, amendment 2026-11-10), and SQL Server,
+  with the Location's user (ADR-0019, amendment 2026-11-10), AMQP,
+  RabbitMQ, ActiveMQ and POP3 a password with the Location's user, and SMB
+  the NTLMv2 response its password makes, computed once in
+  `xmip-core-library-ntlm` (ADR-0019, amendment 2026-11-25), and SQL Server,
   PostgreSQL, MySQL, MariaDB, Oracle Database and IBM DB2 the login's
   password. Built in pieces by the owner's order of 2026-10-29, the command
   line's `xmip secret` with them, and the GUI's Secrets page and the VS Code
@@ -1229,9 +1232,10 @@ What remains of the first part:
   extension reaches no node, so it suggests the key and not a node's secret
   names. Not built: a `certificate`
   secret presented by any technology (a client certificate over HTTPS or
-  FTPS); the other technologies that log in — AMQP, RabbitMQ, ActiveMQ,
-  POP3, SMB, S3 and the vendors' — which refuse a Location
-  naming a secret as the node starts; and one key the Storage nodes in
+  FTPS); the other technologies that log in — S3 and the vendors' — which
+  refuse a Location naming a secret as the node starts; SMB's message
+  signing, so a server that requires it, as Windows 11 24H2 and Windows
+  Server 2025 do by default, refuses the session; and one key the Storage nodes in
   front of one database server share, so a value one seals another opens:
   each seals under its own administration data key today, and no server
   backend is built (ADR-0063, amendment 2026-10-29). An authenticator a store of verifiers
