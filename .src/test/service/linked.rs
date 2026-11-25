@@ -13,15 +13,17 @@
 //! the same way, by [`carried`], in a namespace that test makes
 //! (`namespaced.rs`).
 //!
+//! A far end that checks a secret does — a broker's or a server's login, an
+//! AWS signature, an Azure key, a Google token (`far_ends/secured.rs`) — and
+//! so does the POP3 maildrop: each admits only a value drawn for it, which
+//! the node presents as the secret its Location names, set on the node
+//! through its local operate endpoint once it started, as `Set-XmipSecret`
+//! sets one, before the file is dropped (ADR-0019 and ADR-0015, amendments
+//! 2026-11-25).
+//!
 //! A POP3 Location only collects, so it is proven receiving: the node's
 //! Receive Location collects a maildrop this test serves, and the node
 //! carries the mail to a file Send Port.
-//!
-//! A far end that can require a login does: AMQP's, `RabbitMQ`'s,
-//! `ActiveMQ`'s and SMB's, and the POP3 maildrop, each admit only a password
-//! drawn for it, which the node presents as the secret its Location names,
-//! set on the node through its local operate endpoint once it started, as
-//! `Set-XmipSecret` sets one (ADR-0019, amendment 2026-11-25).
 
 use std::collections::BTreeMap;
 use std::fmt::Write as _;
@@ -31,11 +33,11 @@ use std::time::{Duration, Instant};
 
 use xmip_runtime::plane::{Outcome, Remote};
 
-#[cfg(feature = "transport-pop3")]
-use super::far_ends::DOCUMENT;
 use super::far_ends::{self, BOUND, Standing};
+#[cfg(feature = "transport-pop3")]
+use super::far_ends::{DOCUMENT, drawn};
 use super::folder::{dropped, named, quoted};
-use super::{Ending, exited, heard, lines, spawned, stop, test_cluster};
+use super::{Ending, exited, heard, lines, node_scope, spawned, stop, test_cluster};
 #[cfg(feature = "transport-pop3")]
 use super::{told, watched};
 
@@ -92,23 +94,16 @@ fn configuration(directory: &Path, inbox: &Path, standing: &[Standing]) -> Strin
     )
 }
 
-/// A password drawn for one far end, never written down: from the operating
-/// system's random source.
-pub(crate) fn drawn() -> String {
-    let bytes = xmip_codec::random::array::<8>();
-    format!("drawn-{}", xmip_codec::hex::encode(&bytes))
-}
-
-/// Each of `secrets`, a name and its password, set on the node configured
-/// in `directory` through its local operate endpoint, as `Set-XmipSecret`
-/// sets one, so a Location naming it presents it as it next connects.
+/// Each of `secrets`, a name and its value, set on the node configured in
+/// `directory` through its local operate endpoint, as `Set-XmipSecret` sets
+/// one, so a Location naming it presents it as it next connects.
 fn set(directory: &Path, secrets: &[(String, String)]) {
     let clock = std::sync::Arc::new(xmip_core::SystemClock);
     let surface =
         Remote::local(&super::endpoint(directory), Duration::ZERO, clock).expect("a local surface");
     for (name, value) in secrets {
         let (outcome, said) = surface
-            .set_secret(0, &super::node_scope(), (name, "password", value))
+            .set_secret(0, &node_scope(), (name, "password", value))
             .expect("the node answers");
         assert_eq!(outcome, Outcome::Taken, "{name}: {said}");
     }

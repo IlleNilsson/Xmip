@@ -1150,7 +1150,9 @@ never per Message on a kept connection, through `transport::secured`:
   A Location that names no secret logs on as a guest, as before.
 - **A secret named without a user is refused as the node starts** where
   the user may be left out — AMQP, `RabbitMQ` and `ActiveMQ`, as MQTT's
-  was — by one refusal written once, `transport::secured::without_user`.
+  was — by one refusal written once, `transport::secured::without_holder`,
+  which the vendors' `access_key_id` and `key_name` share (ADR-0015,
+  amendment 2026-11-25).
 - **Xmip's own far ends require the login.** AMQP's `Session` closed a
   wrong login with 403 `ACCESS_REFUSED`, and `ActiveMQ`'s answered `ERROR`
   `not authorized`, already. POP3's `Session` is handed a

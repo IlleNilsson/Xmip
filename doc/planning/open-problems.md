@@ -1224,18 +1224,21 @@ What remains of the first part:
   with the Location's user (ADR-0019, amendment 2026-11-10), AMQP,
   RabbitMQ, ActiveMQ and POP3 a password with the Location's user, and SMB
   the NTLMv2 response its password makes, computed once in
-  `xmip-core-library-ntlm` (ADR-0019, amendment 2026-11-25), and SQL Server,
-  PostgreSQL, MySQL, MariaDB, Oracle Database and IBM DB2 the login's
-  password. Built in pieces by the owner's order of 2026-10-29, the command
+  `xmip-core-library-ntlm` (ADR-0019, amendment 2026-11-25), the four AWS
+  technologies a secret access key with the Location's `access_key_id`,
+  Azure Blob an account key, Event Grid a topic key, Event Hubs and Service
+  Bus a shared access policy's key with its `key_name`, and Google Cloud
+  Storage and Pub/Sub a bearer token (ADR-0015, amendment 2026-11-25), and
+  SQL Server, PostgreSQL, MySQL, MariaDB, Oracle Database and IBM DB2 the
+  login's password. Built in pieces by the owner's order of 2026-10-29, the command
   line's `xmip secret` with them, and the GUI's Secrets page and the VS Code
   extension's `secret` on 2026-10-30 (ADR-0014, amendment 2026-10-30): the
   extension reaches no node, so it suggests the key and not a node's secret
   names. Not built: a `certificate`
   secret presented by any technology (a client certificate over HTTPS or
-  FTPS); the other technologies that log in — S3 and the vendors' — which
-  refuse a Location naming a secret as the node starts; SMB's message
-  signing, so a server that requires it, as Windows 11 24H2 and Windows
-  Server 2025 do by default, refuses the session; and one key the Storage nodes in
+  FTPS); SMB's message signing, so a server that requires it, as Windows
+  11 24H2 and Windows Server 2025 do by default, refuses the session; and
+  one key the Storage nodes in
   front of one database server share, so a value one seals another opens:
   each seals under its own administration data key today, and no server
   backend is built (ADR-0063, amendment 2026-10-29). An authenticator a store of verifiers
@@ -3193,29 +3196,27 @@ per crate or project and test, but a Pester failure, the root's or a
 module's, is named only in the part's log, the run's record carrying its
 last lines.
 
-## 169. The cloud transports take their key from nothing a Location gives them
-
-Found 2026-11-24 linking the transports into the assembled service: the
-ten cloud transports (AWS Kinesis, S3, SNS and SQS; Azure Blob, Event Grid,
-Event Hubs and Service Bus; Google Cloud Storage and Pub/Sub) take their
-credential only in code and refuse a Location's `secret`, so none is
-linked. Each is to read its key or token from its Location's secret, as
-MQTT, IMAP and the SQL transports read a password. An S3, Azure Blob or
-Google Cloud Storage Send Location also names its object after its whole
-endpoint.
-
 ## 171. No feature turns on TLS for HTTP in the assembled service
 
 Found 2026-11-24 the same day: HTTP and what rides on it (AS2, AS4, Peppol,
 MSMQ, WebDAV) are linked without TLS, as HTTP was, and turning TLS on for
 one turns it on for all, so https, as2s, as4s, msmqs and webdavs are
 refused in the service. Real AS4 and Peppol access points use HTTPS.
+Since 2026-11-25 the ten vendors' transports ride on HTTP too and are
+linked without TLS, so an `https://` endpoint, which every vendor's own
+service is, is refused until this is solved (ADR-0015, amendment
+2026-11-25).
 
-## 172. An SMB or NFS Send Location names every file after its server
+## 172. An SMB, NFS or object store Send Location names every file after its server
 
 Found 2026-11-24 the same day: neither uses the name the Message carries,
 as file and SFTP do, so each file lands under one name, the server's
-address, over the last.
+address, over the last. Wider 2026-11-25, once aws-s3, azure-blob and
+google-cloud-storage were linked: each puts its object under its
+endpoint's URL as its key, the same way. Needed: each names it as the file
+family does, by the Message's `file.name` or the Location's pattern
+(`transport::file_name`); the service test's far ends take the bytes whole
+whatever the key, so they do not catch it.
 
 ## 173. `--listening` reports a UDP Location's port as TCP
 
@@ -3402,6 +3403,15 @@ root. Needed: Podman there, and a run in its containers.
 Found 2026-11-25 resolving 188: `wslc` makes, fills and starts one
 container in about 12 s, so seventeen take some 3.5 minutes before the roll
 starts. Needed: made side by side.
+
+## 213. A Google Location's bearer token expires within the hour
+
+Found 2026-11-25 linking google-cloud-storage and google-pub-sub: they
+present the bearer token the Location's secret holds, and a token Google
+issues lives an hour at most, so an operator sets it again before then.
+Needed: a service account's key exchanged for a token as the Location
+connects (a signed JWT, RFC 7523).
+
 # Suggested order
 
 Rewritten 2026-09-23, and corrected to what is built on 2026-11-10. The
@@ -4812,3 +4822,16 @@ switch -As Container*, *Aliased as C*), which refuses naming this: WSL
 containers or containerd on Windows, Podman on Linux, one container per node
 and far end, made from the same cluster file (ADR-0015, amendment
 2026-11-24). Needed: that way, built.
+
+## 169. The cloud transports take their key from nothing a Location gives them — **Resolved**
+
+*Resolved 2026-11-25 (ADR-0015, amendment 2026-11-25; the owner: "Go ahead with bigger things"):* each of the ten presents the secret its Location names, a `password` secret read at each request through `transport::secured::presented`, the four AWS technologies beside the Location's `access_key_id` (`aws::access_key`), Event Hubs and Service Bus beside its `key_name` (`azure::key_name`), Blob beside its `account`, a secret named without one refused as the node starts (`transport::secured::without_holder`); all ten are linked into `xmip-service` and carried through a node by the service test `linked.rs`, whose far ends check a value the test draws and sets through the node. The object an S3, Azure Blob or Google Cloud Storage Send Location names after its endpoint is problem 172.
+
+Found 2026-11-24 linking the transports into the assembled service: the
+ten cloud transports (AWS Kinesis, S3, SNS and SQS; Azure Blob, Event Grid,
+Event Hubs and Service Bus; Google Cloud Storage and Pub/Sub) take their
+credential only in code and refuse a Location's `secret`, so none is
+linked. Each is to read its key or token from its Location's secret, as
+MQTT, IMAP and the SQL transports read a password. An S3, Azure Blob or
+Google Cloud Storage Send Location also names its object after its whole
+endpoint.

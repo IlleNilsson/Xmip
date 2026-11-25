@@ -471,8 +471,12 @@ authorize-location = ["authorize", "dep:xmip-authorize-location"]
 # architecture.toml's `linked-transports`. tcp terminates
 # TLS where its Location says `tls = true`, with the node's
 # `[provision.receive]` certificate. HTTP and what rides on it — as2, as4,
-# peppol, msmq, webdav — are linked without TLS, as http's crate leaves it
-# off by default, so their secure schemes are refused. sftp takes files
+# peppol, msmq, webdav, and the vendors' aws-*, azure-* and google-* — are
+# linked without TLS, as http's crate leaves it off by default, so their
+# secure schemes and an https:// endpoint are refused. The vendors' present
+# the secret their Location names, a password secret holding an access key's
+# secret, a shared key or a bearer token (ADR-0015, amendment 2026-11-25).
+# sftp takes files
 # from and puts them on an SFTP server, each under its name: the Parties'
 # far end the System Tests serve nodes on machines of their own (ADR-0028,
 # amendment 2026-10-22). CAN and what rides on it — canopen, iso-tp, j1939,
@@ -486,6 +490,14 @@ transport-activemq = ["dep:xmip-transport-activemq"]
 transport-amqp = ["dep:xmip-transport-amqp"]
 transport-as2 = ["dep:xmip-transport-as2"]
 transport-as4 = ["dep:xmip-transport-as4"]
+transport-aws-kinesis = ["dep:xmip-transport-aws-kinesis"]
+transport-aws-s3 = ["dep:xmip-transport-aws-s3"]
+transport-aws-sns = ["dep:xmip-transport-aws-sns"]
+transport-aws-sqs = ["dep:xmip-transport-aws-sqs"]
+transport-azure-blob = ["dep:xmip-transport-azure-blob"]
+transport-azure-event-grid = ["dep:xmip-transport-azure-event-grid"]
+transport-azure-event-hubs = ["dep:xmip-transport-azure-event-hubs"]
+transport-azure-service-bus = ["dep:xmip-transport-azure-service-bus"]
 transport-bacnet = ["dep:xmip-transport-bacnet"]
 transport-can-bus = ["dep:xmip-transport-can-bus", "xmip-transport-can-bus/socketcan"]
 transport-canopen = ["dep:xmip-transport-canopen", "xmip-transport-can-bus/socketcan"]
@@ -502,6 +514,8 @@ transport-ethernet = ["dep:xmip-transport-ethernet", "xmip-transport-ethernet/pa
 transport-ethernet-ip = ["dep:xmip-transport-ethernet-ip"]
 transport-file = ["dep:xmip-transport-file"]
 transport-ftp = ["dep:xmip-transport-ftp", "xmip-transport-ftp/tls"]
+transport-google-cloud-storage = ["dep:xmip-transport-google-cloud-storage"]
+transport-google-pub-sub = ["dep:xmip-transport-google-pub-sub"]
 transport-hart = ["dep:xmip-transport-hart"]
 transport-http = ["dep:xmip-transport-http"]
 transport-ibm-mq = ["dep:xmip-transport-ibm-mq"]
@@ -653,6 +667,14 @@ xmip-transport-activemq = { package = "xmip-core-transport-activemq", git = "htt
 xmip-transport-amqp = { package = "xmip-core-transport-amqp", git = "https://github.com/IlleNilsson/xmip-core-transport-amqp", branch = "main", optional = true }
 xmip-transport-as2 = { package = "xmip-core-transport-as2", git = "https://github.com/IlleNilsson/xmip-core-transport-as2", branch = "main", optional = true }
 xmip-transport-as4 = { package = "xmip-core-transport-as4", git = "https://github.com/IlleNilsson/xmip-core-transport-as4", branch = "main", optional = true }
+xmip-transport-aws-kinesis = { package = "xmip-core-transport-aws-kinesis", git = "https://github.com/IlleNilsson/xmip-core-transport-aws-kinesis", branch = "main", optional = true }
+xmip-transport-aws-s3 = { package = "xmip-core-transport-aws-s3", git = "https://github.com/IlleNilsson/xmip-core-transport-aws-s3", branch = "main", optional = true }
+xmip-transport-aws-sns = { package = "xmip-core-transport-aws-sns", git = "https://github.com/IlleNilsson/xmip-core-transport-aws-sns", branch = "main", optional = true }
+xmip-transport-aws-sqs = { package = "xmip-core-transport-aws-sqs", git = "https://github.com/IlleNilsson/xmip-core-transport-aws-sqs", branch = "main", optional = true }
+xmip-transport-azure-blob = { package = "xmip-core-transport-azure-blob", git = "https://github.com/IlleNilsson/xmip-core-transport-azure-blob", branch = "main", optional = true }
+xmip-transport-azure-event-grid = { package = "xmip-core-transport-azure-event-grid", git = "https://github.com/IlleNilsson/xmip-core-transport-azure-event-grid", branch = "main", optional = true }
+xmip-transport-azure-event-hubs = { package = "xmip-core-transport-azure-event-hubs", git = "https://github.com/IlleNilsson/xmip-core-transport-azure-event-hubs", branch = "main", optional = true }
+xmip-transport-azure-service-bus = { package = "xmip-core-transport-azure-service-bus", git = "https://github.com/IlleNilsson/xmip-core-transport-azure-service-bus", branch = "main", optional = true }
 xmip-transport-bacnet = { package = "xmip-core-transport-bacnet", git = "https://github.com/IlleNilsson/xmip-core-transport-bacnet", branch = "main", optional = true }
 xmip-transport-coap = { package = "xmip-core-transport-coap", git = "https://github.com/IlleNilsson/xmip-core-transport-coap", branch = "main", optional = true }
 xmip-transport-cotp = { package = "xmip-core-transport-cotp", git = "https://github.com/IlleNilsson/xmip-core-transport-cotp", branch = "main", optional = true }
@@ -665,6 +687,8 @@ xmip-transport-dns = { package = "xmip-core-transport-dns", git = "https://githu
 xmip-transport-ethernet-ip = { package = "xmip-core-transport-ethernet-ip", git = "https://github.com/IlleNilsson/xmip-core-transport-ethernet-ip", branch = "main", optional = true }
 xmip-transport-file = { package = "xmip-core-transport-file", git = "https://github.com/IlleNilsson/xmip-core-transport-file", branch = "main", optional = true }
 xmip-transport-ftp = { package = "xmip-core-transport-ftp", git = "https://github.com/IlleNilsson/xmip-core-transport-ftp", branch = "main", optional = true }
+xmip-transport-google-cloud-storage = { package = "xmip-core-transport-google-cloud-storage", git = "https://github.com/IlleNilsson/xmip-core-transport-google-cloud-storage", branch = "main", optional = true }
+xmip-transport-google-pub-sub = { package = "xmip-core-transport-google-pub-sub", git = "https://github.com/IlleNilsson/xmip-core-transport-google-pub-sub", branch = "main", optional = true }
 xmip-transport-hart = { package = "xmip-core-transport-hart", git = "https://github.com/IlleNilsson/xmip-core-transport-hart", branch = "main", optional = true }
 xmip-transport-http = { package = "xmip-core-transport-http", git = "https://github.com/IlleNilsson/xmip-core-transport-http", branch = "main", optional = true }
 xmip-transport-ibm-mq = { package = "xmip-core-transport-ibm-mq", git = "https://github.com/IlleNilsson/xmip-core-transport-ibm-mq", branch = "main", optional = true }

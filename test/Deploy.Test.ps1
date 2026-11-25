@@ -211,16 +211,21 @@ Describe 'Every site becomes a build, or is refused where its target says' {
         Set-Content -LiteralPath $path -Value @(
             'target = "server"'
             'roles = ["receiving"]'
-            'technologies = ["xmip-core-transport-smtp", "xmip-core-transport-aws-s3"]'
+            'technologies = ["xmip-core-transport-smtp", "xmip-core-transport-aws-s3",'
+            '    "xmip-core-transport-zigbee"]'
         )
 
         $plan = Resolve-XmipTestSite -Site $path
 
-        $plan.Technologies | Should -Be @('xmip-core-transport-smtp', 'xmip-core-transport-aws-s3')
+        $plan.Technologies | Should -Be @(
+            'xmip-core-transport-smtp', 'xmip-core-transport-aws-s3', 'xmip-core-transport-zigbee'
+        )
         $plan.Features | Should -Contain 'transport-smtp'
-        # Presenting no key a Location gives it, aws-s3 is not linked
+        # Presenting the secret its Location names, aws-s3 is linked since
+        # 2026-11-25; no node reaches a radio it drives, so zigbee is not
         # (architecture.toml, linked-transports).
-        $plan.Unlinked | Should -Contain 'xmip-core-transport-aws-s3'
+        $plan.Features | Should -Contain 'transport-aws-s3'
+        $plan.Unlinked | Should -Be @('xmip-core-transport-zigbee')
     }
 
     # Site chooses (the owner, 2026-10-20; ADR-0015, amendment 2026-10-20):

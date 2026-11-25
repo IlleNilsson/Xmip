@@ -2061,3 +2061,73 @@ containers*; the amendment of 2026-11-23 stands whole.
 Proved by `test/SystemTestContainer.Test.ps1` and `test/XmipTest.Test.ps1`,
 and by a System Tests roll in WSL containers (ADR-0028, amendment of this
 date).
+
+## Amendment, 2026-11-25: the cloud transports present their secret and are linked
+
+**Provenance.** The owner, 2026-11-25: *Go ahead with bigger things*. The
+amendment of 2026-11-24 left ten transports unlinked because their far end
+checks a key, a signature or a token no Location gave them, while the way a
+Location names its proof was decided and built for others: `secret =
+"<name>"`, kept sealed in the Administration Database's `secret` table and
+read as the Location connects (ADR-0019, amendments 2026-10-29 and
+2026-11-10). How each presents it is the drafting's, and the owner's to
+strike.
+
+**80 of the 88 are linked.** Not linked: aws and azure, what their vendors'
+transports speak and no transports; and the six radios, bluetooth, lorawan,
+thread, wireless-hart, wireless-m-bus and zigbee, whose far end lives
+inside one process and whose radio no node reaches here.
+
+- **Each presents the secret its Location names**, through one function of
+  the transport capability, `transport::secured::presented`: the text the
+  secret holds, read now, or what the transport was built with where the
+  Location names none. `logged_in`, the way a technology with a user and a
+  password presents one, calls it, so the rule is written once. aws-kinesis,
+  aws-s3, aws-sns and aws-sqs sign with it as the secret access key
+  (Signature Version 4); azure-blob as the account key (Shared Key);
+  azure-event-grid sends it as the topic key; azure-event-hubs and
+  azure-service-bus make a Shared Access Signature with it as the policy's
+  key; google-cloud-storage and google-pub-sub send it as the bearer token.
+- **A `password` secret**: each is one UTF-8 text the far end checks, so no
+  kind is added (ADR-0019, amendment 2026-10-29, has `password`, `key` and
+  `certificate`).
+- **Read at each request**, as HTTP reads its Basic password: Signature
+  Version 4, Shared Key and a Shared Access Signature sign every request, so
+  a secret set or replaced reaches the next request without a restart. One
+  point read of Xmip Storage per request of these ten; nothing else on the
+  message path reads one.
+- **Who signs is a setting, where the protocol names one**, as IMAP's `user`
+  and MQTT's `username` are: the four AWS technologies' `access_key_id`,
+  declared once in the aws crate (`aws::access_key`); Event Hubs' and
+  Service Bus' `key_name`, the shared access policy; Blob's `account`, which
+  it already required. Event Grid's topic key and Google's token name no
+  one. A Location naming a secret and no `access_key_id` or `key_name` is
+  refused as the node starts, as MQTT refuses a password with no user name,
+  by the one refusal of a secret named without whose it is,
+  `transport::secured::without_holder` (ADR-0019, amendment 2026-11-25).
+- **A Location that receives by being connected to presents nothing**: an
+  SNS or Event Grid Receive Location is the webhook a subscription
+  delivers to, as an HTTP Receive Location is.
+- **Linked without TLS**, as HTTP and what rides on it are (the amendment of
+  2026-11-24): the ten ride on HTTP, so an `https://` endpoint, which every
+  vendor's own service is, is refused until a site can choose TLS for HTTP.
+  Until then they reach an `http://` endpoint, an emulator's or a stand-in's.
+- **Proven as the rest are** (`.src/test/service/linked.rs`,
+  `far_ends/secured.rs`): each far end is its crate's own loopback, stood
+  checking a value the test draws from the operating system's random source;
+  the node's Send Port names a secret of its own name, and the test sets it
+  through the node's local endpoint as an operator sets one
+  (`Set-XmipSecret`), before it drops the file, so the node reads it from
+  its Administration Database as it sends. FTP's far end, which admits the
+  user its address names with the password the Location's secret holds, is
+  proven the same way; until this amendment no test set it a secret, and
+  FTP was carried through no node.
+
+Not built, and open: a Send Location of an object store — aws-s3,
+azure-blob, google-cloud-storage — names its object by the target a node
+sends to, which is the Location's own address, so a node puts the object
+under its endpoint's URL and not the Message's file name, as a folder or an
+SFTP server would (`transport::file_name`; found 2026-11-24 with open
+problem 169); and a bearer token Google issues expires within the hour, so
+a Location's token is set again before then, and exchanging a service
+account's key for one is not built.

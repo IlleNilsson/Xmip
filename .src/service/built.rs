@@ -265,9 +265,10 @@ macro_rules! linked {
 /// order of their names: every one written whose far end a node in a
 /// process of its own reaches, each proven carrying a file through the
 /// service (`.src/test/service/linked.rs`), a serial line's through a
-/// pseudo-terminal, which Linux and macOS have (ADR-0015, amendments
-/// 2026-11-24 and 2026-11-25); and after them those on a link of the
-/// kernel's ([`kernel_transports`]).
+/// pseudo-terminal, which Linux and macOS have, and a vendor's presenting
+/// the secret its Location names (ADR-0015, amendments 2026-11-24 and
+/// 2026-11-25); and after them those on a link of the kernel's
+/// ([`kernel_transports`]).
 #[allow(
     unused_mut,
     clippy::vec_init_then_push,
@@ -279,6 +280,14 @@ pub fn transports() -> Vec<LinkedTransport> {
         "transport-amqp" => xmip_transport_amqp::AmqpTransport,
         "transport-as2" => xmip_transport_as2::As2Transport,
         "transport-as4" => xmip_transport_as4::As4Transport,
+        "transport-aws-kinesis" => xmip_transport_aws_kinesis::KinesisTransport,
+        "transport-aws-s3" => xmip_transport_aws_s3::S3Transport,
+        "transport-aws-sns" => xmip_transport_aws_sns::SnsTransport,
+        "transport-aws-sqs" => xmip_transport_aws_sqs::SqsTransport,
+        "transport-azure-blob" => xmip_transport_azure_blob::AzureBlobTransport,
+        "transport-azure-event-grid" => xmip_transport_azure_event_grid::EventGridTransport,
+        "transport-azure-event-hubs" => xmip_transport_azure_event_hubs::EventHubsTransport,
+        "transport-azure-service-bus" => xmip_transport_azure_service_bus::ServiceBusTransport,
         "transport-bacnet" => xmip_transport_bacnet::BacnetTransport,
         "transport-coap" => xmip_transport_coap::CoapTransport,
         "transport-cotp" => xmip_transport_cotp::CotpTransport,
@@ -291,6 +300,8 @@ pub fn transports() -> Vec<LinkedTransport> {
         "transport-ethernet-ip" => xmip_transport_ethernet_ip::EtherNetIpTransport,
         "transport-file" => xmip_transport_file::FileTransport,
         "transport-ftp" => xmip_transport_ftp::FtpTransport,
+        "transport-google-cloud-storage" => xmip_transport_google_cloud_storage::GcsTransport,
+        "transport-google-pub-sub" => xmip_transport_google_pub_sub::PubSubTransport,
         "transport-hart" => xmip_transport_hart::HartTransport,
         "transport-http" => xmip_transport_http::HttpTransport,
         "transport-ibm-mq" => xmip_transport_ibm_mq::IbmMqTransport,

@@ -18,7 +18,7 @@ use std::time::Duration;
 use xmip_transport::error::protocol_error;
 use xmip_transport::{Configured, FarEnd, Taken, Transport, arrived::next_arrival, held::Held};
 
-use super::{BOUND, DOCUMENT, Standing};
+use super::{BOUND, Standing};
 
 /// The virtual CAN interfaces the test makes, one for each technology.
 pub(crate) const CAN: [&str; 6] = [

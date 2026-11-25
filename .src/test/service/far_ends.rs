@@ -9,9 +9,11 @@
 //! transport whose far end lives inside one process — a simulated bus, a
 //! radio held in memory — is not linked, and README's *Transports* says why
 //! for each. Two linked before are proven elsewhere: file by every test of
-//! this program, and sftp by the System Tests' far ends; ftp is not proven
-//! here, its far end logging in by a password a node presents through a
-//! secret only.
+//! this program, and sftp by the System Tests' far ends.
+//!
+//! A far end that checks a secret — a broker's or a server's login, a
+//! vendor's key, signature or token — checks one the test draws, which the
+//! node presents from the secret its Send Port names (`secured.rs`).
 //!
 //! A Send Location that announces or answers — mDNS a service, SSDP a
 //! device, DHCP a lease — sends what its protocol says in one datagram, and
@@ -36,7 +38,12 @@ use std::time::Duration;
 use xmip_transport::{Configured, FarEnd, Loopback};
 
 mod announced;
+#[cfg(feature = "transport-sqlite")]
+mod table;
 mod terminal;
+
+#[cfg(feature = "transport-sqlite")]
+use table::Table;
 
 /// What a far end takes where its protocol carries any bytes: one XML
 /// document, short and plain, as every linked protocol carries it whole —
@@ -47,6 +54,13 @@ pub(crate) const DOCUMENT: &str = "<probe><n>1</n>round-trip</probe>";
 /// How long a far end waits for the node, and for each read of it: a bound
 /// on the test, never on Xmip.
 pub(crate) const BOUND: Duration = Duration::from_secs(20);
+
+/// A value for a far end to check, never one written down: 32 bytes from
+/// the operating system's random source, in base64, which an Azure account
+/// key is and every other secret here may be.
+pub(crate) fn drawn() -> String {
+    xmip_codec::base64::encode(&xmip_codec::random::array::<32>())
+}
 
 /// One linked transport's far end, and the Send Port that reaches it.
 pub(crate) struct Standing {
@@ -63,8 +77,8 @@ pub(crate) struct Standing {
     /// What it is sent, and its far end takes: [`DOCUMENT`], or what its
     /// protocol carries whole where it carries a shape of its own.
     pub(crate) document: &'static str,
-    /// The secret its Send Port names, and the password it holds, which its
-    /// far end requires, where it requires one.
+    /// The secret its Send Port names, and the value it holds, which its
+    /// far end checks, where it checks one (`secured.rs`).
     pub(crate) secret: Option<(String, String)>,
 }
 
@@ -101,10 +115,10 @@ impl Standing {
         self
     }
 
-    /// Its far end requiring `password`, which its Send Port presents as
-    /// the secret `linked.<name>`.
-    fn secured(mut self, password: &str) -> Self {
-        self.secret = Some((format!("linked.{}", self.name), password.to_string()));
+    /// Its far end checking `value`, which its Send Port presents as the
+    /// secret `linked.<name>`.
+    fn secured(mut self, value: &str) -> Self {
+        self.secret = Some((format!("linked.{}", self.name), value.to_string()));
         self
     }
 
@@ -139,29 +153,29 @@ fn stood<T: Loopback + Configured>(loopback: T) -> Option<Box<dyn FarEnd>> {
 /// The far end `$loopback` stands where this build links `$feature`, its
 /// Send Port `$name` at `$address` with the settings listed, each value a
 /// TOML text or integer, written as it is listed; sent `$document` where
-/// one is named, [`DOCUMENT`] else. A far end written `|$password|
-/// $loopback` requires a password drawn for it, its Send Port's secret.
+/// one is named, [`DOCUMENT`] else. A far end written `|$drawn| $loopback`
+/// checks a value drawn for it ([`drawn`]), its Send Port's secret.
 macro_rules! standing {
-    ($all:ident, $feature:literal, $name:literal, |$password:ident| $loopback:expr,
+    ($all:ident, $feature:literal, $name:literal, |$drawn:ident| $loopback:expr,
      $($rest:tt)*) => {
         #[cfg(feature = $feature)]
         {
-            let ($password, mut one) = (crate::linked::drawn(), Vec::new());
+            let ($drawn, mut one) = (crate::far_ends::drawn(), Vec::new());
             standing! {one, $feature, $name, $loopback, $($rest)*}
-            $all.extend(one.into_iter().map(|one: Standing| one.secured(&$password)));
+            $all.extend(one.into_iter().map(|one: Standing| one.secured(&$drawn)));
         }
     };
     ($all:ident, $feature:literal, $name:literal, $loopback:expr, $address:literal,
      [$($key:literal = $value:literal),*], $at_close:literal) => {
         standing! {$all, $feature, $name, $loopback, $address, [$($key = $value),*],
-        $at_close, DOCUMENT}
+        $at_close, crate::far_ends::DOCUMENT}
     };
     ($all:ident, $feature:literal, $name:literal, $loopback:expr, $address:literal,
      [$($key:literal = $value:literal),*], $at_close:literal, $document:expr) => {
         #[cfg(feature = $feature)]
         if let Some(far) = $loopback {
             let settings: &[(&'static str, &str)] = &[$(($key, stringify!($value))),*];
-            let one = Standing::new($name, far, $address, settings, $at_close);
+            let one = crate::far_ends::Standing::new($name, far, $address, settings, $at_close);
             $all.push(one.sent($document));
         }
     };
@@ -172,8 +186,30 @@ macro_rules! standing {
 #[cfg(target_os = "linux")]
 pub(crate) mod kernel;
 
+/// The far ends that check the secret a node presents: the brokers' and
+/// servers' that require a login, and the vendors'.
+#[cfg(any(
+    feature = "transport-activemq",
+    feature = "transport-amqp",
+    feature = "transport-aws-kinesis",
+    feature = "transport-aws-s3",
+    feature = "transport-aws-sns",
+    feature = "transport-aws-sqs",
+    feature = "transport-azure-blob",
+    feature = "transport-azure-event-grid",
+    feature = "transport-azure-event-hubs",
+    feature = "transport-azure-service-bus",
+    feature = "transport-ftp",
+    feature = "transport-google-cloud-storage",
+    feature = "transport-google-pub-sub",
+    feature = "transport-rabbitmq",
+    feature = "transport-smb"
+))]
+mod secured;
+
 /// Every far end this build's linked transports have, in the order of their
-/// names; a database file's under `directory`.
+/// names, and after them those checking a secret (`secured::every`); a
+/// database file's under `directory`.
 #[allow(
     clippy::too_many_lines,
     reason = "one far end a transport, each its few lines"
@@ -182,14 +218,6 @@ pub(crate) fn every(
     #[cfg_attr(not(feature = "transport-sqlite"), allow(unused_variables))] directory: &Path,
 ) -> Vec<Standing> {
     let mut all = Vec::new();
-    standing! {all, "transport-activemq", "activemq",
-    |password| stood(xmip_transport_activemq::ActiveMqTransport::loopback()
-        .logging_in(xmip_transport::Login::new("probe", &password))),
-    "activemq://{far}", ["destination" = "/queue/probe", "user" = "probe"], false}
-    standing! {all, "transport-amqp", "amqp",
-    |password| stood(xmip_transport_amqp::AmqpTransport::loopback()
-        .logging_in(xmip_transport::Login::new("probe", &password))),
-    "amqp://{far}", ["user" = "probe"], false}
     standing! {all, "transport-as2", "as2",
     stood(xmip_transport_as2::As2Transport::loopback()),
     "as2://{far}/as2", ["as2_id" = "Buyer", "to_party_id" = "Seller"], false}
@@ -296,10 +324,6 @@ pub(crate) fn every(
     stood(xmip_transport_postgresql::PostgresTransport::loopback()),
     "postgresql://{far}/probe/inbox/payload", ["database" = "probe", "user" = "probe"],
     false}
-    standing! {all, "transport-rabbitmq", "rabbitmq",
-    |password| stood(xmip_transport_rabbitmq::RabbitMqTransport::loopback()
-        .logging_in(xmip_transport::Login::new("probe", &password))),
-    "rabbitmq://{far}", ["queue" = "probe", "user" = "probe"], false}
     standing! {all, "transport-redis-streams", "redis-streams",
     stood(xmip_transport_redis_streams::RedisStreamsTransport::loopback()),
     "redis://{far}", ["stream" = "probe"], false}
@@ -314,10 +338,6 @@ pub(crate) fn every(
     "secs-gem://{far}", [], true}
     standing! {all, "transport-serial", "serial", terminal::line(),
     "serial://{far}", ["baud" = 9600], false}
-    standing! {all, "transport-smb", "smb",
-    |password| stood(xmip_transport_smb::SmbTransport::loopback()
-        .admitting(xmip_transport::Login::new("probe", &password))),
-    "smb://{far}", ["share" = "xmip", "user" = "probe"], false}
     standing! {all, "transport-smtp", "smtp",
     stood(xmip_transport_smtp::SmtpTransport::loopback()),
     "smtp://{far}", ["from" = "xmip@example.com", "to" = "round-trip@example.com"], true}
@@ -344,54 +364,23 @@ pub(crate) fn every(
     standing! {all, "transport-websocket", "websocket",
     stood(xmip_transport_websocket::WebSocketTransport::loopback()),
     "ws://{far}/probe", [], false}
+    #[cfg(any(
+        feature = "transport-activemq",
+        feature = "transport-amqp",
+        feature = "transport-aws-kinesis",
+        feature = "transport-aws-s3",
+        feature = "transport-aws-sns",
+        feature = "transport-aws-sqs",
+        feature = "transport-azure-blob",
+        feature = "transport-azure-event-grid",
+        feature = "transport-azure-event-hubs",
+        feature = "transport-azure-service-bus",
+        feature = "transport-ftp",
+        feature = "transport-google-cloud-storage",
+        feature = "transport-google-pub-sub",
+        feature = "transport-rabbitmq",
+        feature = "transport-smb"
+    ))]
+    secured::every(&mut all);
     all
-}
-
-/// A database file a sqlite Send Location inserts its rows in: its far end
-/// is the file, which this test reads as a sqlite Receive Location would,
-/// once a row is there. The crate's own loopback names its file per thread
-/// and its row by a round, which a node's Send Location knows nothing of.
-#[cfg(feature = "transport-sqlite")]
-struct Table {
-    path: std::path::PathBuf,
-    named: String,
-}
-
-#[cfg(feature = "transport-sqlite")]
-impl Table {
-    fn under(directory: &Path) -> Box<dyn FarEnd> {
-        let path = directory.join("sqlite").join("inbox.sqlite");
-        let named = path.display().to_string().replace('\\', "/");
-        Box::new(Self { path, named })
-    }
-}
-
-#[cfg(feature = "transport-sqlite")]
-impl FarEnd for Table {
-    fn address(&self) -> &str {
-        &self.named
-    }
-
-    /// The first row, as soon as the file holds one, taken as a Receive
-    /// Location takes it; told by the file's folder changing, never by a
-    /// poll.
-    fn take_one(self: Box<Self>) -> xmip_transport::Result<xmip_transport::Taken> {
-        let folder = self.path.parent().expect("the file's folder").to_path_buf();
-        std::fs::create_dir_all(&folder).expect("the file's folder");
-        let (changed, _watch) = super::watched(&folder);
-        let queue = xmip_transport_sqlite::SqliteTransport::new(&self.path);
-        let found = std::cell::RefCell::new(None);
-        let deadline = std::time::Instant::now() + BOUND;
-        super::told(&changed, deadline, || {
-            if found.borrow().is_none() {
-                let row = queue.take(1).ok().and_then(|rows| rows.into_iter().next());
-                *found.borrow_mut() = row;
-            }
-            found.borrow().is_some()
-        });
-        found.into_inner().map_or_else(
-            || Err(xmip_transport::TransportError::permanent("no row arrived")),
-            xmip_transport::Arrived::taken,
-        )
-    }
 }

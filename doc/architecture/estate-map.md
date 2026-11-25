@@ -138,10 +138,12 @@ ADR-0015 (amendments 2026-10-01 and 2026-10-20), ADR-0056 (amendment
 
 #### `linked-transports`
 
-**The transports a node runs.** `xmip-service` links 70 of the 88 declared
+**The transports a node runs.** `xmip-service` links 80 of the 88 declared
 transports, each a `transport-<technology>` feature of the root crate a site
-names: activemq, amqp, as2, as4, bacnet, can-bus, canopen, coap, cotp, db2,
-dds, dhcp, dicom, dnp3, dns, ethercat, ethernet, ethernet-ip, file, ftp, hart,
+names: activemq, amqp, as2, as4, aws-kinesis, aws-s3, aws-sns, aws-sqs,
+azure-blob, azure-event-grid, azure-event-hubs, azure-service-bus, bacnet,
+can-bus, canopen, coap, cotp, db2, dds, dhcp, dicom, dnp3, dns, ethercat,
+ethernet, ethernet-ip, file, ftp, google-cloud-storage, google-pub-sub, hart,
 http, ibm-mq, iec-60870-5-104, iec-61850, imap, io-link, iso-tp, j1939, kafka,
 knx, m-bus, mariadb, mdns, mllp, modbus, mqtt, msmq, mssql, mysql, named-pipe,
 nats, nats-jetstream, nfs, obd-ii, opc-ua, oracle, peppol, pop3, postgresql,
@@ -165,19 +167,25 @@ the service test (`namespaced.rs`) runs itself again in, where it makes a
 virtual CAN interface for each CAN technology and a veth pair for each
 Ethernet one with no administrator, each far end its own crate's end on the
 kernel's link; pop3 only collects, and a node collects a maildrop's mail
-through it; file is carried by every other test of the service, and sftp by
-the System Tests' far ends; ftp's far end logs in by a password a node
-presents through a secret alone, which the test sets none of. The HTTP
-technologies are linked without TLS, as http's crate leaves it off, so https,
-as2s, as4s, msmqs and webdavs are refused. Not linked: aws and azure, what
-their vendors' transports speak and no transports; aws-kinesis, aws-s3,
-aws-sns, aws-sqs, azure-blob, azure-event-grid, azure-event-hubs,
-azure-service-bus, google-cloud-storage and google-pub-sub, which present a
-key, a signature or a token no Location gives them; and bluetooth, lorawan,
-thread, wireless-hart, wireless-m-bus and zigbee, whose far end lives inside
-one process and whose radio no node reaches here. Records: ADR-0015
-(amendments 2026-11-24 and 2026-11-25), ADR-0051, ADR-0064 (amendment
-2026-10-28).
+through it; the vendors' ten — aws-kinesis, aws-s3, aws-sns and aws-sqs
+signing with Signature Version 4, azure-blob with Shared Key, azure-event-grid
+with its topic key, azure-event-hubs and azure-service-bus with a Shared
+Access Signature, google-cloud-storage and google-pub-sub with a bearer token
+— present the secret their Location names, a `password` secret read through
+`transport::secured::presented` at each request, beside the Location's
+`access_key_id`, `account` or `key_name` where the protocol names who signs,
+and their far ends check a value the test draws and sets through the node as
+an operator does; so does ftp's, which admits the user its address names with
+the password the Location's secret holds; file is carried by every other test
+of the service, and sftp by the System Tests' far ends. The HTTP technologies,
+and the vendors' riding on HTTP, are linked without TLS, as http's crate
+leaves it off, so https, as2s, as4s, msmqs and webdavs, and a vendor's
+https:// endpoint, are refused. Not linked: aws and azure, what their vendors'
+transports speak and no transports; and bluetooth, lorawan, thread,
+wireless-hart, wireless-m-bus and zigbee, whose far end lives inside one
+process and whose radio no node reaches here. Records: ADR-0015 (amendments
+2026-11-24 and 2026-11-25), ADR-0019 (amendment 2026-10-29), ADR-0051,
+ADR-0064 (amendment 2026-10-28).
 
 #### `module-loading`
 
@@ -514,7 +522,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 418669 lines of production
+Where each repository mounts and what it holds: 419009 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -539,7 +547,7 @@ hold no source to count.
 ├── module/
 │   ├── core/
 │   │   ├── capability/
-│   │   │   ├── transport                       9802
+│   │   │   ├── transport                       9823
 │   │   │   │   ├── amqp                        2861
 │   │   │   │   ├── opc-ua                      2505
 │   │   │   │   ├── db2                         2481
@@ -569,25 +577,25 @@ hold no source to count.
 │   │   │   │   ├── nats                        1049
 │   │   │   │   ├── ethercat                     995
 │   │   │   │   ├── m-bus                        989
+│   │   │   │   ├── aws-sns                      985
 │   │   │   │   ├── as2                          984
+│   │   │   │   ├── aws-s3                       975
+│   │   │   │   ├── azure-blob                   969
 │   │   │   │   ├── pop3                         967
-│   │   │   │   ├── aws-sns                      959
-│   │   │   │   ├── aws-s3                       958
-│   │   │   │   ├── azure-blob                   951
 │   │   │   │   ├── ethernet-ip                  941
 │   │   │   │   ├── hart                         930
+│   │   │   │   ├── aws-kinesis                  921
+│   │   │   │   ├── google-cloud-storage         915
+│   │   │   │   ├── azure-event-grid             911
 │   │   │   │   ├── uds                          910
-│   │   │   │   ├── aws-kinesis                  905
 │   │   │   │   ├── j1939                        898
-│   │   │   │   ├── google-cloud-storage         896
+│   │   │   │   ├── azure-service-bus            896
+│   │   │   │   ├── google-pub-sub               890
 │   │   │   │   ├── bluetooth                    886
-│   │   │   │   ├── azure-event-grid             880
 │   │   │   │   ├── redis-streams                880
+│   │   │   │   ├── aws-sqs                      878
 │   │   │   │   ├── lorawan                      878
-│   │   │   │   ├── azure-service-bus            872
 │   │   │   │   ├── file                         865
-│   │   │   │   ├── google-pub-sub               863
-│   │   │   │   ├── aws-sqs                      854
 │   │   │   │   ├── profinet                     838
 │   │   │   │   ├── cotp                         836
 │   │   │   │   ├── dhcp                         832
@@ -612,15 +620,15 @@ hold no source to count.
 │   │   │   │   ├── redpanda                     598
 │   │   │   │   ├── ethernet                     595
 │   │   │   │   ├── modbus                       595
-│   │   │   │   ├── azure-event-hubs             544
+│   │   │   │   ├── azure-event-hubs             567
+│   │   │   │   ├── aws                          553
 │   │   │   │   ├── wireless-m-bus               532
-│   │   │   │   ├── aws                          510
+│   │   │   │   ├── azure                        502
 │   │   │   │   ├── can-bus                      488
 │   │   │   │   ├── mysql                        483
 │   │   │   │   ├── sqlite                       471
 │   │   │   │   ├── bacnet                       462
 │   │   │   │   ├── mllp                         461
-│   │   │   │   ├── azure                        451
 │   │   │   │   ├── rabbitmq                     451
 │   │   │   │   ├── unix-socket                  359
 │   │   │   │   ├── named-pipe                   335
