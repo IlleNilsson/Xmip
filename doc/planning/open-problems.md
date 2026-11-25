@@ -3275,19 +3275,6 @@ Needed: the far end's audit of where its start went, its declaration
 measured and cut to the millisecond, and the roll's refusal naming what
 the far end last did.
 
-## 181. Slicing without `--authority` writes a private key beside the cluster file
-
-Found 2026-11-24 checking that a fresh `xmip-service` slices the System
-Tests' cluster file: `--slice` with no `--authority` made a self-signed
-authority, its private key among it, in an `authority` folder beside
-`test/core/system-test/configuration/cluster.xmip`, where the file's
-`[nodes.OP1.provision.operator] authority = "authority"` points. That
-folder is tracked and nothing ignores it, so the next landing would have
-committed the key; it was moved out by hand before one ran. Needed: a
-slice that makes an authority writes it only to a device-local folder,
-or refuses without `--authority`, and a test that slicing leaves the
-configuration's folder as it found it.
-
 ## 182. The domain controller as the network's way out has not run on a machine
 
 Found 2026-11-24 building it (ADR-0015, amendment 2026-11-24): the
@@ -4493,3 +4480,29 @@ and the verdict only in its log and its snapshot through
 `Get-XmipTestResult -Path`, which refuses without `-Path` while an older
 cluster's snapshot shares the folder. Needed: a finished roll listed from
 its record, as an estate run is, its state and its worst result in words.
+
+## 181. Slicing without `--authority` writes a private key beside the cluster file — **Resolved**
+
+*Resolved 2026-11-25:* a slice that names no folder for its cluster's
+authority signs with the one kept in `authority/<cluster>` of the
+account's own Xmip folder on the machine slicing, `%LOCALAPPDATA%\Xmip` on
+Windows and `~/.local/state/xmip` elsewhere, made there where none is,
+and never beside the cluster's file; a cluster with no name is refused
+there. `xmip-service --slice` and `xmip_cluster_signed_slice_v1` reach it
+through `runtime::signed::sliced_signed`, which answers the folder that
+signed; the entry point and `RuntimeDesign.TrySignedSlice` no longer take
+the cluster's path, and `SliceDelivery` takes the folder, which its tests
+name so none writes to the account's (ADR-0031, amendment 2026-11-25; the
+owner, 2026-11-25: *Yes*). Proven by `runtime::signed`'s tests and
+`SliceDeliveryTest`, which finds nothing beside the cluster's file.
+
+Found 2026-11-24 checking that a fresh `xmip-service` slices the System
+Tests' cluster file: `--slice` with no `--authority` made a self-signed
+authority, its private key among it, in an `authority` folder beside
+`test/core/system-test/configuration/cluster.xmip`, where the file's
+`[nodes.OP1.provision.operator] authority = "authority"` points. That
+folder is tracked and nothing ignores it, so the next landing would have
+committed the key; it was moved out by hand before one ran. Needed: a
+slice that makes an authority writes it only to a device-local folder,
+or refuses without `--authority`, and a test that slicing leaves the
+configuration's folder as it found it.

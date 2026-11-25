@@ -1056,3 +1056,47 @@ resource, while one document serves both families (`node.dsc.yaml`).
 **Provenance.** PowerShell/DSC#1793 and its closing comment, the
 v3.4.0-preview.3 release, and `dsc resource list` on both systems,
 2026-11-21; the reading is the assistant's, at the coordinator's order.
+
+## Amendment, 2026-11-25: an authority no folder is named for is kept in the account's own
+
+A slice named no folder for its cluster's authority in two places:
+`xmip-service --slice` without `--authority`, and the Operation Desktop
+saving `cluster.xmip` through `xmip_cluster_signed_slice_v1`. Both signed
+with the authority in the `authority` folder beside the cluster's file,
+made there where none was, its private key among it. On 2026-11-24 a
+check of `--slice` against the System Tests' cluster file made one in
+`test/core/system-test/configuration/authority`, a tracked folder nothing
+ignores, and the next landing would have committed the key (open problem
+181). A cluster's file is a design, and a design is kept in a repository.
+
+Asked where it goes instead, the owner, 2026-11-25: *Yes*, to the
+assistant's suggestion. Where no folder is named, the cluster's authority
+is kept in `authority/<cluster>` of the account's own Xmip folder on the
+machine slicing: `%LOCALAPPDATA%\Xmip` on Windows, and elsewhere `xmip` in
+`$XDG_STATE_HOME` or `~/.local/state`, where the machine deploying an
+environment keeps its private state too. It is made there where none is,
+a private directory as every authority's is, so a machine signs every
+slice of a cluster with its own, as the amendment of 2026-11-06 has the
+machine deploying an environment do. It is never kept beside the
+cluster's file.
+
+1. **One place decides it.** `runtime::signed::sliced_signed` keeps the
+   authority in the folder named, else in `signed::own_authority`'s, and
+   answers which, so the certificate a surface writes beside a slice is
+   read from the folder that signed it.
+2. **A cluster without a name is refused** where no folder is named: the
+   folder is the cluster's, so its name, from the file or the
+   environment's `--cluster`, is needed, and a name that is no single
+   folder's is refused too.
+3. **The cluster's path is no longer an argument.**
+   `xmip_cluster_signed_slice_v1` takes `{"node"}` with `"name"` and
+   `"authority"` where given, and `RuntimeDesign.TrySignedSlice` no path.
+   `SliceDelivery` takes the folder; the desktop names none, and its tests
+   name one of their own, so no test writes to the account's folder.
+4. **A one-node install is unchanged.** `xmip-service --install` signs its
+   own node's configuration with the authority beside it
+   (`signed::signed_beside`): its configuration folder is the machine's
+   own, never a design.
+
+**Provenance.** Open problem 181; the owner's answer, 2026-11-25. The
+reading is the assistant's.

@@ -110,17 +110,17 @@ Records: ADR-0033 (amendment 2026-10-19), ADR-0063.
 **Saving and slicing the cluster's configuration.** The Operation Desktop
 saves `cluster.xmip`, validated by the runtime and audited, and slices it
 through `xmip_cluster_signed_slice_v1`, each slice signed by the cluster's
-authority beside the file; desired state slices it and signs it on the machine
-the environment is deployed from (`xmip-service --slice --authority`) and
-ships each node its slice and the authority's certificate alone. A node runs
-only a slice that verifies against the authority's certificate beside it,
-refuses and audits one changed by hand, and one that verifies and that it
-cannot start, and runs its active configuration, the last slice that ran,
-instead (`runtime::signed`, `runtime::running::activation`); its record at
-`<node>/configuration` and `xmip-service --activation` say which, and desired
-state asks the latter. A changed slice takes effect when the node starts
-again. Records: ADR-0031 (amendments 2026-10-01, 2026-10-05, 2026-11-06,
-2026-11-12).
+authority kept in this account's own Xmip folder, never beside the file;
+desired state slices it and signs it on the machine the environment is
+deployed from (`xmip-service --slice --authority`) and ships each node its
+slice and the authority's certificate alone. A node runs only a slice that
+verifies against the authority's certificate beside it, refuses and audits one
+changed by hand, and one that verifies and that it cannot start, and runs its
+active configuration, the last slice that ran, instead (`runtime::signed`,
+`runtime::running::activation`); its record at `<node>/configuration` and
+`xmip-service --activation` say which, and desired state asks the latter. A
+changed slice takes effect when the node starts again. Records: ADR-0031
+(amendments 2026-10-01, 2026-10-05, 2026-11-06, 2026-11-12, 2026-11-25).
 
 #### `embedded-storage`
 
@@ -500,7 +500,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 412586 lines of production
+Where each repository mounts and what it holds: 412679 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -765,12 +765,12 @@ hold no source to count.
 │   │   │   ├── asn1                             686
 │   │   │   └── file                             318
 │   │   └── operation/
-│   │       ├── operate                        52249  C# 32163 · Rust 20086
-│   │       ├── cli                            11898
+│   │       ├── operate                        52257  C# 32180 · Rust 20077
+│   │       ├── cli                            11892
 │   │       ├── observe                         7954
 │   │       │   ├── otlp                         591
 │   │       │   └── prometheus                   332
-│   │       ├── gui                             7916
+│   │       ├── gui                             7917
 │   │       │   └── vscode                      3424
 │   │       ├── powershell                      3806  C# 3806 · PowerShell 0
 │   │       ├── audit                           3670
@@ -795,7 +795,7 @@ hold no source to count.
 │   │           ├── postgresql                    62
 │   │           └── mssql                         59
 │   ├── foundation/
-│   │   ├── abi                                 8353  C# 4644 · Rust 3329 · PowerShell 380
+│   │   ├── abi                                 8354  C# 4644 · Rust 3330 · PowerShell 380
 │   │   ├── core                                4694
 │   │   ├── message                             2093
 │   │   │   ├── avro                             300
@@ -820,7 +820,7 @@ hold no source to count.
 │   │   ├── stream                               382
 │   │   └── party                                193
 │   └── platform/
-│       ├── runtime                            51927
+│       ├── runtime                            52016
 │       ├── persist                            25713
 │       │   ├── rocksdb                          323
 │       │   ├── sqlite                           288

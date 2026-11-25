@@ -4,11 +4,11 @@
 //! to that node*). Desired state runs it on each node it deploys and writes
 //! what it prints where the node reads its configuration
 //! (`deployment-model.md` section 8). What it prints is signed by the
-//! cluster's authority kept in `--authority`, the machine deploying the
-//! environment's, or beside the cluster's file where it names none, made there
-//! where none is (`signed::sliced_signed`, the one slicing and signing
-//! `xmip_cluster_signed_slice_v1` asks too; ADR-0031, amendments 2026-11-06
-//! and 2026-11-19); nothing else is written. With
+//! cluster's authority kept in `--authority`, or where it names none in this
+//! account's own folder on the machine slicing, made there where none is,
+//! never beside the cluster's file (`signed::sliced_signed`, the one slicing
+//! and signing `xmip_cluster_signed_slice_v1` asks too; ADR-0031, amendments
+//! 2026-11-06, 2026-11-19 and 2026-11-25); nothing else is written. With
 //! `--cluster`, a cluster's file that names no cluster is sliced as that
 //! one, and one naming another is refused (`slice_named`; ADR-0028,
 //! amendment 2026-10-21). With `--bind`, each Receive Location and Send
@@ -63,9 +63,9 @@ fn sliced(arguments: &Arguments) -> Result<String, String> {
     cluster = xmip_configure::observers::operated_by(&cluster, &arguments.operators)?;
     xmip_runtime::signed::sliced_signed(
         &cluster,
-        std::path::Path::new(&arguments.configuration),
         node,
         arguments.cluster.as_deref(),
         arguments.authority.as_deref().map(std::path::Path::new),
     )
+    .map(|(text, _)| text)
 }

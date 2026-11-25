@@ -37,7 +37,9 @@ pub const USAGE: &str = "usage: xmip-service --configuration <path> [--console] 
      each name, a certificate's subject CN=<person> or an account, among the node's \
      [operate] operators; \
      what --slice prints is signed by the cluster's authority kept in --authority, \
-     beside cluster.xmip where it names none, made there where none is kept.\n\
+     where it names none in authority/<cluster> of this account's own Xmip folder \
+     (%LOCALAPPDATA%\\Xmip on Windows, ~/.local/state/xmip elsewhere), made there \
+     where none is kept, never beside cluster.xmip.\n\
      --install, where the node has no configuration yet, writes a starter cluster.xmip \
      where there is none and slices and signs the node's configuration beside it; it \
      makes the node's folders, \
@@ -121,8 +123,8 @@ pub struct Arguments {
     pub operators: Vec<String>,
     /// The folder the cluster's authority is kept in, with `--slice`: the
     /// machine deploying the environment's, never a node's (ADR-0031,
-    /// amendment 2026-11-06); the `authority` folder beside the cluster's
-    /// file where it names none.
+    /// amendment 2026-11-06); this account's own where it names none
+    /// (`signed::own_authority`; amendment 2026-11-25).
     pub authority: Option<String>,
     /// How long `--readiness` waits for the node to be ready; none, it
     /// answers at once.
