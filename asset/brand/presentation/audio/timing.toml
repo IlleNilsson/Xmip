@@ -60,43 +60,58 @@ duration = 1.725
 file = "scene-03.wav"
 
 [[scene.caption]]
-text = "Here is one order, followed to completion: an example flow like one Xmip's own tests run; the System Tests, which exercise the whole product, run a shorter one."
+text = "Here is an example of one order, followed to completion."
 start = 0
-duration = 11.15
+duration = 3.925
+
+[[scene.caption]]
+text = "It illustrates a business flow you can build with Xmip; the exact steps and deadline are this example's choices."
+start = 4.105
+duration = 7.075
 
 [[scene.caption]]
 text = "A client's order arrives at a Receive Location, where Xmip takes messages in, and a Subscription, a filter on what a message holds, starts a Work Process Instance, one run of the flow, for this order alone."
-start = 11.33
+start = 11.36
 duration = 13.525
 
 [[scene.caption]]
 text = "The Instance notes the order and keeps values of its own: the lines ordered, delivered and accepted."
-start = 25.035
+start = 25.065
 duration = 6.65
 
 [[scene.caption]]
 text = "Every later message about the order carries its number, and a Correlation on that number brings each one to the same Instance."
-start = 31.865
+start = 31.895
 duration = 7.575
 
 [[scene.caption]]
-text = "Goods may ship in parts: as the warehouse ships, the transporter delivers and the client answers, each part is counted, and a refused or returned part comes off the count, to be delivered again or credited."
-start = 39.62
-duration = 13.275
+text = "After payment is received, or a promise to pay is accepted, the order goes to a factory for production or is fulfilled from warehouse stock."
+start = 39.65
+duration = 9.325
+
+[[scene.caption]]
+text = "Production updates, shipment notices and delivery confirmations all return to the same Instance."
+start = 49.155
+duration = 6.375
+
+[[scene.caption]]
+text = "Goods may ship in parts: as finished goods leave the factory or the warehouse ships, the transporter delivers and the client answers, each part is counted, and a refused or returned part comes off the count, to be delivered again or credited."
+start = 55.71
+duration = 15.2
 
 [[scene.caption]]
 text = "Until every line is accepted, the Instance waits again; then it confirms the order to the ERP, the business system that takes orders, and completes."
-start = 53.075
+start = 71.09
 duration = 10.025
 
 [[scene.caption]]
 text = "If thirty days pass first, it fails as overdue."
-start = 63.28
+start = 81.295
 duration = 3.5
 
 [[scene.caption]]
 text = "Operators see each Work Process's newest Instances, what each waits for and its values, and can dismiss a failed one or retry it once its cause is fixed."
-start = 66.96
+start = 84.975
 duration = 10.45
 
 [[scene]]

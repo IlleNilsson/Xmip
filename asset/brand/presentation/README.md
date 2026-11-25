@@ -7,7 +7,7 @@ overview's both formats. Revise them together.
 ## View
 
 - [PowerPoint: 16 slides](Xmip-overview_en-US.pptx)
-- [Animated video: about 9.5 minutes](Xmip-overview_en-US.mp4)
+- [Animated video: about 10 minutes](Xmip-overview_en-US.mp4)
 - [Video captions](Xmip-overview_en-US.srt)
 - [The environment, PowerPoint: 4 slides](Xmip-environment.pptx): the nodes
   Xmip's tests and demos run, the functions beside the message path, the
@@ -37,7 +37,12 @@ the work steps are too simplistic" and "Better scenario, a completion. Goods
 can be shipped in parts"); and *Measured* counts 70 of the 88 transports
 (ADR-0015, amendment 2026-11-25). The two scenes were voiced again, the other
 fourteen tracks kept as they were, and the deck, the video and its captions
-built again. Project source references record
+built again. The order example now also shows payment or an accepted promise
+to pay, followed by factory production or fulfillment from warehouse stock.
+Its title, diagram and narration explicitly identify an illustrative business
+flow; its business steps and thirty-day deadline are choices for this example.
+Slide 3, its voice track, accessibility notes and the video captions agree.
+Project source references record
 the documentation used, rather than a promise of release readiness.
 
 ## Outreach
