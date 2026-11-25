@@ -2,34 +2,35 @@
 //! own far end (the owner, 2026-11-24: *go through each item and sort it or
 //! ask me*). One node, its own Storage node: a file Receive Location over a
 //! drop folder, accepting the circumstance, and a Send Port for each linked
-//! transport (`far_ends.rs`), each with a Subscription taking every Message
-//! the node publishes, so one file dropped in is sent over every transport
-//! at once, and each far end takes it whole. A far end that hands what it
-//! took only once its connection is let go is joined after the node stops:
-//! a node keeps its connections in its pool while it runs.
+//! transport (`far_ends.rs`), each with a Subscription taking the Messages
+//! of the file its document is dropped as, so one file dropped in is sent
+//! over every transport that carries any bytes at once, a protocol that
+//! carries a shape of its own sent a file of its own beside it, and each
+//! far end takes what it was sent whole. A far end that hands what it took
+//! only once its connection is let go is joined after the node stops: a
+//! node keeps its connections in its pool while it runs.
 //!
 //! A POP3 Location only collects, so it is proven receiving: the node's
 //! Receive Location collects a maildrop this test serves, and the node
 //! carries the mail to a file Send Port.
 
+use std::collections::BTreeMap;
 use std::fmt::Write as _;
 use std::path::Path;
 use std::sync::mpsc;
 use std::time::{Duration, Instant};
 
+#[cfg(feature = "transport-pop3")]
+use super::far_ends::DOCUMENT;
 use super::far_ends::{self, BOUND, Standing};
 use super::folder::{dropped, named, quoted};
 use super::{Ending, exited, heard, lines, spawned, stop, test_cluster};
 #[cfg(feature = "transport-pop3")]
 use super::{told, watched};
 
-/// What every far end takes: one XML document, short and plain, as every
-/// linked protocol carries it whole — inside an MLLP block, a Peppol
-/// Standard Business Document, a Modbus write, an IEC 104 ASDU.
-const DOCUMENT: &str = "<probe><n>1</n>round-trip</probe>";
-
 /// The node: `inbox` received from, and each of `standing` a Send Port with
-/// a Subscription of its own taking every Message.
+/// a Subscription of its own taking the Messages of the file its document
+/// is dropped as (`Standing::file`).
 fn configuration(directory: &Path, inbox: &Path, standing: &[Standing]) -> String {
     let (cluster, node) = (&test_cluster().name, &test_cluster().node(0).name);
     let mut ports = String::new();
@@ -53,7 +54,8 @@ fn configuration(directory: &Path, inbox: &Path, standing: &[Standing]) -> Strin
             "\n[[xmip_applications.send_ports]]\nname = {name}\n\n\
              [[xmip_applications.subscriptions]]\nid = {name}\n\
              destination = {{ send-port = {name} }}\n\
-             filter = \"xmip.transport.mechanism = 'circumstance'\""
+             filter = \"xmip.transport.mechanism = 'circumstance' and file.name = '{}'\"",
+            one.file()
         );
         written.expect("a String takes it");
     }
@@ -90,10 +92,14 @@ fn started(directory: &Path, text: &str) -> (std::process::Child, Ending, mpsc::
     (child, ending, said)
 }
 
-/// What `name`'s far end took, or why it took nothing whole.
-fn judged(name: &str, taken: xmip_transport::Result<xmip_transport::Taken>) -> Option<String> {
+/// What `name`'s far end took, or why it took nothing whole of `document`.
+fn judged(
+    name: &str,
+    document: &str,
+    taken: xmip_transport::Result<xmip_transport::Taken>,
+) -> Option<String> {
     match taken {
-        Ok(taken) if taken.bytes == DOCUMENT.as_bytes() => None,
+        Ok(taken) if taken.bytes == document.as_bytes() => None,
         Ok(taken) => Some(format!(
             "{name}: took {:?}",
             String::from_utf8_lossy(&taken.bytes)
@@ -113,25 +119,29 @@ fn a_file_dropped_in_is_sent_over_every_linked_transport_to_its_own_far_end() {
 
     let (took, taking) = mpsc::channel();
     let (mut first, mut last) = (Vec::new(), Vec::new());
+    let mut files = BTreeMap::new();
     for one in standing {
         if one.at_close { &mut last } else { &mut first }.push(one.name);
+        files.insert(one.file(), one.document);
         let took = took.clone();
         std::thread::spawn(move || {
-            let _ = took.send((one.name, one.far.take_one()));
+            let _ = took.send((one.name, one.document, one.far.take_one()));
         });
     }
-    dropped(&directory, &inbox, "probe.xml", DOCUMENT);
+    for (file, document) in files {
+        dropped(&directory, &inbox, &file, document);
+    }
     let mut failed = Vec::new();
     let deadline = Instant::now() + BOUND + Duration::from_secs(5);
     let heard_from = |waited: &mut Vec<&str>, failed: &mut Vec<String>| {
         while !waited.is_empty() {
             let left = deadline.saturating_duration_since(Instant::now());
-            let Ok((name, taken)) = taking.recv_timeout(left) else {
+            let Ok((name, document, taken)) = taking.recv_timeout(left) else {
                 failed.extend(waited.drain(..).map(|name| format!("{name}: nothing")));
                 return;
             };
             waited.retain(|waiting| *waiting != name);
-            failed.extend(judged(name, taken));
+            failed.extend(judged(name, document, taken));
         }
     };
     heard_from(&mut first, &mut failed);

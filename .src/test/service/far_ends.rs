@@ -12,11 +12,33 @@
 //! this program, and sftp by the System Tests' far ends; ftp is not proven
 //! here, its far end logging in by a password a node presents through a
 //! secret only.
+//!
+//! A Send Location that announces or answers — mDNS a service, SSDP a
+//! device, DHCP a lease — sends what its protocol says in one datagram, and
+//! its crate's loopback far end asks its sender back for a Stream in chunks
+//! or plays the other side; its far end here is what hears that one
+//! datagram (`announced.rs`), and the document it is sent is one its
+//! protocol carries whole: TXT strings, a notification, options.
+//!
+//! A serial line's far end is a device on a pseudo-terminal, which a node
+//! opens by its path as it opens a port (`terminal.rs`): one frame a serial
+//! Send Location writes, or a HART, IO-Link or M-Bus master's Stream,
+//! answered as the protocol's own crate answers it on the SDK's bus in
+//! process. Linux and macOS have one, Windows none.
 
 use std::path::Path;
 use std::time::Duration;
 
 use xmip_transport::{Configured, FarEnd, Loopback};
+
+mod announced;
+mod terminal;
+
+/// What a far end takes where its protocol carries any bytes: one XML
+/// document, short and plain, as every linked protocol carries it whole —
+/// inside an MLLP block, a Peppol Standard Business Document, a Modbus
+/// write, an IEC 104 ASDU.
+pub(crate) const DOCUMENT: &str = "<probe><n>1</n>round-trip</probe>";
 
 /// How long a far end waits for the node, and for each read of it: a bound
 /// on the test, never on Xmip.
@@ -34,6 +56,9 @@ pub(crate) struct Standing {
     /// Whether the far end hands what it took only once its connection is
     /// let go, which a node keeps in its pool until it stops.
     pub(crate) at_close: bool,
+    /// What it is sent, and its far end takes: [`DOCUMENT`], or what its
+    /// protocol carries whole where it carries a shape of its own.
+    pub(crate) document: &'static str,
 }
 
 impl Standing {
@@ -58,6 +83,24 @@ impl Standing {
             address,
             settings,
             at_close,
+            document: DOCUMENT,
+        }
+    }
+
+    /// Sent `document` in place of [`DOCUMENT`].
+    const fn sent(mut self, document: &'static str) -> Self {
+        self.document = document;
+        self
+    }
+
+    /// The file its document is dropped into the node as, which its
+    /// Subscription takes by name: `probe.xml` for [`DOCUMENT`], which
+    /// every far end taking it shares, and its own name else.
+    pub(crate) fn file(&self) -> String {
+        if self.document == DOCUMENT {
+            "probe.xml".to_string()
+        } else {
+            format!("{}.probe", self.name)
         }
     }
 }
@@ -80,14 +123,21 @@ fn stood<T: Loopback + Configured>(loopback: T) -> Option<Box<dyn FarEnd>> {
 
 /// The far end `$loopback` stands where this build links `$feature`, its
 /// Send Port `$name` at `$address` with the settings listed, each value a
-/// TOML text or integer, written as it is listed.
+/// TOML text or integer, written as it is listed; sent `$document` where
+/// one is named, [`DOCUMENT`] else.
 macro_rules! standing {
     ($all:ident, $feature:literal, $name:literal, $loopback:expr, $address:literal,
      [$($key:literal = $value:literal),*], $at_close:literal) => {
+        standing! {$all, $feature, $name, $loopback, $address, [$($key = $value),*],
+        $at_close, DOCUMENT}
+    };
+    ($all:ident, $feature:literal, $name:literal, $loopback:expr, $address:literal,
+     [$($key:literal = $value:literal),*], $at_close:literal, $document:expr) => {
         #[cfg(feature = $feature)]
         if let Some(far) = $loopback {
             let settings: &[(&'static str, &str)] = &[$(($key, stringify!($value))),*];
-            $all.push(Standing::new($name, far, $address, settings, $at_close));
+            let one = Standing::new($name, far, $address, settings, $at_close);
+            $all.push(one.sent($document));
         }
     };
 }
@@ -113,6 +163,10 @@ pub(crate) fn every(
     standing! {all, "transport-as4", "as4",
     stood(xmip_transport_as4::As4Transport::loopback()),
     "as4://{far}/msh", ["party_id" = "Xmip", "to_party_id" = "Xmip"], false}
+    standing! {all, "transport-bacnet", "bacnet",
+    stood(xmip_transport_bacnet::BacnetTransport::loopback()), "bacnet://{far}", [], false}
+    standing! {all, "transport-coap", "coap",
+    stood(xmip_transport_coap::CoapTransport::loopback()), "coap://{far}/probe", [], false}
     standing! {all, "transport-cotp", "cotp",
     stood(xmip_transport_cotp::CotpTransport::loopback()), "cotp://{far}", [], false}
     standing! {all, "transport-db2", "db2",
@@ -121,6 +175,9 @@ pub(crate) fn every(
     standing! {all, "transport-dds", "dds",
     stood(xmip_transport_dds::DdsTransport::loopback()),
     "dds://127.0.0.1:0", ["locator" = "{far}"], false}
+    standing! {all, "transport-dhcp", "dhcp", Some(announced::client()),
+    "dhcp://{far}?xid=0x786d6970&mac=02:00:00:78:6d:69&type=offer", [], false,
+    announced::LEASE}
     standing! {all, "transport-dicom", "dicom",
     stood(xmip_transport_dicom::DicomTransport::loopback()),
     "dicom://{far}", ["called" = "XMIP"], false}
@@ -133,6 +190,8 @@ pub(crate) fn every(
     standing! {all, "transport-ethernet-ip", "ethernet-ip",
     stood(xmip_transport_ethernet_ip::EtherNetIpTransport::loopback()),
     "enip://{far}", [], true}
+    standing! {all, "transport-hart", "hart", terminal::field_device(),
+    "hart://{far}", ["device" = "0"], false}
     standing! {all, "transport-http", "http",
     stood(xmip_transport_http::HttpTransport::loopback()), "http://{far}/probe", [], false}
     standing! {all, "transport-ibm-mq", "ibm-mq",
@@ -147,15 +206,21 @@ pub(crate) fn every(
     standing! {all, "transport-imap", "imap",
     stood(xmip_transport_imap::ImapTransport::loopback()),
     "imap://{far}", ["mailbox" = "INBOX", "user" = "probe"], false}
+    standing! {all, "transport-io-link", "io-link", terminal::io_link_device(),
+    "iolink://{far}", ["rate" = "com2"], false}
     standing! {all, "transport-kafka", "kafka",
     stood(xmip_transport_kafka::KafkaTransport::loopback()),
     "kafka://{far}", ["topic" = "probe"], false}
     standing! {all, "transport-knx", "knx",
     stood(xmip_transport_knx::KnxTransport::loopback()),
     "knx://{far}", ["local" = "127.0.0.1:0", "timeout" = "10s"], false}
+    standing! {all, "transport-m-bus", "m-bus", terminal::meter(),
+    "mbus://{far}", ["meter" = 1], false}
     standing! {all, "transport-mariadb", "mariadb",
     stood(xmip_transport_mariadb::MariaDbTransport::loopback()),
     "mariadb://{far}/probe/inbox/payload", ["database" = "probe", "user" = "xmip"], false}
+    standing! {all, "transport-mdns", "mdns", Some(announced::browser()),
+    "mdns://{far}/Probe._xmip._tcp.local?port=8080", [], false, announced::SERVICE}
     standing! {all, "transport-mllp", "mllp",
     stood(xmip_transport_mllp::MllpTransport::loopback()), "mllp://{far}", [], false}
     standing! {all, "transport-modbus", "modbus",
@@ -213,6 +278,8 @@ pub(crate) fn every(
     standing! {all, "transport-secs-gem", "secs-gem",
     stood(xmip_transport_secs_gem::SecsGemTransport::loopback()),
     "secs-gem://{far}", [], true}
+    standing! {all, "transport-serial", "serial", terminal::line(),
+    "serial://{far}", ["baud" = 9600], false}
     standing! {all, "transport-smb", "smb",
     stood(xmip_transport_smb::SmbTransport::loopback()),
     "smb://{far}", ["share" = "xmip"], false}
@@ -224,6 +291,8 @@ pub(crate) fn every(
     "snmp+set://{far}/1.3.6.1.4.1.0.1.0", [], false}
     standing! {all, "transport-sqlite", "sqlite",
     Some(Table::under(directory)), "sqlite://{far}", [], false}
+    standing! {all, "transport-ssdp", "ssdp", Some(announced::control_point()),
+    "ssdp://{far}", [], false, announced::DEVICE}
     standing! {all, "transport-syslog", "syslog",
     stood(xmip_transport_syslog::SyslogTransport::loopback()),
     "syslog+tcp://{far}", ["carrier" = "tcp", "hostname" = "xmip-test"], false}

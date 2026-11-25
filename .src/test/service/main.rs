@@ -42,9 +42,11 @@
 //!   Send Port its message type and recipient name, whole, and one no
 //!   Subscription takes goes nowhere.
 //! - `linked.rs`: one file dropped in is sent over every transport the
-//!   build links at once, each to the far end its own crate stands
-//!   (`far_ends.rs`), and every far end takes it whole; a POP3 Location
-//!   collects a maildrop's mail (ADR-0015, amendment 2026-11-24).
+//!   build links at once, each to the far end its own crate stands, or one
+//!   that hears what its protocol sends, a serial line's a device on a
+//!   pseudo-terminal (`far_ends.rs`), and every far end takes it whole; a
+//!   POP3 Location collects a maildrop's mail (ADR-0015, amendments
+//!   2026-11-24 and 2026-11-25).
 //! - `approved.rs`: a sales order passes the System Tests' Work Process
 //!   *Order approval*, its unit opened through the C ABI as the service
 //!   starts, on its way to the ERP (ADR-0066, amendment 2026-11-24).

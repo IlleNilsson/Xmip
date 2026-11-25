@@ -138,32 +138,41 @@ ADR-0015 (amendments 2026-10-01 and 2026-10-20), ADR-0056 (amendment
 
 #### `linked-transports`
 
-**The transports a node runs.** `xmip-service` links 52 of the 88 declared
+**The transports a node runs.** `xmip-service` links 61 of the 88 declared
 transports, each a `transport-<technology>` feature of the root crate a site
-names: activemq, amqp, as2, as4, cotp, db2, dds, dicom, dnp3, dns,
-ethernet-ip, file, ftp, http, ibm-mq, iec-60870-5-104, iec-61850, imap, kafka,
-knx, mariadb, mllp, modbus, mqtt, msmq, mssql, mysql, named-pipe, nats,
-nats-jetstream, nfs, opc-ua, oracle, peppol, pop3, postgresql, rabbitmq,
-redis-streams, redpanda, s7comm, secs-gem, sftp, smb, smtp, snmp, sqlite,
-syslog, tcp, udp, unix-socket, webdav and websocket. One node of the root's
-service test (`linked.rs`) sends one file dropped into it over every one of
-them at once, each to the far end its own crate stands (ADR-0051), and every
-far end takes it whole, a Unix domain socket's on Linux and macOS alone; pop3
-only collects, and a node collects a maildrop's mail through it; file is
-carried by every other test of the service, and sftp by the System Tests' far
-ends; ftp's far end logs in by a password a node presents through a secret
-alone, which the test sets none of. The HTTP technologies are linked without
-TLS, as http's crate leaves it off, so https, as2s, as4s, msmqs and webdavs
-are refused. Not linked: aws and azure, what their vendors' transports speak
-and no transports; aws-kinesis, aws-s3, aws-sns, aws-sqs, azure-blob,
-azure-event-grid, azure-event-hubs, azure-service-bus, google-cloud-storage
-and google-pub-sub, which present a key, a signature or a token no Location
-gives them; bacnet, coap, dhcp, mdns and ssdp, whose far end or Send Location
-cannot take a node's one send; and bluetooth, can-bus, canopen, ethercat,
-ethernet, hart, io-link, iso-tp, j1939, lorawan, m-bus, obd-ii, profinet,
-serial, thread, uds, wireless-hart, wireless-m-bus and zigbee, whose far end
-lives inside one process and whose device no node reaches here. Records:
-ADR-0015 (amendment 2026-11-24), ADR-0051, ADR-0064 (amendment 2026-10-28).
+names: activemq, amqp, as2, as4, bacnet, coap, cotp, db2, dds, dhcp, dicom,
+dnp3, dns, ethernet-ip, file, ftp, hart, http, ibm-mq, iec-60870-5-104,
+iec-61850, imap, io-link, kafka, knx, m-bus, mariadb, mdns, mllp, modbus,
+mqtt, msmq, mssql, mysql, named-pipe, nats, nats-jetstream, nfs, opc-ua,
+oracle, peppol, pop3, postgresql, rabbitmq, redis-streams, redpanda, s7comm,
+secs-gem, serial, sftp, smb, smtp, snmp, sqlite, ssdp, syslog, tcp, udp,
+unix-socket, webdav and websocket. One node of the root's service test
+(`linked.rs`) sends one file dropped into it over every one of them at once,
+each to the far end its own crate stands (ADR-0051), and every far end takes
+it whole, a Unix domain socket's on Linux and macOS alone; a Send Location
+that announces or answers in one datagram, mDNS a service, SSDP a device and
+DHCP a lease, is sent a document its protocol carries whole, and its far end
+is what hears it, a browser, a control point and a client; serial, hart,
+io-link and m-bus write to a device on a pseudo-terminal, which a node opens
+by its path as it opens a port, answering as the protocol's own crate answers
+on the SDK's bus in process, on Linux and macOS alone; pop3 only collects, and
+a node collects a maildrop's mail through it; file is carried by every other
+test of the service, and sftp by the System Tests' far ends; ftp's far end
+logs in by a password a node presents through a secret alone, which the test
+sets none of. The HTTP technologies are linked without TLS, as http's crate
+leaves it off, so https, as2s, as4s, msmqs and webdavs are refused. Not
+linked: aws and azure, what their vendors' transports speak and no transports;
+aws-kinesis, aws-s3, aws-sns, aws-sqs, azure-blob, azure-event-grid,
+azure-event-hubs, azure-service-bus, google-cloud-storage and google-pub-sub,
+which present a key, a signature or a token no Location gives them; can-bus,
+canopen, iso-tp, j1939, obd-ii and uds, whose far end is a socket on a CAN
+interface of the kernel's, which only an administrator makes, virtual or not;
+ethernet, ethercat and profinet, which no link carries but the in-process one,
+the kernel's raw socket asking a binding the estate does not write; and
+bluetooth, lorawan, thread, wireless-hart, wireless-m-bus and zigbee, whose
+far end lives inside one process and whose radio no node reaches here.
+Records: ADR-0015 (amendments 2026-11-24 and 2026-11-25), ADR-0051, ADR-0064
+(amendment 2026-10-28).
 
 #### `module-loading`
 
@@ -500,7 +509,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 412479 lines of production
+Where each repository mounts and what it holds: 412680 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -534,9 +543,9 @@ hold no source to count.
 │   │   │   │   ├── kafka                       2055
 │   │   │   │   ├── smb                         2019
 │   │   │   │   ├── ibm-mq                      1958
+│   │   │   │   ├── serial                      1850
 │   │   │   │   ├── ftp                         1839
 │   │   │   │   ├── sftp                        1830
-│   │   │   │   ├── serial                      1736
 │   │   │   │   ├── mssql                       1653
 │   │   │   │   ├── snmp                        1454
 │   │   │   │   ├── nats-jetstream              1390
@@ -559,8 +568,8 @@ hold no source to count.
 │   │   │   │   ├── aws-s3                       958
 │   │   │   │   ├── azure-blob                   951
 │   │   │   │   ├── ethernet-ip                  941
+│   │   │   │   ├── hart                         930
 │   │   │   │   ├── activemq                     926
-│   │   │   │   ├── hart                         913
 │   │   │   │   ├── uds                          910
 │   │   │   │   ├── aws-kinesis                  905
 │   │   │   │   ├── j1939                        898
@@ -576,7 +585,7 @@ hold no source to count.
 │   │   │   │   ├── aws-sqs                      854
 │   │   │   │   ├── profinet                     838
 │   │   │   │   ├── cotp                         836
-│   │   │   │   ├── dhcp                         824
+│   │   │   │   ├── dhcp                         832
 │   │   │   │   ├── wireless-hart                821
 │   │   │   │   ├── smtp                         813
 │   │   │   │   ├── peppol                       788
@@ -585,18 +594,18 @@ hold no source to count.
 │   │   │   │   ├── knx                          750
 │   │   │   │   ├── syslog                       741
 │   │   │   │   ├── iec-60870-5-104              733
+│   │   │   │   ├── io-link                      725
 │   │   │   │   ├── iso-tp                       721
+│   │   │   │   ├── mdns                         706
 │   │   │   │   ├── websocket                    706
-│   │   │   │   ├── mdns                         698
 │   │   │   │   ├── dds                          693
-│   │   │   │   ├── io-link                      693
 │   │   │   │   ├── msmq                         680
 │   │   │   │   ├── dnp3                         678
 │   │   │   │   ├── obd-ii                       626
 │   │   │   │   ├── ssdp                         621
+│   │   │   │   ├── coap                         602
 │   │   │   │   ├── redpanda                     598
 │   │   │   │   ├── modbus                       595
-│   │   │   │   ├── coap                         585
 │   │   │   │   ├── azure-event-hubs             544
 │   │   │   │   ├── wireless-m-bus               532
 │   │   │   │   ├── aws                          510
@@ -604,8 +613,8 @@ hold no source to count.
 │   │   │   │   ├── ethernet                     485
 │   │   │   │   ├── mysql                        483
 │   │   │   │   ├── sqlite                       471
+│   │   │   │   ├── bacnet                       462
 │   │   │   │   ├── mllp                         461
-│   │   │   │   ├── bacnet                       457
 │   │   │   │   ├── azure                        451
 │   │   │   │   ├── rabbitmq                     430
 │   │   │   │   ├── unix-socket                  359

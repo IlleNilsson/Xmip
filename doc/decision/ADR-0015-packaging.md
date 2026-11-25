@@ -1897,3 +1897,54 @@ This supersedes, without editing them:
   `internet`: the way out is `gateway`, `-Uplink` and the Node capability
   `online`. What that amendment found, and what it says is not yet known,
   stand.
+
+## Amendment, 2026-11-25: nine transports more, each proven through a node
+
+**Provenance.** The owner, 2026-11-25, asked what the 36 transports not
+linked need, then: *I can do a physical TX device via USB, but just do your
+best for now*. The eighteen that need nothing bought were taken: five a far
+end in a process of its own reaches on any computer, thirteen through
+Linux's virtual devices. How each far end is stood is the drafting's, and
+the owner's to strike.
+
+**61 of the 88 are linked**, by the criterion of the amendment of
+2026-11-24: a node in a process of its own sends to the far end and the far
+end takes what it sent whole (`.src/test/service/linked.rs`).
+
+- **bacnet, coap, dhcp, mdns and ssdp, proven on every platform** (open
+  problem 170). CoAP's and BACnet/IP's own far ends take a node's one send:
+  the first POST or NPDU shorter than a message carries closes the Stream,
+  as a last block does, where only an empty one closed it, which no node
+  sends. CoAP's, DHCP's and mDNS's Send Locations send to their whole
+  address, which their sends read their scheme from, as WebSocket's and
+  SNMP's do since 2026-11-24. mDNS, SSDP and DHCP announce or answer in one
+  datagram, and their crates' far ends ask the sender back for a Stream in
+  chunks or play the other side, so the far end in the service test is what
+  hears that datagram — a browser, a control point, a client — read by the
+  technology's own reading. Each is sent a document its protocol carries
+  whole, TXT strings, a notification, an offer's options, dropped as a file
+  of its own, which its Subscription takes by `file.name`.
+- **serial, hart, io-link and m-bus, linked on every platform and proven on
+  Linux and macOS** through a pseudo-terminal: the node opens its line's
+  end by path as it opens a device's port, and the far end at the device's
+  end is serial's `terminal::Terminal`, taking the one frame a serial Send
+  Location writes, or answering each frame a protocol's master writes as
+  the protocol's own device answers it on the SDK's bus in process, until
+  it holds the Stream. Windows has no pseudo-terminal, so there the four
+  are linked and not proven. A HART Location takes a serial port as its
+  line at 1200 baud, where every address but `loopback` was refused; an
+  IO-Link master message says its length in its first two bytes, and a
+  device says when it is between two transfers; a build linking io-link
+  brings serial's port, which io-link's own dependency leaves out.
+- **can-bus, canopen, iso-tp, j1939, obd-ii and uds are not linked.** Each
+  reaches a CAN interface of the kernel's (`socketcan`), and only an
+  administrator makes one, a virtual one too; the commands were handed to
+  the owner, and the far ends are written once an interface stands.
+- **ethernet, ethercat and profinet are not linked.** Their one link is the
+  in-process one: the kernel's raw socket (`AF_PACKET`) asks a binding the
+  estate does not write without `unsafe` (ADR-0050) and a capability,
+  `CAP_NET_RAW`, only an administrator grants. Which way, the owner's.
+- **Receiving stays unproven, for these as for the 52.** A node built with
+  the `ip` identifier claims a datagram's peer, and no authenticator the
+  service links verifies `ip`, so a Stream over a network not mutually
+  authenticated by TLS is refused at authentication (ADR-0019).

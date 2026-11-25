@@ -264,7 +264,9 @@ macro_rules! linked {
 /// The transports this build carries, each by its own declaration, in the
 /// order of their names: every one written whose far end a node in a
 /// process of its own reaches, each proven carrying a file through the
-/// service (`.src/test/service/linked.rs`; ADR-0015, amendment 2026-11-24).
+/// service (`.src/test/service/linked.rs`), a serial line's through a
+/// pseudo-terminal, which Linux and macOS have (ADR-0015, amendments
+/// 2026-11-24 and 2026-11-25).
 #[allow(
     unused_mut,
     clippy::vec_init_then_push,
@@ -276,23 +278,30 @@ pub fn transports() -> Vec<LinkedTransport> {
         "transport-amqp" => xmip_transport_amqp::AmqpTransport,
         "transport-as2" => xmip_transport_as2::As2Transport,
         "transport-as4" => xmip_transport_as4::As4Transport,
+        "transport-bacnet" => xmip_transport_bacnet::BacnetTransport,
+        "transport-coap" => xmip_transport_coap::CoapTransport,
         "transport-cotp" => xmip_transport_cotp::CotpTransport,
         "transport-db2" => xmip_transport_db2::Db2Transport,
         "transport-dds" => xmip_transport_dds::DdsTransport,
+        "transport-dhcp" => xmip_transport_dhcp::DhcpTransport,
         "transport-dicom" => xmip_transport_dicom::DicomTransport,
         "transport-dnp3" => xmip_transport_dnp3::Dnp3Transport,
         "transport-dns" => xmip_transport_dns::DnsTransport,
         "transport-ethernet-ip" => xmip_transport_ethernet_ip::EtherNetIpTransport,
         "transport-file" => xmip_transport_file::FileTransport,
         "transport-ftp" => xmip_transport_ftp::FtpTransport,
+        "transport-hart" => xmip_transport_hart::HartTransport,
         "transport-http" => xmip_transport_http::HttpTransport,
         "transport-ibm-mq" => xmip_transport_ibm_mq::IbmMqTransport,
         "transport-iec-60870-5-104" => xmip_transport_iec_60870_5_104::Iec104Transport,
         "transport-iec-61850" => xmip_transport_iec_61850::Iec61850Transport,
         "transport-imap" => xmip_transport_imap::ImapTransport,
+        "transport-io-link" => xmip_transport_io_link::IoLinkTransport,
         "transport-kafka" => xmip_transport_kafka::KafkaTransport,
         "transport-knx" => xmip_transport_knx::KnxTransport,
+        "transport-m-bus" => xmip_transport_m_bus::MBusTransport,
         "transport-mariadb" => xmip_transport_mariadb::MariaDbTransport,
+        "transport-mdns" => xmip_transport_mdns::MdnsTransport,
         "transport-mllp" => xmip_transport_mllp::MllpTransport,
         "transport-modbus" => xmip_transport_modbus::ModbusTransport,
         "transport-mqtt" => xmip_transport_mqtt::MqttTransport,
@@ -313,11 +322,13 @@ pub fn transports() -> Vec<LinkedTransport> {
         "transport-redpanda" => xmip_transport_redpanda::RedpandaTransport,
         "transport-s7comm" => xmip_transport_s7comm::S7Transport,
         "transport-secs-gem" => xmip_transport_secs_gem::SecsGemTransport,
+        "transport-serial" => xmip_transport_serial::SerialTransport,
         "transport-sftp" => xmip_transport_sftp::SftpTransport,
         "transport-smb" => xmip_transport_smb::SmbTransport,
         "transport-smtp" => xmip_transport_smtp::SmtpTransport,
         "transport-snmp" => xmip_transport_snmp::SnmpTransport,
         "transport-sqlite" => xmip_transport_sqlite::SqliteTransport,
+        "transport-ssdp" => xmip_transport_ssdp::SsdpTransport,
         "transport-syslog" => xmip_transport_syslog::SyslogTransport,
         "transport-tcp" => xmip_transport_tcp::TcpTransport,
         "transport-udp" => xmip_transport_udp::UdpTransport,

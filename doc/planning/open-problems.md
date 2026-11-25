@@ -488,6 +488,8 @@ verified the same hour.
 
 ---
 
+*Option C in part, 2026-11-25:* a real port is driven through a pseudo-terminal, serial's `terminal::Terminal`, and serial, M-Bus, HART and IO-Link Send Locations are proven through a node on Linux; com0com on Windows stays open.
+
 # Consolidation
 
 ## 25. The estate still says one thing in several places
@@ -3198,14 +3200,6 @@ MQTT, IMAP and the SQL transports read a password. An S3, Azure Blob or
 Google Cloud Storage Send Location also names its object after its whole
 endpoint.
 
-## 170. Five transports cannot take a node's single send
-
-Found 2026-11-24 the same day: CoAP, DHCP and mDNS lose the scheme their
-sends need, and their far ends want more than one send: CoAP waits for an
-empty closing POST, DHCP expects a request where a node sends a reply,
-mDNS and SSDP query the sender back, and BACnet waits for an empty closing
-message.
-
 ## 171. No feature turns on TLS for HTTP in the assembled service
 
 Found 2026-11-24 the same day: HTTP and what rides on it (AS2, AS4, Peppol,
@@ -3224,6 +3218,8 @@ address, over the last.
 Found 2026-11-24 the same day, older than it: noted in `listening.rs` and
 wider now that DDS, DNS, KNX, SNMP, syslog and UDP are linked, so an
 environment opens TCP where they listen on UDP.
+
+Wider 2026-11-25: BACnet/IP, CoAP, DHCP, mDNS and SSDP are linked and listen on UDP too.
 
 ## 177. The operator web view renders its head statically under interactive pages
 
@@ -3316,7 +3312,7 @@ and far end, made from the same cluster file (ADR-0015, amendment
 
 ## 189. How a run runs is not shown beyond PowerShell
 
-Found 2026-11-25: `[run] runs_as`, Process, VirtualMachine or Container, is
+Found 2026-11-25: `[run] runs_as`, `Process`, `VirtualMachine` or `Container`, is
 in the run's record and `Get-XmipTestStatus`, but not in operate's
 `RunHeader`, the ABI or the operator views. Needed: the run line says it.
 
@@ -3363,6 +3359,37 @@ Found 2026-11-25: Xmip.Operations' build there stops NETSDK1147, the
 maui-android workload not installed. Needed: the workload installed there,
 or the Android target skipped in words where it is absent, as the landing
 does without the NDK.
+
+Wider 2026-11-25: on a test computer, `Core.Internal -Test .` builds every module's .NET projects, because the copy holds no submodule `.git`; on the Linux test computer Xmip.Operations needs the same workload and Xmip.Operate.Test fails 8 of 106, which stops the root's Rust part.
+
+## 196. No network Stream without TLS is received by the assembled service
+
+Found 2026-11-25 linking far ends: a node built with the `ip` identifier
+refuses every Stream over a network transport not mutually authenticated by
+TLS, because no authenticator verifies `ip`, so no UDP or plain TCP Receive
+Location of xmip-service is proven receiving; only POP3 is. Needed: an
+authenticator for `ip`, or the refusal said in words at the Location.
+
+## 197. The serial technology opens every port 8N1
+
+Found 2026-11-25 with the pseudo-terminal far ends: a HART modem speaks odd
+parity and an M-Bus level converter even, so neither works on a real line
+until a Location can set parity. Needed: parity, data and stop bits on a
+serial Location, each protocol's default its own.
+
+## 198. CAN, CANopen, ISO-TP, J1939, OBD-II and UDS have no far end
+
+Found 2026-11-25: each needs a kernel CAN interface, and making one needs
+root, so none is proven through a node. ISO-TP, UDS and OBD-II share the
+identifiers 0x7e0 and 0x7e8, so each needs an interface of its own. Needed:
+six virtual CAN interfaces on the Linux test computer, made by the owner,
+then the far ends.
+
+## 199. Ethernet, EtherCAT and PROFINET have no kernel link
+
+Found 2026-11-25: no technology of the estate opens a raw link-layer socket,
+which needs `unsafe` (ADR-0050) or a new dependency, and `CAP_NET_RAW`.
+Needed: the owner's choice of binding, then a veth pair as the far end.
 # Suggested order
 
 Rewritten 2026-09-23, and corrected to what is built on 2026-11-10. The
@@ -4616,3 +4643,13 @@ resolve in one sentence, naming the `-Nodes` that run those that do
 (`real::mapped`). OP1 stays without a machine in both example
 environments: the owner's node plan gives the operator's machine no node,
 and mapping one is his to choose. Held by `real.rs`'s tests.
+
+## 170. Five transports cannot take a node's single send — **Resolved**
+
+*Resolved 2026-11-25:* CoAP, DHCP and mDNS send to their whole address, CoAP's and BACnet/IP's far ends close on a POST or NPDU shorter than a full one, and mDNS, SSDP and DHCP are proven against a browser, a control point and a client that hear their one datagram (ADR-0015, amendment 2026-11-25).
+
+Found 2026-11-24 the same day: CoAP, DHCP and mDNS lose the scheme their
+sends need, and their far ends want more than one send: CoAP waits for an
+empty closing POST, DHCP expects a request where a node sends a reply,
+mDNS and SSDP query the sender back, and BACnet waits for an empty closing
+message.

@@ -171,8 +171,9 @@ takes them (judgment, with the survey behind it):
    Location — built in the runtime on 2026-09-28 and driven by its tests;
    the executable that starts one outside a test is next. Every row below
    depends on it. Built 2026-11-24 for transports and Work Processes: the
-   assembled service runs 52 of the 88 declared transports, where it ran
-   six, each proven carrying a file through a node to its own far end, and
+   assembled service runs 61 of the 88 declared transports, where it ran
+   six, each proven carrying a file through a node to its own far end
+   (52 on 2026-11-24, nine more on 2026-11-25), and
    a Work Process unit through the C ABI (README, *Security and assurance*;
    `estate-map.md`, `linked-transports` and `process-execution`).
 2. Transformation. BizTalk estates are thousands of XSLT 1.0 maps; CData sells
