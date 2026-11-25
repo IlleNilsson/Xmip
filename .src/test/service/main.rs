@@ -47,6 +47,9 @@
 //!   pseudo-terminal (`far_ends.rs`), and every far end takes it whole; a
 //!   POP3 Location collects a maildrop's mail (ADR-0015, amendments
 //!   2026-11-24 and 2026-11-25).
+//! - `namespaced.rs`: on Linux, the same over every transport on a link of
+//!   the kernel's, CAN's and Ethernet's, the test run again in a user and
+//!   network namespace of its own where it makes their interfaces.
 //! - `approved.rs`: a sales order passes the System Tests' Work Process
 //!   *Order approval*, its unit opened through the C ABI as the service
 //!   starts, on its way to the ERP (ADR-0066, amendment 2026-11-24).
@@ -91,6 +94,8 @@ mod door;
 mod failover;
 mod far_ends;
 mod linked;
+#[cfg(target_os = "linux")]
+mod namespaced;
 mod operate;
 #[cfg(all(feature = "route-content", feature = "path-edi"))]
 mod routed;

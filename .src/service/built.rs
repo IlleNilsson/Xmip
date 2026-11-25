@@ -266,14 +266,15 @@ macro_rules! linked {
 /// process of its own reaches, each proven carrying a file through the
 /// service (`.src/test/service/linked.rs`), a serial line's through a
 /// pseudo-terminal, which Linux and macOS have (ADR-0015, amendments
-/// 2026-11-24 and 2026-11-25).
+/// 2026-11-24 and 2026-11-25); and after them those on a link of the
+/// kernel's ([`kernel_transports`]).
 #[allow(
     unused_mut,
     clippy::vec_init_then_push,
     reason = "each push is a feature this build may leave out"
 )]
 pub fn transports() -> Vec<LinkedTransport> {
-    linked![
+    let mut transports = linked![
         "transport-activemq" => xmip_transport_activemq::ActiveMqTransport,
         "transport-amqp" => xmip_transport_amqp::AmqpTransport,
         "transport-as2" => xmip_transport_as2::As2Transport,
@@ -335,7 +336,39 @@ pub fn transports() -> Vec<LinkedTransport> {
         "transport-unix-socket" => xmip_transport_unix_socket::UnixSocketTransport,
         "transport-webdav" => xmip_transport_webdav::WebDavTransport,
         "transport-websocket" => xmip_transport_websocket::WebSocketTransport,
-    ]
+    ];
+    transports.extend(kernel_transports());
+    transports
+}
+
+/// The transports that reach a link of the kernel's, in the order of their
+/// names: a CAN interface (can-bus's `socketcan`) and what rides on it, and
+/// an Ethernet interface's raw socket (ethernet's `packet`) and what rides
+/// on it, which Linux alone has; each proven by a node in a user and network
+/// namespace of the test's own, on interfaces it makes there
+/// (`.src/test/service/namespaced.rs`; ADR-0015, amendment 2026-11-25).
+/// Elsewhere none: a CAN Location there would open a bus inside the node
+/// alone.
+#[allow(
+    unused_mut,
+    clippy::vec_init_then_push,
+    reason = "each push is a feature this build may leave out"
+)]
+fn kernel_transports() -> Vec<LinkedTransport> {
+    cfg_select! {
+        target_os = "linux" => linked![
+            "transport-can-bus" => xmip_transport_can_bus::CanTransport,
+            "transport-canopen" => xmip_transport_canopen::CanOpenTransport,
+            "transport-ethercat" => xmip_transport_ethercat::EtherCatTransport,
+            "transport-ethernet" => xmip_transport_ethernet::EthernetTransport,
+            "transport-iso-tp" => xmip_transport_iso_tp::IsoTpTransport,
+            "transport-j1939" => xmip_transport_j1939::J1939Transport,
+            "transport-obd-ii" => xmip_transport_obd_ii::ObdTransport,
+            "transport-profinet" => xmip_transport_profinet::ProfinetTransport,
+            "transport-uds" => xmip_transport_uds::UdsTransport,
+        ],
+        _ => Vec::new(),
+    }
 }
 
 #[cfg(test)]

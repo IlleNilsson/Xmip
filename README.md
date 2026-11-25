@@ -424,10 +424,12 @@ relevant where data sovereignty is regulated. Its AS4 and Peppol transports
 are protocol software for the operator of a certified access point, which is
 what European e-invoicing runs on; certification itself belongs to the
 operator. The assembled service runs both, without TLS until a site can
-choose it for HTTP, and 59 transports more: 61 of the 88 declared, among
+choose it for HTTP, and 68 transports more: 70 of the 88 declared, among
 them MLLP for HL7, SMTP, WebSocket, Kafka, MQTT, AMQP, IBM MQ, OPC UA,
-Modbus, BACnet, CoAP, a serial line, M-Bus, HART, IO-Link and the SQL
-databases, each proven carrying a file through a node to its own far end
+Modbus, BACnet, CoAP, a serial line, M-Bus, HART, IO-Link, CAN, CANopen,
+J1939, raw Ethernet, EtherCAT, PROFINET and the SQL databases, each proven
+carrying a file through a node to its own far end, the CAN and Ethernet
+ones on Linux
 ([built, in the assembled service](doc/architecture/estate-map.md#linked-transports),
 which names every one and why each other is not).
 

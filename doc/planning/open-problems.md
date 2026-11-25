@@ -3323,19 +3323,6 @@ parity and an M-Bus level converter even, so neither works on a real line
 until a Location can set parity. Needed: parity, data and stop bits on a
 serial Location, each protocol's default its own.
 
-## 198. CAN, CANopen, ISO-TP, J1939, OBD-II and UDS have no far end
-
-Found 2026-11-25: each needs a kernel CAN interface, and making one needs
-root, so none is proven through a node. ISO-TP, UDS and OBD-II share the
-identifiers 0x7e0 and 0x7e8, so each needs an interface of its own. Needed:
-six virtual CAN interfaces on the Linux test computer, made by the owner,
-then the far ends.
-
-## 199. Ethernet, EtherCAT and PROFINET have no kernel link
-
-Found 2026-11-25: no technology of the estate opens a raw link-layer socket,
-which needs `unsafe` (ADR-0050) or a new dependency, and `CAP_NET_RAW`.
-Needed: the owner's choice of binding, then a veth pair as the far end.
 ## 200. A Journey retried after its turn failed on a timer is written Active
 
 Found 2026-11-25 building Retry and Dismiss of a Work Process Journey: a
@@ -3383,6 +3370,14 @@ Found 2026-11-25 resolving 180: the first start of a newly built image took
 once per build, since each far end's image is a hard link to it. Needed:
 what Windows does in that time measured and named, and whether a signed or
 excluded image is spared it.
+## 207. An Ethernet Receive Location takes every frame its interface carries
+
+Found 2026-11-25 linking Ethernet on a kernel link: the raw socket is bound
+to every EtherType (`ETH_P_ALL`, the only one nix's `SockProtocol` names for
+it) and the transport takes whatever its link hands it, IP among it, each a
+Stream; and the transport says a read of its link returns at once, which a
+kernel link's does not. Needed: the Location's EtherType filtered, and the
+waiting said per link.
 # Suggested order
 
 Rewritten 2026-09-23, and corrected to what is built on 2026-11-10. The
@@ -4751,3 +4746,21 @@ declaring itself costs it hundreds of milliseconds (the millisecond rule).
 Needed: the far end's audit of where its start went, its declaration
 measured and cut to the millisecond, and the roll's refusal naming what
 the far end last did.
+
+## 198. CAN, CANopen, ISO-TP, J1939, OBD-II and UDS have no far end — **Resolved**
+
+*Resolved 2026-11-25:* with no root: the service test runs itself again in a user and network namespace of its own (`unshare --user --map-root-user --net`), makes a virtual CAN interface there for each of CAN, CANopen, ISO-TP, J1939, OBD-II and UDS, and a node's one send reaches each one's far end; all six are linked on Linux (ADR-0015, amendment 2026-11-25).
+
+Found 2026-11-25: each needs a kernel CAN interface, and making one needs
+root, so none is proven through a node. ISO-TP, UDS and OBD-II share the
+identifiers 0x7e0 and 0x7e8, so each needs an interface of its own. Needed:
+six virtual CAN interfaces on the Linux test computer, made by the owner,
+then the far ends.
+
+## 199. Ethernet, EtherCAT and PROFINET have no kernel link — **Resolved**
+
+*Resolved 2026-11-25:* ethernet's `packet` link is an `AF_PACKET` socket bound through nix 0.31's safe calls, its address the interface's own from `getifaddrs`, with no `unsafe` and no new dependency; rustix 1.1 and socket2 0.6 reach a link-layer address only through `unsafe`. Ethernet, EtherCAT and PROFINET are proven on veth pairs in the same kind of namespace and linked on Linux (ADR-0015, amendment 2026-11-25).
+
+Found 2026-11-25: no technology of the estate opens a raw link-layer socket,
+which needs `unsafe` (ADR-0050) or a new dependency, and `CAP_NET_RAW`.
+Needed: the owner's choice of binding, then a veth pair as the far end.

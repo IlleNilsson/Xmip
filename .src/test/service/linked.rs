@@ -8,7 +8,10 @@
 //! carries a shape of its own sent a file of its own beside it, and each
 //! far end takes what it was sent whole. A far end that hands what it took
 //! only once its connection is let go is joined after the node stops: a
-//! node keeps its connections in its pool while it runs.
+//! node keeps its connections in its pool while it runs. A transport whose
+//! far end is on a link of the kernel's, CAN's or Ethernet's, is carried
+//! the same way, by [`carried`], in a namespace that test makes
+//! (`namespaced.rs`).
 //!
 //! A POP3 Location only collects, so it is proven receiving: the node's
 //! Receive Location collects a maildrop this test serves, and the node
@@ -110,10 +113,17 @@ fn judged(
 
 #[test]
 fn a_file_dropped_in_is_sent_over_every_linked_transport_to_its_own_far_end() {
-    let directory = xmip_file::temporary::Folder::new("service-linked");
+    carried("service-linked", far_ends::every);
+}
+
+/// One node in a folder named for `test`, a Send Port for each of what
+/// `standing` stands in it, and every document dropped in: each far end
+/// takes what it was sent, whole (`namespaced.rs` drives it too).
+pub(crate) fn carried(test: &str, standing: impl FnOnce(&Path) -> Vec<Standing>) {
+    let directory = xmip_file::temporary::Folder::new(test);
     let inbox = directory.join("in");
     std::fs::create_dir_all(&inbox).expect("a drop folder");
-    let standing = far_ends::every(&directory);
+    let standing = standing(&directory);
     let (child, mut ending, said) =
         started(&directory, &configuration(&directory, &inbox, &standing));
 

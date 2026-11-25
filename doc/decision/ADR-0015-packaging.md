@@ -1948,3 +1948,43 @@ end takes what it sent whole (`.src/test/service/linked.rs`).
   the `ip` identifier claims a datagram's peer, and no authenticator the
   service links verifies `ip`, so a Stream over a network not mutually
   authenticated by TLS is refused at authentication (ADR-0019).
+
+## Amendment, 2026-11-25: the kernel's links, made in a namespace of the test's own
+
+**Provenance.** The amendment above left CAN and Ethernet unlinked for want
+of an administrator to make their interfaces and a binding for the raw
+socket. The same day it was found that a user and network namespace grants
+both with no administrator: `unshare --user --map-root-user --net` makes
+the account's user root of a network namespace of its own, holding
+`CAP_NET_ADMIN` and `CAP_NET_RAW` over it alone, where a virtual CAN
+interface and a veth pair are made. How the test and the link are built is
+the drafting's, and the owner's to strike.
+
+**70 of the 88 are linked**, the nine below on Linux alone.
+
+- **can-bus, canopen, iso-tp, j1939, obd-ii and uds reach the kernel's CAN
+  interface** through can-bus's `socketcan`, which each one's feature of
+  the root crate brings (open problem 198).
+- **ethernet, ethercat and profinet reach the kernel's raw socket**,
+  ethernet's new `packet` link: an `AF_PACKET` socket bound to the
+  interface a Location names, through `nix`'s safe calls, its address the
+  interface's own `sockaddr_ll` as the kernel lists it (`getifaddrs`), so
+  the estate writes no `unsafe` and adds no dependency (open problem 199).
+  Of the three crates in the lock that bind a socket, `rustix` reaches no
+  link-layer address but through an `unsafe` constructor, and `socket2`
+  none but through one; `nix` lists the interface's own. It needs
+  `CAP_NET_RAW`: a box's grant to a node, or a namespace's.
+- **Linked on Linux alone** (`built.rs`, `kernel_transports`): elsewhere a
+  CAN Location would open a bus inside the node alone, and a raw socket is
+  Linux's in this build.
+- **Proven as the rest are, by a node's one send** (`namespaced.rs`): the
+  service test runs itself again in such a namespace, brings its loopback
+  interface up, turns IPv6 off so no interface speaks on its own, makes a
+  virtual CAN interface for each CAN technology — ISO-TP, UDS and OBD-II
+  answer under the same identifiers — and a veth pair for each Ethernet one,
+  and drives one node and the far ends there, each the end its own crate
+  stands in process, on the kernel's link: an ECU collecting, a receiver
+  clearing a transfer, a tester polling, a `CANopen` node and an `EtherCAT`
+  ring answering until their object holds the Stream, a PROFINET device
+  taking its cycles. Where a machine grants no such namespace, the test
+  says so and runs nothing.

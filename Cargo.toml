@@ -475,12 +475,20 @@ authorize-location = ["authorize", "dep:xmip-authorize-location"]
 # off by default, so their secure schemes are refused. sftp takes files
 # from and puts them on an SFTP server, each under its name: the Parties'
 # far end the System Tests serve nodes on machines of their own (ADR-0028,
-# amendment 2026-10-22).
+# amendment 2026-10-22). CAN and what rides on it — canopen, iso-tp, j1939,
+# obd-ii, uds — reach the kernel's CAN interface (can-bus's `socketcan`), and
+# Ethernet and what rides on it — ethercat, profinet — the kernel's raw
+# socket (ethernet's `packet`), so each brings its kernel link, and
+# `built.rs` links them on Linux alone: each is proven by a node in a user
+# and network namespace of the test's own, on interfaces it makes there
+# (`.src/test/service/namespaced.rs`).
 transport-activemq = ["dep:xmip-transport-activemq"]
 transport-amqp = ["dep:xmip-transport-amqp"]
 transport-as2 = ["dep:xmip-transport-as2"]
 transport-as4 = ["dep:xmip-transport-as4"]
 transport-bacnet = ["dep:xmip-transport-bacnet"]
+transport-can-bus = ["dep:xmip-transport-can-bus", "xmip-transport-can-bus/socketcan"]
+transport-canopen = ["dep:xmip-transport-canopen", "xmip-transport-can-bus/socketcan"]
 transport-coap = ["dep:xmip-transport-coap"]
 transport-cotp = ["dep:xmip-transport-cotp"]
 transport-db2 = ["dep:xmip-transport-db2"]
@@ -489,6 +497,8 @@ transport-dhcp = ["dep:xmip-transport-dhcp"]
 transport-dicom = ["dep:xmip-transport-dicom"]
 transport-dnp3 = ["dep:xmip-transport-dnp3"]
 transport-dns = ["dep:xmip-transport-dns"]
+transport-ethercat = ["dep:xmip-transport-ethercat", "xmip-transport-ethernet/packet"]
+transport-ethernet = ["dep:xmip-transport-ethernet", "xmip-transport-ethernet/packet"]
 transport-ethernet-ip = ["dep:xmip-transport-ethernet-ip"]
 transport-file = ["dep:xmip-transport-file"]
 transport-ftp = ["dep:xmip-transport-ftp", "xmip-transport-ftp/tls"]
@@ -502,6 +512,8 @@ transport-imap = ["dep:xmip-transport-imap"]
 # build that links IO-Link brings serial's port too, as the serial crate's
 # own default feature does, whether or not it links serial itself.
 transport-io-link = ["dep:xmip-transport-io-link", "dep:xmip-transport-serial"]
+transport-iso-tp = ["dep:xmip-transport-iso-tp", "xmip-transport-can-bus/socketcan"]
+transport-j1939 = ["dep:xmip-transport-j1939", "xmip-transport-can-bus/socketcan"]
 transport-kafka = ["dep:xmip-transport-kafka"]
 transport-knx = ["dep:xmip-transport-knx"]
 transport-m-bus = ["dep:xmip-transport-m-bus"]
@@ -517,11 +529,13 @@ transport-named-pipe = ["dep:xmip-transport-named-pipe"]
 transport-nats = ["dep:xmip-transport-nats"]
 transport-nats-jetstream = ["dep:xmip-transport-nats-jetstream"]
 transport-nfs = ["dep:xmip-transport-nfs"]
+transport-obd-ii = ["dep:xmip-transport-obd-ii", "xmip-transport-can-bus/socketcan"]
 transport-opc-ua = ["dep:xmip-transport-opc-ua"]
 transport-oracle = ["dep:xmip-transport-oracle"]
 transport-peppol = ["dep:xmip-transport-peppol"]
 transport-pop3 = ["dep:xmip-transport-pop3"]
 transport-postgresql = ["dep:xmip-transport-postgresql"]
+transport-profinet = ["dep:xmip-transport-profinet", "xmip-transport-ethernet/packet"]
 transport-rabbitmq = ["dep:xmip-transport-rabbitmq"]
 transport-redis-streams = ["dep:xmip-transport-redis-streams"]
 transport-redpanda = ["dep:xmip-transport-redpanda"]
@@ -537,6 +551,7 @@ transport-ssdp = ["dep:xmip-transport-ssdp"]
 transport-syslog = ["dep:xmip-transport-syslog"]
 transport-tcp = ["dep:xmip-transport-tcp", "xmip-transport-tcp/tls"]
 transport-udp = ["dep:xmip-transport-udp"]
+transport-uds = ["dep:xmip-transport-uds", "xmip-transport-can-bus/socketcan"]
 transport-unix-socket = ["dep:xmip-transport-unix-socket"]
 transport-webdav = ["dep:xmip-transport-webdav"]
 transport-websocket = ["dep:xmip-transport-websocket"]
@@ -745,6 +760,20 @@ xmip-sdk = { package = "xmip-core-sdk", git = "https://github.com/IlleNilsson/xm
 # secret).
 xmip-audit-windows-event-log = { package = "xmip-core-audit-windows-event-log", git = "https://github.com/IlleNilsson/xmip-core-audit-windows-event-log", branch = "main", optional = true }
 xmip-secret-dpapi = { package = "xmip-core-secret-dpapi", git = "https://github.com/IlleNilsson/xmip-core-secret-dpapi", branch = "main", optional = true }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+# The transports on a link of the kernel's, which Linux alone has: a CAN
+# interface and an Ethernet interface's raw socket (`built.rs`,
+# `kernel_transports`), so no other build carries them.
+xmip-transport-can-bus = { package = "xmip-core-transport-can-bus", git = "https://github.com/IlleNilsson/xmip-core-transport-can-bus", branch = "main", optional = true }
+xmip-transport-canopen = { package = "xmip-core-transport-canopen", git = "https://github.com/IlleNilsson/xmip-core-transport-canopen", branch = "main", optional = true }
+xmip-transport-ethercat = { package = "xmip-core-transport-ethercat", git = "https://github.com/IlleNilsson/xmip-core-transport-ethercat", branch = "main", optional = true }
+xmip-transport-ethernet = { package = "xmip-core-transport-ethernet", git = "https://github.com/IlleNilsson/xmip-core-transport-ethernet", branch = "main", optional = true }
+xmip-transport-iso-tp = { package = "xmip-core-transport-iso-tp", git = "https://github.com/IlleNilsson/xmip-core-transport-iso-tp", branch = "main", optional = true }
+xmip-transport-j1939 = { package = "xmip-core-transport-j1939", git = "https://github.com/IlleNilsson/xmip-core-transport-j1939", branch = "main", optional = true }
+xmip-transport-obd-ii = { package = "xmip-core-transport-obd-ii", git = "https://github.com/IlleNilsson/xmip-core-transport-obd-ii", branch = "main", optional = true }
+xmip-transport-profinet = { package = "xmip-core-transport-profinet", git = "https://github.com/IlleNilsson/xmip-core-transport-profinet", branch = "main", optional = true }
+xmip-transport-uds = { package = "xmip-core-transport-uds", git = "https://github.com/IlleNilsson/xmip-core-transport-uds", branch = "main", optional = true }
 
 [target.'cfg(unix)'.dependencies]
 # The operating system's log and the key store on Linux and every Unix

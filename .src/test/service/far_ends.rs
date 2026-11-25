@@ -25,6 +25,10 @@
 //! Send Location writes, or a HART, IO-Link or M-Bus master's Stream,
 //! answered as the protocol's own crate answers it on the SDK's bus in
 //! process. Linux and macOS have one, Windows none.
+//!
+//! A CAN technology's and an Ethernet technology's far end is on a link of
+//! the kernel's, an interface a test makes in a network namespace of its
+//! own (`kernel.rs`), and is stood there, never in [`every`].
 
 use std::path::Path;
 use std::time::Duration;
@@ -141,6 +145,11 @@ macro_rules! standing {
         }
     };
 }
+
+/// The far ends on a link of the kernel's, Linux's alone, which a test
+/// stands in a network namespace of its own (`namespaced.rs`).
+#[cfg(target_os = "linux")]
+pub(crate) mod kernel;
 
 /// Every far end this build's linked transports have, in the order of their
 /// names; a database file's under `directory`.
