@@ -147,7 +147,10 @@ Journey recorded, to a Work Process, a Send Port or a Send Port Group. The terms
   design compiles to a Work Process unit a node loads through the C ABI, and
   the node's Work Process step takes a turn of each Instance from the Ledger,
   holding no thread while it waits (ADR-0066, amendments 2026-10-22 and
-  2026-11-24).
+  2026-11-24). An Instance keeps values of its own across every Message it
+  takes — its design's data objects — and its history of Messages, and
+  every surface lists each Work Process's Instances; a Message that failed
+  at one takes Retry and Dismiss (ADR-0066, amendment 2026-11-25).
   *Audited: the start, each step's outcome, and the answer.*
 - **Assignment.** Setting values in a Message's context, from a literal or
   from another value, in order. It belongs to a Work Process alone and
@@ -781,11 +784,14 @@ subscriptions the nodes hold, with `--pause`, `--resume` or `--remove` on
 one, and `xmip dead-messages`, what each node's Dead Message Queue keeps,
 with `--message` to open one and `--replay` on it, and `xmip message`,
 the Messages that failed at each Send Port, a page at a time, with
-`--retry` or `--dismiss` on one, and `xmip report`, every Report in one
+`--retry` or `--dismiss` on one, at a Send Port or a Work Process, and
+`xmip instances`, the Instances of each Work Process with `--instance` to
+open one, and `xmip report`, every Report in one
 list, each quick or taking longer, with `--configuration` opening one whose
 Quest probes a node's configuration; the PowerShell module answers the same
 as objects, the audit, the Subscriptions, the Event subscriptions, the Dead
-Message Queues, the failed Messages and the Reports included, every Report
+Message Queues, the failed Messages, the Work Processes' Instances and the
+Reports included, every Report
 through its one report cmdlet, and takes listing, Retry and Dismiss of
 failed Messages as parameters of its scope cmdlet. A person's
 certificate for reaching a node's operate listener, the phone first —

@@ -3322,37 +3322,6 @@ Found 2026-11-25: `runtime::signed::own_folder` (Rust) and
 `Get-XmipAccountFolder` (PowerShell) each spell where an account keeps its
 Xmip state. Needed: one, the other asking it through the ABI.
 
-## 191. A Work Process Instance keeps no values across Messages
-
-Found 2026-11-25 drafting the deck's order story: each Message a wait takes
-replaces the values its decisions read (`process` `flow/turn.rs`,
-`current`), so a Work Process cannot count what is ordered against what is
-delivered and accepted, as an orchestration's variables do in BizTalk (the
-owner, 2026-11-25: *A Work Process is like an Orchestration in BizTalk*).
-Needed: an Instance's own values, kept in the Ledger with it.
-
-## 192. No operator surface shows Work Process Instances
-
-Found 2026-11-25 with 191: no view, command or cmdlet reads the Ledger's
-Process Instance table, so an operator cannot see an order's Instance,
-whether it runs, waits or failed, its deadline, or its parts. Needed: the
-Instances in every surface, as BizTalk's console shows running, dehydrated
-and suspended instances.
-
-## 193. A failed Work Process Journey cannot be retried or dismissed
-
-Found 2026-11-25 with 191: Retry and Dismiss act only through the node that
-sends a Send Port (`runtime` `send_step/message_act.rs`), where
-runtime-model section 22, *Process outcome*, says such a Journey is kept in
-its Work Process's queue for an operator's Retry or Dismiss. Needed: the
-acts on a Work Process Journey.
-
-## 194. No test runs a Work Process that loops back to a wait
-
-Found 2026-11-25 with 191: a flow leading back to an earlier wait passes the
-program check and runs under the engine's loop guard, but no test runs one,
-as an order shipped in parts needs. Needed: that test.
-
 ## 195. Root Core.Internal fails its .NET part on the test computer
 
 Found 2026-11-25: Xmip.Operations' build there stops NETSDK1147, the
@@ -3390,6 +3359,38 @@ then the far ends.
 Found 2026-11-25: no technology of the estate opens a raw link-layer socket,
 which needs `unsafe` (ADR-0050) or a new dependency, and `CAP_NET_RAW`.
 Needed: the owner's choice of binding, then a veth pair as the far end.
+## 200. A Journey retried after its turn failed on a timer is written Active
+
+Found 2026-11-25 building Retry and Dismiss of a Work Process Journey: a
+Journey whose turn failed while it waited for its timer, without failing its
+Instance, is written Active when retried, where it waits. Needed: it goes
+back to waiting, as a retried deadline turn of a failed Instance does.
+
+## 201. A retried Journey goes to the end of its Work Process's queue
+
+Found 2026-11-25 with 200: unless its Instance failed or a Correlation
+blocks, a later Message of the same key can be turned before the retried
+one. Needed: a retried Journey turned in its own order.
+
+## 202. A node's published Instances are current only for what it turned
+
+Found 2026-11-25 with 192: a node publishes the newest 20 Instances of each
+Work Process, but only for Instances it read at start or turned itself, so
+one turned by another node of the cluster is shown as it was. Needed: the
+window read from the Ledger, or each node's turns published to the others.
+
+## 203. The VS Code designer is not checked with data objects
+
+Found 2026-11-25 with 191: a Work Process design keeps an Instance's values
+in BPMN data objects, which the process and bpmn crates read and test, but
+no test opens such a design in the VS Code designer. Needed: that test.
+
+## 204. Operate's remote build test needs a build made by hand first
+
+Found 2026-11-25 with 192: `RemoteBuildTest` needs operate's remote native
+library built first, `cargo build --lib -p xmip-core-operate
+--no-default-features --features remote`, which no test run makes. Needed:
+the run builds it, or the test says in words that it is absent.
 # Suggested order
 
 Rewritten 2026-09-23, and corrected to what is built on 2026-11-10. The
@@ -4653,3 +4654,42 @@ sends need, and their far ends want more than one send: CoAP waits for an
 empty closing POST, DHCP expects a request where a node sends a reply,
 mDNS and SSDP query the sender back, and BACnet waits for an empty closing
 message.
+
+## 191. A Work Process Instance keeps no values across Messages — **Resolved**
+
+*Resolved 2026-11-25:* an Instance keeps values of its own across every Message it takes, in the Ledger with it: a design declares them as BPMN data objects and sets them in a task whose data output targets one, computed in Xmip's expression language (`path::expression::Computed`, `process::Step::Keep`), and a decision reads a declared name from them and any other from the current Message (ADR-0066, amendment 2026-11-25; the owner, 2026-11-25: *A Work Process is like an Orchestration in BizTalk. So it is aware via subscriptions, even when running or not*).
+
+Found 2026-11-25 drafting the deck's order story: each Message a wait takes
+replaces the values its decisions read (`process` `flow/turn.rs`,
+`current`), so a Work Process cannot count what is ordered against what is
+delivered and accepted, as an orchestration's variables do in BizTalk (the
+owner, 2026-11-25: *A Work Process is like an Orchestration in BizTalk*).
+Needed: an Instance's own values, kept in the Ledger with it.
+
+## 192. No operator surface shows Work Process Instances — **Resolved**
+
+*Resolved 2026-11-25:* every surface lists each Work Process's Instances — running, waiting for a Message of its key until its deadline, failed with its code and why, dismissed or completed, its values and its history of Messages — and the Messages that failed in its queue: the Ledger's Process Instance table searched by Work Process (`Ask::InstancesOf`), each node publishing the newest it knows, `xmip_operate.h` section 29, `xmip instances`, `Get-XmipInstance` and the Instances view of the Web and the Desktop (ADR-0066, amendment 2026-11-25).
+
+Found 2026-11-25 with 191: no view, command or cmdlet reads the Ledger's
+Process Instance table, so an operator cannot see an order's Instance,
+whether it runs, waits or failed, its deadline, or its parts. Needed: the
+Instances in every surface, as BizTalk's console shows running, dehydrated
+and suspended instances.
+
+## 193. A failed Work Process Journey cannot be retried or dismissed — **Resolved**
+
+*Resolved 2026-11-25:* a Message that failed at a Work Process takes the operator's Retry and Dismiss, noun `message`, applied by the node that runs the Work Process (`work_step::message_act`): an error no scope caught now keeps its Instance as it stood before that turn, failed, holding its keys, with nothing the turn made published, Retry takes that turn again from there while every other Message of its key waits, and Dismiss ends the Instance (ADR-0066, amendment 2026-11-25).
+
+Found 2026-11-25 with 191: Retry and Dismiss act only through the node that
+sends a Send Port (`runtime` `send_step/message_act.rs`), where
+runtime-model section 22, *Process outcome*, says such a Journey is kept in
+its Work Process's queue for an operator's Retry or Dismiss. Needed: the
+acts on a Work Process Journey.
+
+## 194. No test runs a Work Process that loops back to a wait — **Resolved**
+
+*Resolved 2026-11-25:* an order delivered in parts — Correlation on the order, a deadline on the whole, the client's accept, refuse and return — loops back to its wait until every line is delivered and accepted, in the BPMN technology's `tests/order_in_parts.rs` over `design/order-in-parts.bpmn` and through the Ledger in the runtime's `tests/ledger/work_instances.rs` (ADR-0066, amendment 2026-11-25).
+
+Found 2026-11-25 with 191: a flow leading back to an earlier wait passes the
+program check and runs under the engine's loop guard, but no test runs one,
+as an order shipped in parts needs. Needed: that test.

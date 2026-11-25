@@ -200,6 +200,26 @@ CREATE TABLE `claim` (
     CONSTRAINT claim_key PRIMARY KEY (`journey`)
 ) ENGINE=InnoDB;
 
+-- every Work Process Instance, by its identifier: its state in the form the Work Process engine writes, sealed, written whole at every turn only over the turn it was read at, with its Work Process, its turns, whether it has ended and when it was last written in columns of their own.
+CREATE TABLE `process_instance` (
+    `instance` binary(16) NOT NULL,
+    `work_process` varchar(400) NOT NULL,
+    `turns` int NOT NULL,
+    `ended` boolean NOT NULL,
+    `body` longblob NOT NULL,
+    `updated_at` datetime(6) NOT NULL,
+    CONSTRAINT process_instance_key PRIMARY KEY (`instance`)
+) ENGINE=InnoDB;
+
+CREATE INDEX `process_instance_work_process` ON `process_instance` (`work_process`, `updated_at`);
+
+-- each key a Work Process Instance is correlated by, named from its Work Process, Correlation and values, and the Instance it belongs to; written only where it belongs to no Instance or to the one writing it.
+CREATE TABLE `instance_key` (
+    `instance_key` binary(16) NOT NULL,
+    `instance` binary(16) NOT NULL,
+    CONSTRAINT instance_key_key PRIMARY KEY (`instance_key`)
+) ENGINE=InnoDB;
+
 -- audit records as first written, until the audit keeper moves them.
 CREATE TABLE `audit` (
     `sequence` bigint AUTO_INCREMENT NOT NULL,

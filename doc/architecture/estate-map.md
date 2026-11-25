@@ -509,7 +509,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 412680 lines of production
+Where each repository mounts and what it holds: 417169 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -648,7 +648,7 @@ hold no source to count.
 │   │   │   │   ├── password                      81
 │   │   │   │   ├── basic                         76
 │   │   │   │   └── mutual-tls                    74
-│   │   │   ├── path                            2694
+│   │   │   ├── path                            2791
 │   │   │   │   ├── jsonpath                     663
 │   │   │   │   ├── fhirpath                     619
 │   │   │   │   ├── edi                          402
@@ -658,13 +658,13 @@ hold no source to count.
 │   │   │   │   ├── regex                        163
 │   │   │   │   ├── index                        161
 │   │   │   │   └── json-pointer                  65
+│   │   │   ├── process                         2777
+│   │   │   │   └── bpmn                        3498
 │   │   │   ├── prepare                         2422
 │   │   │   │   ├── rpgp                         255
 │   │   │   │       declared, not built 9
 │   │   │   │       bzip2  canonicalize  checksum  chunking  envelope  framing
 │   │   │   │        hash  quoted-printable  tar
-│   │   │   ├── process                         2396
-│   │   │   │   └── bpmn                        3098
 │   │   │   ├── transform                       2206
 │   │   │   │       declared, not built 8
 │   │   │   │       handlebars  jolt  jq  jsonata  liquid  mustache  tera
@@ -774,14 +774,14 @@ hold no source to count.
 │   │   │   ├── asn1                             686
 │   │   │   └── file                             318
 │   │   └── operation/
-│   │       ├── operate                        51973  C# 31922 · Rust 20051
-│   │       ├── cli                            11838
-│   │       ├── observe                         8056
+│   │       ├── operate                        52995  C# 32563 · Rust 20432
+│   │       ├── cli                            12348
+│   │       ├── observe                         8196
 │   │       │   ├── otlp                         591
 │   │       │   └── prometheus                   332
-│   │       ├── gui                             7911
+│   │       ├── gui                             8153
 │   │       │   └── vscode                      3424
-│   │       ├── powershell                      3796  C# 3796 · PowerShell 0
+│   │       ├── powershell                      3923  C# 3923 · PowerShell 0
 │   │       ├── audit                           3584
 │   │       │   ├── file                         685
 │   │       │   ├── windows-event-log            173
@@ -804,7 +804,7 @@ hold no source to count.
 │   │           ├── postgresql                    62
 │   │           └── mssql                         59
 │   ├── foundation/
-│   │   ├── abi                                 8342  C# 4638 · Rust 3324 · PowerShell 380
+│   │   ├── abi                                 8401  C# 4650 · Rust 3371 · PowerShell 380
 │   │   ├── core                                4694
 │   │   ├── message                             2093
 │   │   │   ├── avro                             300
@@ -829,8 +829,8 @@ hold no source to count.
 │   │   ├── stream                               382
 │   │   └── party                                193
 │   └── platform/
-│       ├── runtime                            52232
-│       ├── persist                            25708
+│       ├── runtime                            53623
+│       ├── persist                            25828
 │       │   ├── rocksdb                          323
 │       │   ├── sqlite                           288
 │       │       declared, not built 1

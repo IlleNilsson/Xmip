@@ -232,6 +232,29 @@ CREATE TABLE xmip.claim (
 );
 GO
 
+-- every Work Process Instance, by its identifier: its state in the form the Work Process engine writes, sealed, written whole at every turn only over the turn it was read at, with its Work Process, its turns, whether it has ended and when it was last written in columns of their own.
+CREATE TABLE xmip.process_instance (
+    instance binary(16) NOT NULL,
+    work_process nvarchar(400) NOT NULL,
+    turns int NOT NULL,
+    ended bit NOT NULL,
+    body varbinary(max) NOT NULL,
+    updated_at datetime2(7) NOT NULL,
+    CONSTRAINT process_instance_key PRIMARY KEY (instance)
+);
+GO
+
+CREATE INDEX process_instance_work_process ON xmip.process_instance (work_process, updated_at);
+GO
+
+-- each key a Work Process Instance is correlated by, named from its Work Process, Correlation and values, and the Instance it belongs to; written only where it belongs to no Instance or to the one writing it.
+CREATE TABLE xmip.instance_key (
+    instance_key binary(16) NOT NULL,
+    instance binary(16) NOT NULL,
+    CONSTRAINT instance_key_key PRIMARY KEY (instance_key)
+);
+GO
+
 -- audit records as first written, until the audit keeper moves them.
 CREATE TABLE xmip.audit (
     sequence bigint IDENTITY(1, 1) NOT NULL,

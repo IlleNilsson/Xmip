@@ -1421,3 +1421,88 @@ Work Process marks the order `Approval = 'approved'` and publishes it
 again, and it reaches the ERP's folder whole, nothing else routing there. A unit's
 settings and its calls through the standard units are still decided, not
 built.
+
+## Amendment, 2026-11-25: an Instance keeps values of its own, every surface lists the Instances, and a failed one takes Retry and Dismiss
+
+The owner, 2026-11-25: *A Work Process is like an Orchestration in BizTalk.
+So it is aware via subscriptions, even when running or not.* Open problems
+191 to 194 recorded what that asks and the engine lacked: each Message a
+wait took replaced every value its decisions read, no surface listed an
+Instance, a Journey that failed at a Work Process took no operator's act,
+and no test ran a flow back to its wait. Built the same day.
+
+- **An Instance keeps values of its own** (191). A design declares them, in
+  BPMN 2.0 as data objects, each a value by its name, its identifier where
+  it has none, a name one value (`process::Program::values`); and sets them
+  in a task whose data output association targets a data object or a
+  reference to one, its assignment's `from` a value in Xmip's expression
+  language, its `to`, where it says one, the data object's name
+  (`Step::Keep`). A value is compiled once as the unit opens, through the
+  language's one value compiler (`path::expression::Computed`: names,
+  literals, arithmetic, `||` and `coalesce`, its kinds checked), and
+  computed in the turn over the current Message and the Instance's own
+  values; it makes no Message, so it is no Assignment. One that cannot be
+  computed throws `no-value` with why, for a scope to catch. A task keeps
+  values or assigns the Message's context, never both. A decision, and a
+  value kept, reads a declared name from the Instance's values and any
+  other from the current Message (`Instance::read`, renamed from `values`),
+  and the names the runtime reads of a Message leave the declared ones out.
+- **Every surface lists the Instances** (192). Each Instance keeps its
+  history of Messages, the newest 64, the earlier counted: each Message the
+  runtime handed it — started, arrived, due — made, published, and where an
+  operator acted, failed, retried and dismissed, with the Journey of its
+  turn, written by the runtime, so a unit written by hand has one too. The
+  Process Instance table is searchable by its Work Process, newest written
+  first (`process_instance`, index `process_instance_work_process`;
+  `Ask::InstancesOf`), its Instance Key table beside it in the database
+  servers' schema. Each node publishes, per Work Process it runs, the newest
+  20 Instances it knows — read from the Ledger at its first publication,
+  then as its own turns write them, so a publication reads no Ledger — and
+  the oldest hundred Messages that failed in its queue, read again once a
+  scan or at once after a failure or an act (`work_step::published`); a
+  cluster's publication carries each node's list. Each Instance is said as
+  running, waiting — for a Message of its key in each Correlation it holds,
+  for a time, or both, until its earliest deadline — failed with its code,
+  why and the Journey whose turn failed it, dismissed, or completed; with
+  its values and its turns. `xmip_operate.h` section 29
+  (`xmip_instances_v1` from the Ledger, `xmip_publication_instances_v1`),
+  the list query's `XMIP_LIST_INSTANCES` over the one query
+  (`operate::surface::instance_query`), `xmip instances [work-process]` with
+  `--instance`, `Get-XmipInstance`, and the Instances view of the Web and the
+  Desktop.
+- **A failed Work Process Journey takes Retry and Dismiss** (193), the acts
+  a Message that failed at a Send Port takes, noun `message`, its Journey's
+  identifier, applied by the node that runs the Work Process
+  (`work_step::message_act`, through `crate::journey_act`, the rules the
+  send step's acts now share). Until now an error no scope caught wrote the
+  Instance with every flow ended and published what its turn had made. Now
+  that turn writes nothing it made: the Instance is kept as it stood before
+  it, failed with the code and why, holding the keys the turn took, and the
+  Journey Failed in its queue, so a Message of its key waits on the Instance
+  rather than starting another or being swallowed. Retry writes the Journey
+  Active, its tries anew, and moves it to the end of its queue — one whose
+  failed turn was its timer's Waiting, due now, at its place — and that
+  Journey's turn alone takes the Instance on from where it stood, every other
+  Message of its key after it. Dismiss writes it Dismissed and ends the
+  Instance it failed in the same write, its keys let go; the Instance is
+  said dismissed. A turn that could not be taken or that panicked still
+  leaves its Instance as it was, and its Journey takes the same acts.
+- **A Work Process loops back to its wait** (194): the BPMN technology's
+  example `tests/design/order-in-parts.bpmn` — an order's lines kept, each
+  delivery counted, the client's accept, refuse and return each a branch,
+  the loop inside a subprocess whose thirty-day boundary timer raises the
+  order overdue — runs to completion in `tests/order_in_parts.rs`; and the
+  runtime's `tests/ledger/work_instances.rs` carries an order in parts
+  through a node into the Ledger, lists its Instance, fails a turn,
+  retries, dismisses, and retries a deadline's turn.
+- **Form version 2.** A Program and an Instance hold more, so every form of
+  `process::form` opens with 2, and a unit or an Instance of version 1 is
+  refused in words. The runtime's example unit and the System Tests'
+  `order_approval` are generated again from their designs; what they do is
+  unchanged.
+
+Provenance: the owner's words above. The names — `Keep`, `Computed`, the
+history and its bound, the window of 20, the word dismissed — the BPMN
+mapping, and that a failed turn keeps its Instance as it stood and writes
+nothing it made, are the assistant's, the same day, for the owner to
+overrule.

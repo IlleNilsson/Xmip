@@ -2995,6 +2995,23 @@ it to the ERP. Its unit is the System Tests' example `order_approval`, which
 the System Tests' build builds and the run copies beside each node that
 opens it.
 
+**Built 2026-11-25: an Instance keeps values of its own, every surface lists
+the Instances, and a failed one takes Retry and Dismiss** (ADR-0066,
+amendment 2026-11-25; open problems 191 to 194). The owner, 2026-11-25: *A
+Work Process is like an Orchestration in BizTalk. So it is aware via
+subscriptions, even when running or not.* A design declares the values an
+Instance keeps — in BPMN 2.0 its data objects — and a task sets them, each
+computed in Xmip's expression language; they outlast every Message it takes,
+where the values read from the current Message are replaced by each, and a
+decision reads a declared name from the Instance. The Instance keeps its
+history of Messages, and the Ledger's Process Instance table is searched by
+its Work Process: each node publishes the newest Instances of each
+Work Process it runs and the Messages that failed in its queue, and every surface
+lists them, running, waiting for a Message of its key until its deadline,
+failed with its code and why, dismissed or completed (`xmip_operate.h`
+section 29). So a design loops back to its wait, an order delivered in parts
+counted against what was ordered until every line is accepted.
+
 **Decided, not built:** the `settings` a Work Process gives its unit; unit
 calls through the standard units' registry (a node calls none yet, and a call
 throws `no-unit`); human tasks (open problem 54).
@@ -3040,7 +3057,11 @@ A Work Process is one step inside a Journey rather than the Journey itself, so t
 vocabularies stay distinct. What is built: an Instance that ends `Completed`
 leaves the Journey of its last turn `Completed`; one that ends `Failed` — an error
 no scope caught — leaves it `Failed` with the code and why, kept in its
-Work Process's queue for an operator's Retry or Dismiss. A Journey whose turn only
+Work Process's queue for an operator's Retry or Dismiss. Since 2026-11-25
+that turn writes nothing it made: the Instance is kept as it stood before
+it, failed, holding its keys, a Message of its key waiting on it; Retry takes
+the turn again from there, and Dismiss ends the Instance with the Journey
+(ADR-0066, amendment 2026-11-25). A Journey whose turn only
 hands its Message to a waiting Instance is `Completed`; one whose turn starts a
 timer is `Waiting` until it is due. `CompletedWithWarnings`, `Canceled`,
 `TimedOut` and `Abandoned` are not produced yet.
