@@ -3259,3 +3259,58 @@ deleted; `ClusterSurfacesTest` and `ClusterListTest` hold the set as it is.
 Provenance: the decision is the owner's, quoted. Keeping `Carry` as the one
 record of what a link carries, now the cluster alone, is the worker's
 drafting, for the owner to strike.
+
+## Amendment, 2026-11-25: what a view stands on is on a status bar at the window's foot
+
+The owner, 2026-11-25: *In the operations view there is a lot of
+information, static information. Like CN, cluster name and what not. That
+should be on a status bar at the bottom of the page. It should be on the
+bottom of the page regardless of the user's navigation, scrolling.*
+
+**Amends the amendments of 2026-09-20 and 2026-09-26** (the cluster
+chooser on the run line, and the run line above every view's data) **and
+the navigation's role** (ADR-0009, amendment 2026-10-06): the facts move,
+nothing is said twice.
+
+- **One status bar, on every view of both hosts.** `StatusBar` in
+  `Xmip.Gui`, a footer landmark (`role="contentinfo"`, named *Status*),
+  fixed at the window's foot whatever is scrolled or opened. Both hosts
+  draw their views in one frame, `Frame` — the theme (`Themed`), the
+  navigation with what the host adds to it (`TopNav`), the view and the
+  status bar — so no view of either host is without it.
+- **What it says**, as label and value: *signed in*, who the runtime's gate
+  proved the caller to be (`RoleContext.Who`), or *nobody proven*; *role*,
+  the one assigned, its description on hover (`Roles.Describe`); *cluster*,
+  the one in view; *source*, where the records come from, what a gathered
+  view says of itself included; and *run*, what the run was started with,
+  the runtime's one line, where the publisher says it. It reads the cluster
+  the address names and follows that cluster's change feed as every view
+  does (`ClusterView`), so it moves with the operator's navigation.
+- **Moved, not copied.** The run line is gone: what an operator acts on
+  stays above the view's data — the cluster chooser where the host holds
+  more than one cluster (`ClusterChooser`), the filter, every button — and
+  a host with one cluster draws no line above the filter. The navigation no
+  longer shows the role or who holds it; the Settings cog stands at its end.
+- **Nothing stands behind it.** The bar keeps one height: a fact too long
+  for the window scrolls the bar sideways rather than wrapping, and the
+  frame keeps that height and the safe area clear at its foot, so the end
+  of every page is above it. On a phone it is the same line; the Settings
+  sheet, the error banner and the reconnect panel stand over it. Painted in
+  the page's own paper and text, its labels muted, in either theme; the
+  brand is not on it.
+
+Tested in `StatusBarTest`: every view of the bar, in the frame, stands over
+one status bar, a contentinfo landmark, saying those five facts in that
+order, the cluster fixture's own; no view and not the navigation says the
+run, the source, the role or who; an Operator's role is described and a
+caller nothing proved is *nobody proven*; and the stylesheet fixes the bar
+at the foot and keeps its height clear beneath the frame. `TwoClustersTest`
+holds that the bar follows the cluster the address names;
+`GatheredClusterViewTest` and `ThreeViewsTest` the source and a run that
+says nothing.
+
+Who decided what. The owner's: a status bar at the bottom, always there,
+holding the static facts. The assistant's, for the owner to change: the five
+facts and their order — who first, the run's long line last — the one
+height that scrolls sideways, the shared frame, and the page's paper
+rather than the navigation's ink.
