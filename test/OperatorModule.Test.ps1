@@ -295,6 +295,39 @@ Describe 'The runtime library the operator module copies' {
         @($built.Argument | Sort-Object -Unique) | Should -Be 'build --lib'
     }
 
+    It 'is built again with -Fresh where one is there, cargo deciding what changed' {
+        # A test computer's copy kept the morning's library after a send changed
+        # its sources, and 391 tests failed on it (open problem 208).
+        [string] $tree = Join-Path -Path $TestDrive -ChildPath 'fresh'
+        $global:XmipTestCrateBuild = [System.Collections.Generic.List[object]]::new()
+
+        try {
+            InModuleScope Xmip -Parameters @{ Tree = $tree } {
+                param([string] $Tree)
+
+                Mock Invoke-XmipCrateBuild {
+                    $global:XmipTestCrateBuild.Add($Argument -join ' ')
+                    $library = Get-XmipPackageProgram | Where-Object -Property Kind -EQ 'Library'
+                    [string] $debug = Join-Path -Path $TargetDirectory -ChildPath 'debug'
+                    $null = New-Item -ItemType Directory -Path $debug -Force
+                    Set-Content -LiteralPath (Join-Path $debug $library.File) -Value 'library'
+                }
+
+                $env:CARGO_TARGET_DIR = Join-Path -Path $Tree -ChildPath 'shared'
+                $null = Build-XmipRuntimeLibrary -Root $Tree
+                $null = Build-XmipRuntimeLibrary -Root $Tree -Fresh
+                $null = Build-XmipRuntimeLibrary -Root $Tree -Fresh
+                Remove-Item -Path 'env:CARGO_TARGET_DIR'
+            }
+            [string[]] $built = @($global:XmipTestCrateBuild)
+        }
+        finally {
+            Remove-Variable -Name XmipTestCrateBuild -Scope Global
+        }
+
+        $built | Should -Be @('build --lib', 'build --lib', 'build --lib')
+    }
+
     It 'is built before the operator module, which copies it' {
         [string] $tree = Join-Path -Path $TestDrive -ChildPath 'order'
         $global:XmipTestOrder = [System.Collections.Generic.List[string]]::new()

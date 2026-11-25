@@ -477,6 +477,35 @@ Describe 'What crosses to the computer and back' {
         }
     }
 
+    It 'builds the runtime library from the copy before a start, after RocksDB''s' {
+        # A send changed the copy's sources and the library built before it was
+        # read as it was: 391 tests failed before testing anything (open
+        # problem 208).
+        InModuleScope Xmip {
+            $global:XmipTestPrepared = [System.Collections.Generic.List[string]]::new()
+
+            try {
+                Mock Read-XmipToml { @{} }
+                Mock Install-XmipNativeLibrary { $global:XmipTestPrepared.Add('native') }
+                Mock Build-XmipRuntimeLibrary {
+                    $global:XmipTestPrepared.Add("runtime fresh=$([bool] $Fresh)")
+                }
+
+                Install-XmipTestComputerLibrary -Confirm:$false
+                [string[]] $done = @($global:XmipTestPrepared)
+                $global:XmipTestPrepared.Clear()
+                Install-XmipTestComputerLibrary -WhatIf
+                [string[]] $whatIf = @($global:XmipTestPrepared)
+            }
+            finally {
+                Remove-Variable -Name XmipTestPrepared -Scope Global
+            }
+
+            $done | Should -Be @('native', 'runtime fresh=True')
+            $whatIf | Should -Not -Contain 'runtime fresh=True'
+        }
+    }
+
     It 'calls ssh in one place, and shows what is said there as it is said, but the answer' {
         InModuleScope Xmip -Parameters @{ Computer = $script:Computer } {
             param($Computer)

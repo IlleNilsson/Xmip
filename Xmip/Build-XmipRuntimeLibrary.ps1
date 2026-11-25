@@ -35,19 +35,27 @@ function Build-XmipRuntimeLibrary {
 
         .PARAMETER Root
             The estate's root.
+
+        .PARAMETER Fresh
+            Built even where one is there, cargo deciding whether anything
+            changed: for a copy whose sources changed since its last build,
+            as a test computer's does with every send (open problem 208).
     #>
     [CmdletBinding()]
     [OutputType([string])]
     param(
         [Parameter(Mandatory = $true)]
-        [string] $Root
+        [string] $Root,
+
+        [Parameter()]
+        [switch] $Fresh
     )
 
     $library = Get-XmipPackageProgram | Where-Object -Property Kind -EQ 'Library'
     [string] $target = (Get-XmipEstateLayout -Root $Root).Build
     [string] $path = Join-Path -Path $target -ChildPath "debug/$($library.File)"
 
-    if (-not [System.IO.File]::Exists($path)) {
+    if ($Fresh -or -not [System.IO.File]::Exists($path)) {
         [hashtable] $building = @{
             Root            = $Root
             Folder          = $library.Folder

@@ -155,7 +155,9 @@ function Install-XmipTestComputerLibrary {
             Run on the test computer, in the copy of the estate there, before
             a suite starts: the RocksDB library every build under the root
             links, compiled once as any clone compiles it
-            (Install-XmipNativeLibrary), and said to be there after.
+            (Install-XmipNativeLibrary), and said to be there after; then the
+            runtime library the suite's rules are read through, built from
+            the copy as it now is.
 
         .DESCRIPTION
             The copy is a clone this module keeps there, and nobody else
@@ -163,6 +165,13 @@ function Install-XmipTestComputerLibrary {
             tree's library into theirs, and a copy of its own failed
             NativeLibrary.Test.ps1. The build slot the start holds is held
             for the compile too.
+
+            Every send changes the copy's sources, and a runtime library built
+            before it was used as it was, since one was there: on 2026-11-25
+            a Core.Estate run read the morning's, without that day's
+            xmip_publication_instances_v1, and 391 tests failed before testing
+            anything (open problem 208). It is built again before every start,
+            cargo deciding whether anything changed, as a landing builds it.
     #>
     [CmdletBinding(SupportsShouldProcess)]
     [OutputType([void])]
@@ -178,4 +187,8 @@ function Install-XmipTestComputerLibrary {
     }
 
     $null = Install-XmipNativeLibrary @source
+
+    if ($PSCmdlet.ShouldProcess('the runtime library', 'Build from the copy')) {
+        $null = Build-XmipRuntimeLibrary -Root (Get-XmipRepositoryRoot) -Fresh
+    }
 }
