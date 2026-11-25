@@ -21,7 +21,7 @@
 [string[]] $script:XmipTestStatusProperty = @(
     'Cluster', 'StartTime', 'Stress', 'Tests', 'Rounds', 'Nodes', 'NodeCapability',
     'RealNodes', 'Worst', 'Tally', 'Passed', 'Failed', 'Skipped', 'Fault', 'Snapshot',
-    'Path', 'Record', 'Log', 'Hidden', 'ComputerName'
+    'Path', 'Record', 'Log', 'ComputerName'
 )
 
 
@@ -49,9 +49,9 @@ function New-XmipTestStatus {
             The rest, by name: Cluster, StartTime, Stress, Tests, Rounds,
             Nodes, NodeCapability (each node's Node capabilities,
             <node>=online+erp-direct), RealNodes, Worst, Tally, Passed, Failed,
-            Skipped, Fault, Snapshot, Path, Record, Log, Hidden and
-            ComputerName, the test computer it runs on, null for this one. A
-            name not given is null.
+            Skipped, Fault, Snapshot, Path, Record, Log and ComputerName, the
+            test computer it runs on, null for this one. A name not given is
+            null.
     #>
     [CmdletBinding()]
     [OutputType('Xmip.TestStatus')]

@@ -84,8 +84,7 @@ function Get-XmipLatestRollSnapshot {
     <#
         .SYNOPSIS
             The snapshot of the roll started last in a roll area, running or
-            ended, among the ones shown — never an assistant's hidden run
-            (ADR-0028, amendment 2026-09-30). Empty where no record names one.
+            ended. Empty where no record names one.
 
         .PARAMETER Path
             The roll area.
@@ -97,14 +96,8 @@ function Get-XmipLatestRollSnapshot {
         [string] $Path
     )
 
-    Import-XmipOperatorModule
-    $rules = [Xmip.Surface.RuntimeLibrary]::Rules
-
     $latest = @(
         Get-XmipRollRecord -Path $Path |
-            Where-Object {
-                $rules.Shown([bool](Get-TomlValue -Node $_.Record -Name 'hidden' -Default $false), $false)
-            } |
             Sort-Object -Property {
                 [datetimeoffset]::Parse(
                     [string](Get-TomlValue -Node $_.Record -Name 'started' -Default '0001-01-01T00:00:00Z'),

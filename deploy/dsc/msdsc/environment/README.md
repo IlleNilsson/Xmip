@@ -15,51 +15,55 @@ It is a template for creating Xmip environments, never a lab.
 
 ## The one file, and the environment
 
-`cluster.xmip` is the Systems Tests' own,
+`cluster.xmip` is the System Tests' own,
 `test/core/system-test/configuration/cluster.xmip`: the one file a test runs
-whether its nodes are simulated on one computer or on machines of their own
-(the owner, 2026-10-21: *one TOML file that can be run for tests regardless
-of node faking or actual nodes*; ADR-0028, amendment 2026-10-21). It says
-what the cluster is and nothing of where it runs. What the environment adds
-is the environment file's, `deploy/dsc/README.md`: the cluster's name, its
-DNS domain, which node runs on which machine, the package, the folder of
-each node's certificate, and `far_end`, where the machines reach the
-Parties' far end the Systems Tests serve. `Deploy-XmipEnvironment` gives the
-documents here their parameters from it; the layout and the accounts are
+whether its nodes are processes on one computer or on virtual machines of
+their own (the owner, 2026-10-21: *one TOML file that can be run for tests
+regardless of node faking or actual nodes*; ADR-0028, amendments 2026-10-21
+and 2026-11-25). What the cluster is, and in its `[environment]` table where
+it runs on virtual machines, which no node is given
+(`deploy/dsc/README.md`, *The environment table*). What the environment
+adds is the command's: the cluster's name, `-Cluster`, the package, every
+node's and far end's certificate, and each machine's address, in the order
+the table derives it. `Deploy-XmipEnvironment` gives the documents here
+their parameters from them; the layout and the accounts are
 `machine.dsc.yaml`'s own defaults.
 
-The Hyper-V example, `deploy/dsc/hyperv.example.toml`, puts ten of the
-file's eleven nodes on ten node machines, as the owner's node plan of
-2026-11-22 lays them out, and the libvirt example the same ten on the same
-machines under KVM; OP1, the eleventh, runs on no machine and is left out of the
-Systems Tests' run. Both Storage nodes the
-file lists, DS1 and DS2, run on machines of their own: neither serves until
-both answer (ADR-0056, amendment 2026-11-08).
+The System Tests' table puts each of the file's eleven nodes on a machine of
+its own, as the owner's node plan of 2026-11-22 lays them out, OP1 on the
+plan's operator machine (ADR-0028, amendment 2026-11-25), under Hyper-V or
+under KVM alike. Both Storage nodes the file lists, DS1 and DS2, run on
+machines of their own: neither serves until both answer (ADR-0056,
+amendment 2026-11-08).
 
-| Node | Roles | Machine | Operating system | Address |
-| --- | --- | --- | --- | --- |
-| DS1 | storage | XMIP-DS01 | AlmaLinux 10 | 10.77.0.81 |
-| DS2 | storage | XMIP-DS02 | Windows Server 2025 | 10.77.0.82 |
-| RX1 | receiving | XMIP-RX01 | AlmaLinux 10 | 10.77.0.41 |
-| RX2 | receiving | XMIP-RX02 | Windows Server 2025 | 10.77.0.42 |
-| RX3 | receiving | XMIP-RX03 | AlmaLinux 10 | 10.77.0.43 |
-| EX1 | processing | XMIP-EX01 | Windows Server 2025 | 10.77.0.52 |
-| EX2 | executing | XMIP-EX02 | AlmaLinux 10 | 10.77.0.53 |
-| TX1 | sending | XMIP-TX01 | Windows Server 2025 | 10.77.0.71 |
-| TX2 | sending | XMIP-TX02 | AlmaLinux 10 | 10.77.0.72 |
-| TX3 | sending | XMIP-TX03 | Windows Server 2025 | 10.77.0.73 |
+| Node | Roles | Machine | Operating system |
+| --- | --- | --- | --- |
+| RX1 | receiving | XMIP-RX1 | AlmaLinux 10 |
+| RX2 | receiving | XMIP-RX2 | Windows Server 2025 |
+| RX3 | receiving | XMIP-RX3 | AlmaLinux 10 |
+| EX1 | processing | XMIP-EX1 | Windows Server 2025 |
+| EX2 | executing | XMIP-EX2 | AlmaLinux 10 |
+| TX1 | sending | XMIP-TX1 | Windows Server 2025 |
+| TX2 | sending | XMIP-TX2 | AlmaLinux 10 |
+| TX3 | sending | XMIP-TX3 | Windows Server 2025 |
+| OP1 | operational, monitoring | XMIP-OP1 | Windows 11 |
+| DS1 | storage | XMIP-DS1 | AlmaLinux 10 |
+| DS2 | storage | XMIP-DS2 | Windows Server 2025 |
 
 Which machine runs which node, and its system, are the owner's node plan of
-2026-11-22 (ADR-0028 and ADR-0056, amendments of that date); the addresses
-are the assistant's, the same day.
+2026-11-22 (ADR-0028 and ADR-0056, amendments of that date); a machine's
+name is `XMIP-<node>`, and its address is the network's, the nodes after
+the machines of their own and the far ends, in the file's order (ADR-0015,
+amendment 2026-11-25).
 
 ## What each machine is given
 
-**The DNS server**, XMIP-DC01 (`name.dsc.yaml`): the zone, `xmip.test`,
-where it is not there, and an A record for the cluster, `CL1`, holding every
-node machine's address, and one for each node holding its machine's. A node
-finds another by its name — `DS1:7443` — and the Systems Tests use a node whose
-name resolves.
+**The DNS server**, the `domain_controller`, XMIP-DC01 in the owner's plan
+(`name.dsc.yaml`): the zone, `xmip.test`, where it is not there, and an A
+record for the cluster, `CL1`, holding every node machine's address, and
+one for each node holding its machine's. A node finds another by its name —
+`DS1:7443` — inside the network; the System Tests reach each node and far
+end at the address `deployed.toml` gives it, and resolve no name.
 
 **Each node's slice, on this machine** (`machine.dsc.yaml`,
 `Xmip.Environment/Slice`), before its machine is set up: `node.xmip` as
@@ -69,12 +73,12 @@ that authority's certificate beside it, written into `slices/<node>`: every
 Receive Location and Send Port the cluster's file designs is placed over the
 environment's nodes, round robin over those whose roles serve its stage,
 every Work Process on each node serving its stage, and work no node
-satisfies refused (ADR-0056, amendment 2026-11-13); the Locations bound
-over SFTP on the Parties' far end at `far_end`, port 7422, each a user of
-its own there, so a
-node fetches what the Systems Tests drop and puts what it sends where the
-Systems Tests are told of it (ADR-0028, amendment 2026-10-22). The nodes are the
-environment file's, never written again. A node never slices and never
+satisfies refused (ADR-0056, amendment 2026-11-13); each Receive Location
+listening over HTTP on its node, where the far ends that send push to it,
+and each Send Port bound over SFTP to the far end that receives of its
+turn, in the order `[environment.far_ends] receivers` lists them, each a
+user of its own there (ADR-0028, amendment 2026-11-22). The nodes are the
+cluster file's, never written again. A node never slices and never
 holds the authority's key, so a `node.xmip` edited on it is refused there
 and the node runs its active configuration, the last slice that ran. Its
 pin, kept in the node's data folder apart from that configuration, holds
@@ -89,18 +93,20 @@ first — and a run over an environment restarts no node for a new
 signature.
 
 **Each far end's machine** (`far-end-program.dsc.yaml`, from the host's
-`far-end.dsc.yaml`), where the environment file's `external` names one of
-the Systems Tests' far ends (ADR-0028, amendment 2026-11-22): its certificate,
-key and anchors from the cluster's own authority, `identity`'s folder of its
-name, under `tls`; the program `xmip-system-test-external` the file's
-`[far_ends.<family>]` names, placed and registered as the service
+`far-end.dsc.yaml`), for each of the System Tests' far ends the table's
+`[environment.far_ends]` names (ADR-0028, amendments 2026-11-22 and
+2026-11-25): its certificate, key and anchors from the cluster's own
+authority, issued into the environment's state, under `tls`; the program
+`xmip-system-test-external` of the build for its system, placed and
+registered as the service
 `xmip-<name>` by its own `--install`, which asks the runtime's one
 registration of a service, as `xmip-service --install` does
 (`Xmip.Node/Program`); a firewall opening for exactly the ports
 `--listening` says it serves on, 7422 for a receiver's Send Ports and 7423
 for the roll; and the service running and started with the machine. The far
 end is no node: it takes no slice, package or account of its own. The names
-step gives its name the machine's address, and the roll finds it by it.
+step gives its name the machine's address, and the roll reaches it at the
+address `deployed.toml` gives it.
 
 **Each node machine** (`node.dsc.yaml`), in this order:
 
@@ -199,8 +205,8 @@ this folder, a node's files and its parameters to the machine's staging
 folder and runs `dsc` there, elevated: over PowerShell Remoting to a
 Windows machine as its Administrator, PowerShell Direct where this host
 runs it on Hyper-V and WinRM otherwise, DSC brought to it as to an
-AlmaLinux one, the `pwsh` and `dsc` zips the environment file's
-`[tools.Windows]` names, each checked against its SHA-256 and unpacked
+AlmaLinux one, the `pwsh` and `dsc` zips `prerequisite.toml` names, found
+in the image folder, each checked against its SHA-256 and unpacked
 under `C:\ProgramData\Xmip\environment\tools`, since Windows Server ships
 Windows PowerShell alone; over OpenSSH to an AlmaLinux one,
 with the environment's key and its `known_hosts`, checked strictly, so a
@@ -210,8 +216,8 @@ machine whose host key is not the one its kickstart was given is refused
 back as standard error here: PowerShell Remoting writes a warning of the
 far side to the console past any redirection, standard output, where DSC
 reads the resource's JSON. An AlmaLinux machine needs nothing but its sshd:
-DSC is brought to it, the `pwsh` and `dsc` tarballs the environment file's
-`[tools.Linux]` names, each checked against its SHA-256, copied once and
+DSC is brought to it, the `pwsh` and `dsc` tarballs `prerequisite.toml`
+names, found in the image folder, each checked against its SHA-256, copied once and
 unpacked under `/var/tmp/xmip-environment/tools`, never installed for the
 machine, and `dsc` runs from there with sudo. That staging folder is the
 login's alone, `0700`, and one another account owns is refused; a node's
@@ -248,8 +254,8 @@ answer while it restarts is not yet in its desired state, never an error,
 so the run sets it again until it is.
 
 `Xmip.Environment/Gateway` works from this machine in the same session: it
-makes the machine the network's `[network] gateway_machine` names, XMIP-DC01
-in the examples, the network's way out (the owner, 2026-11-24: *the VM DSC
+makes the machine the table's `gateway` names, XMIP-DC01 in the owner's
+plan, the network's way out (the owner, 2026-11-24: *the VM DSC
 can be a gateway to internet for those machines that needs it*, *A good
 choice would be the DC*, *The DC would be behind my firewall*). What the
 machine is given is `deploy/dsc/machine/WindowsGateway.ps1`'s, the one
@@ -284,7 +290,7 @@ upgrade.
 | `node.dsc.yaml` | one node, on its machine |
 | `name.dsc.yaml` | the names, on the DNS server |
 | `started.dsc.yaml` | every node started together, from the host |
-| `far-end.dsc.yaml` | one of the Systems Tests' far ends, from the host: `far-end-program.dsc.yaml` applied on its machine |
+| `far-end.dsc.yaml` | one of the System Tests' far ends, from the host: `far-end-program.dsc.yaml` applied on its machine |
 | `far-end-program.dsc.yaml` | one far end, on its machine: its certificate, its program placed and registered, its firewall opening and its service |
 | `node.resource.ps1`, `NodeMachine.ps1`, `NodeFile.ps1`, `NodeOpening.ps1`, `NodeAccess.ps1`, `NodePackage.ps1`, `NodeProgram.ps1`, `NodeService.ps1` | the `Xmip.Node` resources |
 | `environment.resource.ps1`, `EnvironmentMachine.ps1`, `EnvironmentSsh.ps1`, `EnvironmentSlice.ps1`, `EnvironmentName.ps1`, `EnvironmentDomain.ps1`, `EnvironmentGateway.ps1`, `EnvironmentStarted.ps1` | the `Xmip.Environment` resources |
@@ -293,72 +299,39 @@ upgrade.
 ## Before the first run
 
 `Deploy-XmipEnvironment` makes the machines first, with the hypervisor's
-template (`deploy/dsc/README.md`). On Hyper-V, XMIP-DC01 runs the DNS
-Server role; the domain controller's own template is not written. An
-AlmaLinux machine needs nothing more: DSC is brought to it.
+template (`deploy/dsc/README.md`). A machine needs nothing more, Windows and
+AlmaLinux alike: DSC is brought to it, as above.
 
-**On each Windows machine**, once, as its Administrator: PowerShell 7.7
-and Microsoft DSC 3.4.0-preview.3 or newer — `winget install --id
-Microsoft.PowerShell --exact` and `Add-AppxPackage -Path
-https://github.com/PowerShell/DSC/releases/download/v3.4.0-preview.3/DSC-3.4.0-preview.3-Win.msixbundle`
-(winget carries no 3.4 preview). Bringing them as the AlmaLinux machines
-are brought theirs waits on the owner's Hyper-V run.
-
-**On the host**, in an elevated Xmip PowerShell Console, once: WinRM may
-reach the Windows machines by address, and the host asks XMIP-DC01 for the
-environment's names, so `RX1` and `CL1` resolve where the Systems Tests run.
-
-```powershell
-Set-Item -Path WSMan:\localhost\Client\TrustedHosts -Value '10.77.0.*' -Force
-Add-DnsClientNrptRule -Namespace '.xmip.test' -NameServers '10.77.0.10'
-[string[]] $suffixes = @((Get-DnsClientGlobalSetting).SuffixSearchList) + 'xmip.test'
-Set-DnsClientGlobalSetting -SuffixSearchList $suffixes
-[hashtable] $farEnd = @{
-    DisplayName   = 'Xmip Systems Tests, the Parties'' far end'
-    Direction     = 'Inbound'
-    Protocol      = 'TCP'
-    LocalPort     = 7422
-    RemoteAddress = '10.77.0.0/24'
-    Action        = 'Allow'
-}
-New-NetFirewallRule @farEnd
-```
-
-The last lets the machines reach the far end the Systems Tests serve on this
-host, and nothing else reach it.
-
-Then, not elevated, in an Xmip PowerShell Console: the packages
-(`deploy/package/README.md`: the portable archive on Windows, the `.rpm` on a
-Linux machine), and the cluster's authority and each node's certificate
-from it.
+Then, not elevated, in an Xmip PowerShell Console, the build the command
+takes the packages, the module libraries, the far ends' program and the
+slicer from (`deploy/package/README.md`: the portable archive on Windows,
+the `.rpm` on a Linux machine), and the images and the tool archives in the
+image folder (`deploy/dsc/README.md`, *Before the first run*):
 
 ```powershell
 Import-Module -Name D:\Repos\Xmip\Xmip\Xmip.psd1
 Build-XmipService -Site personal-computer -CargoArgument '--release' -Package archive
-[string] $local = 'D:\Repos\Xmip\.local-work\environment'
-foreach ($node in 'RX1', 'RX2', 'RX3', 'EX1', 'EX2', 'TX1', 'TX2', 'TX3', 'DS1', 'DS2') {
-    [hashtable] $issue = @{
-        Node      = $node
-        Cluster   = 'CL1'
-        Authority = "$local\authority"
-        Name      = "$node.xmip.test", $node, 'CL1', 'CL1.xmip.test'
-        Path      = "$local\identity\$node"
-    }
-    New-XmipCertificate @issue
-}
 ```
 
-The environment file names each, `deploy/dsc/README.md`.
+Nothing more is made by hand. The cluster's authority, every node's and far
+end's certificate and the Windows machines' Administrator secret are the
+command's own, made where none is. The host is given no rule or suffix that
+sends its names to the environment's DNS server, and WinRM no trusted
+hosts: the System Tests reach every machine at the address `deployed.toml`
+gives it, and this host reaches a Windows machine through PowerShell Direct
+on Hyper-V. The uplink, where the table names a `gateway`, is yours to make
+once (`deploy/dsc/README.md`, *Before the first run*).
 
 ## Running it
 
-`Deploy-XmipEnvironment -Path <environment file>`, with `technology =
-"msdsc"`: after the machines, it applies `domain.dsc.yaml` to the
-`domain_controller` where the file names one, `gateway.dsc.yaml` to the
-network's `gateway_machine` where it names one, `names.dsc.yaml` where one of
-the machines is the DNS server, `domain.dsc.yaml` to each other Windows
-machine where there is a domain, then `machine.dsc.yaml` once for each node in
-the order the file lists the machines, and last `started.dsc.yaml`, with
+`Deploy-XmipEnvironment -Path <cluster file> -Cluster <name>`, msdsc where
+`-Technology` is left out: after the machines, it applies `domain.dsc.yaml`
+to the `domain_controller` where the table names one, `gateway.dsc.yaml` to
+its `gateway` where it names one, `names.dsc.yaml` where one of the
+machines is the DNS server, `domain.dsc.yaml` to each other Windows machine
+where there is a domain, `far-end.dsc.yaml` once for each far end, then
+`machine.dsc.yaml` once for each node in the order the file declares them,
+and last `started.dsc.yaml`, with
 this folder on `PATH` so DSC finds its resources. A node refuses to accept
 work until its cluster's Xmip Storage answers, and a Storage node until
 every Storage node the cluster lists does, so no node of them starts alone,
@@ -369,32 +342,17 @@ every one runs or its window, 180 seconds, is spent. Each document runs itself e
 through WinRM as the Administrator or SSH with sudo; on the host it needs
 none. `-WhatIf` says what differs and changes nothing.
 
-Then the Systems Tests run against the machines, `Start-XmipTest -Suite
-Core.Systems`: every node typed must resolve and answer as that node, or the
-run is REFUSED before it starts, and none is spawned in a machine's place
-(ADR-0028, amendment 2026-11-23). The tester's operator
-certificate is signed by the same authority, the one `[provision.operator]`
-names in the slice of the node the cluster's file declares that table for,
-OP1: sliced and signed as every node's slice is, by the environment file's
-`slicer` with the same `--cluster` and `--authority`, and kept as
-`operator.xmip` beside the `authority` folder, where its trust reads it, so
-one edited by hand is refused (ADR-0031, amendment 2026-11-19). Type
-exactly the nodes the environment file maps, which the Systems Tests place
-the Locations over as the machines did:
+Then the System Tests run against the machines, `Start-XmipTest -Suite
+Core.System -As VirtualMachine` (ADR-0028, amendment 2026-11-25). The run
+is the file's every node, OP1 among it; it is handed every node's and far
+end's address and the operator certificate, signed by the same authority,
+from the deployed state, resolves no name, and makes, starts and spawns
+nothing. Every node must answer as that node, or the run is REFUSED before
+it starts; `-Nodes`, `-NodeRole` and `-NodeCapability` are refused with it,
+and so is a cluster file that changed since it was deployed:
 
 ```powershell
-[string] $local = 'D:\Repos\Xmip\.local-work\environment'
-[string] $tester = "$local\tester"
-[string] $slicer = '<the environment file''s slicer>'
-[string] $cluster = 'D:\Repos\Xmip\test\core\system-test\configuration\cluster.xmip'
-[string[]] $printed = & $slicer --configuration $cluster --node OP1 --cluster CL1 `
-    --authority "$local\authority" --slice
-Set-Content -LiteralPath "$local\operator.xmip" -Value (($printed -join "`n") + "`n") -NoNewline
-New-XmipCertificate -Operator 'tester@xmip.test' -Path $tester |
-    New-XmipCertificate -Configuration "$local\operator.xmip" -Path "$tester\operator.pem"
-Copy-Item -LiteralPath "$local\authority\authority.pem" -Destination "$tester\anchors.pem"
-[string[]] $mapped = 'RX1', 'RX2', 'RX3', 'EX1', 'EX2', 'TX1', 'TX2', 'TX3', 'DS1', 'DS2'
-Start-XmipTest -Suite Core.Systems -Cluster CL1 -Nodes $mapped -Certificate $tester
+Start-XmipTest -Suite Core.System -Cluster CL1 -As VirtualMachine
 Get-XmipTestStatus
 Get-XmipTestResult -Test Carried
 Start-XmipOperationWeb -Snapshot D:\Repos\Xmip\.local-work\system-test\CL1-snapshot.xmip
@@ -410,21 +368,17 @@ mutual TLS on the Storage plane's port, 7443, presenting its own
 DS1's and DS2's `xmip-service --listening` says `7443/tcp storage`, so
 their machines' firewalls open it. Each runs on a machine of its own, the
 primary and the standby that follows it (ADR-0056, amendment 2026-11-08),
-and every other node reaches the primary. The Systems Tests serve the
-Parties' far end on the host, port 7422, each Location placed on the real
-nodes a user of its own there; each
-round it drops a file for every Receive Location, a real receiving node
-fetches it, writes it to the Ledger on DS1, and a real sending node puts it
-back under its name, which the far end tells the Systems Tests of:
-each Receive Location's `delivery` says how many of the documents dropped
-there arrived whole where their route sends them and how long each took
-(ADR-0028, amendments 2026-10-22 and 2026-11-11). Where the environment
-runs the far ends on machines of their own, as the Hyper-V example does
-(`external`, `far_end` the receivers, `listen`), the run finds each by its
-name and reaches it there instead: each round a sender pushes to each
-Receive Location listening on its node, and each Send Port puts on the
-receiver of its turn (ADR-0028, amendment 2026-11-22). OP1, the file's
-eleventh node, is not in the run, and no node is started on the host.
+and every other node reaches the primary. Every far end runs on a machine
+of its own, and the run reaches each at its address: each round a sender
+pushes a document to each Receive Location listening on its node, a real
+receiving node takes it and writes it to the Ledger on DS1, and a real
+sending node puts it on the receiver of its turn, which tells the run of
+it: each Receive Location's `delivery` says how many of the documents
+dropped there arrived whole where their route sends them and how long each
+took (ADR-0028, amendments 2026-11-11, 2026-11-22 and 2026-11-25). OP1, the
+file's operational and monitoring node, runs on XMIP-OP1 and is in the run,
+and no node is started on the host. The Parties' far end the System Tests
+serve on the host, port 7422, is reached by no run now.
 
 **What waits on the owner.** The Windows machines take the portable
 archive, `Build-XmipService -Package archive`, until the MSI is built: WiX
@@ -435,11 +389,11 @@ archive, `Build-XmipService -Package archive`, until the MSI is built: WiX
 
 `test/MsdscEnvironment.Test.ps1` holds what can be held without the
 machines: the documents read as YAML by DSC, each declaring every parameter
-it uses; the Hyper-V example evaluated by DSC as `Deploy-XmipEnvironment`
-applies it, with every resource replaced by an echo, each node machine
-given its node's values, the environment's `known_hosts` and, on AlmaLinux,
-the tools, every mapped node declared by the cluster's file, and every node
-machine told the environment's nodes and the far end it binds to; the
+it uses; the System Tests' environment evaluated by DSC as
+`Deploy-XmipEnvironment` applies it, with every resource replaced by an
+echo, each node machine given its node's values, the environment's
+`known_hosts` and, on AlmaLinux, the tools, and every node machine told the
+environment's nodes and the far ends it binds to; the
 resource manifests found by DSC; a tool whose SHA-256 differs refused
 before anything is sent; and the resources' own steps with the machine's
 commands stubbed, the slice asked with `--bind` and `--nodes`.
@@ -447,9 +401,8 @@ commands stubbed, the slice asked with `--bind` and `--nodes`.
 and its refusals, the step's place, and `WindowsGateway.ps1` with every
 Windows command a stub over a machine held in memory, a fresh one found
 differing in each rule, made so and then found as it is. The root's
-`cargo test --test deploy` holds that every node an example maps is one the
-cluster's file declares, that every mapped node's slice, its Locations
-placed and bound on the far end, reads as `xmip-service` reads it, and that
+`cargo test --test deploy` holds that every node's slice, its Locations
+placed and bound to the far ends, reads as `xmip-service` reads it, and that
 every Location the file designs is placed on one of them. The machines
 themselves are proved by running `Deploy-XmipEnvironment`
 (`deploy/dsc/README.md`).

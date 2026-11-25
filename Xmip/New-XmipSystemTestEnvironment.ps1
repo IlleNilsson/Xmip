@@ -249,9 +249,6 @@ function New-XmipSystemTestEnvironment {
         [string] $Image,
 
         [Parameter()]
-        [switch] $Hidden,
-
-        [Parameter()]
         [switch] $Machines,
 
         [Parameter()]
@@ -317,14 +314,6 @@ function New-XmipSystemTestEnvironment {
     # keeps the binary's own name, which is what a roll started by hand does.
     if (-not [string]::IsNullOrWhiteSpace($Image)) {
         $environment.XMIP_SYSTEM_TEST_IMAGES = $Image
-    }
-
-    # A run that declares itself hidden says so to the roll, which says it in
-    # its [run] table, and to the cluster and nodes it spawns, which inherit it
-    # and say it in their declarations and on every audit record (ADR-0028,
-    # amendment 2026-09-30). Unset, the run is shown, whatever it is called.
-    if ($Hidden) {
-        $environment.XMIP_SYSTEM_TEST_HIDDEN = 'true'
     }
 
     # The Systems Tests run on an environment's machines: the roll resolves

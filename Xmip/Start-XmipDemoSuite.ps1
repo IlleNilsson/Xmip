@@ -122,7 +122,6 @@ function Start-XmipDemoSuite {
         Cluster = $cluster
         Stress  = $stress
         Tester  = [string] $Bound['Tester']
-        Hidden  = [bool] $Bound['Hidden']
         Log     = Join-Path -Path $area -ChildPath "demo-$stamp.log"
     }
 
@@ -160,9 +159,6 @@ function New-XmipDemoCommand {
         .PARAMETER Tester
             The tester, or empty.
 
-        .PARAMETER Hidden
-            Whether the run is declared hidden.
-
         .PARAMETER Log
             The run's log.
     #>
@@ -182,15 +178,11 @@ function New-XmipDemoCommand {
         [AllowEmptyString()]
         [string] $Tester = '',
 
-        [Parameter()]
-        [bool] $Hidden = $false,
-
         [Parameter(Mandatory)]
         [string] $Log
     )
 
     [string] $module = Join-Path -Path $PSScriptRoot -ChildPath 'Xmip.psd1'
-    [string] $hide = if ($Hidden) { '$true' } else { '$false' }
 
     return @(
         '$ErrorActionPreference = ''Stop'''
@@ -199,7 +191,7 @@ function New-XmipDemoCommand {
         "    Cluster = $(ConvertTo-XmipLiteral -Text $Cluster)"
         "    Stress = $(ConvertTo-XmipLiteral -Text $Stress)"
         "    Tester = $(ConvertTo-XmipLiteral -Text $Tester)"
-        "    Hidden = $hide; Log = $(ConvertTo-XmipLiteral -Text $Log) }"
+        "    Log = $(ConvertTo-XmipLiteral -Text $Log) }"
         '& (Get-Module -Name Xmip | Select-Object -First 1) {'
         '    param([hashtable] $Run)'
         '    Test-XmipDemoReady @Run'
@@ -236,7 +228,6 @@ function Write-XmipDemoStart {
         Cluster = $Run.Cluster
         Stress  = $Run.Stress
         Tester  = $Run.Tester
-        Hidden  = $Run.Hidden
         Log     = $Run.Log
         Id      = $Process.Id
         Started = $Process.StartTime

@@ -153,7 +153,6 @@ function New-XmipSystemTestBuildRecord {
         capabilities = @(Get-XmipNodeCapabilityEntry -Capability $Start['Capability'])
         snapshot     = [string] $Start['Snapshot']
         log          = [string] $Start['Log']
-        hidden       = [bool] $Start['Hidden']
     }
 }
 

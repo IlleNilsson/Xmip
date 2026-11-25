@@ -8,10 +8,11 @@ use std::sync::mpsc;
 
 use xmip_audit::program_audit::ProgramAudit;
 use xmip_node::Purpose;
+use xmip_runtime::registration::readiness;
 
 use crate::arguments::{Arguments, Mode};
+use crate::audit;
 use crate::run::{self, StoppedBy, Told};
-use crate::{audit, readiness};
 
 /// Run the node until a signal stops it.
 pub fn run(program: &str, audit: &ProgramAudit, arguments: &Arguments) -> ExitCode {

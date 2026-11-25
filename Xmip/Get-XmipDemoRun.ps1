@@ -115,7 +115,6 @@ function ConvertTo-XmipDemoRun {
             Path      = $Area
             Record    = $File
             Log       = [string](Get-TomlValue -Node $Record -Name 'log' -Default '')
-            Hidden    = [bool](Get-TomlValue -Node $Record -Name 'hidden' -Default $false)
         }
     }
 

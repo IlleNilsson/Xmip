@@ -55,14 +55,6 @@ function Get-XmipTestStatus {
             named, not matched, where Start-XmipTest spawns one. An estate run
             rolls as no cluster, so naming one leaves it out.
 
-        .PARAMETER IncludeHidden
-            Lists the runs that declared themselves hidden too — an
-            assistant's test runs, started with Start-XmipTest -Hidden — which
-            are left out unless this is given, so Get-XmipTestStatus |
-            Start-XmipOperationWeb never follows one unasked (ADR-0028,
-            amendment 2026-09-30). A run is hidden by what it declared, never
-            by its cluster's name; Hidden says which.
-
         .PARAMETER ComputerName
             The runs on that test computer instead, as its own
             Get-XmipTestStatus lists them in the copy of the estate
@@ -82,9 +74,6 @@ function Get-XmipTestStatus {
 
         .EXAMPLE
             Get-XmipTestStatus | Where-Object -Property Suite -EQ -Value Core.Estate
-
-        .EXAMPLE
-            Get-XmipTestStatus -Cluster CL2 -IncludeHidden
     #>
     [CmdletBinding()]
     [OutputType('Xmip.TestStatus')]
@@ -95,9 +84,6 @@ function Get-XmipTestStatus {
         [Parameter()]
         [SupportsWildcards()]
         [string] $Cluster = '*',
-
-        [Parameter()]
-        [switch] $IncludeHidden,
 
         [Parameter()]
         [ArgumentCompleter({
@@ -112,7 +98,7 @@ function Get-XmipTestStatus {
 
     # There, that computer's own Get-XmipTestStatus answers.
     if ($PSBoundParameters.ContainsKey('ComputerName')) {
-        [hashtable] $asked = @{ Cluster = $Cluster; IncludeHidden = [bool] $IncludeHidden }
+        [hashtable] $asked = @{ Cluster = $Cluster }
         $computer = Read-XmipTestComputer -Name $ComputerName
 
         return Invoke-XmipTestComputer -Computer $computer -Command Get-XmipTestStatus -Parameter (
@@ -149,25 +135,22 @@ function Get-XmipTestStatus {
         return
     }
 
-    Import-XmipOperatorModule
-    $rules = [Xmip.Surface.RuntimeLibrary]::Rules
-
     # A demo run, running or finished, and a roll still building, or whose
-    # build FAILED, until its nodes start: shown and hidden by the one rule,
-    # as a roll is.
-    $demos | Where-Object { $rules.Shown([bool] $_.Hidden, [bool] $IncludeHidden) }
-    $builds | Where-Object { $rules.Shown([bool] $_.Hidden, [bool] $IncludeHidden) }
+    # build FAILED, until its nodes start.
+    $demos
+    $builds
 
     if ($rolls.Count + $ended.Count -eq 0) {
         return
     }
 
+    Import-XmipOperatorModule
+
     [hashtable] $each = @{
-        Path          = $Path
-        Cluster       = $Cluster
-        IncludeHidden = [bool] $IncludeHidden
-        Nodes         = @(Get-XmipTestNode)
-        Suites        = @(Get-XmipTestSuite)
+        Path    = $Path
+        Cluster = $Cluster
+        Nodes   = @(Get-XmipTestNode)
+        Suites  = @(Get-XmipTestSuite)
     }
 
     foreach ($roll in $rolls) {
@@ -191,17 +174,13 @@ function ConvertTo-XmipRollStatus {
         .SYNOPSIS
             One roll as an Xmip.TestStatus: running, or ended and listed from
             the record it left, its worst result in words from the snapshot
-            it published. Nothing where -Cluster or the hidden rule leaves it
-            out.
+            it published. Nothing where -Cluster leaves it out.
 
         .PARAMETER Path
             The roll area, where its record is.
 
         .PARAMETER Cluster
             Get-XmipTestStatus's -Cluster.
-
-        .PARAMETER IncludeHidden
-            Get-XmipTestStatus's -IncludeHidden.
 
         .PARAMETER Nodes
             The live System Tests nodes, from Get-XmipTestNode.
@@ -232,9 +211,6 @@ function ConvertTo-XmipRollStatus {
         [string] $Cluster,
 
         [Parameter(Mandatory)]
-        [bool] $IncludeHidden,
-
-        [Parameter(Mandatory)]
         [AllowEmptyCollection()]
         [object[]] $Nodes,
 
@@ -260,14 +236,6 @@ function ConvertTo-XmipRollStatus {
     [string] $rolledAs = [string](Get-TomlValue -Node $record -Name 'cluster' -Default '')
 
     if ($rolledAs -notlike $Cluster) {
-        return
-    }
-
-    # Whether a run is shown is the one rule, observe::run::shown, over
-    # what the run declared (ADR-0028, amendment 2026-09-30).
-    [bool] $hidden = [bool](Get-TomlValue -Node $record -Name 'hidden' -Default $false)
-
-    if (-not [Xmip.Surface.RuntimeLibrary]::Rules.Shown($hidden, $IncludeHidden)) {
         return
     }
 
@@ -348,7 +316,6 @@ function ConvertTo-XmipRollStatus {
             Path           = if ($null -ne $Recorded) { $Path } else { $null }
             Record         = if ($null -ne $Recorded) { $Recorded.File } else { $null }
             Log            = Get-TomlValue -Node $record -Name 'log'
-            Hidden         = $hidden
         }
     }
 

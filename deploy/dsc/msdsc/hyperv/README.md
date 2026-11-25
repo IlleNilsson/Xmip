@@ -29,55 +29,62 @@ finding that says so — never as a failure, so `get` and `test` read a host
 before anything is made on it. Only the host's own refusal, such as an
 account Hyper-V does not let manage VMs, is an error.
 
-## The example environment
+## The System Tests' environment
 
-`deploy/dsc/hyperv.example.toml`, which `Deploy-XmipEnvironment` reads
-(`deploy/dsc/README.md`), describes the 21 machines of the owner's node
-plan of 2026-11-22, the Mac beside them aside. Windows Server is Server
-Core, Linux is installed minimal but on the one developer machine with a
-desktop. Memory is what a machine starts with and, dynamic, the least and
-the most Hyper-V gives it, the most the plan's figure:
+The `[environment]` table of the System Tests' cluster file, which
+`Deploy-XmipEnvironment` reads (`deploy/dsc/README.md`, *The environment
+table*), describes the 21 machines of the owner's node plan of 2026-11-22,
+the Mac beside them aside: the machines of their own, the far ends and every
+node of the file, OP1 on the plan's operator machine (ADR-0028, amendment
+2026-11-25). Windows Server is Server Core, Linux is installed minimal but
+on the one developer machine with a desktop. Memory is what a machine
+starts with and, dynamic, the least and the most Hyper-V gives it, the most
+the plan's figure; the file says each figure where it differs from
+`[environment.machine]`'s. The machines are listed in the order their
+addresses are given:
 
-| Machine | Operating system | Role | Memory | CPUs | Disk | Address |
-| --- | --- | --- | --- | --- | --- | --- |
-| XMIP-DC01 | Windows Server 2025 | domain controller, DNS and the network's gateway | 2, 1-4 GiB | 2 | 64 GiB | 10.77.0.10 |
-| XMIP-FS01 | Windows Server 2025 | file storage, optional | 1, 0.5-2 GiB | 2 | 64 GiB | 10.77.0.20 |
-| XMIP-DS01 | AlmaLinux 10 | Xmip node DS1, Xmip Storage, primary | 2, 0.5-4 GiB | 2 | 32 GiB | 10.77.0.81 |
-| XMIP-DS02 | Windows Server 2025 | Xmip node DS2, Xmip Storage, standby | 1, 0.5-4 GiB | 2 | 64 GiB | 10.77.0.82 |
-| XMIP-RX01 | AlmaLinux 10 | Xmip node RX1, receiving; reaches past the network | 2, 0.5-3 GiB | 2 | 32 GiB | 10.77.0.41 |
-| XMIP-RX02 | Windows Server 2025 | Xmip node RX2, receiving | 1, 0.5-3 GiB | 2 | 64 GiB | 10.77.0.42 |
-| XMIP-RX03 | AlmaLinux 10 | Xmip node RX3, receiving | 2, 0.5-3 GiB | 2 | 32 GiB | 10.77.0.43 |
-| XMIP-EX01 | Windows Server 2025 | Xmip node EX1, processing | 1, 0.5-4 GiB | 2 | 64 GiB | 10.77.0.52 |
-| XMIP-EX02 | AlmaLinux 10 | Xmip node EX2, executing | 2, 0.5-4 GiB | 2 | 32 GiB | 10.77.0.53 |
-| XMIP-TX01 | Windows Server 2025 | Xmip node TX1, sending | 1, 0.5-3 GiB | 2 | 64 GiB | 10.77.0.71 |
-| XMIP-TX02 | AlmaLinux 10 | Xmip node TX2, sending | 2, 0.5-3 GiB | 2 | 32 GiB | 10.77.0.72 |
-| XMIP-TX03 | Windows Server 2025 | Xmip node TX3, sending | 1, 0.5-3 GiB | 2 | 64 GiB | 10.77.0.73 |
-| XMIP-EXTTX01 | AlmaLinux 10 | a far end that sends, external TX1 | 2, 0.5-2 GiB | 1 | 32 GiB | 10.77.0.91 |
-| XMIP-EXTTX02 | Windows Server 2025 | a far end that sends, external TX2 | 1, 0.5-2 GiB | 1 | 64 GiB | 10.77.0.92 |
-| XMIP-EXTTX03 | AlmaLinux 10 | a far end that sends, external TX3 | 2, 0.5-2 GiB | 1 | 32 GiB | 10.77.0.93 |
-| XMIP-EXTRX01 | Windows Server 2025 | a far end that receives, external RX1 | 1, 0.5-2 GiB | 1 | 64 GiB | 10.77.0.101 |
-| XMIP-EXTRX02 | AlmaLinux 10 | a far end that receives, external RX2 | 2, 0.5-2 GiB | 1 | 32 GiB | 10.77.0.102 |
-| XMIP-EXTRX03 | Windows Server 2025 | a far end that receives, external RX3 | 1, 0.5-2 GiB | 1 | 64 GiB | 10.77.0.103 |
-| XMIP-DEV02 | AlmaLinux 10, desktop | developer machine | 2, 1-4 GiB | 2 | 64 GiB | 10.77.0.32 |
-| XMIP-DEV01 | Windows 11 | developer machine | 4, 2-4 GiB | 2 | 128 GiB | 10.77.0.31 |
-| XMIP-OP01 | Windows 11 | operator machine | 4, 2-4 GiB | 2 | 128 GiB | 10.77.0.33 |
+| Machine | Operating system | Role | Memory | CPUs | Disk |
+| --- | --- | --- | --- | --- | --- |
+| XMIP-DC01 | Windows Server 2025 | domain controller, DNS and the network's gateway | 2, 1-4 GiB | 2 | 64 GiB |
+| XMIP-FS01 | Windows Server 2025 | file storage, optional | 1, 0.5-2 GiB | 2 | 64 GiB |
+| XMIP-DEV01 | Windows 11 | developer machine | 4, 2-4 GiB | 2 | 128 GiB |
+| XMIP-DEV02 | AlmaLinux 10, desktop | developer machine | 2, 1-4 GiB | 2 | 64 GiB |
+| XMIP-EXTTX1 | AlmaLinux 10 | a far end that sends, external TX1 | 2, 0.5-2 GiB | 1 | 32 GiB |
+| XMIP-EXTTX2 | Windows Server 2025 | a far end that sends, external TX2 | 1, 0.5-2 GiB | 1 | 64 GiB |
+| XMIP-EXTTX3 | AlmaLinux 10 | a far end that sends, external TX3 | 2, 0.5-2 GiB | 1 | 32 GiB |
+| XMIP-EXTRX1 | Windows Server 2025 | a far end that receives, external RX1 | 1, 0.5-2 GiB | 1 | 64 GiB |
+| XMIP-EXTRX2 | AlmaLinux 10 | a far end that receives, external RX2 | 2, 0.5-2 GiB | 1 | 32 GiB |
+| XMIP-EXTRX3 | Windows Server 2025 | a far end that receives, external RX3 | 1, 0.5-2 GiB | 1 | 64 GiB |
+| XMIP-RX1 | AlmaLinux 10 | Xmip node RX1, receiving | 2, 0.5-3 GiB | 2 | 32 GiB |
+| XMIP-RX2 | Windows Server 2025 | Xmip node RX2, receiving | 1, 0.5-3 GiB | 2 | 64 GiB |
+| XMIP-RX3 | AlmaLinux 10 | Xmip node RX3, receiving | 2, 0.5-3 GiB | 2 | 32 GiB |
+| XMIP-EX1 | Windows Server 2025 | Xmip node EX1, processing | 1, 0.5-4 GiB | 2 | 64 GiB |
+| XMIP-EX2 | AlmaLinux 10 | Xmip node EX2, executing | 2, 0.5-4 GiB | 2 | 32 GiB |
+| XMIP-TX1 | Windows Server 2025 | Xmip node TX1, sending | 1, 0.5-3 GiB | 2 | 64 GiB |
+| XMIP-TX2 | AlmaLinux 10 | Xmip node TX2, sending | 2, 0.5-3 GiB | 2 | 32 GiB |
+| XMIP-TX3 | Windows Server 2025 | Xmip node TX3, sending | 1, 0.5-3 GiB | 2 | 64 GiB |
+| XMIP-OP1 | Windows 11 | Xmip node OP1, operational and monitoring, on the operator machine | 4, 2-4 GiB | 2 | 128 GiB |
+| XMIP-DS1 | AlmaLinux 10 | Xmip node DS1, Xmip Storage, primary | 2, 0.5-4 GiB | 2 | 32 GiB |
+| XMIP-DS2 | Windows Server 2025 | Xmip node DS2, Xmip Storage, standby | 1, 0.5-4 GiB | 2 | 64 GiB |
 
-They share an internal switch, `Xmip`, on 10.77.0.0/24. The host is
-10.77.0.1 on it, the one manual IPv4 address of the switch's host adapter,
-with no NAT of its own; the domain is `xmip.test`, and XMIP-DC01's address
-is the DNS server every machine is given. XMIP-DC01 is the network's way
-out, its `gateway_machine`: a second adapter, `Uplink`, on the external
-switch your copy's `uplink` names, behind your firewall, with NAT on it
-(`deploy/dsc/README.md`, *The way out*). Only XMIP-RX01 is given XMIP-DC01
-as its gateway, its `internet` saying so where the network's says none
-does: every other machine is installed with no gateway, and reaches the
-network alone, the host on it included. Name no `gateway_machine` and set
-`nat = true`, and the host is the way out again. The plan's Linux developer machine takes
-the image `AlmaLinux10Desktop`, the same DVD installing
-`workstation-product-environment`. The far ends run on their machines in
-the plan; the Systems Tests serve them on the host still, until they are
-built for machines of their own. The roles are the environment templates'
-business; here they are a comment above each machine.
+They share an internal switch, `Xmip-<cluster>`, on the network the table
+names, or, since the System Tests' file names none, a free private /24 the
+command picks on the host and keeps in the environment's state. The host
+is the range's first address, the one manual IPv4 address of the switch's
+host adapter, and the machines take the next in the order above, the
+machines of their own in the file's order; the domain is `xmip.test`, and
+the `domain_controller`'s address is the DNS server every machine is given.
+The `gateway`, XMIP-DC01 in the owner's plan, is the network's way out: a
+second adapter, `Uplink`, on the host's external switch, behind your
+firewall, with NAT on it (`deploy/dsc/README.md`, *The way out*). Only the
+machine of a node that declares the Node capability `online` is given it
+as its gateway: every other machine is installed with no gateway, and
+reaches the network alone, the host on it included. Name no `gateway`, and
+the host's own NAT is the way out where any node is online. The plan's
+Linux developer machine takes an image of the same DVD installing
+`workstation-product-environment`. Each far end runs on its machine, as
+the plan has it; the far end the System Tests served on the host is
+reached by no run now. The roles are the environment templates' business.
 
 ## What each machine is given
 

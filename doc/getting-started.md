@@ -662,7 +662,7 @@ Stop-XmipTest
 Stop-XmipOperationWeb
 ```
 
-### The same run on machines of their own
+### The same run on virtual machines
 
 Everything above is test level 1: one computer, every node a process the run
 spawned. Where the run's nodes include one declaring the Storage role —
@@ -690,23 +690,26 @@ Get-XmipHealth -Scope xmip:///CL1/node/RX1/storage
 it answered, and of each standby whether its primary says it follows it now;
 DS1's says which it is, the primary or a standby.
 
-At test level 2 the Systems Tests run the same cluster file on real nodes —
-`xmip-service` on machines of their own — with the same scenarios,
-`Start-XmipTest -Suite Core.Systems` (ADR-0028, amendments 2026-10-21 and
-2026-11-23). The templates under `deploy/dsc`
-make the machines and put the file's nodes on them, Windows and AlmaLinux
-alike, from one environment file and one command, `Deploy-XmipEnvironment`,
-in either technology (`deploy/dsc/README.md`): `deploy/dsc/msdsc/hyperv` or
-`libvirt` for the virtual machines, then `deploy/dsc/msdsc/environment` for
-what runs inside them, or `deploy/dsc/ansible` for the same in Ansible.
-Each node's slice binds every Receive Location and Send Port of the
-file, placed over the environment's nodes by their roles, on the Parties'
-far end: SFTP the System Tests serve on your computer, port 7422, each
-Location a user of its own there (ADR-0028, amendment 2026-10-22). Every
-node of the run, and a `-Cluster` name that resolves, is asked with the
-operator certificate `-Certificate` names: each must answer as its node,
-and one that does not resolve or does not answer is REFUSED by name before
-the run starts, never spawned in its place. The first lines of the run, its board
+At test level 2 the same run goes on virtual machines by one switch,
+`Start-XmipTest -As VirtualMachine`, `VM` for short (ADR-0028, amendment
+2026-11-25): the same cluster file and the same scenarios, every node
+`xmip-service` and every far end its program, each on a virtual machine of
+its own. Where they run is the file's own `[environment]` table, which no
+node is given (`deploy/dsc/README.md`, *The environment table*). The
+templates under `deploy/dsc` make the machines from it and put the file's
+nodes and far ends on them, Windows and AlmaLinux alike, by one command,
+`Deploy-XmipEnvironment`, in either technology: `deploy/dsc/msdsc/hyperv`
+or `libvirt` for the virtual machines, the host's kind, then
+`deploy/dsc/msdsc/environment` for what runs inside them, or
+`deploy/dsc/ansible` for the same in Ansible. Each node's slice places
+every Receive Location and Send Port of the file over the environment's
+nodes by their roles: each Receive Location listens on its node, where the
+far ends that send push to it, and each Send Port puts on the far end that
+receives of its turn (ADR-0028, amendment 2026-11-22). The run is handed
+every node's and far end's address and the operator certificate from what
+the deploy left; it resolves no name, makes and starts no machine and
+spawns nothing. Every node is a real node and must answer as its node, or
+the run is REFUSED before it starts. The first lines of the run, its board
 and `Get-XmipTestStatus` say which nodes are real. On its machine each node
 presents the certificate its environment gave it, `tls/node.pem`, on its
 operate listener and to the Storage nodes, which serve on port 7443 — the
@@ -720,79 +723,82 @@ one. Each README says each step in full.
 1. **E** Hyper-V, DSC and your account in the Hyper-V Administrators group,
    then restart the computer (`deploy/dsc/msdsc/hyperv/README.md`, *Before
    the first run*).
-2. The Windows machines' Administrator secret, `Export-Clixml` on Windows,
-   and the environment file, `technology = "msdsc"` (the same section).
-   The AlmaLinux machines' SSH key and host keys are the command's own: it
-   makes them in the environment's private state (`deploy/dsc/README.md`).
-3. **E** On your computer once: WinRM's trusted hosts, the names, and the
-   firewall opening that lets the machines reach the far end,
-   `New-NetFirewallRule -DisplayName 'Xmip System Tests, the Parties'' far
-   end' -Direction Inbound -Protocol TCP -LocalPort 7422 -RemoteAddress
-   10.77.0.0/24 -Action Allow` (`deploy/dsc/msdsc/environment/README.md`,
-   *Before the first run*).
-4. The packages, the cluster's authority and each node's certificate,
-   written into the environment file (the same section).
-5. **E** On each Windows machine once, as its Administrator: PowerShell 7.7
-   and DSC 3.4.0-preview.3 (the same section). An AlmaLinux machine needs
-   nothing: DSC is brought to it.
-6. **E** The machines and the nodes, in one command: `Deploy-XmipEnvironment
-   -Path D:\Repos\Xmip\.local-work\deploy\hyperv.toml`, one machine
-   installed at a time, then each node on its machine
-   (`deploy/dsc/README.md`). On a Linux host the libvirt template does the
-   same from `deploy/dsc/libvirt.example.toml`, the same machines under
-   KVM, with no step elevated; its Windows machines wait on how a Linux
-   host reads their secret and reaches them (ADR-0015, amendment
-   2026-11-22).
-7. The tester's operator certificate
-   (`deploy/dsc/msdsc/environment/README.md`, *Running it*), and the run
-   against the machines:
+2. The build the environment takes its packages, module libraries, far
+   ends' programs and slicer from, under `.local-work/package/<version>/`:
+   `Build-XmipService -Site personal-computer -CargoArgument '--release'
+   -Package archive`, and `-Package rpm` on a Linux machine
+   (`deploy/package/README.md`).
+3. The installation images and the archives DSC is brought to each machine
+   with, in the account's Xmip folder's `images`,
+   `%LOCALAPPDATA%\Xmip\images`, or a folder you name once with
+   `-ImageFolder`: each is found there by its SHA-256, an image's in the
+   cluster file's `[environment.images.<os>]` and a tool's in
+   `prerequisite.toml` (`deploy/dsc/README.md`, *Before the first run*).
+4. **E** Once, where the cluster file names a `gateway`: the uplink, an
+   external switch onto your computer's adapter on your network, which you
+   make and the template only finds (the same section).
+5. **E** The machines, the far ends and the nodes, in one command, one
+   machine installed at a time, then each far end and each node on its
+   machine (`deploy/dsc/README.md`, *The command*). The cluster's
+   authority, every node's and far end's certificate, the Windows machines'
+   Administrator secret and the AlmaLinux machines' keys are the command's
+   own: it makes each where none is, the authority in `authority/CL1` of
+   your account's Xmip folder and the rest in the environment's private
+   state.
+   On a Linux host the libvirt template does the same under KVM, with no
+   step elevated, and refuses the Windows machines, naming ADR-0015's third
+   amendment of 2026-11-22: a smaller plan is a smaller cluster file.
+6. The run against the machines.
 
 ```powershell
-[string[]] $mapped = 'RX1', 'RX2', 'RX3', 'EX1', 'EX2', 'TX1', 'TX2', 'TX3', 'DS1', 'DS2'
-Start-XmipTest -Suite Core.Systems -Cluster CL1 -Nodes $mapped `
-    -Certificate D:\Repos\Xmip\.local-work\environment\tester
+Deploy-XmipEnvironment -Path D:\Repos\Xmip\test\core\system-test\configuration\cluster.xmip `
+    -Cluster CL1 -Operator 'CN=operator'
+Start-XmipTest -Suite Core.System -Cluster CL1 -As VirtualMachine
 Get-XmipTestStatus
 Get-XmipTestResult -Test Carried
 Get-XmipTestStatus | Start-XmipOperationWeb
 ```
 
-Type exactly the nodes the environment maps: the Systems Tests place the
-Locations over them as the machines did. Without `-Nodes` the run is the
-cluster file's every node, OP1 among them, which the example environments
-give no machine, and it is refused before it starts, naming every node that
-does not resolve and the `-Nodes` that run those that do (ADR-0028,
-amendment 2026-11-24). They drop a file into every
-Receive Location's directory on the far end each round; a real receiving
-node fetches it, DS1 keeps it, a real sending node puts it back under its
-name, and each Receive Location's `delivery` says what arrived and how
-long it took.
+The run is the cluster file's every node, OP1 on the operator's machine
+among them; `-Nodes`, `-NodeRole` and `-NodeCapability` are refused with
+`-As VirtualMachine`, since the run is the plan deployed, and so is a run
+whose cluster file changed since it was deployed. Each round the far ends
+that send push a document to every Receive Location listening on its node,
+a real receiving node takes it, DS1 keeps it, a real sending node puts it
+on the far end that receives of its turn, and each Receive Location's
+`delivery` says what arrived and how long it took.
 The Web Browser tab at <https://127.0.0.1:5087> follows them on the
-Monitor.
+Monitor. The demo readiness check runs on the same machines with the same
+switch: `Start-XmipTest -Suite Core.Demo -Cluster CL1 -Stress Realistic
+-Tester <person> -As VirtualMachine`.
 
-With Ansible, the environment file says `technology = "ansible"` and step
-6 is the same command run from a Linux controller, the WSL guest, whose
-playbook makes the machines and the nodes alike
-(`deploy/dsc/ansible/README.md`); the rest are the same.
+With Ansible, step 5 is the same command with `-Technology ansible`, run
+from a Linux controller, the WSL guest, whose playbook makes the machines,
+the far ends and the nodes alike; on Windows the command refuses it and
+names the command to run there, carrying `-Hypervisor hyperv` and
+`-WindowsHost` (`deploy/dsc/ansible/README.md`). The rest are the same.
 
-What waits on the owner of the estate. The Hyper-V way above ran with
-msdsc from an elevated console on 2026-11-21; with Ansible
-it waits on the Windows host's address and account and how the Linux
-controller is given the Windows machines' Administrator password, which a
-secret file cannot carry off Windows. The Windows machines take the
-portable archive until the MSI is built, which WiX 7 does only once its
-license is accepted (`deploy/package/README.md`). The AlmaLinux machines
-take the `.rpm`, built on a Linux machine. A machine without its package
-runs no node. The libvirt way on a Linux host has run from nothing in both
-technologies (ADR-0015, amendment 2026-11-11).
+What waits on the owner of the estate. The one-file way above is written
+and has not yet run on a machine; the Hyper-V environment is made again
+from nothing, its machines deleted on 2026-11-25. With Ansible it waits on
+how the Linux controller is given the Windows machines' Administrator
+password, which a secret file cannot carry off Windows. The Windows
+machines take the portable archive until the MSI is built, which WiX 7
+does only once its license is accepted (`deploy/package/README.md`). The
+AlmaLinux machines take the `.rpm`, built on a Linux machine. A machine
+without its package runs no node. The libvirt way on a Linux host ran from
+nothing in both technologies from the environment file of that day
+(ADR-0015, amendment 2026-11-11).
 
 ### The operator app on a phone
 
 The desktop host is the phone app too (ADR-0014, amendment 2026-10-14): on
 Android it follows one node over its operate listener and observes it. One
 command builds the app, the runtime's two Android libraries first, and
-`-Address` names the node it follows — here DS1 on the machines above, a
-network the phone must reach, over the Wi-Fi of a host that routes to it or
-a VPN:
+`-Address` names the node it follows — here DS1 on the virtual machines
+above, at the address the deploy gave it, which `deployed.toml` in the
+environment's private state says, the one below an example; a network the
+phone must reach, over the Wi-Fi of a host that routes to it or a VPN:
 
 ```powershell
 Build-XmipService -Remote Android -Package apk -Address 10.77.0.53:7401

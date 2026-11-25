@@ -797,6 +797,44 @@ Describe 'The environment a roll is started with' {
         }
     }
 
+    It 'carries the Storage nodes listed into the run''s cluster file, in their order' {
+        # The owner, 2026-11-25: "Also the DS2 standby node is not shown". The
+        # run's file lists the Storage nodes of the run in the order the System
+        # Tests' file lists them, so the roll's drawing says each one's place
+        # and stands the configured primary first, never the first by its name
+        # (ADR-0052, amendment 2026-11-25); a node not of the run is left out,
+        # and a run with none lists none.
+        InModuleScope Xmip -Parameters $script:Named {
+            param($Cluster, $Stage)
+
+            [string[]] $storing = @($Cluster.Nodes | Where-Object {
+                    @($Cluster.Role[$_] -split '[,+ ]+') -contains 'storage'
+                })
+            $storing.Count | Should -BeGreaterOrEqual 2
+            [string] $first = $storing[0]
+            [string] $second = $storing[1]
+            [string] $r = $Stage.receiving
+            [string] $area = Join-Path -Path $TestDrive -ChildPath 'storing'
+            [hashtable] $typed = @{
+                Cluster = $Cluster.Name
+                Nodes   = @($r, $first, $second)
+                Storage = @("${second}:7443", "${first}:7443", 'not-of-the-run:7443')
+                Path    = $area
+            }
+
+            [string] $file = Write-XmipTestCluster @typed
+            (Read-XmipTestCluster -Path $file).Storage |
+                Should -Be @("${second}:7443", "${first}:7443")
+
+            $typed.Nodes = @($r)
+            $file = Write-XmipTestCluster @typed
+            (Read-XmipTestCluster -Path $file).Storage | Should -BeNullOrEmpty
+
+            # What the roll reads is what the System Tests' file lists.
+            (Read-XmipSystemTestCluster).Storage | Should -Not -BeNullOrEmpty
+        }
+    }
+
     It 'reads every variable the roll documents' {
         # roll.rs, environment.rs and switch.rs are the source of the names; a
         # variable the roll reads that no parameter can set is a switch an

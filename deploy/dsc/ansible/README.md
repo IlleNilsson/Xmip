@@ -11,20 +11,20 @@ cross platform, so is Blazor, MAUI and DSC. We keep Ansible and other tech
 for familiarity and support for the project.*). It is a template for
 creating Xmip environments, never a lab.
 
-`cluster.xmip` is the Systems Tests' own,
+`cluster.xmip` is the System Tests' own,
 `test/core/system-test/configuration/cluster.xmip`, the one file a test runs
-whether its nodes are simulated or on machines of their own (ADR-0028,
-amendment 2026-10-21). Which node runs on which machine is the environment
-file's, `deploy/dsc/README.md`, never that file's: `Deploy-XmipEnvironment`
-with `technology = "ansible"` writes the inventory from it, `inventory.yml`
-in the run folder, generated and never configuration, and runs the
-playbook.
+whether its nodes are processes on one computer or on virtual machines of
+their own (ADR-0028, amendments 2026-10-21 and 2026-11-25). Which node runs
+on which machine is its `[environment]` table's, which no node is given
+(`deploy/dsc/README.md`, *The environment table*): `Deploy-XmipEnvironment
+-Technology ansible` writes the inventory from it, `inventory.yml` in the
+run folder, generated and never configuration, and runs the playbook.
 
 | File | Is |
 | --- | --- |
 | `environment.yml` | the playbook: the machines, the way out through the gateway machine, the names on the DNS server, every node, one machine at a time, then every node started together |
 | `roles/xmip_machine` | the machines on their hypervisor, one installation at a time: `tasks/libvirt.yml` on a Linux host, `tasks/hyperv.yml` on a Windows one |
-| `roles/xmip_gateway` | on the network's gateway machine, where the environment file names one: NAT out of its uplink, which is kept out of the domain, `deploy/dsc/machine/WindowsGateway.ps1` handed whole to `win_powershell` |
+| `roles/xmip_gateway` | on the network's gateway machine, where the cluster file's `[environment]` names a `gateway`: NAT out of its uplink, which is kept out of the domain, `deploy/dsc/machine/WindowsGateway.ps1` handed whole to `win_powershell` |
 | `roles/xmip_name` | on the DNS server, a Windows DNS server: the zone, and an A record for the cluster and for each node |
 | `roles/xmip_node` | one node on its machine: `tasks/windows.yml` and `tasks/linux.yml`, the same steps on each system |
 
@@ -48,8 +48,8 @@ it uses Microsoft's `microsoft.hyperv` (`hv_vswitch`, `hv_vhd`, `hv_vm`,
 module covers; a gateway machine is given its second adapter, `Uplink`, on
 the uplink, an external switch `deploy/dsc/machine/HyperVUplink.ps1` finds
 on the host, handed to it whole, and never makes. On libvirt the network
-forwards with NAT only where the file's `nat` says, and is isolated where a
-gateway machine is the way out. The role `xmip_gateway` then makes that
+forwards with NAT only where the host's NAT is the way out — no `gateway`
+named and some node online — and is isolated otherwise. The role `xmip_gateway` then makes that
 machine the way out (`deploy/dsc/README.md`, *The way out*): the one script
 Microsoft DSC's `Xmip.Environment/Gateway` runs, read on the controller and
 handed whole as `win_powershell`'s script, which under `--check` reads and
@@ -79,9 +79,10 @@ the active configuration runs, and is tried again at the next start
 (ADR-0031, amendments 2026-11-06, 2026-11-07 and 2026-11-12) —
 every Receive Location and
 Send Port the cluster's file designs placed over the inventory's
-`xmip_nodes`, round robin by their roles, and bound over SFTP on the
-Parties' far end the Systems Tests serve at `xmip_far_end`, port 7422, each a
-user of its own there (ADR-0028, amendment 2026-10-22); a firewall opening
+`xmip_nodes`, round robin by their roles, each Receive Location listening
+on its node and each Send Port bound over SFTP to the far end that receives
+of its turn, `xmip_far_end`, each a user of its own there (ADR-0028,
+amendment 2026-11-22); a firewall opening
 for exactly the ports `xmip-service --listening` says, and none it no
 longer does — none for the far end, which a node reaches and never serves —
 kept by firewalld and reloaded, and reloaded too where the running firewall
@@ -153,17 +154,18 @@ Ansible's control node does not run on Windows
 the controller is a Linux machine: the WSL AlmaLinux guest, which reads
 this clone at `/mnt/d/Repos/Xmip`. WSL is not what Ansible supports for
 production; here it is a test level 2 controller. `Deploy-XmipEnvironment`
-on Windows refuses `technology = "ansible"` and names the command to run in
-the guest. Once, there, `prerequisite.toml`'s `[prerequisite.ansible]`, its
+on Windows refuses `-Technology ansible` and names the command to run in
+the guest, which carries the Windows host's kind, `-Hypervisor hyperv`, and
+`-WindowsHost`. Once, there, `prerequisite.toml`'s `[prerequisite.ansible]`, its
 bin on `PATH`, and `deploy/dsc/README.md`'s *Before the first run*.
 
 ## Running it
 
 ```text
-pwsh -Command "Import-Module /mnt/d/Repos/Xmip/Xmip/Xmip.psd1; Deploy-XmipEnvironment -Path /mnt/d/Repos/Xmip/.local-work/deploy/libvirt.toml"
+pwsh -Command "Import-Module /mnt/d/Repos/Xmip/Xmip/Xmip.psd1; Deploy-XmipEnvironment -Path /mnt/d/Repos/Xmip/test/core/system-test/configuration/cluster.xmip -Cluster CL1 -Technology ansible"
 ```
 
-with `technology = "ansible"` in the file. `-WhatIf` runs the playbook with
+on a Linux host, the hypervisor its own, libvirt. `-WhatIf` runs the playbook with
 `--check --diff`, which says what differs: every task that only reads runs
 (`check_mode: false`), and every command that changes names in `removes`
 the file it needs, which is how the command module says under `--check`
@@ -188,21 +190,21 @@ The package is staged on a node machine in Ansible's own folder,
 `/var/tmp/xmip-ansible` or `C:\ProgramData\Xmip\ansible`, never the one
 Microsoft DSC's template stages in.
 
-On Hyper-V the controller reaches the Windows host at the file's `host`,
-over WinRM, as `ANSIBLE_REMOTE_USER`; that host's address, the account and
-its rights wait on the owner's Hyper-V run.
+On Hyper-V the controller reaches the Windows host at `-WindowsHost`, given
+once and kept in the environment's state, over WinRM, as
+`ANSIBLE_REMOTE_USER`; the account and its rights wait on the owner's
+Hyper-V run.
 
-Then the Systems Tests run against the machines as
-`deploy/dsc/msdsc/environment/README.md` says under *Running it*, typing
-exactly the environment's nodes, and what runs is the same: the real nodes
-reach DS1 for Xmip Storage, and the Systems Tests drive them through the
-Parties' far end they serve on the host, counting at `xmip:///CL1/carried`
-what they carried.
+Then the System Tests run against the machines, `Start-XmipTest -As
+VirtualMachine`, as `deploy/dsc/msdsc/environment/README.md` says under
+*Running it*, and the real nodes reach DS1 for Xmip Storage. The role for a
+far end's machine is not written here, so an environment Ansible made has
+no far end on a machine of its own for the run to reach yet.
 
 ## How it is held
 
 `test/MsdscEnvironment.Test.ps1` runs `ansible-playbook --syntax-check` and
-`--list-tasks` over the inventory each example environment file writes,
+`--list-tasks` over the inventory the System Tests' cluster file writes,
 where Ansible is on `PATH`, SKIPPED where it is not;
 `test/DeployEnvironment.Test.ps1` holds that the inventory maps the nodes
 as the msdsc steps do, reaches each AlmaLinux machine strictly, that no
@@ -219,7 +221,6 @@ after the machines and before the names, and that the scripts handed to
 holds the installation's steps both technologies share; the root
 crate's `cargo test --test deploy` holds that the role asks `xmip-service`
 for the slice, the cluster and the ports, binds the Locations and keeps no
-starter, that every node an example maps is declared by the cluster's file,
-and that each mapped node's slice with its Locations bound on the far end
-reads as `xmip-service` reads it. The machines themselves are proved by
+starter, and that each node's slice with its Locations bound to the far
+ends reads as `xmip-service` reads it. The machines themselves are proved by
 running `Deploy-XmipEnvironment` (`deploy/dsc/README.md`).

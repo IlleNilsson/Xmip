@@ -54,9 +54,6 @@ function Test-XmipDemoReady {
             The person the web host lets act, as Start-XmipOperationWeb
             -Tester takes them; empty for none.
 
-        .PARAMETER Hidden
-            The run, and a roll it starts, declared hidden.
-
         .PARAMETER Log
             The run's log.
     #>
@@ -77,9 +74,6 @@ function Test-XmipDemoReady {
         [AllowEmptyString()]
         [string] $Tester = '',
 
-        [Parameter()]
-        [switch] $Hidden,
-
         [Parameter(Mandatory)]
         [string] $Log
     )
@@ -91,7 +85,6 @@ function Test-XmipDemoReady {
         Cluster = $Cluster
         Stress  = $Stress
         Tester  = $Tester
-        Hidden  = [bool] $Hidden
     }
     Write-XmipAudit -Action 'Test-XmipDemoReady' -Phase Begin -Property $said
     Write-XmipDemoRecord -Run $state
@@ -164,9 +157,6 @@ function New-XmipDemoState {
         .PARAMETER Tester
             The tester, or empty.
 
-        .PARAMETER Hidden
-            Whether the run is declared hidden.
-
         .PARAMETER Log
             The run's log.
 
@@ -193,9 +183,6 @@ function New-XmipDemoState {
         [AllowEmptyString()]
         [string] $Tester = '',
 
-        [Parameter()]
-        [switch] $Hidden,
-
         [Parameter(Mandatory)]
         [string] $Log,
 
@@ -214,7 +201,6 @@ function New-XmipDemoState {
         cluster  = $Cluster
         stress   = $Stress
         tester   = $Tester
-        hidden   = [bool] $Hidden
         log      = $Log
         doing    = ''
         snapshot = ''
@@ -324,7 +310,6 @@ function Complete-XmipDemoRun {
         Property = @{
             Cluster = $Run['cluster']
             State   = $verdict
-            Hidden  = [bool] $Run['hidden']
         }
     }
     Write-XmipAudit @audited

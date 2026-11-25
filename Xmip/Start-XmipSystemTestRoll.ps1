@@ -33,7 +33,7 @@ function Get-XmipSystemTestChoice {
     # -Nodes, -NodeRole and -NodeCapability reach the roll as the run's
     # cluster file (Write-XmipTestCluster), never as variables of their own.
     [string[]] $optional = @(
-        'Cluster', 'Duration', 'TimeFactor', 'LoadBytes', 'Hidden', 'Certificate'
+        'Cluster', 'Duration', 'TimeFactor', 'LoadBytes', 'Certificate'
     )
 
     foreach ($name in $optional) {
@@ -261,9 +261,11 @@ function Start-XmipSystemTestRoll {
     # from -Cluster and the nodes -Nodes names, each with the roles -NodeRole
     # and the Node capabilities -NodeCapability states or, where it says none,
     # the System Tests' file declares (amendment 2026-11-24); omitted, its
-    # every node. XMIP_TEST_CLUSTER names it to the roll, and the run record
-    # says the nodes it declares. The Systems Tests resolve every one of them
-    # on the environment's machines; the System Tests resolve none.
+    # every node; and its Storage nodes in the order its [storage] lists them
+    # (ADR-0052, amendment 2026-11-25). XMIP_TEST_CLUSTER names it to the
+    # roll, and the run record says the nodes it declares. The Systems Tests
+    # resolve every one of them on the environment's machines; the System
+    # Tests resolve none.
     $declared = Read-XmipSystemTestCluster
     [string[]] $typed = if ($boundNodes) { @($Nodes) } else { @($declared.Nodes) }
     [hashtable] $joined = @{ Nodes = $typed; NodeRole = $NodeRole; Declared = $declared.Role }
@@ -275,6 +277,7 @@ function Start-XmipSystemTestRoll {
         Nodes          = $typed
         NodeRole       = Join-XmipNodeRole @joined
         NodeCapability = Join-XmipNodeCapability @capable
+        Storage        = $declared.Storage
         Path           = $Path
     }
     [string] $clusterFile = Write-XmipTestCluster @written
@@ -305,10 +308,8 @@ function Start-XmipSystemTestRoll {
         }
     }
 
-    [bool] $hidden = $Bound.ContainsKey('Hidden') -and [bool] $Bound['Hidden']
     [bool] $boundDuration = $Bound.ContainsKey('Duration')
     [bool] $boundFactor = $Bound.ContainsKey('TimeFactor')
-    $choice.Hidden = $hidden
 
     # Everything the roll is spawned and recorded with, handed to the
     # detached build as one value (Start-XmipSystemTestRollProcess).
@@ -326,7 +327,6 @@ function Start-XmipSystemTestRoll {
         Named       = $boundNodes
         Seconds     = if ($boundDuration) { $Duration.TotalSeconds } else { 0 }
         TimeFactor  = if ($boundFactor) { $TimeFactor } else { 1.0 }
-        Hidden      = $hidden
         Choice      = $choice
         What        = $what
     }
@@ -364,9 +364,7 @@ function Start-XmipSystemTestRoll {
     # from files on disk — a surface is stated (clause 3).
     $prompt = 'Xmip.PowerShell.PromptMonitor' -as [type]
 
-    # A hidden run is not followed: the prompt is the owner's (ADR-0028,
-    # amendment 2026-09-30).
-    if ($null -ne $prompt -and -not $hidden -and $snapshot -ne '') {
+    if ($null -ne $prompt -and $snapshot -ne '') {
         [string[]] $beside = @(
             Get-XmipTestStatus -Path $Path | ForEach-Object -MemberName Snapshot |
                 Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
@@ -379,6 +377,6 @@ function Start-XmipSystemTestRoll {
         "the build FAILED; Stop-XmipTest -Id $id stops it.")
 
     if ($PassThru) {
-        return Get-XmipTestStatus -Path $Path -IncludeHidden | Where-Object { $_.Id -eq $id }
+        return Get-XmipTestStatus -Path $Path | Where-Object { $_.Id -eq $id }
     }
 }

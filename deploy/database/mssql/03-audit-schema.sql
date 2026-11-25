@@ -36,7 +36,6 @@ CREATE TABLE xmip.audit (
     host nvarchar(400) NOT NULL,
     process int NOT NULL,
     location nvarchar(400) NULL,
-    hidden bit NOT NULL,
     execution binary(16) NULL,
     journey binary(16) NULL,
     message binary(16) NULL,

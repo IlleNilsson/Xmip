@@ -10,8 +10,9 @@
   the Audit, since the amendment of 2026-09-29), ADR-0053 (the processes
   Xmip owns, their names and the location each declares, which every record
   carries since 2026-09-29), ADR-0059 (a test suite carries its
-  provider), ADR-0028 (a hidden run's records say `hidden = "true"` and are
-  read only when a query includes them, its amendment 2026-09-30), ADR-0015
+  provider), ADR-0028 (a hidden run's records said `hidden = "true"` and were
+  read only when a query included them, from its amendment 2026-09-30 until
+  its amendment 2026-11-25), ADR-0015
   (amendment 2026-10-01: Xmip Storage, where audit is written since this
   record's amendment of that date), `doc/architecture/observability-model.md`,
   `module/core/operation/audit/doc/audit-record.md`

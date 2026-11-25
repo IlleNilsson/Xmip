@@ -176,7 +176,7 @@ The cluster file stays the same; which node runs where belongs to the environmen
 
 45
 00:04:30,720 --> 00:04:39,395
-The System Tests prove the flow as processes on one computer, and the Systems Tests prove it on virtual machines, Windows and Linux.
+The System Tests prove the flow as local processes on one computer or, by one switch, on virtual machines, Windows and Linux.
 
 46
 00:04:39,575 --> 00:04:45,375

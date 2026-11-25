@@ -1334,9 +1334,8 @@ dependency = ["xmip-core-library-codec"]
   repositoryRole = "operational-capability"
   maturity = "scaffolded"
   # xmip-core-node for the one scope rule and the one wildcard the audit read
-  # filters by, xmip-core-observe for whether a hidden run's record is shown
-  # (ADR-0062, amendment 2026-11-13).
-  dependency = ["xmip-core", "xmip-core-library-codec", "xmip-core-node", "xmip-core-observe"]
+  # filters by (ADR-0062, amendment 2026-11-13).
+  dependency = ["xmip-core", "xmip-core-library-codec", "xmip-core-node"]
     # file, syslog and windows-event-log are audit's technologies, each a
     # repository of its own (the owner, 2026-11-16, "Go ahead"): audit keeps
     # the sink seam, the operating system's log as a seam and ADR-0062's

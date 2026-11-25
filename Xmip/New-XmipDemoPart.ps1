@@ -151,7 +151,7 @@ function Add-XmipDemoPart {
         Action   = 'Test-XmipDemoReady'
         Severity = $severity[$Part.State]
         Message  = $line
-        Property = @{ Part = $Part.Name; State = $Part.State; Hidden = [bool] $Run['hidden'] }
+        Property = @{ Part = $Part.Name; State = $Part.State }
     }
     Write-XmipAudit @audited
     Write-XmipDemoRecord -Run $Run

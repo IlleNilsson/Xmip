@@ -79,14 +79,6 @@ function Stop-XmipTest {
             Pester run. A pattern no running suite matches is REFUSED, naming
             what is running.
 
-        .PARAMETER IncludeHidden
-            Picks among the runs that declared themselves hidden too, as
-            Get-XmipTestStatus -IncludeHidden lists them: -Suite, -Cluster and
-            -Test pick among the shown runs alone unless this is given, so a
-            plain Stop-XmipTest leaves an assistant's hidden test run
-            running (ADR-0028, amendment 2026-09-30). A run named by -Id or
-            on the pipeline is stopped whether hidden or not.
-
         .PARAMETER ComputerName
             Stops runs on that test computer instead, by its own Stop-XmipTest,
             picked by -Id or the filters as here; a run piped from
@@ -106,9 +98,6 @@ function Stop-XmipTest {
 
         .EXAMPLE
             Stop-XmipTest -Cluster 'C*'
-
-        .EXAMPLE
-            Stop-XmipTest -Cluster CL2 -IncludeHidden
 
         .EXAMPLE
             Get-XmipTestStatus | Where-Object -Property Stress -EQ -Value brutal |
@@ -178,9 +167,6 @@ function Stop-XmipTest {
         [SupportsWildcards()]
         [string] $Suite,
 
-        [Parameter(ParameterSetName = 'Filter')]
-        [switch] $IncludeHidden,
-
         [Parameter(ParameterSetName = 'Id')]
         [Parameter(ParameterSetName = 'Filter')]
         [ArgumentCompleter({
@@ -241,19 +227,10 @@ function Stop-XmipTest {
         # A run that has ended is listed, an estate run's and a roll's alike,
         # and there is nothing of it to stop: it is chosen only by its id,
         # and then refused in words.
-        # A run named by its id is found whether hidden or not; a filter picks
-        # among the shown runs unless -IncludeHidden (ADR-0028, amendment
-        # 2026-09-30), by the one rule over what each run declared.
-        [object[]] $listed = @(Get-XmipTestStatus -IncludeHidden)
+        [object[]] $listed = @(Get-XmipTestStatus)
         [object[]] $running = @($listed | Where-Object { $_.State -in 'running', 'building' })
 
         if ($PSCmdlet.ParameterSetName -eq 'Filter') {
-            [bool] $including = $IncludeHidden
-            $running = @(
-                $running | Where-Object {
-                    [Xmip.Surface.RuntimeLibrary]::Rules.Shown([bool] $_.Hidden, $including)
-                }
-            )
             [hashtable] $asked = @{
                 Running = $running
                 Cluster = $Cluster

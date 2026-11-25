@@ -21,7 +21,8 @@
   amendment of 2026-09-29), ADR-0065 (Events subscribed; the Subscriptions
   view, its amendment 2026-09-29), ADR-0009 (roles; both GUIs take the role
   by one rule since 2026-09-29), ADR-0028 (a test run hidden by what it
-  declares; the "show test clusters" box, amendments 2026-09-30), ADR-0018
+  declares; the "show test clusters" box, amendments 2026-09-30, both
+  deleted 2026-11-25), ADR-0018
   (`xmip-service` publishes its node; its amendment 2026-09-30, and this
   record's of the same date, the drawing in observe)
 
@@ -3130,3 +3131,131 @@ On Windows, the landing's verification run in full before the landing,
 since the change reaches the landing's own tooling: Pester passed 669,
 failed none and skipped 7; the root crate's lints and its 52 Rust tests
 passed; and its six timing tests, run alone, held their bounds.
+
+## Amendment, 2026-11-25: the theme is chosen in Settings, behind a cog
+
+The owner, 2026-11-25: *The button to switch mode (System, Light & Dark) is
+in the wrong place. There should be a cog wheel, settings, where that and
+other settings can reside.*
+
+**Amends the amendment of 2026-11-12, *the theme is the operator's
+choice*:** the theme is no longer a button on the bar that turns it round.
+
+- **A cog at the bar's end opens Settings.** One component for both hosts,
+  `Settings` in `Xmip.Gui`, drawn by `TopNav` after the role: a button
+  named *Settings* for a screen reader, its cog drawn inline as a line in
+  the text's own color like every icon (`.icon` in `xmip.css`), that opens
+  the panel beneath it and says so (`aria-expanded`). The cog again, Escape
+  — focus back on the cog — or a press anywhere outside closes it. Lime
+  while open, as *Arrange* is while pressed.
+- **A setting is a row.** Each row of the panel is its name and its
+  choices, a group named by its row; another setting is another row. The
+  theme is the first and, today, the only one: the system's, light and
+  dark side by side, each by `ThemeChoice.Name`, the one in force pressed.
+  Choosing the one in force keeps nothing, since the Web host's keeping
+  loads the page again. `ThemeChoice.Next`, what the bar's button turned
+  the theme to, is deleted.
+- **Kept and painted as before.** The store, the cookie, the Desktop's
+  `[theme]` table and the frame (`Themed`) are unchanged; the Web host
+  reloads the page on a choice and so closes the panel, and the Desktop's
+  stays open.
+- **On a phone** the cog stays at the bar's right edge while the bar
+  scrolls beneath it, and the panel is a sheet at the screen's foot over a
+  dimmed page, each choice at least 44px tall.
+
+Tested in `TopNavTest`: the bar holds the cog, named and closed, and no
+theme of its own; the cog opens Settings, whose Theme row offers the three
+with the one in force pressed; choosing the one in force writes nothing,
+light and dark turn the frame at once and the Desktop's file keeps the
+choice; the cog, Escape — focus back on the cog — and a press outside
+close it. `StylesheetTest` holds the one `.icon` rule to the text's own
+color.
+
+Who decided what. The owner's: a cog, Settings, the theme in it, and room
+for other settings there. The assistant's, for the owner to change: the
+three choices side by side in place of a button that turns round, the cog
+at the bar's end after the role, closing by Escape and by a press outside,
+and the sheet at a phone's foot.
+
+## Amendment, 2026-11-25: a Storage node says where it stands, and the primary stands on the path by what it reports
+
+The owner, 2026-11-25: *Also the DS2 standby node is not shown.* Looked
+into the same day over his System Tests snapshot of 2026-11-24: every view
+drew DS2 — the Topology below DS1 with *copies to* between them, the
+Monitor's Nodes, the Configuration tree — but none said it was the
+standby. Its box said *node*; the Monitor's hover said *declares no role*
+(ADR-0018, amendment 2026-11-25); and the map stood DS1 on the path only
+because its scope sorted first: the run's cluster file listed no `[storage]`
+(`Write-XmipTestCluster`), so no Storage node said its place, and the
+layout fell back to the scope's bytes, a name.
+
+- **A Storage node of several says where it stands, as it reports itself
+  running.** `observe::topology::StorageStanding` — primary, standby, or finding
+  its primary — is a drawn node's `standing`, drawn by the node itself
+  from its election (`storage::Reached::elected`), never read from its
+  record's words, and the node's alone when a cluster's drawing merges it.
+  Header section 8 carries it as `XmipTopologyNode.standing`, the runtime's
+  words: *Storage, primary*, *Storage, standby*, *Storage, finding*. A box
+  says them beneath its label, and its hover with them (`English.Kind`).
+- **The primary stands on the path by what it reports.** The layout stands
+  there the Storage node reporting itself the primary; where none does, the
+  one `[storage] nodes` lists first; where none is listed, the first the
+  cluster declares — never the first by its name. After a switchover the
+  new primary stands on the path and the former one below it; the
+  configured relations stay with the first listed, as the amendment of
+  2026-11-13 says, and the traffic draws at the new primary.
+  `relate::listed` takes the members' order for those listed nowhere, in
+  place of their names' bytes.
+- **The run's file lists the run's Storage nodes.** `Write-XmipTestCluster
+  -Storage` writes `[storage] nodes` with each Storage node of the run, in
+  the order the System Tests' file lists them, so the roll's drawing says
+  each one's place.
+
+Tested in observe (`topology::layout`: the one reporting itself the
+primary stands on the path whatever its place and name, the first listed
+where none reports, the first declared where none is listed;
+`topology`: a standing crosses TOML and is the node's own in a merge),
+the operate library (`ffi::publication`: the reader hands a standing over
+in the runtime's words), the shared pages (`TopologyRolesTest`: a box and
+its hover say *Storage, standby*, and after a switchover the new primary
+stands on the path) and the PowerShell module (`XmipTest.Test.ps1`: the
+run's file lists the run's Storage nodes in the listed order).
+
+Who decided what. The owner's: the report. The assistant's, for the owner
+to change: the standing drawn by the node from its election rather than
+read from the words of its `<node>/storage` record, the three words, and
+the first declared where nothing is listed.
+
+## Amendment, 2026-11-25: the "show test clusters" box is deleted
+
+The owner, 2026-11-25, asking *Why do you need to roll your own cluster now
+when we have established an estate for tests*, and then deciding: *So remove
+your test cluster and the checkbox to show it or not.* The hidden run is
+gone (ADR-0028, amendment of this date), so the box of the amendment of
+2026-09-30 has nothing to show or leave out, and it goes with every use of
+it:
+
+- **The run line carries no box.** `RunLine` draws the cluster pills, the
+  run's line and the source, on every view of the web and the desktop
+  alike. No pill, audit group or audit record says `· test` or is outlined
+  dashed, and no run line ends *hidden test run*; the stylesheet's
+  `.run-hidden` and `.test` rules are gone.
+- **The address carries the cluster alone.** No view reads `hidden=include`:
+  `Carry` is the cluster a link was written on, `ScopeLink.Hidden` is gone
+  and `ScopeLink.Cluster` takes the path and the cluster.
+- **Every cluster held is listed.** `ClusterSurfaces` lists every cluster it
+  holds (`Clusters`; `Listed`, `Hidden` and `AnyHidden` are gone),
+  `Several` is whether it holds more than one, and `For` and `Showing` take
+  the cluster asked for alone: that one where it is held, else the first.
+  The surface that held nothing where every cluster was hidden, `Withheld`,
+  is gone.
+- **The other surfaces** say no `hidden` in JSON and no `Hidden` on an
+  object: `AuditEntry`, `AuditGroup`, `PublishedRun`, `RunHeader` and
+  `AuditQuery` lose it.
+
+`HiddenClusterTest` and the hidden cases of `ClusterSurfacesTest` are
+deleted; `ClusterSurfacesTest` and `ClusterListTest` hold the set as it is.
+
+Provenance: the decision is the owner's, quoted. Keeping `Carry` as the one
+record of what a link carries, now the cluster alone, is the worker's
+drafting, for the owner to strike.

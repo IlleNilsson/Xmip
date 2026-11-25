@@ -2650,14 +2650,6 @@ Found 2026-11-23 with the split of the System Tests and the Systems Tests
 of a snapshot `Core.System`, a Systems Tests run's too, since the snapshot
 does not say which suite rolled it.
 
-## 118. A Pester test of hidden runs reads this computer's run area
-
-Found 2026-11-23 landing the same split: on Windows `HiddenRun.Test.ps1`
-counted a record left in `.local-work/demo` by an earlier run, a CL1 row
-the test had not made, and failed; on Linux, with no such record, it
-passed. A test that reads the computer's own run area passes or fails by
-what ran there before.
-
 ## 119. Every mutual-TLS connection to a Storage node is a full handshake
 
 Found 2026-11-23 building problem 92: Xmip's TLS client keeps no session
@@ -3289,6 +3281,27 @@ through the NAT pass the uplink's inbound block rule. Needed: a run on
 the Hyper-V environment with a machine whose `internet` says so reaching
 past the network, each of the three observed and recorded.
 
+## 183. A deploy step's refusal is buried in terminal color codes
+
+Found 2026-11-25 in the owner's redeploy of the Hyper-V environment:
+`Invoke-XmipDeployStep` refused EXTTX1 with *dsc set exit 2* followed by
+what dsc and both pwsh hosts wrote to standard error, every PowerShell
+error formatted for a terminal, so the words that said why, *Job for
+xmip-EXTTX1.service failed because a timeout was exceeded*, sat between
+hundreds of `\x1b[31;1m` and `\x1b[36;1m` escapes, each twice. Needed:
+the resource scripts and the remote pwsh write plain text
+(`$PSStyle.OutputRendering = 'PlainText'` where they start), the refusal
+says each distinct line once, and a test that a refusal carries no escape.
+
+## 184. Two Storage succession tests fail under a full parallel run and pass alone
+
+Found 2026-11-25 by two workers' full runs: the runtime's
+`storage::tests::a_node_reaches_the_storage_nodes_listed_and_reads_on_as_the_primary_stops_in_order`
+failed once with *a Storage node finding its primary … copying, not
+promoted until ready*, and a persist Storage succession test failed once;
+each passed alone, the first 3 of 3 in 0.35 to 0.43 s. Needed: what each
+waits on found, and the wait bounded by the event, never by more time
+(the millisecond rule), so a loaded machine changes nothing.
 # Suggested order
 
 Rewritten 2026-09-23, and corrected to what is built on 2026-11-10. The
@@ -4506,3 +4519,16 @@ committed the key; it was moved out by hand before one ran. Needed: a
 slice that makes an authority writes it only to a device-local folder,
 or refuses without `--authority`, and a test that slicing leaves the
 configuration's folder as it found it.
+
+## 118. A Pester test of hidden runs reads this computer's run area — **Resolved**
+
+*Resolved 2026-11-25:* `test/HiddenRun.Test.ps1` is deleted with the hidden
+run itself (ADR-0028 and ADR-0052, amendments 2026-11-25; the owner,
+2026-11-25: "So remove your test cluster and the checkbox to show it or
+not").
+
+Found 2026-11-23 landing the same split: on Windows `HiddenRun.Test.ps1`
+counted a record left in `.local-work/demo` by an earlier run, a CL1 row
+the test had not made, and failed; on Linux, with no such record, it
+passed. A test that reads the computer's own run area passes or fails by
+what ran there before.

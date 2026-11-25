@@ -129,8 +129,8 @@ function Start-XmipPesterSuite {
             switch that belongs to the System Tests alone.
 
         .DESCRIPTION
-            Part of Start-XmipTest's body until 2026-09-30, when -Hidden took
-            the room that file had left. -Caller is Start-XmipTest's own
+            Part of Start-XmipTest's body until 2026-09-30, when that file ran
+            out of room. -Caller is Start-XmipTest's own
             $PSCmdlet, so -WhatIf and -Confirm decide here as they did there.
 
         .PARAMETER Caller

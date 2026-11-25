@@ -318,8 +318,9 @@ The System Tests ([ADR-0028](doc/decision/ADR-0028-the-xmip-system-test.md)) are
 an integration test over time: every transport by every contract, round after
 round, with injected faults, at four stress levels, with a cluster's nodes as
 processes contending over real files and handing work receive to process to
-send, publishing the snapshots the monitors read; the Systems Tests run the
-same on machines an environment's templates set up first. The estate's suite holds a test for every defect that has reached an
+send, publishing the snapshots the monitors read; one switch runs them, from
+the same cluster file, on the virtual machines an environment's templates
+set up first. The estate's suite holds a test for every defect that has reached an
 operator's console.
 
 The design record starts at:
@@ -608,7 +609,7 @@ amendment 2026-10-19).
 | --- | --- | --- | --- |
 | PowerShell 7.7.0 or later, Core edition | `winget` | `snap`, `apt`, `dnf`, `zypper`, `pacman` | `brew` |
 | Prerequisites | `Install-XmipPrerequisite` reads [`prerequisite.toml`](prerequisite.toml), one package per operating system and package manager | | |
-| Desired state | One environment file and `Deploy-XmipEnvironment` (`deploy/dsc`): Microsoft DSC v3 (`msdsc`) makes the machines on Hyper-V (`hyperv`) and what runs inside them (`environment`), or the file names Ansible (`ansible`), whose controller is a Linux machine | the machines on KVM through libvirt (`libvirt`) and the nodes, by the same command in either technology | the same |
+| Desired state | The cluster file's `[environment]` table and `Deploy-XmipEnvironment` (`deploy/dsc`): Microsoft DSC v3 (`msdsc`, where `-Technology` is left out) makes the machines on Hyper-V (`hyperv`, the host's kind) and what runs inside them (`environment`), or `-Technology ansible` names Ansible, whose controller is a Linux machine | the machines on KVM through libvirt (`libvirt`, the host's kind) and the nodes, by the same command in either technology | refused in words: a macOS host is not written yet |
 | Remote operation | PowerShell Remoting over WinRM or SSH | SSH | SSH |
 
 The environment templates put a cluster's nodes on machines of their own,
@@ -618,8 +619,8 @@ owner, 2026-10-21): the names of the cluster and its nodes, and on each node
 machine its account, `cluster.xmip`, its certificate from the
 cluster's own authority (`xmip certificate --node`), the package, its
 slice with every Receive Location and Send Port placed over the
-environment's nodes and bound on the Parties' far end the Systems Tests serve
-(ADR-0028, amendment 2026-10-22), the firewall openings its configuration
+environment's nodes and bound to the far ends, each on a virtual machine of
+its own (ADR-0028, amendments 2026-11-22 and 2026-11-25), the firewall openings its configuration
 listens on, and its service
 (ADR-0015, amendment 2026-10-21). Every rule about the node is
 `xmip-service`'s — `--slice --cluster --bind --nodes`, `--listening`, `--install
@@ -631,9 +632,10 @@ Storage node the primary, or a standby ready and following that its
 primary's stop in order hands over to at once; each node restarted once and
 asked once, after the last step that changes what it runs (ADR-0056,
 amendments 2026-11-23 and 2026-11-24) — and `cargo test --test deploy` reads the System Tests' cluster
-file, which the example environment runs, as `xmip-service` reads it for
+file, whose `[environment]` table is the environment, as `xmip-service` reads it for
 every node it declares. That file is the same on one computer and on the
-machines (ADR-0028, amendment 2026-10-21).
+virtual machines, and slicing gives no node its `[environment]` (ADR-0028
+and ADR-0031, amendments 2026-11-25).
 
 A site, `deploy/site/<name>.xmip`, says what one deployment's program is
 built with: one **target** it runs on (`device`, `edge`, `computer`,
@@ -877,21 +879,6 @@ You name the cluster with `-Cluster` and the nodes with `-Nodes`; nothing
 names either for you, and Xmip reads nothing in the names you choose. Two
 cluster names are two clusters side by side, each with its own web GUI.
 
-A run started with `-Hidden` declares itself hidden: an assistant's test run
-beside yours. Nothing shows it unless asked — `Get-XmipTestStatus
--IncludeHidden`, the operator module's audit with `-IncludeHidden`, `xmip
-audit --include-hidden`, and the *show test clusters* box on every view of the
-web and desktop — so `Get-XmipTestStatus | Start-XmipOperationWeb` never follows
-one, and a plain `Stop-XmipTest` leaves it running. It is hidden by what it
-declared, never by its name (ADR-0028, amendment 2026-09-30). The assistant's
-test cluster is started so, and stopped by name:
-
-```powershell
-Start-XmipTest -Suite Core.System -Cluster CL2 -Test RoundTrip -Nodes RX1, PX1, TX1 `
-    -NodeRole @{ RX1 = 'receiving'; PX1 = 'processing'; TX1 = 'sending' } -Hidden
-Stop-XmipTest -Cluster CL2 -IncludeHidden
-```
-
 Every tier is a process of its own: the test spawns the cluster, the cluster
 spawns its nodes, and each declares itself, so `Get-XmipProcess` shows all
 three. Omit both switches and `-Stress` is `Brutal`, the most the rig can
@@ -903,16 +890,27 @@ a node `-NodeRole` says nothing of taking the roles the System Tests' file
 declares. A node is configuration and there is no count (ADR-0056, amendment
 2026-10-03); in a real environment an orchestrator spawns nodes, never Xmip.
 
-The same file runs on machines of their own (ADR-0028, amendment
-2026-10-21): a `-Cluster` or `-Nodes` name that resolves is a real node,
-asked over its operate listener with the operator certificate `-Certificate`
-names — real where it answers as that node, REFUSED by name where it does
-not — and never spawned; a name that does not resolve is spawned as before.
-The run says which are real, and `Get-XmipTestStatus` shows them as `Real`.
-The environment templates put the file's nodes on machines
-(`deploy/dsc/msdsc/environment/README.md`), and the run drives the real
-nodes through the Parties' far end it serves on the host, SFTP on port 7422,
-which their slices bind every Location to (ADR-0028, amendment 2026-10-22).
+The same file runs on virtual machines by one switch, `-As VirtualMachine`
+(`VM` for short), where `-As Processes`, the default, is everything above
+(ADR-0028, amendment 2026-11-25). The machines are made beforehand from the
+file's `[environment]` table by `Deploy-XmipEnvironment`, in an elevated
+Xmip PowerShell Console on Windows (`deploy/dsc/README.md`); the run never
+makes or starts one:
+
+```powershell
+Deploy-XmipEnvironment -Path ./test/core/system-test/configuration/cluster.xmip -Cluster CL1
+Start-XmipTest -Suite Core.System -Cluster CL1 -As VirtualMachine
+```
+
+The run is handed every node's and far end's address and the operator
+certificate from what the deploy left, resolves no name and spawns nothing:
+every node is a real node, which answers over its operate listener as that
+node or the run is REFUSED, and `Get-XmipTestStatus` shows them as `Real`.
+Each far end runs on a virtual machine of its own. The run is refused
+before it starts on macOS, with `-Nodes`, `-NodeRole` or `-NodeCapability`,
+where no environment is deployed for `-Cluster` on this computer, naming
+the command that deploys it, and where the cluster file changed since it
+was deployed. The demo readiness check takes the same switch.
 
 Use the System Tests to practice diagnosis and recovery, to verify an
 operational change, and to show the monitor before Xmip carries
@@ -954,24 +952,25 @@ Start-XmipTest -Suite Core.Internal -Test module/foundation/core  # as a landing
 Start-XmipTest -Suite Core.Estate -ComputerName build1  # on the computer build1.toml names
 Get-XmipTestStatus -ComputerName build1               # running, OK or FAILED there
 Start-XmipTest -Suite Core.System -Cluster CL1 -Test RoundTrip  # omit -Nodes: dealt
+Start-XmipTest -Suite Core.System -Cluster CL1 -As VirtualMachine  # on the deployed environment
 Start-XmipTest -Suite * -Cluster CL1                   # Core.System and Core.Estate; the rest by name
 Start-XmipTest -Suite Core.Demo -Cluster CL1 -Stress Realistic -Tester alice@example.org
 ```
 
 Two kinds of test (ADR-0028, amendment 2026-11-23): the internal tests, the
 code's own, which `Publish-XmipChange` runs where a change touched them, and
-the tests of the whole estate, run two ways from one rig, the System Tests and
-the Systems Tests, which it never runs; the demo readiness check rolls the
-System Tests:
+the tests of the whole estate, the System Tests, which it never runs, run as
+local processes or on virtual machines by one switch, `-As`; the demo
+readiness check rolls the System Tests either way (ADR-0028, amendment
+2026-11-25):
 
 | Kind | Suite | Runs | Command |
 | --- | --- | --- | --- |
 | Internal | A module's own | its crate or project | `cargo test` in the module; `dotnet test <path to the *.Test.csproj>`; `Invoke-Pester module/core/operation/powershell/tests`; or, as a landing verifies it, its format, lints and tests and its .NET projects, detached, every crate or project and test that failed named in the run's record: `Start-XmipTest -Suite Core.Internal -Test <module>`, then `Get-XmipTestStatus`, `Get-XmipTestResult -Suite Core.Internal`, `Stop-XmipTest -Suite Core.Internal` |
 | Internal | The System Tests' own | `test/core/system-test` | `cargo test` in `test/core/system-test` |
 | Internal | The estate's | the style rules, the manifest, the record, the estate module, one Pester file each under `test/` | `Start-XmipTest -Suite Core.Estate`, then `Get-XmipTestStatus`, `Get-XmipTestResult -Suite Core.Estate`, `Stop-XmipTest -Suite Core.Estate` |
-| The whole estate | The System Tests | Xmip end to end, every transport by every contract, as a cluster you name, every node a process on this computer | `Start-XmipTest -Suite Core.System -Cluster <name>`, then `Get-XmipTestStatus`, `Get-XmipTestResult -Worst`, `Stop-XmipTest` |
-| The whole estate | The Systems Tests | the same on an environment's machines, set up first with `Deploy-XmipEnvironment`, every node one that answers there; every node of the run whose name does not resolve is refused in one sentence, naming the `-Nodes` that resolve (the example environments give the cluster file's OP1 no machine) | `Start-XmipTest -Suite Core.Systems -Cluster <name> -Nodes <the mapped nodes> -Certificate <folder>`, then as above |
-| The whole estate | The demo readiness check | what the owner's demo runs: a roll of the cluster you name, the web operations tool over it, the Desktop operations app over the same snapshot, the VS Code extension and its language server | `Start-XmipTest -Suite Core.Demo -Cluster <name> -Stress Realistic -Tester <person>`, then `Get-XmipTestStatus`, `Get-XmipTestResult -Suite Core.Demo`, `Stop-XmipTest -Suite Core.Demo` |
+| The whole estate | The System Tests | Xmip end to end, every transport by every contract, as a cluster you name: every node a process on this computer, or, `-As VirtualMachine`, every node and far end on a virtual machine of the environment `Deploy-XmipEnvironment` made beforehand from the cluster file's `[environment]` table, every node one that answers there | `Start-XmipTest -Suite Core.System -Cluster <name>`, with `-As VirtualMachine` on the virtual machines, then `Get-XmipTestStatus`, `Get-XmipTestResult -Worst`, `Stop-XmipTest` |
+| The whole estate | The demo readiness check | what the owner's demo runs: a roll of the cluster you name, as local processes or `-As VirtualMachine`, the web operations tool over it, the Desktop operations app over the same snapshot, the VS Code extension and its language server | `Start-XmipTest -Suite Core.Demo -Cluster <name> -Stress Realistic -Tester <person>`, then `Get-XmipTestStatus`, `Get-XmipTestResult -Suite Core.Demo`, `Stop-XmipTest -Suite Core.Demo` |
 
 The internal tests, `Core.Estate` and `Core.Internal`, run on a Linux
 computer too, beside this one, with `-ComputerName <name>`
@@ -1079,7 +1078,7 @@ first Linear release, work commits directly to `main`
 
 A suite is named `<Provider>.<Name>`, like every other name in the estate
 (ADR-0011, ADR-0059), and `core` is the reserved provider that means Xmip
-itself — so Xmip's own are `Core.System`, `Core.Systems`, `Core.Estate` and `Core.Demo`,
+itself — so Xmip's own are `Core.System`, `Core.Estate`, `Core.Internal` and `Core.Demo`,
 and that is what every record, refusal and surface spells. A bare `System` is
 accepted and resolves to `Core.System`, so nothing you have typed stops
 working. A provider's suite carries its own name: `<Provider>.<Name>`.
@@ -1109,7 +1108,7 @@ and asks the server to initialize; then stops everything it started. Each
 part is said OK, FAILED or SKIPPED in words with the reason:
 `Get-XmipTestStatus` says the part it is on, `Get-XmipTestResult -Suite
 Core.Demo` each part, and `Stop-XmipTest` stops what it started and then the
-run. It takes `-Cluster`, `-Stress`, `-Hidden` and `-Tester` and refuses
+run. It takes `-Cluster`, `-Stress` and `-Tester` and refuses
 every other switch, and a second run while one runs; `-Tester` is refused on
 the other suites. It is started by its name alone: no pattern selects it.
 
@@ -1224,9 +1223,9 @@ Every command that changes state accepts `-WhatIf`. Reporting is the default.
 | `Get-XmipStatus` | The whole estate at once: dirty, ahead, behind, new modules, and the build output a landing refuses. |
 | `Publish-XmipChange` | Test and land a change, dependency order, modules first. Aliased `xgit` and `xmip-git`. |
 | `Publish-XmipPin` | Move the superproject's gitlinks to where the modules now are: how a land ends, and how one that stopped halfway is finished. |
-| `Start-XmipTest`, `Get-XmipTestStatus`, `Stop-XmipTest` | A suite of Xmip's tests: `Core.System`, `Core.Systems`, `Core.Estate`, `Core.Internal`, `Core.Demo` — a bare name is accepted and resolves to those — or a provider's `<Provider>.<Name>`. `-Suite` takes wildcards. Xmip's own start detached and are observed and stopped from outside; `-Tester` is the demo readiness check's alone, and `-ComputerName` the internal tests', `Core.Estate` and `Core.Internal`, run on the test computer `.local-work/test-computer/<name>.toml` names. |
+| `Start-XmipTest`, `Get-XmipTestStatus`, `Stop-XmipTest` | A suite of Xmip's tests: `Core.System`, `Core.Estate`, `Core.Internal`, `Core.Demo` — a bare name is accepted and resolves to those — or a provider's `<Provider>.<Name>`. `-Suite` takes wildcards. Xmip's own start detached and are observed and stopped from outside; `-As Processes` (the default) or `-As VirtualMachine` (`VM`) is the System Tests' and the demo readiness check's, as local processes or on the virtual machines `Deploy-XmipEnvironment` made, `-Tester` is the demo readiness check's alone, and `-ComputerName` the internal tests', `Core.Estate` and `Core.Internal`, run on the test computer `.local-work/test-computer/<name>.toml` names. |
 | `Start-XmipTestNode`, `Get-XmipTestNode`, `Stop-XmipTestNode` | Simulated node processes, by name. |
-| `Deploy-XmipEnvironment` | Make an environment from one TOML file with the technology it names, Microsoft DSC v3 or Ansible: the network, each machine installed from its ISO one at a time, on Hyper-V or libvirt, then the Xmip node on each machine (`deploy/dsc/README.md`); the environment keeps the technology that made it and refuses the other; `-WhatIf` tests, a host where nothing is made yet too. |
+| `Deploy-XmipEnvironment` | Make an environment from a cluster file's `[environment]` table, `-Path` and `-Cluster`, with Microsoft DSC v3 or, `-Technology ansible`, Ansible: the network, each machine installed from its image one at a time, on the host's Hyper-V or libvirt, then each far end and the Xmip node on each machine (`deploy/dsc/README.md`); the host's facts are defaults, and one it cannot choose is given once as a parameter and kept — `-ImageFolder`, `-DiskFolder`, `-Uplink`, `-WindowsHost`, `-Operator`; what it made written to `deployed.toml` in its private state, which `Start-XmipTest -As VirtualMachine` reads; the environment keeps the technology that made it and refuses the other; `-WhatIf` tests, a host where nothing is made yet too. |
 | `Get-XmipTestResult`, `Get-XmipHistory` | What a run reports, now and over time. `Get-XmipTestResult -Suite Core.Estate` reads the estate run's record and returns its failures, `-Suite Core.Internal` likewise the module where its verification stopped, and `-Suite Core.Demo` every part of the latest demo readiness check, OK, FAILED or SKIPPED with its reason; with `-ComputerName`, the test computer's. `Get-XmipTestResult` reads the snapshot through the operator module's `Xmip.Surface` and ranks by the runtime's order, as every surface does, and `Get-XmipHistory` reads the history through the runtime's reader (`observe::Curve`) the same way; the module is built once per change of its sources into `.local-work/operator` and loaded from there on first use, and the runtime (`cargo build` in `module/platform/runtime`) must be built. |
 | `Start-XmipOperationWeb`, `Get-XmipOperationWeb`, `Stop-XmipOperationWeb` | The web GUI, detached; it opens no browser. One host holds one cluster per `-Snapshot`. |
 | `Get-XmipDecisionRecord`, `New-XmipDecisionIndex` | The decision record and its index. |

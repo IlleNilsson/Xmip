@@ -56,7 +56,7 @@ function Start-XmipTest {
             Xmip itself (ADR-0011): a bare System is accepted and resolves to
             Core.System. A third party's suite carries its own provider. Case
             does not matter. The parameters below are the two rolls', and
-            Core.Demo takes -Cluster, -Stress, -Hidden and its own -Tester.
+            Core.Demo takes -Cluster, -Stress and its own -Tester.
 
             Wildcards select a group, exactly as -Test does (the owner,
             2026-09-19): -Suite * is every suite but those started by their name
@@ -204,17 +204,6 @@ function Start-XmipTest {
         .PARAMETER PassThru
             Return the Xmip.TestStatus object for the run started, building.
 
-        .PARAMETER Hidden
-            Declares the run hidden, as an assistant's test run is (ADR-0028,
-            amendment 2026-09-30): its run record, [run] table, process
-            declarations and audit records say so, and the web and desktop
-            leave it out until "show test clusters" is ticked, as
-            Get-XmipTestStatus and Get-XmipAudit do until -IncludeHidden. The
-            declaration hides it, never its name. The assistant's test cluster
-            is started so, always: Start-XmipTest -Suite Core.System
-            -Cluster CL2 -Test RoundTrip -Nodes RX1, PX1, TX1 -NodeRole
-            @{ RX1 = 'receiving'; PX1 = 'processing'; TX1 = 'sending' } -Hidden
-
         .PARAMETER Tester
             Core.Demo's alone: the person who demonstrates, as New-XmipCertificate
             -Operator named them, handed to Start-XmipOperationWeb -Tester.
@@ -337,9 +326,6 @@ function Start-XmipTest {
 
         [Parameter()]
         [switch] $PassThru,
-
-        [Parameter()]
-        [switch] $Hidden,
 
         [Parameter()]
         [ValidateNotNullOrWhiteSpace()]

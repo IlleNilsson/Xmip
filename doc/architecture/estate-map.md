@@ -500,7 +500,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 412679 lines of production
+Where each repository mounts and what it holds: 412238 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -765,15 +765,15 @@ hold no source to count.
 │   │   │   ├── asn1                             686
 │   │   │   └── file                             318
 │   │   └── operation/
-│   │       ├── operate                        52257  C# 32180 · Rust 20077
-│   │       ├── cli                            11892
-│   │       ├── observe                         7954
+│   │       ├── operate                        51972  C# 31921 · Rust 20051
+│   │       ├── cli                            11838
+│   │       ├── observe                         8049
 │   │       │   ├── otlp                         591
 │   │       │   └── prometheus                   332
-│   │       ├── gui                             7917
+│   │       ├── gui                             7758
 │   │       │   └── vscode                      3424
-│   │       ├── powershell                      3806  C# 3806 · PowerShell 0
-│   │       ├── audit                           3670
+│   │       ├── powershell                      3796  C# 3796 · PowerShell 0
+│   │       ├── audit                           3584
 │   │       │   ├── file                         685
 │   │       │   ├── windows-event-log            173
 │   │       │   ├── syslog                        78
@@ -795,7 +795,7 @@ hold no source to count.
 │   │           ├── postgresql                    62
 │   │           └── mssql                         59
 │   ├── foundation/
-│   │   ├── abi                                 8354  C# 4644 · Rust 3330 · PowerShell 380
+│   │   ├── abi                                 8342  C# 4638 · Rust 3324 · PowerShell 380
 │   │   ├── core                                4694
 │   │   ├── message                             2093
 │   │   │   ├── avro                             300
@@ -813,15 +813,15 @@ hold no source to count.
 │   │   │   ├── text                              59
 │   │   │   ├── edi-tradacoms                     56
 │   │   │   └── binary                            38
-│   │   ├── node                                1393
 │   │   ├── event                               1392
+│   │   ├── node                                1385
 │   │   ├── context                             1149
 │   │   ├── journey                              751
 │   │   ├── stream                               382
 │   │   └── party                                193
 │   └── platform/
-│       ├── runtime                            52016
-│       ├── persist                            25713
+│       ├── runtime                            52125
+│       ├── persist                            25708
 │       │   ├── rocksdb                          323
 │       │   ├── sqlite                           288
 │       │       declared, not built 1
@@ -830,7 +830,7 @@ hold no source to count.
 │       └── cluster                             5090
 └── test/
     └── core/
-        ├── system-test                        18895
+        ├── system-test                        18869
         └── module                                83
 ```
 

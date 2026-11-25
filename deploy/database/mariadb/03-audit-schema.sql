@@ -30,7 +30,6 @@ CREATE TABLE `audit` (
     `host` varchar(400) NOT NULL,
     `process` int NOT NULL,
     `location` varchar(400) NULL,
-    `hidden` boolean NOT NULL,
     `execution` binary(16) NULL,
     `journey` binary(16) NULL,
     `message` binary(16) NULL,

@@ -53,7 +53,7 @@ function Stop-XmipTestOnComputer {
 
     # The filters as Stop-XmipTest was given them, there.
     if ($Bound.ContainsKey('ComputerName')) {
-        [hashtable] $given = @{ IncludeHidden = [bool] $Bound['IncludeHidden'] }
+        [hashtable] $given = @{}
 
         foreach ($name in 'Id', 'Suite', 'Cluster', 'Test') {
             if ($Bound.ContainsKey($name)) {
@@ -96,6 +96,10 @@ function Stop-XmipTestThere {
     [string] $picked = @(
         $Parameter.Keys | Sort-Object | ForEach-Object { "-$_ $(@($Parameter[$_]) -join ',')" }
     ) -join ' '
+
+    if ($picked -eq '') {
+        $picked = 'no filter'
+    }
 
     if (-not $Caller.ShouldProcess("the runs on $ComputerName picked by $picked", 'Stop')) {
         return

@@ -114,7 +114,6 @@ function ConvertTo-XmipSystemTestBuild {
             Path        = $Area
             Record      = $File
             Log         = $log
-            Hidden      = [bool](Get-TomlValue -Node $Record -Name 'hidden' -Default $false)
         }
     }
 

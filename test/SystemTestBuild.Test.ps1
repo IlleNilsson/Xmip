@@ -145,7 +145,7 @@ Describe 'A build says how it stands' {
             [hashtable] $start = @{
                 Suite = 'Core.System'; Cluster = $Cluster; Stress = 'Calm'
                 Test = @(); Rounds = 1; Nodes = @($Node); Capability = @{}
-                Hidden = $false; Snapshot = ''; Path = $Area
+                Snapshot = ''; Path = $Area
                 Log = Join-Path $Area 'build-1.log'
             }
             [string] $handed = Join-Path $Area 'build-1.clixml'

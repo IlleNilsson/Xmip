@@ -3291,3 +3291,31 @@ library's own code and debug information, which no Rust profile touches.
 In the one workspace, the whole estate linted again after a change: 43 s on
 the Linux build machine, 14 s on Windows (`cargo clippy --workspace
 --all-targets --all-features`).
+
+## Amendment, 2026-11-25: a node's capability record says the roles its slice declares
+
+The owner, 2026-11-25: *Also the DS2 standby node is not shown.* Looked
+into the same day: the System Tests' snapshot drew DS2, but nothing said
+what it was. A running node published at `<node>/capability` the roles of
+the stages it served (`node::Capability::serving`, the amendment of
+2026-11-11 above, *processing is declared where routing runs*), so every
+Storage node and the operational node said *declares no role*, each
+receiving node *receiving,processing*, and the Monitor's hover, which
+takes what a node published over what its run says, said so of DS1, DS2
+and OP1.
+
+**Amends the amendment of 2026-11-11:** the record says what the node
+declares, never what it serves. `Running::declared` — the roles its slice
+declares, `[nodes.<name>] roles`, with its Node capabilities — is the one
+declaration its capability record and its membership row both say, as a
+node the System Tests simulate says its own (`--role`). Whether a node
+routes is still decided once as it starts (`running::starting::routes`)
+and still the pickup's rule; a Work Process stage is still drawn where the
+node reports on it. `node::Capability::serving` is deleted with its one
+caller, and the running node's `routes`, which only it read.
+
+Tested in the runtime (`tests/running/drawing.rs`: a node whose slice
+declares `executing, storage` publishes both, though storage serves no
+stage, and one whose slice declares none publishes none, though it
+receives, routes and sends; a node sending only declares sending and
+publishes no Subscription).

@@ -29,11 +29,11 @@
 [System.Collections.Specialized.OrderedDictionary] $script:XmipSuiteSwitch = [ordered]@{
     roll     = @(
         'Stress', 'Test', 'Rounds', 'Duration', 'TimeFactor', 'Nodes', 'NodeRole', 'NodeCapability'
-        'Cluster', 'Certificate', 'LoadBytes', 'Path', 'PassThru', 'Hidden'
+        'Cluster', 'Certificate', 'LoadBytes', 'Path', 'PassThru'
     )
     pester   = @('Test', 'Path', 'ComputerName')
     internal = @('Test', 'ComputerName')
-    demo     = @('Cluster', 'Stress', 'Hidden', 'Tester')
+    demo     = @('Cluster', 'Stress', 'Tester')
 }
 
 function Get-XmipSuiteSwitchForeign {

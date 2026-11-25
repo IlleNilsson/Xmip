@@ -31,8 +31,8 @@ function Test-XmipDemoRoll {
             throws why not.
 
         .PARAMETER Run
-            The run, from New-XmipDemoState: its cluster, stress and hidden,
-            and where the snapshot and the roll it launched are kept.
+            The run, from New-XmipDemoState: its cluster and stress, and where
+            the snapshot and the roll it launched are kept.
     #>
     [CmdletBinding()]
     [OutputType([string])]
@@ -46,7 +46,6 @@ function Test-XmipDemoRoll {
         Suite       = $script:XmipSystemTestSuite
         Cluster     = $cluster
         Stress      = $Run['stress']
-        Hidden      = [bool] $Run['hidden']
         PassThru    = $true
         ErrorAction = 'Stop'
     }
@@ -93,7 +92,7 @@ function Wait-XmipDemoBuild {
 
     while ($true) {
         [object[]] $rows = @(
-            Get-XmipTestStatus -Cluster $Cluster -IncludeHidden |
+            Get-XmipTestStatus -Cluster $Cluster |
                 Where-Object { "$($_.Cluster)" -eq $Cluster -and $_.Kind -in 'roll', 'build' }
         )
         $roll = $rows | Where-Object { $_.Kind -eq 'roll' } | Select-Object -First 1
@@ -151,7 +150,7 @@ function Wait-XmipDemoRoll {
     Wait-XmipSnapshot -Path ([System.IO.Path]::GetFullPath($snapshot)) -Since $spawned
     [double] $seconds = [math]::Round(((Get-Date) - $spawned).TotalSeconds, 1)
 
-    $published = Get-XmipTestStatus -Cluster $cluster -IncludeHidden |
+    $published = Get-XmipTestStatus -Cluster $cluster |
         Where-Object { $_.Kind -eq 'roll' -and $_.State -eq 'running' -and $_.Id -eq $Roll.Id } |
         Select-Object -First 1
 

@@ -49,7 +49,7 @@ function Wait-XmipSnapshot {
         return
     }
 
-    [object] $rolling = Get-XmipTestStatus -IncludeHidden |
+    [object] $rolling = Get-XmipTestStatus |
         Where-Object { $_.Snapshot -and ([IO.Path]::GetFullPath($_.Snapshot) -eq $Path) } |
         Select-Object -First 1
 

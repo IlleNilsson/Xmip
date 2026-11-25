@@ -39,8 +39,9 @@ function Read-XmipTestCluster {
     <#
         .SYNOPSIS
             A cluster's cluster.xmip as a test run reads it: its name, its nodes
-            in ordinal order, the roles each declares as written, and its
-            scope. The module's one reading of a cluster's nodes.
+            in ordinal order, the roles each declares as written, the Storage
+            nodes [storage] nodes lists in its order, and its scope. The
+            module's one reading of a cluster's nodes.
 
         .DESCRIPTION
             Throws where the file is not there or names no cluster_name. A
@@ -77,6 +78,7 @@ function Read-XmipTestCluster {
         Nodes      = $declared.Nodes
         Role       = $declared.Role
         Capability = $declared.Capability
+        Storage    = $declared.Storage
         Scope      = "xmip:///$name"
     }
 }
@@ -85,9 +87,11 @@ function Get-XmipClusterNodeRole {
     <#
         .SYNOPSIS
             The nodes a cluster's cluster.xmip declares, in ordinal order, the
-            roles each declares as written, and the Node capabilities each
-            declares (ADR-0056, amendment 2026-11-24): the module's one
-            reading of a cluster's [nodes].
+            roles each declares as written, the Node capabilities each
+            declares (ADR-0056, amendment 2026-11-24), and the Storage nodes
+            its [storage] nodes lists, host:port, in the order it lists them,
+            the configured primary first (ADR-0056, amendment 2026-10-22):
+            the module's one reading of a cluster's [nodes] and [storage].
 
         .PARAMETER Document
             cluster.xmip, as Read-XmipConfiguration read it.
@@ -112,15 +116,21 @@ function Get-XmipClusterNodeRole {
         $capability[$node] = [string[]] @($words)
     }
 
-    return [pscustomobject]@{ Nodes = $names; Role = $role; Capability = $capability }
+    $storage = Get-TomlValue -Node $Document -Name 'storage'
+    [string[]] $listed = @(Get-TomlValue -Node $storage -Name 'nodes' -Default @())
+
+    return [pscustomobject]@{
+        Nodes = $names; Role = $role; Capability = $capability; Storage = $listed
+    }
 }
 
 function Read-XmipSystemTestCluster {
     <#
         .SYNOPSIS
-            The nodes the System Tests' own cluster cluster.xmip declares and the
-            roles each declares. It names no cluster: where it runs is the
-            run's or the environment's (ADR-0028, amendment 2026-10-21).
+            The nodes the System Tests' own cluster cluster.xmip declares, the
+            roles each declares and the Storage nodes it lists. It names no
+            cluster: where it runs is the run's or the environment's (ADR-0028,
+            amendment 2026-10-21).
     #>
     [CmdletBinding()]
     [OutputType([pscustomobject])]
@@ -306,8 +316,12 @@ function Write-XmipTestCluster {
             them, in node::NodeRole's words as ConvertTo-XmipNodeRole says
             them, and capabilities where -NodeCapability states its Node
             capabilities (ADR-0056, amendment 2026-11-24). A node neither
-            names declares nothing. Replaced on every run, so the file is what
-            was typed this time.
+            names declares nothing. [storage] nodes lists, in the order
+            -Storage gives them, each Storage node of -Storage that is one of
+            the run's nodes, so the roll's drawing says each one's place there
+            and stands the configured primary first, never the first by its
+            name (ADR-0052, amendment 2026-11-25); none where none is.
+            Replaced on every run, so the file is what was typed this time.
 
         .PARAMETER Cluster
             The cluster's name, as -Cluster gave it.
@@ -321,6 +335,10 @@ function Write-XmipTestCluster {
         .PARAMETER NodeCapability
             The Node capabilities per node, as Join-XmipNodeCapability joins
             them.
+
+        .PARAMETER Storage
+            The Storage nodes the System Tests' file lists, host:port, in its
+            order (Read-XmipSystemTestCluster).
 
         .PARAMETER Path
             The run's directory.
@@ -343,6 +361,11 @@ function Write-XmipTestCluster {
         [Parameter()]
         [AllowNull()]
         [hashtable] $NodeCapability,
+
+        [Parameter()]
+        [AllowNull()]
+        [AllowEmptyCollection()]
+        [string[]] $Storage = @(),
 
         [Parameter(Mandatory)]
         [string] $Path
@@ -375,6 +398,17 @@ function Write-XmipTestCluster {
 
     if ($declared.Count -gt 0) {
         $document.nodes = $declared
+    }
+
+    # Each listed by its node's name, the host before the port, as
+    # configure::cluster::storage_places reads it.
+    [string[]] $listed = @(
+        @($Storage) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } |
+            Where-Object { $declared.Contains(($_ -replace ':[^:]*$', '')) }
+    )
+
+    if ($listed.Count -gt 0) {
+        $document.storage = [ordered]@{ nodes = $listed }
     }
 
     [string] $file = Join-Path -Path $Path -ChildPath "$Cluster.xmip"

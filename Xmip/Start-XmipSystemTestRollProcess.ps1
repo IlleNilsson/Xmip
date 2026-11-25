@@ -30,7 +30,7 @@ function Start-XmipSystemTestRollProcess {
         .PARAMETER Start
             What Start-XmipSystemTestRoll decided: Suite, Cluster, Stress,
             Test, Rounds, Nodes, NodeRole, Capability, Path, ClusterFile,
-            Named, Seconds, TimeFactor, Hidden, Choice and What.
+            Named, Seconds, TimeFactor, Choice and What.
     #>
     [CmdletBinding()]
     [OutputType([int])]
@@ -44,7 +44,6 @@ function Start-XmipSystemTestRollProcess {
     [string] $path = $Start.Path
     [string[]] $nodes = @($Start.Nodes)
     [string] $clusterFile = $Start.ClusterFile
-    [bool] $hidden = [bool] $Start.Hidden
 
     [int[]] $rolling = @(Get-XmipSystemTestRolling -Path $path -Cluster $cluster)
 
@@ -95,7 +94,6 @@ function Start-XmipSystemTestRollProcess {
         history      = $publication.History
         activity     = $publication.Activity
         log          = $launch.RedirectStandardOutput
-        hidden       = $hidden
     }
 
     [string] $recordPath = Get-XmipRollRecordPath -Path $path -Id $process.Id

@@ -31,7 +31,6 @@ CREATE TABLE xmip.audit (
     host text NOT NULL,
     process integer NOT NULL,
     location text NULL,
-    hidden boolean NOT NULL,
     execution uuid NULL,
     journey uuid NULL,
     message uuid NULL,

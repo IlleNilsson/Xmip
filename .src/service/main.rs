@@ -110,7 +110,6 @@ mod install;
 mod listening;
 mod opened;
 mod publication;
-mod readiness;
 mod ready;
 mod run;
 mod slice;
