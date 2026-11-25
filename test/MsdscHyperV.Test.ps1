@@ -550,7 +550,7 @@ Describe 'The System Tests'' cluster file' {
     }
 
     It 'gives the machine of each node that declares online a gateway, and every other none' {
-        # RX1 alone reaches past the network in the file, through the gateway
+        # RX1 and TX3 alone reach past the network in the file, through the gateway
         # machine, the domain controller (the owner, 2026-11-24: "A good
         # choice would be the DC"); the host keeps its address on the switch.
         $nodes = $script:Made.Content['nodes']

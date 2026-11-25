@@ -241,8 +241,12 @@ not:
   the System Tests and the Systems Tests alike, the run's node list from it
   and its operator certificate from `operator/`, resolving no name, and
   refuses a cluster file that changed since (ADR-0028, amendment
-  2026-11-25). Its third switch, `-Container`, is refused until the tests
-  run in containers.
+  2026-11-25). Its third switch, `-Container`, deploys nothing here: the
+  run makes a Linux container for each node and far end itself, from the
+  file's `[environment.container]` image and the same build under
+  `.local-work/package/<version>/`, and slices each node with
+  `Set-EnvironmentSlice` (`msdsc/environment/EnvironmentSlice.ps1`) as a
+  machine's slice is made (ADR-0028, the second amendment of 2026-11-25).
 
 The keys are kept as long as the folder is: a person reaches a machine with
 `ssh -i <state>/ssh/id_ed25519 -o UserKnownHostsFile=<state>/known_hosts

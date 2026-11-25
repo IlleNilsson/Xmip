@@ -56,7 +56,7 @@ function Start-XmipTest {
             a bare System is accepted and resolves to Core.System. A third
             party's suite carries its own provider. Case does not matter. The
             parameters below are the two rolls', and Core.Demo takes -Cluster,
-            -Stress, -Process, -VirtualMachine and its own -Tester.
+            -Stress, -Process, -VirtualMachine, -Container and its own -Tester.
 
             Wildcards select a group, exactly as -Test does (the owner,
             2026-09-19): -Suite * is every suite but those started by their name
@@ -186,8 +186,7 @@ function Start-XmipTest {
             Start-XmipTest -Cluster CL2 -PassThru | Start-XmipOperationWeb -Url ...
 
         .PARAMETER Process
-            Every node and far end a local process, as where no switch is given; the
-            three are Core.System's, Core.Systems' and Core.Demo's. -Proc.
+            Each node and far end a local process, as with no switch; rolls' and Core.Demo's. -Proc.
 
         .PARAMETER VirtualMachine
             On the virtual machines Deploy-XmipEnvironment deployed for -Cluster here,
@@ -197,7 +196,8 @@ function Start-XmipTest {
             with nothing deployed, or another cluster file than the one deployed. -VM.
 
         .PARAMETER Container
-            Not built yet, and REFUSED before anything is built (ADR-0015). -C.
+            A Linux container each, WSL's on Windows, Podman's on Linux, made once built and taken
+            away by Stop-XmipTest; REFUSED before anything is built, naming what it lacks. -C.
 
         .PARAMETER LoadBytes
             The HeavyLoad test's payload: a number or a size like 512mb or 2gb.

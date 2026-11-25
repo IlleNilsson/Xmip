@@ -51,7 +51,8 @@ function Test-XmipDemoReady {
             where it is not given.
 
         .PARAMETER RunsAs
-            Process or VirtualMachine: the switch the roll is started with.
+            Process, VirtualMachine or Container: the switch the roll is
+            started with.
 
         .PARAMETER Tester
             The person the web host lets act, as Start-XmipOperationWeb
@@ -74,7 +75,7 @@ function Test-XmipDemoReady {
         [string] $Stress = $script:XmipDemoStress,
 
         [Parameter()]
-        [ValidateSet('Process', 'VirtualMachine')]
+        [ValidateSet('Process', 'VirtualMachine', 'Container')]
         [string] $RunsAs = 'Process',
 
         [Parameter()]
@@ -163,7 +164,7 @@ function New-XmipDemoState {
             The stress it starts the roll at.
 
         .PARAMETER RunsAs
-            Process or VirtualMachine: what it runs the roll as.
+            Process, VirtualMachine or Container: what it runs the roll as.
 
         .PARAMETER Tester
             The tester, or empty.
@@ -191,7 +192,7 @@ function New-XmipDemoState {
         [string] $Stress = $script:XmipDemoStress,
 
         [Parameter()]
-        [ValidateSet('Process', 'VirtualMachine')]
+        [ValidateSet('Process', 'VirtualMachine', 'Container')]
         [string] $RunsAs = 'Process',
 
         [Parameter()]

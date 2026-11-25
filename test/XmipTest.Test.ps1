@@ -333,25 +333,44 @@ Describe 'One switch runs the rolls as local processes, on virtual machines or a
         }
     }
 
-    It 'refuses -Container, by -C too, before anything is built: not built yet' {
+    It 'refuses -Container, by -C too, before anything is built, in the order it is asked' {
         # -C is an alias of its own, which PowerShell binds before any prefix;
         # -Cluster and -ComputerName still bind by their names.
-        InModuleScope Xmip -Parameters @{ Cluster = $script:Cluster.Name } {
-            param($Cluster)
+        [hashtable] $given = @{ Cluster = $script:Cluster.Name; Stage = $script:Stage }
+
+        InModuleScope Xmip -Parameters $given {
+            param($Cluster, $Stage)
 
             Mock Start-XmipSystemTestBuild { throw 'built' }
             Mock Get-XmipDeployHypervisor { throw 'asked of a host' }
-            [string] $refused = '*REFUSED. Running as containers is not built yet: the open ' +
-                'problem "The tests and the demo run in containers: WSL containers or ' +
-                'containerd on Windows, Podman on Linux, one container per node and far end, ' +
-                'made from the same cluster file" (ADR-0015)*'
 
+            # First the host's container tool, in its own words.
+            Mock Get-XmipContainerTool { throw 'REFUSED: no container tool on this host' }
             foreach ($suite in 'Core.System', 'Core.Systems') {
                 { Start-XmipTest -Suite $suite -Cluster $Cluster -Container -ErrorAction Stop } |
-                    Should -Throw -ExpectedMessage $refused
+                    Should -Throw -ExpectedMessage '*REFUSED: no container tool on this host*'
                 { Start-XmipTest -Suite $suite -Cluster $Cluster -C -ErrorAction Stop } |
-                    Should -Throw -ExpectedMessage $refused
+                    Should -Throw -ExpectedMessage '*REFUSED: no container tool on this host*'
             }
+
+            # Then nodes chosen: the containers run the file's every node.
+            Mock Get-XmipContainerTool { 'a container tool' }
+            Mock Get-XmipContainerImage { throw 'REFUSED: no image named' }
+            [hashtable] $named = @{
+                Nodes = @($Stage.receiving); NodeRole = @{ $Stage.receiving = 'executing' }
+            }
+            { Start-XmipTest -Cluster $Cluster -C @named -ErrorAction Stop } |
+                Should -Throw -ExpectedMessage (
+                    '*REFUSED. -Nodes, -NodeRole belong to -Process, not -Container*')
+
+            # Then the file's image, then the Linux build the containers run.
+            { Start-XmipTest -Cluster $Cluster -C -ErrorAction Stop } |
+                Should -Throw -ExpectedMessage '*REFUSED: no image named*'
+            Mock Get-XmipContainerImage { 'an image' }
+            Mock Get-XmipContainerBuild { throw 'REFUSED: no Linux build' }
+            { Start-XmipTest -Cluster $Cluster -C -ErrorAction Stop } |
+                Should -Throw -ExpectedMessage '*REFUSED: no Linux build*'
+
             { Start-XmipTest -Suite Core.Estate -C -ErrorAction Stop } |
                 Should -Throw -ExpectedMessage '*-Container belong to Core.System and Core.Systems*'
             Should -Invoke Start-XmipSystemTestBuild -Times 0
@@ -469,6 +488,70 @@ Describe 'One switch runs the rolls as local processes, on virtual machines or a
             Should -Invoke Start-XmipSystemTestRollProcess -Times 1 -ParameterFilter {
                 $Start.RunsAs -eq 'VirtualMachine'
             }
+        }
+    }
+
+    It 'makes the containers once built and hands the roll their addresses, ports and operator' {
+        [hashtable] $given = $script:Named + @{ Area = (Join-Path $TestDrive 'contained') }
+
+        InModuleScope Xmip -Parameters $given {
+            param($Cluster, $Stage, $Area)
+
+            [string] $node = @($Cluster.Nodes)[0]
+            Mock Get-XmipContainerTool { 'a container tool' }
+            Mock Get-XmipContainerImage { 'an image' }
+            Mock Get-XmipContainerBuild { @{} }
+            Mock Start-XmipSystemTestBuild { $script:Started = $Start; 4242 }
+            Mock Get-XmipSystemTestPublication { throw 'no binary in this test' }
+            Mock Get-XmipTestStatus { }
+            Mock Write-Host { }
+
+            Start-XmipTest -Suite Core.System -Cluster $Cluster.Name -C -Rounds 1 -Path $Area
+
+            # Nothing is made before the build: the console returns at once.
+            $script:Started.RunsAs | Should -Be 'Container'
+            $script:Started.Choice.Keys | Should -Not -Contain 'Deployed'
+            [hashtable] $began = @{ Start = $script:Started; Id = 1; Started = Get-Date }
+            (New-XmipSystemTestBuildRecord @began).runs_as | Should -Be 'Container'
+
+            # The build builds the roll and this host's xmip-service, which
+            # slices, makes the containers, and hands the roll no service.
+            $script:Made = @{
+                Operator  = Join-Path $Area 'operator'
+                Nodes     = [ordered]@{ $node = '192.0.2.20' }
+                FarEnds   = [ordered]@{ far = '192.0.2.21' }
+                Published = [ordered]@{
+                    "${node}:7401" = '127.0.0.1:50001'; 'far:7423' = '127.0.0.1:50002'
+                }
+            }
+            [hashtable] $handing = @{
+                Cluster = $Cluster.Name; RunsAs = 'Container'; Path = $Area
+                Choice  = @{ Stress = 'Calm'; Area = $Area }
+            }
+            [string] $handed = Join-Path $Area 'build-container.clixml'
+            Export-Clixml -LiteralPath $handed -InputObject $handing -Depth 5
+            Mock Invoke-XmipSystemTestBuild { 'roll' }
+            Mock Invoke-XmipSystemTestService { 'this host''s xmip-service' }
+            Mock Start-XmipSystemTestContainer {
+                $script:Making = @{ Cluster = $Cluster; Slicer = $Slicer }
+                $script:Made
+            }
+            Mock Start-XmipSystemTestRollProcess { $script:Rolled = $Start; 7 }
+
+            [string] $record = Join-Path $Area 'build-container.toml'
+            Complete-XmipSystemTestBuild -Record $record -Handed $handed
+
+            $script:Making.Cluster | Should -Be $Cluster.Name
+            $script:Making.Slicer | Should -Be 'this host''s xmip-service'
+            $script:Rolled.Keys | Should -Not -Contain 'Service'
+            [hashtable] $choice = $script:Rolled.Choice
+            $environment = New-XmipSystemTestEnvironment @choice
+            $environment.XMIP_SYSTEM_TEST_MACHINES |
+                Should -Be "$node=192.0.2.20,far=192.0.2.21"
+            $environment.XMIP_SYSTEM_TEST_PUBLISHED |
+                Should -Be "${node}:7401=127.0.0.1:50001,far:7423=127.0.0.1:50002"
+            $environment.XMIP_SYSTEM_TEST_CERTIFICATE |
+                Should -Be ([System.IO.Path]::GetFullPath($script:Made.Operator))
         }
     }
 }

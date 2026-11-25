@@ -1991,3 +1991,73 @@ the drafting's, and the owner's to strike.
   ring answering until their object holds the Stream, a PROFINET device
   taking its cycles. Where a machine grants no such namespace, the test
   says so and runs nothing.
+
+## Amendment, 2026-11-25: the tests' containers are Linux, WSL containers on Windows and Podman on Linux
+
+**Provenance.** Open problem 188: the tests and the demo run in containers,
+*WSL containers or containerd on Windows, Podman on Linux, one container per
+node and far end, made from the same cluster file*, recorded with
+`Start-XmipTest -Container` (the owner, 2026-11-25: *We missed a switch -As
+Container*, *Aliased as C*), the containers being where the amendment of
+2026-11-23 has them (*Containers, wherever they live*). Building it, the
+workers settled the rest the same day, for the owner to strike; ADR-0028's
+amendment of this date says how a run makes and reads them.
+
+- **Linux containers wherever they live.** On a Windows host, WSL
+  containers, `wslc`, Windows' own and no administrator's to run; on a
+  Linux host, Podman, the system's own, rootless; Docker Desktop is not
+  used, as the amendment of 2026-11-23 has it. The two take the same verbs
+  and switches, so the module runs either through one function
+  (`Invoke-XmipContainerTool`) and knows which by the host alone
+  (`Get-XmipContainerTool`), refusing in words, naming what installs it,
+  where it is absent.
+- **Every node and far end of a run in containers is Linux.** A machine's
+  `os` in the cluster file is its virtual machine's; a run in containers
+  gives every node and far end the Linux build, as a run as local
+  processes runs every node on this computer's own system. The Windows
+  Server Core containers on containerd that the amendment of 2026-11-23
+  gives Windows nodes stand, with the isolation each host takes, process
+  isolation where the host's Windows build is the image's and Hyper-V
+  isolation where it is not, as on a Windows 11 host (the owner,
+  2026-11-25: *Go as you suggest*); they are not built: they take
+  containerd and the Windows Containers feature, which an administrator
+  installs, every program built for Windows given to them, and a network
+  where a Linux and a Windows container find each other by name. Recorded
+  as an open problem.
+- **No image of Xmip's yet.** Clause 4's image per release is not built.
+  The cluster file names the image every container runs, `[environment.container]
+  image`, the System Tests' AlmaLinux's own minimal image from its
+  publisher's registry, as their Linux machines install AlmaLinux from its
+  publisher's ISO; the container tool pulls it where it has none. The
+  programs are not in it: one copy of the Linux build is mounted read-only
+  into every container, and each container's configuration is copied in,
+  since a copy from Windows keeps no mode and a program copied so would not
+  run.
+- **A container is given what a Linux machine is given**: the Linux build
+  under `.local-work/package/<version>`, the `.rpm`'s staged
+  `xmip-service`, the far ends' program and the module libraries built for
+  Linux. Where that build keeps each is said once, `Get-XmipBuiltProgram`,
+  which `Deploy-XmipEnvironment`'s `Add-XmipDeployBuild` asks too, where it
+  spelled the layout itself.
+- **What each was, 2026-11-25.** WSL 3.0.5 (2026-11-03) is the latest
+  release, WSL containers generally available since WSL 3.0.1 (2026-09-29;
+  [Microsoft](https://blogs.windows.com/windowsdeveloper/2026/09/29/wsl-containers-now-generally-available/),
+  [the WSL releases](https://github.com/microsoft/WSL/releases)), without
+  Compose yet; its `wslc` 5.0.1 mounts a Windows folder into a container,
+  finds a container on its network by its alias, publishes a port on
+  127.0.0.1, refuses one in a range Windows reserves, and answers the
+  inspection of a network that is not there with success and an empty
+  list, so whether one is there is read from the answer. Podman 6.2 is the
+  latest release
+  ([its releases](https://github.com/podman-container-tools/podman/releases),
+  [endoflife.date](https://endoflife.date/podman)); a system based on
+  Ubuntu 24.04 carries 4.9.3 in its own repositories, below the floor, and
+  installing any of it takes an administrator.
+
+This supersedes, without editing it, the first amendment of this date's
+*Its third switch, `-Container`, is refused until the tests run in
+containers*; the amendment of 2026-11-23 stands whole.
+
+Proved by `test/SystemTestContainer.Test.ps1` and `test/XmipTest.Test.ps1`,
+and by a System Tests roll in WSL containers (ADR-0028, amendment of this
+date).

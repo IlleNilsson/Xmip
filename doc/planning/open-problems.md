@@ -3279,14 +3279,6 @@ Found 2026-11-25: `deploy/dsc/ansible` has no role for a System Tests far
 end, where msdsc places and starts one. Needed: the role, or a refusal
 naming msdsc.
 
-## 188. The tests and the demo do not run in containers
-
-Recorded 2026-11-25 with `Start-XmipTest -Container` (the owner: *We missed a
-switch -As Container*, *Aliased as C*), which refuses naming this: WSL
-containers or containerd on Windows, Podman on Linux, one container per node
-and far end, made from the same cluster file (ADR-0015, amendment
-2026-11-24). Needed: that way, built.
-
 ## 189. How a run runs is not shown beyond PowerShell
 
 Found 2026-11-25: `[run] runs_as`, `Process`, `VirtualMachine` or `Container`, is
@@ -3378,6 +3370,34 @@ it) and the transport takes whatever its link hands it, IP among it, each a
 Stream; and the transport says a read of its link returns at once, which a
 kernel link's does not. Needed: the Location's EtherType filtered, and the
 waiting said per link.
+
+## 209. Windows nodes run in Linux containers
+
+Found 2026-11-25 resolving 188: a run in containers gives every node and
+far end the Linux build; the Windows Server Core containers on containerd of
+ADR-0015's amendment of 2026-11-23, with the isolation the owner chose on
+2026-11-25, are not built. Needed: containerd and the Windows Containers
+feature, Windows builds given to them, and a network where a Linux and a
+Windows container find each other by name.
+
+## 210. A roll in containers that ends on its own leaves its containers
+
+Found 2026-11-25 resolving 188: a roll that ends by `-Rounds` or `-Duration`
+leaves its containers running until the cluster's next start, since
+`Stop-XmipTest` refuses a run that has ended. Needed: the end of the run
+takes them away.
+
+## 211. Runs in containers are unproven on Podman
+
+Found 2026-11-25 resolving 188: `-Container` ran in WSL containers on
+Windows; the Linux test computer has no Podman, and installing it takes
+root. Needed: Podman there, and a run in its containers.
+
+## 212. WSL containers are made one after another
+
+Found 2026-11-25 resolving 188: `wslc` makes, fills and starts one
+container in about 12 s, so seventeen take some 3.5 minutes before the roll
+starts. Needed: made side by side.
 # Suggested order
 
 Rewritten 2026-09-23, and corrected to what is built on 2026-11-10. The
@@ -4778,3 +4798,13 @@ had not changed, kept the stale copy, and `Get-XmipTestStatus` and
 `Stop-XmipTest` failed the same way, so the run could not be stopped by its
 own command. Needed: a run on another computer builds the runtime its parts
 load, as a landing does, or refuses in words, naming what is stale.
+
+## 188. The tests and the demo do not run in containers — **Resolved**
+
+*Resolved 2026-11-25:* `Start-XmipTest -Container` (`-C`) runs Core.System, Core.Systems and Core.Demo's roll with every node and far end in a Linux container of its own the run makes, WSL containers on Windows and rootless Podman on Linux, and `Stop-XmipTest` takes them away (ADR-0015 and ADR-0028, amendments 2026-11-25); a Core.System run in seventeen WSL containers proved it.
+
+Recorded 2026-11-25 with `Start-XmipTest -Container` (the owner: *We missed a
+switch -As Container*, *Aliased as C*), which refuses naming this: WSL
+containers or containerd on Windows, Podman on Linux, one container per node
+and far end, made from the same cluster file (ADR-0015, amendment
+2026-11-24). Needed: that way, built.

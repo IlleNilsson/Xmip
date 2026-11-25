@@ -189,11 +189,12 @@ Describe 'Core.Demo is one of Xmip''s suites, and refuses what it does not take'
 
             { Start-XmipTest -Suite Core.Demo -Cluster $Cluster -VM -ErrorAction Stop } |
                 Should -Throw -ExpectedMessage "*REFUSED. No environment of cluster $Cluster*"
-            # Containers are a way to run that is not built yet (ADR-0015).
+            # In containers, refused before anything starts where this host
+            # has no container tool, in its own words (ADR-0028, amendment
+            # 2026-11-25).
+            Mock Get-XmipContainerTool { throw 'REFUSED: no container tool on this host' }
             { Start-XmipTest -Suite Core.Demo -Cluster $Cluster -Container -ErrorAction Stop } |
-                Should -Throw -ExpectedMessage (
-                    '*REFUSED. Running as containers is not built yet: the open problem ' +
-                    '"The tests and the demo run in containers*')
+                Should -Throw -ExpectedMessage '*REFUSED: no container tool on this host*'
             Should -Invoke Start-XmipDetachedShell -Times 0
 
             [string] $file = (Get-XmipSystemTestLayout).Configuration

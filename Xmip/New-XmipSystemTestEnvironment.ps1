@@ -314,12 +314,14 @@ function New-XmipSystemTestEnvironment {
     }
 
     # On virtual machines, the System Tests' and the Systems Tests' alike, the
-    # environment Deploy-XmipEnvironment recorded:
+    # environment Deploy-XmipEnvironment recorded, and in containers the ones
+    # Start-XmipSystemTestContainer made:
     # each node's and far end's name=address, which the roll reads every one
     # of them at, resolving no name and spawning none in a machine's place,
     # and the folder of the operator certificate it made, which the roll asks
-    # them with. Unset, the run is local processes (ADR-0028, amendment
-    # 2026-11-25).
+    # them with; in containers also where this computer reaches each
+    # listener, name:port=address:port, its port published. Unset, the run is
+    # local processes (ADR-0028, amendments 2026-11-25).
     if ($null -ne $Deployed) {
         [string[]] $each = @(
             foreach ($table in @($Deployed['Nodes'], $Deployed['FarEnds'] | Where-Object { $_ })) {
@@ -329,6 +331,13 @@ function New-XmipSystemTestEnvironment {
         $environment.XMIP_SYSTEM_TEST_MACHINES = $each -join ','
         $environment.XMIP_SYSTEM_TEST_CERTIFICATE = [System.IO.Path]::GetFullPath(
             [string] $Deployed['Operator'])
+        $published = $Deployed['Published']
+
+        if ($null -ne $published -and $published.Count -gt 0) {
+            $environment.XMIP_SYSTEM_TEST_PUBLISHED = @(
+                foreach ($listener in @($published.Keys)) { "$listener=$($published[$listener])" }
+            ) -join ','
+        }
     }
 
     # The xmip-service the run starts every node as that is neither real nor

@@ -52,53 +52,91 @@ function Add-XmipDeployBuild {
         [string] $Estate
     )
 
-    $cargo = Read-XmipToml -Path (Join-Path $Estate 'Cargo.toml')
-    [string] $version = Get-TomlValue -Node (Get-TomlValue -Node $cargo -Name 'package') -Name (
-        'version')
-    [string] $built = Join-Path (Get-XmipEstateLayout -Root $Estate).Package $version
-    [string] $site = $script:XmipDeploySite
-    [string] $build = "Build-XmipService -Site $site -CargoArgument '--release'"
     [bool] $modules = @(Get-TomlValue -Node $Content -Name 'modules' -Default @()).Count -gt 0
     $Facts['Packages'] = @{}
     foreach ($family in @($Machines | Where-Object { $_.kind -eq 'node' } |
             ForEach-Object { $_.family } | Sort-Object -Unique)) {
-        [string] $system = $family.ToLowerInvariant()
-        [string] $kind = if ($family -eq 'Windows') { 'zip' } else { 'rpm' }
-        [string] $path = Join-Path $built "xmip-$version-$site-$system-x64.$kind"
-        if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
-            [string] $made = if ($kind -eq 'zip') { "$build -Package archive" }
-            else { "$build -Package rpm, on Linux" }
-            throw "REFUSED: a $family node is installed from $path, which is not there: $made."
+        [hashtable] $built = Get-XmipBuiltProgram -Estate $Estate -Family $family
+        if (-not (Test-Path -LiteralPath $built.Package -PathType Leaf)) {
+            throw ("REFUSED: a $family node is installed from $($built.Package), which is not " +
+                "there: $($built.Build).")
         }
-        $Facts.Packages[$family] = @{ path = $path }
-        [string] $libraries = Join-Path $built "modules/$system"
-        if (Test-Path -LiteralPath $libraries -PathType Container) {
-            $Facts.Packages[$family]['modules'] = $libraries
+        $Facts.Packages[$family] = @{ path = $built.Package }
+        if (Test-Path -LiteralPath $built.Modules -PathType Container) {
+            $Facts.Packages[$family]['modules'] = $built.Modules
         }
         elseif ($modules) {
             throw ("REFUSED: the cluster file's [[modules]] name module libraries, which a " +
-                "$family node is given from $libraries, which is not there: their libraries " +
-                "built for $family.")
+                "$family node is given from $($built.Modules), which is not there: their " +
+                "libraries built for $family.")
         }
     }
     $Facts['Programs'] = @{}
     foreach ($family in @($Machines | Where-Object { $_.kind -eq 'far end' } |
             ForEach-Object { $_.family } | Sort-Object -Unique)) {
-        [string] $file = if ($family -eq 'Windows') { 'xmip-system-test-external.exe' }
-        else { 'xmip-system-test-external' }
-        [string] $path = Join-Path $built "far-end/$($family.ToLowerInvariant())/$file"
+        [string] $path = (Get-XmipBuiltProgram -Estate $Estate -Family $family).FarEnd
         if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
             throw ("REFUSED: a far end on a $family machine runs $path, which is not there: " +
                 "the System Tests' xmip-system-test-external built for $family.")
         }
-        $Facts.Programs[$family] = @{ path = $path; file = $file }
+        $Facts.Programs[$family] = @{ path = $path; file = Split-Path -Path $path -Leaf }
     }
-    [string] $own = if ($IsWindows) { 'windows' } else { 'linux' }
-    [string] $program = if ($IsWindows) { 'xmip-service.exe' } else { 'xmip-service' }
-    $Facts['Slicer'] = Join-Path $built "$site-$own-x64/xmip/bin/$program"
+    [string] $own = if ($IsWindows) { 'Windows' } else { 'Linux' }
+    [hashtable] $slicing = Get-XmipBuiltProgram -Estate $Estate -Family $own
+    $Facts['Slicer'] = $slicing.Service
     if (-not (Test-Path -LiteralPath $Facts.Slicer -PathType Leaf)) {
-        [string] $kind = if ($IsWindows) { 'archive' } else { 'rpm' }
         throw ("REFUSED: this host slices and signs each node's configuration with " +
-            "$($Facts.Slicer), which is not there: $build -Package $kind.")
+            "$($Facts.Slicer), which is not there: $($slicing.Build).")
+    }
+}
+
+function Get-XmipBuiltProgram {
+    <#
+        .SYNOPSIS
+            Where this tree's build under .local-work/package/<version> keeps
+            what a machine of one family is given, the one place its layout
+            is said: Package, the family's package; Service, the xmip-service
+            the package stages; FarEnd, the System Tests' far-end program;
+            Modules, the folder of the module libraries; and Build, what
+            makes the package. Tests nothing.
+
+        .DESCRIPTION
+            The packages are Build-XmipService -Site personal-computer's: the
+            portable archive for Windows, the .rpm, built on Linux, for an
+            AlmaLinux machine, and for a container of the System Tests
+            (Start-XmipSystemTestContainer); their staged programs beside them.
+
+        .PARAMETER Estate
+            The estate's root.
+
+        .PARAMETER Family
+            Windows or Linux.
+    #>
+    [CmdletBinding()]
+    [OutputType([hashtable])]
+    param(
+        [Parameter(Mandatory)]
+        [string] $Estate,
+
+        [Parameter(Mandatory)]
+        [ValidateSet('Windows', 'Linux')]
+        [string] $Family
+    )
+
+    $cargo = Read-XmipToml -Path (Join-Path $Estate 'Cargo.toml')
+    [string] $version = Get-TomlValue -Node (Get-TomlValue -Node $cargo -Name 'package') -Name (
+        'version')
+    [string] $built = Join-Path (Get-XmipEstateLayout -Root $Estate).Package $version
+    [string] $site = $script:XmipDeploySite
+    [string] $system = $Family.ToLowerInvariant()
+    [string] $suffix = if ($Family -eq 'Windows') { '.exe' } else { '' }
+    [string] $kind = if ($Family -eq 'Windows') { 'zip' } else { 'rpm' }
+    [string] $made = if ($Family -eq 'Windows') { 'archive' } else { 'rpm, on Linux' }
+    return @{
+        Package = Join-Path $built "xmip-$version-$site-$system-x64.$kind"
+        Service = Join-Path $built "$site-$system-x64/xmip/bin/xmip-service$suffix"
+        FarEnd  = Join-Path $built "far-end/$system/xmip-system-test-external$suffix"
+        Modules = Join-Path $built "modules/$system"
+        Build   = "Build-XmipService -Site $site -CargoArgument '--release' -Package $made"
     }
 }

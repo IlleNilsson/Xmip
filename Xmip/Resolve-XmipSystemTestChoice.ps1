@@ -55,13 +55,14 @@ function Resolve-XmipRunsAs {
             What a run reads before anything is built, by what it runs as:
             nothing as local processes; on virtual machines the environment
             Deploy-XmipEnvironment recorded (Resolve-XmipVirtualMachineRun);
-            as containers, REFUSED by throwing, since that is not built yet.
+            in containers nothing, the refusals asked first
+            (Resolve-XmipContainerRun), since the run makes its containers
+            once it is built (Start-XmipSystemTestContainer).
 
         .DESCRIPTION
             Local processes, containers, virtual machines and physical
             machines are the ways a run is placed (ADR-0015, amendment
-            2026-11-24); containers wait on an open problem of their own. The
-            rolls' and the demo readiness check's alike.
+            2026-11-24). The rolls' and the demo readiness check's alike.
 
         .PARAMETER Bound
             What Start-XmipTest was called with.
@@ -82,11 +83,8 @@ function Resolve-XmipRunsAs {
     [string] $runsAs = Get-XmipRunsAs -Bound $Bound
 
     if ($runsAs -eq 'Container') {
-        throw ('REFUSED. Running as containers is not built yet: the open problem "The tests ' +
-            'and the demo run in containers: WSL containers or containerd on Windows, Podman ' +
-            'on Linux, one container per node and far end, made from the same cluster file" ' +
-            '(ADR-0015). -Process runs as local processes, -VirtualMachine on the virtual ' +
-            'machines Deploy-XmipEnvironment made.')
+        Resolve-XmipContainerRun -Bound $Bound
+        return $null
     }
 
     if ($runsAs -eq 'VirtualMachine') {
@@ -94,6 +92,51 @@ function Resolve-XmipRunsAs {
     }
 
     return $null
+}
+
+
+function Resolve-XmipContainerRun {
+    <#
+        .SYNOPSIS
+            REFUSED, by throwing, before anything is built, a run in
+            containers this host cannot make; nothing where it can.
+
+        .DESCRIPTION
+            Start-XmipTest -Container makes a container for each node and far
+            end of the System Tests' cluster file once the run is built
+            (Start-XmipSystemTestContainer; ADR-0015 and ADR-0028, amendments
+            2026-11-25). Refused in this order: a host with no container tool
+            (Get-XmipContainerTool), naming what installs it; -Nodes,
+            -NodeRole or -NodeCapability, since the containers run the file's
+            every node with what it declares; a file naming no image; and no
+            Linux build of this tree to give the containers
+            (Get-XmipContainerBuild), naming what builds it.
+
+        .PARAMETER Bound
+            What Start-XmipTest was called with.
+    #>
+    [CmdletBinding()]
+    [OutputType([void])]
+    param(
+        [Parameter(Mandatory)]
+        [System.Collections.IDictionary] $Bound
+    )
+
+    $null = Get-XmipContainerTool
+    $layout = Get-XmipSystemTestLayout
+    [string] $file = $layout.Configuration
+    [string[]] $chose = @(
+        'Nodes', 'NodeRole', 'NodeCapability' | Where-Object { $Bound.ContainsKey($_) }
+    )
+
+    if ($chose.Count -gt 0) {
+        throw ("REFUSED. -$($chose -join ', -') belong to -Process, not -Container: the " +
+            "containers run every node of $file with what it declares.")
+    }
+
+    $content = Read-XmipToml -Path $file
+    $null = Get-XmipContainerImage -Content $content -File $file
+    $null = Get-XmipContainerBuild -Estate $layout.Root -Content $content
 }
 
 

@@ -36,6 +36,8 @@
   `-Container`, say where the System Tests, the Systems Tests and the demo
   run, containers not built yet; the System Tests test the internals, the
   Systems Tests how nodes interact
+- Amended: 2026-11-25 — `-Container` runs them in containers the run makes,
+  one Linux container for every node and far end
 - Related: ADR-0018 (the Service and the Host Services), ADR-0027 (the operator
   boundary), ADR-0010 (contract and transport boundaries), ADR-0025 (when a
   Module loads), ADR-0052 (the views' "show test clusters" box, its
@@ -2180,3 +2182,87 @@ This supersedes, without editing them:
   2026-11-22 that a far end is used where its name resolves and the far end
   on this computer is served where none does: on virtual machines every far
   end is a deployed one.
+
+## Amendment, 2026-11-25: `-Container` runs the System Tests, the Systems Tests and the demo in containers the run makes
+
+**Provenance.** Open problem 188, recorded with the switch the amendment
+above added (the owner, 2026-11-25: *We missed a switch -As Container*,
+then *Aliased as C*), and ADR-0015's amendment of 2026-11-23: *Local
+processes, VM machines or containers. Containers, wherever they live*. How
+the run makes its containers, the variable, the image and the Linux-only
+containers are the worker's drafting, the same day, for the owner to
+strike; ADR-0015's amendment of this date says what a container runs.
+
+- **The same file, one container each.** `Start-XmipTest -Container`
+  (`-C`) runs `Core.System`, `Core.Systems` and `Core.Demo`'s roll over the
+  System Tests' one cluster file with every node and every far end of it in
+  a Linux container of its own, on a network of the cluster's,
+  `Xmip-<cluster>`, where each is found by its name, as the machines of an
+  environment find each other by theirs; a container is
+  `xmip-system-test-<cluster>-node-<node>` or
+  `-external-<far end>`, as the processes are (ADR-0053). Every node is
+  real, as on virtual machines: the roll asks each over its operate
+  listener with an operator certificate and is driven through the far ends
+  served in theirs (`external/remote.rs`); nothing runs as a process here
+  but the roll. `[run] runs_as` and `Get-XmipTestStatus`'s `As` say
+  `Container`.
+- **The run makes them; nothing is deployed beforehand.** Unlike virtual
+  machines, which take an administrator and an hour, containers take
+  seconds and no administrator, so the detached build makes them once the
+  roll is built (`Start-XmipSystemTestContainer`), and `Stop-XmipTest`
+  takes them and their network away with the roll, or with the build that
+  made them before its roll started; a build that fails once it made them
+  takes them away itself. What an earlier run of
+  the cluster left — a roll that ended on its own leaves its containers — is
+  taken away before the next is made, by the record the run writes before
+  it makes anything, `container/<cluster>/containers.toml` in the area. For
+  each node and far end, as a deployment gives a Linux machine: its
+  certificate (`Initialize-XmipDeployIdentity`) and, for a node, its slice,
+  sliced by this host's `xmip-service` and signed (`Set-EnvironmentSlice`,
+  the deployment's own), bound to the receivers and listening, Xmip Storage
+  first; all of it issued under the System Tests' own authority, where the
+  nodes a run starts are issued (the amendment of 2026-10-27). The
+  configuration is copied into the container, and the programs mounted
+  read-only from one copy of the Linux build the run takes, so a later
+  build never changes what runs. Each node is waited for until it says it
+  is ready (`xmip-service --readiness`), as a deployment waits.
+- **What this computer reaches is published.** A container's own address
+  is its network's, which the far ends and the other nodes reach and this
+  computer does not: WSL containers run in a utility virtual machine and
+  rootless Podman in a namespace of its own. Every port each node and far
+  end says it listens on (`--listening`) is published on this computer's
+  loopback, each at a free port of its own, and the roll is told both:
+  `XMIP_SYSTEM_TEST_MACHINES`, each `name=address` on the network, which
+  the far ends are told a node's listening Receive Locations at, and
+  `XMIP_SYSTEM_TEST_PUBLISHED`, each listener's `name:port=address:port`,
+  where the roll dials a node's operate listener and a far end's control
+  port (`environment::Machines::reached`). Published listeners are what say
+  the run is in containers; on virtual machines none is, and every dial is
+  the machine's own address as before.
+- **Refused before anything is built**, in this order: a host with no
+  container tool, naming what installs it; `-Nodes`, `-NodeRole` or
+  `-NodeCapability`, since the containers run the file's every node with
+  what it declares; a file whose `[environment.container]` names no image;
+  and no Linux build of this tree under `.local-work/package/<version>`,
+  naming what builds it (`Resolve-XmipContainerRun`).
+
+This supersedes, without editing it, the bullet *`-Container` is not built*
+of the amendment above, and, for containers, the second amendment of
+2026-11-23's *Setting up the environment is the prerequisite*: a run in
+containers sets up its own.
+
+Proved by `test/SystemTestContainer.Test.ps1` (the tool each host has, the
+image, the build's refusals, the containers made with their names,
+aliases, published ports and readiness in order, and taken away: what the
+tool answers read for whether one is there, with a roll or a build
+`Stop-XmipTest` stops and by a build that failed),
+`test/XmipTest.Test.ps1` (the refusals in order before anything is built,
+and the roll handed the machines, the published listeners and the operator
+from the containers made once built), `test/Demo.Test.ps1` and the roll's
+`environment.rs` tests (a published listener reached where it is
+published, a malformed one refused in words); and by `Start-XmipTest
+-Suite Core.System -Container` in WSL containers on a Windows 11 host the
+same day: seventeen containers, the eleven nodes and the six far ends, the
+roll reading every node as real where its operate port was published, 27
+rounds, its worst fine when it was stopped, and all of it taken away by
+`Stop-XmipTest`.

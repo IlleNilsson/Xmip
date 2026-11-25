@@ -22,7 +22,9 @@ function Stop-XmipTest {
             the tree or declared in its cluster, and after the cluster every
             process declared in the cluster is ended as well: on 2026-09-25 a
             cluster restarting its nodes faster than they could be listed
-            left seventeen running behind a stopped roll.
+            left seventeen running behind a stopped roll. A run in containers,
+            its roll or the build that made them, takes its containers and
+            their network away with it.
 
             Which runs: those -Suite, -Cluster and -Test pick together, as
             Start-XmipTest was told them; those on the pipeline from
@@ -280,6 +282,12 @@ function Stop-XmipTest {
                 continue
             }
 
+            # A run in containers takes them away with it, a roll and a build
+            # that made them before it started its roll alike (ADR-0028,
+            # amendment 2026-11-25).
+            [hashtable] $contained = @{ Cluster = "$($roll.Cluster)"; Area = "$($roll.Path)" }
+            [bool] $inContainers = "$($roll.RunsAs)" -eq 'Container' -and $contained.Area -ne ''
+
             if ($detached) {
                 if ($PSCmdlet.ShouldProcess("the $($roll.Suite) run $number", 'Stop')) {
                     # What a demo run started first — its roll, web host and
@@ -294,6 +302,9 @@ function Stop-XmipTest {
                     }
                     else {
                         Stop-XmipDetachedRun -Run $roll
+                    }
+                    if ($inContainers -and $roll.Kind -eq 'build') {
+                        Remove-XmipSystemTestContainer @contained -Confirm:$false
                     }
                     Write-XmipAudit -Action 'Stop-XmipTest' -Phase Finished -Property @{
                         Id    = $number
@@ -331,6 +342,10 @@ function Stop-XmipTest {
             # 2026-09-20).
             if (-not [string]::IsNullOrWhiteSpace($roll.Cluster)) {
                 Remove-XmipSystemTestImage -Cluster $roll.Cluster -Confirm:$false
+            }
+
+            if ($inContainers) {
+                Remove-XmipSystemTestContainer @contained -Confirm:$false
             }
 
             Write-XmipAudit -Action 'Stop-XmipTest' -Phase Finished -Property @{

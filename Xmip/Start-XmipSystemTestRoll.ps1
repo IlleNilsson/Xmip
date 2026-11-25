@@ -157,8 +157,10 @@ function Start-XmipSystemTestRoll {
             As Start-XmipTest takes it, already checked there.
 
         .PARAMETER RunsAs
-            Process, as local processes, or VirtualMachine, on the virtual
-            machines -Deployed names: the switch Start-XmipTest was given.
+            Process, as local processes; VirtualMachine, on the virtual
+            machines -Deployed names; or Container, in the containers the
+            build makes (Start-XmipSystemTestContainer): the switch
+            Start-XmipTest was given.
 
         .PARAMETER Deployed
             On virtual machines, the environment Deploy-XmipEnvironment
@@ -210,7 +212,7 @@ function Start-XmipSystemTestRoll {
         [switch] $PassThru,
 
         [Parameter(Mandatory = $false)]
-        [ValidateSet('Process', 'VirtualMachine')]
+        [ValidateSet('Process', 'VirtualMachine', 'Container')]
         [string] $RunsAs = 'Process',
 
         [Parameter(Mandatory = $false)]
@@ -238,7 +240,10 @@ function Start-XmipSystemTestRoll {
         ", the nodes of $((Get-XmipSystemTestLayout).Configuration)"
     }
     elseif ($Nodes.Count -eq 0) { ', no nodes' } else { ", nodes $($Nodes -join ', ')" }
-    [string] $on = if ($RunsAs -eq 'VirtualMachine') { ' on its virtual machines' } else { '' }
+    [hashtable] $placed = @{
+        Process = ''; VirtualMachine = ' on its virtual machines'; Container = ' in containers'
+    }
+    [string] $on = $placed[$RunsAs]
     [string] $what = "roll at $($Stress.ToLowerInvariant())$of$for$with as cluster $Cluster$on"
 
     if (-not $Caller.ShouldProcess("the Xmip System Tests in $Path", "Start a $what")) {

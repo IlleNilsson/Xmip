@@ -192,11 +192,26 @@ function Complete-XmipSystemTestBuild {
 
     try {
         Invoke-XmipSystemTestBuild -Binary roll | Out-Null
+        [string] $runsAs = [string] $start['RunsAs']
 
         # The xmip-service every node of the run not real is started as; on
         # virtual machines every node is real, and none is built here.
-        if ([string] $start['RunsAs'] -ne 'VirtualMachine') {
+        if ($runsAs -notin 'VirtualMachine', 'Container') {
             $start.Service = Invoke-XmipSystemTestService -Cluster $start.Cluster
+        }
+
+        # In containers every node is real too, each given the Linux build;
+        # this host's xmip-service slices and signs their configurations, and
+        # its far-end program says what a far end listens on (ADR-0028,
+        # amendment 2026-11-25).
+        if ($runsAs -eq 'Container') {
+            [hashtable] $making = @{
+                Cluster  = $start.Cluster
+                Area     = $start.Path
+                Slicer   = Invoke-XmipSystemTestService -Cluster $start.Cluster
+                Listener = (Get-XmipSystemTestLayout).External
+            }
+            $start.Choice.Deployed = Start-XmipSystemTestContainer @making
         }
 
         [int] $roll = Start-XmipSystemTestRollProcess -Start $start
@@ -204,10 +219,24 @@ function Complete-XmipSystemTestBuild {
         Write-Verbose "built; cluster $($start.Cluster) rolls as pid $roll"
     }
     catch {
+        [string] $fault = $_.Exception.Message
+
+        # A build that failed once it made containers takes them away, a
+        # failure to do so said after its own (ADR-0028, amendment 2026-11-25).
+        if ([string] $start['RunsAs'] -eq 'Container') {
+            [hashtable] $made = @{ Cluster = $start.Cluster; Area = $start.Path }
+            try {
+                Remove-XmipSystemTestContainer @made -Confirm:$false
+            }
+            catch {
+                $fault += " The containers were not taken away: $($_.Exception.Message)"
+            }
+        }
+
         [datetime] $began = (Get-Process -Id $PID).StartTime
         $written = New-XmipSystemTestBuildRecord -Start $start -Id $PID -Started $began
         $written.state = 'FAILED'
-        $written.fault = $_.Exception.Message
+        $written.fault = $fault
         $written.finished = [datetime]::UtcNow.ToString('o')
         Write-XmipToml -Path $Record -Value $written
         Write-Verbose "FAILED: $($_.Exception.Message)"

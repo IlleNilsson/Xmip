@@ -693,8 +693,8 @@ DS1's says which it is, the primary or a standby.
 At test level 2 the same run goes on virtual machines,
 `Start-XmipTest -VirtualMachine`, `-VM` for short, where `-Process`
 (`-Proc`) is level 1 and what runs where no switch is given; the third,
-`-Container` (`-C`), is to run them in containers and is refused until
-that is built (ADR-0028, amendment 2026-11-25). It takes the System Tests, which test the
+`-Container` (`-C`), runs them in containers, below (ADR-0028, amendments
+2026-11-25). It takes the System Tests, which test the
 internals, and the Systems Tests, `Core.Systems`, which test how nodes
 interact, alike: the same cluster file and the same scenarios, every node
 `xmip-service` and every far end its program, each on a virtual machine of
@@ -722,6 +722,21 @@ presents the certificate its environment gave it, `tls/node.pem`, on its
 operate listener and to the Storage nodes, which serve on port 7443 — the
 port a Storage node's `xmip-service --listening` says, so the environment
 opens it.
+
+In containers, `Start-XmipTest -Container`, the same file runs with nothing
+deployed beforehand and no administrator: once the roll is built, the run
+makes one Linux container for every node and far end, on a network of the
+cluster's where each is found by its name, from the image the file's
+`[environment.container]` names — WSL containers, `wslc`, on Windows, which
+WSL 3.0.1 and later bring (`wsl --update`), and rootless Podman on Linux.
+Each is given what an AlmaLinux machine is given, from the build under
+`.local-work/package/<version>/` (step 2 below, the `.rpm`'s staged
+programs and the far ends' program built for Linux), its slice signed and
+its certificate issued under the System Tests' own authority; every port it
+listens on is published on this computer's loopback, where the run reaches
+it, and the run waits for each node to be ready. `Stop-XmipTest` takes the
+containers away. A machine's `os` is its virtual machine's alone: every
+container is Linux, wherever it lives.
 
 The whole way, in order, with Microsoft DSC. **E** marks a step that needs
 an elevated Xmip PowerShell Console; every other step runs in an ordinary

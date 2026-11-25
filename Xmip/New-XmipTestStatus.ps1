@@ -47,8 +47,9 @@ function New-XmipTestStatus {
 
         .PARAMETER Property
             The rest, by name: RunsAs (a roll's, its build's and a demo
-            run's: Process, as local processes, or VirtualMachine, on virtual
-            machines), Cluster, StartTime, Stress, Tests, Rounds,
+            run's: Process, as local processes, VirtualMachine, on virtual
+            machines, or Container, in containers), Cluster, StartTime,
+            Stress, Tests, Rounds,
             Nodes, NodeCapability (each node's Node capabilities,
             <node>=online+erp-direct), RealNodes, Worst, Tally, Passed, Failed,
             Skipped, Fault, Snapshot, Path, Record, Log and ComputerName, the

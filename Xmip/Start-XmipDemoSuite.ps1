@@ -165,7 +165,7 @@ function New-XmipDemoCommand {
             The stress it starts its roll at.
 
         .PARAMETER RunsAs
-            Process or VirtualMachine: what it runs its roll as.
+            Process, VirtualMachine or Container: what it runs its roll as.
 
         .PARAMETER Tester
             The tester, or empty.
@@ -186,7 +186,7 @@ function New-XmipDemoCommand {
         [string] $Stress,
 
         [Parameter()]
-        [ValidateSet('Process', 'VirtualMachine')]
+        [ValidateSet('Process', 'VirtualMachine', 'Container')]
         [string] $RunsAs = 'Process',
 
         [Parameter()]

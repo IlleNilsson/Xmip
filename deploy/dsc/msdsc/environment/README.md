@@ -356,7 +356,8 @@ and the operator certificate the deploy issued for your account,
 `CN=<account name>`, signed by the same authority, whom every node lists
 among its `[operate] operators` — for the Systems Tests their node list and
 operator certificate — resolves no name, and makes, starts and spawns
-nothing. `-Container` is refused until the tests run in containers.
+nothing. `-Container` runs the same file in containers the run makes,
+each node's slice written by this folder's `Set-EnvironmentSlice`, as here.
 Every node must answer as that node, or the run is REFUSED before it
 starts; `-Nodes`, `-NodeRole` and `-NodeCapability` are refused with it,
 and so is a cluster file that changed since it was deployed:
