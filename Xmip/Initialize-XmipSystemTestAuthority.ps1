@@ -95,7 +95,7 @@ function Initialize-XmipSystemTestAuthority {
     $design = [Xmip.Surface.RuntimeLibrary]::Rules.Design
     [string] $text = Get-Content -LiteralPath $file -Raw -Encoding utf8
 
-    if (-not $design.TrySignedSlice($text, $file, $signing[0], $cluster, $full, [ref] $answer)) {
+    if (-not $design.TrySignedSlice($text, $signing[0], $cluster, $full, [ref] $answer)) {
         throw "REFUSED. The slice of $($signing[0]) from ${file}: $answer"
     }
 
