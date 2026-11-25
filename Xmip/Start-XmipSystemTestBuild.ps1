@@ -143,6 +143,7 @@ function New-XmipSystemTestBuildRecord {
     # Read by key: a key a caller left out is empty, never an error.
     return [ordered]@{
         suite        = [string] $Start['Suite']
+        runs_as      = [string] $Start['RunsAs']
         cluster      = [string] $Start['Cluster']
         pid          = $Id
         started      = $Started.ToUniversalTime().ToString('o')
@@ -191,8 +192,13 @@ function Complete-XmipSystemTestBuild {
 
     try {
         Invoke-XmipSystemTestBuild -Binary roll | Out-Null
-        # The xmip-service every node of the run not real is started as.
-        $start.Service = Invoke-XmipSystemTestService -Cluster $start.Cluster
+
+        # The xmip-service every node of the run not real is started as; on
+        # virtual machines every node is real, and none is built here.
+        if ([string] $start['RunsAs'] -ne 'VirtualMachine') {
+            $start.Service = Invoke-XmipSystemTestService -Cluster $start.Cluster
+        }
+
         [int] $roll = Start-XmipSystemTestRollProcess -Start $start
         Remove-Item -LiteralPath $Record -Force -ErrorAction SilentlyContinue
         Write-Verbose "built; cluster $($start.Cluster) rolls as pid $roll"

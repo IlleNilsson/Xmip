@@ -15,32 +15,34 @@ network, a pool or a domain is libvirt's.
 
 | Resource | Is |
 | --- | --- |
-| `Xmip.Libvirt/Network` | a network with NAT, the host its gateway, where `nat` says, isolated where a gateway machine is the way out or none is; its DHCP gives each machine its address by its static MAC, its DNS answers each machine's name and the names the environment adds |
+| `Xmip.Libvirt/Network` | a network with NAT, the host its gateway, where the host is the way out, isolated where a gateway machine is the way out or none is; its DHCP gives each machine its address by its static MAC, its DNS answers each machine's name and the names the environment adds |
 | `Xmip.Libvirt/Pool` | a directory pool for the machines' disks, images and answer media |
 | `Xmip.Libvirt/Machine` | one machine, a domain installed unattended from its ISO |
 
-## The example environment
+## The System Tests' environment
 
-`deploy/dsc/libvirt.example.toml`, which `Deploy-XmipEnvironment` reads
-(`deploy/dsc/README.md`), is the owner's node plan of 2026-11-22 under KVM:
-the Hyper-V example's 21 machines on 10.77.0.0/24, machine for machine, with
-the same names, addresses, systems, nodes and far ends
-(`deploy/dsc/msdsc/environment/README.md`). XMIP-DC01, the domain
-controller, is the network's DNS server and its way out, its
-`gateway_machine`, with a second adapter on the bridge your copy's `uplink`
-names (`deploy/dsc/README.md`, *The way out*), and the network is isolated;
-XMIP-RX01 alone reaches past the network, through it; XMIP-DEV02 is
-AlmaLinux with a desktop. An AlmaLinux machine starts
-with 2 GiB and is given up to the plan's figure; a Windows machine has the
-plan's floor, static: 2 GiB for Windows Server, 4 GiB for Windows 11
-(ADR-0015, amendment 2026-11-22).
+The `[environment]` table of the System Tests' cluster file, which
+`Deploy-XmipEnvironment` reads (`deploy/dsc/README.md`, *The environment
+table*), is the owner's node plan of 2026-11-22 under KVM as under
+Hyper-V: the same table, the same machines, names, systems, nodes and far
+ends (`deploy/dsc/msdsc/hyperv/README.md`), KVM through libvirt being a
+Linux host's kind. The `domain_controller`, XMIP-DC01 in the owner's plan,
+is the network's DNS server and its `gateway`, with a second adapter on the
+host's bridge (`deploy/dsc/README.md`, *The way out*), and the network is
+isolated; only the machine of a node that declares the Node capability
+`online` reaches past the network, through it; XMIP-DEV02 is AlmaLinux
+with a desktop. An AlmaLinux machine starts with 2 GiB and is given up to
+the plan's figure; a Windows machine has the plan's floor, static: 2 GiB
+for Windows Server, 4 GiB for Windows 11 (ADR-0015, amendment 2026-11-22).
 
-From a Linux host the Windows machines wait on two things the owner
-decides: their Administrator secret, which only Windows reads
-(`deploy/dsc/machine/MachineSecret.ps1`), and how msdsc reaches them, since
-PowerShell on Linux has no WinRM client. Until they are made, XMIP-DC01 is
-not either: name no `gateway_machine` and set `nat = true`, and the host is
-the network's way out, through libvirt's NAT.
+From a Linux host the Windows machines are refused in words, naming
+ADR-0015's third amendment of 2026-11-22, before anything is made: they
+wait on two things the owner decides, their Administrator secret, which
+only Windows reads (`deploy/dsc/machine/MachineSecret.ps1`), and how msdsc
+reaches them, since PowerShell on Linux has no WinRM client. A smaller plan
+is a smaller cluster file: a cluster whose `[environment]` names AlmaLinux
+machines alone, and no `gateway`, has the host as the network's way out,
+through libvirt's NAT, where any node is online.
 
 ## What each machine is given
 
@@ -49,7 +51,12 @@ of the pool, so the hypervisor reads them wherever they came from; the image
 is named by its SHA-256 and shared by every machine that installs from it,
 checked against it and uploaded only where the pool does not hold it yet, so
 a DVD's gigabytes are read once, not once per machine. A
-domain with UEFI and Secure Boot, the enrolled keys, its memory and CPUs, its
+domain with UEFI and Secure Boot, the enrolled keys, its memory and CPUs, a
+`<description>` stating its role and its operating system in one line, the
+role from what the cluster file declares and the system from its image's
+`name`, such as
+*Receiving node RX1 · AlmaLinux 10* (`deploy/dsc/README.md`, *The
+environment table*), its
 adapter on the network with a static MAC made from its address (52-54-00 and
 the address's last three octets), the gateway machine a second on the
 uplink, a bridge of the host's, its MAC the same with its first octet 02,
@@ -107,16 +114,18 @@ sudo systemctl enable --now virtqemud.socket virtnetworkd.socket virtstoraged.so
 ```
 
 then sign in again. The rest, none of it with sudo, is
-`deploy/dsc/README.md`'s *Before the first run*. Where the file names a
-`gateway_machine`, its `uplink` is a bridge of the host's holding its
-adapter on your network, made once with the system's own network tools, as
-your network wants it; the templates name it and never make it, and
-libvirt refuses to start a domain whose bridge is not there.
+`deploy/dsc/README.md`'s *Before the first run*. Where the table names a
+`gateway`, the uplink is a bridge of the host's holding its adapter on your
+network, made once with the system's own network tools, as your network
+wants it: the command finds the host's one bridge, or `-Uplink` names it
+once; the templates never make it, and libvirt refuses to start a domain
+whose bridge is not there.
 
 ## Running it
 
 As the account in the `libvirt` group, never root;
-`Deploy-XmipEnvironment` with `technology = "msdsc"` (`deploy/dsc/README.md`).
+`Deploy-XmipEnvironment -Path <cluster file> -Cluster <name>`, msdsc where
+`-Technology` is left out (`deploy/dsc/README.md`).
 It applies `network.dsc.yaml`, then `machine.dsc.yaml` once per machine, one
 installation at a time, with this folder on `PATH` so DSC finds the
 resources, waiting until each machine is installed before it makes the
@@ -146,8 +155,8 @@ network's and the domain's definitions, the network isolated without
 `nat`, the gateway machine's second adapter on the uplink's bridge, their
 memory, balloon, TPM and Windows' interface and clock; an AlmaLinux
 machine's answer given KVM's
-clock; the example as `Deploy-XmipEnvironment` reads it, the Hyper-V
-example's plan machine for machine, every machine's domain defined, and a
+clock; the System Tests' environment as `Deploy-XmipEnvironment` reads it,
+every machine's domain defined, and a
 Windows machine's dynamic memory refused; the machine's `set` while it
 installs, with `virsh` a stub: it leaves the machine to install and writes
 nothing, and an ISO hashed only where its volume is not in the pool whole.

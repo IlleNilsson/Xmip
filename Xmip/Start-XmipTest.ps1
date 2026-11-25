@@ -31,9 +31,9 @@ function Start-XmipTest {
             the snapshot so Get-XmipTestStatus can say what is running and
             Stop-XmipTest can end it, nodes first.
 
-            A roll spawns one cluster process and the cluster spawns one
-            process per node (the owner, 2026-09-19: even clusters have to be
-            spawned as processes during tests). Get-XmipProcess shows all
+            As local processes a roll spawns one cluster process and the cluster
+            spawns one process per node (the owner, 2026-09-19: even clusters
+            have to be spawned as processes during tests). Get-XmipProcess shows all
             three kinds with the location and purpose each declared, and
             Stop-XmipTest ends the tree from the leaves up. Where a node
             declares the Storage role, each node runs as xmip-service instead,
@@ -49,14 +49,14 @@ function Start-XmipTest {
 
         .PARAMETER Suite
             Which test suite to run: Core.System (the default), the System
-            Tests on this computer; Core.Systems, the Systems Tests on an
-            environment's machines; Core.Estate; Core.Internal, the internal
-            tests of modules as a landing verifies them; or Core.Demo. Every suite is
-            <Provider>.<Name> and core is the reserved provider that means
-            Xmip itself (ADR-0011): a bare System is accepted and resolves to
-            Core.System. A third party's suite carries its own provider. Case
-            does not matter. The parameters below are the two rolls', and
-            Core.Demo takes -Cluster, -Stress and its own -Tester.
+            Tests, the internals; Core.Systems, the Systems Tests, how nodes
+            interact; Core.Estate; Core.Internal, the internal tests of modules
+            as a landing verifies them; or Core.Demo. Every suite is <Provider>.<Name>
+            and core is the reserved provider that means Xmip itself (ADR-0011):
+            a bare System is accepted and resolves to Core.System. A third
+            party's suite carries its own provider. Case does not matter. The
+            parameters below are the two rolls', and Core.Demo takes -Cluster,
+            -Stress, -Process, -VirtualMachine and its own -Tester.
 
             Wildcards select a group, exactly as -Test does (the owner,
             2026-09-19): -Suite * is every suite but those started by their name
@@ -185,11 +185,19 @@ function Start-XmipTest {
             by side, each with its own web GUI:
             Start-XmipTest -Cluster CL2 -PassThru | Start-XmipOperationWeb -Url ...
 
-        .PARAMETER Certificate
-            Core.Systems' alone, and required there: operator.pem, operator.key
-            and anchors.pem's folder, which every node's machine and a
-            resolving -Cluster are asked with; one that does not answer as that
-            node is REFUSED, and none is spawned in its place.
+        .PARAMETER Process
+            Every node and far end a local process, as where no switch is given; the
+            three are Core.System's, Core.Systems' and Core.Demo's. -Proc.
+
+        .PARAMETER VirtualMachine
+            On the virtual machines Deploy-XmipEnvironment deployed for -Cluster here,
+            at the addresses and with the operator certificate it recorded; nothing is
+            built or started for them, no machine made or started. REFUSED before anything
+            is built on a host that makes none, with -Nodes, -NodeRole or -NodeCapability,
+            with nothing deployed, or another cluster file than the one deployed. -VM.
+
+        .PARAMETER Container
+            Not built yet, and REFUSED before anything is built (ADR-0015). -C.
 
         .PARAMETER LoadBytes
             The HeavyLoad test's payload: a number or a size like 512mb or 2gb.
@@ -219,7 +227,7 @@ function Start-XmipTest {
             Start-XmipTest -Suite Core.System -Cluster CL1
 
         .EXAMPLE
-            Start-XmipTest -Suite Core.System -Cluster CL1 -Test HeavyLoad -Stress Harsh
+            Start-XmipTest -Suite Core.System -Cluster CL1 -Test HeavyLoad -Stress Harsh -Process
 
         .EXAMPLE
             Start-XmipTest -Suite Core.System -Cluster CL1 -Nodes RX1, TX1 -PassThru |
@@ -248,7 +256,7 @@ function Start-XmipTest {
             Start-XmipTest -Suite Core.Estate -Test Sync-Xmip*
 
         .EXAMPLE
-            Start-XmipTest -Suite * -Cluster CL1
+            Start-XmipTest -Suite * -Cluster CL1 -VirtualMachine
 
         .EXAMPLE
             Start-XmipTest -Suite Core.Demo -Cluster CL1 -Stress Realistic -Tester alice@example.org
@@ -256,7 +264,8 @@ function Start-XmipTest {
         .EXAMPLE
             Start-XmipTest -Suite Core.Internal -Test module/foundation/core -ComputerName build1
     #>
-    [CmdletBinding(SupportsShouldProcess, PositionalBinding = $false)]
+    [CmdletBinding(SupportsShouldProcess, PositionalBinding = $false,
+        DefaultParameterSetName = 'Process')]
     [OutputType('Xmip.TestStatus')]
     param(
         # The sentence is "start the System Tests' HeavyLoad": suite first, then
@@ -314,8 +323,18 @@ function Start-XmipTest {
         [ValidatePattern('^[A-Za-z][A-Za-z0-9-]*$')]
         [string] $Cluster,
 
-        [Parameter()]
-        [string] $Certificate,
+        # In sets of their own, which PowerShell refuses together (ADR-0028).
+        [Parameter(ParameterSetName = 'Process')]
+        [Alias('Proc')]
+        [switch] $Process,
+
+        [Parameter(ParameterSetName = 'VirtualMachine')]
+        [Alias('VM')]
+        [switch] $VirtualMachine,
+
+        [Parameter(ParameterSetName = 'Container')]
+        [Alias('C')]
+        [switch] $Container,
 
         [Parameter()]
         [ValidatePattern('^\d+\s*(gb|g|mb|m|kb|k)?$')]
@@ -365,21 +384,17 @@ function Start-XmipTest {
     $chosen = $matched[0]
     $Suite = $chosen.Name
 
+    [hashtable] $given = @{ Caller = $PSCmdlet; Bound = $PSBoundParameters }
+
     if ($chosen.Kind -ne 'roll') {
-        [hashtable] $other = @{ Chosen = $chosen; Caller = $PSCmdlet; Bound = $PSBoundParameters }
-        return Start-XmipChosenSuite @other -Path $Path -Test $Test
+        return Start-XmipChosenSuite @given -Chosen $chosen -Path $Path -Test $Test
     }
 
-    # The System Tests' own work: checking the choice, then building, spawning
-    # and recording the roll. It is handed this cmdlet so -WhatIf and -Confirm
-    # still decide there, and a parameter nobody gave is not handed on.
-    [hashtable] $systemTest = @{
-        Caller = $PSCmdlet; Bound = $PSBoundParameters; Machines = [bool] $chosen.Machines
-    }
-
+    # The System Tests' own work, handed this cmdlet so -WhatIf and -Confirm
+    # still decide there; a parameter nobody gave is not handed on.
     foreach ($name in $script:XmipRollHanded) {
-        $systemTest[$name] = Get-Variable -Name $name -ValueOnly
+        $given[$name] = Get-Variable -Name $name -ValueOnly
     }
 
-    Start-XmipChosenRoll -Choice $systemTest
+    Start-XmipChosenRoll -Choice $given
 }

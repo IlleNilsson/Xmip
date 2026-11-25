@@ -16,20 +16,18 @@
 #>
 
 
-function Get-XmipMachineChoiceRefusal {
+function Get-XmipRunsAs {
     <#
         .SYNOPSIS
-            Why a roll's -Certificate is refused, or the empty string. Pure.
+            What a run runs as, in the word of the switch Start-XmipTest was
+            given: VirtualMachine, Container, or Process where neither is.
+            Pure.
 
         .DESCRIPTION
-            The Systems Tests ask every node's machine with the operator
-            certificate -Certificate names, so they need one; the System Tests
-            run every node on this computer and ask nothing, so one given them
-            is a choice they cannot honor. Refused before anything is built
-            (ADR-0055 clause 2; ADR-0028, amendment 2026-11-23).
-
-        .PARAMETER Machines
-            Whether the suite chosen runs on an environment's machines.
+            The switches are in parameter sets of their own, so PowerShell
+            refuses two together (ADR-0028, amendment 2026-11-25); a switch
+            given as $false is not given. The rolls' and the demo readiness
+            check's alike.
 
         .PARAMETER Bound
             What Start-XmipTest was called with.
@@ -37,26 +35,132 @@ function Get-XmipMachineChoiceRefusal {
     [CmdletBinding()]
     [OutputType([string])]
     param(
-        [Parameter()]
-        [bool] $Machines,
-
         [Parameter(Mandatory)]
         [System.Collections.IDictionary] $Bound
     )
 
-    [bool] $given = $Bound.ContainsKey('Certificate')
-
-    if ($Machines -and -not $given) {
-        return ("REFUSED. $script:XmipSystemsTestSuite asks every node's machine with an " +
-            'operator certificate: name its folder with -Certificate.')
+    foreach ($word in 'VirtualMachine', 'Container') {
+        if ([bool] $Bound[$word]) {
+            return $word
+        }
     }
 
-    if ($given -and -not $Machines) {
-        return ("REFUSED. -Certificate belongs to $script:XmipSystemsTestSuite, not " +
-            "$script:XmipSystemTestSuite, which runs every node here and asks no machine.")
+    return 'Process'
+}
+
+
+function Resolve-XmipRunsAs {
+    <#
+        .SYNOPSIS
+            What a run reads before anything is built, by what it runs as:
+            nothing as local processes; on virtual machines the environment
+            Deploy-XmipEnvironment recorded (Resolve-XmipVirtualMachineRun);
+            as containers, REFUSED by throwing, since that is not built yet.
+
+        .DESCRIPTION
+            Local processes, containers, virtual machines and physical
+            machines are the ways a run is placed (ADR-0015, amendment
+            2026-11-24); containers wait on an open problem of their own. The
+            rolls' and the demo readiness check's alike.
+
+        .PARAMETER Bound
+            What Start-XmipTest was called with.
+
+        .PARAMETER Cluster
+            The cluster, as -Cluster names it.
+    #>
+    [CmdletBinding()]
+    [OutputType([hashtable])]
+    param(
+        [Parameter(Mandatory)]
+        [System.Collections.IDictionary] $Bound,
+
+        [Parameter(Mandatory)]
+        [string] $Cluster
+    )
+
+    [string] $runsAs = Get-XmipRunsAs -Bound $Bound
+
+    if ($runsAs -eq 'Container') {
+        throw ('REFUSED. Running as containers is not built yet: the open problem "The tests ' +
+            'and the demo run in containers: WSL containers or containerd on Windows, Podman ' +
+            'on Linux, one container per node and far end, made from the same cluster file" ' +
+            '(ADR-0015). -Process runs as local processes, -VirtualMachine on the virtual ' +
+            'machines Deploy-XmipEnvironment made.')
     }
 
-    return ''
+    if ($runsAs -eq 'VirtualMachine') {
+        return Resolve-XmipVirtualMachineRun -Bound $Bound -Cluster $Cluster
+    }
+
+    return $null
+}
+
+
+function Resolve-XmipVirtualMachineRun {
+    <#
+        .SYNOPSIS
+            The environment a run on virtual machines reads, as
+            Read-XmipDeployedEnvironment recorded it; REFUSED, by throwing,
+            before anything is built or spawned.
+
+        .DESCRIPTION
+            Start-XmipTest -VirtualMachine never makes or starts a virtual
+            machine: Deploy-XmipEnvironment made them from the System Tests'
+            cluster file, and this reads what it recorded (ADR-0015 and
+            ADR-0028, amendments 2026-11-25). Refused in this order: a host
+            that makes no virtual machine Xmip deploys, as
+            Get-XmipDeployHypervisor says it; -Nodes, -NodeRole or
+            -NodeCapability, since the machines run the file's every node with
+            what it declares; no environment of the cluster deployed on this
+            host; and a cluster file that is not the one deployed, by its
+            SHA-256. The rolls' and the demo readiness check's alike.
+
+        .PARAMETER Bound
+            What Start-XmipTest was called with.
+
+        .PARAMETER Cluster
+            The cluster, as -Cluster names it.
+    #>
+    [CmdletBinding()]
+    [OutputType([hashtable])]
+    param(
+        [Parameter(Mandatory)]
+        [System.Collections.IDictionary] $Bound,
+
+        [Parameter(Mandatory)]
+        [string] $Cluster
+    )
+
+    $null = Get-XmipDeployHypervisor
+    [string] $file = (Get-XmipSystemTestLayout).Configuration
+    [string[]] $chose = @(
+        'Nodes', 'NodeRole', 'NodeCapability' | Where-Object { $Bound.ContainsKey($_) }
+    )
+
+    if ($chose.Count -gt 0) {
+        throw ("REFUSED. -$($chose -join ', -') belong to -Process, not -VirtualMachine: " +
+            "the machines Deploy-XmipEnvironment made run every node of $file with what it " +
+            'declares.')
+    }
+
+    [string] $deploy = ("Deploy-XmipEnvironment -Path $file -Cluster $Cluster deploys it, " +
+        'in an elevated Xmip PowerShell Console on Windows; -VirtualMachine never makes or ' +
+        'starts a virtual machine.')
+    $deployed = Read-XmipDeployedEnvironment -Cluster $Cluster
+
+    if ($null -eq $deployed) {
+        throw "REFUSED. No environment of cluster $Cluster is deployed on this host. $deploy"
+    }
+
+    [string] $now = (Get-FileHash -LiteralPath $file -Algorithm SHA256).Hash.ToLowerInvariant()
+
+    if ($now -ne [string] $deployed.Sha256) {
+        throw ("REFUSED. The environment of cluster $Cluster was deployed from a cluster " +
+            "file whose SHA-256 is $($deployed.Sha256), and $file is $now. $deploy")
+    }
+
+    return $deployed
 }
 
 
@@ -82,16 +186,6 @@ function Resolve-XmipSystemTestChoice {
 
     if ($foreign -ne '') {
         Write-Error $foreign
-        return $null
-    }
-
-    # The Systems Tests ask every node's machine with -Certificate's; the
-    # System Tests ask no machine (ADR-0028, amendment 2026-11-23).
-    [hashtable] $where = @{ Machines = [bool] $Choice.Machines; Bound = $Choice.Bound }
-    [string] $machine = Get-XmipMachineChoiceRefusal @where
-
-    if ($machine -ne '') {
-        Write-Error $machine
         return $null
     }
 
@@ -133,6 +227,12 @@ function Resolve-XmipSystemTestChoice {
         Write-Error 'A roll is a cluster and you name it: -Cluster <name>.'
         return $null
     }
+
+    # What the run runs as, by the switch given; on virtual machines the
+    # environment Deploy-XmipEnvironment recorded, or REFUSED (ADR-0028,
+    # amendment 2026-11-25).
+    $Choice.RunsAs = Get-XmipRunsAs -Bound $Choice.Bound
+    $Choice.Deployed = Resolve-XmipRunsAs -Bound $Choice.Bound -Cluster $Choice.Cluster
 
     # A node named with no role states the roles the System Tests' own file
     # declares for it (ADR-0028, amendment 2026-10-21).

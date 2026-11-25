@@ -227,7 +227,7 @@ function Get-LibvirtMachineDefinition {
     return @(
         "<domain type='kvm'>"
         "  <name>$(ConvertTo-LibvirtText -Value $Instance['name'])</name>"
-        "  <description>$(ConvertTo-LibvirtText -Value $Instance['environment'])</description>"
+        "  <description>$(ConvertTo-LibvirtText -Value $Instance['description'])</description>"
         @(Get-LibvirtMemoryLine -Instance $Instance)
         "  <vcpu>$($Instance['cpu'])</vcpu>"
         "  <os firmware='efi'>"

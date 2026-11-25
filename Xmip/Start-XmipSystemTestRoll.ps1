@@ -32,9 +32,7 @@ function Get-XmipSystemTestChoice {
 
     # -Nodes, -NodeRole and -NodeCapability reach the roll as the run's
     # cluster file (Write-XmipTestCluster), never as variables of their own.
-    [string[]] $optional = @(
-        'Cluster', 'Duration', 'TimeFactor', 'LoadBytes', 'Certificate'
-    )
+    [string[]] $optional = @('Cluster', 'Duration', 'TimeFactor', 'LoadBytes')
 
     foreach ($name in $optional) {
         if ($Bound.ContainsKey($name)) {
@@ -64,7 +62,7 @@ function Start-XmipChosenRoll {
             2026-11-23, when -ComputerName took the room that file had left.
 
         .PARAMETER Choice
-            Caller, Bound and Machines, and the values of
+            Caller, Bound and RunsAs, and the values of
             $script:XmipRollHanded as Start-XmipTest holds them.
     #>
     [CmdletBinding()]
@@ -158,9 +156,13 @@ function Start-XmipSystemTestRoll {
         .PARAMETER PassThru
             As Start-XmipTest takes it, already checked there.
 
-        .PARAMETER Machines
-            Whether the suite runs on an environment's machines, as the
-            suite Start-XmipTest chose declares it: Core.Systems.
+        .PARAMETER RunsAs
+            Process, as local processes, or VirtualMachine, on the virtual
+            machines -Deployed names: the switch Start-XmipTest was given.
+
+        .PARAMETER Deployed
+            On virtual machines, the environment Deploy-XmipEnvironment
+            recorded (Resolve-XmipVirtualMachineRun).
     #>
     [CmdletBinding()]
     [OutputType([PSCustomObject])]
@@ -208,7 +210,11 @@ function Start-XmipSystemTestRoll {
         [switch] $PassThru,
 
         [Parameter(Mandatory = $false)]
-        [bool] $Machines
+        [ValidateSet('Process', 'VirtualMachine')]
+        [string] $RunsAs = 'Process',
+
+        [Parameter(Mandatory = $false)]
+        [System.Collections.IDictionary] $Deployed
     )
 
     Set-StrictMode -Version Latest
@@ -232,7 +238,8 @@ function Start-XmipSystemTestRoll {
         ", the nodes of $((Get-XmipSystemTestLayout).Configuration)"
     }
     elseif ($Nodes.Count -eq 0) { ', no nodes' } else { ", nodes $($Nodes -join ', ')" }
-    [string] $what = "roll at $($Stress.ToLowerInvariant())$of$for$with as cluster $Cluster"
+    [string] $on = if ($RunsAs -eq 'VirtualMachine') { ' on its virtual machines' } else { '' }
+    [string] $what = "roll at $($Stress.ToLowerInvariant())$of$for$with as cluster $Cluster$on"
 
     if (-not $Caller.ShouldProcess("the Xmip System Tests in $Path", "Start a $what")) {
         return
@@ -263,9 +270,10 @@ function Start-XmipSystemTestRoll {
     # the System Tests' file declares (amendment 2026-11-24); omitted, its
     # every node; and its Storage nodes in the order its [storage] lists them
     # (ADR-0052, amendment 2026-11-25). XMIP_TEST_CLUSTER names it to the
-    # roll, and the run record says the nodes it declares. The Systems Tests
-    # resolve every one of them on the environment's machines; the System
-    # Tests resolve none.
+    # roll, and the run record says the nodes it declares. On virtual
+    # machines, the System Tests' and the Systems Tests' alike, the roll reads
+    # every one of them at the address the deployed environment recorded,
+    # and names none to be resolved (ADR-0028, amendment 2026-11-25).
     $declared = Read-XmipSystemTestCluster
     [string[]] $typed = if ($boundNodes) { @($Nodes) } else { @($declared.Nodes) }
     [hashtable] $joined = @{ Nodes = $typed; NodeRole = $NodeRole; Declared = $declared.Role }
@@ -281,7 +289,10 @@ function Start-XmipSystemTestRoll {
         Path           = $Path
     }
     [string] $clusterFile = Write-XmipTestCluster @written
-    $choice.Machines = $Machines
+
+    if ($null -ne $Deployed) {
+        $choice.Deployed = $Deployed
+    }
 
     $configured = Read-XmipTestCluster -Path $clusterFile
     $choice.ClusterFile = $clusterFile
@@ -315,6 +326,7 @@ function Start-XmipSystemTestRoll {
     # detached build as one value (Start-XmipSystemTestRollProcess).
     [hashtable] $start = @{
         Suite       = $Suite
+        RunsAs      = $RunsAs
         Cluster     = $Cluster
         Stress      = $Stress
         Test        = @($Test)

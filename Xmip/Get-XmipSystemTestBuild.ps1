@@ -101,6 +101,7 @@ function ConvertTo-XmipSystemTestBuild {
         State    = $state
         Id       = $run.Id
         Property = @{
+            RunsAs      = Get-TomlValue -Node $Record -Name 'runs_as'
             Cluster     = [string](Get-TomlValue -Node $Record -Name 'cluster' -Default '')
             StartTime   = $run.Started.ToLocalTime()
             Stress      = Get-TomlValue -Node $Record -Name 'stress'

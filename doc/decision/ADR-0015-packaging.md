@@ -10,7 +10,7 @@ Accepted. Implementation follows in separate reviewed changes.
 - Subject: Packaging and distribution
 - Name: Packaging and distribution
 - Order: 2
-- Concepts: arm64, embedded, IoT; MSI, winget, deb, rpm, OCI, pkg, launchd; target, site; archive target; schema version, upgrade; environment template, environment file
+- Concepts: arm64, embedded, IoT; MSI, winget, deb, rpm, OCI, pkg, launchd; target, site; archive target; schema version, upgrade; environment template, environment table
 
 Packaging covers the node; Modules are out of scope. MSI via WiX, published
 through winget, on Windows. `.deb` and `.rpm` on Linux. An OCI image every
@@ -1736,3 +1736,164 @@ the step's place, the inventory, and the script with every Windows command
 a stub over a machine held in memory), `test/MsdscHyperV.Test.ps1` (the
 uplink found and never made, the gateway machine's two adapters) and
 `test/MsdscLibvirt.Test.ps1` (the isolated network, the bridge interface).
+
+## Amendment, 2026-11-25: an environment is its cluster file's `[environment]` table, the host's facts are defaults, and its kind follows the host
+
+**Provenance.** The owner, 2026-11-25, of running the System Tests, the
+Systems Tests and the demo on virtual machines (ADR-0028, amendment of this
+date): *I'd like it to be a switch to minimize the number of files and
+duplication of configuration*; *I still don't get why there is a need for
+two files?*; *Yes* to one file, the cluster file, and one switch; and of
+each machine, *When you set up virtual machines, there is a description
+field. I want it to state Role and OS type*. The coordinator settled
+the rest the same day, for the owner to strike: the System Tests' tracked
+file names no network, a free private /24 picked on the host where
+`network` is left out; on a Linux host the Windows machines are refused in
+words, a smaller plan being a smaller cluster file; on Windows the WSL
+command named for Ansible carries the Windows host's kind and
+`-WindowsHost`; and the Hyper-V environment is made again from nothing, the
+owner having had every machine deleted that day. The keys, the defaults and
+the refusals below are the coordinator's drafting. Written; not yet run on
+a machine.
+
+- **One file.** Where a cluster runs on virtual machines is its cluster
+  file's `[environment]` table, and no other file says it:
+  `deploy/dsc/hyperv.example.toml`, `deploy/dsc/libvirt.example.toml` and
+  the System Tests' `configuration/external.xmip` are deleted, and the
+  System Tests' `configuration/cluster.xmip` carries the table, the owner's
+  node plan of 2026-11-22 in it. No node is given the table: slicing leaves
+  it out (ADR-0031, the second amendment of this date), and a run as local
+  processes reads only its far ends from it (ADR-0028, amendment of this
+  date). It names no cluster, no machine's address and no absolute path, as
+  the file never did (ADR-0028, amendment 2026-10-21).
+- **What the table says** (`deploy/dsc/README.md`, *The environment
+  table*):
+  - `network`, optional, `"<prefix>/<length>"`. Left out, the command picks
+    a free private /24 on the host and keeps it in the environment's state.
+    The host takes the range's first address, then the machines in order:
+    the `[environment.machines]` entries that run no node and no far end, in
+    the file's order, then the far ends, senders then receivers, then the
+    nodes, in the file's order.
+  - `domain`, the DNS domain, `xmip.test` where left out.
+  - `domain_controller`, optional: a Windows machine of the environment,
+    the first controller of a new forest and the network's DNS server.
+    Without one the host answers names.
+  - `gateway`, optional: a Windows machine that is the network's way out,
+    NAT by Routing and Remote Access out of a second adapter on the host's
+    uplink, as the amendment of 2026-11-24 has it. Left out, the host's own
+    NAT is the way out where any node is online, and the network is
+    isolated otherwise.
+  - `[environment.machine]`, every virtual machine's defaults: `os`, an
+    image's name, `cpu`, `memory_gb`, `dynamic_memory = { minimum_gb,
+    maximum_gb }` and `disk_gb`. Built in: 2 processors, 2 GiB and 64 GiB;
+    no `os`.
+  - `[environment.machines.<name>]`, the same keys. For a node or a far end
+    of that name, its machine where it differs; any other name is a machine
+    of its own that runs no node and no far end — the domain controller, the
+    file storage, the people's machines — and needs an `os`, and may say a
+    `purpose`.
+  - `[environment.far_ends]`, `senders = [...]` and `receivers = [...]`,
+    what `external.xmip` named.
+  - `[environment.images.<os>]`: `name`, the system in plain words,
+    `sha256`, `family` (`Windows` or `Linux`), `edition`,
+    `secureBootTemplate`, `tpm` and `environment`, the kickstart's group. No
+    path: the image is found on the host by its SHA-256.
+- **Derived, never written.** A machine is `XMIP-<name>`: XMIP-RX1 for the
+  node RX1, XMIP-DC01 for the entry DC01. The network, the switch and the
+  pool are `Xmip-<cluster>`. A node's machine reaches past the network where
+  the node declares the Node capability `online` (ADR-0056, amendment
+  2026-11-24); a far end's machine and a machine of its own do not.
+- **Each machine says what it is.** Its description field, Hyper-V's Notes
+  and libvirt's `<description>`, states its role and its operating system
+  in one line: the role from what the cluster file declares — a node's
+  roles, a far end's side, the domain controller or the gateway, and for
+  any other machine of its own its `purpose` — and the system from its
+  image's `name`: *Receiving node RX1 · AlmaLinux 10*, *Sender far end
+  EXTTX1 · AlmaLinux 10*, *Domain controller and gateway DC01 ·* and its
+  image's name.
+- **The command.** `Deploy-XmipEnvironment -Path <cluster file> -Cluster
+  <name>`, both required. `-Technology msdsc|ansible`, msdsc where left
+  out, held by the state as before (the second amendment of 2026-11-11);
+  `-Hypervisor hyperv|libvirt`, the host's kind where left out: Hyper-V on
+  Windows, KVM through libvirt on Linux, refused in words on macOS.
+- **The host's facts are defaults.** What the command cannot choose is
+  given once, as a parameter, and then kept in the state:
+  - `-ImageFolder`: the installation images, found there by their SHA-256,
+    and the tool archives, found there by name; left out, the account's
+    Xmip folder's `images`,
+    `%LOCALAPPDATA%\Xmip\images` on Windows and `xmip/images` under
+    `$XDG_STATE_HOME` or `~/.local/state` elsewhere.
+  - `-DiskFolder`: Hyper-V's virtual hard disk path, or
+    `/var/lib/libvirt/images`, with `Xmip-<cluster>` in it.
+  - `-Uplink`, where `gateway` is named: the host's one external switch on
+    Hyper-V, or its one bridge on Linux; refused where there is none or
+    several, naming the switches found.
+  - `-WindowsHost`: Ansible's view of the Windows host, for Ansible on
+    Hyper-V.
+  - `-Operator`: who else operates the nodes, each a certificate's subject,
+    `CN=<person>`, or an account, listed among every node's `[operate]
+    operators` beside this account's person (below).
+- **Taken with no parameter:**
+  - the packages, the module libraries, the far ends' programs and the
+    slicer, from the build under `.local-work/package/<version>/`, refused
+    naming `Build-XmipService` where absent;
+  - the environment's authority, which signs every slice and issues every
+    certificate, kept in the private state's `authority` folder and made
+    there where none is, with `operator.xmip` beside it: the slice of the
+    node the cluster file declares `[provision.operator]` for, signed by
+    that authority, by which the operator's request is signed
+    (`Write-XmipOperatorSlice`, the one the System Tests' authority is
+    written with too);
+  - every certificate, made in the private state where none is
+    (`Initialize-XmipDeployIdentity`): each node's and far end's in
+    `identity/<name>`, issued by `New-XmipCertificate -Node`; and the
+    operator's in `operator/`, `operator.pem`, `operator.key` and
+    `anchors.pem`, for this account's person, `CN=<account name>`, whom
+    every node lists among its `[operate] operators` with each `-Operator`
+    given, and with which `Start-XmipTest -VirtualMachine` asks the nodes;
+  - the Windows machines' Administrator secret, generated once into the
+    state, `Export-Clixml`, encrypted by Windows' Data Protection API;
+  - the AlmaLinux machines' account, `xmip-admin`;
+  - the tools Microsoft DSC brings to each machine, their archives' names
+    and SHA-256 in `prerequisite.toml`, `[prerequisite.powershell.archive]`
+    and `[prerequisite.dsc.archive]`, found by name under `-ImageFolder`.
+- **Refused in words:** on Windows, a run not elevated, naming an elevated
+  Xmip PowerShell Console, which it never starts; on a Linux host, every
+  Windows machine, naming the third amendment of 2026-11-22, by which
+  Windows machines are not made from a Linux host yet — a smaller plan is a
+  smaller cluster file; and Ansible on Windows, naming the WSL command,
+  which carries `-Hypervisor hyperv` and `-WindowsHost`.
+- **What a run leaves.** The run folder is `.local-work/deploy/<cluster>`.
+  A run that applies writes `deployed.toml` into the private state: the
+  cluster file's path and SHA-256, the technology, the hypervisor, and each
+  node's and far end's machine and address, which `Start-XmipTest
+  -VirtualMachine` reads, for the System Tests and the Systems Tests alike
+  (ADR-0028, amendment of this date). Its third switch, `-Container`, is
+  refused until the tests run in containers, one of the four ways of the
+  amendment of 2026-11-24, which the tests do not take yet.
+- **Made again from nothing.** The Hyper-V environment the earlier
+  amendments made is not carried over: its machines were deleted on
+  2026-11-25 (`deploy/dsc/README.md`, *Starting again from nothing*).
+
+This supersedes, without editing them:
+
+- the amendment of 2026-10-21, *the environment templates, one set per
+  technology*, where the mapping of nodes onto machines is the templates'
+  parameters, never the cluster's file;
+- the second amendment of 2026-11-11, *an environment in one command, in
+  either technology*, its *One environment file, the technology a value in
+  it*: the technology is a parameter, and the file is the cluster's;
+- the bullets *The example is the plan* of the first and third amendments
+  of 2026-11-22, and the first's *A way out, per machine*: a machine's
+  `internet` is its node's Node capability `online`;
+- of the second amendment of 2026-11-22, a machine's `external` and the
+  environment file's `[far_ends.<family>]`, `far_end` and `listen`: a far
+  end's machine is its name's in `[environment.far_ends]`, its program the
+  build's, and every Send Port is bound to the receiver of its turn and
+  every Receive Location listens on its node, as the plan's environment had
+  it;
+- of the amendment of 2026-11-24, *the domain controller is the network's
+  way out*, the keys `[network] gateway_machine`, `uplink`, `nat` and
+  `internet`: the way out is `gateway`, `-Uplink` and the Node capability
+  `online`. What that amendment found, and what it says is not yet known,
+  stand.

@@ -6,7 +6,7 @@ function Invoke-XmipDeployPlaybook {
     <#
         .SYNOPSIS
             Runs deploy/dsc/ansible/environment.yml over the inventory the
-            environment file wrote, -Check with --check --diff, and answers
+            cluster file wrote, -Check with --check --diff, and answers
             each host's recap: in its desired state where it was reached,
             nothing failed and, under -Check, nothing would change.
 

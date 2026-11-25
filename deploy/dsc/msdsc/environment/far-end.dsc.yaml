@@ -32,7 +32,7 @@ parameters:
         folder: /opt/xmip-far-end
   name:
     type: string
-    description: The far end, as the Systems Tests' configuration/external.xmip names it.
+    description: The far end, as the cluster file's [environment.far_ends] names it.
   machine:
     type: object
     description: The machine the far end runs on, its name, address and family.

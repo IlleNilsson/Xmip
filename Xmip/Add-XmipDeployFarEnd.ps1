@@ -5,72 +5,42 @@ Set-StrictMode -Version Latest
 function Add-XmipDeployFarEnd {
     <#
         .SYNOPSIS
-            The Systems Tests' far ends an environment runs on machines of their
-            own, added to what Get-XmipDeployEnvironment read: each machine's
-            external, the far end it runs, with the machine; and, where any
-            does, the program each family runs them by and the folder of
-            their certificates.
+            The System Tests' far ends an environment runs, each on a virtual
+            machine of its own, added to what Get-XmipDeployEnvironment read:
+            each far end with its machine; the program each family runs them
+            by; and the folder of their certificates.
 
         .DESCRIPTION
-            A machine's external names one far end of the Systems Tests'
-            configuration/external.xmip (deploy/dsc/README.md; ADR-0028,
-            amendment 2026-11-22). [far_ends.<family>] program is the
-            program xmip-system-test-external built for that family, which
-            msdsc places and registers on each such machine
-            (far-end.dsc.yaml); each far end's certificate is identity's
-            folder of its name, New-XmipCertificate -Node.
-
-        .PARAMETER Environment
-            The environment file, as Read-XmipToml reads it.
-
-        .PARAMETER Estate
-            The estate's root.
+            The far ends are the cluster file's [environment.far_ends],
+            senders and receivers (ADR-0028, amendments 2026-11-22 and
+            2026-11-25). The program is xmip-system-test-external built for
+            each family, which msdsc places and registers on each far end's
+            machine (far-end.dsc.yaml); each far end's certificate is the
+            identity folder's of its name, issued from the cluster's
+            authority (Initialize-XmipDeployIdentity).
 
         .PARAMETER Read
             What Get-XmipDeployEnvironment read: FarEnds, Programs and
             Identity are added to it.
+
+        .PARAMETER Facts
+            What the host gives, Get-XmipDeployHost's: Programs and Identity.
     #>
     [CmdletBinding()]
     [OutputType([void])]
     param(
         [Parameter(Mandatory)]
-        [AllowNull()]
-        $Environment,
+        [hashtable] $Read,
 
         [Parameter(Mandatory)]
-        [string] $Estate,
-
-        [Parameter(Mandatory)]
-        [hashtable] $Read
+        [hashtable] $Facts
     )
 
-    $Read['FarEnds'] = @(foreach ($machine in $Read.Machines) {
-            [object] $on = @(Get-TomlValue -Node $Environment -Name 'machines' -Default @()) |
-                Where-Object { (Get-TomlValue -Node $_ -Name 'name') -eq $machine['name'] } |
-                Select-Object -First 1
-            [string] $external = Get-TomlValue -Node $on -Name 'external' -Default ''
-            if ($external) {
-                @{ name = $external; machine = @{ name = $machine['name']
-                        address = $machine['address']; family = $machine['image'].family } }
-            }
-        })
-    $Read['Programs'] = @{}
-    $Read['Identity'] = ''
-    if ($Read.FarEnds.Count -eq 0) {
-        return
-    }
-    $Read['Identity'] = Resolve-XmipDeployPath -Estate $Estate -Path (
-        Get-TomlValue -Node $Environment -Name 'identity' -Default '')
-    $given = Get-TomlValue -Node $Environment -Name 'far_ends' -Default $null
-    foreach ($family in @($Read.FarEnds | ForEach-Object { $_.machine.family } |
-            Sort-Object -Unique)) {
-        $entry = Get-TomlValue -Node $given -Name $family -Default $null
-        [string] $path = Resolve-XmipDeployPath -Estate $Estate -Path (
-            Get-TomlValue -Node $entry -Name 'program' -Default '')
-        if (-not $path -or -not (Test-Path -LiteralPath $path -PathType Leaf)) {
-            throw ("REFUSED: a far end on a $family machine needs [far_ends.$family] program, " +
-                "xmip-system-test-external built for it: '$path'.")
-        }
-        $Read.Programs[$family] = @{ path = $path; file = Split-Path -Path $path -Leaf }
-    }
+    $Read['FarEnds'] = @($Read.Listed | Where-Object { $_.kind -eq 'far end' } |
+            ForEach-Object {
+                @{ name = $_.name; machine = @{ name = $_.machine; address = $_.address
+                        family = $_.family } }
+            })
+    $Read['Programs'] = if ($Read.FarEnds.Count -gt 0) { $Facts.Programs } else { @{} }
+    $Read['Identity'] = if ($Read.FarEnds.Count -gt 0) { $Facts.Identity } else { '' }
 }

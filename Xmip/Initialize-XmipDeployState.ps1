@@ -6,8 +6,8 @@ function Get-XmipDeployStateFolder {
     <#
         .SYNOPSIS
             Where an environment's private state is kept on the machine
-            deploying it: on Linux and macOS under $XDG_STATE_HOME, or
-            ~/.local/state, xmip/deploy/<environment>, since a file on a
+            deploying it: on Linux and macOS in the account's own Xmip folder,
+            deploy/<cluster> (Get-XmipAccountFolder), since a file on a
             Windows drive mounted in WSL shows as 0777 there and OpenSSH
             refuses a private key others may read; on Windows in the run
             folder, state, whose access rules are made this account's alone.
@@ -25,9 +25,7 @@ function Get-XmipDeployStateFolder {
     if ($IsWindows) {
         return Join-Path $Run 'state'
     }
-    [string] $base = if ($env:XDG_STATE_HOME) { $env:XDG_STATE_HOME }
-    else { Join-Path $HOME '.local/state' }
-    return Join-Path $base "xmip/deploy/$Name"
+    return Join-Path (Get-XmipAccountFolder) "deploy/$Name"
 }
 
 function Initialize-XmipDeployState {
@@ -43,7 +41,8 @@ function Initialize-XmipDeployState {
             such machine's SSH host key, made here before it is installed
             and given to it by its kickstart; and known_hosts holding
             exactly those keys, so every login checks the machine it reaches
-            and none trusts on first use.
+            and none trusts on first use; and, where a machine is Windows,
+            its Administrator secret, made once (New-XmipDeploySecret).
 
         .DESCRIPTION
             An environment is made by one technology, never a mix (ADR-0015,
@@ -59,15 +58,16 @@ function Initialize-XmipDeployState {
             machine with the environment's key, ssh -i
             <folder>/ssh/id_ed25519.
 
-        .PARAMETER Environment
-            The environment file, as Read-XmipToml reads it.
+        .PARAMETER Read
+            The environment, as Get-XmipDeployEnvironment read it: its name,
+            its machines and the secret's path.
 
         .PARAMETER Folder
             The state folder, Get-XmipDeployStateFolder's, which this run
             holds.
 
         .PARAMETER Technology
-            msdsc or ansible, the environment file's.
+            msdsc or ansible, Deploy-XmipEnvironment's -Technology.
 
         .PARAMETER Record
             Writes the technology where the folder names none: a run that
@@ -77,8 +77,7 @@ function Initialize-XmipDeployState {
     [OutputType([hashtable])]
     param(
         [Parameter(Mandatory)]
-        [AllowNull()]
-        $Environment,
+        [hashtable] $Read,
 
         [Parameter(Mandatory)]
         [string] $Folder,
@@ -91,7 +90,7 @@ function Initialize-XmipDeployState {
         [switch] $Record
     )
 
-    [string] $name = Get-TomlValue -Node $Environment -Name 'name'
+    [string] $name = $Read.Name
     [string] $made = Join-Path $Folder 'technology'
     if (Test-Path -LiteralPath $made -PathType Leaf) {
         [string] $by = (Get-Content -LiteralPath $made -Raw).Trim()
@@ -112,24 +111,72 @@ function Initialize-XmipDeployState {
     New-XmipDeployKey -Path $key -Comment "xmip-$name"
     [hashtable] $hostKey = @{}
     [string[]] $known = @()
-    $images = Get-TomlValue -Node $Environment -Name 'images'
-    foreach ($machine in @(Get-TomlValue -Node $Environment -Name 'machines' -Default @())) {
-        $image = Get-TomlValue -Node $images -Name (Get-TomlValue -Node $machine -Name 'image')
-        if ((Get-TomlValue -Node $image -Name 'family') -ne 'Linux') {
+    foreach ($machine in $Read.Machines) {
+        if ($machine['image'].family -ne 'Linux') {
             continue
         }
-        [string] $machineName = Get-TomlValue -Node $machine -Name 'name'
+        [string] $machineName = $machine['name']
         [string] $path = Join-Path $Folder "host/$machineName"
         New-XmipDeployKey -Path $path -Comment $machineName
         $hostKey[$machineName] = $path
         [string[]] $field = @((Get-Content -LiteralPath "$path.pub" -Raw).Trim() -split '\s+')
-        [string] $address = Get-TomlValue -Node $machine -Name 'address'
-        $known += "$machineName,$address $($field[0]) $($field[1])"
+        $known += "$machineName,$($machine['address']) $($field[0]) $($field[1])"
     }
     [string] $knownHosts = Join-Path $Folder 'known_hosts'
     [IO.File]::WriteAllText($knownHosts, (($known + '') -join "`n"),
         [Text.UTF8Encoding]::new($false))
+    if ($Read.Common.secretPath) {
+        New-XmipDeploySecret -Path $Read.Common.secretPath
+    }
     return @{ Folder = $Folder; Key = $key; KnownHosts = $knownHosts; HostKey = $hostKey }
+}
+
+function New-XmipDeploySecret {
+    <#
+        .SYNOPSIS
+            The Windows machines' Administrator secret at -Path, made once
+            where none is: a password of 24 characters drawn by .NET's
+            cryptographic generator, at least one of each kind Windows asks,
+            kept by Export-Clixml, which on Windows encrypts it for this
+            account by the Data Protection API, and read by
+            deploy/dsc/machine/MachineSecret.ps1 alone. Nobody writes it, and
+            whoever deploys reads it back with Import-Clixml.
+
+        .DESCRIPTION
+            Off Windows Export-Clixml keeps a password as plain text
+            (deploy/dsc/machine/MachineSecret.ps1 cites Microsoft), and a
+            Linux host makes no Windows machine yet, so it is refused there.
+    #>
+    [CmdletBinding()]
+    [OutputType([void])]
+    param(
+        [Parameter(Mandatory)]
+        [string] $Path
+    )
+
+    if (Test-Path -LiteralPath $Path -PathType Leaf) {
+        return
+    }
+    if (-not $IsWindows) {
+        throw ('REFUSED: the Windows machines'' Administrator secret is kept encrypted on ' +
+            'Windows alone, and this host is not Windows.')
+    }
+    [string[]] $kinds = @('ABCDEFGHJKLMNPQRSTUVWXYZ', 'abcdefghijkmnopqrstuvwxyz', '23456789',
+        '!#%+-=?@^_')
+    [string] $every = -join $kinds
+    # One of each kind first, then any, and then shuffled.
+    [char[]] $drawn = @(foreach ($index in 0..23) {
+            [string] $from = if ($index -lt $kinds.Count) { $kinds[$index] } else { $every }
+            $from[[Security.Cryptography.RandomNumberGenerator]::GetInt32($from.Length)]
+        })
+    [type] $random = [Security.Cryptography.RandomNumberGenerator]
+    [char[]] $shuffled = @($drawn | Sort-Object { $random::GetInt32([int]::MaxValue) })
+    [securestring] $secret = [securestring]::new()
+    foreach ($one in $shuffled) {
+        $secret.AppendChar($one)
+    }
+    [pscredential]::new('Administrator', $secret) | Export-Clixml -LiteralPath $Path
+    Protect-XmipDeployPath -Path $Path
 }
 
 function Lock-XmipDeployState {

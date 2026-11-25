@@ -5,14 +5,15 @@ Set-StrictMode -Version Latest
 function Get-XmipDeployDynamicMemory {
     <#
         .SYNOPSIS
-            A machine's dynamic memory as its environment file says it, in
-            MiB: the least and the most its hypervisor may give it, its
-            memory_gb the memory it starts with; none, an empty table, where
-            it says none, and the machine's memory is static.
+            A machine's dynamic memory as its cluster file says it, in MiB:
+            the least and the most its hypervisor may give it, its memory_gb
+            the memory it starts with; none, an empty table, where it says
+            none, and the machine's memory is static.
 
         .DESCRIPTION
-            dynamic_memory = { minimum_gb = 0.5, maximum_gb = 3 } on a
-            machine (deploy/dsc/README.md). Hyper-V takes each in steps of
+            dynamic_memory = { minimum_gb = 0.5, maximum_gb = 3 } in
+            [environment.machine] or a machine's own table of
+            [environment.machines] (deploy/dsc/README.md). Hyper-V takes each in steps of
             2 MiB, and the least at most the start and the start at most the
             most; any other is refused in words before anything is made. On
             libvirt a guest is given its memory back from a virtio balloon,
@@ -20,7 +21,8 @@ function Get-XmipDeployDynamicMemory {
             machine there is refused it: its memory is static.
 
         .PARAMETER Machine
-            One [[machines]] table of the environment file.
+            The machine's name, memory_gb and dynamic_memory, as
+            Resolve-XmipDeployMachine resolves them.
 
         .PARAMETER Hypervisor
             The environment's hypervisor, libvirt or hyperv.

@@ -50,6 +50,9 @@ function Test-XmipDemoReady {
             The stress the roll is started at; Realistic, the demo's own,
             where it is not given.
 
+        .PARAMETER RunsAs
+            Process or VirtualMachine: the switch the roll is started with.
+
         .PARAMETER Tester
             The person the web host lets act, as Start-XmipOperationWeb
             -Tester takes them; empty for none.
@@ -71,6 +74,10 @@ function Test-XmipDemoReady {
         [string] $Stress = $script:XmipDemoStress,
 
         [Parameter()]
+        [ValidateSet('Process', 'VirtualMachine')]
+        [string] $RunsAs = 'Process',
+
+        [Parameter()]
         [AllowEmptyString()]
         [string] $Tester = '',
 
@@ -84,6 +91,7 @@ function Test-XmipDemoReady {
     [hashtable] $said = @{
         Cluster = $Cluster
         Stress  = $Stress
+        RunsAs  = $RunsAs
         Tester  = $Tester
     }
     Write-XmipAudit -Action 'Test-XmipDemoReady' -Phase Begin -Property $said
@@ -154,6 +162,9 @@ function New-XmipDemoState {
         .PARAMETER Stress
             The stress it starts the roll at.
 
+        .PARAMETER RunsAs
+            Process or VirtualMachine: what it runs the roll as.
+
         .PARAMETER Tester
             The tester, or empty.
 
@@ -180,6 +191,10 @@ function New-XmipDemoState {
         [string] $Stress = $script:XmipDemoStress,
 
         [Parameter()]
+        [ValidateSet('Process', 'VirtualMachine')]
+        [string] $RunsAs = 'Process',
+
+        [Parameter()]
         [AllowEmptyString()]
         [string] $Tester = '',
 
@@ -200,6 +215,7 @@ function New-XmipDemoState {
         started  = $Started.ToUniversalTime().ToString('o')
         cluster  = $Cluster
         stress   = $Stress
+        runs_as  = $RunsAs
         tester   = $Tester
         log      = $Log
         doing    = ''

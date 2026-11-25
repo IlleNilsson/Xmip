@@ -41,6 +41,10 @@ function Get-XmipTestStatus {
             A run of Core.Internal, the internal tests of named modules, is
             listed as an estate run is, kind internal.
 
+            A roll, its build and a demo run say in RunsAs what Start-XmipTest
+            ran them as: Process, as local processes, or VirtualMachine, on
+            the virtual machines Deploy-XmipEnvironment deployed.
+
             Nothing here starts, stops or writes anything. Nothing running
             and nothing recorded means no output.
 
@@ -154,8 +158,16 @@ function Get-XmipTestStatus {
     }
 
     foreach ($roll in $rolls) {
+        # A roll that exits while it is listed says no start time; it has
+        # ended, and its record lists it so the next time it is asked.
+        $began = try { $roll.StartTime } catch { $null }
+
+        if ($null -eq $began) {
+            continue
+        }
+
         $recorded = Get-XmipRollRecord -Path $Path -Id $roll.Id
-        ConvertTo-XmipRollStatus @each -Recorded $recorded -Id $roll.Id -StartTime $roll.StartTime
+        ConvertTo-XmipRollStatus @each -Recorded $recorded -Id $roll.Id -StartTime $began
     }
 
     foreach ($recorded in $ended) {
@@ -288,6 +300,7 @@ function ConvertTo-XmipRollStatus {
         State    = $state
         Id       = $Id
         Property = @{
+            RunsAs         = Get-TomlValue -Node $record -Name 'runs_as'
             Cluster        = if ($rolledAs -ne '') { $rolledAs } else { $null }
             StartTime      = $StartTime
             Stress         = Get-TomlValue -Node $record -Name 'stress'

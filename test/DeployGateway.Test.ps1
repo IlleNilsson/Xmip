@@ -6,13 +6,15 @@
     2026-11-24; the owner, 2026-11-24: "A good choice would be the DC", and
     "The DC would be behind my firewall"), without a machine.
 
-    - The environment file: [network] gateway_machine names a Windows machine
-      of the environment and uplink the switch or bridge its second adapter
-      is on. Each machine whose internet says so is given the gateway
-      machine's address as its gateway; the gateway machine none on the
-      network, and the uplink; every other machine no uplink. Refused: a
-      name that is no Windows machine, no uplink, and the host's NAT beside
-      it. Left out, the host is the gateway as before.
+    - The cluster file's [environment] (ADR-0015, amendment 2026-11-25):
+      gateway names a Windows machine of the environment, and the host facts
+      the uplink, the switch or bridge its second adapter is on. Each machine
+      whose node declares online is given the gateway machine's address as
+      its gateway; the gateway machine none on the network, and the uplink;
+      every other machine no uplink, and the host no NAT. Refused: a name
+      that is no Windows machine. Left out, the host is the way out, through
+      its NAT where a node is online. The uplink is the one given, else the
+      host's one, refused in words where it has none or several.
     - msdsc applies gateway.dsc.yaml after the domain's controller and
       before the names; Ansible's inventory names the gateway machine in
       xmip_gateway, played after the machines and before the names.
@@ -43,35 +45,49 @@ BeforeAll {
     . (Join-Path $script:Machine 'WindowsGateway.ps1')
     . (Join-Path $script:Environment 'EnvironmentGateway.ps1')
 
-    # An example environment, its values given, changed as asked.
+    # The System Tests' cluster file, each key of its [environment] -Change
+    # names set as given, or removed where given $null; with -Offline no
+    # node declares online.
     function New-Environment {
         param(
-            [string] $Example = 'hyperv',
-            [hashtable] $Network = @{}
+            [hashtable] $Change = @{},
+            [string] $Technology = 'msdsc',
+            [switch] $Offline
         )
 
-        [string] $folder = Join-Path $TestDrive ([guid]::NewGuid().ToString('n'))
-        $environment = Read-XmipTestEnvironment -Path (
-            Join-Path $script:Root "deploy/dsc/$Example.example.toml") -Folder $folder
-        foreach ($key in $Network.Keys) {
-            if ($null -eq $Network[$key]) {
-                $environment['network'].Remove($key)
+        [hashtable] $made = New-XmipTestEnvironment -Folder (
+            Join-Path $TestDrive ([guid]::NewGuid().ToString('n'))) -Technology $Technology
+        $table = $made.Content['environment']
+        foreach ($key in $Change.Keys) {
+            if ($null -eq $Change[$key]) {
+                $table.Remove($key)
             }
             else {
-                $environment['network'][$key] = $Network[$key]
+                $table[$key] = $Change[$key]
             }
         }
-        return @{ Environment = $environment; Folder = $folder }
+        foreach ($node in @($made.Content['nodes'].Values | Where-Object { $Offline })) {
+            $node['capabilities'] = @($node['capabilities'] | Where-Object {
+                    $_ -and $_ -ne 'online' })
+        }
+        return $made
     }
 
     # The environment as Get-XmipDeployEnvironment reads it.
     function Read-Environment {
         param([hashtable] $Made)
 
-        & (Get-Module -Name Xmip) {
-            param($Environment, $Estate, $Run)
-            Get-XmipDeployEnvironment -Environment $Environment -Estate $Estate -Run $Run
-        } $Made.Environment $script:Root $Made.Folder
+        return Read-XmipTestEnvironment -Environment $Made -Run $Made.Folder
+    }
+
+    # The machines of the nodes that declare online, the ones that reach
+    # past the network.
+    function Get-OnlineMachine {
+        param([hashtable] $Made)
+
+        $nodes = $Made.Content['nodes']
+        return @($nodes.Keys | Where-Object { 'online' -in @($nodes[$_]['capabilities']) } |
+                ForEach-Object { "XMIP-$_" })
     }
 
     # A gateway machine held in memory: its network's adapter and its
@@ -105,7 +121,7 @@ BeforeAll {
         foreach ($record in @(
                 @('xmip.test', 'XMIP-DC01', '10.77.0.10'), @('xmip.test', 'XMIP-DC01', '192.0.2.50')
                 @('xmip.test', '@', '10.77.0.10'), @('xmip.test', '@', '192.0.2.50')
-                @('xmip.test', 'RX1', '10.77.0.41'), @('_msdcs.xmip.test', 'gc', '192.0.2.50'))) {
+                @('xmip.test', 'web', '10.77.0.41'), @('_msdcs.xmip.test', 'gc', '192.0.2.50'))) {
             $script:Gw.Records.Add([pscustomobject] @{ ZoneName = $record[0]
                     HostName = $record[1]; RecordType = 'A'
                     RecordData = [pscustomobject] @{ IPv4Address = $record[2] } })
@@ -304,60 +320,94 @@ AfterAll {
     $env:COMPUTERNAME = $script:Name
 }
 
-Describe 'The environment file' {
-    It 'gives a machine whose internet says so <Example>''s gateway machine' -ForEach @(
-        @{ Example = 'hyperv' }, @{ Example = 'libvirt' }) {
-        [hashtable] $read = Read-Environment -Made (New-Environment -Example $Example)
-        $read.Gateway.machine.name | Should -Be 'XMIP-DC01'
-        $read.Gateway.machine.address | Should -Be '10.77.0.10'
+Describe 'The cluster file''s environment' {
+    It 'gives each machine whose node declares online the gateway machine''s address' {
+        [hashtable] $made = New-Environment
+        [hashtable] $read = Read-Environment -Made $made
+        [string] $gateway = "XMIP-$($made.Content['environment']['gateway'])"
+        [string[]] $online = @(Get-OnlineMachine -Made $made)
+        $online | Should -Not -BeNullOrEmpty
+        $read.Gateway.machine.name | Should -Be $gateway
+        # The host on the network's first address, the machines of their own
+        # next, the domain controller first of them.
+        $read.Gateway.machine.address | Should -Be '10.77.0.2'
         $read.Gateway.uplink | Should -Be 'Uplink'
         $read.Common.network.uplink | Should -Be 'Uplink'
-        $read.Common.network.enableNat | Should -BeFalse
         foreach ($machine in $read.Machines) {
-            [string] $want = if ($machine['name'] -eq 'XMIP-RX01') { '10.77.0.10' } else { '' }
+            [string] $want = if ($machine['name'] -in $online) { '10.77.0.2' } else { '' }
             $machine['network']['gateway'] | Should -Be $want -Because $machine['name']
-            [string] $up = if ($machine['name'] -eq 'XMIP-DC01') { 'Uplink' } else { '' }
+            [string] $up = if ($machine['name'] -eq $gateway) { 'Uplink' } else { '' }
             $machine['network']['uplink'] | Should -Be $up -Because $machine['name']
         }
     }
 
-    It 'leaves the host the gateway, through its NAT, where no gateway machine is named' {
-        [hashtable] $read = Read-Environment -Made (New-Environment -Network @{
-                gateway_machine = $null; uplink = $null; nat = $true })
+    It 'leaves the host the way out of each online node''s machine where no gateway is named' {
+        [hashtable] $made = New-Environment -Change @{ gateway = $null }
+        [hashtable] $read = Read-Environment -Made $made
         $read.Gateway | Should -BeNullOrEmpty
         $read.Common.network.uplink | Should -Be ''
         @($read.Machines | Where-Object { $_['network']['gateway'] } |
             ForEach-Object { "$($_['name']) $($_['network']['gateway'])" }) |
-            Should -Be @('XMIP-RX01 10.77.0.1')
+            Should -Be @(Get-OnlineMachine -Made $made | ForEach-Object { "$_ 10.77.0.1" })
     }
 
-    It 'refuses <Because>' -ForEach @(
-        @{ Because = 'a gateway machine that is no Windows machine'
-            Network = @{ gateway_machine = 'XMIP-RX01' }; Said = '*no Windows machine*' }
-        @{ Because = 'a gateway machine the environment does not have'
-            Network = @{ gateway_machine = 'XMIP-GW99' }; Said = '*no Windows machine*' }
-        @{ Because = 'a gateway machine with no uplink'
-            Network = @{ uplink = '' }; Said = '*write it in your copy*' }
-        @{ Because = 'the host''s NAT beside a gateway machine'
-            Network = @{ nat = $true }; Said = '*two ways out*' }
+    It 'gives the host NAT: <Nat>, where <Because>' -ForEach @(
+        @{ Because = 'a gateway is named'; Change = @{}; Offline = $false; Nat = $false }
+        @{ Because = 'no gateway is named and a node is online'; Change = @{ gateway = $null }
+            Offline = $false; Nat = $true }
+        @{ Because = 'no node is online'; Change = @{ gateway = $null }; Offline = $true
+            Nat = $false }
     ) {
-        { Read-Environment -Made (New-Environment -Network $Network) } |
-            Should -Throw -ExpectedMessage "REFUSED: $Said"
+        [hashtable] $read = Read-Environment -Made (New-Environment -Change $Change -Offline:(
+                $Offline))
+        $read.Common.network.enableNat | Should -Be $Nat
+    }
+
+    It 'refuses a gateway that is <Because>' -ForEach @(
+        @{ Because = 'no Windows machine'; Gateway = 'DEV02' }
+        @{ Because = 'no machine of the environment'; Gateway = 'GW99' }
+    ) {
+        { Read-Environment -Made (New-Environment -Change @{ gateway = $Gateway }) } |
+            Should -Throw -ExpectedMessage "REFUSED: *gateway names $Gateway, no Windows machine*"
+    }
+}
+
+Describe 'The uplink, the host''s switches a stub' {
+    It 'takes the uplink given, else the host''s one, asking the host only then' {
+        Mock -ModuleName Xmip -CommandName Get-XmipDeployHostSwitch -MockWith { @('Outside') }
+        InModuleScope Xmip { Get-XmipDeployUplink -Given 'Lab' -Hypervisor 'hyperv' } |
+            Should -Be 'Lab'
+        Should -Invoke -ModuleName Xmip -CommandName Get-XmipDeployHostSwitch -Times 0 -Exactly
+        InModuleScope Xmip { Get-XmipDeployUplink -Hypervisor 'hyperv' } | Should -Be 'Outside'
+    }
+
+    It 'refuses a gateway where the host has no uplink' {
+        Mock -ModuleName Xmip -CommandName Get-XmipDeployHostSwitch -MockWith { @() }
+        { InModuleScope Xmip { Get-XmipDeployUplink -Hypervisor 'hyperv' } } |
+            Should -Throw -ExpectedMessage 'REFUSED: the gateway reaches past*; it has none (*'
+    }
+
+    It 'refuses a gateway where the host has several uplinks, naming each' {
+        Mock -ModuleName Xmip -CommandName Get-XmipDeployHostSwitch -MockWith {
+            @('Outside', 'Lab') }
+        { InModuleScope Xmip { Get-XmipDeployUplink -Hypervisor 'libvirt' } } |
+            Should -Throw -ExpectedMessage (
+                'REFUSED: *one bridge onto*; it has Outside, Lab: name one with -Uplink (*')
     }
 }
 
 Describe 'Where each technology makes the gateway' {
     It 'applies gateway.dsc.yaml after the domain''s controller and before the names' {
         [hashtable] $made = New-Environment
-        [hashtable[]] $steps = @(Get-XmipTestDeployStep -Environment $made.Environment -Run (
-                $made.Folder))
+        [hashtable[]] $steps = @(Get-XmipTestDeployStep -Environment $made -Run $made.Folder)
         [string[]] $named = @($steps | ForEach-Object { $_.Name })
         [int] $at = [array]::IndexOf($named, 'gateway')
-        $at | Should -Be ([array]::IndexOf($named, 'domain-XMIP-DC01') + 1)
+        [string] $controller = $made.Content['environment']['domain_controller']
+        $at | Should -Be ([array]::IndexOf($named, "domain-XMIP-$controller") + 1)
         $named[$at + 1] | Should -Be 'names'
         [hashtable] $value = $steps[$at].Value
         Split-Path -Path $steps[$at].Document -Leaf | Should -Be 'gateway.dsc.yaml'
-        $value.machine.name | Should -Be 'XMIP-DC01'
+        $value.machine.name | Should -Be "XMIP-$($made.Content['environment']['gateway'])"
         $value.prefix | Should -Be '10.77.0.0/24'
         $value.domain | Should -Be 'xmip.test'
         $value.common.secretPath | Should -Not -BeNullOrEmpty
@@ -377,19 +427,18 @@ Describe 'Where each technology makes the gateway' {
     }
 
     It 'has no gateway step where no gateway machine is named' {
-        [hashtable] $made = New-Environment -Network @{
-            gateway_machine = $null; uplink = $null; nat = $true }
-        @(Get-XmipTestDeployStep -Environment $made.Environment -Run $made.Folder |
+        [hashtable] $made = New-Environment -Change @{ gateway = $null }
+        @(Get-XmipTestDeployStep -Environment $made -Run $made.Folder |
             Where-Object { $_.Name -eq 'gateway' }) | Should -BeNullOrEmpty
     }
 
     It 'names the gateway machine in Ansible''s xmip_gateway, played before the names' {
-        [hashtable] $made = New-Environment
-        $made.Environment['technology'] = 'ansible'
-        [string] $path = Write-XmipTestInventory -Environment $made.Environment -Run $made.Folder
+        [hashtable] $made = New-Environment -Technology 'ansible'
+        [string] $gateway = "XMIP-$($made.Content['environment']['gateway'])"
+        [string] $path = Write-XmipTestInventory -Environment $made -Run $made.Folder
         $children = (Read-XmipTestYaml -Path $path).all.children
-        @($children.xmip_gateway.hosts.Keys) | Should -Be @('XMIP-DC01')
-        $children.windows.hosts.Contains('XMIP-DC01') | Should -BeTrue
+        @($children.xmip_gateway.hosts.Keys) | Should -Be @($gateway)
+        $children.windows.hosts.Contains($gateway) | Should -BeTrue
         $children.xmip_gateway.vars.xmip_network_prefix | Should -Be '10.77.0.0/24'
         $children.xmip_gateway.vars.xmip_gateway_script | Should -BeLike '*WindowsGateway.ps1'
         [string[]] $plays = @((Read-XmipTestYaml -Path (Join-Path $script:Root (
@@ -462,7 +511,7 @@ Describe 'The gateway machine, every Windows command a stub' {
             'netsh routing ip nat add interface name=Ethernet mode=private')
         # The network's own records stay: its address and every other machine's.
         @($script:Gw.Records | ForEach-Object { "$($_.HostName) $($_.RecordData.IPv4Address)" }) |
-            Should -Be @('XMIP-DC01 10.77.0.10', '@ 10.77.0.10', 'RX1 10.77.0.41')
+            Should -Be @('XMIP-DC01 10.77.0.10', '@ 10.77.0.10', 'web 10.77.0.41')
         Get-WindowsGatewayFinding -Address '10.77.0.10' -Prefix '10.77.0.0/24' |
             Should -BeNullOrEmpty
     }

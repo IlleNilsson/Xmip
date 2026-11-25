@@ -247,35 +247,6 @@ Describe 'Start, Get and Stop, and nothing else' {
                 '*belong to Core.System and Core.Systems, not Core.Estate*')
     }
 
-    It 'runs the Systems Tests on machines alone, by name and with a certificate' {
-        # The owner, 2026-11-23: *System Test is local. Systems Test test
-        # systems together.* The suite says where its nodes run, never a name
-        # (ADR-0028, amendment 2026-11-23).
-        InModuleScope Xmip {
-            [object[]] $known = @(Get-XmipTestSuite)
-            $systems = $known | Where-Object { $_.Name -eq 'Core.Systems' }
-            $systems.Machines | Should -BeTrue
-            $systems.ByName | Should -BeTrue -Because 'it needs an environment, never a pattern'
-            ($known | Where-Object { $_.Name -eq 'Core.System' }).Machines | Should -BeFalse
-
-            [hashtable] $least = @{ Stress = 'Calm'; Area = 'a' }
-            (New-XmipSystemTestEnvironment @least -Machines).XMIP_SYSTEM_TEST_MACHINES |
-                Should -Be 'true'
-            (New-XmipSystemTestEnvironment @least).Keys |
-                Should -Not -Contain 'XMIP_SYSTEM_TEST_MACHINES'
-        }
-
-        [string] $cluster = $script:Cluster.Name
-        { Start-XmipTest -Suite Core.Systems -Cluster $cluster -ErrorAction Stop } |
-            Should -Throw -ExpectedMessage '*REFUSED. Core.Systems asks every node*-Certificate.*'
-        [hashtable] $local = @{
-            Suite = 'Core.System'; Cluster = $cluster; Certificate = $TestDrive
-            ErrorAction = 'Stop'
-        }
-        { Start-XmipTest @local } |
-            Should -Throw -ExpectedMessage '*REFUSED. -Certificate belongs to Core.Systems, not*'
-    }
-
     It 'rehearses every Start and Stop with -WhatIf' {
         [object[]] $commands = @(Get-Command -Module Xmip -Verb Start, Stop)
         [string[]] $doors = @($commands | ForEach-Object { $_.Name })
@@ -320,6 +291,184 @@ Describe 'Start, Get and Stop, and nothing else' {
 
         foreach ($file in $files) {
             Get-Content -LiteralPath $file -Raw | Should -Not -Match $starts -Because $file
+        }
+    }
+}
+
+Describe 'One switch runs the rolls as local processes, on virtual machines or as containers' {
+    It 'is three switches in sets of their own, -Process the default, with PowerShell''s aliases' {
+        # The owner, 2026-11-25: *there has to be a switch to run the tests,
+        # demo, as local processes or VMs*, *PowerShell as an Alias system, do
+        # not overthink*, *We missed a switch -As Container* and *Aliased as
+        # C* (ADR-0028, amendment 2026-11-25).
+        $command = Get-Command -Name Start-XmipTest
+        $parameters = $command.Parameters
+
+        foreach ($pair in @(@('Process', 'Proc'), @('VirtualMachine', 'VM'), @('Container', 'C'))) {
+            $parameters[$pair[0]].Aliases | Should -Contain $pair[1]
+            $parameters[$pair[0]].SwitchParameter | Should -BeTrue
+            @($parameters[$pair[0]].ParameterSets.Keys) | Should -Be @($pair[0])
+        }
+        $command.DefaultParameterSet | Should -Be 'Process'
+        $parameters.Keys | Should -Not -Contain 'Certificate'
+
+        [string] $cluster = $script:Cluster.Name
+        { Start-XmipTest -Cluster $cluster -Process -VirtualMachine -WhatIf -ErrorAction Stop } |
+            Should -Throw -ErrorId 'AmbiguousParameterSet*'
+        { Start-XmipTest -Cluster $cluster -VM -Container -WhatIf -ErrorAction Stop } |
+            Should -Throw -ErrorId 'AmbiguousParameterSet*'
+        { Start-XmipTest -Suite Core.Estate -VM -ErrorAction Stop } |
+            Should -Throw -ExpectedMessage (
+                '*-VirtualMachine belong to Core.System and Core.Systems, not Core.Estate*')
+
+        # The System Tests test the internals and the Systems Tests how nodes
+        # interact (the owner, 2026-11-25): two suites, each a roll the switch
+        # places, never the suite, and Core.Systems started by its name alone.
+        InModuleScope Xmip {
+            [object[]] $known = @(Get-XmipTestSuite)
+            $systems = $known | Where-Object { $_.Name -eq 'Core.Systems' }
+            $systems.Kind | Should -Be 'roll'
+            $systems.ByName | Should -BeTrue -Because 'never selected by a pattern'
+            $known[0].PSObject.Properties.Name | Should -Not -Contain 'Machines'
+        }
+    }
+
+    It 'refuses -Container, by -C too, before anything is built: not built yet' {
+        # -C is an alias of its own, which PowerShell binds before any prefix;
+        # -Cluster and -ComputerName still bind by their names.
+        InModuleScope Xmip -Parameters @{ Cluster = $script:Cluster.Name } {
+            param($Cluster)
+
+            Mock Start-XmipSystemTestBuild { throw 'built' }
+            Mock Get-XmipDeployHypervisor { throw 'asked of a host' }
+            [string] $refused = '*REFUSED. Running as containers is not built yet: the open ' +
+                'problem "The tests and the demo run in containers: WSL containers or ' +
+                'containerd on Windows, Podman on Linux, one container per node and far end, ' +
+                'made from the same cluster file" (ADR-0015)*'
+
+            foreach ($suite in 'Core.System', 'Core.Systems') {
+                { Start-XmipTest -Suite $suite -Cluster $Cluster -Container -ErrorAction Stop } |
+                    Should -Throw -ExpectedMessage $refused
+                { Start-XmipTest -Suite $suite -Cluster $Cluster -C -ErrorAction Stop } |
+                    Should -Throw -ExpectedMessage $refused
+            }
+            { Start-XmipTest -Suite Core.Estate -C -ErrorAction Stop } |
+                Should -Throw -ExpectedMessage '*-Container belong to Core.System and Core.Systems*'
+            Should -Invoke Start-XmipSystemTestBuild -Times 0
+            Should -Invoke Get-XmipDeployHypervisor -Times 0
+
+            # The names that begin with C bind as the estate calls them.
+            Mock Start-XmipChosenRoll { $script:Handed = $Choice }
+            Mock Start-XmipTestOnComputer { $script:On = $Bound }
+            Start-XmipTest -Suite Core.System -Cluster $Cluster
+            $script:Handed.Cluster | Should -Be $Cluster
+            $script:Handed.Bound.Keys | Should -Not -Contain 'Container'
+            Start-XmipTest -Suite Core.Estate -ComputerName 'absent-computer'
+            $script:On['ComputerName'] | Should -Be 'absent-computer'
+            $script:On.Keys | Should -Not -Contain 'Container'
+        }
+    }
+
+    It 'refuses -VirtualMachine before anything is built, in the order it is asked' {
+        [hashtable] $given = $script:Named + @{ Area = (Join-Path $TestDrive 'refused') }
+
+        InModuleScope Xmip -Parameters $given {
+            param($Cluster, $Stage, $Area)
+
+            [string] $name = $Cluster.Name
+            [string] $file = (Get-XmipSystemTestLayout).Configuration
+            [hashtable] $door = @{
+                Cluster = $name; VirtualMachine = $true; Path = $Area; ErrorAction = 'Stop'
+            }
+            Mock Start-XmipSystemTestBuild { throw 'built' }
+            Mock Read-XmipDeployedEnvironment { }
+
+            # First the host, in Get-XmipDeployHypervisor's own words.
+            Mock Get-XmipDeployHypervisor { throw 'REFUSED: this host makes no virtual machine' }
+            { Start-XmipTest @door } |
+                Should -Throw -ExpectedMessage '*REFUSED: this host makes no virtual machine*'
+            Should -Invoke Read-XmipDeployedEnvironment -Times 0
+
+            # Then nodes chosen: the machines run the file's every node.
+            Mock Get-XmipDeployHypervisor { 'hyperv' }
+            [hashtable] $named = @{
+                Nodes = @($Stage.receiving); NodeRole = @{ $Stage.receiving = 'executing' }
+            }
+            { Start-XmipTest @door @named } | Should -Throw -ExpectedMessage (
+                '*REFUSED. -Nodes, -NodeRole belong to -Process, not -VirtualMachine*')
+            Should -Invoke Read-XmipDeployedEnvironment -Times 0
+
+            # Then nothing deployed here: the switch never makes a machine.
+            [string] $deploy = "Deploy-XmipEnvironment -Path $file -Cluster $name deploys it, " +
+                'in an elevated Xmip PowerShell Console on Windows; -VirtualMachine never*'
+            foreach ($suite in 'Core.System', 'Core.Systems') {
+                { Start-XmipTest @door -Suite $suite } | Should -Throw -ExpectedMessage (
+                    "*REFUSED. No environment of cluster $name is deployed on this host. $deploy")
+            }
+
+            # Then another cluster file deployed, by its SHA-256.
+            Mock Read-XmipDeployedEnvironment { @{ Sha256 = 'f' * 64 } }
+            { Start-XmipTest @door } | Should -Throw -ExpectedMessage (
+                "*REFUSED. The environment of cluster $name was deployed from a cluster file " +
+                "whose SHA-256 is $('f' * 64), and $file is *. $deploy")
+
+            Should -Invoke Start-XmipSystemTestBuild -Times 0
+        }
+    }
+
+    It 'hands the roll the deployed machines and operator, records it, and builds no service' {
+        [hashtable] $given = $script:Named + @{ Area = (Join-Path $TestDrive 'deployed') }
+
+        InModuleScope Xmip -Parameters $given {
+            param($Cluster, $Stage, $Area)
+
+            [string] $file = (Get-XmipSystemTestLayout).Configuration
+            [string[]] $node = @($Cluster.Nodes | Select-Object -First 2)
+            [string] $hash = (Get-FileHash -LiteralPath $file -Algorithm SHA256).Hash
+            $script:Deployed = @{
+                Sha256   = $hash.ToLowerInvariant()
+                Operator = Join-Path $Area 'operator'
+                Nodes    = [ordered]@{ $node[0] = '192.0.2.1'; $node[1] = '192.0.2.2' }
+                FarEnds  = [ordered]@{ far = '192.0.2.3' }
+            }
+            Mock Get-XmipDeployHypervisor { 'hyperv' }
+            Mock Read-XmipDeployedEnvironment { $script:Deployed }
+            Mock Start-XmipSystemTestBuild { $script:Started = $Start; 4242 }
+            Mock Get-XmipSystemTestPublication { throw 'no binary in this test' }
+            Mock Get-XmipTestStatus { }
+            Mock Write-Host { }
+
+            Start-XmipTest -Suite Core.Systems -Cluster $Cluster.Name -VM -Rounds 1 -Path $Area
+
+            $script:Started.Suite | Should -Be 'Core.Systems' -Because 'the Systems Tests'' own'
+            $script:Started.RunsAs | Should -Be 'VirtualMachine'
+            [hashtable] $choice = $script:Started.Choice
+            $environment = New-XmipSystemTestEnvironment @choice
+            $environment.XMIP_SYSTEM_TEST_MACHINES |
+                Should -Be "$($node[0])=192.0.2.1,$($node[1])=192.0.2.2,far=192.0.2.3"
+            $environment.XMIP_SYSTEM_TEST_CERTIFICATE |
+                Should -Be ([System.IO.Path]::GetFullPath($script:Deployed.Operator))
+            (New-XmipSystemTestEnvironment -Stress Calm -Area 'a').Keys |
+                Should -Not -Contain 'XMIP_SYSTEM_TEST_MACHINES' -Because 'local processes'
+            [hashtable] $began = @{ Start = $script:Started; Id = 1; Started = Get-Date }
+            (New-XmipSystemTestBuildRecord @began).runs_as | Should -Be 'VirtualMachine'
+
+            # The build builds the roll and no xmip-service on virtual machines.
+            [hashtable] $handing = @{
+                Cluster = $Cluster.Name; RunsAs = 'VirtualMachine'; Path = $Area
+            }
+            [string] $handed = Join-Path $Area 'build-vm.clixml'
+            Export-Clixml -LiteralPath $handed -InputObject $handing -Depth 5
+            Mock Invoke-XmipSystemTestBuild { 'roll' }
+            Mock Invoke-XmipSystemTestService { throw 'a service was built' }
+            Mock Start-XmipSystemTestRollProcess { 7 }
+
+            Complete-XmipSystemTestBuild -Record (Join-Path $Area 'build-vm.toml') -Handed $handed
+
+            Should -Invoke Invoke-XmipSystemTestService -Times 0
+            Should -Invoke Start-XmipSystemTestRollProcess -Times 1 -ParameterFilter {
+                $Start.RunsAs -eq 'VirtualMachine'
+            }
         }
     }
 }
@@ -1409,7 +1558,8 @@ Describe 'A cluster rolls once' {
 
             Mock -CommandName Test-XmipRollAlive -MockWith { $false }
             @(Get-XmipSystemTestRolling -Path $Area -Cluster $one).Count | Should -Be 0
-            Remove-Item -LiteralPath (Join-Path $Area 'roll-4242.toml'), (Join-Path $Area 'roll-4343.toml')
+            Remove-Item -LiteralPath (Join-Path $Area 'roll-4242.toml'), (
+                Join-Path $Area 'roll-4343.toml')
         }
     }
 }
@@ -1449,16 +1599,23 @@ evidence = "a document no Subscription takes was dropped this turn"
 observed_unix_nanos = 1789208338038783900
 "@
             Set-Content -LiteralPath $published -Encoding utf8 -Value $snapshot
-            Set-Content -LiteralPath (Join-Path $area "$other-snapshot.xmip") -Encoding utf8 -Value $snapshot
+            [string] $copy = Join-Path $area "$other-snapshot.xmip"
+            Set-Content -LiteralPath $copy -Encoding utf8 -Value $snapshot
             [datetime] $began = (Get-Item -LiteralPath $published).LastWriteTime.AddMinutes(-5)
 
-            foreach ($roll in @(@{ Id = 4646; Cluster = $ended }, @{ Id = 4747; Cluster = $other })) {
-                Set-Content -LiteralPath (Join-Path $area "roll-$($roll.Id).toml") -Encoding utf8 -Value @(
+            [hashtable[]] $rolls = @(
+                @{ Id = 4646; Cluster = $ended }
+                @{ Id = 4747; Cluster = $other }
+            )
+
+            foreach ($roll in $rolls) {
+                [string] $record = Join-Path $area "roll-$($roll.Id).toml"
+                Set-Content -LiteralPath $record -Encoding utf8 -Value @(
                     'suite = "Core.System"'
                     "cluster = `"$($roll.Cluster)`""
                     "pid = $($roll.Id)"
                     "started = `"$($began.AddSeconds($roll.Id - 4646).ToString('o'))`""
-                    'nodes = ["RX1", "TX1"]'
+                    "nodes = [`"$Node`"]"
                     "snapshot = '$(Join-Path $area "$($roll.Cluster)-snapshot.xmip")'"
                 )
             }
@@ -1472,7 +1629,7 @@ observed_unix_nanos = 1789208338038783900
             $row.State | Should -Be 'ended'
             $row.Id | Should -Be 4646
             $row.Worst | Should -Be 'stressed' -Because 'the worst of the snapshot it published'
-            @($row.Nodes) | Should -Be @('RX1', 'TX1')
+            @($row.Nodes) | Should -Be @($Node)
             $row.Fault | Should -BeNullOrEmpty
 
             # A snapshot older than the roll is an earlier roll's.
@@ -1491,7 +1648,9 @@ observed_unix_nanos = 1789208338038783900
 
             # Nothing of it is stopped: its pid may be another process's now.
             Mock -CommandName Get-XmipTestStatus -MockWith {
-                [PSCustomObject]@{ Id = 4646; Kind = 'roll'; State = 'ended'; Suite = 'Core.System' }
+                [PSCustomObject]@{
+                    Id = 4646; Kind = 'roll'; State = 'ended'; Suite = 'Core.System'
+                }
             }
             { Stop-XmipTest -Id 4646 -ErrorAction Stop } |
                 Should -Throw -ExpectedMessage '*REFUSED*run 4646 has ended; there is nothing*'

@@ -836,12 +836,15 @@ the roles `xmip_name` and `xmip_node` — each for Windows and AlmaLinux alike
 machines, they give the DNS server the names of the cluster and its nodes,
 and each node machine its account, its slice — sliced and signed on the
 machine the environment is deployed from by `xmip-service --slice --cluster
---bind --nodes --authority`, with the environment's authority, and shipped
-with that authority's certificate alone, so a node never slices and runs
-only a slice its cluster signed (ADR-0031, amendment 2026-11-06) — its
-certificate, key and anchors from the cluster's own authority — issued on
-the operator's machine by `New-XmipCertificate -Node`, `xmip_operate.h`
-section 22, since a node starts no provisioner yet — the estate's package,
+--bind --nodes --authority`, with the environment's authority, kept in its
+private state's `authority` folder and made there where none is, and
+shipped with that authority's certificate alone, so a node never slices
+and runs only a slice its cluster signed (ADR-0031, amendment 2026-11-06)
+— its certificate, key and anchors from that authority — issued into the
+private state by `New-XmipCertificate -Node`, `xmip_operate.h` section 22,
+since a node starts no provisioner yet, as is the operator certificate of
+the account deploying, whom every node lists among its operators (ADR-0015,
+amendment 2026-11-25) — the estate's package,
 whose `xmip-service --install --account` registers and starts the service
 as the node's account, a firewall opening for exactly the ports
 `xmip-service --listening` says, and its service running — started with
@@ -858,33 +861,42 @@ node restarted comes back a standby, and its primary, stopped in order,
 hands over to a standby ready and following at once (ADR-0056, amendments
 2026-11-23 and 2026-11-24). Each slice has
 every Receive Location and Send Port the file designs placed over the
-environment's nodes by `xmip-core-configure`'s one placement and bound on
-the far end the environment names (ADR-0028, amendment 2026-10-22), and
+environment's nodes by `xmip-core-configure`'s one placement and bound to
+the far ends the environment names (ADR-0028, amendments 2026-11-22 and
+2026-11-25), and
 every Work Process on each node serving its stage; work no node of the
-environment satisfies is refused (ADR-0056, amendment 2026-11-13). Which
-node runs on which machine is the environment file's, never the cluster's
-file: one TOML file names the technology that makes the environment, the
-hypervisor, the machines with the node each runs and what a node is given,
-and `Deploy-XmipEnvironment` writes the YAML each technology reads from it,
-DSC's parameters or Ansible's inventory; the environment keeps the
+environment satisfies is refused (ADR-0056, amendment 2026-11-13). Where a
+cluster runs on virtual machines is its own file's `[environment]` table,
+which slicing gives no node (ADR-0031, the second amendment of 2026-11-25):
+the network, the domain, every machine's defaults, the machines that differ
+or run no node, and the far ends. `Deploy-XmipEnvironment -Path <cluster
+file> -Cluster <name>` reads the same file, takes the technology and the
+hypervisor as parameters, msdsc and the host's kind where left out, and the
+host's facts as defaults it keeps, and writes the YAML each technology
+reads, DSC's parameters or Ansible's inventory; the environment keeps the
 technology that made it, in its private state and in each libvirt
-machine's record, and refuses the other (ADR-0015, amendment 2026-11-11).
+machine's record, and refuses the other (ADR-0015, amendments 2026-11-11
+and 2026-11-25).
 Nothing in YAML or a template reads,
 slices or writes the configuration: `xmip-core-configure`'s one slicing does
 (`module/platform/configure/doc/cluster-configuration.md`), and the node
 reads the document `xmip-core-configure` reads
 (`module/platform/configure/doc/node-configuration.md`).
 
-**A cluster's file says nothing of where it runs** (the owner, 2026-10-21:
-*one TOML file that can be run for tests regardless of node faking or
-actual nodes*; ADR-0028, amendment 2026-10-21). Its nodes, their roles, the
-Storage nodes each reaches, by name, the operate listener on the wildcard
-address, and its certificate's paths relative to the configuration — and no
+**A cluster's file says where it runs in its `[environment]` table alone**
+(the owner, 2026-10-21: *one TOML file that can be run for tests regardless
+of node faking or actual nodes*; 2026-11-25: *I still don't get why there
+is a need for two files?*; ADR-0028, amendments 2026-10-21 and
+2026-11-25). Its nodes, their roles, the Storage nodes each reaches, by
+name, the operate listener on the wildcard address, its certificate's paths
+relative to the configuration, and the table no node is given — and no
 cluster name, no machine's address, no absolute path. The environment names
-the cluster: the System Tests' run, or `--cluster` on a machine, which the
-slice writes where the file names none (`configure::slice_named`). The
-System Tests' own file is such a file, and the example environment runs it;
-the estate root's `cargo test --test deploy` slices it for every node it
+the cluster: the System Tests' run, `Deploy-XmipEnvironment -Cluster`, or
+`--cluster` on a machine, which the slice writes where the file names none
+(`configure::slice_named`). The System Tests' own file is such a file, the
+System Tests and the Systems Tests run from it as local processes or on the
+virtual machines its table describes; the
+estate root's `cargo test --test deploy` slices it for every node it
 declares and reads each slice as `xmip-service` does.
 
 **The machines an environment runs on are templates too, one per

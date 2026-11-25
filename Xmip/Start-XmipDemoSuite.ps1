@@ -36,8 +36,10 @@ function Start-XmipDemoSuite {
 
             Refused before anything starts: a switch Core.Demo does not take;
             no -Cluster, since a test spawns a cluster and never invents a
-            name for one; a run of the check still running, since two would
-            share one web address and one desktop app's folder and gui.toml;
+            name for one; on virtual machines, what a roll on them is refused
+            for (Resolve-XmipVirtualMachineRun); a run of the check still
+            running, since two would share one web address and one desktop
+            app's folder and gui.toml;
             and a cluster that rolls or builds already, since the check
             proves the roll it builds from this tree and never follows one
             (Get-XmipClusterRunning).
@@ -51,7 +53,8 @@ function Start-XmipDemoSuite {
             Start-XmipTest itself, for ShouldProcess.
 
         .PARAMETER Bound
-            What Start-XmipTest was called with.
+            What Start-XmipTest was called with; its switch says what the
+            check runs its roll as, and its record says it (Get-XmipRunsAs).
     #>
     [CmdletBinding()]
     [OutputType('Xmip.TestStatus')]
@@ -76,6 +79,10 @@ function Start-XmipDemoSuite {
         Write-Error "REFUSED. $script:XmipDemoSuite rolls a cluster you name: -Cluster <name>."
         return
     }
+
+    # Refused as the roll it starts would be, before its pwsh starts.
+    [string] $as = Get-XmipRunsAs -Bound $Bound
+    $null = Resolve-XmipRunsAs -Bound $Bound -Cluster $cluster
 
     $layout = Get-XmipSystemTestLayout
     [string] $area = $layout.Demo
@@ -121,6 +128,7 @@ function Start-XmipDemoSuite {
         Record  = Join-Path -Path $area -ChildPath "demo-$stamp.toml"
         Cluster = $cluster
         Stress  = $stress
+        RunsAs  = $as
         Tester  = [string] $Bound['Tester']
         Log     = Join-Path -Path $area -ChildPath "demo-$stamp.log"
     }
@@ -156,6 +164,9 @@ function New-XmipDemoCommand {
         .PARAMETER Stress
             The stress it starts its roll at.
 
+        .PARAMETER RunsAs
+            Process or VirtualMachine: what it runs its roll as.
+
         .PARAMETER Tester
             The tester, or empty.
 
@@ -175,6 +186,10 @@ function New-XmipDemoCommand {
         [string] $Stress,
 
         [Parameter()]
+        [ValidateSet('Process', 'VirtualMachine')]
+        [string] $RunsAs = 'Process',
+
+        [Parameter()]
         [AllowEmptyString()]
         [string] $Tester = '',
 
@@ -190,6 +205,7 @@ function New-XmipDemoCommand {
         "`$run = @{ Record = $(ConvertTo-XmipLiteral -Text $Record)"
         "    Cluster = $(ConvertTo-XmipLiteral -Text $Cluster)"
         "    Stress = $(ConvertTo-XmipLiteral -Text $Stress)"
+        "    RunsAs = $(ConvertTo-XmipLiteral -Text $RunsAs)"
         "    Tester = $(ConvertTo-XmipLiteral -Text $Tester)"
         "    Log = $(ConvertTo-XmipLiteral -Text $Log) }"
         '& (Get-Module -Name Xmip | Select-Object -First 1) {'
@@ -227,6 +243,7 @@ function Write-XmipDemoStart {
         Record  = $Run.Record
         Cluster = $Run.Cluster
         Stress  = $Run.Stress
+        RunsAs  = $Run.RunsAs
         Tester  = $Run.Tester
         Log     = $Run.Log
         Id      = $Process.Id

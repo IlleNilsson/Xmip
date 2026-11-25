@@ -9,11 +9,14 @@ Set-StrictMode -Version Latest
 # owner: "It's name is Core.System, to give place for third parties"). A bare
 # name is still accepted and canonicalized. Said once here, so no surface
 # spells a name for itself and none of them can disagree. Core.System is the
-# System Tests on one computer and Core.Systems the Systems Tests on an
-# environment's machines (ADR-0028, amendment 2026-11-23); Core.Internal is
-# the internal tests of the modules -Test names, as a landing verifies them
-# (ADR-0028, amendment 2026-11-23, the second); Core.Demo is the demo
-# readiness check (ADR-0028, amendment 2026-11-10).
+# System Tests, which test the internals, and Core.Systems the Systems Tests,
+# which test how nodes interact (ADR-0028, amendment 2026-11-23; the owner,
+# 2026-11-25); each runs as local processes or on virtual machines, as
+# Start-XmipTest's -Process and -VirtualMachine choose, never as the suite
+# says (ADR-0028, amendment 2026-11-25). Core.Internal is the internal tests
+# of the modules -Test names, as a landing verifies them (ADR-0028,
+# amendment 2026-11-23, the second); Core.Demo is the demo readiness check
+# (ADR-0028, amendment 2026-11-10).
 [string] $script:XmipSystemTestSuite = 'Core.System'
 [string] $script:XmipSystemsTestSuite = 'Core.Systems'
 [string] $script:XmipEstateSuite = 'Core.Estate'
@@ -53,7 +56,7 @@ function Get-XmipTestSuite {
     )
 
     New-XmipTestSuite -Provider 'Core' -Name 'System' -Kind 'roll'
-    New-XmipTestSuite -Provider 'Core' -Name 'Systems' -Kind 'roll' -ByName -Machines
+    New-XmipTestSuite -Provider 'Core' -Name 'Systems' -Kind 'roll' -ByName
     New-XmipTestSuite -Provider 'Core' -Name 'Estate' -Kind 'pester'
     New-XmipTestSuite -Provider 'Core' -Name 'Internal' -Kind 'internal' -ByName
     New-XmipTestSuite -Provider 'Core' -Name 'Demo' -Kind 'demo' -ByName
@@ -114,16 +117,9 @@ function New-XmipTestSuite {
             Started by its name alone, never by a pattern naming a group:
             Core.Demo, which builds and opens the desktop app, holds the web
             host's address and rolls a cluster of its own (ADR-0028,
-            amendment 2026-11-10); Core.Systems, which needs an
-            environment's machines (ADR-0028, amendment 2026-11-23); and
-            Core.Internal, whose whole suite is every module's landing
-            verification.
-
-        .PARAMETER Machines
-            Runs on an environment's machines, every node of the run one that
-            answers there and none spawned in its place: Core.Systems, the
-            Systems Tests. The suite says so; a name never does (ADR-0028,
-            amendment 2026-11-23).
+            amendment 2026-11-10); Core.Systems, the Systems Tests (ADR-0028,
+            amendment 2026-11-23); and Core.Internal, whose whole suite is
+            every module's landing verification.
     #>
     [CmdletBinding()]
     [OutputType('Xmip.TestSuite')]
@@ -145,10 +141,7 @@ function New-XmipTestSuite {
         [string] $Source = '',
 
         [Parameter()]
-        [switch] $ByName,
-
-        [Parameter()]
-        [switch] $Machines
+        [switch] $ByName
     )
 
     # Every suite is spelled <Provider>.<Name>, Xmip's own included: the slot
@@ -167,7 +160,6 @@ function New-XmipTestSuite {
         Command    = $Command
         Source     = $Source
         ByName     = [bool] $ByName
-        Machines   = [bool] $Machines
     }
 }
 

@@ -19,21 +19,14 @@ files. Narration, flex poses and accessibility notes were updated on 2026-11-07.
 On 2026-11-22 the node roles, the parts around the nodes and the five ways to
 run one plan were added, and the integration path replaced the Application
 section in both formats. On 2026-11-23 the story, the deck, the video and its
-captions took the System Tests' names of that day, and containers as the
+captions took the System Tests and the Systems Tests, and containers as the
 sixth way to run the plan. On 2026-11-24 the overview was rebuilt as one
 design in both formats: sixteen scenes, each with one message in large type
 and a figure or a screenshot, current content, recorded figures, and the
 video rendered from the deck's own slides; both decks count four ways to run
 the plan, local processes, containers, virtual machines and physical
 machines, the hypervisors being the virtual machines' (ADR-0015, amendment
-2026-11-24). On 2026-11-25 the story, the captions and the timing took one
-name, the System Tests, run as local processes or on virtual machines by
-one switch (ADR-0028, amendment 2026-11-25): one sentence of the narration
-of *One plan, four ways* changed, and two alt texts, each caption's timing
-kept. The audio of that sentence, in `audio/scene-09.wav`, still says the
-words before and is to be voiced again; the decks' figures and the video's
-frames that name the tests are to be drawn again with it, the timing then
-generated again from the speech. Project source references record
+2026-11-24). Project source references record
 the documentation used, rather than a promise of release readiness.
 
 ## Outreach

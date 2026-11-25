@@ -59,6 +59,15 @@ winget = "Microsoft.PowerShell"
 [prerequisite.powershell.macos]
 brew = "powershell"
 
+# What Microsoft DSC's environment template brings to each virtual machine it
+# applies a document on, unpacked in its staging folder and never installed
+# for the machine (Deploy-XmipEnvironment): each found by its name in the
+# deployment's image folder and checked against its SHA-256, both from its
+# GitHub release.
+[prerequisite.powershell.archive]
+linux = { file = "powershell-7.7.0-linux-x64.tar.gz", sha256 = "c89d9c682d2c403dfe726f3df948e359675235a5bd6fab535776de69729ca0cb" }
+windows = { file = "PowerShell-7.7.0-win-x64.zip", sha256 = "7c74e03b20a75b59715847439d046a6214b1863ee79b187872980f139bb4a05f" }
+
 [prerequisite.git]
 role = "operator"
 probe = "git --version"
@@ -277,6 +286,12 @@ command = "Add-AppxPackage -Path https://github.com/PowerShell/DSC/releases/down
 dnf = "dsc-preview"
 apt = "dsc-preview"
 note = "From Microsoft's package repository, packages.microsoft.com, where a preview is published as dsc-preview since PowerShell/DSC#1747 and the stable release as dsc."
+
+# What Microsoft DSC's environment template brings to each virtual machine, as
+# [prerequisite.powershell.archive] is.
+[prerequisite.dsc.archive]
+linux = { file = "DSC-3.4.0-preview.3-x86_64-linux.tar.gz", sha256 = "5ff4d28a6beeff34f791f4e4a0d635e97ba5cd6321142ed88ddae8d65c04559c" }
+windows = { file = "DSC-3.4.0-preview.3-x86_64-pc-windows-msvc.zip", sha256 = "40215c92c3a61f0572bb5193e6ae2df8568a847f0f311047c22a12389fc4567e" }
 
 [prerequisite.ansible]
 role = "operator"

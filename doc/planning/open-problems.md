@@ -3049,19 +3049,6 @@ them. `test/Terminology.Test.ps1` reads every file the estate and its
 submodules track (`git grep --recurse-submodules`), ADR-0028's ruling and
 MAUI's own package name excepted.
 
-## 149. `Core.Systems` without `-Nodes` is refused for both example environments
-
-Found 2026-11-24 by the same review: the System Tests' cluster file
-declares OP1, which no machine of either example environment maps, and
-`Core.Systems` refuses a node that does not answer.
-
-Built 2026-11-24 (ADR-0028, amendment 2026-11-24): the rig resolves every
-node of the run before it asks any, and refuses every one that does not
-resolve in one sentence, naming the `-Nodes` that run those that do
-(`real::mapped`). OP1 stays without a machine in both example
-environments: the owner's node plan gives the operator's machine no node,
-and mapping one is his to choose. Held by `real.rs`'s tests.
-
 ## 150. A node opens no Promote unit a module library holds
 
 Found 2026-11-24 building the packages for developers (ADR-0075): a
@@ -3200,12 +3187,6 @@ per crate or project and test, but a Pester failure, the root's or a
 module's, is named only in the part's log, the run's record carrying its
 last lines.
 
-## 168. The Systems Tests could take their nodes from the environment file
-
-Found 2026-11-24 the same day: the Systems Tests resolve the nodes the
-System Tests' cluster file names and refuse every unmapped one, where the
-environment file already says which nodes its machines run.
-
 ## 169. The cloud transports take their key from nothing a Location gives them
 
 Found 2026-11-24 linking the transports into the assembled service: the
@@ -3278,7 +3259,7 @@ is not set; each later run finds and removes such a record), whether
 `netsh routing ip nat` and its dump on Windows Server 2025 match the
 2008 R2 reference the template reads, and whether answers coming back
 through the NAT pass the uplink's inbound block rule. Needed: a run on
-the Hyper-V environment with a machine whose `internet` says so reaching
+the Hyper-V environment with the machine of a node that declares `online` reaching
 past the network, each of the three observed and recorded.
 
 ## 183. A deploy step's refusal is buried in terminal color codes
@@ -3302,6 +3283,86 @@ promoted until ready*, and a persist Storage succession test failed once;
 each passed alone, the first 3 of 3 in 0.35 to 0.43 s. Needed: what each
 waits on found, and the wait bounded by the event, never by more time
 (the millisecond rule), so a loaded machine changes nothing.
+## 185. Core.System and Core.Systems run the same roll
+
+Found 2026-11-25 building the switch: the owner, *System Tests tests the
+internals, Systems Tests tests how nodes interacts*, and both suites stay,
+each taking `-Process`, `-VirtualMachine` or `-Container`; but nothing yet
+differs in what the roll runs, only the suite's name in records and status.
+Needed: the Systems Tests' own tests of how the nodes interact, and the
+System Tests' of the internals, each the suite's alone.
+
+## 186. A far end's SFTP port and `--slice --bind` to one far end are reached by no run
+
+Found 2026-11-25: with every far end on a machine of its own or a process of
+its own, the far end the rig served on the host is deleted, so
+`configure::placed::FAR_END_PORT` and `xmip-service --slice --bind` to one
+far end are left without a caller. Needed: the owner's choice, delete or
+keep.
+
+## 187. Ansible makes no far end's machine
+
+Found 2026-11-25: `deploy/dsc/ansible` has no role for a System Tests far
+end, where msdsc places and starts one. Needed: the role, or a refusal
+naming msdsc.
+
+## 188. The tests and the demo do not run in containers
+
+Recorded 2026-11-25 with `Start-XmipTest -Container` (the owner: *We missed a
+switch -As Container*, *Aliased as C*), which refuses naming this: WSL
+containers or containerd on Windows, Podman on Linux, one container per node
+and far end, made from the same cluster file (ADR-0015, amendment
+2026-11-24). Needed: that way, built.
+
+## 189. How a run runs is not shown beyond PowerShell
+
+Found 2026-11-25: `[run] runs_as`, Process, VirtualMachine or Container, is
+in the run's record and `Get-XmipTestStatus`, but not in operate's
+`RunHeader`, the ABI or the operator views. Needed: the run line says it.
+
+## 190. The account's own Xmip folder is found twice
+
+Found 2026-11-25: `runtime::signed::own_folder` (Rust) and
+`Get-XmipAccountFolder` (PowerShell) each spell where an account keeps its
+Xmip state. Needed: one, the other asking it through the ABI.
+
+## 191. A Work Process Instance keeps no values across Messages
+
+Found 2026-11-25 drafting the deck's order story: each Message a wait takes
+replaces the values its decisions read (`process` `flow/turn.rs`,
+`current`), so a Work Process cannot count what is ordered against what is
+delivered and accepted, as an orchestration's variables do in BizTalk (the
+owner, 2026-11-25: *A Work Process is like an Orchestration in BizTalk*).
+Needed: an Instance's own values, kept in the Ledger with it.
+
+## 192. No operator surface shows Work Process Instances
+
+Found 2026-11-25 with 191: no view, command or cmdlet reads the Ledger's
+Process Instance table, so an operator cannot see an order's Instance,
+whether it runs, waits or failed, its deadline, or its parts. Needed: the
+Instances in every surface, as BizTalk's console shows running, dehydrated
+and suspended instances.
+
+## 193. A failed Work Process Journey cannot be retried or dismissed
+
+Found 2026-11-25 with 191: Retry and Dismiss act only through the node that
+sends a Send Port (`runtime` `send_step/message_act.rs`), where
+runtime-model section 22, *Process outcome*, says such a Journey is kept in
+its Work Process's queue for an operator's Retry or Dismiss. Needed: the
+acts on a Work Process Journey.
+
+## 194. No test runs a Work Process that loops back to a wait
+
+Found 2026-11-25 with 191: a flow leading back to an earlier wait passes the
+program check and runs under the engine's loop guard, but no test runs one,
+as an order shipped in parts needs. Needed: that test.
+
+## 195. Root Core.Internal fails its .NET part on the test computer
+
+Found 2026-11-25: Xmip.Operations' build there stops NETSDK1147, the
+maui-android workload not installed. Needed: the workload installed there,
+or the Android target skipped in words where it is absent, as the landing
+does without the NDK.
 # Suggested order
 
 Rewritten 2026-09-23, and corrected to what is built on 2026-11-10. The
@@ -4522,7 +4583,7 @@ configuration's folder as it found it.
 
 ## 118. A Pester test of hidden runs reads this computer's run area — **Resolved**
 
-*Resolved 2026-11-25:* `test/HiddenRun.Test.ps1` is deleted with the hidden
+*Resolved 2026-11-25:* the hidden runs' Pester file is deleted with the hidden
 run itself (ADR-0028 and ADR-0052, amendments 2026-11-25; the owner,
 2026-11-25: "So remove your test cluster and the checkbox to show it or
 not").
@@ -4532,3 +4593,26 @@ counted a record left in `.local-work/demo` by an earlier run, a CL1 row
 the test had not made, and failed; on Linux, with no such record, it
 passed. A test that reads the computer's own run area passes or fails by
 what ran there before.
+
+## 168. The Systems Tests could take their nodes from the environment file — **Resolved**
+
+*Resolved 2026-11-25:* there is no environment file: the cluster file's `[environment]` says where the plan runs, `Deploy-XmipEnvironment -Path -Cluster` records each node's and far end's virtual machine and address in `deployed.toml`, and `Start-XmipTest -VirtualMachine` runs from it, the Systems Tests taking their node list and operator certificate from it and resolving no name (ADR-0015 and ADR-0028, amendments 2026-11-25; the owner, 2026-11-25: "I still don't get why there is a need for two files?").
+
+Found 2026-11-24 the same day: the Systems Tests resolve the nodes the
+System Tests' cluster file names and refuse every unmapped one, where the
+environment file already says which nodes its machines run.
+
+## 149. `Core.Systems` without `-Nodes` is refused for both example environments — **Resolved**
+
+*Resolved 2026-11-25:* superseded: there are no example environments; one virtual machine runs each node of the cluster file, OP1 on the plan's operator machine (ADR-0028, amendment 2026-11-25).
+
+Found 2026-11-24 by the same review: the System Tests' cluster file
+declares OP1, which no machine of either example environment maps, and
+`Core.Systems` refuses a node that does not answer.
+
+Built 2026-11-24 (ADR-0028, amendment 2026-11-24): the rig resolves every
+node of the run before it asks any, and refuses every one that does not
+resolve in one sentence, naming the `-Nodes` that run those that do
+(`real::mapped`). OP1 stays without a machine in both example
+environments: the owner's node plan gives the operator's machine no node,
+and mapping one is his to choose. Held by `real.rs`'s tests.

@@ -72,8 +72,8 @@ schema: !embedded
           The technology making the environment, msdsc, which the domain's
           record names; a machine another technology made is refused.
         type: string
-      environment:
-        description: 'The environment''s name, written in the domain''s description.'
+      description:
+        description: 'The machine''s role and operating system in one line, its domain''s description.'
         type: string
       address:
         type: string

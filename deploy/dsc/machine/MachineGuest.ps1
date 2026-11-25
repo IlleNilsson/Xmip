@@ -4,7 +4,7 @@
 # hypervisor (hyperv, libvirt) and in both technologies: its memory, as its
 # instance says it, and its clock, as chrony takes it. HyperVDefinition.ps1
 # and LibvirtDefinition.ps1 dot-source it, each with its own device; the
-# environment file's dynamic_memory is read once, by
+# cluster file's dynamic_memory is read once, by
 # Get-XmipDeployDynamicMemory, and reaches a template as dynamicMemory.
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'

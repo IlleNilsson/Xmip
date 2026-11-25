@@ -40,9 +40,9 @@
 
     Where a name may stand (ADR-0056, amendment 2026-10-03), and only there:
 
-    - an cluster.xmip, a cluster's configuration, and the System Tests'
-      external.xmip beside its own, which names the far ends outside it
-      (ADR-0028, amendment 2026-11-22);
+    - an cluster.xmip, a cluster's configuration, its [environment] among
+      it, which names the far ends outside the cluster and the virtual
+      machines it runs on (ADR-0028, amendments 2026-11-22 and 2026-11-25);
     - a README.md, and doc/getting-started.md, the first run the README links
       first (ADR-0056, amendment 2026-10-20, drafted);
     - the .EXAMPLE and .PARAMETER sections of a comment-based help block in a
@@ -58,10 +58,10 @@
     2026-11-12: *I think we should name C CL, R RX, P PX, O OP, S TX, D DT*;
     *Let's go with it, EX*; *DT, if that's what for storage, it would be
     better as DS instead of DT* (ADR-0056, amendment 2026-11-12). A one-letter
-    designation, C1 for CL1, is refused in every place above, in the
-    estate's README.md, and in deploy/'s READMEs and example environment
-    files; what a record measured or quoted under one keeps it, and those
-    places hold no record.
+    designation, C1 for CL1, is refused in every place above, a cluster
+    file's [environment] among them, in the estate's README.md, and in
+    deploy/'s READMEs; what a record measured or quoted under one keeps it,
+    and those places hold no record.
 
     Two kinds of token are not names and are said here once: $script:Word,
     the products and specifications the estate integrates with, and
@@ -200,8 +200,9 @@ BeforeAll {
     <#
         .SYNOPSIS
         The documents beside the searched tree that show the owner's names:
-        the estate's README.md, and deploy/'s READMEs and example environment
-        files, which name a cluster and its nodes as a cluster.xmip does.
+        the estate's README.md and deploy/'s READMEs. The environments they
+        deploy are named in a cluster file's [environment], which the
+        searched tree holds (ADR-0028, amendment 2026-11-25).
     #>
     function Get-ShownNameFile {
         'README.md'
@@ -214,7 +215,7 @@ BeforeAll {
         )
 
         foreach ($one in $file) {
-            if ($one.Name -eq 'README.md' -or $one.Name -like '*.example.toml') {
+            if ($one.Name -eq 'README.md') {
                 [IO.Path]::GetRelativePath($script:Root, $one.FullName) -replace '\\', '/'
             }
         }
@@ -223,10 +224,9 @@ BeforeAll {
     <#
         .SYNOPSIS
         The indexes of the lines of a file where the owner's names belong:
-        all of an cluster.xmip, the System Tests' external.xmip, an example
-        environment file and a README.md,
-        the .EXAMPLE and .PARAMETER sections of a script's help, a binary's
-        usage text.
+        all of an cluster.xmip, its [environment] among it, and of a
+        README.md, the .EXAMPLE and .PARAMETER sections of a script's help,
+        a binary's usage text.
     #>
     function Get-NodeNameHelpLine([string] $Path, [string[]] $Line) {
         [string] $leaf = ($Path -split '/')[-1]
@@ -234,8 +234,7 @@ BeforeAll {
         [bool] $test = $Path -like 'test/*' -or $leaf -like '*.Test.ps1'
 
         if ($leaf -eq 'README.md' -or $Path -eq 'doc/getting-started.md' -or
-            $leaf -like '*cluster.xmip' -or $leaf -like '*.example.toml' -or
-            $Path -eq 'test/core/system-test/configuration/external.xmip') {
+            $leaf -like '*cluster.xmip') {
             return 0..([Math]::Max($Line.Count - 1, 0))
         }
 
@@ -371,8 +370,17 @@ Describe 'No cluster or node is named in code or tests' {
     }
 
     It 'writes the owner''s two-letter designations where a name may stand, never one letter' {
+        [string[]] $searched = @(Get-NodeNameFile)
+
+        # The far ends and the virtual machines are named in the System Tests'
+        # cluster file's [environment], and read where its nodes are.
+        [string] $system = 'test/core/system-test/configuration/cluster.xmip'
+        $searched | Should -Contain $system
+        [IO.File]::ReadAllText((Join-Path $script:Root $system)) |
+            Should -Match '(?m)^\[environment\.far_ends\]\r?$'
+
         [string[]] $found = @(
-            foreach ($path in @(Get-NodeNameFile) + @(Get-ShownNameFile)) {
+            foreach ($path in $searched + @(Get-ShownNameFile)) {
                 [string] $text = [IO.File]::ReadAllText((Join-Path $script:Root $path))
 
                 if ($path -ne $script:Self -and $script:Struck.IsMatch($text)) {
@@ -401,8 +409,8 @@ Describe 'No cluster or node is named in code or tests' {
             Should -BeNullOrEmpty -Because 'the two letters are the owner''s'
         @(Find-StruckName -Path $readme -Line 'cl /O2, cc -O2, `@P1`, Amazon S3, LoRaWAN L2') |
             Should -BeNullOrEmpty -Because 'a flag, a parameter and a product are no designation'
-        @(Find-StruckName -Path 'deploy/dsc/sample.example.toml' -Line 'nodes = ["D1"]') |
-            Should -HaveCount 1 -Because 'an example environment file names nodes'
+        @(Find-StruckName -Path 'test/sample/cluster.xmip' -Line 'senders = ["D1"]') |
+            Should -HaveCount 1 -Because 'a cluster file''s [environment] names far ends'
         @(Find-StruckName -Path 'module/core/sample/src/lib.rs' -Line 'near.send(b"C1")') |
             Should -BeNullOrEmpty -Because 'a payload in code is no place a name may stand'
     }

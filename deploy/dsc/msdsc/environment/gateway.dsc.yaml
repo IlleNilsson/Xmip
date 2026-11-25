@@ -1,9 +1,9 @@
 # The network's way out, from the machine DSC runs on: the gateway machine
-# the network's gateway_machine names translates the network's prefix out
+# the cluster file's [environment] gateway names translates the network's prefix out
 # of its second adapter, the uplink, behind the owner's firewall, and keeps
 # that adapter out of the domain's DNS, NetBIOS and reach, its DNS server
 # answering on the network alone. Deploy-XmipEnvironment applies it where
-# the environment file names a gateway machine: after the domain's
+# the cluster file names a gateway: after the domain's
 # controller and before the names (deploy/dsc/README.md).
 $schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
 directives:

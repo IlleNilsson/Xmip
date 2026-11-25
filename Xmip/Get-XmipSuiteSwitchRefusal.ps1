@@ -23,17 +23,19 @@
 # beside -Suite: roll is Core.System and Core.Systems, pester Core.Estate,
 # internal Core.Internal, demo Core.Demo. -ComputerName is the internal
 # tests' alone, Core.Estate's and Core.Internal's: they run on another
-# computer (Start-XmipTestOnComputer).
+# computer (Start-XmipTestOnComputer). -Process, -VirtualMachine and
+# -Container are the rolls' and the demo's: as local processes, on virtual
+# machines, or as containers (ADR-0028, amendment 2026-11-25).
 # A provider's command is handed everything (Start-XmipProviderSuite). A
 # switch belongs to the first kind listed that takes it.
 [System.Collections.Specialized.OrderedDictionary] $script:XmipSuiteSwitch = [ordered]@{
     roll     = @(
         'Stress', 'Test', 'Rounds', 'Duration', 'TimeFactor', 'Nodes', 'NodeRole', 'NodeCapability'
-        'Cluster', 'Certificate', 'LoadBytes', 'Path', 'PassThru'
+        'Cluster', 'LoadBytes', 'Path', 'PassThru', 'Process', 'VirtualMachine', 'Container'
     )
     pester   = @('Test', 'Path', 'ComputerName')
     internal = @('Test', 'ComputerName')
-    demo     = @('Cluster', 'Stress', 'Tester')
+    demo     = @('Cluster', 'Stress', 'Tester', 'Process', 'VirtualMachine', 'Container')
 }
 
 function Get-XmipSuiteSwitchForeign {

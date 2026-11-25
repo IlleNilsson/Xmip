@@ -2,7 +2,7 @@
 # name.dsc.yaml applied on the environment's DNS server by
 # Xmip.Environment/Machine. Deploy-XmipEnvironment applies it where one of
 # the environment's machines is the network's DNS server, with the records
-# it writes from the environment file: the cluster at every node machine's
+# it writes from the cluster file's [environment]: the cluster at every node machine's
 # address, each node at its machine's (deploy/dsc/README.md). Where none is,
 # as on libvirt, the network's own DNS answers those names.
 $schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json

@@ -500,7 +500,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 412238 lines of production
+Where each repository mounts and what it holds: 412479 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -765,12 +765,12 @@ hold no source to count.
 │   │   │   ├── asn1                             686
 │   │   │   └── file                             318
 │   │   └── operation/
-│   │       ├── operate                        51972  C# 31921 · Rust 20051
+│   │       ├── operate                        51973  C# 31922 · Rust 20051
 │   │       ├── cli                            11838
-│   │       ├── observe                         8049
+│   │       ├── observe                         8056
 │   │       │   ├── otlp                         591
 │   │       │   └── prometheus                   332
-│   │       ├── gui                             7758
+│   │       ├── gui                             7911
 │   │       │   └── vscode                      3424
 │   │       ├── powershell                      3796  C# 3796 · PowerShell 0
 │   │       ├── audit                           3584
@@ -820,17 +820,17 @@ hold no source to count.
 │   │   ├── stream                               382
 │   │   └── party                                193
 │   └── platform/
-│       ├── runtime                            52125
+│       ├── runtime                            52232
 │       ├── persist                            25708
 │       │   ├── rocksdb                          323
 │       │   ├── sqlite                           288
 │       │       declared, not built 1
 │       │       postgresql
-│       ├── configure                           5718
+│       ├── configure                           5724
 │       └── cluster                             5090
 └── test/
     └── core/
-        ├── system-test                        18869
+        ├── system-test                        18836
         └── module                                83
 ```
 

@@ -17,12 +17,13 @@
     - The Ansible role makes node.xmip the node's alone to write, and masks
       the node's key, never logging or diffing it; ansible-playbook
       --syntax-check where Ansible is here, SKIPPED where it is not.
-    - The Hyper-V example environment, deploy/dsc/hyperv.example.toml, runs
-      through DSC as Deploy-XmipEnvironment applies it, with every resource
-      replaced by Microsoft.DSC.Debug/Echo: the names are given every node
-      machine's address, each node machine is given its node's files and
-      values and the environment's known_hosts, and every node mapped is one
-      the System Tests' cluster file declares.
+    - The System Tests' cluster file on Hyper-V (ADR-0015, amendment
+      2026-11-25) runs through DSC as Deploy-XmipEnvironment applies it,
+      with every resource replaced by Microsoft.DSC.Debug/Echo: the names
+      are given every node machine's address, each node machine is given its
+      node's files and values and the environment's known_hosts, each node
+      the receivers of [environment.far_ends], each far end its program, and
+      every node the file declares is mapped to a machine of its own.
     - An AlmaLinux machine is reached over OpenSSH with the environment's
       key and known_hosts, checked strictly, and DSC is brought to it only
       from a tarball whose SHA-256 is the one named.
@@ -81,14 +82,14 @@ BeforeAll {
         Write-XmipTestYaml -Path (Join-Path $TestDrive $Name) -Value $document
     }
 
-    # The Hyper-V example as Deploy-XmipEnvironment applies it: its steps of
-    # this folder, the names and each node, each evaluated with the values
-    # of the parameters its document declares. The machine an instance is
-    # applied on by its step's name, its slice as "<name> slice".
-    $script:Example = Read-XmipTestEnvironment -Path (
-        Join-Path $script:Root 'deploy/dsc/hyperv.example.toml') -Folder (
-        Join-Path $TestDrive 'environment')
-    [hashtable[]] $script:Steps = @(Get-XmipTestDeployStep -Environment $script:Example -Run (
+    # The System Tests' cluster file on Hyper-V as Deploy-XmipEnvironment
+    # applies it: its steps of this folder, the names and each node, each
+    # evaluated with the values of the parameters its document declares.
+    # The machine an instance is applied on by its step's name, its slice as
+    # "<name> slice".
+    $script:Made = New-XmipTestEnvironment -Folder (Join-Path $TestDrive 'environment')
+    $script:Read = Read-XmipTestEnvironment -Environment $script:Made -Run ([string] $TestDrive)
+    [hashtable[]] $script:Steps = @(Get-XmipTestDeployStep -Environment $script:Made -Run (
             [string] $TestDrive) | Where-Object {
             [IO.Path]::GetFullPath((Split-Path -Path $_.Document -Parent)) -eq
                 [IO.Path]::GetFullPath($script:Template) })
@@ -115,7 +116,7 @@ BeforeAll {
             Write-XmipTestYaml -Path $file -Value @{ parameters = $value }
             [string] $json = dsc config --parameters-file $file get --file $document
             if ($LASTEXITCODE -ne 0) {
-                throw "dsc could not evaluate the example's $($step.Name)."
+                throw "dsc could not evaluate the cluster file's $($step.Name)."
             }
             foreach ($echo in ($json | ConvertFrom-Json -AsHashtable).results) {
                 $output = $echo.result.actualState.output
@@ -276,16 +277,16 @@ Describe 'The documents' {
     }
 }
 
-Describe 'The example environment' {
+Describe 'The System Tests'' cluster file' {
     BeforeEach {
         if (-not $script:HasDsc) {
             Set-ItResult -Skipped -Because $script:NoDsc
         }
     }
 
-    It 'maps only nodes the System Tests'' cluster file declares' {
-        # The owner's node plan of 2026-11-22: every node but OP1 on a machine.
-        $script:Nodes.Count | Should -Be 10
+    It 'maps every node the System Tests'' cluster file declares, each on a machine' {
+        # The owner's node plan of 2026-11-22, OP1 on the operator's machine.
+        $script:Nodes.Count | Should -Be @($script:Declared.Nodes).Count
         foreach ($node in $script:Nodes.Keys) {
             $node | Should -BeIn $script:Declared.Nodes
         }
@@ -294,10 +295,11 @@ Describe 'The example environment' {
     It 'gives the names every node machine''s address under the cluster''s name' {
         $names = $script:Evaluated['names']
         $names.document | Should -Be 'name.dsc.yaml'
-        $names.name | Should -Be 'XMIP-DC01'
+        # On the domain controller, the network's DNS server.
+        $names.name | Should -Be "XMIP-$($script:Made.Content['environment']['domain_controller'])"
         [string[]] $addresses = @($script:Nodes.Values | ForEach-Object { $_.address } |
             Sort-Object)
-        [string] $named = $script:Example['cluster']
+        [string] $named = $script:Read.Cluster
         $cluster = $names.parameters.records | Where-Object { $_.name -eq $named }
         @($cluster.addresses | Sort-Object) | Should -Be $addresses
     }
@@ -331,8 +333,10 @@ Describe 'The example environment' {
     }
 
     It 'tells each node machine the far ends, whether they push, and every node placed over' {
-        # The far ends one or a list, given as xmip-service --bind takes them.
-        [string] $farEnd = @($script:Example['far_end']) -join ','
+        # The receivers a Send Port puts on, given as xmip-service --bind
+        # takes them; each Receive Location listens for the senders' push.
+        [string[]] $receivers = @($script:Made.Content['environment']['far_ends']['receivers'])
+        [string] $farEnd = $receivers -join ','
         $farEnd | Should -Not -BeNullOrEmpty
         [string[]] $mapped = @($script:Nodes.Keys | Sort-Object)
 
@@ -340,9 +344,9 @@ Describe 'The example environment' {
             $slice = $script:Evaluated["$node slice"]
             $slice.node | Should -Be $node
             $slice.bind | Should -Be $farEnd
-            $slice.listen | Should -Be ([bool] $script:Example['listen'])
+            $slice.listen | Should -Be ($receivers.Count -gt 0)
             @($slice.nodes -split ',' | Sort-Object) | Should -Be $mapped
-            $slice.authority | Should -Be $script:Example['authority']
+            $slice.authority | Should -Be $script:Made.Facts.Authority
             $slice.into | Should -BeLike "*$node"
         }
     }
@@ -351,8 +355,8 @@ Describe 'The example environment' {
         if (-not $script:HasDsc) {
             Set-ItResult -Skipped -Because $script:NoDsc
         }
-        [string[]] $far = @($script:Example['machines'] | Where-Object { $_.Contains('external') } |
-                ForEach-Object { $_['external'] })
+        $farEnds = $script:Made.Content['environment']['far_ends']
+        [string[]] $far = @(@($farEnds['senders']) + @($farEnds['receivers']))
         $far.Count | Should -Be 6
         foreach ($name in $far) {
             [hashtable] $machine = $script:Evaluated[$name]
@@ -440,7 +444,7 @@ Describe 'The Ansible role xmip_node' {
         @($named | Where-Object { $_ -notin $known }) | Should -BeNullOrEmpty
     }
 
-    It 'passes ansible-playbook <_> over the inventory each example writes' -ForEach @(
+    It 'passes ansible-playbook <_> over the inventory written for either hypervisor' -ForEach @(
         '--syntax-check', '--list-tasks') {
         if (-not $script:HasAnsible) {
             Set-ItResult -Skipped -Because ('SKIPPED: ansible-playbook is not on PATH; ' +
@@ -449,14 +453,16 @@ Describe 'The Ansible role xmip_node' {
         }
 
         [string] $playbook = Join-Path $script:Root 'deploy/dsc/ansible/environment.yml'
-        foreach ($example in 'libvirt', 'hyperv') {
-            [string] $folder = Join-Path $TestDrive "ansible-$example"
-            [string] $inventory = Write-XmipTestInventory -Environment (
-                Read-XmipTestEnvironment -Path (
-                    Join-Path $script:Root "deploy/dsc/$example.example.toml") -Folder (
-                    $folder) -Technology 'ansible') -Run $folder
+        foreach ($hypervisor in 'libvirt', 'hyperv') {
+            [string] $folder = Join-Path $TestDrive "ansible-$hypervisor"
+            # A Linux host makes AlmaLinux machines alone (ADR-0015, the third
+            # amendment of 2026-11-22).
+            [hashtable] $asked = @{ Folder = $folder; Technology = 'ansible'
+                Hypervisor = $hypervisor; Linux = $hypervisor -eq 'libvirt' }
+            [hashtable] $made = New-XmipTestEnvironment @asked
+            [string] $inventory = Write-XmipTestInventory -Environment $made -Run $folder
             [string[]] $said = @(& ansible-playbook $_ -i $inventory $playbook 2>&1)
-            $LASTEXITCODE | Should -Be 0 -Because "$example`: $($said -join ' ')"
+            $LASTEXITCODE | Should -Be 0 -Because "$hypervisor`: $($said -join ' ')"
         }
     }
 }

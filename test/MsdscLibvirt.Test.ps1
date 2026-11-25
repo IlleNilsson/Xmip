@@ -18,13 +18,16 @@
       swtpm; a gateway machine's second adapter on the uplink, a bridge.
     - The answer: an AlmaLinux machine's kickstart keeps KVM's clock,
       ptp_kvm loaded at every start.
-    - The example, deploy/dsc/libvirt.example.toml, as
-      Deploy-XmipEnvironment reads it: the network, then each machine, each
-      with every parameter its document declares; the Hyper-V example's
-      node plan, machine for machine, a Windows machine's memory static; a
-      gateway on XMIP-RX01 alone, XMIP-DC01, the one machine on the
-      uplink, and a desktop on XMIP-DEV02; dynamic
-      memory on a Windows machine refused.
+    - The System Tests' cluster file on a Linux host, every machine AlmaLinux
+      (ADR-0015, amendment 2026-11-25), as Deploy-XmipEnvironment reads it:
+      the network, then each machine, each with every parameter its document
+      declares, and the names of each far end and node, then the cluster's;
+      the host the way out, through its NAT, of each node that declares
+      online alone, no machine on an uplink, and a desktop on XMIP-DEV02;
+      each machine's domain with its description and its memory. Refused: a
+      Windows machine, which a Linux host makes none of yet (ADR-0015, the
+      third amendment of 2026-11-22), and dynamic memory on a Windows machine
+      on libvirt.
     - The machine's set while it installs, virsh a stub: it is left to
       install and nothing is written, since DSC reads what the resource
       writes as its answer.
@@ -44,13 +47,11 @@ BeforeAll {
         . (Join-Path $script:Template $part)
     }
 
-    # The names are configuration (ADR-0056): the example's own node and cluster.
-    $script:Example = Read-XmipTestEnvironment -Path (
-        Join-Path $script:Root 'deploy/dsc/libvirt.example.toml') -Folder (
-        Join-Path $TestDrive 'environment')
-    [string] $script:Node = @($script:Example['machines'] | ForEach-Object { @($_['nodes']) } |
-        Where-Object { $_ })[0]
-    [string] $script:Cluster = $script:Example['cluster']
+    # The names are configuration (ADR-0056): the test cluster's own first
+    # node and its name.
+    $script:TestCluster = Get-XmipTestCluster
+    [string] $script:Node = @($script:TestCluster.Nodes)[0]
+    [string] $script:Cluster = $script:TestCluster.Name
 
     $script:Network = @{
         name = 'xmip'
@@ -71,9 +72,11 @@ BeforeAll {
     function New-Machine {
         param([string] $Family)
 
+        [string] $system = if ($Family -eq 'Windows') { 'Windows Server 2025' }
+        else { 'AlmaLinux 10' }
         return @{
             name = 'XMIP-IN01'
-            environment = 'xmip'
+            description = "Receiving node IN01 $([char] 0x00B7) $system"
             address = '10.77.0.61'
             memoryGB = 4
             cpu = 2
@@ -129,7 +132,10 @@ Describe 'The network' {
 
 Describe 'The domain' {
     It 'boots an AlmaLinux machine with UEFI, Secure Boot and virtio, its disk first' {
-        [xml] $domain = Get-LibvirtMachineDefinition -Instance (New-Machine -Family 'Linux')
+        [hashtable] $machine = New-Machine -Family 'Linux'
+        [xml] $domain = Get-LibvirtMachineDefinition -Instance $machine
+        # Its role and system in one line, the domain's description.
+        $domain.domain.description | Should -Be $machine['description']
         # The attribute, not the <firmware> element of the same name.
         $domain.domain.os.GetAttribute('firmware') | Should -Be 'efi'
         $domain.SelectSingleNode("//feature[@name='secure-boot']").enabled | Should -Be 'yes'
@@ -240,18 +246,28 @@ Describe 'The documents and the resources' {
     }
 }
 
-Describe 'The example, as Deploy-XmipEnvironment reads it' {
-    It 'applies the network, then each machine, with every parameter declared' {
-        [hashtable[]] $steps = @(Get-XmipTestDeployStep -Environment $script:Example -Run (
+Describe 'The System Tests'' cluster file on a Linux host, as Deploy-XmipEnvironment reads it' {
+    BeforeAll {
+        # Every machine AlmaLinux; the developer's desktop, a Linux image too,
+        # kept.
+        $script:Made = New-XmipTestEnvironment -Folder (Join-Path $TestDrive 'environment') -Linux
+        $script:Made.Content['environment']['machines']['DEV02']['os'] = 'AlmaLinux10Desktop'
+        $script:Read = Read-XmipTestEnvironment -Environment $script:Made -Run ([string] $TestDrive)
+        [hashtable[]] $script:Steps = @(Get-XmipTestDeployStep -Environment $script:Made -Run (
                 [string] $TestDrive) | Where-Object {
                 [IO.Path]::GetFullPath((Split-Path -Path $_.Document -Parent)) -eq
                     [IO.Path]::GetFullPath($script:Template) })
-        $steps[0].Name | Should -Be 'network'
+        [hashtable[]] $script:Machines = @($script:Steps | Select-Object -Skip 1 |
+            ForEach-Object { $_.Value })
+    }
+
+    It 'applies the network, then each machine, with every parameter declared' {
+        $script:Steps[0].Name | Should -Be 'network'
         # The owner's node plan of 2026-11-22: 21 machines, the Mac aside.
-        @($steps | Select-Object -Skip 1 | ForEach-Object { $_.Name }) |
-            Should -Be @($script:Example['machines'] | ForEach-Object { $_['name'] })
-        $steps.Count | Should -Be 22
-        foreach ($step in $steps) {
+        @($script:Steps | Select-Object -Skip 1 | ForEach-Object { $_.Name }) |
+            Should -Be @($script:Read.Machines | ForEach-Object { $_['name'] })
+        $script:Steps.Count | Should -Be 22
+        foreach ($step in $script:Steps) {
             [Collections.IDictionary] $declared = (
                 Read-XmipTestYaml -Path $step.Document).parameters
             foreach ($name in $declared.Keys) {
@@ -259,83 +275,39 @@ Describe 'The example, as Deploy-XmipEnvironment reads it' {
             }
         }
         # Each far end and each node by its name, then the cluster.
-        [string[]] $named = @($script:Example['machines'] | ForEach-Object {
-                @($_['external']) + @($_['nodes']) } | Where-Object { $_ })
-        @($steps[0].Value['names'] | ForEach-Object { $_.name }) |
-            Should -Be @($named + $script:Cluster)
+        $farEnds = $script:Made.Content['environment']['far_ends']
+        [string[]] $named = @(@($farEnds['senders']) + @($farEnds['receivers']) +
+            @($script:Made.Content['nodes'].Keys))
+        @($script:Steps[0].Value['names'] | ForEach-Object { $_.name }) |
+            Should -Be @($named + $script:Read.Cluster)
     }
 
-    It 'is the Hyper-V example''s node plan under KVM, machine for machine' {
-        $hyperv = Read-XmipTestEnvironment -Path (
-            Join-Path $script:Root 'deploy/dsc/hyperv.example.toml') -Folder (
-            Join-Path $TestDrive 'hyperv')
-        foreach ($key in 'domain', 'domain_controller', 'cluster', 'far_end', 'listen',
-            'operators') {
-            "$($script:Example[$key])" | Should -Be "$($hyperv[$key])" -Because $key
-        }
-        foreach ($key in 'prefix', 'gateway', 'dns_server', 'gateway_machine', 'nat',
-            'internet') {
-            "$($script:Example['network'][$key])" | Should -Be "$($hyperv['network'][$key])"
-        }
-        [object[]] $kvm = @($script:Example['machines'])
-        [object[]] $plan = @($hyperv['machines'])
-        $kvm.Count | Should -Be $plan.Count
-        foreach ($index in 0..($plan.Count - 1)) {
-            [Collections.IDictionary] $one = $kvm[$index]
-            [Collections.IDictionary] $other = $plan[$index]
-            foreach ($key in 'name', 'address', 'cpu', 'disk_gb', 'nodes', 'external',
-                'internet') {
-                "$($one[$key])" | Should -Be "$($other[$key])" -Because "$($other['name']) $key"
-            }
-            [Collections.IDictionary] $image = $script:Example['images'][$one['image']]
-            [Collections.IDictionary] $planned = $hyperv['images'][$other['image']]
-            foreach ($key in 'sha256', 'family', 'edition', 'environment', 'tpm') {
-                "$($image[$key])" | Should -Be "$($planned[$key])" -Because "$($one['name']) $key"
-            }
-            if ($image['family'] -eq 'Windows') {
-                # Windows has no balloon driver of its own: its memory is static.
-                $one.Contains('dynamic_memory') | Should -BeFalse -Because $one['name']
-                $one['memory_gb'] | Should -BeGreaterOrEqual $other['memory_gb']
-                continue
-            }
-            $one['memory_gb'] | Should -Be $other['memory_gb']
-            $one['dynamic_memory']['maximum_gb'] |
-                Should -Be $other['dynamic_memory']['maximum_gb'] -Because $one['name']
-        }
+    It 'makes the host the names'' server and, through its NAT, the way out of online nodes' {
+        $nodes = $script:Made.Content['nodes']
+        [string[]] $online = @($nodes.Keys | Where-Object {
+                'online' -in @($nodes[$_]['capabilities']) } | ForEach-Object { "XMIP-$_" })
+        $online | Should -Not -BeNullOrEmpty
+        @($script:Machines | Where-Object { $_.network.gateway } |
+            ForEach-Object { "$($_.name) $($_.network.gateway)" }) |
+            Should -Be @($online | ForEach-Object { "$_ 10.77.0.1" })
+        # No domain controller and no gateway machine: nothing on an uplink.
+        $script:Read.NameServer | Should -BeNullOrEmpty
+        $script:Read.Gateway | Should -BeNullOrEmpty
+        @($script:Machines | Where-Object { $_.network.uplink }) | Should -BeNullOrEmpty
+        $script:Steps[0].Value.network.enableNat | Should -BeTrue
+        $script:Steps[0].Value.network.dnsServer | Should -Be '10.77.0.1'
     }
 
-    It 'gives the one machine whose internet says so a gateway, and the developer a desktop' {
-        [hashtable[]] $machines = @(Get-XmipTestDeployStep -Environment $script:Example -Run (
-                [string] $TestDrive) | Where-Object { $_.Value.ContainsKey('memoryGB') } |
-            ForEach-Object { $_.Value })
-        @($machines | Where-Object { $_.network.gateway } | ForEach-Object { $_.name }) |
-            Should -Be @('XMIP-RX01')
-        # Through XMIP-DC01, the one machine on the uplink (ADR-0015,
-        # amendment 2026-11-24).
-        @($machines | Where-Object { $_.network.gateway })[0].network.gateway |
-            Should -Be '10.77.0.10'
-        @($machines | Where-Object { $_.network.uplink } | ForEach-Object { $_.name }) |
-            Should -Be @('XMIP-DC01')
-        @($machines | Where-Object { $_.image['environment'] } | ForEach-Object { $_.name }) |
-            Should -Be @('XMIP-DEV02')
-        foreach ($machine in $machines) {
-            [Collections.IDictionary] $dynamic = $machine.dynamicMemory
-            if ($machine.image.family -eq 'Linux') {
-                $dynamic.maximumMB | Should -BeGreaterOrEqual ($machine.memoryGB * 1024)
-            }
-            else {
-                $dynamic.Count | Should -Be 0 -Because $machine.name
-            }
-        }
+    It 'gives the developer a desktop' {
+        @($script:Machines | Where-Object { $_.image['environment'] } |
+            ForEach-Object { $_.name }) | Should -Be @('XMIP-DEV02')
     }
 
-    It 'defines every machine''s domain, a TPM for Windows 11 alone' {
+    It 'defines every machine''s domain, its description, a TPM for Windows 11 alone' {
         function Get-Command { param($Name, $ErrorAction) [pscustomobject] @{ Name = $Name } }
-        [hashtable[]] $machines = @(Get-XmipTestDeployStep -Environment $script:Example -Run (
-                [string] $TestDrive) | Where-Object { $_.Value.ContainsKey('memoryGB') } |
-            ForEach-Object { $_.Value })
-        foreach ($machine in $machines) {
+        foreach ($machine in $script:Machines) {
             [xml] $domain = Get-LibvirtMachineDefinition -Instance $machine
+            $domain.domain.description | Should -Be $machine.description -Because $machine.name
             [long] $start = $machine.memoryGB * 1024
             [long] $most = if ($machine.dynamicMemory.Count) { $machine.dynamicMemory.maximumMB }
             else { $start }
@@ -347,15 +319,27 @@ Describe 'The example, as Deploy-XmipEnvironment reads it' {
         }
     }
 
-    It 'refuses dynamic memory on a Windows machine, which has no balloon driver of its own' {
-        $environment = Read-XmipTestEnvironment -Path (
-            Join-Path $script:Root 'deploy/dsc/libvirt.example.toml') -Folder (
-            Join-Path $TestDrive 'windows')
-        [Collections.IDictionary] $windows = @($environment['machines'] | Where-Object {
-                $environment['images'][$_['image']]['family'] -eq 'Windows' })[0]
-        $windows['dynamic_memory'] = @{ minimum_gb = 1; maximum_gb = 4 }
-        { Get-XmipTestDeployStep -Environment $environment -Run ([string] $TestDrive) } |
-            Should -Throw "*$($windows['name']) runs Windows on libvirt*no balloon driver*"
+}
+
+Describe 'A Windows machine on a Linux host' {
+    It 'is refused, naming it, since a Linux host makes none yet' {
+        [hashtable] $made = New-XmipTestEnvironment -Folder (Join-Path $TestDrive 'windows') -Linux
+        $made.Content['environment']['machines']['DC01']['os'] = 'WindowsServer2025'
+        { Read-XmipTestEnvironment -Environment $made -Run ([string] $TestDrive) } |
+            Should -Throw -ExpectedMessage ('REFUSED: a Linux host makes no Windows machine ' +
+                'yet, XMIP-DC01: *(ADR-0015, the third amendment of 2026-11-22)*')
+    }
+
+    It 'is refused dynamic memory on libvirt, Windows having no balloon driver of its own' {
+        [hashtable] $sized = @{ name = 'XMIP-DC01'; memory_gb = 2
+            dynamic_memory = @{ minimum_gb = 1; maximum_gb = 4 } }
+        {
+            InModuleScope Xmip -Parameters @{ Sized = $sized } {
+                param($Sized)
+                Get-XmipDeployDynamicMemory -Machine $Sized -Hypervisor 'libvirt' -Family (
+                    'Windows')
+            }
+        } | Should -Throw -ExpectedMessage '*XMIP-DC01 runs Windows on libvirt*no balloon driver*'
     }
 }
 

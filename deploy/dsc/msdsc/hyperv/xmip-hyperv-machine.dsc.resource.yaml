@@ -66,8 +66,8 @@ schema: !embedded
       name:
         description: 'The machine''s name, its VM''s and its computer''s.'
         type: string
-      environment:
-        description: 'The environment''s name, written in the VM''s notes.'
+      description:
+        description: 'The machine''s role and operating system in one line, the VM''s notes.'
         type: string
       root:
         description: 'The folder that holds a folder per machine on the host.'

@@ -12,18 +12,21 @@
       manifest elevates a method. Only the template's own resources are
       used, each given every property its manifest requires and none it
       does not declare, and DSC finds both manifests.
-    - The example environment, as Deploy-XmipEnvironment applies it: the
-      network, then each machine, each step evaluated by DSC with every
-      resource replaced by Microsoft.DSC.Debug/Echo; each machine is the
-      machine README.md's table names. A step whose dsc fails is refused,
-      tested or set: every resource answers what is not there as absent.
+    - The System Tests' cluster file (ADR-0015, amendment 2026-11-25), as
+      Deploy-XmipEnvironment applies it: the network, then each machine,
+      each step evaluated by DSC with every resource replaced by
+      Microsoft.DSC.Debug/Echo, each machine its description, the one line
+      its VM's notes hold; each machine, with its memory, processors and
+      disk, the machine README.md's table names. A step whose dsc fails is
+      refused, tested or set: every resource answers what is not there as
+      absent.
     - The install answers: a Windows machine's autounattend.xml parses,
       names its computer and image and holds no plain-text password; an
       AlmaLinux machine's kickstart gives its host name, static address,
       key and Hyper-V's clock, the environment its image names and a desktop
-      started to it; each a gateway where the machine reaches past the
-      network, XMIP-RX01 alone, through XMIP-DC01, and none elsewhere; the
-      answer medium is an ISO with the label its installer reads.
+      started to it; each a gateway where its node declares online, XMIP-RX1
+      alone, through the gateway machine, and none elsewhere; the answer
+      medium is an ISO with the label its installer reads.
     - The resources' get, test and set, every Hyper-V and network command a
       stub over a host held in memory: a switch, a NAT and a machine that
       are not there answered absent, a host's refusal kept an error, an
@@ -50,16 +53,15 @@ BeforeAll {
     [bool] $script:HasDsc = $null -ne (Get-Command -Name dsc -ErrorAction SilentlyContinue)
     [string] $script:NoDsc = 'dsc (Microsoft DSC v3) is not on PATH; README.md installs it'
     [string[]] $script:Document = @('network.dsc.yaml', 'machine.dsc.yaml')
-    [string] $script:ExamplePath = Join-Path $script:Root 'deploy/dsc/hyperv.example.toml'
 
     $script:Parsed = @{}
     foreach ($name in $script:Document) {
         $script:Parsed[$name] = Read-XmipTestYaml -Path (Join-Path $script:Template $name)
     }
-    $script:Example = Read-XmipTestEnvironment -Path $script:ExamplePath -Folder (
-        Join-Path $TestDrive 'environment')
-    # The example's steps of this template as Deploy-XmipEnvironment applies them.
-    [hashtable[]] $script:Steps = @(Get-XmipTestDeployStep -Environment $script:Example -Run (
+    $script:Made = New-XmipTestEnvironment -Folder (Join-Path $TestDrive 'environment')
+    $script:Read = Read-XmipTestEnvironment -Environment $script:Made -Run ([string] $TestDrive)
+    # The file's steps of this template as Deploy-XmipEnvironment applies them.
+    [hashtable[]] $script:Steps = @(Get-XmipTestDeployStep -Environment $script:Made -Run (
             [string] $TestDrive) | Where-Object {
             [IO.Path]::GetFullPath((Split-Path -Path $_.Document -Parent)) -eq
                 [IO.Path]::GetFullPath($script:Template) })
@@ -96,7 +98,7 @@ BeforeAll {
         Write-XmipTestYaml -Path (Join-Path $TestDrive $Name) -Value $document
     }
 
-    # Each step of the example evaluated by DSC as Echoes, with the
+    # Each step of the cluster file evaluated by DSC as Echoes, with the
     # parameters its document declares: each step's Echo results by name.
     function Invoke-EchoEnvironment {
         foreach ($name in $script:Document) {
@@ -114,7 +116,7 @@ BeforeAll {
             Write-XmipTestYaml -Path $file -Value @{ parameters = $value }
             [string] $json = dsc config --parameters-file $file get --file $document
             if ($LASTEXITCODE -ne 0) {
-                throw "dsc could not evaluate the example's $($step.Name)."
+                throw "dsc could not evaluate the cluster file's $($step.Name)."
             }
             [hashtable] $instance = @{}
             foreach ($echo in ($json | ConvertFrom-Json -AsHashtable).results) {
@@ -180,7 +182,8 @@ BeforeAll {
             sha256 = (Get-FileHash -LiteralPath $iso -Algorithm SHA256).Hash
             secureBootTemplate = 'MicrosoftUEFICertificateAuthority' }
         [hashtable] $instance = @{ name = 'XMIP-IN01'; address = '10.77.0.61'
-            environment = 'Xmip-HyperV'; root = [string] $TestDrive
+            description = "Receiving node IN01 $([char] 0x00B7) AlmaLinux 10"
+            root = [string] $TestDrive
             memoryGB = 4; cpu = 2; diskGB = 32; domainName = 'xmip.test'
             network = @{ name = 'Xmip'; gateway = '10.77.0.1'; prefixLength = 24
                 dnsServer = '10.77.0.10' }
@@ -189,6 +192,7 @@ BeforeAll {
         if ($Family -eq 'Windows') {
             $instance['name'] = 'XMIP-DEV01'
             $instance['address'] = '10.77.0.30'
+            $instance['description'] = "Developer machine DEV01 $([char] 0x00B7) Windows 11 Pro"
             [string] $secret = Join-Path $TestDrive 'secret.xml'
             [securestring] $password = ConvertTo-SecureString -String 'Pa55word' -AsPlainText -Force
             [pscredential]::new('Administrator', $password) |
@@ -215,7 +219,7 @@ BeforeAll {
             MemoryStartup = [long] $Instance['memoryGB'] * 1GB; DynamicMemoryEnabled = $on
             MemoryMinimum = $(if ($on) { [long] $dynamic['minimumMB'] * 1MB } else { 512MB })
             MemoryMaximum = $(if ($on) { [long] $dynamic['maximumMB'] * 1MB } else { 1TB })
-            AutomaticCheckpointsEnabled = $false; Notes = $Instance['environment']
+            AutomaticCheckpointsEnabled = $false; Notes = $Instance['description']
             HardDrives = @(New-FakeDrive -Location 0 -Path $disk)
             DVDDrives = @(New-FakeDrive -Location 1 -Path ''; New-FakeDrive -Location 2 -Path '')
             NetworkAdapters = @([pscustomobject] @{ Name = 'Network Adapter'
@@ -497,10 +501,10 @@ Describe 'The documents and the resources' {
     }
 }
 
-Describe 'The example environment' {
+Describe 'The System Tests'' cluster file' {
     It 'applies the network, then each machine, with every parameter declared' {
         $script:Steps[0].Name | Should -Be 'network'
-        [string[]] $machines = @($script:Example['machines'] | ForEach-Object { $_['name'] })
+        [string[]] $machines = @($script:Read.Machines | ForEach-Object { $_['name'] })
         @($script:Steps | Select-Object -Skip 1 | ForEach-Object { $_.Name }) |
             Should -Be $machines
         foreach ($step in $script:Steps) {
@@ -517,12 +521,14 @@ Describe 'The example environment' {
             Set-ItResult -Skipped -Because $script:NoDsc
         }
         [hashtable] $network = $script:Evaluated['network']['Network'].properties
-        $network.name | Should -Be 'Xmip'
-        $network.environment | Should -Be 'Xmip-HyperV'
+        # The switch and the NAT named for the cluster, Xmip-<cluster>; the
+        # host on the network's first address.
+        $network.name | Should -Be "Xmip-$($script:Read.Cluster)"
+        $network.environment | Should -Be "Xmip-$($script:Read.Cluster)"
         $network.gateway | Should -Be '10.77.0.1'
         $network.prefixLength | Should -Be 24
         $network.prefix | Should -Be '10.77.0.0/24'
-        # XMIP-DC01 is the way out, over the uplink the owner's copy names.
+        # The gateway machine is the way out, over the uplink the host facts found.
         $network.nat | Should -BeFalse
         $network.uplink | Should -Be 'Uplink'
     }
@@ -533,33 +539,40 @@ Describe 'The example environment' {
         }
         foreach ($machine in $script:Machine) {
             [hashtable] $vm = $script:Evaluated[$machine.name]['Machine'].properties
-            foreach ($key in 'name', 'address', 'memoryGB', 'cpu', 'diskGB', 'root') {
+            foreach ($key in 'name', 'description', 'address', 'memoryGB', 'cpu', 'diskGB',
+                'root') {
                 $vm[$key] | Should -Be $machine.$key -Because "$($machine.name) $key"
             }
-            $vm.network.name | Should -Be 'Xmip'
+            $vm.network.name | Should -Be "Xmip-$($script:Read.Cluster)"
             $vm.image.family | Should -Be $machine.image.family
             $vm.dynamicMemory.maximumMB | Should -Be $machine.dynamicMemory.maximumMB
         }
     }
 
-    It 'gives the one machine whose internet says so a gateway, and every other none' {
-        # The owner's node plan: XMIP-RX01 alone reaches past the network,
-        # through XMIP-DC01 (the owner, 2026-11-24: "A good choice would be
-        # the DC"); the host keeps its address on the switch.
+    It 'gives the machine of each node that declares online a gateway, and every other none' {
+        # RX1 alone reaches past the network in the file, through the gateway
+        # machine, the domain controller (the owner, 2026-11-24: "A good
+        # choice would be the DC"); the host keeps its address on the switch.
+        $nodes = $script:Made.Content['nodes']
+        [string[]] $online = @($nodes.Keys | Where-Object {
+                'online' -in @($nodes[$_]['capabilities']) } | ForEach-Object { "XMIP-$_" })
+        $online | Should -Not -BeNullOrEmpty
         [string[]] $out = @($script:Machine | Where-Object { $_.network.gateway } |
             ForEach-Object { $_.name })
-        $out | Should -Be @('XMIP-RX01')
-        @($script:Machine | Where-Object { $_.network.gateway })[0].network.gateway |
-            Should -Be '10.77.0.10'
-        $script:Example['network']['gateway'] | Should -Be '10.77.0.1'
+        $out | Should -Be $online
+        @($script:Machine | Where-Object { $_.network.gateway } |
+            ForEach-Object { $_.network.gateway } | Sort-Object -Unique) |
+            Should -Be @($script:Read.Gateway.machine.address)
+        $script:Read.Common.network.gateway | Should -Be '10.77.0.1'
     }
 
-    It 'gives XMIP-DC01 alone a second adapter, on the uplink' {
+    It 'gives the gateway machine alone a second adapter, on the uplink' {
+        [string] $gateway = "XMIP-$($script:Made.Content['environment']['gateway'])"
         [string[]] $up = @($script:Machine | Where-Object { $_.network.uplink } |
             ForEach-Object { $_.name })
-        $up | Should -Be @('XMIP-DC01')
+        $up | Should -Be @($gateway)
         if ($script:HasDsc) {
-            $script:Evaluated['XMIP-DC01']['Machine'].properties.network.uplink |
+            $script:Evaluated[$gateway]['Machine'].properties.network.uplink |
                 Should -Be 'Uplink'
         }
     }
@@ -583,7 +596,7 @@ Describe 'The example environment' {
             Should -Be 21
         @($addresses | Sort-Object -Unique).Count | Should -Be 21
         @($macs | Sort-Object -Unique).Count | Should -Be 21
-        [string] $prefix = $script:Example['network']['prefix']
+        [string] $prefix = $script:Read.Common.network.prefix
         [string] $mask = Get-MachineNetmask -PrefixLength ([int] ($prefix -replace '^.*/', ''))
         [uint32] $want = ([ipaddress] ($prefix -replace '/.*$')).Address
         $addresses | Where-Object {
@@ -591,13 +604,17 @@ Describe 'The example environment' {
         } | Should -BeNullOrEmpty
     }
 
-    It 'is the environment README.md names' {
+    It 'is the environment README.md names, in its order, with its memory, processors and disk' {
         [string] $readme = Get-Content -LiteralPath (Join-Path $script:Template 'README.md') -Raw
-        [string[]] $rows = @([regex]::Matches($readme, '(?m)^\| (XMIP-\S+) \|.*\| (\S+) \|$') |
-            ForEach-Object { "$($_.Groups[1].Value) $($_.Groups[2].Value)" } | Sort-Object)
-        [string[]] $machines = @($script:Machine |
-            ForEach-Object { "$($_.name) $($_.address)" } | Sort-Object)
-        ($rows -join ',') | Should -Be ($machines -join ',')
+        # | Machine | Operating system | Role | Memory | CPUs | Disk |
+        [string] $row = '(?m)^\| (XMIP-\S+) \|[^|]*\|[^|]*\| ([\d.]+), ([\d.]+)-([\d.]+) GiB \| ' +
+            '(\d+) \| (\d+) GiB \|\r?$'
+        [string[]] $rows = @([regex]::Matches($readme, $row) | ForEach-Object {
+                @($_.Groups | Select-Object -Skip 1 | ForEach-Object { $_.Value }) -join ' ' })
+        [string[]] $machines = @($script:Machine | ForEach-Object {
+                "$($_.name) $($_.memoryGB) $($_.dynamicMemory.minimumMB / 1024) " +
+                "$($_.dynamicMemory.maximumMB / 1024) $($_.cpu) $($_.diskGB)" })
+        ($rows -join "`n") | Should -Be ($machines -join "`n")
     }
 
     It 'refuses a step whose dsc <_> fails, never reading it as not yet made' -ForEach @(
@@ -670,8 +687,11 @@ Describe 'The install answers' {
             $kickstart | Should -Match '(?m)^hyperv-daemons$'
             [string] $hostName = "$($machine.name.ToLowerInvariant()).xmip.test"
             $kickstart | Should -Match "--device=$mac --bootproto=static --ip=$($machine.address) "
-            # A gateway where the machine reaches past the network, none where not.
-            [string] $route = if ($machine.network.gateway) { '--gateway=10\.77\.0\.10 ' }
+            # A gateway where the machine reaches past the network, the gateway
+            # machine's address, none where not.
+            [string] $route = if ($machine.network.gateway) {
+                "--gateway=$([regex]::Escape($script:Read.Gateway.machine.address)) "
+            }
             else { '' }
             $kickstart | Should -Match "--netmask=255\.255\.255\.0 $route--nameserver="
             $kickstart | Should -Match "--hostname=$([regex]::Escape($hostName)) "
@@ -703,7 +723,7 @@ Describe 'The install answers' {
                 $kickstart | Should -Match '(?m)^skipx$'
             }
         }
-        # The example's one Linux desktop, the developer's.
+        # The file's one Linux desktop, the developer's.
         @($linux | Where-Object { $_.image['environment'] } | ForEach-Object { $_.name }) |
             Should -Be @('XMIP-DEV02')
     }
@@ -859,6 +879,8 @@ Describe 'The machine, every Hyper-V command a stub' {
             'Set-VMNetworkAdapter 00155D4D003D', 'Add-VMDvdDrive 1', 'Add-VMDvdDrive 2',
             'Set-VMFirmware 0,1,2', 'New-MachineAnswerMedium OEMDRV', 'Set-VMDvdDrive 1',
             'Set-VMDvdDrive 2', 'Start-VM')
+        # Its role and system in one line, the VM's notes.
+        $script:Fake.Vm[0].Notes | Should -Be $script:Linux['description']
         $set._exist | Should -BeTrue
         $set.installation | Should -Be 'Installing'
         $set.running | Should -BeTrue

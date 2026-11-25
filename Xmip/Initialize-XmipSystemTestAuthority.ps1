@@ -76,32 +76,14 @@ function Initialize-XmipSystemTestAuthority {
         throw "REFUSED. The System Tests' authority at ${full}: $refused"
     }
 
-    # Names are configuration (ADR-0056, amendment 2026-10-03): the cluster
-    # the run names, and the node the cluster's file declares the table for.
-    [string] $file = (Get-XmipSystemTestLayout).Configuration
-    [string] $cluster = (Read-XmipTestCluster -Path (Get-XmipTestClusterPath)).Name
-    $nodes = Get-TomlValue -Node (Read-XmipConfiguration -Path $file) -Name 'nodes'
-    [string[]] $signing = @(Get-TomlKey -Node $nodes | Where-Object {
-            $provision = Get-TomlValue -Node (Get-TomlValue -Node $nodes -Name $_) -Name 'provision'
-            $null -ne (Get-TomlValue -Node $provision -Name 'operator')
-        })
-
-    if ($signing.Count -ne 1) {
-        throw ("REFUSED. $file declares [provision.operator] for $($signing.Count) nodes " +
-            "($($signing -join ', ')); one node's slice signs a tester's request.")
+    # The cluster the run names, and the node the System Tests' file declares
+    # [provision.operator] for (Write-XmipOperatorSlice).
+    [hashtable] $slicing = @{
+        File      = (Get-XmipSystemTestLayout).Configuration
+        Cluster   = (Read-XmipTestCluster -Path (Get-XmipTestClusterPath)).Name
+        Authority = $full
     }
-
-    [string] $answer = ''
-    $design = [Xmip.Surface.RuntimeLibrary]::Rules.Design
-    [string] $text = Get-Content -LiteralPath $file -Raw -Encoding utf8
-
-    if (-not $design.TrySignedSlice($text, $signing[0], $cluster, $full, [ref] $answer)) {
-        throw "REFUSED. The slice of $($signing[0]) from ${file}: $answer"
-    }
-
-    [string] $beside = Split-Path -Path $full -Parent
-    [string] $configuration = Join-Path -Path $beside -ChildPath 'operator.xmip'
-    Write-XmipWholeFile -Path $configuration -Text (ConvertFrom-Json -InputObject $answer).text
+    [string] $configuration = Write-XmipOperatorSlice @slicing
 
     return [PSCustomObject]@{
         Certificate   = $issued.Certificate

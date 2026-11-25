@@ -99,9 +99,9 @@ function Get-XmipLatestRollSnapshot {
     $latest = @(
         Get-XmipRollRecord -Path $Path |
             Sort-Object -Property {
-                [datetimeoffset]::Parse(
-                    [string](Get-TomlValue -Node $_.Record -Name 'started' -Default '0001-01-01T00:00:00Z'),
-                    [cultureinfo]::InvariantCulture).UtcDateTime
+                [string] $started = Get-TomlValue -Node $_.Record -Name 'started' -Default (
+                    '0001-01-01T00:00:00Z')
+                [datetimeoffset]::Parse($started, [cultureinfo]::InvariantCulture).UtcDateTime
             }
     ) | Select-Object -Last 1
 

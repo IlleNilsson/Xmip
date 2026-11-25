@@ -17,7 +17,7 @@ parameters:
   name:
     type: string
     description: >-
-      The far end, as the Systems Tests' configuration/external.xmip names it;
+      The far end, as the cluster file's [environment.far_ends] names it;
       its service is xmip-<name>.
   program:
     type: string

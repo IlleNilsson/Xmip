@@ -1,7 +1,7 @@
 ---
 # An environment's machines on their hypervisor (README.md), one
 # installation at a time. Deploy-XmipEnvironment's inventory gives every
-# value from the environment file; what a network, a pool, a domain or an
+# value from the cluster file's [environment]; what a network, a pool, a domain or an
 # answer medium is, is asked of deploy/dsc/machine, the code Microsoft DSC's
 # machine resources use, and never written here.
 #

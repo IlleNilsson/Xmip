@@ -248,7 +248,7 @@ start = 14.285
 duration = 5.575
 
 [[scene.caption]]
-text = "The System Tests prove the flow as local processes on one computer or, by one switch, on virtual machines, Windows and Linux."
+text = "The System Tests prove the flow as processes on one computer, and the Systems Tests prove it on virtual machines, Windows and Linux."
 start = 20.04
 duration = 8.675
 

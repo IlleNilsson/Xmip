@@ -59,7 +59,7 @@
         name: "{{ xmip_machine.name }}"
         generation: 2
         memory_startup_bytes: "{{ xmip_machine.memoryGB * xmip_gib }}"
-        notes: "{{ xmip_environment }}"
+        notes: "{{ xmip_machine.description }}"
         state: present
 
     - name: Its memory, static, or dynamic where the machine names its least and most

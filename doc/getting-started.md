@@ -690,9 +690,13 @@ Get-XmipHealth -Scope xmip:///CL1/node/RX1/storage
 it answered, and of each standby whether its primary says it follows it now;
 DS1's says which it is, the primary or a standby.
 
-At test level 2 the same run goes on virtual machines by one switch,
-`Start-XmipTest -As VirtualMachine`, `VM` for short (ADR-0028, amendment
-2026-11-25): the same cluster file and the same scenarios, every node
+At test level 2 the same run goes on virtual machines,
+`Start-XmipTest -VirtualMachine`, `-VM` for short, where `-Process`
+(`-Proc`) is level 1 and what runs where no switch is given; the third,
+`-Container` (`-C`), is to run them in containers and is refused until
+that is built (ADR-0028, amendment 2026-11-25). It takes the System Tests, which test the
+internals, and the Systems Tests, `Core.Systems`, which test how nodes
+interact, alike: the same cluster file and the same scenarios, every node
 `xmip-service` and every far end its program, each on a virtual machine of
 its own. Where they run is the file's own `[environment]` table, which no
 node is given (`deploy/dsc/README.md`, *The environment table*). The
@@ -706,11 +710,14 @@ every Receive Location and Send Port of the file over the environment's
 nodes by their roles: each Receive Location listens on its node, where the
 far ends that send push to it, and each Send Port puts on the far end that
 receives of its turn (ADR-0028, amendment 2026-11-22). The run is handed
-every node's and far end's address and the operator certificate from what
-the deploy left; it resolves no name, makes and starts no machine and
-spawns nothing. Every node is a real node and must answer as its node, or
-the run is REFUSED before it starts. The first lines of the run, its board
-and `Get-XmipTestStatus` say which nodes are real. On its machine each node
+every node's and far end's address and the operator certificate the deploy
+issued for your account, `CN=<account name>`, whom every node lists among
+its operators, the Systems Tests' node list among it; it resolves no
+name, makes and starts no machine and spawns nothing. Every node is a real
+node and must answer as its node, or the run is REFUSED before it starts.
+The first lines of the run, its board and `Get-XmipTestStatus` say which
+nodes are real, and the status says where the run runs as `As`, `Process`,
+`VirtualMachine` or `Container`. On its machine each node
 presents the certificate its environment gave it, `tls/node.pem`, on its
 operate listener and to the Storage nodes, which serve on port 7443 — the
 port a Storage node's `xmip-service --listening` says, so the environment
@@ -728,23 +735,26 @@ one. Each README says each step in full.
    `Build-XmipService -Site personal-computer -CargoArgument '--release'
    -Package archive`, and `-Package rpm` on a Linux machine
    (`deploy/package/README.md`).
-3. The installation images and the archives DSC is brought to each machine
-   with, in the account's Xmip folder's `images`,
+3. The installation images and the archives Microsoft DSC brings to each
+   machine, in the account's Xmip folder's `images`,
    `%LOCALAPPDATA%\Xmip\images`, or a folder you name once with
-   `-ImageFolder`: each is found there by its SHA-256, an image's in the
-   cluster file's `[environment.images.<os>]` and a tool's in
-   `prerequisite.toml` (`deploy/dsc/README.md`, *Before the first run*).
+   `-ImageFolder`: an image is found there by the SHA-256 the cluster
+   file's `[environment.images.<os>]` gives it, and an archive by the name
+   `prerequisite.toml`'s `[prerequisite.powershell.archive]` and
+   `[prerequisite.dsc.archive]` give it (`deploy/dsc/README.md`, *Before
+   the first run*).
 4. **E** Once, where the cluster file names a `gateway`: the uplink, an
    external switch onto your computer's adapter on your network, which you
    make and the template only finds (the same section).
 5. **E** The machines, the far ends and the nodes, in one command, one
    machine installed at a time, then each far end and each node on its
-   machine (`deploy/dsc/README.md`, *The command*). The cluster's
-   authority, every node's and far end's certificate, the Windows machines'
-   Administrator secret and the AlmaLinux machines' keys are the command's
-   own: it makes each where none is, the authority in `authority/CL1` of
-   your account's Xmip folder and the rest in the environment's private
-   state.
+   machine (`deploy/dsc/README.md`, *The command*). The environment's
+   authority, every node's and far end's certificate, your operator
+   certificate, the Windows machines' Administrator secret and the
+   AlmaLinux machines' keys are the command's own: it makes each in the
+   environment's private state where none is. Each machine's description
+   in Hyper-V Manager says its role and its operating system in one line,
+   such as *Receiving node RX1 · AlmaLinux 10*.
    On a Linux host the libvirt template does the same under KVM, with no
    step elevated, and refuses the Windows machines, naming ADR-0015's third
    amendment of 2026-11-22: a smaller plan is a smaller cluster file.
@@ -752,16 +762,18 @@ one. Each README says each step in full.
 
 ```powershell
 Deploy-XmipEnvironment -Path D:\Repos\Xmip\test\core\system-test\configuration\cluster.xmip `
-    -Cluster CL1 -Operator 'CN=operator'
-Start-XmipTest -Suite Core.System -Cluster CL1 -As VirtualMachine
+    -Cluster CL1
+Start-XmipTest -Suite Core.System -Cluster CL1 -VirtualMachine
 Get-XmipTestStatus
 Get-XmipTestResult -Test Carried
 Get-XmipTestStatus | Start-XmipOperationWeb
 ```
 
-The run is the cluster file's every node, OP1 on the operator's machine
-among them; `-Nodes`, `-NodeRole` and `-NodeCapability` are refused with
-`-As VirtualMachine`, since the run is the plan deployed, and so is a run
+`Start-XmipTest -Suite Core.Systems -Cluster CL1 -VirtualMachine` runs the
+Systems Tests on the same machines. The run is the cluster file's every
+node, OP1 on the operator's machine among them; `-Nodes`, `-NodeRole` and
+`-NodeCapability` are refused with `-VirtualMachine`, since the run is the
+plan deployed, and so is a run
 whose cluster file changed since it was deployed. Each round the far ends
 that send push a document to every Receive Location listening on its node,
 a real receiving node takes it, DS1 keeps it, a real sending node puts it
@@ -770,11 +782,12 @@ on the far end that receives of its turn, and each Receive Location's
 The Web Browser tab at <https://127.0.0.1:5087> follows them on the
 Monitor. The demo readiness check runs on the same machines with the same
 switch: `Start-XmipTest -Suite Core.Demo -Cluster CL1 -Stress Realistic
--Tester <person> -As VirtualMachine`.
+-Tester <person> -VirtualMachine`.
 
 With Ansible, step 5 is the same command with `-Technology ansible`, run
-from a Linux controller, the WSL guest, whose playbook makes the machines,
-the far ends and the nodes alike; on Windows the command refuses it and
+from a Linux controller, the WSL guest, whose playbook makes the machines
+and the nodes alike, its role for a far end's machine not yet written; on
+Windows the command refuses it and
 names the command to run there, carrying `-Hypervisor hyperv` and
 `-WindowsHost` (`deploy/dsc/ansible/README.md`). The rest are the same.
 

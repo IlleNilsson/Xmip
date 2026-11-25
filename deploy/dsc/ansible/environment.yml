@@ -4,9 +4,9 @@
 # at a time; the network's way out through its gateway machine, where the
 # environment names one; the names of the cluster and its nodes on the DNS
 # server, where the environment has one; then each node on its machine,
-# Windows and AlmaLinux alike, one machine at a time in the order the
-# environment file lists them. Deploy-XmipEnvironment writes the inventory
-# from that file:
+# Windows and AlmaLinux alike, one machine at a time, the Storage nodes
+# first. Deploy-XmipEnvironment writes the inventory from the cluster file's
+# [environment]:
 # which node runs on which machine is the environment's, never
 # cluster.xmip's (ADR-0028 and ADR-0015, amendments 2026-10-21).
 

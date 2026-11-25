@@ -103,6 +103,7 @@ function ConvertTo-XmipDemoRun {
         State    = $run.State
         Id       = $run.Id
         Property = @{
+            RunsAs    = Get-TomlValue -Node $Record -Name 'runs_as'
             Cluster   = [string](Get-TomlValue -Node $Record -Name 'cluster' -Default '')
             StartTime = $run.Started.ToLocalTime()
             Stress    = if ($stress -ne '') { $stress } else { $null }

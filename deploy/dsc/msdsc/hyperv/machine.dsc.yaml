@@ -7,9 +7,11 @@ $schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
 directives:
   version: ^3.4.0-preview.3
 parameters:
-  environment:
+  description:
     type: string
-    description: The environment's name, written in each VM's notes.
+    description: >-
+      The machine's role and operating system in one line, written in its
+      VM's notes (Resolve-XmipDeployMachine).
   root:
     type: string
     description: The folder that holds a folder per machine on the host.
@@ -64,7 +66,7 @@ resources:
     type: Xmip.HyperV/Machine
     properties:
       name: "[parameters('name')]"
-      environment: "[parameters('environment')]"
+      description: "[parameters('description')]"
       root: "[parameters('root')]"
       address: "[parameters('address')]"
       memoryGB: "[parameters('memoryGB')]"

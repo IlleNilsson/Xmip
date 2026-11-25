@@ -1,6 +1,6 @@
 ---
 # The network's way out through its gateway machine (README.md): the
-# machine the environment file's [network] gateway_machine names, reached
+# machine the cluster file's [environment] gateway names, reached
 # over WinRM as every Windows machine is. Deploy-XmipEnvironment's inventory
 # gives both values.
 #

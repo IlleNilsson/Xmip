@@ -2,8 +2,9 @@
 # Windows machine at a time: the controller the domain_controller line names
 # made the first domain controller of a new forest of the environment's
 # domain, then every other Windows machine joined to it, each restarted.
-# Deploy-XmipEnvironment applies it where the environment file names a
-# controller: the controller before the names, which go into its zone, and
+# Deploy-XmipEnvironment applies it where the cluster file's [environment]
+# names a domain_controller: the controller before the names, which go into
+# its zone, and
 # each member after (deploy/dsc/README.md).
 $schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
 directives:

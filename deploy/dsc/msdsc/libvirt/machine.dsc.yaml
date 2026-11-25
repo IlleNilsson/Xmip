@@ -8,7 +8,12 @@ directives:
 parameters:
   environment:
     type: string
-    description: The environment's name, its pool's and each domain's description.
+    description: The environment's name, its pool's.
+  description:
+    type: string
+    description: >-
+      The machine's role and operating system in one line, its domain's
+      description (Resolve-XmipDeployMachine).
   technology:
     type: string
     description: >-
@@ -66,7 +71,7 @@ resources:
     properties:
       name: "[parameters('name')]"
       technology: "[parameters('technology')]"
-      environment: "[parameters('environment')]"
+      description: "[parameters('description')]"
       address: "[parameters('address')]"
       memoryGB: "[parameters('memoryGB')]"
       dynamicMemory: "[parameters('dynamicMemory')]"

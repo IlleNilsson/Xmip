@@ -249,10 +249,7 @@ function New-XmipSystemTestEnvironment {
         [string] $Image,
 
         [Parameter()]
-        [switch] $Machines,
-
-        [Parameter()]
-        [string] $Certificate,
+        [System.Collections.IDictionary] $Deployed,
 
         [Parameter()]
         [string] $Service,
@@ -316,17 +313,22 @@ function New-XmipSystemTestEnvironment {
         $environment.XMIP_SYSTEM_TEST_IMAGES = $Image
     }
 
-    # The Systems Tests run on an environment's machines: the roll resolves
-    # every node of the run and the cluster's name, each asked with the
-    # operator certificate, and spawns none in a machine's place. Unset, the
-    # System Tests run here and no name is resolved (ADR-0028, amendment
-    # 2026-11-23). The suite says which, never a name.
-    if ($Machines) {
-        $environment.XMIP_SYSTEM_TEST_MACHINES = 'true'
-    }
-
-    if (-not [string]::IsNullOrWhiteSpace($Certificate)) {
-        $environment.XMIP_SYSTEM_TEST_CERTIFICATE = [System.IO.Path]::GetFullPath($Certificate)
+    # On virtual machines, the System Tests' and the Systems Tests' alike, the
+    # environment Deploy-XmipEnvironment recorded:
+    # each node's and far end's name=address, which the roll reads every one
+    # of them at, resolving no name and spawning none in a machine's place,
+    # and the folder of the operator certificate it made, which the roll asks
+    # them with. Unset, the run is local processes (ADR-0028, amendment
+    # 2026-11-25).
+    if ($null -ne $Deployed) {
+        [string[]] $each = @(
+            foreach ($table in @($Deployed['Nodes'], $Deployed['FarEnds'] | Where-Object { $_ })) {
+                foreach ($name in @($table.Keys)) { "$name=$($table[$name])" }
+            }
+        )
+        $environment.XMIP_SYSTEM_TEST_MACHINES = $each -join ','
+        $environment.XMIP_SYSTEM_TEST_CERTIFICATE = [System.IO.Path]::GetFullPath(
+            [string] $Deployed['Operator'])
     }
 
     # The xmip-service the run starts every node as that is neither real nor

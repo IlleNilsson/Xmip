@@ -1,22 +1,25 @@
 //! Every node configuration `deploy/` writes, read the way `xmip-service`
 //! reads its own: the System Tests' cluster `cluster.xmip` — the one file a
-//! test runs whether its nodes are simulated or on machines of their own
-//! (ADR-0028, amendment 2026-10-21), which the environment templates under
-//! `deploy/dsc` put on each node machine — sliced to every node it declares
-//! by `xmip_configure::slice_named`, as `xmip-service --slice --cluster`
-//! prints it, then `xmip_runtime::start::read` and the execution tree
-//! against the technologies the runtime carries. The reader keeps no key it
-//! does not know, so each key the slice writes must also come back when the
-//! document the reader made of it is written out: a file naming a key the
-//! reader drops fails here, not on an installed node.
+//! test runs whether its nodes are local processes or on virtual machines of
+//! their own (ADR-0028, amendments 2026-10-21 and 2026-11-25), which the
+//! environment templates under `deploy/dsc` put on each node's machine —
+//! sliced to every node it declares by `xmip_configure::slice_named`, as
+//! `xmip-service --slice --cluster` prints it, then
+//! `xmip_runtime::start::read` and the execution tree against the
+//! technologies the runtime carries. The reader keeps no key it does not
+//! know, so each key the slice writes must also come back when the document
+//! the reader made of it is written out: a file naming a key the reader
+//! drops fails here, not on an installed node. No slice holds the file's
+//! `[environment]`, which no node is given (ADR-0031, amendment 2026-11-25).
 //!
 //! The Ansible role asks `xmip-service` for the slice, its cluster and the
-//! ports the firewall opens, and keeps no starter of its own; the example
-//! environment files, from which both technologies' parameters are written
-//! (`deploy/dsc/README.md`), map only nodes the file declares, and every
-//! Location the file designs is placed on one of the Hyper-V example's, bound
-//! on the Parties' far end, in a slice the runtime reads. The Microsoft DSC
-//! v3 documents are held by `test/MsdscEnvironment.Test.ps1`.
+//! ports the firewall opens, and keeps no starter of its own; every node of
+//! the file has a virtual machine of its own (ADR-0015, amendment
+//! 2026-11-25), and every Location the file designs is placed on one of
+//! them, each Send Port bound to a receiving far end of
+//! `[environment.far_ends]` and each Receive Location listening on its
+//! node, in a slice the runtime reads. The Microsoft DSC v3 documents are
+//! held by `test/MsdscEnvironment.Test.ps1`.
 
 use std::path::{Path, PathBuf};
 
@@ -28,12 +31,6 @@ const SYSTEM_TEST: &str = "test/core/system-test/configuration/cluster.xmip";
 const TASKS_WINDOWS: &str = "deploy/dsc/ansible/roles/xmip_node/tasks/windows.yml";
 const TASKS_LINUX: &str = "deploy/dsc/ansible/roles/xmip_node/tasks/linux.yml";
 const TASKS_SLICE: &str = "deploy/dsc/ansible/roles/xmip_node/tasks/slice.yml";
-/// The example environment files: the one place each says which node runs
-/// on which machine, `[[machines]]`' `nodes`.
-const ENVIRONMENTS: [&str; 2] = [
-    "deploy/dsc/hyperv.example.toml",
-    "deploy/dsc/libvirt.example.toml",
-];
 const DEFAULTS: &str = "deploy/dsc/ansible/roles/xmip_node/defaults/main.yml";
 
 fn source(relative: &str) -> String {
@@ -57,18 +54,19 @@ fn keys(table: &toml::Table, prefix: &str) -> Vec<String> {
     paths
 }
 
-/// The nodes an environment file maps onto its machines, in its order.
-fn mapped_by(relative: &str) -> Vec<String> {
-    let environment: toml::Table = source(relative)
+/// The far ends the cluster file's `[environment.far_ends]` lists as
+/// receivers, in its order: what each Send Port is bound to.
+fn receivers(cluster: &str) -> Vec<String> {
+    let table: toml::Table = cluster
         .parse()
-        .unwrap_or_else(|error| panic!("{relative} is TOML: {error}"));
-    environment
-        .get("machines")
+        .unwrap_or_else(|error| panic!("{SYSTEM_TEST} is TOML: {error}"));
+    table
+        .get("environment")
+        .and_then(|environment| environment.get("far_ends"))
+        .and_then(|far_ends| far_ends.get("receivers"))
         .and_then(toml::Value::as_array)
-        .unwrap_or_else(|| panic!("{relative} lists its [[machines]]"))
+        .unwrap_or_else(|| panic!("{SYSTEM_TEST} lists its receiving far ends"))
         .iter()
-        .filter_map(|machine| machine.get("nodes").and_then(toml::Value::as_array))
-        .flatten()
         .filter_map(toml::Value::as_str)
         .map(str::to_string)
         .collect()
@@ -184,6 +182,11 @@ fn every_node_configuration_deploy_writes_is_the_one_the_runtime_reads() {
     for node in &nodes {
         let text = xmip_configure::slice_named(&cluster, node, &environment)
             .unwrap_or_else(|problem| panic!("{node} does not slice: {problem}"));
+        let sliced: toml::Table = text.parse().expect("a slice is TOML");
+        assert!(
+            !sliced.contains_key("environment"),
+            "{node}'s slice holds no [environment]: no node is given it"
+        );
         let document = read(&directory, &format!("system-test-{node}"), &text);
         assert_eq!(document.service.cluster_name, environment);
         assert_eq!(document.service.node_name, *node);
@@ -198,31 +201,16 @@ fn every_node_configuration_deploy_writes_is_the_one_the_runtime_reads() {
         );
     }
 
-    // Each example environment puts only nodes the file declares on machines.
-    for environment in ENVIRONMENTS {
-        let named = mapped_by(environment);
-        assert!(!named.is_empty(), "{environment} maps nodes onto machines");
-        for one in &named {
-            assert!(
-                nodes.iter().any(|node| node == one),
-                "{environment} maps {one}, which {SYSTEM_TEST} does not declare"
-            );
-        }
-    }
-    // The Hyper-V example's nodes are the ones every Location is placed over.
-    let mapped = mapped_by(ENVIRONMENTS[0]);
-
-    // Every node it maps, its Locations placed over the mapped nodes on the
-    // Parties' far end as `xmip-service --slice --bind --nodes` places them
-    // (ADR-0028, amendment 2026-10-22), reads as xmip-service reads it, and
-    // every Location the file designs is placed on one of them.
-
+    // Every node on its virtual machine, its Locations placed over every node
+    // and bound as `xmip-service --slice --bind --listen --nodes` binds them,
+    // each Send Port on the receiving far end of its turn (ADR-0028,
+    // amendment 2026-11-22), reads as xmip-service reads it, and every
+    // Location the file designs is placed on one of them.
     assert!(source(DEFAULTS).contains("'--bind', xmip_far_end, '--nodes'"));
-    let bound =
-        xmip_configure::placed::at_far_ends(&cluster, &mapped, &["10.77.0.1".to_string()], false)
-            .expect("places over the mapped nodes");
+    let bound = xmip_configure::placed::at_far_ends(&cluster, &nodes, &receivers(&cluster), true)
+        .expect("places over every node");
     let mut placed = 0;
-    for node in &mapped {
+    for node in &nodes {
         let text = xmip_configure::slice_named(&bound, node, &environment)
             .unwrap_or_else(|problem| panic!("{node} does not slice bound: {problem}"));
         let document = read(&directory, &format!("bound-{node}"), &text);
@@ -238,8 +226,5 @@ fn every_node_configuration_deploy_writes_is_the_one_the_runtime_reads() {
         .iter()
         .map(|one| one.receive_locations.len() + one.send_ports.len())
         .sum();
-    assert_eq!(
-        placed, designed,
-        "every Location is placed on a mapped node"
-    );
+    assert_eq!(placed, designed, "every Location is placed on a node");
 }

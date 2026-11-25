@@ -127,6 +127,7 @@ Describe 'Core.Demo is one of Xmip''s suites, and refuses what it does not take'
 
             $run.Kind | Should -Be 'demo'
             $run.State | Should -Be 'running'
+            $run.RunsAs | Should -Be 'Process' -Because 'what runs where neither switch is given'
             $run.Cluster | Should -Be $Cluster
             $run.Stress | Should -Be 'Realistic'
             $run.Id | Should -Be $PID
@@ -158,6 +159,53 @@ Describe 'Core.Demo is one of Xmip''s suites, and refuses what it does not take'
             # roll asked for by itself.
             (Start-XmipTest -Suite Core.Demo -Cluster $Cluster).Stress | Should -Be 'Realistic'
             $script:DemoScript | Should -Match "Stress = 'Realistic'"
+        }
+    }
+
+    It 'carries -Process or -VirtualMachine into its record, refused as a roll is first' {
+        # The owner, 2026-11-25: *there has to be a switch to run the tests,
+        # demo, as local processes or VMs* (ADR-0028, amendment 2026-11-25).
+        [hashtable] $given = @{ Cluster = $script:Cluster; Area = (New-XmipDemoArea -Name 'vm') }
+
+        InModuleScope Xmip -Parameters $given {
+            param($Cluster, $Area)
+
+            $script:DemoArea = $Area
+            Mock Write-XmipAudit { }
+            Mock Write-Host { }
+            Mock Get-XmipSystemTestLayout {
+                [pscustomobject]@{
+                    Demo = $script:DemoArea; Area = $script:DemoArea
+                    Configuration = Join-Path (Get-XmipRepositoryRoot) 'test/cluster.xmip'
+                }
+            }
+            Mock Get-XmipClusterRunning { }
+            Mock Get-XmipDeployHypervisor { 'hyperv' }
+            Mock Read-XmipDeployedEnvironment { }
+            Mock Start-XmipDetachedShell {
+                $script:DemoScript = $Script
+                Get-Process -Id $PID
+            }
+
+            { Start-XmipTest -Suite Core.Demo -Cluster $Cluster -VM -ErrorAction Stop } |
+                Should -Throw -ExpectedMessage "*REFUSED. No environment of cluster $Cluster*"
+            # Containers are a way to run that is not built yet (ADR-0015).
+            { Start-XmipTest -Suite Core.Demo -Cluster $Cluster -Container -ErrorAction Stop } |
+                Should -Throw -ExpectedMessage (
+                    '*REFUSED. Running as containers is not built yet: the open problem ' +
+                    '"The tests and the demo run in containers*')
+            Should -Invoke Start-XmipDetachedShell -Times 0
+
+            [string] $file = (Get-XmipSystemTestLayout).Configuration
+            $script:Deployed = @{
+                Sha256 = (Get-FileHash -LiteralPath $file -Algorithm SHA256).Hash.ToLowerInvariant()
+            }
+            Mock Read-XmipDeployedEnvironment { $script:Deployed }
+
+            $run = Start-XmipTest -Suite Core.Demo -Cluster $Cluster -VirtualMachine
+            $run.RunsAs | Should -Be 'VirtualMachine'
+            $script:DemoScript | Should -Match "RunsAs = 'VirtualMachine'"
+            Get-Content -Raw -LiteralPath $run.Record | Should -Match 'runs_as = "VirtualMachine"'
         }
     }
 
@@ -462,6 +510,60 @@ Describe 'The roll part rolls its own cluster from this tree, timed from its spa
             @($run['launched']['roll_ids']) | Should -Be @(21, 31)
             $said -match '(\d+)(\.\d)? s after the roll was spawned' | Should -BeTrue
             [int] $Matches[1] | Should -BeGreaterOrEqual 89
+            $said | Should -BeLike "*its nodes ($($Pair -join ', ')) run*"
+            Should -Invoke Start-XmipTest -Times 1 -ParameterFilter {
+                $Process -and -not $VirtualMachine
+            }
+        }
+    }
+
+    It 'starts the roll on virtual machines where it was asked, every node running once reached' {
+        [hashtable] $given = @{
+            Cluster = $script:Cluster
+            Area    = (New-XmipDemoArea -Name 'machines')
+            Pair    = $script:Pair
+        }
+
+        InModuleScope Xmip -Parameters $given {
+            param($Cluster, $Area, $Pair)
+
+            [string] $recorded = Join-Path $Area 'roll-31.toml'
+            Set-Content -LiteralPath $recorded -Value "nodes = [`"$($Pair[0])`", `"$($Pair[1])`"]"
+            # No node runs here: the roll reached each on its machine, [run] real.
+            [hashtable] $row = @{
+                Suite    = 'Core.System'
+                Kind     = 'roll'
+                State    = 'running'
+                Id       = 31
+                Property = @{
+                    RunsAs    = 'VirtualMachine'
+                    Cluster   = $Cluster
+                    StartTime = Get-Date
+                    Nodes     = @()
+                    RealNodes = $Pair
+                    Snapshot  = Join-Path $Area "$Cluster-snapshot.xmip"
+                    Record    = $recorded
+                }
+            }
+            $script:Rolling = New-XmipTestStatus @row
+            Mock Start-XmipTest { [pscustomobject]@{ Id = 21; Kind = 'build' } }
+            Mock Get-XmipTestStatus { $script:Rolling }
+            Mock Wait-XmipSnapshot { }
+            Mock Write-XmipDemoRecord { }
+
+            [hashtable] $began = @{
+                Record  = Join-Path $Area 'demo-1.toml'
+                Cluster = $Cluster
+                RunsAs  = 'VirtualMachine'
+                Log     = Join-Path $Area 'demo-1.log'
+                Id      = 1
+                Started = Get-Date
+            }
+            [string] $said = Test-XmipDemoRoll -Run (New-XmipDemoState @began)
+
+            Should -Invoke Start-XmipTest -Times 1 -ParameterFilter {
+                $VirtualMachine -and -not $Process
+            }
             $said | Should -BeLike "*its nodes ($($Pair -join ', ')) run*"
         }
     }

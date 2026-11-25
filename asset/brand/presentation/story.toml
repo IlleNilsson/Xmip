@@ -117,11 +117,11 @@ headline = "One plan, four ways to run it"
 screen = "The same cluster file everywhere. Each way has its own safety and security trade-offs: Xmip advises, you choose."
 voice = "female"
 power = "both-power"
-narration = "One plan runs four ways: as local processes, in containers, on virtual machines, and on physical machines. Virtual machines run on Hyper-V, on KVM with libvirt, or on VMware. The cluster file stays the same; which node runs where belongs to the environment. The System Tests prove the flow as local processes on one computer or, by one switch, on virtual machines, Windows and Linux. Each way has its own safety and security trade-offs: Xmip advises, and you choose."
+narration = "One plan runs four ways: as local processes, in containers, on virtual machines, and on physical machines. Virtual machines run on Hyper-V, on KVM with libvirt, or on VMware. The cluster file stays the same; which node runs where belongs to the environment. The System Tests prove the flow as processes on one computer, and the Systems Tests prove it on virtual machines, Windows and Linux. Each way has its own safety and security trade-offs: Xmip advises, and you choose."
 sources = ["doc/decision/ADR-0015-packaging.md", "doc/decision/ADR-0028-the-xmip-system-test.md", "deploy/dsc/README.md", "doc/terminology.md"]
 note = ""
 layout = ["scene", "ways"]
-alt = "Four numbered tiles. Local processes, a process per node on one computer: the System Tests. Containers, wherever yours live. Virtual machines on Hyper-V, KVM with libvirt or VMware: the System Tests too, by one switch. Physical machines, a machine per node or one for all: your site."
+alt = "Four numbered tiles. Local processes, a process per node on one computer: the System Tests. Containers, wherever yours live. Virtual machines on Hyper-V, KVM with libvirt or VMware: the Systems Tests. Physical machines, a machine per node or one for all: your site."
 accessibility_notes = "The female host on the left and the male host on the right gently flex their arms to emphasize working across operating systems."
 
 [[section]]
@@ -183,7 +183,7 @@ narration = "Xmip's core is written in Rust, and Xmip is open source. Xmip itsel
 sources = ["CONTRIBUTING.md", "README.md", "doc/decision/ADR-0023-licensing-model.md", "doc/decision/ADR-0061-a-provider-builds-against-the-sdk.md", "doc/decision/ADR-0028-the-xmip-system-test.md"]
 note = "Xmip AGPL-3.0-or-later; the module boundary Apache-2.0 (decided 2026-11-24)"
 layout = ["scene", "open"]
-alt = "Four cards. AGPL: Xmip itself, version 3 or later; it cannot be relicensed or withdrawn. Apache-2.0: the module boundary, the headers, bindings and packages a module builds against, so your module stays yours. 75: decision records, each with its reasons. Tests of two kinds: internal tests, and the System Tests, on one computer or on virtual machines."
+alt = "Four cards. AGPL: Xmip itself, version 3 or later; it cannot be relicensed or withdrawn. Apache-2.0: the module boundary, the headers, bindings and packages a module builds against, so your module stays yours. 75: decision records, each with its reasons. Tests three ways: internal tests, the System Tests on one computer, the Systems Tests on machines."
 accessibility_notes = "The female host gently flexes their arms to emphasize open-source freedom."
 
 [[section]]

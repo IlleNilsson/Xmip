@@ -37,7 +37,7 @@ function Get-HyperVMachineSetting {
         $setting['MemoryMaximum'] = [long] $dynamic['maximumMB'] * 1MB
     }
     $setting['AutomaticCheckpointsEnabled'] = $false
-    $setting['Notes'] = [string] $Instance['environment']
+    $setting['Notes'] = [string] $Instance['description']
     return $setting
 }
 

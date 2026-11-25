@@ -12,8 +12,8 @@ function Get-XmipDeployStep {
             where one of the machines is the environment's DNS server, each
             other Windows machine joined to the domain, each of the
             System Tests' far ends on its machine, then each node on its
-            machine, in the order the environment file lists the machines,
-            and last every node started together.
+            machine, the Storage nodes first, and last every node started
+            together.
 
         .DESCRIPTION
             A machine's step is marked Install: the command applies it until
@@ -154,7 +154,7 @@ function Get-XmipDeployMachine {
     <#
         .SYNOPSIS
             Each machine as a machine template is given it, in either
-            technology: what the environment file says of it, with the
+            technology: what the cluster file says of it, with the
             technology making it, which its host's record of it names, the
             environment's public SSH key its account is given and, for an
             AlmaLinux machine, the host key its kickstart gives it.

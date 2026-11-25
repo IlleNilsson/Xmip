@@ -6,7 +6,7 @@ function Write-XmipDeployInventory {
     <#
         .SYNOPSIS
             Ansible's inventory for an environment, written from its
-            environment file into the run folder as inventory.yml, and its
+            cluster file into the run folder as inventory.yml, and its
             path: generated YAML, never configuration (CONTRIBUTING).
 
         .DESCRIPTION

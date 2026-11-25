@@ -38,7 +38,9 @@ Microsoft DSC's machine resource runs, asked through `machine.ps1`: its ISO
 checked against its SHA-256, a new disk and its answer medium put in the
 pool whole, its domain defined and started, then, once it answers from its
 disk, its media taken out, its answer medium deleted and its domain's
-metadata recording it installed and by which technology, refused where a
+metadata recording it installed and by which technology, its description
+its role and operating system in one line (`deploy/dsc/README.md`, *The
+environment table*), refused where a
 drive still holds a medium or the answer medium is still in the pool, and a
 machine the other technology made refused. On Hyper-V
 it uses Microsoft's `microsoft.hyperv` (`hv_vswitch`, `hv_vhd`, `hv_vm`,
@@ -195,9 +197,9 @@ once and kept in the environment's state, over WinRM, as
 `ANSIBLE_REMOTE_USER`; the account and its rights wait on the owner's
 Hyper-V run.
 
-Then the System Tests run against the machines, `Start-XmipTest -As
-VirtualMachine`, as `deploy/dsc/msdsc/environment/README.md` says under
-*Running it*, and the real nodes reach DS1 for Xmip Storage. The role for a
+Then the System Tests and the Systems Tests run against the machines,
+`Start-XmipTest -VirtualMachine`, as `deploy/dsc/msdsc/environment/README.md`
+says under *Running it*, and the real nodes reach DS1 for Xmip Storage. The role for a
 far end's machine is not written here, so an environment Ansible made has
 no far end on a machine of its own for the run to reach yet.
 

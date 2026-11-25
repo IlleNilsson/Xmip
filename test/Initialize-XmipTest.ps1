@@ -21,10 +21,11 @@
     takes a cluster's or a node's name from (ADR-0056, amendment 2026-10-03),
     and Read-XmipTestYaml and Write-XmipTestYaml, the module's YAML reader
     and writer for a test. Get-XmipTestFloor is a prerequisite's floor as
-    prerequisite.toml declares it. Read-XmipTestEnvironment and
-    Get-XmipTestDeployStep are an environment file's example with what its
-    nodes need given, and Microsoft DSC's steps for it, as
-    Deploy-XmipEnvironment reads and applies it.
+    prerequisite.toml declares it. New-XmipTestEnvironment is the System
+    Tests' cluster file with what this host would give its machines and
+    nodes, as files of the test's own; Read-XmipTestEnvironment,
+    Get-XmipTestDeployStep and Write-XmipTestInventory are what
+    Deploy-XmipEnvironment reads, applies and writes of it.
 
     Not a test file: Pester is told its extension, .Test.ps1, and this is not
     one.
@@ -129,98 +130,159 @@ function Get-XmipTestFloor {
     return $floor
 }
 
-function Read-XmipTestEnvironment {
+function New-XmipTestEnvironment {
     <#
         .SYNOPSIS
-        An environment file (deploy/dsc/*.example.toml), read by the
-        module's TOML reader, with every value its machines and nodes need
-        given as files of the test's own under -Folder, so what
-        Deploy-XmipEnvironment makes of it is held with no authority, build
-        or package. -Technology sets technology where given.
+        An environment as Deploy-XmipEnvironment reads it, with no host: the
+        System Tests' cluster file, read by the module's TOML reader, and the
+        host facts its machines and nodes need given as files of the test's
+        own under -Folder, so what the command makes of it is held with no
+        hypervisor, image, authority, build or package. Answers Content,
+        the file read; File, a copy of it under -Folder; Facts; Technology;
+        Hypervisor; and Folder.
+
+        .DESCRIPTION
+        -Linux makes every machine AlmaLinux and names no domain controller
+        and no gateway, as a Linux host's environment is until it makes
+        Windows machines (ADR-0015, amendment 2026-11-25). -Hypervisor is
+        hyperv unless given, libvirt with -Linux.
     #>
     [CmdletBinding()]
-    [OutputType([System.Collections.IDictionary])]
+    [OutputType([hashtable])]
     param(
-        [Parameter(Mandatory = $true)]
-        [string] $Path,
-
         [Parameter(Mandatory = $true)]
         [string] $Folder,
 
         [Parameter()]
-        [string] $Technology = ''
+        [string] $Technology = 'msdsc',
+
+        [Parameter()]
+        [string] $Hypervisor = '',
+
+        [Parameter()]
+        [switch] $Linux
     )
 
-    foreach ($each in 'authority', 'identity') {
-        New-Item -Path (Join-Path $Folder $each) -ItemType Directory -Force | Out-Null
+    New-Item -Path $Folder -ItemType Directory -Force | Out-Null
+    [string] $source = Join-Path $script:Root 'test/core/system-test/configuration/cluster.xmip'
+    $content = & (Get-Module -Name Xmip) { param($Path) Read-XmipToml -Path $Path } $source
+    if ($Linux) {
+        $environment = $content['environment']
+        $environment.Remove('domain_controller')
+        $environment.Remove('gateway')
+        $environment['machine']['os'] = 'AlmaLinux10'
+        $environment['machine'].Remove('dynamic_memory')
+        foreach ($name in @($environment['machines'].Keys)) {
+            $environment['machines'][$name]['os'] = 'AlmaLinux10'
+            $environment['machines'][$name].Remove('dynamic_memory')
+        }
+        $Hypervisor = if ($Hypervisor) { $Hypervisor } else { 'libvirt' }
     }
-    foreach ($each in 'slicer', 'xmip.rpm', 'xmip.msi', 'pwsh.tar.gz', 'dsc.tar.gz',
-        'pwsh.zip', 'dsc.zip', 'secret.xml', 'xmip-system-test-external',
+    $Hypervisor = if ($Hypervisor) { $Hypervisor } else { 'hyperv' }
+    foreach ($each in 'xmip-service', 'xmip.rpm', 'xmip.zip', 'pwsh.tar.gz', 'dsc.tar.gz',
+        'pwsh.zip', 'dsc.zip', 'image.iso', 'xmip-system-test-external',
         'xmip-system-test-external.exe') {
         Set-Content -LiteralPath (Join-Path $Folder $each) -Value $each
     }
-    $environment = & (Get-Module -Name Xmip) { param($Path) Read-XmipToml -Path $Path } $Path
-    $environment['linux_account'] = 'account'
-    $environment['secret'] = Join-Path $Folder 'secret.xml'
-    $environment['slicer'] = Join-Path $Folder 'slicer'
-    $environment['authority'] = Join-Path $Folder 'authority'
-    $environment['identity'] = Join-Path $Folder 'identity'
-    $environment['host'] = '127.0.0.1'
-    $environment['packages'] = @{
-        Linux = @{ path = Join-Path $Folder 'xmip.rpm' }
-        Windows = @{ path = Join-Path $Folder 'xmip.msi' }
+    # The file as changed, so a command reading it reads what the test reads.
+    [string] $file = Join-Path $Folder 'cluster.xmip'
+    & (Get-Module -Name Xmip) { param($Path, $Value) Write-XmipToml -Path $Path -Value $Value } (
+        $file) $content
+    [hashtable] $images = @{}
+    foreach ($os in @($content['environment']['images'].Keys)) {
+        $images[$os] = Join-Path $Folder 'image.iso'
     }
-    $environment['tools'] = @{
-        Linux = @{
-            pwsh = @{ path = Join-Path $Folder 'pwsh.tar.gz'; sha256 = 'AB' }
-            dsc = @{ path = Join-Path $Folder 'dsc.tar.gz'; sha256 = 'CD' }
+    [hashtable] $facts = @{
+        Network = '10.77.0.0/24'
+        Root = Join-Path $Folder 'disks'
+        Uplink = 'Uplink'
+        WindowsHost = '127.0.0.1'
+        Operators = @('CN=tester')
+        LinuxAccount = 'account'
+        Authority = Join-Path $Folder 'state/authority'
+        Identity = Join-Path $Folder 'state/identity'
+        Operator = Join-Path $Folder 'state/operator'
+        Secret = Join-Path $Folder 'state/secret.xml'
+        Images = $images
+        Tools = @{
+            Linux = @{
+                pwsh = @{ path = Join-Path $Folder 'pwsh.tar.gz'; sha256 = 'ab' }
+                dsc = @{ path = Join-Path $Folder 'dsc.tar.gz'; sha256 = 'cd' }
+            }
+            Windows = @{
+                pwsh = @{ path = Join-Path $Folder 'pwsh.zip'; sha256 = 'ef' }
+                dsc = @{ path = Join-Path $Folder 'dsc.zip'; sha256 = '01' }
+            }
         }
-        Windows = @{
-            pwsh = @{ path = Join-Path $Folder 'pwsh.zip'; sha256 = 'EF' }
-            dsc = @{ path = Join-Path $Folder 'dsc.zip'; sha256 = '01' }
+        Packages = @{
+            Linux = @{ path = Join-Path $Folder 'xmip.rpm' }
+            Windows = @{ path = Join-Path $Folder 'xmip.zip' }
         }
+        Programs = @{
+            Linux = @{ path = Join-Path $Folder 'xmip-system-test-external'
+                file = 'xmip-system-test-external' }
+            Windows = @{ path = Join-Path $Folder 'xmip-system-test-external.exe'
+                file = 'xmip-system-test-external.exe' }
+        }
+        Slicer = Join-Path $Folder 'xmip-service'
+        Hashes = @{}
+        Given = @{}
     }
-    # The uplink a gateway machine's second adapter is on, which the owner's
-    # copy names.
-    if ($environment['network'].Contains('gateway_machine')) {
-        $environment['network']['uplink'] = 'Uplink'
-    }
-    # The System Tests' far end's program, for a machine that runs one.
-    $environment['far_ends'] = @{
-        Linux = @{ program = Join-Path $Folder 'xmip-system-test-external' }
-        Windows = @{ program = Join-Path $Folder 'xmip-system-test-external.exe' }
-    }
-    if ($Technology) {
-        $environment['technology'] = $Technology
-    }
-    return $environment
+    return @{ Content = $content; File = $file; Facts = $facts; Technology = $Technology
+        Hypervisor = $Hypervisor; Folder = $Folder }
+}
+
+function Read-XmipTestEnvironment {
+    <#
+        .SYNOPSIS
+        The environment New-XmipTestEnvironment made, as
+        Get-XmipDeployEnvironment reads it, its run folder -Run.
+    #>
+    [CmdletBinding()]
+    [OutputType([hashtable])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [hashtable] $Environment,
+
+        [Parameter(Mandatory = $true)]
+        [string] $Run
+    )
+
+    [string] $cluster = (Get-XmipTestCluster).Name
+    & (Get-Module -Name Xmip) {
+        param($Environment, $Estate, $Run, $Cluster)
+        [hashtable] $reading = @{ Cluster = $Environment.Content; Name = $Cluster
+            File = $Environment.File; Technology = $Environment.Technology
+            Hypervisor = $Environment.Hypervisor; Facts = $Environment.Facts; Estate = $Estate
+            Run = $Run }
+        Get-XmipDeployEnvironment @reading
+    } $Environment $script:Root $Run $cluster
 }
 
 function Get-XmipTestDeployStep {
     <#
         .SYNOPSIS
         Microsoft DSC's steps for an environment as Deploy-XmipEnvironment
-        applies them: the module's own reading of the file and its steps,
-        the private state a stand-in naming no file.
+        applies them: the module's own reading of New-XmipTestEnvironment's
+        and its steps, the private state a stand-in naming no file.
     #>
     [CmdletBinding()]
     [OutputType([hashtable])]
     param(
         [Parameter(Mandatory = $true)]
-        [System.Collections.IDictionary] $Environment,
+        [hashtable] $Environment,
 
         [Parameter(Mandatory = $true)]
         [string] $Run
     )
 
+    [hashtable] $read = Read-XmipTestEnvironment -Environment $Environment -Run $Run
     & (Get-Module -Name Xmip) {
-        param($Environment, $Estate, $Run)
-        [hashtable] $read = Get-XmipDeployEnvironment -Environment $Environment -Estate (
-            $Estate) -Run $Run
+        param($Read, $Estate, $Run)
         [hashtable] $state = @{ Folder = $Run; Key = 'key'; KnownHosts = 'known_hosts'
             HostKey = @{} }
-        Get-XmipDeployStep -Read $read -State $state -Estate $Estate
-    } $Environment $script:Root $Run
+        Get-XmipDeployStep -Read $Read -State $state -Estate $Estate
+    } $read $script:Root $Run
 }
 
 function Write-XmipTestInventory {
@@ -234,18 +296,17 @@ function Write-XmipTestInventory {
     [OutputType([string])]
     param(
         [Parameter(Mandatory = $true)]
-        [System.Collections.IDictionary] $Environment,
+        [hashtable] $Environment,
 
         [Parameter(Mandatory = $true)]
         [string] $Run
     )
 
+    [hashtable] $read = Read-XmipTestEnvironment -Environment $Environment -Run $Run
     & (Get-Module -Name Xmip) {
-        param($Environment, $Estate, $Run)
-        [hashtable] $read = Get-XmipDeployEnvironment -Environment $Environment -Estate (
-            $Estate) -Run $Run
+        param($Read, $Estate, $Run)
         [hashtable] $state = @{ Folder = $Run; Key = 'key'; KnownHosts = 'known_hosts'
             HostKey = @{} }
-        Write-XmipDeployInventory -Read $read -State $state -Estate $Estate -Run $Run
-    } $Environment $script:Root $Run
+        Write-XmipDeployInventory -Read $Read -State $state -Estate $Estate -Run $Run
+    } $read $script:Root $Run
 }

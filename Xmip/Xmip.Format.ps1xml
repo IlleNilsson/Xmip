@@ -26,6 +26,7 @@
         <TableHeaders>
           <TableColumnHeader><Label>Suite</Label><Width>13</Width></TableColumnHeader>
           <TableColumnHeader><Label>Computer</Label><Width>9</Width></TableColumnHeader>
+          <TableColumnHeader><Label>As</Label><Width>14</Width></TableColumnHeader>
           <TableColumnHeader><Label>Cluster</Label><Width>10</Width></TableColumnHeader>
           <TableColumnHeader><Label>Id</Label><Width>7</Width><Alignment>Right</Alignment></TableColumnHeader>
           <TableColumnHeader><Label>Started</Label><Width>11</Width></TableColumnHeader>
@@ -43,6 +44,7 @@
             <TableColumnItems>
               <TableColumnItem><PropertyName>Suite</PropertyName></TableColumnItem>
               <TableColumnItem><ScriptBlock>if ($null -eq $_.ComputerName) { 'here' } else { $_.ComputerName }</ScriptBlock></TableColumnItem>
+              <TableColumnItem><PropertyName>RunsAs</PropertyName></TableColumnItem>
               <TableColumnItem><ScriptBlock>if ($_.Kind -in 'pester', 'internal') { '' } elseif ($null -eq $_.Cluster) { 'by hand' } else { $_.Cluster }</ScriptBlock></TableColumnItem>
               <TableColumnItem><PropertyName>Id</PropertyName></TableColumnItem>
               <TableColumnItem><ScriptBlock>$_.StartTime.ToString('MM-dd HH:mm')</ScriptBlock></TableColumnItem>

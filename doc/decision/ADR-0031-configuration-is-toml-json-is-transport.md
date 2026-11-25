@@ -1100,3 +1100,20 @@ cluster's file.
 
 **Provenance.** Open problem 181; the owner's answer, 2026-11-25. The
 reading is the assistant's.
+
+## Amendment, 2026-11-25: slicing never gives a node `[environment]`
+
+The owner, 2026-11-25, of the System Tests, the Systems Tests and the demo:
+*Yes* to one file, the cluster file, and one switch (ADR-0028 and
+ADR-0015, amendments of this date). Where a cluster runs on virtual machines is then its file's
+`[environment]` table, which the machine deploying the environment reads
+and no node does. The amendment of 2026-10-03 has desired state write each
+node the cluster's shared sections and its own; `[environment]` is neither.
+`configure::cluster::slice`, the one slicing, never gives a node
+`[environment]`, so a slice's text above its `[signature]` is the same with
+the table or without it, and its `cluster`, the file's SHA-256, still says
+which save it was sliced from (the amendment of 2026-11-06). A node is never
+told the machine it runs on, the network's range or the other machines.
+
+**Provenance.** The owner's answer above; the rule is the coordinator's,
+2026-11-25, for the owner to strike.

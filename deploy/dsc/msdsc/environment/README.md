@@ -62,7 +62,8 @@ amendment 2026-11-25).
 (`name.dsc.yaml`): the zone, `xmip.test`, where it is not there, and an A
 record for the cluster, `CL1`, holding every node machine's address, and
 one for each node holding its machine's. A node finds another by its name —
-`DS1:7443` — inside the network; the System Tests reach each node and far
+`DS1:7443` — inside the network; the System Tests and the Systems Tests
+reach each node and far
 end at the address `deployed.toml` gives it, and resolve no name.
 
 **Each node's slice, on this machine** (`machine.dsc.yaml`,
@@ -93,7 +94,8 @@ first — and a run over an environment restarts no node for a new
 signature.
 
 **Each far end's machine** (`far-end-program.dsc.yaml`, from the host's
-`far-end.dsc.yaml`), for each of the System Tests' far ends the table's
+`far-end.dsc.yaml`), for each far end of the System Tests and the Systems
+Tests the table's
 `[environment.far_ends]` names (ADR-0028, amendments 2026-11-22 and
 2026-11-25): its certificate, key and anchors from the cluster's own
 authority, issued into the environment's state, under `tls`; the program
@@ -205,8 +207,9 @@ this folder, a node's files and its parameters to the machine's staging
 folder and runs `dsc` there, elevated: over PowerShell Remoting to a
 Windows machine as its Administrator, PowerShell Direct where this host
 runs it on Hyper-V and WinRM otherwise, DSC brought to it as to an
-AlmaLinux one, the `pwsh` and `dsc` zips `prerequisite.toml` names, found
-in the image folder, each checked against its SHA-256 and unpacked
+AlmaLinux one, the `pwsh` and `dsc` zips `prerequisite.toml`'s
+`[prerequisite.powershell.archive]` and `[prerequisite.dsc.archive]` name,
+found by that name in the image folder, each checked against its SHA-256 and unpacked
 under `C:\ProgramData\Xmip\environment\tools`, since Windows Server ships
 Windows PowerShell alone; over OpenSSH to an AlmaLinux one,
 with the environment's key and its `known_hosts`, checked strictly, so a
@@ -216,8 +219,9 @@ machine whose host key is not the one its kickstart was given is refused
 back as standard error here: PowerShell Remoting writes a warning of the
 far side to the console past any redirection, standard output, where DSC
 reads the resource's JSON. An AlmaLinux machine needs nothing but its sshd:
-DSC is brought to it, the `pwsh` and `dsc` tarballs `prerequisite.toml`
-names, found in the image folder, each checked against its SHA-256, copied once and
+DSC is brought to it, the `pwsh` and `dsc` tarballs the same two tables
+name, found by that name in the image folder, each checked against its
+SHA-256, copied once and
 unpacked under `/var/tmp/xmip-environment/tools`, never installed for the
 machine, and `dsc` runs from there with sudo. That staging folder is the
 login's alone, `0700`, and one another account owns is refused; a node's
@@ -313,9 +317,11 @@ Import-Module -Name D:\Repos\Xmip\Xmip\Xmip.psd1
 Build-XmipService -Site personal-computer -CargoArgument '--release' -Package archive
 ```
 
-Nothing more is made by hand. The cluster's authority, every node's and far
-end's certificate and the Windows machines' Administrator secret are the
-command's own, made where none is. The host is given no rule or suffix that
+Nothing more is made by hand. The environment's authority, with
+`operator.xmip` beside it, every node's and far end's certificate in
+`identity/<name>`, your operator certificate in `operator/` and the Windows
+machines' Administrator secret are the command's own, made in its private
+state where none is (`deploy/dsc/README.md`, *The command*). The host is given no rule or suffix that
 sends its names to the environment's DNS server, and WinRM no trusted
 hosts: the System Tests reach every machine at the address `deployed.toml`
 gives it, and this host reaches a Windows machine through PowerShell Direct
@@ -342,17 +348,22 @@ every one runs or its window, 180 seconds, is spent. Each document runs itself e
 through WinRM as the Administrator or SSH with sudo; on the host it needs
 none. `-WhatIf` says what differs and changes nothing.
 
-Then the System Tests run against the machines, `Start-XmipTest -Suite
-Core.System -As VirtualMachine` (ADR-0028, amendment 2026-11-25). The run
-is the file's every node, OP1 among it; it is handed every node's and far
-end's address and the operator certificate, signed by the same authority,
-from the deployed state, resolves no name, and makes, starts and spawns
-nothing. Every node must answer as that node, or the run is REFUSED before
-it starts; `-Nodes`, `-NodeRole` and `-NodeCapability` are refused with it,
+Then the System Tests, which test the internals, and the Systems Tests,
+which test how nodes interact, run against the machines, `Start-XmipTest
+-VirtualMachine` (ADR-0028, amendment 2026-11-25). The run is the file's
+every node, OP1 among it; it is handed every node's and far end's address
+and the operator certificate the deploy issued for your account,
+`CN=<account name>`, signed by the same authority, whom every node lists
+among its `[operate] operators` — for the Systems Tests their node list and
+operator certificate — resolves no name, and makes, starts and spawns
+nothing. `-Container` is refused until the tests run in containers.
+Every node must answer as that node, or the run is REFUSED before it
+starts; `-Nodes`, `-NodeRole` and `-NodeCapability` are refused with it,
 and so is a cluster file that changed since it was deployed:
 
 ```powershell
-Start-XmipTest -Suite Core.System -Cluster CL1 -As VirtualMachine
+Start-XmipTest -Suite Core.System -Cluster CL1 -VirtualMachine
+Start-XmipTest -Suite Core.Systems -Cluster CL1 -VirtualMachine
 Get-XmipTestStatus
 Get-XmipTestResult -Test Carried
 Start-XmipOperationWeb -Snapshot D:\Repos\Xmip\.local-work\system-test\CL1-snapshot.xmip
@@ -377,8 +388,9 @@ it: each Receive Location's `delivery` says how many of the documents
 dropped there arrived whole where their route sends them and how long each
 took (ADR-0028, amendments 2026-11-11, 2026-11-22 and 2026-11-25). OP1, the
 file's operational and monitoring node, runs on XMIP-OP1 and is in the run,
-and no node is started on the host. The Parties' far end the System Tests
-serve on the host, port 7422, is reached by no run now.
+and no node is started on the host. The far end the System Tests served on
+the host for nodes on machines is deleted from the rig; on virtual
+machines the far ends are always the deployed ones.
 
 **What waits on the owner.** The Windows machines take the portable
 archive, `Build-XmipService -Package archive`, until the MSI is built: WiX

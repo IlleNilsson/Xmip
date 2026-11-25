@@ -28,9 +28,9 @@ function Start-XmipSystemTestRollProcess {
             build began.
 
         .PARAMETER Start
-            What Start-XmipSystemTestRoll decided: Suite, Cluster, Stress,
-            Test, Rounds, Nodes, NodeRole, Capability, Path, ClusterFile,
-            Named, Seconds, TimeFactor, Choice and What.
+            What Start-XmipSystemTestRoll decided: Suite, RunsAs, Cluster,
+            Stress, Test, Rounds, Nodes, NodeRole, Capability, Path,
+            ClusterFile, Named, Seconds, TimeFactor, Choice and What.
     #>
     [CmdletBinding()]
     [OutputType([int])]
@@ -78,6 +78,7 @@ function Start-XmipSystemTestRollProcess {
     # cluster_file where they came from.
     $record = [ordered]@{
         suite        = $Start.Suite
+        runs_as      = [string] $Start['RunsAs']
         cluster      = $cluster
         pid          = $process.Id
         started      = $process.StartTime.ToString('o')

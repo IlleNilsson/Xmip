@@ -32,6 +32,10 @@
 - Amended: 2026-11-23 — the internal tests by hand: Core.Internal, and both
   of their suites on another computer by -ComputerName
 - Amended: 2026-11-25 — the hidden run is deleted
+- Amended: 2026-11-25 — three switches, `-Process`, `-VirtualMachine` and
+  `-Container`, say where the System Tests, the Systems Tests and the demo
+  run, containers not built yet; the System Tests test the internals, the
+  Systems Tests how nodes interact
 - Related: ADR-0018 (the Service and the Host Services), ADR-0027 (the operator
   boundary), ADR-0010 (contract and transport boundaries), ADR-0025 (when a
   Module loads), ADR-0052 (the views' "show test clusters" box, its
@@ -2071,37 +2075,59 @@ Provenance: the decision is the owner's, quoted. Taking out with it the
 audit's `hidden` word, the storage column and the phrase is the worker's
 reading of *delete, never deprecate*, for the owner to strike.
 
-## Amendment, 2026-11-25: one switch runs the System Tests and the demo as local processes or on virtual machines, and the Systems Tests are deleted
+## Amendment, 2026-11-25: three switches, `-Process`, `-VirtualMachine` and `-Container`, say where the System Tests, the Systems Tests and the demo run; containers are not built yet
 
 **Provenance.** The owner, 2026-11-25: *running the tests, demo, regardless
 which platform the user is on, there has to be a switch to run the tests,
 demo, as local processes or VMs*; *I'd like it to be a switch to minimize
 the number of files and duplication of configuration*; *I still don't get
 why there is a need for two files?*; *Yes* to one file, the cluster file,
-and one switch; and of the switch's value, *The switch -As Machine should
-be -As VM, it is not an actual Machine*, then *Or better, -As
-VirtualMachine, aliases as VM*. The coordinator settled the rest the same
-day, for the owner to strike: one name, the System Tests, with the Systems
-Tests and Core.Systems deleted everywhere, the overview's narration changed
-now and its audio voiced again later; OP1 on the plan's operator machine;
-and the far end the System Tests serve on the host recorded as an open
-problem, not deleted. Where the environment is said, and how it is made, is
-ADR-0015's amendment of this date. Written; not yet run on a machine.
+and one switch; of the switch's value, *The switch -As Machine should be
+-As VM, it is not an actual Machine*, *Or better, -As VirtualMachine,
+aliases as VM* and *`-As Process` should also have an alias, `-As Proc`*, then
+*PowerShell has an Alias system, do not overthink*, and *We missed a switch
+-As Container*, then *Aliased as C*; and of the two suites,
+*The System Tests and Systems Tests are different, I hope you get that*,
+and *System Tests tests the internals, Systems Tests tests how nodes
+interact*. The coordinator settled the rest the same day, for the owner to
+strike: OP1 on the plan's operator machine; and the far end the System
+Tests served on this computer for nodes on machines deleted from the rig,
+what still binds to it recorded as an open problem. Where the environment
+is said, and how it is made, is ADR-0015's amendment of this date.
+Written; not yet run on a machine.
 
-- **One switch.** `Start-XmipTest -As Processes|VirtualMachine`,
-  `Processes` where left out, for Core.System and Core.Demo alike. `VM` is
-  accepted for `VirtualMachine`, and every record, refusal and surface says
-  `VirtualMachine`. `-As Processes` is the System Tests as they ran, test
-  level 1: the cluster file's node plan, every node and far end a process
-  on this computer. `-As VirtualMachine` is test level 2 (the amendment of
-  2026-10-21).
-- **`-As VirtualMachine`** runs the same file on the virtual machines of an
-  environment deployed beforehand from its `[environment]` table by
-  `Deploy-XmipEnvironment -Path <cluster file> -Cluster <name>` (ADR-0015,
-  amendment of this date). It never makes or starts a virtual machine. The
-  roll is handed every node's and far end's address and the operator
-  certificate from the deployed state, so it resolves no name and spawns
-  nothing, and every node of the run is a real node. Refused before
+- **Two suites, two purposes.** The System Tests, `Core.System`, test the
+  internals; the Systems Tests, `Core.Systems`, test how nodes interact.
+  Both run the same cluster file, its node plan and its far ends, and
+  Core.Systems is still started by its name alone (`ByName`). In prose the
+  names are plural, in code singular, as the second amendment of
+  2026-11-23 has it.
+- **Three switches.** `Start-XmipTest -Process`, alias `-Proc`, runs the
+  cluster's nodes and far ends as processes on this computer, test level 1,
+  and is what runs where no switch is given. `-VirtualMachine`, alias
+  `-VM`, runs them on the virtual machines of an environment deployed
+  beforehand, test level 2 (the amendment of 2026-10-21). `-Container`,
+  alias `-C`, is to run them in containers. The aliases are PowerShell's
+  own parameter aliases, and the three are one set: one is given at most.
+  They apply to Core.System, Core.Systems and Core.Demo alike. Every record
+  and surface says which, `Process`, `VirtualMachine` or `Container`: the
+  run record's and the snapshot's `[run]` `runs_as`, and
+  `Get-XmipTestStatus`'s `RunsAs`, shown as `As`.
+- **`-Container` is not built.** It is refused before anything is built,
+  naming the open problem *The tests and the demo run in containers: WSL
+  containers or containerd on Windows, Podman on Linux, one container per
+  node and far end, made from the same cluster file*, the containers being
+  one of ADR-0015's four ways to run the node plan (amendment 2026-11-24).
+- **`-VirtualMachine`** runs the file on the environment `Deploy-XmipEnvironment
+  -Path <cluster file> -Cluster <name>` deployed from its `[environment]`
+  table (ADR-0015, amendment of this date). It never makes or starts a
+  virtual machine. The roll is handed every node's and far end's address
+  and the operator certificate from the deployed state, the one the deploy
+  issued for this account's person, whom every node lists among its
+  `[operate] operators`, so it resolves no name and spawns nothing, and
+  every node of the run is a real node: the Systems Tests' node list and
+  operator certificate are the deployed environment's, where `-Nodes` and
+  `-Certificate` gave them. `-Certificate` is deleted. Refused before
   anything starts:
   - on macOS;
   - with `-Nodes`, `-NodeRole` or `-NodeCapability`: the run is the plan
@@ -2110,50 +2136,47 @@ ADR-0015's amendment of this date. Written; not yet run on a machine.
     `Deploy-XmipEnvironment -Path <cluster file> -Cluster <name>`, run in an
     elevated Xmip PowerShell Console on Windows;
   - where the cluster file changed since it was deployed.
-
-  `-Certificate` is deleted.
-- **The demo too.** Core.Demo's *roll* part passes `-As` on; its *web*,
-  *desktop* and *extension* parts are unchanged.
-- **One name, the System Tests.** Core.Systems is deleted with every use of
-  it, and the Systems Tests with it: the System Tests run as local
-  processes or on virtual machines. In prose the name is plural; in code
-  singular, as the second amendment of 2026-11-23 has it. Where the
-  amendment of this date, *the hidden run is deleted*, names the Systems
-  Tests on an environment's machines, it is the System Tests on virtual
-  machines.
-- **Every far end on a virtual machine of its own.** The far ends are the
-  cluster file's `[environment.far_ends]`, `senders` and `receivers`;
-  `configuration/external.xmip` is deleted, and a run as local processes
-  reads them from the same table. On virtual machines each far end runs on
-  one of its own, as the plan has it (the third amendment of 2026-11-22,
-  *the far ends run on machines of their own*), reached at the address the
-  deployed state gives it, never by its name. The Parties' far end the
-  System Tests serve on the host, SFTP on port 7422, which a slice bound by
-  `xmip-service --slice --bind` to one far end reaches, is reached by no
-  run now: it is recorded as an open problem, to be deleted or kept, and is
-  not deleted here.
+- **`-Process`** runs the cluster's nodes on this computer, for the Systems
+  Tests as for the System Tests.
+- **The demo too.** Core.Demo's *roll* part passes the switch on; its
+  *web*, *desktop* and *extension* parts are unchanged.
+- **The far ends, local or deployed.** The far ends are the cluster file's
+  `[environment.far_ends]`, `senders` and `receivers`;
+  `configuration/external.xmip` is deleted. With `-Process` each is a
+  process of its own on this computer, as before. On virtual machines the
+  far ends are always the deployed ones, each on a machine of its own, as
+  the plan has it (the third amendment of 2026-11-22, *the far ends run on
+  machines of their own*), reached at the address the deployed state gives
+  it, never by its name. The Parties' far end the System Tests served on
+  this computer for nodes on machines, SFTP on port 7422 (the second
+  amendment of 2026-10-22), is deleted from the rig. What still binds to
+  it, `configure::placed::FAR_END_PORT` and `xmip-service --slice --bind`
+  to one far end, is reached by no run and is recorded as an open problem.
 - **OP1 on the operator's machine.** The plan's operator machine runs OP1,
   so every node of the file has a machine of its own, and a run on virtual
   machines is the file's every node.
 
 This supersedes, without editing them:
 
-- the first two amendments of 2026-11-23, *the System Tests and the demo
-  run one fixed solution, the plan as processes on one computer*, where Hyper-V,
-  KVM, VMware, containers and physical machines prove the machines and
-  never the System Tests or the demo, and *the System Tests, local, and
-  the Systems Tests, on machines*: one rig, one suite and one name, the
-  switch saying where they run; and the third of that date, *the internal
-  tests by hand, here or on a test computer*, where it refuses the Systems
-  Tests on a test computer: the System Tests and the demo are refused
-  there;
+- the first amendment of 2026-11-23, *the System Tests and the demo run
+  one fixed solution, the plan as processes on one computer*, where
+  Hyper-V, KVM, VMware, containers and physical machines prove the machines
+  and never the System Tests or the demo;
+- of the second amendment of 2026-11-23, *the System Tests, local, and the
+  Systems Tests, on machines*, the split by where each runs, the System
+  Tests on one computer alone and the Systems Tests on machines alone,
+  *Which one runs is the suite's*, its `Machines`, and `-Certificate`,
+  Core.Systems' own and required there: where a suite runs is the switch's,
+  and what it tests is its purpose. Its names and its two kinds of test
+  stand;
 - of the second amendment of 2026-11-24, *the test tooling sends what Git
   holds, names what failed, and runs cargo once for each mode*, the bullet
   of open problem 149, where the example environments keep OP1 without a
-  machine;
+  machine, and its *The Systems Tests refuse every node that does not
+  resolve at once*: no run resolves a name;
 - the statements of the amendment of 2026-10-21 and of both amendments of
   2026-10-22 that a node on a machine of its own is driven through the
   Parties' far end the rig serves on the host, and of the third amendment of
   2026-11-22 that a far end is used where its name resolves and the far end
-  on this computer is served where none does: every far end now has a
-  virtual machine of its own.
+  on this computer is served where none does: on virtual machines every far
+  end is a deployed one.

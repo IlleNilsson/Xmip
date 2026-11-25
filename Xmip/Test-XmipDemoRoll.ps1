@@ -9,7 +9,9 @@
 
 .DESCRIPTION
     The check starts the roll exactly as Start-XmipTest -Suite Core.System
-    starts any roll, at the -Stress it was given, and its stop part ends it.
+    starts any roll, at the -Stress it was given, as local processes or on
+    virtual machines as -Process or -VirtualMachine said, and its stop part
+    ends it.
     It never follows a roll it did not start: one built from another tree, or
     at another stress, proves nothing of this one, so a cluster that rolls or
     builds already is refused before the check starts (Start-XmipDemoSuite;
@@ -31,8 +33,8 @@ function Test-XmipDemoRoll {
             throws why not.
 
         .PARAMETER Run
-            The run, from New-XmipDemoState: its cluster and stress, and where
-            the snapshot and the roll it launched are kept.
+            The run, from New-XmipDemoState: its cluster, stress and what it
+            runs as, and where the snapshot and the roll it launched are kept.
     #>
     [CmdletBinding()]
     [OutputType([string])]
@@ -49,6 +51,10 @@ function Test-XmipDemoRoll {
         PassThru    = $true
         ErrorAction = 'Stop'
     }
+
+    # The switch the check was started with, by its own name: -Process or
+    # -VirtualMachine.
+    $start[[string] $Run['runs_as']] = $true
 
     # Its build's pid as Start-XmipTest returns it, then its roll's once
     # spawned: the stop part ends these and never another roll of the name.
@@ -125,9 +131,12 @@ function Wait-XmipDemoRoll {
         .DESCRIPTION
             Returns Roll, the roll as Get-XmipTestStatus lists it once it has
             published; Nodes, the nodes its record declares; and Seconds,
-            from the roll's spawn to its snapshot. Throws, naming what is
-            missing: no snapshot within the bound (Wait-XmipSnapshot says
-            which way), or nodes not running once it published.
+            from the roll's spawn to its snapshot. A node runs where it is a
+            process of the roll here, or the roll reached it, its snapshot's
+            [run] real saying so: as local processes the one, on virtual
+            machines the other. Throws, naming what is missing: no snapshot
+            within the bound (Wait-XmipSnapshot says which way), or nodes not
+            running once it published.
 
         .PARAMETER Roll
             The roll just spawned, from Wait-XmipDemoBuild.
@@ -165,7 +174,8 @@ function Wait-XmipDemoRoll {
         $declared = @(Get-TomlValue -Node $recorded -Name 'nodes' -Default @())
     }
 
-    [string[]] $missing = @($declared | Where-Object { $_ -notin @($published.Nodes) })
+    [string[]] $running = @(@($published.Nodes) + @($published.RealNodes))
+    [string[]] $missing = @($declared | Where-Object { $_ -notin $running })
 
     if ($missing.Count -gt 0) {
         throw ("$cluster published $snapshot $seconds s after its spawn, and its nodes " +

@@ -83,16 +83,22 @@ reaches the network alone, the host on it included. Name no `gateway`, and
 the host's own NAT is the way out where any node is online. The plan's
 Linux developer machine takes an image of the same DVD installing
 `workstation-product-environment`. Each far end runs on its machine, as
-the plan has it; the far end the System Tests served on the host is
-reached by no run now. The roles are the environment templates' business.
+the plan has it, for the System Tests and the Systems Tests alike; the far
+end the System Tests served on the host for nodes on machines is deleted
+from the rig. What runs inside a machine is the environment templates'
+business; its role is said in its Notes (below).
 
 ## What each machine is given
 
-A folder, `<root>\<machine>`, and in it a new dynamic disk, `os.vhdx`, made
-once and never resized or replaced. A generation 2 VM holding it, whose own
-files Hyper-V keeps in that folder, with the memory it starts with, static,
-or dynamic between the least and the most its `dynamic_memory` names, its
-CPUs, no automatic checkpoints and the environment's name in its notes; its one
+A folder, `<disk folder>\Xmip-<cluster>\<machine>`, and in it a new
+dynamic disk, `os.vhdx`, made once and never resized or replaced. A
+generation 2 VM holding it, whose own files Hyper-V keeps in that folder,
+with the memory it starts with, static, or dynamic between the least and
+the most its `dynamic_memory` names, its CPUs, no automatic checkpoints,
+and in its Notes its role and its operating system in one line, the role
+from what the cluster file declares and the system from its image's
+`name`, such as *Receiving node RX1 · AlmaLinux 10* (`deploy/dsc/README.md`,
+*The environment table*); its one
 adapter on the switch with a static MAC made from its address (00-15-5D and
 the address's last three octets), and the gateway machine a second,
 `Uplink`, on the uplink, its MAC the same with its first octet 02, a
@@ -161,56 +167,50 @@ Add-AppxPackage -Path https://github.com/PowerShell/DSC/releases/download/v3.4.0
 Add-LocalGroupMember -SID 'S-1-5-32-578' -Member $account
 ```
 
-The ISOs go where the environment file names them, under
-`D:\Downloads\OS\Images`. Then, as the Windows user that will run DSC, not
-elevated: the Administrator secret of the Windows machines, encrypted to
-that user on this host, and the environment file copied to where it is
-yours:
-
-```powershell
-[string] $local = 'D:\Repos\Xmip\.local-work\hyperv'
-New-Item -ItemType Directory -Force -Path $local
-Get-Credential -UserName 'Administrator' -Message 'The Windows machines' |
-    Export-Clixml -LiteralPath "$local\secret.xml"
-[string] $example = 'D:\Repos\Xmip\deploy\dsc\hyperv.example.toml'
-Copy-Item -LiteralPath $example -Destination 'D:\Repos\Xmip\.local-work\deploy\hyperv.toml'
-```
-
-In the copy, write in `linux_account`, the account the kickstart creates on
-the AlmaLinux machines, `secret`, `[network] uplink` and what the nodes are
-given (`deploy/dsc/README.md`), and strike the machines you do not want. The
-AlmaLinux machines' account is given the environment's own SSH key, which
-`Deploy-XmipEnvironment` makes.
+The ISOs go into the image folder: the account's Xmip folder's `images`,
+`%LOCALAPPDATA%\Xmip\images`, or one `-ImageFolder` names once, each found
+there by the SHA-256 its `[environment.images.<os>]` gives, whatever its
+file is called. Nothing else is written by hand: the Windows machines'
+Administrator secret is the command's, generated once into the
+environment's state and encrypted to the user that deploys, and so is the
+AlmaLinux machines' account, `xmip-admin`, given the environment's own SSH
+key. A smaller plan is a smaller cluster file: a cluster of your own names
+the machines it wants in its own `[environment]`.
 
 The uplink XMIP-DC01's second adapter is on is an external switch onto the
 host's adapter on your network, behind your firewall. It takes that
 adapter, the host keeping its own way out through it, so it is yours to
 make, once, in an elevated Xmip PowerShell Console, and the template finds
 it, refuses one that is not there or not external, and never makes, changes
-or removes it. The names are your own, written in the copy alone:
+or removes it. Its name is your own: the command finds the host's one
+external switch, or `-Uplink` names it once, kept in the state, where there
+are several:
 
 ```powershell
 Get-NetAdapter -Physical
 New-VMSwitch -Name '<uplink>' -NetAdapterName '<the host''s adapter on your network>' -AllowManagementOS $true
 ```
 
-Without it, name no `gateway_machine` and set `nat = true`: the host is the
-network's way out. A XMIP-DC01 made before its copy named the uplink is
-running with one adapter, and its hardware changes only while it is off:
-the run refuses it, never stopping it, until you shut it down once.
+Without it, name no `gateway`: the host is the network's way out. A
+XMIP-DC01 made before the uplink was there is running with one adapter,
+and its hardware changes only while it is off: the run refuses it, never
+stopping it, until you shut it down once.
 
 ## Running it
 
 In an elevated Xmip PowerShell Console, as the same user: the network
 document asks for elevation as a whole, because a switch's host address and
 NAT are an administrator's to set; the machine documents ask for none, since
-a member of Hyper-V Administrators manages VMs unelevated. One command makes
-the network and every machine, and waits until each is installed; `-WhatIf`
-says what differs and changes nothing, on a fresh host too:
+a member of Hyper-V Administrators manages VMs unelevated. A run not
+elevated is refused, naming the console, and none is started. One command
+makes the network and every machine, Hyper-V being the Windows host's kind,
+and waits until each is installed; `-WhatIf` says what differs and changes
+nothing, on a fresh host too:
 
 ```powershell
-Deploy-XmipEnvironment -Path 'D:\Repos\Xmip\.local-work\deploy\hyperv.toml' -WhatIf
-Deploy-XmipEnvironment -Path 'D:\Repos\Xmip\.local-work\deploy\hyperv.toml'
+[string] $cluster = 'D:\Repos\Xmip\test\core\system-test\configuration\cluster.xmip'
+Deploy-XmipEnvironment -Path $cluster -Cluster CL1 -WhatIf
+Deploy-XmipEnvironment -Path $cluster -Cluster CL1
 ```
 
 It applies `network.dsc.yaml`, then `machine.dsc.yaml` once per machine,
@@ -220,9 +220,9 @@ time left. An installation runs on its own; while a machine installs, its
 document is applied again every thirty seconds until it is installed, its
 media gone, and running, and only then is the next machine made. The names
 and the nodes follow (`deploy/dsc/msdsc/environment`). Everything DSC says
-goes to `.local-work\deploy\<environment>\run.log`. The same environment
-with `technology = "ansible"` is made by `deploy/dsc/ansible` from a Linux
-controller.
+goes to `.local-work\deploy\<cluster>\run.log`. The same environment
+with `-Technology ansible` is made by `deploy/dsc/ansible` from a Linux
+controller, the command naming the one to run there.
 
 ## The files
 
@@ -247,8 +247,8 @@ Each document requires DSC `^3.4.0-preview.3`, the latest release.
 
 `test/MsdscHyperV.Test.ps1` holds what can be held without Hyper-V: the
 documents read as YAML by DSC, their parameters and elevation, the
-manifests found by DSC and every property each requires given, the example
-environment as `Deploy-XmipEnvironment` applies it — the network, then each
+manifests found by DSC and every property each requires given, the System
+Tests' environment as `Deploy-XmipEnvironment` applies it — the network, then each
 machine — each step evaluated by DSC with every resource replaced by an
 echo, this table of machines against it, the install answers and the answer
 medium, and the resources' `get`, `test` and `set` with every Hyper-V and
@@ -258,7 +258,7 @@ machine made, an uplink that is not one external switch refused and never
 made, a gateway machine given its `Uplink` and never booted from it, an
 `Uplink` on any other machine refused, a machine given dynamic memory
 between its least and its most, the gateway and a desktop where the
-example's machine has one, a
+plan's machine has one, a
 Windows 11 machine's TPM given before its media and Enter
 pressed for its first twenty seconds, a machine still installing answered
 by its state alone, a VM with two adapters refused, and an installed

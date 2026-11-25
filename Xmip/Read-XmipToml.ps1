@@ -183,6 +183,8 @@ function Write-XmipToml {
     )
 
     Import-XmipToml
-    [string] $text = ConvertTo-Toml -InputObject $Value -Depth 4
+    # Deep enough for a cluster's file, whose [environment.machines.<name>]
+    # holds an inline table: PSToml truncates past the depth, with a warning.
+    [string] $text = ConvertTo-Toml -InputObject $Value -Depth 16
     Write-XmipWholeFile -Path $Path -Text $text -NoClobber:$NoClobber
 }
