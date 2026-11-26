@@ -899,6 +899,53 @@ overrule:
    gates alone: written in `lib.rs`, the declaration took amqp's to 415
    production lines and aws-s3's to 407, past the 400 the style holds.
 
+Step 2's next batches, built the same day as the first, the assistant's:
+
+- **The vendors and the databases**: `xmip-core-transport-aws-kinesis`,
+  `-aws-sns`, `-aws-sqs`, `-azure-blob`, `-azure-event-grid`,
+  `-azure-service-bus`, `-google-cloud-storage` and `-google-pub-sub`, and
+  `-db2`, `-mariadb`, `-mssql`, `-mysql`, `-oracle`, `-postgresql` and
+  `-sqlite`. aws-kinesis, aws-sns and aws-sqs take `access_key_id`, and
+  azure-service-bus `key_name`, by the vendor crate's `declaration`;
+  azure-blob signs as its own `account` and takes nothing of the Azure
+  crate. A SQL technology's wire hands `transport::sql`'s `Configured` the
+  declaration's `SETTINGS` and `SCHEMES`, the settings every SQL Location
+  shares staying `transport::sql`'s.
+- **File and web**: `xmip-core-transport-http`, `-sftp`, `-smb`, `-nfs`,
+  `-webdav`, `-as2`, `-as4`, `-peppol`, `-websocket`, `-imap`, `-pop3` and
+  `-smtp`. None takes a setting from the technology it rides on.
+
+Thirty-four crates declare the feature, and `test/Declaration.Test.ps1`
+holds each. What the batches settled, each decided by the assistant, for
+the owner to overrule:
+
+4. **A constant a declaration reads moves with it**, into `declaration.rs`
+   or the crate root built with it: aws-kinesis's `SHARD`,
+   azure-service-bus's `MAX_WAIT` (out of `client`), AS4's test service and
+   action (out of `envelope`), Peppol's billing invoice and process,
+   WebDAV's `LOCK_TIMEOUT`, NFS's `DELETE_AFTER_RETRIEVE` and the kind of
+   an `AUTH_UNIX` id, IMAP's `DELETE_AFTER_FETCH` and POP3's
+   `DELETE_AFTER_RETRIEVE`; http's `SCHEMES` left the crate root for
+   `declaration::SCHEMES`. Three public paths moved with them, which
+   nothing in the estate used.
+5. **A side file that held a declaration is renamed or split**: mariadb's,
+   mysql's and oracle's `configured.rs` became `declaration.rs`; db2's
+   keeps the code reading `tls`; aws-kinesis's `settings.rs`, left with the
+   `Configured` impl alone, became `configured.rs`; AS4's and Peppol's
+   `settings.rs` keep theirs.
+6. **A feature that is code turns the default on**, or moves into it:
+   db2's `tls` and http's `test-support` turn it on as FTP's `tls` does,
+   and mariadb's and mysql's capability `tls`, which `client_tls` needs
+   and the declaration does not, moved from the dependency into the
+   default.
+7. **A carrier the code rides on is the code's dependency**, optional
+   behind the default, and never a declaration's: http under AS2, AS4 and
+   WebDAV, AS4 under Peppol, tcp under SFTP, the Azure crate under
+   azure-blob. Only a setting shared through a crate (aws's, azure's,
+   amqp's `presenting`) makes it a declaration's dependency. sqlite's
+   declaration takes nothing of the capability, so the capability is
+   behind its default, as file's is.
+
 Built and waiting on its repository: step 3, the gathering crate,
 `xmip-core-declaration` in Operation, which xmip-core-operate's node build
 links and carries into the runtime's catalogue, so the language server, the

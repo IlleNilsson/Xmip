@@ -1687,13 +1687,14 @@ declaration stays placed once. The plan, its own work after the current:
 Steps 1 and 2 begun 2026-11-26 (ADR-0064, amendment 2026-11-26):
 `test/Declaration.Test.ps1` holds that a technology built with its
 `declaration` feature alone compiles nothing beyond its capability's own
-build and other technologies' declarations; the transports file, FTP,
-AMQP, aws-s3 and azure-event-hubs, and the vendor crates aws and azure,
-have the feature, each declaration in `src/declaration.rs`. Step 3, the
+build and other technologies' declarations; 32 transports — file, FTP,
+AMQP, the AWS, Azure and Google ones, the databases, and file and web —
+and the vendor crates aws and azure have the feature, each declaration in
+`src/declaration.rs`. Step 3, the
 gathering crate `xmip-core-declaration`, linked by xmip-core-operate's node
 build, is built and waits on its repository, which the owner creates
 (`Sync-XmipEstate -Create`); until it lands a surface carries no
-declaration. Open: the other 81 transports and the 20 contract
+declaration. Open: the other 54 transports and the 20 contract
 technologies, in batches, and whether the other capabilities'
 technologies carry a declaration to the surfaces at all.
 
