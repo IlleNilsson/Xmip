@@ -224,8 +224,9 @@ Three of its items are still open, and this register is where they belong:
   nothing (ADR-0058, ADR-0065 and ADR-0067, amendments 2026-11-13). Left:
   `configure` placing through it, and `[sync]`, read by a node that then
   joins the plane.
-- **A typed configuration loader.** The surfaces' library carries no
-  technology's declaration (problem 48), which is what remains. **The
+- **A typed configuration loader.** The surfaces' library carries every
+  transport's declaration and no contract's (problem 48), which is what
+  remains. **The
   reading resolved 2026-11-17:** what the estate's PowerShell reads and
   writes of a configuration Xmip runs — a cluster's `cluster.xmip`, a node's
   document — is read by `configure`, the runtime's one reader, through the
@@ -1690,13 +1691,12 @@ Steps 1 and 2 begun 2026-11-26 (ADR-0064, amendment 2026-11-26):
 build and other technologies' declarations, and refuses a transport or
 contract without one; every transport crate, the 86 transports and the
 vendor crates aws and azure, and the 20 contracts have the feature, each
-declaration in `src/declaration.rs`. Step 3, the gathering crate
-`xmip-core-declaration`, linked by xmip-core-operate's node build, is
-built and waits on its repository, which the owner creates
-(`Sync-XmipEstate -Create`); until it lands a surface carries no
-declaration. Open: the contracts' carrying (problem 217), and whether the
-other capabilities' technologies carry a declaration to the surfaces at
-all.
+declaration in `src/declaration.rs`. Step 3 built the same day: the
+gathering crate `xmip-core-declaration`, linked by xmip-core-operate's node
+build, gathers every transport, so the language server, the desktop and
+`xmip validate` suggest and check every transport's settings. Open: the
+contracts' carrying (problem 217), and whether the other capabilities'
+technologies carry a declaration to the surfaces at all.
 
 ## 50. Validation and the path languages hold a Stream whole
 

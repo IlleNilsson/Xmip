@@ -1723,7 +1723,7 @@ dependency = ["xmip-core-library-codec"]
   # What each Cargo feature carries (ADR-0014, amendment 2026-10-14: the
   # phone follows nodes remotely and runs none).
   features = [
-      "node (default): every export of xmip_operate.h — sections 1, 5, 6 and 10 to 16, section 17's serve exports, section 19's signing, sections 21 to 26, a module library probed through the runtime's loader among them — over the runtime's node build, and the designer (design); includes remote",
+      "node (default): every export of xmip_operate.h — sections 1, 5, 6 and 10 to 16, section 17's serve exports, section 19's signing, sections 21 to 26, a module library probed through the runtime's loader among them — over the runtime's node build, and the designer (design), and every technology's declaration xmip-core-declaration gathers, carried into the runtime's catalogue before sections 6 and 12 read it (catalogue); includes remote",
       "remote: the phone's build (--no-default-features --features remote) over the runtime's plane::remote — sections 7, 8, 9 and the four publication lists of sections 11, 14, 15 and 16, section 18, section 17's client exports, section 19's request and section 27, a configuration document read by configure",
   ]
   architecturalDomain = "Operation"
@@ -1733,6 +1733,10 @@ dependency = ["xmip-core-library-codec"]
       "xmip-core",
       "xmip-core-abi",
       "xmip-core-audit",
+      # Every technology's declaration, gathered: the runtime depends on no
+      # technology, so the surfaces' library links them through it (ADR-0064,
+      # amendment 2026-11-26).
+      "xmip-core-declaration",
       # What the library hands audit as the program a .NET program audits
       # through: the file sink and the operating system's log, each log's
       # crate empty off its own platform (ADR-0062, amendment 2026-11-16).
@@ -1758,7 +1762,110 @@ dependency = ["xmip-core-library-codec"]
       "xmip-core-secret",
   ]
 
+  # The gathering crate of open problem 48 (ADR-0064, amendments 2026-10-22
+  # and 2026-11-26): a platform service depends on no technology, so the
+  # library the surfaces load links every technology's declaration through
+  # this one. Each technology is built with its `declaration` feature alone,
+  # its code behind its default; test/Declaration.Test.ps1 holds that nothing
+  # heavier is built. It gathers every transport, the vendor crates aws and
+  # azure with the transports whose declarations take from them.
+  [xmip.core.declaration]
+  description = "Every technology's declaration, gathered for the surfaces: the names, settings, kinds and words a Location of each is configured with, and none of their code, which xmip-core-operate's library carries into the runtime's catalogue (ADR-0064, amendment 2026-11-26)."
+  architecturalDomain = "Operation"
+  repositoryRole = "common-architecture"
+  maturity = "scaffolded"
+  dependency = [
+      "xmip-core",
+      "xmip-core-transport-activemq",
+      "xmip-core-transport-amqp",
+      "xmip-core-transport-as2",
+      "xmip-core-transport-as4",
+      "xmip-core-transport-aws-kinesis",
+      "xmip-core-transport-aws-s3",
+      "xmip-core-transport-aws-sns",
+      "xmip-core-transport-aws-sqs",
+      "xmip-core-transport-azure-blob",
+      "xmip-core-transport-azure-event-grid",
+      "xmip-core-transport-azure-event-hubs",
+      "xmip-core-transport-azure-service-bus",
+      "xmip-core-transport-bacnet",
+      "xmip-core-transport-bluetooth",
+      "xmip-core-transport-can-bus",
+      "xmip-core-transport-canopen",
+      "xmip-core-transport-coap",
+      "xmip-core-transport-cotp",
+      "xmip-core-transport-db2",
+      "xmip-core-transport-dds",
+      "xmip-core-transport-dhcp",
+      "xmip-core-transport-dicom",
+      "xmip-core-transport-dnp3",
+      "xmip-core-transport-dns",
+      "xmip-core-transport-ethercat",
+      "xmip-core-transport-ethernet",
+      "xmip-core-transport-ethernet-ip",
+      "xmip-core-transport-file",
+      "xmip-core-transport-ftp",
+      "xmip-core-transport-google-cloud-storage",
+      "xmip-core-transport-google-pub-sub",
+      "xmip-core-transport-hart",
+      "xmip-core-transport-http",
+      "xmip-core-transport-ibm-mq",
+      "xmip-core-transport-iec-60870-5-104",
+      "xmip-core-transport-iec-61850",
+      "xmip-core-transport-imap",
+      "xmip-core-transport-io-link",
+      "xmip-core-transport-iso-tp",
+      "xmip-core-transport-j1939",
+      "xmip-core-transport-kafka",
+      "xmip-core-transport-knx",
+      "xmip-core-transport-lorawan",
+      "xmip-core-transport-m-bus",
+      "xmip-core-transport-mariadb",
+      "xmip-core-transport-mdns",
+      "xmip-core-transport-mllp",
+      "xmip-core-transport-modbus",
+      "xmip-core-transport-mqtt",
+      "xmip-core-transport-msmq",
+      "xmip-core-transport-mssql",
+      "xmip-core-transport-mysql",
+      "xmip-core-transport-named-pipe",
+      "xmip-core-transport-nats",
+      "xmip-core-transport-nats-jetstream",
+      "xmip-core-transport-nfs",
+      "xmip-core-transport-obd-ii",
+      "xmip-core-transport-opc-ua",
+      "xmip-core-transport-oracle",
+      "xmip-core-transport-peppol",
+      "xmip-core-transport-pop3",
+      "xmip-core-transport-postgresql",
+      "xmip-core-transport-profinet",
+      "xmip-core-transport-rabbitmq",
+      "xmip-core-transport-redis-streams",
+      "xmip-core-transport-redpanda",
+      "xmip-core-transport-s7comm",
+      "xmip-core-transport-secs-gem",
+      "xmip-core-transport-serial",
+      "xmip-core-transport-sftp",
+      "xmip-core-transport-smb",
+      "xmip-core-transport-smtp",
+      "xmip-core-transport-snmp",
+      "xmip-core-transport-sqlite",
+      "xmip-core-transport-ssdp",
+      "xmip-core-transport-syslog",
+      "xmip-core-transport-tcp",
+      "xmip-core-transport-thread",
+      "xmip-core-transport-udp",
+      "xmip-core-transport-uds",
+      "xmip-core-transport-unix-socket",
+      "xmip-core-transport-webdav",
+      "xmip-core-transport-websocket",
+      "xmip-core-transport-wireless-hart",
+      "xmip-core-transport-wireless-m-bus",
+      "xmip-core-transport-zigbee",
+  ]
+
   [xmip.core.cli]
+
   description = "The xmip command line, Rust and needing no .NET: every operator read and act over xmip-core-operate's surface and the runtime's crates, Rust to Rust through traits (ADR-0014, amendment 2026-11-17), each audited, and xmip mcp, a Model Context Protocol server over net's JSON-RPC (ADR-0071)."
   architecturalDomain = "Operation"
   repositoryRole = "common-architecture"

@@ -218,3 +218,7 @@
 	path = module/core/library/file
 	url = https://github.com/IlleNilsson/xmip-core-library-file.git
 	branch = main
+[submodule "module/core/operation/declaration"]
+	path = module/core/operation/declaration
+	url = https://github.com/IlleNilsson/xmip-core-declaration.git
+	branch = main

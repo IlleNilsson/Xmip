@@ -1,6 +1,6 @@
 # The Xmip estate
 
-327 repositories are declared and 283 of them are
+328 repositories are declared and 284 of them are
 mounted in this working tree.
 
 **Generated from `architecture.toml` and from the `.gitmodules` files
@@ -33,16 +33,16 @@ the estate tree, and are counted nowhere below.
 | Foundation | 9 | 9 | 0 |
 | Library | 1 | 0 | 1 |
 | Capability | 23 | 23 | 0 |
-| Operation | 9 | 8 | 1 |
+| Operation | 10 | 9 | 1 |
 | Platform | 4 | 4 | 0 |
 | Technology | 281 | 239 | 42 |
-| **Total** | 327 | 283 | 44 |
+| **Total** | 328 | 284 | 44 |
 
 | Maturity | Declared | Mounted | Not mounted |
 | --- | ---: | ---: | ---: |
 | planned | 1 | 0 | 1 |
 | reserved | 43 | 0 | 43 |
-| scaffolded | 283 | 283 | 0 |
+| scaffolded | 284 | 284 | 0 |
 
 **Mounted means composed as a submodule, and composition happens at two
 levels** (ADR-0016, amended 2026-09-07). The root `.gitmodules` composes
@@ -522,7 +522,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 423522 lines of production
+Where each repository mounts and what it holds: 423741 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -787,8 +787,8 @@ hold no source to count.
 │   │   │   ├── asn1                             686
 │   │   │   └── file                             318
 │   │   └── operation/
-│   │       ├── operate                        52995  C# 32563 · Rust 20432
-│   │       ├── cli                            12348
+│   │       ├── operate                        53033  C# 32563 · Rust 20470
+│   │       ├── cli                            12389
 │   │       ├── gui                             8323
 │   │       │   └── vscode                      3424
 │   │       ├── observe                         8196
@@ -805,17 +805,18 @@ hold no source to count.
 │   │       ├── report                          2250
 │   │       │       declared, not built 6
 │   │       │       csv  html  json  pdf  prometheus  sql
-│   │       └── archive                         1435
-│   │           ├── sql                          253
-│   │           ├── parquet                      204
-│   │           ├── aws-s3                       163
-│   │           ├── google-cloud-storage         150
-│   │           ├── azure-blob                   138
-│   │           ├── sqlite                       125
-│   │           ├── file                         105
-│   │           ├── mariadb                       87
-│   │           ├── postgresql                    62
-│   │           └── mssql                         59
+│   │       ├── archive                         1435
+│   │       │   ├── sql                          253
+│   │       │   ├── parquet                      204
+│   │       │   ├── aws-s3                       163
+│   │       │   ├── google-cloud-storage         150
+│   │       │   ├── azure-blob                   138
+│   │       │   ├── sqlite                       125
+│   │       │   ├── file                         105
+│   │       │   ├── mariadb                       87
+│   │       │   ├── postgresql                    62
+│   │       │   └── mssql                         59
+│   │       └── declaration                      140
 │   ├── foundation/
 │   │   ├── abi                                 8401  C# 4650 · Rust 3371 · PowerShell 380
 │   │   ├── core                                4694
@@ -1063,6 +1064,7 @@ Running and governing Xmip.
 | `xmip-core-archive` | scaffolded | `module/core/operation/archive` | 10 |
 | `xmip-core-audit` | scaffolded | `module/core/operation/audit` | 10 |
 | `xmip-core-cli` | scaffolded | `module/core/operation/cli` | — |
+| `xmip-core-declaration` | scaffolded | `module/core/operation/declaration` | — |
 | `xmip-core-gui` | scaffolded | `module/core/operation/gui` | 1 |
 | `xmip-core-observe` | scaffolded | `module/core/operation/observe` | 2 |
 | `xmip-core-operate` | scaffolded | `module/core/operation/operate` | — |

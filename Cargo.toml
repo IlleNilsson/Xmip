@@ -249,6 +249,7 @@ members = [
     "module/core/operation/audit/syslog",
     "module/core/operation/audit/windows-event-log",
     "module/core/operation/cli",
+    "module/core/operation/declaration",
     "module/core/operation/gui/vscode",
     "module/core/operation/observe",
     "module/core/operation/observe/otlp",
@@ -959,6 +960,8 @@ xmip-core-contract-wsdl = { path = "module/core/capability/contract/wsdl" }
 xmip-core-contract-xml-schema = { path = "module/core/capability/contract/xml-schema" }
 [patch."https://github.com/IlleNilsson/xmip-core-contract-yaml"]
 xmip-core-contract-yaml = { path = "module/core/capability/contract/yaml" }
+[patch."https://github.com/IlleNilsson/xmip-core-declaration"]
+xmip-core-declaration = { path = "module/core/operation/declaration" }
 [patch."https://github.com/IlleNilsson/xmip-core-demote"]
 xmip-core-demote = { path = "module/core/capability/demote" }
 [patch."https://github.com/IlleNilsson/xmip-core-event"]

@@ -1031,15 +1031,64 @@ the owner to overrule:
     without the feature, and each capability's guide (`adding-a-transport.md`,
     "The declaration"; `adding-a-contract.md`) says how one is written.
 
-Built and waiting on its repository: step 3, the gathering crate,
-`xmip-core-declaration` in Operation, which xmip-core-operate's node build
-links and carries into the runtime's catalogue, so the language server, the
-desktop and `xmip validate` suggest and check these settings. A repository
-is created on origin by the owner (repository model, section 10), and since
-the estate is one workspace (ADR-0016, amendment 2026-11-20) cargo fetches
-the original git source of every `[patch]`ed crate, so nothing in the
-workspace resolves while a declared crate's repository does not exist.
-Until it does, a surface carries no declaration, as before. Open problem 48
-stays open for the gathering crate, the rest of the technologies in
-batches, and the contracts, the other capabilities' technologies and the
-Wizard and Guides (the amendment of 2026-11-07) after them.
+Step 3, the gathering crate, built the same day for every transport, the
+assistant's: until then a surface's process carried no declaration, so VS
+Code suggested no transport setting, aws-s3's `access_key_id` and the file
+Send Location's `name` among them.
+
+- **The gathering crate**, `xmip-core-declaration`, a new Operation
+  repository at `module/core/operation/declaration` (`architecture.toml`):
+  `TRANSPORTS`, each a `Transport` of its `settings` and `schemes`, by
+  module name, every one of the 86 transports a dependency without its
+  default and with its `declaration`, one `transport!(…)` line each.
+  xmip-core-operate links it in its node build and carries each
+  declaration into the runtime's catalogue once in the process, through the
+  runtime's one way in, `catalogue::carry` (`operate::catalogue::carried`),
+  before `xmip_technology_catalogue_v1` answers, `xmip_validate_v1`
+  validates or `xmip_start_v1` plans. The command line, which validates
+  through the runtime Rust to Rust, carries them the same way before
+  `xmip validate`. `test/Declaration.Test.ps1` holds that it gathers every
+  transport declaring the feature and compiles nothing more; a contract's
+  declaration is not gathered until problem 217 settles how the catalogue
+  carries one.
+- **Proven**, each test failing before and passing after: the language
+  server offers `access_key_id` in an `aws-s3://` Send Location's settings,
+  `name` in a file Send Location's and `node` in an `opc.tcp://` Receive
+  Location's, over the built library (`language.rs`);
+  `xmip_technology_catalogue_v1` answers aws-s3's `access_key_id` and
+  file's `name` with their sides; and `xmip_validate_v1` and
+  `xmip validate` refuse a file Send Location's `named`, which its
+  technology does not declare.
+
+What step 3 settled, each decided by the assistant, for the owner to
+overrule:
+
+15. **The gathering crate is `xmip-core-declaration`, in Operation**: the
+    surfaces' library is Operation's, and Operation may depend on a
+    technology where a platform service may not. It lists each capability's
+    technologies apart (`TRANSPORTS` now; the contracts' list once problem
+    217 is settled), since the catalogue carries each with its
+    capability. A vendor crate, aws or azure, is no technology of its own
+    and is not listed: it comes with the transports whose declarations take
+    from it.
+16. **Carried once, on first use**, by each export that reads the
+    catalogue, never as the library loads: nothing runs under the loader.
+    The phone's remote build carries none, having neither section 6 nor 12.
+17. **Carried is checked, as well as suggested.** Once carried, a surface
+    validating a node holds each Location to its technology's declaration as
+    a node does, which is the rule's *checked on every surface*: a setting a
+    technology does not declare, a required one missing or one of the other
+    side is refused on the desktop, in the editor and by `xmip validate`.
+18. **The command line carries them too.** It links the operating library
+    Rust to Rust and validates through the runtime, not the ABI, so it
+    carried none; one call before `xmip validate` makes it a surface the
+    rule holds on, as the language server and the desktop are.
+
+Found: since the estate is one workspace (ADR-0016, amendment 2026-11-20),
+cargo fetches the original git source of every `[patch]`ed crate, so
+nothing in the workspace resolves while a declared crate's repository does
+not exist, and a new repository is created on origin by the owner
+(repository model, section 10) before the crate that needs it lands; he
+created `xmip-core-declaration` the same day. Open problem 48 stays open for
+the contracts' carrying (problem 217), the other capabilities' technologies
+and the Wizard and Guides (the amendment of 2026-11-07).

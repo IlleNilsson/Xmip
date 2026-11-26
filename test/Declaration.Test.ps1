@@ -10,8 +10,8 @@ using namespace System.Collections.Generic
     load carries every technology's declaration — names, settings, kinds and
     words, not the technologies' code — by a `declaration` feature in each
     technology crate, its code and its dependencies behind the default
-    feature, gathered by one crate the surfaces' build links (step 3, to
-    come).
+    feature, gathered by one crate the surfaces' build links,
+    xmip-core-declaration.
 
     Heavy is whatever a technology's code is built on and its declaration is
     not. A declaration may compile its capability and what the capability
@@ -23,13 +23,15 @@ using namespace System.Collections.Generic
     The builds are what `cargo tree` resolves, offline, in the estate's one
     workspace (ADR-0016, amendment 2026-11-20): every technology declaring
     the feature at once, with --no-default-features --features declaration,
-    as a gathering crate builds them, and each capability with its own
+    as the gathering crate builds them, and each capability with its own
     defaults.
 #>
 
 BeforeAll {
     . (Join-Path $PSScriptRoot 'Initialize-XmipTest.ps1')
 
+    # The crate the surfaces' library links every declaration through.
+    [string] $script:Gathering = 'xmip-core-declaration'
     [string] $manifest = Join-Path $script:Root 'Cargo.toml'
 
     <#
@@ -192,6 +194,10 @@ BeforeAll {
     # surfaces (ADR-0064, amendment 2026-11-26).
     [string[]] $script:Carrying = @('xmip-core-transport', 'xmip-core-contract')
 
+    # The capabilities the gathering crate carries: a contract's declaration
+    # waits on how the catalogue carries one (open problem 217).
+    [string[]] $script:Gathers = @('xmip-core-transport')
+
     [hashtable] $script:Parent = @{}
     foreach ($repository in @(Get-XmipEstateRepository -Root $script:Root)) {
         $script:Parent[$repository.Name] = [string] $repository.Parent
@@ -206,11 +212,13 @@ BeforeAll {
 
     [hashtable] $script:Alone = @{}
     [hashtable] $script:Whole = @{}
+    [hashtable] $script:Gathered = @{}
 
     if ($script:Declaring.Count -gt 0) {
         [string[]] $declarationAlone = @('--no-default-features', '--features', 'declaration')
         $script:Alone = Get-XmipTestBuilt -Package $script:Declaring -Argument $declarationAlone
         $script:Whole = Get-XmipTestBuilt -Package $script:Capability -Argument @()
+        $script:Gathered = Get-XmipTestBuilt -Package @($script:Gathering) -Argument @()
     }
 
     <#
@@ -292,6 +300,33 @@ Describe 'A technology built with its declaration alone pulls in no heavy depend
         $heavy | Should -BeNullOrEmpty -Because (
             "a declaration's build compiles these, which only the technology's code " +
             "needs; put each behind the default feature:`n" + ($heavy -join "`n")
+        )
+    }
+
+    It 'gathers every transport''s declaration into the crate the surfaces link, and nothing more' {
+        $script:Gathered.ContainsKey($script:Gathering) | Should -BeTrue -Because (
+            "$script:Gathering is the crate the surfaces' library links every declaration through"
+        )
+        [HashSet[string]] $built = $script:Gathered[$script:Gathering]
+        [string[]] $ungathered = @(
+            $script:Declaring |
+                Where-Object { $script:Gathers -contains $script:Parent[$_] } |
+                Where-Object { -not $built.Contains($_) }
+        )
+
+        $ungathered | Should -BeNullOrEmpty -Because (
+            "every transport declaring its declaration is gathered:`n" + ($ungathered -join "`n")
+        )
+
+        [HashSet[string]] $allowed = [HashSet[string]]::new([string[]] @($script:Gathering))
+        foreach ($package in $script:Declaring) {
+            $allowed.UnionWith((Get-XmipTestAllowed -Package $package))
+        }
+        [string[]] $heavy = @($built | Where-Object { -not $allowed.Contains($_) } | Sort-Object)
+
+        $heavy | Should -BeNullOrEmpty -Because (
+            "the gathering crate builds a technology's code or what it is built on:`n" +
+            ($heavy -join "`n")
         )
     }
 }
