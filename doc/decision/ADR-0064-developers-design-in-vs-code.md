@@ -914,8 +914,24 @@ Step 2's next batches, built the same day as the first, the assistant's:
 - **File and web**: `xmip-core-transport-http`, `-sftp`, `-smb`, `-nfs`,
   `-webdav`, `-as2`, `-as4`, `-peppol`, `-websocket`, `-imap`, `-pop3` and
   `-smtp`. None takes a setting from the technology it rides on.
+- **The brokers**: `xmip-core-transport-activemq`, `-rabbitmq`, `-kafka`,
+  `-redpanda`, `-mqtt`, `-nats`, `-nats-jetstream`, `-redis-streams`,
+  `-ibm-mq`, `-msmq`, `-dds` and `-coap`. rabbitmq takes `user` and
+  `virtual_host` by amqp's `declaration`, and nats-jetstream `name` by
+  nats's; redpanda rides on kafka, msmq on http and dds on udp in their
+  code alone.
+- **Network and system**: `xmip-core-transport-tcp`, `-udp`,
+  `-unix-socket`, `-named-pipe`, `-thread`, `-serial`, `-syslog`, `-snmp`,
+  `-dns`, `-mdns`, `-ssdp`, `-dhcp`, `-mllp`, `-dicom` and `-ethernet`. A
+  declaration is the same on every operating system — unix-socket's where
+  no Unix domain socket is reached, named-pipe's for the Windows pipe and
+  the FIFO alike, serial's with no port, ethernet's without a raw socket —
+  so a Location's settings are suggested on any surface; only the code
+  keeps its target `cfg`s. mdns rides on dns, and mllp on its HL7
+  acknowledgement, in their code alone; syslog, mllp and dicom ride on the
+  capability's sockets, not on the tcp or udp technology.
 
-Thirty-four crates declare the feature, and `test/Declaration.Test.ps1`
+Sixty-one crates declare the feature, and `test/Declaration.Test.ps1`
 holds each. What the batches settled, each decided by the assistant, for
 the owner to overrule:
 
@@ -925,14 +941,18 @@ the owner to overrule:
    action (out of `envelope`), Peppol's billing invoice and process,
    WebDAV's `LOCK_TIMEOUT`, NFS's `DELETE_AFTER_RETRIEVE` and the kind of
    an `AUTH_UNIX` id, IMAP's `DELETE_AFTER_FETCH` and POP3's
-   `DELETE_AFTER_RETRIEVE`; http's `SCHEMES` left the crate root for
-   `declaration::SCHEMES`. Three public paths moved with them, which
-   nothing in the estate used.
+   `DELETE_AFTER_RETRIEVE`; nats's `DEFAULT_NAME`, ibm-mq's
+   `DEFAULT_CHANNEL` (out of `client`) and `DEFAULT_WAIT`,
+   nats-jetstream's `DEFAULT_CONSUMER` and `DEFAULT_BATCH`, dds's `TIMEOUT`
+   and `BUFFER` and CoAP's `ACK_TIMEOUT`; http's `SCHEMES` left the crate
+   root for `declaration::SCHEMES`. Nine public paths moved with them,
+   which nothing in the estate used but nats-jetstream, now reading
+   `nats::declaration`.
 5. **A side file that held a declaration is renamed or split**: mariadb's,
    mysql's and oracle's `configured.rs` became `declaration.rs`; db2's
-   keeps the code reading `tls`; aws-kinesis's `settings.rs`, left with the
-   `Configured` impl alone, became `configured.rs`; AS4's and Peppol's
-   `settings.rs` keep theirs.
+   keeps the code reading `tls`; aws-kinesis's, ibm-mq's and msmq's
+   `settings.rs`, left with the `Configured` impl alone, became
+   `configured.rs`; AS4's and Peppol's `settings.rs` keep theirs.
 6. **A feature that is code turns the default on**, or moves into it:
    db2's `tls` and http's `test-support` turn it on as FTP's `tls` does,
    and mariadb's and mysql's capability `tls`, which `client_tls` needs
@@ -945,6 +965,20 @@ the owner to overrule:
    amqp's `presenting`) makes it a declaration's dependency. sqlite's
    declaration takes nothing of the capability, so the capability is
    behind its default, as file's is.
+8. **A setting two technologies wrote alike is one `Setting`**, in the
+   carrier's `declaration`: nats-jetstream's `name`, nats's default and
+   all, is `nats::declaration::NAME`, so nats is a dependency of its
+   declaration. dds's `buffer` description, whose line continuations
+   were lost into runs of spaces, reads as written.
+9. **serial's `port` feature is deleted**, its dependencies the
+   default's: the port is code, so `port` named the default's build. io-link
+   and the System Test, which took serial without its default for the
+   framing, take it whole; it builds on a box with no serial stack,
+   refusing a port none has. serial's `TIMEOUT` and ethernet's
+   `XMIP_ETHERTYPE` keep a crate-root re-export beside
+   `declaration::`, for m-bus and the service test, which read them there.
+10. **A type moves to a file of its own where the gates pass the line
+    limit**: snmp's `Envelope`, `src/envelope.rs`.
 
 Built and waiting on its repository: step 3, the gathering crate,
 `xmip-core-declaration` in Operation, which xmip-core-operate's node build

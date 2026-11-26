@@ -522,7 +522,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 420319 lines of production
+Where each repository mounts and what it holds: 421459 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -554,27 +554,27 @@ hold no source to count.
 │   │   │   │   ├── http                        2281
 │   │   │   │   ├── nfs                         2217
 │   │   │   │   ├── smb                         2208
-│   │   │   │   ├── kafka                       2055
-│   │   │   │   ├── ibm-mq                      1958
+│   │   │   │   ├── kafka                       2095
+│   │   │   │   ├── ibm-mq                      2005
+│   │   │   │   ├── serial                      1897
 │   │   │   │   ├── ftp                         1884
 │   │   │   │   ├── sftp                        1864
-│   │   │   │   ├── serial                      1850
 │   │   │   │   ├── mssql                       1694
-│   │   │   │   ├── snmp                        1454
+│   │   │   │   ├── snmp                        1505
+│   │   │   │   ├── nats-jetstream              1427
 │   │   │   │   ├── as4                         1402
 │   │   │   │   ├── oracle                      1391
-│   │   │   │   ├── nats-jetstream              1390
-│   │   │   │   ├── dns                         1268
+│   │   │   │   ├── dns                         1307
+│   │   │   │   ├── activemq                    1254
 │   │   │   │   ├── s7comm                      1238
 │   │   │   │   ├── imap                        1236
-│   │   │   │   ├── activemq                    1215
+│   │   │   │   ├── mqtt                        1224
 │   │   │   │   ├── secs-gem                    1215
-│   │   │   │   ├── mqtt                        1184
 │   │   │   │   ├── webdav                      1180
+│   │   │   │   ├── dicom                       1171
 │   │   │   │   ├── canopen                     1155
-│   │   │   │   ├── dicom                       1122
 │   │   │   │   ├── iec-61850                   1105
-│   │   │   │   ├── nats                        1049
+│   │   │   │   ├── nats                        1095
 │   │   │   │   ├── as2                         1022
 │   │   │   │   ├── aws-sns                     1022
 │   │   │   │   ├── aws-s3                      1019
@@ -589,53 +589,53 @@ hold no source to count.
 │   │   │   │   ├── ethernet-ip                  941
 │   │   │   │   ├── hart                         930
 │   │   │   │   ├── google-pub-sub               927
+│   │   │   │   ├── redis-streams                918
 │   │   │   │   ├── aws-sqs                      914
 │   │   │   │   ├── uds                          910
 │   │   │   │   ├── j1939                        898
 │   │   │   │   ├── file                         895
 │   │   │   │   ├── bluetooth                    886
-│   │   │   │   ├── redis-streams                880
 │   │   │   │   ├── lorawan                      878
+│   │   │   │   ├── dhcp                         867
 │   │   │   │   ├── smtp                         847
 │   │   │   │   ├── profinet                     838
 │   │   │   │   ├── cotp                         836
-│   │   │   │   ├── dhcp                         832
+│   │   │   │   ├── thread                       834
 │   │   │   │   ├── peppol                       830
 │   │   │   │   ├── wireless-hart                821
-│   │   │   │   ├── thread                       787
+│   │   │   │   ├── syslog                       784
 │   │   │   │   ├── zigbee                       783
 │   │   │   │   ├── knx                          750
 │   │   │   │   ├── websocket                    745
-│   │   │   │   ├── syslog                       741
+│   │   │   │   ├── mdns                         744
+│   │   │   │   ├── dds                          742
+│   │   │   │   ├── msmq                         735
 │   │   │   │   ├── iec-60870-5-104              733
 │   │   │   │   ├── io-link                      725
 │   │   │   │   ├── iso-tp                       721
-│   │   │   │   ├── mdns                         706
-│   │   │   │   ├── dds                          693
-│   │   │   │   ├── msmq                         680
 │   │   │   │   ├── dnp3                         678
+│   │   │   │   ├── ssdp                         655
+│   │   │   │   ├── ethernet                     648
+│   │   │   │   ├── coap                         643
+│   │   │   │   ├── redpanda                     634
 │   │   │   │   ├── obd-ii                       626
-│   │   │   │   ├── ssdp                         621
 │   │   │   │   ├── azure-event-hubs             606
-│   │   │   │   ├── coap                         602
-│   │   │   │   ├── redpanda                     598
-│   │   │   │   ├── ethernet                     595
 │   │   │   │   ├── modbus                       595
 │   │   │   │   ├── aws                          568
 │   │   │   │   ├── wireless-m-bus               532
 │   │   │   │   ├── azure                        518
 │   │   │   │   ├── mysql                        514
 │   │   │   │   ├── sqlite                       508
+│   │   │   │   ├── mllp                         504
+│   │   │   │   ├── rabbitmq                     497
 │   │   │   │   ├── can-bus                      488
 │   │   │   │   ├── bacnet                       462
-│   │   │   │   ├── mllp                         461
-│   │   │   │   ├── rabbitmq                     451
-│   │   │   │   ├── unix-socket                  359
+│   │   │   │   ├── unix-socket                  401
+│   │   │   │   ├── named-pipe                   375
 │   │   │   │   ├── mariadb                      335
-│   │   │   │   ├── named-pipe                   335
-│   │   │   │   ├── tcp                          278
+│   │   │   │   ├── tcp                          309
 │   │   │   │   ├── postgresql                   276
-│   │   │   │   └── udp                          214
+│   │   │   │   └── udp                          248
 │   │   │   ├── provision                       3831
 │   │   │   │   ├── internal-ca                 2553
 │   │   │   │   ├── acme                        1150

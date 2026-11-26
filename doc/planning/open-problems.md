@@ -1687,14 +1687,14 @@ declaration stays placed once. The plan, its own work after the current:
 Steps 1 and 2 begun 2026-11-26 (ADR-0064, amendment 2026-11-26):
 `test/Declaration.Test.ps1` holds that a technology built with its
 `declaration` feature alone compiles nothing beyond its capability's own
-build and other technologies' declarations; 32 transports — file, FTP,
-AMQP, the AWS, Azure and Google ones, the databases, and file and web —
-and the vendor crates aws and azure have the feature, each declaration in
-`src/declaration.rs`. Step 3, the
+build and other technologies' declarations; 59 transports — file, FTP,
+AMQP, the AWS, Azure and Google ones, the databases, file and web, the
+brokers, and network and system — and the vendor crates aws and azure
+have the feature, each declaration in `src/declaration.rs`. Step 3, the
 gathering crate `xmip-core-declaration`, linked by xmip-core-operate's node
 build, is built and waits on its repository, which the owner creates
 (`Sync-XmipEstate -Create`); until it lands a surface carries no
-declaration. Open: the other 54 transports and the 20 contract
+declaration. Open: the 27 industrial transports and the 20 contract
 technologies, in batches, and whether the other capabilities'
 technologies carry a declaration to the surfaces at all.
 
@@ -3425,6 +3425,23 @@ present the bearer token the Location's secret holds, and a token Google
 issues lives an hour at most, so an operator sets it again before then.
 Needed: a service account's key exchanged for a token as the Location
 connects (a signed JWT, RFC 7523).
+
+## 214. A serial test fails under load
+
+Found 2026-11-26 giving serial its declaration:
+`two_receives_waiting_on_one_port_each_read_a_frame` failed once at "then
+the other" while the machine built other crates, and passed five reruns.
+The code under it did not change. Under the millisecond rule a late frame
+is a defect to find, not a wait to lengthen. Needed: what holds the second
+receive past its frame.
+
+## 215. A test computer's copy fails the Offline test until fetched
+
+Found 2026-11-26 on a newly made test computer folder: Cargo.lock is not
+tracked, each start's copy removes it, and nothing fetches every
+platform's packages there, so `cargo metadata --offline` fails until one
+`cargo fetch` is run in the copy. Needed: the test computer's setup
+(`Install-XmipTestComputerLibrary`) fetches.
 
 # Suggested order
 
