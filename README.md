@@ -639,8 +639,8 @@ told as it publishes, so the next is restarted only once it is: a
 Storage node the primary, or a standby ready and following that its
 primary's stop in order hands over to at once; each node restarted once and
 asked once, after the last step that changes what it runs (ADR-0056,
-amendments 2026-11-23 and 2026-11-24) — and `cargo test --test deploy` reads the System Tests' cluster
-file, whose `[environment]` table is the environment, as `xmip-service` reads it for
+amendments 2026-11-23 and 2026-11-24) — and `cargo test --test deploy` reads the Reference
+Environment, whose `[environment]` table is the environment, as `xmip-service` reads it for
 every node it declares. That file is the same on one computer and on the
 virtual machines, and slicing gives no node its `[environment]` (ADR-0028
 and ADR-0031, amendments 2026-11-25).
@@ -893,7 +893,7 @@ cluster names are two clusters side by side, each with its own web GUI.
 Every tier is a process of its own: the test spawns the cluster, the cluster
 spawns its nodes, and each declares itself, so `Get-XmipProcess` shows all
 three. Omit both switches and `-Stress` is `Brutal`, the most the rig can
-give, and the nodes are the System Tests' own cluster file's,
+give, and the nodes are the Reference Environment's,
 `test/core/system-test/configuration/cluster.xmip`, each declaring the roles
 that file gives it, so the message path runs between the node processes.
 Named, `-Nodes` and `-NodeRole` are written into the run's own cluster file,

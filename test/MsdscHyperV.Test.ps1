@@ -12,7 +12,7 @@
       manifest elevates a method. Only the template's own resources are
       used, each given every property its manifest requires and none it
       does not declare, and DSC finds both manifests.
-    - The System Tests' cluster file (ADR-0015, amendment 2026-11-25), as
+    - The Reference Environment (ADR-0015, amendment 2026-11-25), as
       Deploy-XmipEnvironment applies it: the network, then each machine,
       each step evaluated by DSC with every resource replaced by
       Microsoft.DSC.Debug/Echo, each machine its description, the one line

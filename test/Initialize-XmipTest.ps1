@@ -134,7 +134,7 @@ function New-XmipTestEnvironment {
     <#
         .SYNOPSIS
         An environment as Deploy-XmipEnvironment reads it, with no host: the
-        System Tests' cluster file, read by the module's TOML reader, and the
+        Reference Environment, read by the module's TOML reader, and the
         host facts its machines and nodes need given as files of the test's
         own under -Folder, so what the command makes of it is held with no
         hypervisor, image, authority, build or package. Answers Content,

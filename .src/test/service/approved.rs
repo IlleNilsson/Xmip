@@ -7,8 +7,8 @@
 //! marked `Approval = 'approved'` and published again as a new generation,
 //! and *Approved sales orders* takes it to the ERP's folder, whole: nothing
 //! reaches the ERP but through the Work Process. The module, the Work
-//! Process entry and both Subscriptions are read from the System Tests'
-//! own cluster file, so this node runs what their nodes run.
+//! Process entry and both Subscriptions are read from the Reference
+//! Environment, so this node runs what the System Tests' nodes run.
 
 use std::path::Path;
 use std::time::{Duration, Instant};
@@ -17,7 +17,7 @@ use super::folder::{dropped, named, quoted};
 use super::routed::{ORDERS, sent};
 use super::{Ending, exited, heard, lines, spawned, stop, test_cluster, told, watched};
 
-/// The System Tests' cluster file, beside their design.
+/// The Reference Environment, beside the System Tests' design.
 const CLUSTER: &str = "test/core/system-test/configuration/cluster.xmip";
 
 /// Their Application, its Work Process and the Subscriptions into and out
@@ -52,7 +52,7 @@ fn entry<'a>(table: &'a toml::Table, key: &str, name: &str) -> &'a toml::Table {
 /// library the module names, as this system names it.
 fn configuration(directory: &Path, inbox: &Path, erp: &Path) -> (String, String) {
     let text = std::fs::read_to_string(Path::new(env!("CARGO_MANIFEST_DIR")).join(CLUSTER))
-        .expect("the System Tests' cluster file");
+        .expect("the Reference Environment");
     let cluster: toml::Table = text.parse().expect("TOML");
     let application = entry(&cluster, "xmip_applications", APPLICATION);
     let process = entry(application, "work_processes", PROCESS);

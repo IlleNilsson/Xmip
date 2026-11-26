@@ -38,7 +38,7 @@ function Get-XmipSystemTestLayout {
             under it, so it outlives every run (ADR-0028, amendment
             2026-10-27).
 
-            Configuration is the System Tests' own cluster cluster.xmip, the one
+            Configuration is the Reference Environment, cluster.xmip, the one
             file a run is the same over whether its nodes are simulated or on
             machines of their own (ADR-0028, amendment 2026-10-21): the nodes
             a run spawns where -Nodes names none, and what the environment

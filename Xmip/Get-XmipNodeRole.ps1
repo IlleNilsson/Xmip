@@ -83,7 +83,7 @@ function Get-XmipNodeRole {
             tests whole, which is a real answer and not an error;
             Start-XmipTest says so in words where RoundTrip was asked for. The
             other way to have the message path covered is to omit -Nodes, and
-            take the System Tests' own cluster file's nodes with the roles it
+            take the Reference Environment's nodes with the roles it
             declares.
 
         .PARAMETER Name
@@ -275,7 +275,7 @@ function Get-XmipNodeRoleRefusal {
         "roles declared, or executing; no node declares $($missing -join ' or '). " +
         'State them with -NodeRole, one entry per node — ' +
         "-NodeRole @{ $($Nodes[0]) = 'receiving' } — or omit -Nodes and take " +
-        "the System Tests' own cluster file's nodes, which declares their roles.")
+        "the Reference Environment's nodes with the roles it declares.")
 }
 
 function Get-XmipNodeRoleWarning {
@@ -339,5 +339,5 @@ function Get-XmipNodeRoleWarning {
         'across the nodes. A node name says nothing about what it does (ADR-0056). ' +
         "Split the message path with -NodeRole @{ $($named[0]) = 'receiving' } " +
         "and so on, or give one node 'executing', or omit -Nodes to take the " +
-        "System Tests' own cluster file's nodes as it declares them.")
+        "Reference Environment's nodes as it declares them.")
 }

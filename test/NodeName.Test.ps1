@@ -372,8 +372,8 @@ Describe 'No cluster or node is named in code or tests' {
     It 'writes the owner''s two-letter designations where a name may stand, never one letter' {
         [string[]] $searched = @(Get-NodeNameFile)
 
-        # The far ends and the virtual machines are named in the System Tests'
-        # cluster file's [environment], and read where its nodes are.
+        # The far ends and the virtual machines are named in the Reference
+        # Environment's [environment], and read where its nodes are.
         [string] $system = 'test/core/system-test/configuration/cluster.xmip'
         $searched | Should -Contain $system
         [IO.File]::ReadAllText((Join-Path $script:Root $system)) |

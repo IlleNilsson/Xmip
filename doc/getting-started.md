@@ -571,8 +571,8 @@ Start-XmipTest -Suite Core.System -Cluster CL1 -Test RoundTrip -Nodes RX1, PX1, 
 `-NodeRole` states each node's roles — receiving, processing and sending one
 stage each, or `executing` for all three in one process, the low-latency
 choice ([ADR-0056](decision/ADR-0056-a-node-declares-what-it-can-do.md)).
-Omit `-Nodes` and the run takes every node of the System Tests' own cluster
-file, `test/core/system-test/configuration/cluster.xmip`, whose `[nodes.RX1]
+Omit `-Nodes` and the run takes every node of the Reference Environment,
+`test/core/system-test/configuration/cluster.xmip`, whose `[nodes.RX1]
 roles = "receiving"` and so on cover the whole path; a node you name with no
 `-NodeRole` takes the roles that file declares for it. A node
 given no role declares none and runs the shared-directory tests whole, which

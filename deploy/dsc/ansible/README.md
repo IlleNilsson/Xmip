@@ -206,7 +206,7 @@ no far end on a machine of its own for the run to reach yet.
 ## How it is held
 
 `test/MsdscEnvironment.Test.ps1` runs `ansible-playbook --syntax-check` and
-`--list-tasks` over the inventory the System Tests' cluster file writes,
+`--list-tasks` over the inventory the Reference Environment writes,
 where Ansible is on `PATH`, SKIPPED where it is not;
 `test/DeployEnvironment.Test.ps1` holds that the inventory maps the nodes
 as the msdsc steps do, reaches each AlmaLinux machine strictly, that no

@@ -1,5 +1,5 @@
 //! Every node configuration `deploy/` writes, read the way `xmip-service`
-//! reads its own: the System Tests' cluster `cluster.xmip` — the one file a
+//! reads its own: the Reference Environment, `cluster.xmip` — the one file a
 //! test runs whether its nodes are local processes or on virtual machines of
 //! their own (ADR-0028, amendments 2026-10-21 and 2026-11-25), which the
 //! environment templates under `deploy/dsc` put on each node's machine —

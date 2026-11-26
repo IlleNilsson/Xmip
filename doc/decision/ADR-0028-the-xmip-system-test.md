@@ -38,6 +38,8 @@
   Systems Tests how nodes interact
 - Amended: 2026-11-25 — `-Container` runs them in containers the run makes,
   one Linux container for every node and far end
+- Amended: 2026-11-26 — the Reference Environment, Xmip's one definition of
+  an environment
 - Related: ADR-0018 (the Service and the Host Services), ADR-0027 (the operator
   boundary), ADR-0010 (contract and transport boundaries), ADR-0025 (when a
   Module loads), ADR-0052 (the views' "show test clusters" box, its
@@ -1787,8 +1789,8 @@ roles*.
 - **Every node of the plan is optional.** Three receiving, two executing and
   three sending nodes and two Storage nodes are what the tests and the demo
   run, not what Xmip needs: one node with all roles is the smallest Xmip.
-  The environment deck, `asset/brand/presentation/Xmip-environment.pptx`,
-  says so to end users.
+  The Reference Environment deck,
+  `asset/brand/presentation/Xmip-environment.pptx`, says so to end users.
 
 ## Amendment, 2026-11-23: the System Tests, local, and the Systems Tests, on machines
 
@@ -2020,8 +2022,8 @@ worker's drafting, for the owner to strike.
   (open problem 149), naming each and the `-Nodes` that run the ones that
   resolve, before any node is asked (`real::mapped`). The example
   environments keep the cluster file's OP1 without a machine: the owner's
-  node plan gives the operator's machine no node (the environment deck,
-  slide 3), and mapping one would change his plan, not the tooling; the
+  node plan gives the operator's machine no node (the Reference Environment
+  deck, slide 3), and mapping one would change his plan, not the tooling; the
   amendment of 2026-11-23's *REFUSED by name before anything starts* is
   kept, and said of every such node in one sentence.
 
@@ -2042,12 +2044,12 @@ your test cluster and the checkbox to show it or not.*
 
 The amendment of 2026-09-30 let an assistant roll a cluster of its own on
 the owner's computer, beside his, hidden from his operation views by what
-the run declared. No assistant rolls one there any more: the test estate
-covers what it was for — the System Tests on this computer, the Systems
-Tests on an environment's machines and the Linux test computer
-`-ComputerName` names. Until the first release nothing is deprecated, so
-the hidden run is deleted with every use of it, and nothing reads or writes
-`hidden`:
+the run declared. No assistant rolls one there any more: the Reference
+Environment (the amendment of 2026-11-26) covers what it was for — the
+System Tests on this computer and the Systems Tests on an environment's
+machines — and so does the Linux test computer `-ComputerName` names.
+Until the first release nothing is deprecated, so the hidden run is deleted
+with every use of it, and nothing reads or writes `hidden`:
 
 - **No declaration.** `Start-XmipTest` takes no `-Hidden`, for a roll or for
   Core.Demo, and `XMIP_SYSTEM_TEST_HIDDEN` is gone. A run record, a build
@@ -2266,3 +2268,43 @@ same day: seventeen containers, the eleven nodes and the six far ends, the
 roll reading every node as real where its operate port was published, 27
 rounds, its worst fine when it was stopped, and all of it taken away by
 `Stop-XmipTest`.
+
+## Amendment, 2026-11-26: the Reference Environment, Xmip's one definition of an environment
+
+**Provenance.** The owner, 2026-11-26, of a System Tests run the assistant
+called its own: *I thought we should not have test clusters. We have
+defined the Estate Cluster. Correct me if I'm wrong*; then *So what do you
+recommend, We have one definition of an environment. We made a PowerPoint
+on it. So what do we call it so we are in agreement*; and, to the name the
+assistant proposed: *Yes, go with the reference environment*; and then
+*System Tests and Systems Tests should stay, they use the Reference
+Environment*.
+
+- **The name.** The Reference Environment is Xmip's one definition of an
+  environment: the cluster file the System Tests and the Systems Tests
+  use, `test/core/system-test/configuration/cluster.xmip`, with its nodes,
+  their roles, its Parties and its Xmip Applications, and in its environment
+  table the far ends, the machines and the network they run on (ADR-0015,
+  amendment 2026-11-25). The environment deck,
+  `asset/brand/presentation/Xmip-environment.pptx`, is the Reference
+  Environment deck, which draws it.
+- **What runs it.** The System Tests and the Systems Tests, which keep
+  their names, and the demo use it, by the three switches of the amendment
+  of 2026-11-25: as processes on one
+  computer, on the virtual machines an environment template deployed from
+  it, or in containers the run makes. An end user's own environment, test
+  level 3, is measured against it. Every node in it stays optional (the
+  first amendment of 2026-11-23).
+- **It names no cluster.** The file names none, as before: a run's
+  `-Cluster` does, since a test never invents a cluster's name, and `CL1`
+  or `CL2` is what a tester types for one run, never the environment's
+  name.
+- **Not the estate.** The estate is the repositories — what
+  `Get-XmipStatus`, `Sync-XmipEstate` and `Core.Estate` work on — so no
+  record calls the Reference Environment the *test estate* or an *Estate
+  Cluster*; the owner's *an estate for tests* of 2026-11-25 is quoted,
+  never used.
+
+Proved by `test/Terminology.Test.ps1`: the Reference Environment is named in
+`doc/terminology.md`, and *test estate* and *Estate Cluster* are kept out of
+every file the estate tracks but this amendment.

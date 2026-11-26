@@ -1,17 +1,17 @@
 # Xmip presentation material
 
 The English, self-guided Xmip overview for CEOs, CIOs, developers and operators,
-and the environment deck beside it. This directory is the working home for the
-overview's both formats. Revise them together.
+and the Reference Environment deck beside it. This directory is the working
+home for the overview's both formats. Revise them together.
 
 ## View
 
 - [PowerPoint: 16 slides](Xmip-overview_en-US.pptx)
 - [Animated video: about 10 minutes](Xmip-overview_en-US.mp4)
 - [Video captions](Xmip-overview_en-US.srt)
-- [The environment, PowerPoint: 4 slides](Xmip-environment.pptx): the nodes
-  Xmip's tests and demos run, the functions beside the message path, the
-  machines and four ways to run one plan. Every node in it is optional; Xmip
+- [The Reference Environment, PowerPoint: 4 slides](Xmip-environment.pptx):
+  the nodes Xmip's tests and demos run, the functions beside the message
+  path, the machines and four ways to run one plan. Every node in it is optional; Xmip
   runs on one node with all roles. Its shapes and tables are editable.
 
 The media uses Git LFS. After cloning, run `git lfs pull` to obtain the actual
@@ -109,7 +109,7 @@ The repository does not track JavaScript or TypeScript publishing recipes.
 A media-authoring session may generate temporary recipes in
 `.ai-interaction/presentation/`, using the presentation skill or a media editor.
 The project sources and approved media in this directory remain the durable inputs.
-The environment deck is drawn the same way, through PowerPoint's COM
+The Reference Environment deck is drawn the same way, through PowerPoint's COM
 automation from PowerShell 7; the deck itself is its master.
 
 Since 2026-11-24 each scene is drawn once, for both formats. The deck is built

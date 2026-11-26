@@ -103,7 +103,7 @@ function Resolve-XmipContainerRun {
 
         .DESCRIPTION
             Start-XmipTest -Container makes a container for each node and far
-            end of the System Tests' cluster file once the run is built
+            end of the Reference Environment once the run is built
             (Start-XmipSystemTestContainer; ADR-0015 and ADR-0028, amendments
             2026-11-25). Refused in this order: a host with no container tool
             (Get-XmipContainerTool), naming what installs it; -Nodes,
@@ -149,8 +149,8 @@ function Resolve-XmipVirtualMachineRun {
 
         .DESCRIPTION
             Start-XmipTest -VirtualMachine never makes or starts a virtual
-            machine: Deploy-XmipEnvironment made them from the System Tests'
-            cluster file, and this reads what it recorded (ADR-0015 and
+            machine: Deploy-XmipEnvironment made them from the Reference
+            Environment, and this reads what it recorded (ADR-0015 and
             ADR-0028, amendments 2026-11-25). Refused in this order: a host
             that makes no virtual machine Xmip deploys, as
             Get-XmipDeployHypervisor says it; -Nodes, -NodeRole or

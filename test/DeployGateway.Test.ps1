@@ -45,7 +45,7 @@ BeforeAll {
     . (Join-Path $script:Machine 'WindowsGateway.ps1')
     . (Join-Path $script:Environment 'EnvironmentGateway.ps1')
 
-    # The System Tests' cluster file, each key of its [environment] -Change
+    # The Reference Environment, each key of its [environment] -Change
     # names set as given, or removed where given $null; with -Offline no
     # node declares online.
     function New-Environment {

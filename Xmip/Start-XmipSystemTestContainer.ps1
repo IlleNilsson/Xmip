@@ -9,7 +9,7 @@ Set-StrictMode -Version Latest
 
 .DESCRIPTION
     Start-XmipTest -Container (ADR-0015 and ADR-0028, amendments 2026-11-25):
-    every node and far end of the System Tests' one cluster file runs in a
+    every node and far end of the Reference Environment runs in a
     Linux container of its own, on a network of the cluster's, found there by
     its name; each is given what a Linux machine of a deployed environment is
     given, its slice signed and its certificates issued as Deploy-XmipEnvironment
@@ -30,7 +30,7 @@ function Start-XmipSystemTestContainer {
     <#
         .SYNOPSIS
             Makes and starts a container for each node and far end of the
-            System Tests' cluster file, what an earlier run of the cluster
+            Reference Environment, what an earlier run of the cluster
             left taken away first; returns what the roll reads them by, as
             Read-XmipDeployedEnvironment returns a deployed environment.
 

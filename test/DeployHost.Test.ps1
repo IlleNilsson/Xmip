@@ -35,7 +35,7 @@ BeforeAll {
 
     [string] $script:Cluster = (Get-XmipTestCluster).Name
 
-    # The System Tests' cluster file, as Read-XmipToml reads it.
+    # The Reference Environment, as Read-XmipToml reads it.
     function Read-Cluster {
         & (Get-Module -Name Xmip) {
             Read-XmipToml -Path (Join-Path (Get-XmipRepositoryRoot) (

@@ -247,11 +247,10 @@ System Tests' example `order_approval`) on its way to the ERP. So does every
 landing: the root's service test `approved.rs` hands `xmip-service` that unit,
 built by the root from the same source as its example `order_approval_unit`,
 with the module, the Work Process and its two Subscriptions read from the
-System Tests' cluster file, and a sales order dropped in reaches the ERP's
-folder whole only through it. A unit's settings and calls through the standard
-units are decided, not built. Records: ADR-0066 (amendments 2026-10-22,
-2026-11-21, 2026-11-24), ADR-0025 (amendment 2026-11-21), runtime-model.md
-section 22.
+Reference Environment, and a sales order dropped in reaches the ERP's folder
+whole only through it. A unit's settings and calls through the standard units
+are decided, not built. Records: ADR-0066 (amendments 2026-10-22, 2026-11-21,
+2026-11-24), ADR-0025 (amendment 2026-11-21), runtime-model.md section 22.
 
 #### `program-audit`
 
@@ -522,7 +521,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 423741 lines of production
+Where each repository mounts and what it holds: 423739 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -853,7 +852,7 @@ hold no source to count.
 │       └── cluster                             5090
 └── test/
     └── core/
-        ├── system-test                        19104
+        ├── system-test                        19102
         └── module                                83
 ```
 

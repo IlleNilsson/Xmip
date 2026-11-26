@@ -7,7 +7,7 @@ Set-StrictMode -Version Latest
     nodes a roll spawns (ADR-0056, amendment 2026-10-03: names are parameters
     and configuration). Start-XmipTest writes the run's own file from
     -Cluster, and the nodes -Nodes names or, where it names none, every node
-    the System Tests' own cluster file declares, each with the roles -NodeRole
+    the Reference Environment declares, each with the roles -NodeRole
     states or that file declares (ADR-0028, amendment 2026-10-21: one file
     for one computer and for machines of their own), and names it to the
     roll in XMIP_TEST_CLUSTER — the variable every language's test fixture
@@ -127,7 +127,7 @@ function Get-XmipClusterNodeRole {
 function Read-XmipSystemTestCluster {
     <#
         .SYNOPSIS
-            The nodes the System Tests' own cluster cluster.xmip declares, the
+            The nodes the Reference Environment, cluster.xmip, declares, the
             roles each declares and the Storage nodes it lists. It names no
             cluster: where it runs is the run's or the environment's (ADR-0028,
             amendment 2026-10-21).

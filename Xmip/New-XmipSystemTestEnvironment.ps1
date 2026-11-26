@@ -283,7 +283,7 @@ function New-XmipSystemTestEnvironment {
     # roles key says and the Node capabilities its capabilities key says,
     # online among them where it may assume the internet (ADR-0056,
     # amendments 2026-10-03 and 2026-11-24): the run's own, written from
-    # -Cluster and the nodes -Nodes or the System Tests' own cluster file
+    # -Cluster and the nodes -Nodes or the Reference Environment
     # names (Write-XmipTestCluster). The variable is the one every test
     # fixture reads.
     if (-not [string]::IsNullOrWhiteSpace($ClusterFile)) {

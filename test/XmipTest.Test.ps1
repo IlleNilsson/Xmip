@@ -858,7 +858,7 @@ Describe 'The environment a roll is started with' {
             Get-XmipNodeRoleWarning | Should -Be ''
         }
 
-        # A node the System Tests' own cluster file declares takes the roles it
+        # A node the Reference Environment declares takes the roles it
         # declares there (ADR-0028, amendment 2026-10-21), so nothing is said;
         # nodes it does not declare declare none, and that is said.
         [string[]] $declared = @($script:Stage.receiving, $script:Stage.processing,

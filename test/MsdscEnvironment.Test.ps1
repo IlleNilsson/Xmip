@@ -17,7 +17,7 @@
     - The Ansible role makes node.xmip the node's alone to write, and masks
       the node's key, never logging or diffing it; ansible-playbook
       --syntax-check where Ansible is here, SKIPPED where it is not.
-    - The System Tests' cluster file on Hyper-V (ADR-0015, amendment
+    - The Reference Environment on Hyper-V (ADR-0015, amendment
       2026-11-25) runs through DSC as Deploy-XmipEnvironment applies it,
       with every resource replaced by Microsoft.DSC.Debug/Echo: the names
       are given every node machine's address, each node machine is given its
@@ -82,7 +82,7 @@ BeforeAll {
         Write-XmipTestYaml -Path (Join-Path $TestDrive $Name) -Value $document
     }
 
-    # The System Tests' cluster file on Hyper-V as Deploy-XmipEnvironment
+    # The Reference Environment on Hyper-V as Deploy-XmipEnvironment
     # applies it: its steps of this folder, the names and each node, each
     # evaluated with the values of the parameters its document declares.
     # The machine an instance is applied on by its step's name, its slice as

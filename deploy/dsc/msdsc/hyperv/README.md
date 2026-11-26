@@ -31,7 +31,7 @@ account Hyper-V does not let manage VMs, is an error.
 
 ## The System Tests' environment
 
-The `[environment]` table of the System Tests' cluster file, which
+The `[environment]` table of the Reference Environment, which
 `Deploy-XmipEnvironment` reads (`deploy/dsc/README.md`, *The environment
 table*), describes the 21 machines of the owner's node plan of 2026-11-22,
 the Mac beside them aside: the machines of their own, the far ends and every

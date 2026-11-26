@@ -48,6 +48,29 @@ BeforeAll {
         }
         $sum
     }
+
+    # A retired name across every file the estate and its submodules track:
+    # the files naming it, and those that still use it once each record
+    # $Kept matches is taken out, rustdoc, READMEs and fixtures alike.
+    function Find-RetiredName {
+        param([string] $Pattern, [string[]] $Kept)
+
+        [string[]] $named = @(
+            git -C $script:Root grep --recurse-submodules -I -l -i -E $Pattern |
+                Where-Object { $_ -ne 'test/Terminology.Test.ps1' }
+        )
+        [string[]] $uses = foreach ($file in $named) {
+            [string] $text = Get-Content -Raw -LiteralPath (Join-Path $script:Root $file)
+
+            foreach ($record in $Kept) {
+                $text = [regex]::Replace($text, $record, '')
+            }
+
+            if ($text -match "(?i)$Pattern") { $file }
+        }
+
+        [pscustomobject] @{ Named = $named; Uses = $uses }
+    }
 }
 
 Describe 'Terminology: the glossary carries the disambiguation' {
@@ -94,22 +117,33 @@ Describe 'Terminology: the System Tests and the Systems Tests' {
                 'on machines.*?(?=\n## |\z)')
             'Microsoft\.Maui\.Essentials'
         )
-        [string[]] $named = @(
-            git -C $script:Root grep --recurse-submodules -I -l -i -E 'essentials|playground' |
-                Where-Object { $_ -ne 'test/Terminology.Test.ps1' }
+        $found = Find-RetiredName -Pattern 'essentials|playground' -Kept $kept
+
+        $found.Named | Should -Not -BeNullOrEmpty -Because 'the ruling itself is tracked and read'
+        $found.Uses | Should -BeNullOrEmpty -Because (
+            'the estate says System Tests and Systems Tests')
+    }
+}
+
+Describe 'Terminology: the Reference Environment' {
+    It 'is named, and the test estate and the Estate Cluster are kept out but in the ruling' {
+        # The owner, 2026-11-26: *Yes, go with the reference environment*, for
+        # Xmip's one definition of an environment, after calling it the Estate
+        # Cluster. The estate is the repositories, so ADR-0028's amendment of
+        # that date and the terminology row are the only places either old
+        # word stands.
+        [string] $terminology = Get-Content -Raw -LiteralPath (
+            Join-Path $script:DocsRoot 'terminology.md')
+        [string[]] $kept = @(
+            ('(?s)## Amendment, 2026-11-26: the Reference Environment, Xmip''s one ' +
+                'definition of an environment.*?(?=\n## |\z)')
+            '(?m)^\| \*\*Reference Environment\*\* \|.*$'
         )
-        [string[]] $uses = foreach ($file in $named) {
-            [string] $text = Get-Content -Raw -LiteralPath (Join-Path $script:Root $file)
+        $found = Find-RetiredName -Pattern 'test estate|estate cluster' -Kept $kept
 
-            foreach ($record in $kept) {
-                $text = [regex]::Replace($text, $record, '')
-            }
-
-            if ($text -match '(?i)essentials|playground') { $file }
-        }
-
-        $named | Should -Not -BeNullOrEmpty -Because 'the ruling itself is tracked and read'
-        $uses | Should -BeNullOrEmpty -Because 'the estate says System Tests and Systems Tests'
+        $terminology | Should -Match '(?m)^\| \*\*Reference Environment\*\* \|'
+        $found.Named | Should -Not -BeNullOrEmpty -Because 'the ruling itself is tracked and read'
+        $found.Uses | Should -BeNullOrEmpty -Because 'the estate says the Reference Environment'
     }
 }
 

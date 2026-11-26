@@ -18,16 +18,17 @@ DSC V3 or Ansible, not a mix*):
 Where a cluster runs on virtual machines is its cluster file's
 `[environment]` table, and no other file says it (ADR-0015, amendment
 2026-11-25; the owner, 2026-11-25: *I still don't get why there is a need
-for two files?*). The System Tests' own cluster file, which the Systems
-Tests run too, `test/core/system-test/configuration/cluster.xmip`, holds the owner's node
-plan of 2026-11-22: every node of the file and every far end on a virtual
-machine of its own, OP1 on the operator's machine, and the domain
-controller, the file storage and the developers' machines beside them. A
-smaller plan is a smaller cluster file. The plan is drawn, with its
-machines and the four ways to run it — local processes, containers,
-virtual machines on Hyper-V, KVM with libvirt or VMware, and physical
-machines (ADR-0015, amendment 2026-11-24) — in
-[the environment deck](../../asset/brand/presentation/Xmip-environment.pptx);
+for two files?*). The Reference Environment, Xmip's one definition of an
+environment, is the cluster file the System Tests and the Systems Tests
+use, `test/core/system-test/configuration/cluster.xmip` (ADR-0028,
+amendment 2026-11-26). It holds the owner's node plan of 2026-11-22: every
+node of the file and every far end on a virtual machine of its own, OP1 on
+the operator's machine, and the domain controller, the file storage and the
+developers' machines beside them. A smaller plan is a smaller cluster file.
+The plan is drawn, with its machines and the four ways to run it — local
+processes, containers, virtual machines on Hyper-V, KVM with libvirt or
+VMware, and physical machines (ADR-0015, amendment 2026-11-24) — in
+[the Reference Environment deck](../../asset/brand/presentation/Xmip-environment.pptx);
 every node in it is optional, and Xmip runs on one node with all roles.
 
 Slicing gives no node the table (ADR-0031, the second amendment of

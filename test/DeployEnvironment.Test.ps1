@@ -54,7 +54,7 @@ BeforeAll {
 
     [string] $script:Cluster = (Get-XmipTestCluster).Name
 
-    # The System Tests' cluster file with what its machines need given, in a
+    # The Reference Environment with what its machines need given, in a
     # folder of its own; -Linux all AlmaLinux, as any host makes it.
     function New-Environment {
         param(

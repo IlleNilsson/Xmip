@@ -21,7 +21,7 @@ network, a pool or a domain is libvirt's.
 
 ## The System Tests' environment
 
-The `[environment]` table of the System Tests' cluster file, which
+The `[environment]` table of the Reference Environment, which
 `Deploy-XmipEnvironment` reads (`deploy/dsc/README.md`, *The environment
 table*), is the owner's node plan of 2026-11-22 under KVM as under
 Hyper-V: the same table, the same machines, names, systems, nodes and far

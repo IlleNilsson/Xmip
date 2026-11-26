@@ -165,7 +165,7 @@ function Start-XmipTest {
             exactly, by comma or plus; any other word ('Sending' and the old
             'receive' too), or a node -Nodes does not name, is REFUSED before
             anything starts. A node the table does not name declares what the
-            System Tests' own cluster file declares for it, and nothing where
+            Reference Environment declares for it, and nothing where
             that file does not declare it.
             ADR-0056 names two further kinds of capability, authentication and
             runtime, which the System Tests do not model.
@@ -222,7 +222,7 @@ function Start-XmipTest {
             (Read-XmipTestComputer), in a copy of what Git holds of this estate.
 
         .EXAMPLE
-            # Omitted -Nodes: the System Tests' own cluster file's nodes
+            # Omitted -Nodes: the Reference Environment's nodes
             # ([nodes.RX1] roles = "receiving", and so on).
             Start-XmipTest -Suite Core.System -Cluster CL1
 

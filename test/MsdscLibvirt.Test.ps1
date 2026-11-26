@@ -18,7 +18,7 @@
       swtpm; a gateway machine's second adapter on the uplink, a bridge.
     - The answer: an AlmaLinux machine's kickstart keeps KVM's clock,
       ptp_kvm loaded at every start.
-    - The System Tests' cluster file on a Linux host, every machine AlmaLinux
+    - The Reference Environment on a Linux host, every machine AlmaLinux
       (ADR-0015, amendment 2026-11-25), as Deploy-XmipEnvironment reads it:
       the network, then each machine, each with every parameter its document
       declares, and the names of each far end and node, then the cluster's;

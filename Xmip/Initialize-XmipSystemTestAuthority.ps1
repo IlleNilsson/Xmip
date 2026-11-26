@@ -21,7 +21,7 @@ function Initialize-XmipSystemTestAuthority {
             Xmip.Surface's RuntimeLibrary); nothing here writes a key.
 
             Beside the folder, operator.xmip is the slice of the node the
-            System Tests' cluster.xmip declares [provision.operator] for, found
+            Reference Environment declares [provision.operator] for, found
             by that table and never by its name, sliced as the run names the
             cluster (Get-XmipTestClusterPath) and signed by this authority
             through xmip_cluster_signed_slice_v1, written anew at each call

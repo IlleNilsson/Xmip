@@ -1614,7 +1614,7 @@ strike.
   ways of their own. Each way has its own safety and security trade-offs;
   Xmip advises, and the end user chooses, as how a node runs is theirs
   (the amendment of 2026-11-23). The overview deck, its video and the
-  environment deck say so.
+  Reference Environment deck say so.
 - **Technically nothing merges.** Each hypervisor — Hyper-V, KVM with
   libvirt, VMware — and each operating system — Windows, Linux, macOS —
   stays a target of its own, with its own templates, builds and tests, as
