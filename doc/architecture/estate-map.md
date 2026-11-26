@@ -522,7 +522,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 422798 lines of production
+Where each repository mounts and what it holds: 423522 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -709,26 +709,26 @@ hold no source to count.
 │   │   │   │       declared, not built 5
 │   │   │   │       aws-kms  azure-key-vault  keyring  pkcs11  vault
 │   │   │   ├── contract                         979
-│   │   │   │   ├── json-schema                 1133
-│   │   │   │   ├── graphql-schema               874
-│   │   │   │   ├── xml-schema                   830
-│   │   │   │   ├── avro                         802
-│   │   │   │   ├── toon                         717
-│   │   │   │   ├── protobuf                     714
-│   │   │   │   ├── sql                          631
-│   │   │   │   ├── edi-x12                      629
-│   │   │   │   ├── edi-edifact                  628
-│   │   │   │   ├── hl7-v2                       515
-│   │   │   │   ├── fixed-width                  512
-│   │   │   │   ├── yaml                         504
-│   │   │   │   ├── schematron                   440
-│   │   │   │   ├── wsdl                         389
-│   │   │   │   ├── openapi                      385
-│   │   │   │   ├── toml                         314
-│   │   │   │   ├── fhir                         294
-│   │   │   │   ├── asyncapi                     243
-│   │   │   │   ├── regex                        207
-│   │   │   │   └── csv                          140
+│   │   │   │   ├── json-schema                 1172
+│   │   │   │   ├── graphql-schema               913
+│   │   │   │   ├── xml-schema                   867
+│   │   │   │   ├── avro                         835
+│   │   │   │   ├── toon                         755
+│   │   │   │   ├── protobuf                     748
+│   │   │   │   ├── sql                          670
+│   │   │   │   ├── edi-x12                      666
+│   │   │   │   ├── edi-edifact                  665
+│   │   │   │   ├── hl7-v2                       552
+│   │   │   │   ├── fixed-width                  547
+│   │   │   │   ├── yaml                         543
+│   │   │   │   ├── schematron                   474
+│   │   │   │   ├── openapi                      424
+│   │   │   │   ├── wsdl                         423
+│   │   │   │   ├── toml                         351
+│   │   │   │   ├── fhir                         331
+│   │   │   │   ├── asyncapi                     278
+│   │   │   │   ├── regex                        239
+│   │   │   │   └── csv                          172
 │   │   │   ├── route                            753
 │   │   │   │   ├── metadata                     125
 │   │   │   │   ├── content                      108

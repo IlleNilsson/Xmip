@@ -948,8 +948,16 @@ Step 2's next batches, built the same day as the first, the assistant's:
   `index` and `subindex` by canopen's `declaration`. Each declaration is
   the same on every platform, one with no raw socket, serial port or radio
   included.
+- **The contracts**: `xmip-core-contract-asyncapi`, `-avro`, `-csv`,
+  `-edi-edifact`, `-edi-x12`, `-fhir`, `-fixed-width`, `-graphql-schema`,
+  `-hl7-v2`, `-json-schema`, `-openapi`, `-protobuf`, `-regex`,
+  `-schematron`, `-sql`, `-toml`, `-toon`, `-wsdl`, `-xml-schema` and
+  `-yaml`. None takes anything of the contract capability, so the
+  capability, the Stream and every parser are behind the default, and
+  `xcore` is a declaration's one dependency; toon rides on json-schema in
+  its code alone.
 
-Every transport crate, 88, declares the feature, and `test/Declaration.Test.ps1`
+Every transport crate, 88, and every contract, 20, declares the feature, and `test/Declaration.Test.ps1`
 holds each. What the batches settled, each decided by the assistant, for
 the owner to overrule:
 
@@ -1012,6 +1020,16 @@ the owner to overrule:
     `SUBINDEX`, so canopen is a dependency of ethercat's declaration; and
     IO-Link's rates, the `rate` setting's choices and the baud the code
     opens the line at, are one table, `declaration::RATES`.
+13. **A contract's declaration is `SETTINGS` and `NAME`**, both read by its
+    `ContractFactory`: what a Location naming it gives it, and the word a
+    Validate step's `format` names it by (`csv`, `xml-schema`); `NAME`,
+    since `SETTINGS.technology` is the module's name already. The media
+    type a contract describes stays code. The twenty `reference` settings
+    differ in kind and meaning, so none is shared.
+14. **Every transport and every contract declares it**:
+    `test/Declaration.Test.ps1` refuses a technology of either capability
+    without the feature, and each capability's guide (`adding-a-transport.md`,
+    "The declaration"; `adding-a-contract.md`) says how one is written.
 
 Built and waiting on its repository: step 3, the gathering crate,
 `xmip-core-declaration` in Operation, which xmip-core-operate's node build

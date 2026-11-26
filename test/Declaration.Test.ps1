@@ -180,6 +180,18 @@ BeforeAll {
         }
     )
 
+    # Every package of the workspace, by name, for the technologies that
+    # must declare one.
+    [string[]] $script:Package = @(
+        if ($script:Resolved) {
+            $metadata.packages | ForEach-Object { [string] $_.name }
+        }
+    )
+
+    # The capabilities whose every technology carries its declaration to the
+    # surfaces (ADR-0064, amendment 2026-11-26).
+    [string[]] $script:Carrying = @('xmip-core-transport', 'xmip-core-contract')
+
     [hashtable] $script:Parent = @{}
     foreach ($repository in @(Get-XmipEstateRepository -Root $script:Root)) {
         $script:Parent[$repository.Name] = [string] $repository.Parent
@@ -229,6 +241,24 @@ BeforeAll {
 }
 
 Describe 'A technology built with its declaration alone pulls in no heavy dependency' {
+    It 'finds a declaration in every transport and every contract' {
+        [string[]] $technology = @(
+            $script:Package |
+                Where-Object { $script:Carrying -contains $script:Parent[$_] } |
+                Sort-Object
+        )
+        [string[]] $missing = @($technology | Where-Object { $script:Declaring -notcontains $_ })
+
+        $technology.Count | Should -BeGreaterThan 0 -Because (
+            'the workspace holds the transport and contract technologies'
+        )
+        $missing | Should -BeNullOrEmpty -Because (
+            "each carries its settings to the surfaces by a `declaration` feature, its code " +
+            "behind the default (the capability's guide, 'The declaration'):`n" +
+            ($missing -join "`n")
+        )
+    }
+
     It 'resolves the estate offline and finds the technologies that declare one' {
         $script:Resolved | Should -BeTrue -Because (
             'cargo metadata --offline resolves the workspace once its dependencies are ' +

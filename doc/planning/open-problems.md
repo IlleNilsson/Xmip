@@ -1687,14 +1687,16 @@ declaration stays placed once. The plan, its own work after the current:
 Steps 1 and 2 begun 2026-11-26 (ADR-0064, amendment 2026-11-26):
 `test/Declaration.Test.ps1` holds that a technology built with its
 `declaration` feature alone compiles nothing beyond its capability's own
-build and other technologies' declarations; every transport crate, the
-86 transports and the vendor crates aws and azure, has the feature, each
+build and other technologies' declarations, and refuses a transport or
+contract without one; every transport crate, the 86 transports and the
+vendor crates aws and azure, and the 20 contracts have the feature, each
 declaration in `src/declaration.rs`. Step 3, the gathering crate
 `xmip-core-declaration`, linked by xmip-core-operate's node build, is
 built and waits on its repository, which the owner creates
 (`Sync-XmipEstate -Create`); until it lands a surface carries no
-declaration. Open: the 20 contract technologies, and whether the other
-capabilities' technologies carry a declaration to the surfaces at all.
+declaration. Open: the contracts' carrying (problem 217), and whether the
+other capabilities' technologies carry a declaration to the surfaces at
+all.
 
 ## 50. Validation and the path languages hold a Stream whole
 
@@ -3443,12 +3445,26 @@ platform's packages there, so `cargo metadata --offline` fails until one
 
 ## 216. A declaration's documentation links to code it is built without
 
-Found 2026-11-26 with the transports' declarations: a crate's root
-documentation names items behind its default feature, so
+Found 2026-11-26 with the transports' and contracts' declarations: a
+crate's root documentation names items behind its default feature, so
 `cargo doc --no-default-features --features declaration` reports
-unresolved links in every declaring crate, and stops with an error on
+unresolved links in declaring crates — file and http among the
+transports, nine of the twenty contracts — and stops with an error on
 http. No gate builds the documentation that way. Needed: a crate's root
 documentation whole in either build, and a gate that builds it.
+
+## 217. The runtime's catalogue carries no contract
+
+Found 2026-11-26 giving the contracts their declarations: a Validate
+step names a contract by its `format`, the contract's
+`declaration::NAME`, and the catalogue's `Carried` holds settings and
+schemes alone, so no surface can offer a step's `format`; and no process
+carries a contract at all — a node's start carries transports only, since
+it refuses a Location naming a contract (arrival validation is decided,
+not built), so a Location's contract settings are held to no
+declaration. Needed: whether `Carried` takes the name or `format` names
+the module, and the gathering crate's `CONTRACTS` carried as
+`Capability::Contract`.
 
 # Suggested order
 
