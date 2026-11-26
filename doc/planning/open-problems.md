@@ -1687,17 +1687,14 @@ declaration stays placed once. The plan, its own work after the current:
 Steps 1 and 2 begun 2026-11-26 (ADR-0064, amendment 2026-11-26):
 `test/Declaration.Test.ps1` holds that a technology built with its
 `declaration` feature alone compiles nothing beyond its capability's own
-build and other technologies' declarations; 72 transports — file, FTP,
-AMQP, the AWS, Azure and Google ones, the databases, file and web, the
-brokers, network and system, and the CAN, process and serial families —
-and the vendor crates aws and azure have the feature, each declaration in
-`src/declaration.rs`. Step 3, the
-gathering crate `xmip-core-declaration`, linked by xmip-core-operate's node
-build, is built and waits on its repository, which the owner creates
+build and other technologies' declarations; every transport crate, the
+86 transports and the vendor crates aws and azure, has the feature, each
+declaration in `src/declaration.rs`. Step 3, the gathering crate
+`xmip-core-declaration`, linked by xmip-core-operate's node build, is
+built and waits on its repository, which the owner creates
 (`Sync-XmipEstate -Create`); until it lands a surface carries no
-declaration. Open: the 14 field-bus and radio transports and the 20
-contract technologies, in batches, and whether the other capabilities'
-technologies carry a declaration to the surfaces at all.
+declaration. Open: the 20 contract technologies, and whether the other
+capabilities' technologies carry a declaration to the surfaces at all.
 
 ## 50. Validation and the path languages hold a Stream whole
 
@@ -3443,6 +3440,15 @@ tracked, each start's copy removes it, and nothing fetches every
 platform's packages there, so `cargo metadata --offline` fails until one
 `cargo fetch` is run in the copy. Needed: the test computer's setup
 (`Install-XmipTestComputerLibrary`) fetches.
+
+## 216. A declaration's documentation links to code it is built without
+
+Found 2026-11-26 with the transports' declarations: a crate's root
+documentation names items behind its default feature, so
+`cargo doc --no-default-features --features declaration` reports
+unresolved links in every declaring crate, and stops with an error on
+http. No gate builds the documentation that way. Needed: a crate's root
+documentation whole in either build, and a gate that builds it.
 
 # Suggested order
 

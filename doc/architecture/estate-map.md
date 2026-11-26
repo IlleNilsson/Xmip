@@ -522,7 +522,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 422076 lines of production
+Where each repository mounts and what it holds: 422798 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -549,8 +549,8 @@ hold no source to count.
 │   │   ├── capability/
 │   │   │   ├── transport                       9823
 │   │   │   │   ├── amqp                        2926
+│   │   │   │   ├── opc-ua                      2555
 │   │   │   │   ├── db2                         2529
-│   │   │   │   ├── opc-ua                      2505
 │   │   │   │   ├── http                        2281
 │   │   │   │   ├── nfs                         2217
 │   │   │   │   ├── smb                         2208
@@ -565,56 +565,56 @@ hold no source to count.
 │   │   │   │   ├── as4                         1402
 │   │   │   │   ├── oracle                      1391
 │   │   │   │   ├── dns                         1307
-│   │   │   │   ├── s7comm                      1283
+│   │   │   │   ├── s7comm                      1284
+│   │   │   │   ├── secs-gem                    1267
 │   │   │   │   ├── activemq                    1254
 │   │   │   │   ├── imap                        1236
 │   │   │   │   ├── mqtt                        1224
-│   │   │   │   ├── secs-gem                    1215
-│   │   │   │   ├── canopen                     1201
+│   │   │   │   ├── canopen                     1210
 │   │   │   │   ├── webdav                      1180
 │   │   │   │   ├── dicom                       1171
-│   │   │   │   ├── iec-61850                   1105
+│   │   │   │   ├── iec-61850                   1153
 │   │   │   │   ├── nats                        1095
 │   │   │   │   ├── m-bus                       1037
+│   │   │   │   ├── ethercat                    1035
 │   │   │   │   ├── as2                         1022
 │   │   │   │   ├── aws-sns                     1022
 │   │   │   │   ├── aws-s3                      1019
 │   │   │   │   ├── azure-blob                  1010
 │   │   │   │   ├── pop3                        1005
-│   │   │   │   ├── ethercat                     995
+│   │   │   │   ├── ethernet-ip                  987
 │   │   │   │   ├── hart                         971
 │   │   │   │   ├── aws-kinesis                  969
 │   │   │   │   ├── j1939                        958
 │   │   │   │   ├── google-cloud-storage         955
 │   │   │   │   ├── uds                          951
 │   │   │   │   ├── azure-event-grid             950
+│   │   │   │   ├── lorawan                      946
 │   │   │   │   ├── azure-service-bus            944
-│   │   │   │   ├── ethernet-ip                  941
+│   │   │   │   ├── bluetooth                    940
 │   │   │   │   ├── google-pub-sub               927
 │   │   │   │   ├── redis-streams                918
 │   │   │   │   ├── aws-sqs                      914
 │   │   │   │   ├── file                         895
-│   │   │   │   ├── cotp                         887
-│   │   │   │   ├── bluetooth                    886
-│   │   │   │   ├── lorawan                      878
+│   │   │   │   ├── profinet                     891
+│   │   │   │   ├── cotp                         886
 │   │   │   │   ├── dhcp                         867
 │   │   │   │   ├── wireless-hart                867
+│   │   │   │   ├── zigbee                       850
 │   │   │   │   ├── smtp                         847
-│   │   │   │   ├── profinet                     838
 │   │   │   │   ├── thread                       834
 │   │   │   │   ├── peppol                       830
+│   │   │   │   ├── knx                          803
 │   │   │   │   ├── syslog                       784
-│   │   │   │   ├── zigbee                       783
+│   │   │   │   ├── io-link                      782
 │   │   │   │   ├── iso-tp                       770
-│   │   │   │   ├── knx                          750
+│   │   │   │   ├── iec-60870-5-104              769
 │   │   │   │   ├── websocket                    745
 │   │   │   │   ├── mdns                         744
 │   │   │   │   ├── dds                          742
 │   │   │   │   ├── msmq                         735
-│   │   │   │   ├── iec-60870-5-104              733
-│   │   │   │   ├── io-link                      725
+│   │   │   │   ├── dnp3                         720
 │   │   │   │   ├── obd-ii                       679
-│   │   │   │   ├── dnp3                         678
 │   │   │   │   ├── ssdp                         655
 │   │   │   │   ├── ethernet                     648
 │   │   │   │   ├── modbus                       645
@@ -626,10 +626,10 @@ hold no source to count.
 │   │   │   │   ├── can-bus                      533
 │   │   │   │   ├── azure                        518
 │   │   │   │   ├── mysql                        514
+│   │   │   │   ├── bacnet                       509
 │   │   │   │   ├── sqlite                       508
 │   │   │   │   ├── mllp                         504
 │   │   │   │   ├── rabbitmq                     497
-│   │   │   │   ├── bacnet                       462
 │   │   │   │   ├── unix-socket                  401
 │   │   │   │   ├── named-pipe                   375
 │   │   │   │   ├── mariadb                      335

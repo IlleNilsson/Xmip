@@ -939,8 +939,17 @@ Step 2's next batches, built the same day as the first, the assistant's:
   wireless-m-bus, and serial hart, each in the code alone. A declaration
   builds with no kernel CAN socket and no radio; `socketcan`, which is code,
   turns the default on.
+- **The field and plant buses and the radios**: `xmip-core-transport-bacnet`,
+  `-dnp3`, `-ethercat`, `-ethernet-ip`, `-iec-60870-5-104`, `-iec-61850`,
+  `-io-link`, `-knx`, `-opc-ua`, `-profinet` and `-secs-gem`, and
+  `-lorawan`, `-zigbee` and `-bluetooth`. tcp under EtherNet/IP, ethernet
+  under EtherCAT and PROFINET, cotp and ethernet under IEC 61850 and serial
+  under IO-Link are the code's alone; EtherCAT takes the dictionary's
+  `index` and `subindex` by canopen's `declaration`. Each declaration is
+  the same on every platform, one with no raw socket, serial port or radio
+  included.
 
-Seventy-four crates declare the feature, and `test/Declaration.Test.ps1`
+Every transport crate, 88, declares the feature, and `test/Declaration.Test.ps1`
 holds each. What the batches settled, each decided by the assistant, for
 the owner to overrule:
 
@@ -990,11 +999,19 @@ the owner to overrule:
 11. **A crate-root path a reader outside the crate names stays, as a
     re-export of `declaration::`**: ethernet's `XMIP_ETHERTYPE`, and
     canopen's `STREAM_OBJECT`, iso-tp's `ECU_ID` and obd-ii's `FUNCTIONAL`,
-    which the service test reads; cotp's `tpdu::DEFAULT_SIZE_CODE`, which
-    iec-61850 reads. Paths no one read moved: j1939's `identifier::`
-    constants and obd-ii's `pid::` ones are `declaration::`. j1939's abort
-    reasons and the answer a verdict sends went to `transfer.rs`, its
-    `lib.rs` within the line limit.
+    and ethercat's `STREAM_OBJECT` and io-link's `STREAM_PARAMETER`, which
+    the service test reads. Paths no one read moved: j1939's `identifier::`
+    constants, obd-ii's `pid::` ones, cotp's `tpdu::DEFAULT_SIZE_CODE`,
+    which iec-61850 and s7comm now read from `cotp::declaration`, and the
+    field buses' and radios' timeouts and objects. j1939's abort reasons
+    and the answer a verdict sends went to `transfer.rs`, lorawan's and
+    zigbee's radios to `radio.rs`, each `lib.rs` within the line limit.
+12. **What two declarations wrote alike, or a declaration and its code,
+    is written once**: EtherCAT's `index` and `subindex`, which CoE reads
+    from the slave's CANopen dictionary, are canopen's `INDEX` and
+    `SUBINDEX`, so canopen is a dependency of ethercat's declaration; and
+    IO-Link's rates, the `rate` setting's choices and the baud the code
+    opens the line at, are one table, `declaration::RATES`.
 
 Built and waiting on its repository: step 3, the gathering crate,
 `xmip-core-declaration` in Operation, which xmip-core-operate's node build
