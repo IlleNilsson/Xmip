@@ -839,3 +839,75 @@ runtime's section 10 exports. Where it went is the assistant's.
 
 Built 2026-11-16, the assistant's. Held by xmip-core-operate's tests of the
 designer, moved with it.
+
+## Amendment, 2026-11-26: the technologies' declarations, steps 1 and 2
+
+The first of open problem 48's plan, which the owner decided on 2026-10-22
+(the amendment of that date, *The technologies' declarations*): the runtime
+library the surfaces load carries every technology's declaration — names,
+settings, kinds and words, never the technologies' code — by a
+`declaration` feature in each technology crate, its code and its
+dependencies behind the default feature, gathered by one crate the
+surfaces' build links. Built 2026-11-26, the assistant's, for five
+transports and the two vendor crates their settings come from:
+
+- **A technology's declaration is two `const`s in its `declaration`
+  module**, `src/declaration.rs`, beside its code: `declaration::SETTINGS`
+  and `SCHEMES`. Its `Configured` reads them
+  (`const SETTINGS: &'static Settings = declaration::SETTINGS;`), so each
+  is written once. A setting siblings share stays where it was —
+  `aws::access_key::ACCESS_KEY_ID`, `azure::key_name::key_name`,
+  `amqp::presenting::USER` and `VIRTUAL_HOST` — its module built with the
+  declaration and the code beside it behind the default feature.
+- **The `declaration` feature** in `xmip-core-transport-file`, `-ftp`,
+  `-amqp`, `-aws-s3` and `-azure-event-hubs`, and in `xmip-core-transport-aws`
+  and `-azure`. `default` is `declaration` and every dependency only the
+  code uses, each made optional; the code is compiled under the default
+  feature itself, `cfg(feature = "default")`, the declaration under
+  `cfg(feature = "declaration")`. A vendor crate a declaration takes from is
+  a dependency without its default (`aws`, `azure`), its `declaration`
+  turned on by the technology's and its `default` by the technology's
+  default. A feature that is code, FTP's, aws-s3's and azure-event-hubs'
+  `tls`, turns the default on with it. A default build is what it was, so
+  `xmip-service` links each as before.
+- **Step 1's test**, `test/Declaration.Test.ps1`, beside the offline gate
+  it is modeled on: every crate declaring the feature is built at once with
+  it alone (`cargo tree --no-default-features --features declaration`,
+  offline, in the workspace) and compiles nothing beyond its capability's
+  own build and other technologies' declarations. It failed before, no
+  technology declaring the feature, and a declaration made to pull in the
+  http technology fails it, naming the crates.
+
+What these settled, each decided by the assistant, for the owner to
+overrule:
+
+1. **A declaration may build its capability whole.** The transports'
+   `timeout` is declared through the capability
+   (`transport::configured::timeout`, the amendment of 2026-11-15), and the
+   capability builds only the estate's codec, ASN.1, network and SQL
+   libraries, the context and `rustix`, which the surfaces' library links
+   already through the runtime. So the capability has no `declaration`
+   feature of its own, and *heavy* is whatever a technology's code is built
+   on beyond its capability: the http technology and its TLS, a client
+   library, a vendor's code.
+2. **The code is behind the default feature itself**, as the owner's words
+   put it, with no feature of its own name; `declaration` is a feature of
+   its own, which the default includes.
+3. **The declaration is the module `declaration`, its `SETTINGS` and
+   `SCHEMES`**, one file and one name in every technology, so a gathering
+   crate reads each the same way, and a technology's `lib.rs` grows by its
+   gates alone: written in `lib.rs`, the declaration took amqp's to 415
+   production lines and aws-s3's to 407, past the 400 the style holds.
+
+Built and waiting on its repository: step 3, the gathering crate,
+`xmip-core-declaration` in Operation, which xmip-core-operate's node build
+links and carries into the runtime's catalogue, so the language server, the
+desktop and `xmip validate` suggest and check these settings. A repository
+is created on origin by the owner (repository model, section 10), and since
+the estate is one workspace (ADR-0016, amendment 2026-11-20) cargo fetches
+the original git source of every `[patch]`ed crate, so nothing in the
+workspace resolves while a declared crate's repository does not exist.
+Until it does, a surface carries no declaration, as before. Open problem 48
+stays open for the gathering crate, the rest of the technologies in
+batches, and the contracts, the other capabilities' technologies and the
+Wizard and Guides (the amendment of 2026-11-07) after them.

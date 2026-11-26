@@ -1684,6 +1684,19 @@ declaration stays placed once. The plan, its own work after the current:
    declaration through, since a platform service depends on no technology
    (`architecture.toml`).
 
+Steps 1 and 2 begun 2026-11-26 (ADR-0064, amendment 2026-11-26):
+`test/Declaration.Test.ps1` holds that a technology built with its
+`declaration` feature alone compiles nothing beyond its capability's own
+build and other technologies' declarations; the transports file, FTP,
+AMQP, aws-s3 and azure-event-hubs, and the vendor crates aws and azure,
+have the feature, each declaration in `src/declaration.rs`. Step 3, the
+gathering crate `xmip-core-declaration`, linked by xmip-core-operate's node
+build, is built and waits on its repository, which the owner creates
+(`Sync-XmipEstate -Create`); until it lands a surface carries no
+declaration. Open: the other 81 transports and the 20 contract
+technologies, in batches, and whether the other capabilities'
+technologies carry a declaration to the surfaces at all.
+
 ## 50. Validation and the path languages hold a Stream whole
 
 The standard units stream (ADR-0066, amendment 2026-10-22), and the

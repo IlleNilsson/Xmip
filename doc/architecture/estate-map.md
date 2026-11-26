@@ -522,7 +522,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 419009 lines of production
+Where each repository mounts and what it holds: 419263 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -548,7 +548,7 @@ hold no source to count.
 │   ├── core/
 │   │   ├── capability/
 │   │   │   ├── transport                       9823
-│   │   │   │   ├── amqp                        2861
+│   │   │   │   ├── amqp                        2926
 │   │   │   │   ├── opc-ua                      2505
 │   │   │   │   ├── db2                         2481
 │   │   │   │   ├── http                        2245
@@ -556,8 +556,8 @@ hold no source to count.
 │   │   │   │   ├── smb                         2167
 │   │   │   │   ├── kafka                       2055
 │   │   │   │   ├── ibm-mq                      1958
+│   │   │   │   ├── ftp                         1884
 │   │   │   │   ├── serial                      1850
-│   │   │   │   ├── ftp                         1839
 │   │   │   │   ├── sftp                        1830
 │   │   │   │   ├── mssql                       1653
 │   │   │   │   ├── snmp                        1454
@@ -575,11 +575,11 @@ hold no source to count.
 │   │   │   │   ├── dicom                       1122
 │   │   │   │   ├── iec-61850                   1105
 │   │   │   │   ├── nats                        1049
+│   │   │   │   ├── aws-s3                      1019
 │   │   │   │   ├── ethercat                     995
 │   │   │   │   ├── m-bus                        989
 │   │   │   │   ├── aws-sns                      985
 │   │   │   │   ├── as2                          984
-│   │   │   │   ├── aws-s3                       975
 │   │   │   │   ├── azure-blob                   969
 │   │   │   │   ├── pop3                         967
 │   │   │   │   ├── ethernet-ip                  941
@@ -590,12 +590,12 @@ hold no source to count.
 │   │   │   │   ├── uds                          910
 │   │   │   │   ├── j1939                        898
 │   │   │   │   ├── azure-service-bus            896
+│   │   │   │   ├── file                         895
 │   │   │   │   ├── google-pub-sub               890
 │   │   │   │   ├── bluetooth                    886
 │   │   │   │   ├── redis-streams                880
 │   │   │   │   ├── aws-sqs                      878
 │   │   │   │   ├── lorawan                      878
-│   │   │   │   ├── file                         865
 │   │   │   │   ├── profinet                     838
 │   │   │   │   ├── cotp                         836
 │   │   │   │   ├── dhcp                         832
@@ -616,14 +616,14 @@ hold no source to count.
 │   │   │   │   ├── dnp3                         678
 │   │   │   │   ├── obd-ii                       626
 │   │   │   │   ├── ssdp                         621
+│   │   │   │   ├── azure-event-hubs             606
 │   │   │   │   ├── coap                         602
 │   │   │   │   ├── redpanda                     598
 │   │   │   │   ├── ethernet                     595
 │   │   │   │   ├── modbus                       595
-│   │   │   │   ├── azure-event-hubs             567
-│   │   │   │   ├── aws                          553
+│   │   │   │   ├── aws                          568
 │   │   │   │   ├── wireless-m-bus               532
-│   │   │   │   ├── azure                        502
+│   │   │   │   ├── azure                        518
 │   │   │   │   ├── can-bus                      488
 │   │   │   │   ├── mysql                        483
 │   │   │   │   ├── sqlite                       471
