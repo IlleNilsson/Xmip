@@ -930,8 +930,17 @@ Step 2's next batches, built the same day as the first, the assistant's:
   keeps its target `cfg`s. mdns rides on dns, and mllp on its HL7
   acknowledgement, in their code alone; syslog, mllp and dicom ride on the
   capability's sockets, not on the tcp or udp technology.
+- **The CAN, process and serial families**: `xmip-core-transport-can-bus`,
+  `-canopen`, `-iso-tp`, `-j1939`, `-uds`, `-obd-ii`, `-cotp`, `-s7comm`,
+  `-hart`, `-wireless-hart`, `-m-bus`, `-wireless-m-bus` and `-modbus`. uds
+  and obd-ii take ISO-TP's identifiers and wait by iso-tp's `declaration`,
+  and m-bus its port's wait by serial's; can-bus carries canopen, iso-tp,
+  j1939, uds and obd-ii, cotp carries s7comm, hart wireless-hart, m-bus
+  wireless-m-bus, and serial hart, each in the code alone. A declaration
+  builds with no kernel CAN socket and no radio; `socketcan`, which is code,
+  turns the default on.
 
-Sixty-one crates declare the feature, and `test/Declaration.Test.ps1`
+Seventy-four crates declare the feature, and `test/Declaration.Test.ps1`
 holds each. What the batches settled, each decided by the assistant, for
 the owner to overrule:
 
@@ -974,11 +983,18 @@ the owner to overrule:
    default's: the port is code, so `port` named the default's build. io-link
    and the System Test, which took serial without its default for the
    framing, take it whole; it builds on a box with no serial stack,
-   refusing a port none has. serial's `TIMEOUT` and ethernet's
-   `XMIP_ETHERTYPE` keep a crate-root re-export beside
-   `declaration::`, for m-bus and the service test, which read them there.
+   refusing a port none has. m-bus reads `serial::declaration::TIMEOUT`,
+   so serial's root path is gone.
 10. **A type moves to a file of its own where the gates pass the line
     limit**: snmp's `Envelope`, `src/envelope.rs`.
+11. **A crate-root path a reader outside the crate names stays, as a
+    re-export of `declaration::`**: ethernet's `XMIP_ETHERTYPE`, and
+    canopen's `STREAM_OBJECT`, iso-tp's `ECU_ID` and obd-ii's `FUNCTIONAL`,
+    which the service test reads; cotp's `tpdu::DEFAULT_SIZE_CODE`, which
+    iec-61850 reads. Paths no one read moved: j1939's `identifier::`
+    constants and obd-ii's `pid::` ones are `declaration::`. j1939's abort
+    reasons and the answer a verdict sends went to `transfer.rs`, its
+    `lib.rs` within the line limit.
 
 Built and waiting on its repository: step 3, the gathering crate,
 `xmip-core-declaration` in Operation, which xmip-core-operate's node build

@@ -522,7 +522,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 421459 lines of production
+Where each repository mounts and what it holds: 422076 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -556,7 +556,7 @@ hold no source to count.
 │   │   │   │   ├── smb                         2208
 │   │   │   │   ├── kafka                       2095
 │   │   │   │   ├── ibm-mq                      2005
-│   │   │   │   ├── serial                      1897
+│   │   │   │   ├── serial                      1895
 │   │   │   │   ├── ftp                         1884
 │   │   │   │   ├── sftp                        1864
 │   │   │   │   ├── mssql                       1694
@@ -565,46 +565,47 @@ hold no source to count.
 │   │   │   │   ├── as4                         1402
 │   │   │   │   ├── oracle                      1391
 │   │   │   │   ├── dns                         1307
+│   │   │   │   ├── s7comm                      1283
 │   │   │   │   ├── activemq                    1254
-│   │   │   │   ├── s7comm                      1238
 │   │   │   │   ├── imap                        1236
 │   │   │   │   ├── mqtt                        1224
 │   │   │   │   ├── secs-gem                    1215
+│   │   │   │   ├── canopen                     1201
 │   │   │   │   ├── webdav                      1180
 │   │   │   │   ├── dicom                       1171
-│   │   │   │   ├── canopen                     1155
 │   │   │   │   ├── iec-61850                   1105
 │   │   │   │   ├── nats                        1095
+│   │   │   │   ├── m-bus                       1037
 │   │   │   │   ├── as2                         1022
 │   │   │   │   ├── aws-sns                     1022
 │   │   │   │   ├── aws-s3                      1019
 │   │   │   │   ├── azure-blob                  1010
 │   │   │   │   ├── pop3                        1005
 │   │   │   │   ├── ethercat                     995
-│   │   │   │   ├── m-bus                        989
+│   │   │   │   ├── hart                         971
 │   │   │   │   ├── aws-kinesis                  969
+│   │   │   │   ├── j1939                        958
 │   │   │   │   ├── google-cloud-storage         955
+│   │   │   │   ├── uds                          951
 │   │   │   │   ├── azure-event-grid             950
 │   │   │   │   ├── azure-service-bus            944
 │   │   │   │   ├── ethernet-ip                  941
-│   │   │   │   ├── hart                         930
 │   │   │   │   ├── google-pub-sub               927
 │   │   │   │   ├── redis-streams                918
 │   │   │   │   ├── aws-sqs                      914
-│   │   │   │   ├── uds                          910
-│   │   │   │   ├── j1939                        898
 │   │   │   │   ├── file                         895
+│   │   │   │   ├── cotp                         887
 │   │   │   │   ├── bluetooth                    886
 │   │   │   │   ├── lorawan                      878
 │   │   │   │   ├── dhcp                         867
+│   │   │   │   ├── wireless-hart                867
 │   │   │   │   ├── smtp                         847
 │   │   │   │   ├── profinet                     838
-│   │   │   │   ├── cotp                         836
 │   │   │   │   ├── thread                       834
 │   │   │   │   ├── peppol                       830
-│   │   │   │   ├── wireless-hart                821
 │   │   │   │   ├── syslog                       784
 │   │   │   │   ├── zigbee                       783
+│   │   │   │   ├── iso-tp                       770
 │   │   │   │   ├── knx                          750
 │   │   │   │   ├── websocket                    745
 │   │   │   │   ├── mdns                         744
@@ -612,23 +613,22 @@ hold no source to count.
 │   │   │   │   ├── msmq                         735
 │   │   │   │   ├── iec-60870-5-104              733
 │   │   │   │   ├── io-link                      725
-│   │   │   │   ├── iso-tp                       721
+│   │   │   │   ├── obd-ii                       679
 │   │   │   │   ├── dnp3                         678
 │   │   │   │   ├── ssdp                         655
 │   │   │   │   ├── ethernet                     648
+│   │   │   │   ├── modbus                       645
 │   │   │   │   ├── coap                         643
 │   │   │   │   ├── redpanda                     634
-│   │   │   │   ├── obd-ii                       626
 │   │   │   │   ├── azure-event-hubs             606
-│   │   │   │   ├── modbus                       595
+│   │   │   │   ├── wireless-m-bus               576
 │   │   │   │   ├── aws                          568
-│   │   │   │   ├── wireless-m-bus               532
+│   │   │   │   ├── can-bus                      533
 │   │   │   │   ├── azure                        518
 │   │   │   │   ├── mysql                        514
 │   │   │   │   ├── sqlite                       508
 │   │   │   │   ├── mllp                         504
 │   │   │   │   ├── rabbitmq                     497
-│   │   │   │   ├── can-bus                      488
 │   │   │   │   ├── bacnet                       462
 │   │   │   │   ├── unix-socket                  401
 │   │   │   │   ├── named-pipe                   375
