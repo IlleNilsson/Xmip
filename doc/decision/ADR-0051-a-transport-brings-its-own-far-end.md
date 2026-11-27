@@ -278,3 +278,90 @@ radio at all stands in for one.
    LoRaWAN no longer exchanges in order (the amendment of 2026-09-25 listed
    it), and a round goes on two threads. The loopback radio is deleted: no
    test needs a server in the device's process any more.
+
+## Amendment, 2026-11-27: Thread, Zigbee and WirelessHART ride one IEEE 802.15.4 radio, an interface of Linux's kernel
+
+**Provenance.** The owner, 2026-11-27, on the transports whose far end is
+hardware: *let's do your best for now. I'm not going to buy all that
+hardware.* Thread, Zigbee and WirelessHART each had a radio held in its
+own process alone, so no node reached anything outside itself and the
+service did not link them (ADR-0015, amendment 2026-11-25). The owner gave
+the Linux test computer two virtual radios the same day, `wpan0` and
+`wpan1`, which the kernel's `mac802154_hwsim` makes, on one PAN, brought up
+at boot. Where the boundary lives, its shape and every choice below are the
+assistant's, for the owner to strike or keep.
+
+1. **The boundary is the kernel's MAC, through a datagram socket.** Linux
+   hands a user process an 802.15.4 interface as an `AF_IEEE802154`
+   socket. A raw one writes the MAC header itself and asks for
+   `CAP_NET_RAW`; a datagram one asks for no capability, and neither is
+   made in a network namespace but the first (the kernel's
+   `ieee802154_create`, net/ieee802154/socket.c, read 2026-11-27); a node
+   holds no capability. So a radio is a datagram socket bound to the
+   interface's own PAN and short address, which the interface is asked for
+   (`SIOCGIFADDR`, which mac802154's `mac802154_wpan_ioctl` answers,
+   net/mac802154/iface.c, read the same day); a send
+   hands the kernel one frame's payload for a short address on that PAN,
+   and the kernel writes the header — a data frame, the PAN once, the two
+   short addresses, its own sequence — and the check sequence; a receive
+   reads the payload and the short address that sent it. One frame carries
+   116 bytes above the MAC: 127 less a 9-byte header and the 2-byte check
+   sequence.
+2. **Placed once, in the two layers that own it.** No 802.15.4 crate or
+   module existed: architecture.toml, the transport capability and the
+   libraries name none. A technology crate of its own, as ethernet is for
+   EtherCAT and PROFINET and can-bus for CAN, would be a new repository,
+   which is the owner's to make. The socket is the operating system's, as
+   the TCP connect and the named pipe are, so it is the network library's
+   (`net::ieee802154`: `Interface`, `Address`, `Heard`, `MAX_PAYLOAD`),
+   which all three already depend on, its calls in that crate's one folder
+   of unsafe code (ADR-0050, amendment 2026-11-27). The seam each radio
+   implements is the transport capability's, `ieee802154::Radio`, beside
+   the serial `line::Line`, where each technology depends and its error is
+   the transports' own: a frame's payload to a short address, the next
+   heard and who sent it, and how a receive meets a quiet air — an
+   interface waits for the next frame, a node in process looks and returns
+   at once. The interface implements it there; `ieee802154::interface`
+   opens one by name, and `ieee802154::agreeing` holds a setting to it.
+   Thread and Zigbee each declared that trait for themselves, identically,
+   and WirelessHART one of its own.
+3. **No technology writes a MAC header.** Thread's MAC frame, its PAN fixed
+   at `0xFACE` and its CRC-16/KERMIT, is deleted; `lowpan.rs` keeps the
+   6LoWPAN headers, each frame sent to the next hop's short address, and
+   the crate no longer depends on codec. Zigbee's network frame began above
+   the MAC already, its `MAX_NPDU` now the radio's `MAX_PAYLOAD`, each frame
+   sent to the short address its network header names: one hop, no route.
+   IEC 62591's DLPDU header is the MAC header — the network identifier the
+   PAN, the nicknames short addresses — and WirelessHART wrote a MAC header
+   of its own and then the same fields again; its DLPDU on a radio is now
+   the specifier, the packet and the MIC, 111 bytes of packet where 103
+   were.
+4. **A Location's address names the radio.** `thread://wpan0`,
+   `zigbee://wpan0` and `whart://wpan0` are the interface; `loopback` is
+   each technology's node in process, kept because every test, the System
+   Tests' adapter and every box without an 802.15.4 radio drive it, as
+   can-bus's loopback bus is kept. A Thread or Zigbee address may name
+   after the radio where a send goes, as its targets do,
+   `thread://wpan0/[fd00::ff:fe00:2]:5683` and `zigbee://wpan0/0x0002/1`.
+   No setting is added: Thread's `rloc16` and Zigbee's `short_address` must
+   be the interface's short address and WirelessHART's `network` its PAN,
+   since the kernel's MAC sends from the interface's own, and another is
+   refused, naming both; WirelessHART's gateway is the interface's short
+   address where it is `0xF981` in process.
+5. **Linux's alone.** Elsewhere `Interface::open` refuses in words; so it
+   does where the kernel makes no 802.15.4 socket, naming why: Ubuntu's
+   `/etc/modprobe.d/blacklist-rare-network.conf` keeps `ieee802154_socket`
+   from loading on demand (`alias net-pf-36 off`), so a machine loads it
+   (`modprobe ieee802154_socket`), and the kernel makes none in a network
+   namespace but the first, so no namespace of a test's own makes an
+   interface, as one does a CAN interface and a veth pair.
+6. **Each far end is its crate's own, on the other interface.** The node's
+   Send Location opens `wpan0`; the far end stands on `wpan1`
+   (`.src/test/service/far_ends/radio.rs`): a Thread node taking the
+   datagram sent to its port, a Zigbee node taking the transmission and
+   acknowledging it, and a WirelessHART device answering every request
+   until it holds the Stream — `loopback::OnTheAir`, the device the
+   loopback radio holds, which answers one frame at a time whatever radio
+   carried it. The kernel hands every frame sent to an interface to every
+   socket bound to it, so the three are carried one at a time, a node each
+   (`aired.rs`), never at once with the rest (open problem 234).

@@ -5,11 +5,14 @@
 
 use super::*;
 
-/// The scheme of a transport technology that is no feature of the root
-/// crate, `xmip-core-transport-zigbee`'s: no node reaches a radio it
-/// drives (architecture.toml, `linked-transports`). It was smb's until
-/// 2026-11-24, when smb was linked.
-pub(crate) const UNLINKED: &str = "zigbee://";
+/// A scheme no transport technology declares, so no build carries a
+/// transport for it, and a node naming it is refused as one naming a
+/// technology its build left out is (architecture.toml,
+/// `linked-transports`). It was smb's until 2026-11-24, when smb was
+/// linked, and zigbee's until 2026-11-27, when Bluetooth and the 802.15.4
+/// technologies were linked on Linux and none was left out of a build with
+/// every feature.
+pub(crate) const UNLINKED: &str = "unlinked://";
 
 /// How long a refusal may take: a node refused never accepts work, so one
 /// still running after this was not refused, and is killed.

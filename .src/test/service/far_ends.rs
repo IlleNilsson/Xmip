@@ -29,9 +29,9 @@
 //! process, or a wireless M-Bus Location's, through the receiver stick its
 //! own crate stands. Linux and macOS have one, Windows none.
 //!
-//! A CAN technology's and an Ethernet technology's far end is on a link of
-//! the kernel's, an interface a test makes in a network namespace of its
-//! own (`kernel.rs`), and is stood there, never in [`every`].
+//! A CAN, Ethernet or IEEE 802.15.4 technology's far end is on a link of
+//! the kernel's (`kernel.rs`, `radio.rs`), stood where its test makes the
+//! interface or finds the radio, never in [`every`].
 //!
 //! A `LoRaWAN` Send Location's far end is a device behind a gateway pointed
 //! at the node, its network server, over Semtech's UDP packet forwarder
@@ -93,7 +93,7 @@ pub(crate) struct Standing {
 impl Standing {
     /// `far`, reached at `address` with `settings`, each `{far}` in them its
     /// address.
-    fn new(
+    pub(crate) fn new(
         name: &'static str,
         far: Box<dyn FarEnd>,
         address: &str,

@@ -3641,6 +3641,62 @@ controller and PSM sharing one listener through `transport::Sharing`, as a
 serial port's do (ADR-0064, amendment 2026-11-15), each taking the data
 links of its own server channel.
 
+## 232. Thread, Zigbee and WirelessHART are proven on no radio but Linux's virtual pair
+
+Found 2026-11-27 giving the three an IEEE 802.15.4 interface of Linux's
+kernel (ADR-0051, amendment 2026-11-27): each is proven only through the
+two radios `mac802154_hwsim` makes, whose air loses nothing, between ends
+that are both Xmip's own. A device of another maker is not reached: Thread
+here is uncompressed IPv6 over 6LoWPAN with no header compression, no Mesh
+Link Establishment, no commissioning and no MAC security, all of which a
+Thread device requires; Zigbee has no network formation or joining, no
+network or APS security and no route past one hop; WirelessHART's MICs
+are zero, with no network or session key and no join. Needed: an 802.15.4
+transceiver Linux's MAC drives on the test computer, and a device of each
+technology on its air.
+
+## 233. WirelessHART's time slots are not kept on an 802.15.4 interface
+
+Found 2026-11-27 (ADR-0051, amendment 2026-11-27): IEC 62591 is a
+time-slotted, channel-hopping mesh — ten-millisecond slots on a clock the
+network shares, each link in its slot on its channel — and the kernel's
+MAC sends at once on one channel once the air is clear. The slots are the
+device's own count (`tdma::Superframe`), stamped on its answers and shared
+with no gateway, so a device that transmits and listens in its slots alone
+is not reached and the timing is unproven. Needed: a MAC that keeps a
+network's slots and channels, which an 802.15.4 interface's does not, or a
+WirelessHART gateway's own interface to the mesh.
+
+## 234. A node's Locations on one 802.15.4 interface each hear every frame
+
+Found 2026-11-27 proving the three on one pair of radios (ADR-0015,
+amendment 2026-11-27): the kernel hands every frame sent to an interface
+to every socket bound to it, and each Location opens a socket of its own.
+So a frame meant for one Location is read by every other too: a Thread
+Receive Location takes a datagram for another port as a protocol error,
+and a Zigbee Send Location waiting for its acknowledgement takes another's
+frame as an acknowledgement of something else, so two Locations of a node
+on one interface fail each other, and the service test carries the three
+one at a time. Needed: the Locations of a node naming one interface
+sharing its one socket, each taking its own frames and keeping the others'
+for them, as LoRaWAN's Locations share the gateways' socket
+(`transport::Sharing`; ADR-0051, amendment 2026-11-27).
+
+## 235. A test computer's copy in a longer folder puts the service tests' endpoints past a Unix socket's path
+
+Found 2026-11-27 running the root's tests on a Linux test computer from a
+copy in `w/xmiptest-reference`, the `folder` its
+`.local-work/test-computer/<name>.toml` names: `door` and `failover`
+refused their node at accept-work, since its local operate endpoint,
+named for the test's folder and the node, would be a Unix domain socket at
+a 115-byte path in the run folder beside the copy, where such a path holds
+107. From `w/xmiptest`, ten bytes shorter, it is 105, and both tests pass
+from the longer copy with `XMIP_RUNTIME_DIRECTORY` naming a shorter folder
+only its owner writes. So the folder a test computer's copy takes has a
+limit nobody is told of. Needed: the tests' endpoints named short enough
+for any folder `Start-XmipTest -ComputerName` takes, or the folder refused
+in words before a run.
+
 # Suggested order
 
 Rewritten 2026-09-23, and corrected to what is built on 2026-11-10. The

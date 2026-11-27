@@ -720,3 +720,23 @@ a file. `test/Unsafe.Test.ps1` holds the three folders.
 
 Provenance: the owner, 2026-11-13, *Good that you found it, fix it*; the
 folder kept whole is the assistant's, 2026-11-16.
+
+## Amendment, 2026-11-27: net's folder holds Linux's IEEE 802.15.4 socket too
+
+`net::ieee802154`, the one radio Thread, Zigbee and WirelessHART reach
+(ADR-0051, amendment 2026-11-27), is an `AF_IEEE802154` datagram socket,
+and no crate the estate depends on makes one's address without an unsafe
+constructor — `nix`, `rustix` and `socket2` alike. So its calls are
+`net`'s, in the crate's one folder of calls to the operating system,
+`src/system/`, beside Windows' named pipe and TCP connect, in one file,
+`src/system/ieee802154.rs`, Linux's alone: the socket, `SIOCGIFADDR`
+asked of the interface, its bind, `sendto`, `poll` and `recvfrom`, through
+`libc`, each block saying why it is sound. The socket address is laid out
+as the kernel's `include/net/af_ieee802154.h` lays out `struct
+sockaddr_ieee802154`, held to its twenty bytes at compile time, and the
+interface's answer is read from its bytes. The folder was Windows' alone
+until then; `test/Unsafe.Test.ps1` holds it unchanged.
+
+Provenance: the owner, 2026-11-27, *let's do your best for now*; the file
+in net's folder, rather than a crate of its own, is the assistant's choice
+for the owner to strike or keep.

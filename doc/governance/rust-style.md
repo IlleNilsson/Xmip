@@ -164,8 +164,9 @@ directory watch's calls — is one folder, `src/ffi/`, each file under 400
 lines, and what a boundary file does beyond reading and writing pointers
 stays outside it. xmip-core-operate keeps the operator's exports the same
 way, in its own `src/ffi/` (amendment 2026-11-16). `net` keeps
-its calls into Windows — its named pipe's and its TCP connect's — the same
-way, in `src/system/` (amendments 2026-10-21 and 2026-11-14). A crate has
+its calls into the operating system — Windows' named pipe and TCP connect,
+Linux's IEEE 802.15.4 socket — the same way, in `src/system/` (amendments
+2026-10-21, 2026-11-14 and 2026-11-27). A crate has
 one place, a file or a folder, never both. Such a crate's `Cargo.toml` says `unsafe_code = "deny"` rather
 than `forbid`, because Rust lets no file lower `forbid`; the file lowers
 `deny` at its top with its reason. `test/Unsafe.Test.ps1` holds the folders and

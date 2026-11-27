@@ -138,7 +138,7 @@ ADR-0015 (amendments 2026-10-01 and 2026-10-20), ADR-0056 (amendment
 
 #### `linked-transports`
 
-**The transports a node runs.** `xmip-service` links 83 of the 88 declared
+**The transports a node runs.** `xmip-service` links 86 of the 88 declared
 transports, each a `transport-<technology>` feature of the root crate a site
 names: activemq, amqp, as2, as4, aws-kinesis, aws-s3, aws-sns, aws-sqs,
 azure-blob, azure-event-grid, azure-event-hubs, azure-service-bus, bacnet,
@@ -149,20 +149,23 @@ iso-tp, j1939, kafka, knx, lorawan, m-bus, mariadb, mdns, mllp, modbus, mqtt,
 msmq, mssql, mysql, named-pipe, nats, nats-jetstream, nfs, obd-ii, opc-ua,
 oracle, peppol, pop3, postgresql, profinet, rabbitmq, redis-streams, redpanda,
 s7comm, secs-gem, serial, sftp, smb, smtp, snmp, sqlite, ssdp, syslog, tcp,
-udp, uds, unix-socket, webdav, websocket and wireless-m-bus; bluetooth,
-can-bus, canopen, ethercat, ethernet, iso-tp, j1939, obd-ii, profinet and uds
-on Linux alone, as they reach a link of the kernel's: a CAN interface through
+thread, udp, uds, unix-socket, webdav, websocket, wireless-hart,
+wireless-m-bus and zigbee; bluetooth, can-bus, canopen, ethercat, ethernet,
+iso-tp, j1939, obd-ii, profinet, thread, uds, wireless-hart and zigbee on
+Linux alone, as they reach a link of the kernel's: a CAN interface through
 can-bus's `socketcan` and an Ethernet interface's raw socket through
-ethernet's `packet`, bound through `nix`'s safe calls, and a Bluetooth
-controller through the kernel's L2CAP sockets on a dynamic PSM, rustix's calls
-and the one address rustix does not write, `sockaddr_l2`, bluetooth's file of
-unsafe code. One node of the root's service test (`linked.rs`) sends one file
-dropped into it over every one of them at once, each to the far end its own
-crate stands (ADR-0051), and every far end takes it whole, a Unix domain
-socket's on Linux and macOS alone; a Send Location that announces or answers
-in one datagram, mDNS a service, SSDP a device and DHCP a lease, is sent a
-document its protocol carries whole, and its far end is what hears it, a
-browser, a control point and a client; serial, hart, io-link and m-bus write
+ethernet's `packet`, bound through `nix`'s safe calls, a Bluetooth controller
+through the kernel's L2CAP sockets on a dynamic PSM, rustix's calls and the
+one address rustix does not write, `sockaddr_l2`, bluetooth's file of unsafe
+code, and an IEEE 802.15.4 interface through net's `ieee802154`, an
+`AF_IEEE802154` datagram socket a user opens, under the transport capability's
+`ieee802154::Radio`. One node of the root's service test (`linked.rs`) sends
+one file dropped into it over every one of them at once, each to the far end
+its own crate stands (ADR-0051), and every far end takes it whole, a Unix
+domain socket's on Linux and macOS alone; a Send Location that announces or
+answers in one datagram, mDNS a service, SSDP a device and DHCP a lease, is
+sent a document its protocol carries whole, and its far end is what hears it,
+a browser, a control point and a client; serial, hart, io-link and m-bus write
 to a device on a pseudo-terminal, which a node opens by its path as it opens a
 port, answering as the protocol's own crate answers on the SDK's bus in
 process, and wireless-m-bus to a receiver stick there, IMST's Wireless M-Bus
@@ -172,12 +175,18 @@ the kernel's links are proven by the same node, in a user and network
 namespace the service test (`namespaced.rs`) runs itself again in, where it
 makes a virtual CAN interface for each CAN technology and a veth pair for each
 Ethernet one with no administrator, each far end its own crate's end on the
-kernel's link; pop3 only collects, and a node collects a maildrop's mail
-through it; the vendors' ten — aws-kinesis, aws-s3, aws-sns and aws-sqs
-signing with Signature Version 4, azure-blob with Shared Key, azure-event-grid
-with its topic key, azure-event-hubs and azure-service-bus with a Shared
-Access Signature, google-cloud-storage and google-pub-sub with a bearer token
-— present the secret their Location names, a `password` secret read through
+kernel's link; thread, wireless-hart and zigbee are proven by a node each, one
+after the other (`aired.rs`), the node's Send Location on one IEEE 802.15.4
+interface of the machine's and its far end on the other, the pair Linux's
+`mac802154_hwsim` makes, a Thread node taking the datagram, a WirelessHART
+device answering every request until it holds the Stream and a Zigbee node
+taking the transmission and acknowledging it, each its own crate's; pop3 only
+collects, and a node collects a maildrop's mail through it; the vendors' ten —
+aws-kinesis, aws-s3, aws-sns and aws-sqs signing with Signature Version 4,
+azure-blob with Shared Key, azure-event-grid with its topic key,
+azure-event-hubs and azure-service-bus with a Shared Access Signature,
+google-cloud-storage and google-pub-sub with a bearer token — present the
+secret their Location names, a `password` secret read through
 `transport::secured::presented` at each request, beside the Location's
 `access_key_id`, `account` or `key_name` where the protocol names who signs,
 and their far ends check a value the test draws and sets through the node as
@@ -195,11 +204,9 @@ and sftp by the System Tests' far ends. The HTTP technologies, and the
 vendors' riding on HTTP, are linked without TLS, as http's crate leaves it
 off, so https, as2s, as4s, msmqs and webdavs, and a vendor's https://
 endpoint, are refused. Not linked: aws and azure, what their vendors'
-transports speak and no transports; and thread, wireless-hart and zigbee,
-whose far end lives inside one process and whose radio no node reaches here.
-Records: ADR-0015 (amendments 2026-11-24, 2026-11-25 and 2026-11-27), ADR-0019
-(amendment 2026-10-29), ADR-0051 (amendment 2026-11-27), ADR-0064 (amendment
-2026-10-28).
+transports speak and no transports. Records: ADR-0015 (amendments 2026-11-24,
+2026-11-25 and 2026-11-27), ADR-0019 (amendment 2026-10-29), ADR-0051
+(amendment 2026-11-27), ADR-0064 (amendment 2026-10-28).
 
 #### `module-loading`
 
@@ -535,7 +542,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 427141 lines of production
+Where each repository mounts and what it holds: 427613 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -560,7 +567,7 @@ hold no source to count.
 ├── module/
 │   ├── core/
 │   │   ├── capability/
-│   │   │   ├── transport                       9830
+│   │   │   ├── transport                       9931
 │   │   │   │   ├── amqp                        2923
 │   │   │   │   ├── opc-ua                      2551
 │   │   │   │   ├── db2                         2526
@@ -612,17 +619,17 @@ hold no source to count.
 │   │   │   │   ├── file                         890
 │   │   │   │   ├── profinet                     888
 │   │   │   │   ├── cotp                         883
-│   │   │   │   ├── wireless-hart                864
+│   │   │   │   ├── wireless-hart                874
+│   │   │   │   ├── zigbee                       864
 │   │   │   │   ├── dhcp                         863
-│   │   │   │   ├── zigbee                       845
 │   │   │   │   ├── smtp                         840
-│   │   │   │   ├── thread                       830
 │   │   │   │   ├── peppol                       825
 │   │   │   │   ├── knx                          799
 │   │   │   │   ├── syslog                       780
 │   │   │   │   ├── io-link                      778
 │   │   │   │   ├── iso-tp                       766
 │   │   │   │   ├── iec-60870-5-104              765
+│   │   │   │   ├── thread                       745
 │   │   │   │   ├── mdns                         741
 │   │   │   │   ├── websocket                    741
 │   │   │   │   ├── dds                          738
@@ -788,7 +795,7 @@ hold no source to count.
 │   │   │           declared, not built 5
 │   │   │           aws-s3  azure-blob  file  google-cloud-storage  sql
 │   │   ├── library/
-│   │   │   ├── net                             9061
+│   │   │   ├── net                             9488
 │   │   │   ├── codec                           5955
 │   │   │   ├── tls                             4181
 │   │   │   ├── mariadb                         1785

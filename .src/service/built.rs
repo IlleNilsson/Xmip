@@ -357,15 +357,18 @@ pub fn transports() -> Vec<LinkedTransport> {
 
 /// The transports that reach a link of the kernel's, in the order of their
 /// names: a Bluetooth controller's L2CAP sockets, a CAN interface (can-bus's
-/// `socketcan`) and what rides on it, and an Ethernet interface's raw socket
-/// (ethernet's `packet`) and what rides on it, which Linux alone has. Each
-/// CAN and Ethernet one is proven by a node in a user and network namespace
-/// of the test's own, on interfaces it makes there
-/// (`.src/test/service/namespaced.rs`; ADR-0015, amendment 2026-11-25), and
-/// Bluetooth by the node of `.src/test/service/linked.rs`, from the first of
-/// two virtual controllers to a far end on the second (amendment
-/// 2026-11-27). Elsewhere none: a CAN Location there would open a bus
-/// inside the node alone, and a Bluetooth one reach only a radio in it.
+/// `socketcan`) and what rides on it, an Ethernet interface's raw socket
+/// (ethernet's `packet`) and what rides on it, and an IEEE 802.15.4
+/// interface (`net::ieee802154`), which Thread, Zigbee and `WirelessHART`
+/// ride, all of which Linux alone has. Each CAN and Ethernet one is proven
+/// by a node in a user and network namespace of the test's own, on
+/// interfaces it makes there (`.src/test/service/namespaced.rs`; ADR-0015,
+/// amendment 2026-11-25), Bluetooth by the node of
+/// `.src/test/service/linked.rs`, from the first of two virtual controllers
+/// to a far end on the second, and each 802.15.4 one on the machine's own
+/// pair of radios, one at a time (`aired.rs`; amendments 2026-11-27).
+/// Elsewhere none: a CAN Location there would open a bus inside the node
+/// alone, and a Bluetooth or 802.15.4 one reach only a radio in it.
 #[allow(
     unused_mut,
     clippy::vec_init_then_push,
@@ -383,7 +386,10 @@ fn kernel_transports() -> Vec<LinkedTransport> {
             "transport-j1939" => xmip_transport_j1939::J1939Transport,
             "transport-obd-ii" => xmip_transport_obd_ii::ObdTransport,
             "transport-profinet" => xmip_transport_profinet::ProfinetTransport,
+            "transport-thread" => xmip_transport_thread::ThreadTransport,
             "transport-uds" => xmip_transport_uds::UdsTransport,
+            "transport-wireless-hart" => xmip_transport_wireless_hart::WirelessHartTransport,
+            "transport-zigbee" => xmip_transport_zigbee::ZigbeeTransport,
         ],
         _ => Vec::new(),
     }

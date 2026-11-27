@@ -2312,3 +2312,41 @@ pairing and no encryption; finding a peer's server channel through SDP;
 and more than one Receive Location on one controller and PSM, each binding
 its own listener. No real radio and no other RFCOMM stack is driven (open
 problem 229), and no controller is reached off Linux (open problem 230).
+
+## Amendment, 2026-11-27: Thread, Zigbee and WirelessHART reach an 802.15.4 interface of Linux's kernel, and are linked there
+
+**Provenance.** The owner, 2026-11-27, on the transports that need
+hardware: *let's do your best for now. I'm not going to buy all that
+hardware*. Thread, Zigbee and WirelessHART had a radio held in their own
+process alone, so no node in a process of its own reached their far ends
+(the amendment of 2026-11-25). Each now rides one IEEE 802.15.4 radio, an
+interface of Linux's kernel through an `AF_IEEE802154` datagram socket
+(ADR-0051, amendment 2026-11-27). Linking them, and how they are proven,
+are the assistant's choice, for the owner to strike or keep.
+
+**86 of the 88 are linked**, thread, wireless-hart and zigbee with the 83
+of the amendment above, by the criterion of the amendment of 2026-11-24.
+Not linked: aws and azure, what their vendors' transports speak and no
+transports.
+
+- **On Linux alone**, in `built.rs`'s `kernel_transports()` beside CAN,
+  Ethernet and Bluetooth, their crates Linux's dependencies of the root: elsewhere the
+  kernel offers no 802.15.4 socket, and a Location there could open only a
+  radio inside the node.
+- **Proven one at a time, on the machine's own pair of radios**
+  (`.src/test/service/aired.rs`, `far_ends/radio.rs`): for each, a node of
+  its own whose Send Location opens `wpan0`, its far end its crate's own on
+  `wpan1` — a Thread node, a Zigbee node acknowledging, a WirelessHART
+  device — and a file dropped in taken whole. Not in `linked.rs`'s one
+  node: every socket bound to an interface hears every frame sent to it, so
+  three far ends on one interface at once would each read the others'
+  frames. Not in a namespace of the test's own: the kernel makes no
+  802.15.4 socket outside the first network namespace. Where the machine
+  has no such pair, or its kernel makes no 802.15.4 socket, each says
+  SKIPPED and why, and on Windows and macOS the test says so once. A
+  machine that is to prove them loads `mac802154_hwsim` with two radios,
+  gives both one PAN and a short address each, brings them up and keeps
+  NetworkManager off them, and loads `ieee802154_socket`.
+- **Sending is what the node proves**; Thread's and Zigbee's receive over
+  an interface is what their far ends take with, and through a node
+  receiving stays unproven, as for the rest (the amendment of 2026-11-25).

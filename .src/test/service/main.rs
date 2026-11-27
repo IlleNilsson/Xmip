@@ -50,6 +50,10 @@
 //! - `namespaced.rs`: on Linux, the same over every transport on a link of
 //!   the kernel's, CAN's and Ethernet's, the test run again in a user and
 //!   network namespace of its own where it makes their interfaces.
+//! - `aired.rs`: on Linux, the same over Thread, Zigbee and `WirelessHART`,
+//!   one at a time, the node on one IEEE 802.15.4 interface of the
+//!   machine's and each far end on the other (ADR-0015, amendment
+//!   2026-11-27).
 //! - `approved.rs`: a sales order passes the System Tests' Work Process
 //!   *Order approval*, its unit opened through the C ABI as the service
 //!   starts, on its way to the ERP (ADR-0066, amendment 2026-11-24).
@@ -87,6 +91,7 @@ mod folder;
 
 mod accepted;
 mod activation;
+mod aired;
 #[cfg(all(feature = "process", feature = "route-content", feature = "path-edi"))]
 mod approved;
 mod authority;

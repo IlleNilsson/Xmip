@@ -486,7 +486,11 @@ authorize-location = ["authorize", "dep:xmip-authorize-location"]
 # socket (ethernet's `packet`), so each brings its kernel link, and
 # `built.rs` links them on Linux alone: each is proven by a node in a user
 # and network namespace of the test's own, on interfaces it makes there
-# (`.src/test/service/namespaced.rs`). lorawan is the network server behind
+# (`.src/test/service/namespaced.rs`). thread, wireless-hart and zigbee reach
+# an IEEE 802.15.4 interface of the kernel's (`net::ieee802154`), so
+# `built.rs` links them on Linux alone too: each is proven on the machine's
+# own pair of radios, which `mac802154_hwsim` makes, one at a time
+# (`.src/test/service/aired.rs`). lorawan is the network server behind
 # the gateways that point at the node over Semtech's UDP packet forwarder
 # protocol, its far end a device behind a packet forwarder of its crate's
 # own (ADR-0051 and ADR-0015, amendments 2026-11-27). bluetooth reaches a
@@ -575,14 +579,17 @@ transport-sqlite = ["dep:xmip-transport-sqlite"]
 transport-ssdp = ["dep:xmip-transport-ssdp"]
 transport-syslog = ["dep:xmip-transport-syslog"]
 transport-tcp = ["dep:xmip-transport-tcp", "xmip-transport-tcp/tls"]
+transport-thread = ["dep:xmip-transport-thread"]
 transport-udp = ["dep:xmip-transport-udp"]
 transport-uds = ["dep:xmip-transport-uds", "xmip-transport-can-bus/socketcan"]
 transport-unix-socket = ["dep:xmip-transport-unix-socket"]
 transport-webdav = ["dep:xmip-transport-webdav"]
 transport-websocket = ["dep:xmip-transport-websocket"]
+transport-wireless-hart = ["dep:xmip-transport-wireless-hart"]
 # Wireless M-Bus reaches a receiver stick on a serial port, through IMST's
 # host controller interface, and brings serial's port with its own code.
 transport-wireless-m-bus = ["dep:xmip-transport-wireless-m-bus"]
+transport-zigbee = ["dep:xmip-transport-zigbee"]
 
 # The route technologies xmip-service links and hands to the node it starts
 # (`xmip_runtime::linked::Linked::sources`): each the source a Subscription
@@ -810,9 +817,9 @@ xmip-secret-dpapi = { package = "xmip-core-secret-dpapi", git = "https://github.
 
 [target.'cfg(target_os = "linux")'.dependencies]
 # The transports on a link of the kernel's, which Linux alone has: a CAN
-# interface, an Ethernet interface's raw socket and a Bluetooth
-# controller's L2CAP sockets (`built.rs`, `kernel_transports`), so no other
-# build carries them.
+# interface, an Ethernet interface's raw socket, a Bluetooth controller's
+# L2CAP sockets and an IEEE 802.15.4 interface (`built.rs`,
+# `kernel_transports`), so no other build carries them.
 xmip-transport-bluetooth = { package = "xmip-core-transport-bluetooth", git = "https://github.com/IlleNilsson/xmip-core-transport-bluetooth", branch = "main", optional = true }
 xmip-transport-can-bus = { package = "xmip-core-transport-can-bus", git = "https://github.com/IlleNilsson/xmip-core-transport-can-bus", branch = "main", optional = true }
 xmip-transport-canopen = { package = "xmip-core-transport-canopen", git = "https://github.com/IlleNilsson/xmip-core-transport-canopen", branch = "main", optional = true }
@@ -822,7 +829,10 @@ xmip-transport-iso-tp = { package = "xmip-core-transport-iso-tp", git = "https:/
 xmip-transport-j1939 = { package = "xmip-core-transport-j1939", git = "https://github.com/IlleNilsson/xmip-core-transport-j1939", branch = "main", optional = true }
 xmip-transport-obd-ii = { package = "xmip-core-transport-obd-ii", git = "https://github.com/IlleNilsson/xmip-core-transport-obd-ii", branch = "main", optional = true }
 xmip-transport-profinet = { package = "xmip-core-transport-profinet", git = "https://github.com/IlleNilsson/xmip-core-transport-profinet", branch = "main", optional = true }
+xmip-transport-thread = { package = "xmip-core-transport-thread", git = "https://github.com/IlleNilsson/xmip-core-transport-thread", branch = "main", optional = true }
 xmip-transport-uds = { package = "xmip-core-transport-uds", git = "https://github.com/IlleNilsson/xmip-core-transport-uds", branch = "main", optional = true }
+xmip-transport-wireless-hart = { package = "xmip-core-transport-wireless-hart", git = "https://github.com/IlleNilsson/xmip-core-transport-wireless-hart", branch = "main", optional = true }
+xmip-transport-zigbee = { package = "xmip-core-transport-zigbee", git = "https://github.com/IlleNilsson/xmip-core-transport-zigbee", branch = "main", optional = true }
 
 [target.'cfg(unix)'.dependencies]
 # The operating system's log and the key store on Linux and every Unix
