@@ -1265,7 +1265,7 @@ Every command that changes state accepts `-WhatIf`. Reporting is the default.
 | --- | --- |
 | `Install-XmipModule` | Link the module onto `PSModulePath`. |
 | `Install-XmipPrerequisite` | Report and install what a machine needs, per role. |
-| `Sync-XmipEstate` | Reconcile the estate with `architecture.toml`: create and configure on GitHub, compose the submodule tree, write the dependency revs, carry the brand to every surface. |
+| `Sync-XmipEstate` | Reconcile the estate with `architecture.toml`: create and configure on GitHub, compose the submodule tree, write the dependency revs, carry the brand to every surface, write each module's workflow from its template. |
 | `Sync-XmipRepository` | Local working copies: clone, pull, status, branch, push, distribute. |
 | `Build-XmipService` | Build `xmip-service` for a site under `deploy/site`: its target's, roles' and chosen technologies' features, archive targets among its technologies, refused in words where the target cannot have one; `-WhatIf` says the plan and the cargo command; `-Package msi, archive` builds the runtime library and `xmip`, the command line, beside `xmip-service` and makes the MSI, its winget manifest and the zip under `.local-work/package`, each carrying the three programs, and `-Package rpm` or `deb` the Linux package on Linux (each refused in words on another system, `pkg` everywhere); `-Remote Desktop, Android, iOS` builds the operate library's remote build instead, this machine's into `.ai-interaction/target-remote`, the Android phone's, ARM64 and x86_64, into `.ai-interaction/target-android`, and the iPhone's, a device's and the simulator's static library joined into `xmip_core_operate.xcframework` under `.ai-interaction/target-ios`, only on macOS and refused in words elsewhere (built by hand on macOS alone, `Build-XmipService -Remote iOS` there, and `Xmip.Operations` for the iOS simulator after it: not signed, not run); `-Remote Android -Package apk -Address <host:port>` then makes the phone app itself, following that node, `.local-work/package/<version>/xmip-operations-<version>-android.apk`, signed with the Android SDK's debug key, to side-load. |
 | `Get-XmipManifest`, `Test-XmipManifest` | Read and validate `architecture.toml`. |
@@ -1287,6 +1287,7 @@ Sync-XmipEstate                                       # report drift
 Sync-XmipEstate -Create -WhatIf                       # what would be created on GitHub
 Sync-XmipEstate -Compose                              # wire the submodule tree locally
 Sync-XmipEstate -Brand                                # the mark to every surface (asset/brand)
+Sync-XmipEstate -Workflow                             # each module's verify.yml from its template
 Build-XmipService -Site hospital-interface -WhatIf    # what a site builds, without building
 Sync-XmipRepository -Status                           # dirty, ahead, behind
 Get-XmipStatus

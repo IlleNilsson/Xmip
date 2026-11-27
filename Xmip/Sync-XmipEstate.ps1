@@ -22,6 +22,9 @@
 
 .EXAMPLE
     Sync-XmipEstate -Brand
+
+.EXAMPLE
+    Sync-XmipEstate -Workflow
 #>
 # The domains that start Xmip on a node: linked into the node binary, one of
 # them per estate, and so mounted with no provider in the path. Every other
@@ -154,6 +157,10 @@ function Sync-XmipEstate {
         # the icon and resource made from the mark, and each repository's
         # copy (Write-XmipBrand). Local; alone, GitHub is not asked.
         [switch] $Brand,
+        # Each module repository's .github/workflows/verify.yml written from
+        # its template's (Write-XmipWorkflow). Local; alone, GitHub is not
+        # asked.
+        [switch] $Workflow,
         [switch] $IncludeReserved,
         [switch] $Report,
         # Restrict -Create to these repository names. Without it, -Create makes
@@ -177,10 +184,12 @@ function Sync-XmipEstate {
     $ErrorActionPreference = 'Stop'
     if (-not $ReportPath) { $ReportPath = Join-Path $WorkingDirectory 'architecture-report.json' }
 
-    if ($Brand) {
-        Write-XmipBrand
-        if (-not ($Create -or $Configure -or $Compose -or $Cargo -or $Report)) { return }
-    }
+    if ($Brand) { Write-XmipBrand }
+    if ($Workflow) { Write-XmipWorkflow }
+
+    # Alone, either is done here; the rest reads the manifest and GitHub.
+    [bool] $rest = $Create -or $Configure -or $Compose -or $Cargo -or $Report
+    if (($Brand -or $Workflow) -and -not $rest) { return }
 
     # The GitHub connection every helper is handed, rather than one they read
     # out of this function's scope. They were nested here and read it

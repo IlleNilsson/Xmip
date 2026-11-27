@@ -314,8 +314,8 @@ function Install-XmipPrerequisite {
     $rust = Get-TomlValue -Node $prerequisites -Name 'rust' -Default $null
     if ($rust -and $roles.Contains([string](Get-TomlValue -Node $rust -Name 'role')) -and
         (Get-Command rustup -ErrorAction SilentlyContinue)) {
-        # The channel, current. Every rust-toolchain.toml names the stable
-        # channel, and rustup resolves that to whatever stable it last
+        # The channel, current. The estate's rust-toolchain.toml names the
+        # stable channel, and rustup resolves that to whatever stable it last
         # installed: on 2026-09-22 this machine built on March's 1.94.1 while
         # stable was 1.98.1, and nothing said so. ADR-0021 is latest stable,
         # so an old one is outdated exactly as a version below a floor is.

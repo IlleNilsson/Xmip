@@ -73,7 +73,7 @@ breaking.
 | Rule | Section | Enforced |
 | --- | --- | --- |
 | Formatting | — | yes, by `Publish-XmipChange` at landing |
-| Clippy, warnings denied | — | yes, by `Publish-XmipChange` at landing: a changed module with its default features, every consumer at once, the whole workspace with every feature; a warning fails every cargo build under the estate root (`[build] warnings = "deny"`, `.cargo/config.toml`), and a module repository alone denies them in the shared `rust-verify.yml` |
+| Clippy, warnings denied | — | yes, by `Publish-XmipChange` at landing: a changed module with its default features, every consumer at once, the whole workspace with every feature; a warning fails every cargo build under the estate root (`[build] warnings = "deny"`, `.cargo/config.toml`), where every module builds; the lints are the root's `[workspace.lints]`, which a crate takes whole with `[lints] workspace = true` or replaces whole (ADR-0016, amendment 2026-11-27) |
 | File over 400 lines before `#[cfg(test)]` | 1, 2 | yes |
 | Function length | 3 | **warned by clippy, never gated** |
 | A filename repeating its crate | 5 | yes |
@@ -218,9 +218,9 @@ binaries and the service a roll starts. It is built on `release`, not
 `dev`, since a profile inheriting `dev` would inherit its package overrides.
 Until 2026-11-20 every debug build was at opt-level 3 (`.cargo/config.toml`);
 the owner, 2026-11-20: *I need the faster compiles with Rust then!* (ADR-0018,
-amendment 2026-11-20, which holds the numbers). A crate's repository built
-alone, outside the estate, has cargo's own profiles. `test/Rust.Style.Test.ps1`
-holds all of it.
+amendment 2026-11-20, which holds the numbers). A crate builds only inside
+the estate (ADR-0016, amendment 2026-11-27), so these are the only
+profiles any build of it has. `test/Rust.Style.Test.ps1` holds all of it.
 
 ## 5c. A timing test runs alone, in its module's `measured` program
 

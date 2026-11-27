@@ -9,6 +9,9 @@
   `module/<provider>/<domain>/<leaf>`
 - Amended: 2026-11-20, decision 4 — the estate is one Cargo workspace;
   resolved: path dependencies win, and a repository alone still builds
+- Amended: 2026-11-27, decision 4 — a module takes what every crate shares
+  from the root and builds only inside the estate; its workflow is the one
+  file it keeps, written from its template
 - Supersedes: `.gitmodules.planned`, `Invoke-SynchronizeSubmodules` in `Sync-XmipEstate.ps1`
 - Related: ADR-0010 (direction-neutral transport), ADR-0011 (naming), ADR-0015 (packaging),
   ADR-0018 (amendment 2026-11-20: the build profiles of the one workspace)
@@ -108,7 +111,8 @@ ones and carries on.
 **4. How Cargo sees `module/` is UNRESOLVED and blocks the rest.**
 
 *Resolved 2026-11-20 by the amendment at the end: path dependencies win, and a
-repository checked out alone still builds.*
+repository checked out alone still builds. Narrowed 2026-11-27: a repository
+alone no longer builds; a module builds only inside the estate.*
 
 Two decisions taken separately turn out to contradict each other.
 
@@ -536,3 +540,129 @@ written: with TLS 1,444 bytes arrived, starting with 22; without, nothing,
 and the send was refused. On Linux the workspace's 625 other test programs
 passed in the same three rounds; msmq's 18 pass with default and every
 feature on Windows and on Linux.
+
+## Amendment, 2026-11-27: a module inherits from the root and builds only in the estate
+
+**Provenance.** The owner, 2026-11-27, *Do as recommended*, to this: a
+module repository's own boilerplate inherits from the estate's root, so
+there is one copy and a module builds only inside the estate, as it
+already did in practice; only `.github/workflows/verify.yml` stays in each
+repository, because GitHub needs it there, written from one template and
+held identical to it. It clears what `test/Duplication.Test.ps1` listed
+that day (CONTRIBUTING, *Code is placed once*; ADR-0020 clause 8): the
+toolchain file's comment in 247 files, the lint block in 255 manifests,
+the version, license and edition typed in about 285, the workflow in 255.
+Every detail below that quotes no word of the owner's was decided by the
+assistant while building, told to the owner.
+
+**The amendment of 2026-11-20 is narrowed: a repository alone no longer
+builds.** There a crate checked out alone was its own root and resolved
+its estate dependencies from GitHub. Now:
+
+- The root's `Cargo.toml` holds `[workspace.package]`, `version =
+  "0.1.0"`, `edition = "2024"`, `license = "AGPL-3.0-or-later"` and
+  `publish = false`, and `[workspace.lints]`, the block every crate
+  carried: `unsafe_code = "forbid"`, and clippy's `pedantic` with
+  `too_many_lines`, `missing_errors_doc`, `missing_panics_doc` and
+  `unwrap_used` warned and `expect_used` allowed. A crate takes each value
+  it shares, `version.workspace = true` and the like, and the lints with
+  `[lints] workspace = true`: every member's manifest takes the values,
+  283 of them, and 246 the lints; the root crate takes its edition and
+  license. Every package resolves to the value it had, `cargo metadata`
+  before and after.
+- 23 crates declared no lints at all: fourteen capabilities' own crates and
+  BPMN's, the foundation's context, journey, message, node, party and
+  stream, observe and report. Cargo 1.100 warns of a member with no
+  `[lints]` under a workspace with `[workspace.lints]`
+  (`cargo::missing_lints_inheritance`), and the estate denies warnings, so
+  each says which, and says an empty `[lints]`: none. Held to the shared
+  lints, contract's and process's C exports, which allow unsafe code, do
+  not compile, and clippy found pedantic findings in the foundation's
+  context (8), stream, node and journey (1 each) before their dependents
+  could build; holding these crates to the lints is a change of its own,
+  left to the owner. The root's comment on `[workspace.lints]` says so
+  once.
+- A crate writes its own only where it differs: xmip-core-abi its
+  `license = "Apache-2.0"` (ADR-0075 clause 6), the root crate `xmip` its
+  version, 0.1.1; the 41 crates that never said `publish = false` still
+  say nothing of it. Cargo takes a crate's lints from the workspace whole
+  or not at all, so the thirteen crates that lower `unsafe_code` to `deny`
+  for the one file or folder crossing a C interface (rust-style.md section
+  5a) keep their own `[lints]` whole, nine of them with the shared clippy
+  block beside it; so do xmip-core-configure, which declares `forbid`
+  alone, and the root crate, which declares `forbid` and `pedantic` alone.
+  Giving those two the shared lints would hold them to lints they never
+  had, a change of its own.
+- xmip-core-test-module said `missing_safety_doc = "warn"` beside the
+  block, clippy's own default level for it; it takes the workspace's lints,
+  and nothing it is held to changes.
+- The Rust template, `template/rust`, is a member (the workspace excluded
+  it), since every module made from it builds only here: its `Cargo.toml`
+  takes every shared value and the lints, and it carries no toolchain file.
+  `Get-XmipWorkspacePlan` holds it as any crate, and the root's `exclude`
+  went. A changed crate the plan does not hold is still verified through
+  its own manifest by `Test-XmipRustChange`; no crate of the estate is one
+  now.
+- The root's `rust-toolchain.toml` is the one. The 246 copies in the
+  modules, the SDK and the template are deleted, and with them the
+  *Toolchain* section 222 module READMEs had about the copy.
+
+Held by tests: `test/Rust.Style.Test.ps1`, *ADR-0016: a crate takes what
+every crate shares from the root*, fails on a member writing a package
+value or a lint table equal to the root's; `test/Sync-XmipEstate.Test.ps1`
+fails on a toolchain file anywhere but the root and on a root one not on
+`stable` (ADR-0021); `test/License.Test.ps1` reads the root's
+`[workspace.package]` among the AGPL crates, and requires the boundary to
+write its Apache-2.0 itself, since a boundary crate taking the workspace's
+license would be AGPL.
+
+**The workflow is the one file a module keeps.** GitHub runs a
+repository's workflow only from that repository's own `.github/workflows`.
+Each Rust module's `verify.yml` is `template/rust/.github/workflows/verify.yml`
+byte for byte: `Sync-XmipEstate -Workflow` writes it from the template
+where one differs (`Write-XmipWorkflow`; a repository holding a
+`Cargo.toml` takes the Rust template's, any other the .NET template's),
+and `test/Workflow.Test.ps1` holds all 251 identical. Two verify a second
+language beside the crate and are their own, named in
+`Write-XmipWorkflow.ps1`: xmip-core-abi's .NET binding and surface, and
+xmip-core-gui-vscode's TypeScript shell (ADR-0052 clause 6); the test holds
+that each verifies its crate through the template's shared workflow.
+Twenty-nine Rust repositories have no workflow and are given none.
+`Write-XmipChangedFile` is the one writer of a file where its bytes
+differ, the brand's copies' (`Write-XmipBrand`, which kept it as
+`Write-XmipBrandFile`) and the workflows'.
+
+**What it costs.** A module's repository checked out alone does not
+build: cargo finds no workspace root to take the values from.
+
+- The shared workflow every module's calls, `rust-verify.yml@v1` in
+  `IlleNilsson/.github`, builds a repository alone, and now fails at its
+  first cargo step. It runs only when started by hand and lives outside
+  the estate's tree; verifying a module there means checking out the
+  estate and verifying the crate in it. Left to the owner.
+- A crate of the estate taken by its git URL alone, as a developer outside
+  the estate could until ADR-0075 (*the Rust crates at `branch = "main"`*),
+  no longer resolves. `cargo publish` writes the inherited values into
+  what it packs, so crates.io's `xmip-module` (ADR-0075 clause 2) is not
+  affected.
+
+**Verified**, on Windows, the tree of b2f703ba with this change:
+`cargo metadata` lists 284 packages, each with the version, edition,
+license and publish setting it had; `cargo check --workspace -j 12` and
+`cargo clippy --workspace --all-features -j 12 -- -D warnings` exit 0, and
+the crates taking the workspace's lints were not rebuilt, their lint flags
+what they were. A probe in the template, `value.unwrap()` in a public
+function, made `cargo clippy -p xmip-template-rust` refuse the build with
+`clippy::unwrap_used` and `clippy::missing_panics_doc`, each *requested on
+the command line*, the workspace's, and `pedantic`'s `must_use_candidate`.
+On the Linux test computer, Core.Estate: OK, 844 passed, 0 failed, 13
+skipped. `test/Duplication.Test.ps1`, Configuration: 342 groups over 7,407
+places before (13f30383), 338 over 4,828 after; of the copies this
+amendment is about, 13 groups over 3,373 places, 7 over 50 remain: the
+crates keeping their own lints, and values `architecture.toml` and
+`prerequisite.toml` hold for other subjects. The kind is not cleared, so
+it is not gated.
+
+Followed the same day: rust-style.md (its table, section 5b),
+repository-model.md (sections 8 and 10), `.cargo/config.toml`,
+`README.md`, and the template's `README.md` and `TEMPLATE_SETUP.md`.

@@ -32,9 +32,10 @@ using namespace System.Collections.Generic
     its folder, is verified in that folder, as cargo is run there by hand,
     where cargo reads it: the System Tests' rig. A changed crate the
     workspace does not hold, by its plan's members (Get-XmipWorkspacePlan),
-    the template's, is verified as a repository alone builds: through its own
-    manifest, `--manifest-path`, its format, its lints with its default
-    features and with every feature, and its tests.
+    is verified through its own manifest, `--manifest-path`: its format, its
+    lints with its default features and with every feature, and its tests.
+    Since the template became a member (ADR-0016, amendment 2026-11-27), no
+    crate of the estate is one.
 
     What failed is named by the crate's folder and the test, from what cargo
     said (Get-XmipToolFailure). The timing programs run after every part of

@@ -58,8 +58,10 @@ Describe 'ADR-0075: the module boundary is Apache-2.0, the rest of Xmip AGPL-3.0
                 $wrong += "$file names $($Matches[0])"
             }
 
+            # Said by the crate itself: one taking the estate's
+            # `license.workspace = true` would be AGPL-3.0-or-later.
             if ($file -match '(^|/)Cargo\.toml$' -and
-                $text -match '(?m)^license\s*=\s*"(?!Apache-2\.0")') {
+                $text -notmatch '(?m)^license\s*=\s*"Apache-2\.0"\s*$') {
                 $wrong += "$file is not license = ""Apache-2.0"""
             }
 
@@ -104,12 +106,15 @@ Describe 'ADR-0075: the module boundary is Apache-2.0, the rest of Xmip AGPL-3.0
     }
 
     It 'keeps every other crate of the estate AGPL-3.0-or-later' {
+        # The root's manifest too: what a crate takes with
+        # `license.workspace = true` is its [workspace.package]'s.
         [string[]] $roots = @('.src', 'module', 'test', 'template', 'sdk') |
             ForEach-Object { Join-Path -Path $script:Root -ChildPath $_ }
         [string[]] $boundary = $script:Boundary | ForEach-Object {
             (Join-Path -Path $script:Root -ChildPath $_) + [IO.Path]::DirectorySeparatorChar
         }
         [System.IO.FileInfo[]] $crates = @(
+            Get-Item -LiteralPath (Join-Path -Path $script:Root -ChildPath 'Cargo.toml')
             InModuleScope Xmip -Parameters @{ Roots = $roots } {
                 param($Roots)
                 Find-XmipFile -Path $Roots -Filter 'Cargo.toml'

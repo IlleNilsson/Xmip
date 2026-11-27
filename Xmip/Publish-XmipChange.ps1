@@ -107,11 +107,12 @@ function Publish-XmipChange {
             as a dirty working tree that `git add` cannot explain. This is
             `git submodule update` in the other direction.
 
-            There is deliberately no `-Commit` without `-Push`. Dependencies
-            track `branch = "main"` under ADR-0005, so a module that is committed
-            and not pushed is one every repository built alone, as its own CI
-            builds it, resolves at its *previous* published version — passing
-            or failing for a reason that is not in the working tree. git can
+            There is deliberately no `-Commit` without `-Push`. A module that
+            is committed and not pushed is a pin no other clone of the estate
+            can check out, the root's CI among them, which checks out every
+            submodule at its pin; a module builds only inside the estate
+            (ADR-0016, amendment 2026-11-27) — so it fails for a reason that
+            is not in the working tree. git can
             separate the two because git has no such rule; here the pair is one
             operation.
 

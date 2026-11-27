@@ -602,6 +602,7 @@ and on disk:
 Sync-XmipEstate -Create      # remote: create what the manifest names and GitHub lacks
 Sync-XmipEstate -Configure   # remote: description, topics, features
 Sync-XmipEstate -Compose     # local: wire the submodule hierarchy of section 7
+Sync-XmipEstate -Workflow    # local: each module's verify.yml from its template
 ```
 
 **A reserved repository that does not exist is not drift.** It is section 3
@@ -679,7 +680,10 @@ One component at a time, and the order is not arbitrary:
 1. Stabilize the public purpose and contract of the component.
 2. Create its repository with an initial commit.
 3. Move or rebuild the component there.
-4. Build and test it independently.
+4. Build and test it in the estate, never alone: composed in the working
+   tree (`Sync-XmipEstate -Compose`), it is a member of the one Cargo
+   workspace and takes what every crate shares from the root (ADR-0016,
+   amendment 2026-11-27).
 5. Mount it in `Xmip` as a submodule.
 
 `xmip-core` goes first, because every other repository depends on its shared

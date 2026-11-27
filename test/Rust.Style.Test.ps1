@@ -334,3 +334,64 @@ Describe 'ADR-0021: one edition, and the manifest knows which' {
         $runner | Should -Match "\`$script:XmipMeasuredProfile = 'measured'"
     }
 }
+
+Describe 'ADR-0016: a crate takes what every crate shares from the root' {
+    # Amendment 2026-11-27: a package value or a lint every crate says alike
+    # is said once, in the root's [workspace.package] and [workspace.lints];
+    # a crate writes its own only where it differs. One equal to the root's
+    # is a copy.
+    BeforeAll {
+        function Get-XmipTestTableLine {
+            # Each value line of the tables a pattern matches, as `table: line`,
+            # the table named without the prefix dropped; comments left out.
+            param([string] $Path, [string] $Table, [string] $Drop = '')
+
+            [string] $in = ''
+            foreach ($line in Get-Content -LiteralPath $Path) {
+                [string] $bare = $line.Trim()
+                if ($bare -match '^\[\[?([^\]]+)\]') { $in = $Matches[1]; continue }
+                if ($in -match $Table -and $bare -and -not $bare.StartsWith('#')) {
+                    "$($in.Substring($Drop.Length)): $bare"
+                }
+            }
+        }
+
+        [hashtable] $shared = @{
+            Path = Join-Path $script:Root 'Cargo.toml'; Table = '^workspace\.(package|lints)'
+            Drop = 'workspace.'
+        }
+        [string[]] $script:Shared = @(Get-XmipTestTableLine @shared)
+        $script:Member = @(
+            InModuleScope Xmip -Parameters @{ Root = $script:Root } {
+                param($Root)
+                (Get-XmipWorkspacePlan -RepositoryRoot $Root).Member
+            }
+        )
+    }
+
+    It 'holds no package value or lint table a crate shares with the root' {
+        [string] $lints = ($script:Shared -like 'lints*' | Sort-Object) -join "`n"
+        [string[]] $copied = @(
+            foreach ($folder in $script:Member) {
+                [string] $path = Join-Path (Join-Path $script:Root $folder) 'Cargo.toml'
+                [string[]] $own = @(Get-XmipTestTableLine -Path $path -Table '^(package|lints)')
+
+                [string[]] $same = @(
+                    $own -like 'package: *' | Where-Object { $_ -in $script:Shared }
+                )
+
+                foreach ($line in $same) {
+                    "$folder says $($line.Substring(9)), the root's"
+                }
+
+                if ((($own -like 'lints*' | Sort-Object) -join "`n") -eq $lints) {
+                    "$folder says the root's lints"
+                }
+            }
+        )
+
+        $script:Shared | Should -Contain 'lints.rust: unsafe_code = "forbid"'
+        $copied | Should -BeNullOrEmpty -Because (
+            'a crate takes them with `version.workspace = true` and `[lints] workspace = true`')
+    }
+}

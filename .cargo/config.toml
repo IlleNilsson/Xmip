@@ -20,8 +20,8 @@ ROCKSDB_STATIC = "1"
 # A warning fails every build under the estate root: cargo build, check,
 # clippy and test alike (Cargo 1.97). Lint levels no longer change between
 # check, clippy and test, as `-- -D warnings` on clippy alone made them, so
-# one build serves all three. A module repository checked out alone does not
-# read this file; the shared rust-verify.yml denies warnings there.
+# one build serves all three. A module builds only under the estate root
+# (ADR-0016, amendment 2026-11-27), so every build of it reads this file.
 [build]
 warnings = "deny"
 

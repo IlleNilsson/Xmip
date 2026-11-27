@@ -132,8 +132,9 @@ function Invoke-XmipCargo {
     }
 
     # Every crate mounted is a member of the estate's one workspace, patched
-    # to its folder; a crate keeps no [workspace] of its own, so its
-    # repository alone is its own root (ADR-0016, amendment 2026-11-20).
+    # to its folder; a crate keeps no [workspace] of its own and takes what
+    # every crate shares from the root, so it builds only here (ADR-0016,
+    # amendments 2026-11-20 and 2026-11-27).
     Update-XmipWorkspace -RepositoryRoot $root
 
     Write-XmipStep -Message "Cargo: $revs dependency revs in $($edits.Count) files"

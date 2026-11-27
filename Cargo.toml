@@ -1,11 +1,11 @@
 [workspace]
 # The estate is one workspace (ADR-0016, amendment 2026-11-20): every crate
-# below is a member, built with one resolution, one lock and one build
-# directory; the root package is a member without being listed, and
-# listing "." would make cargo ignore `exclude`. A member keeps its git
-# dependencies and no [workspace] of its own, so its repository, checked
-# out alone, is its own root and builds from git; [patch] at the end of
-# this file resolves each of them here to its working tree.
+# below is a member, the Rust template's too, built with one resolution,
+# one lock and one build directory; the root package is a member without
+# being listed. A member keeps its git dependencies and no [workspace] of
+# its own, and takes from this one what every crate shares (below), so it
+# builds here and nowhere alone (amendment 2026-11-27); [patch] at the end
+# of this file resolves each of its estate dependencies to its working tree.
 members = [
     "module/core/capability/assign",
     "module/core/capability/authenticate",
@@ -287,12 +287,48 @@ members = [
     "module/platform/persist/sqlite",
     "module/platform/runtime",
     "sdk",
+    "template/rust",
     "test/core/module",
     "test/core/system-test",
 ]
-# The template is a repository of its own, never a member.
-exclude = ["template"]
 resolver = "2"
+
+# What every crate of the estate says alike, said once (ADR-0016, amendment
+# 2026-11-27): a crate takes each value it shares, `version.workspace =
+# true` and the like, and writes its own only where it differs: the module
+# boundary's Apache-2.0 (ADR-0075 clause 6), the root's own version.
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "AGPL-3.0-or-later"
+publish = false
+
+# The lints every crate takes with `[lints] workspace = true`. Cargo takes
+# a crate's lints from here whole or not at all, so a crate that lowers
+# unsafe_code to deny for its one file or folder crossing a C interface
+# (rust-style.md section 5a; test/Unsafe.Test.ps1 lists them) keeps its
+# own [lints] whole. An empty [lints] takes none: the crates that declared
+# no lints before 2026-11-27 say so, as cargo asks of a member under a
+# workspace with lints (cargo::missing_lints_inheritance); held to these,
+# they would be held to lints they never had (ADR-0016, amendment
+# 2026-11-27).
+[workspace.lints.rust]
+# forbid, not deny: a module has no business writing unsafe.
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+# Warned, never denied. doc/governance/rust-style.md section 3: a function
+# length gate was tried in this estate's PowerShell and produced a sixteen-entry
+# waiver list while catching nothing. The number worth reading is branches, and
+# clippy prints both.
+too_many_lines = "warn"
+
+# The ones that catch real defects rather than taste.
+pedantic = { level = "warn", priority = -1 }
+missing_errors_doc = "warn"
+missing_panics_doc = "warn"
+unwrap_used = "warn"
+expect_used = "allow"
 
 [package]
 # The platform repository is Xmip, so its primary crate is xmip. It holds no
@@ -301,8 +337,8 @@ resolver = "2"
 # and xmip-service, the program that starts a node from it.
 name = "xmip"
 version = "0.1.1"
-edition = "2024"
-license = "AGPL-3.0-or-later"
+edition.workspace = true
+license.workspace = true
 repository = "https://github.com/IlleNilsson/Xmip"
 description = "The Xmip platform, assembled from its modules."
 # Links the Xmip mark into each executable as its Windows icon.
@@ -894,8 +930,7 @@ codegen-units = 256
 incremental = false
 
 # Every estate crate a member names by its git URL, resolved to its
-# working tree. Written with the members; a repository checked out alone
-# has no parent and resolves the same dependencies from GitHub.
+# working tree. Written with the members.
 [patch."https://github.com/IlleNilsson/xmip-core"]
 xmip-core = { path = "module/foundation/core" }
 [patch."https://github.com/IlleNilsson/xmip-core-abi"]

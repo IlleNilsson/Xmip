@@ -9,9 +9,10 @@ using namespace System.Collections.Generic
     manifest's members and its [patch] (ADR-0016, amendment 2026-11-20).
 
 .DESCRIPTION
-    Every crate under the root but the template's is a member; every estate
-    crate a manifest names by its git URL is patched to its folder, by
-    relative path. Sync-XmipEstate -Compose calls it whenever it mounts a
+    Every crate under the root is a member, the Rust template's too, since a
+    module made from it builds only inside the estate (ADR-0016, amendment
+    2026-11-27); every estate crate a manifest names by its git URL is
+    patched to its folder, by relative path. Sync-XmipEstate -Compose calls it whenever it mounts a
     crate, and test/Publish-XmipChange.Test.ps1 holds the plan to the crates on disk.
 
     Style: doc/governance/powershell-style.md
@@ -42,7 +43,7 @@ function Get-XmipWorkspacePlan {
     foreach ($crate in @(Get-XmipEstateCrate -RepositoryRoot $root)) {
         [string] $folder = [IO.Path]::GetRelativePath($root, $crate.Directory).Replace('\', '/')
 
-        if ($folder -eq '.' -or $folder -eq 'template' -or $folder.StartsWith('template/')) {
+        if ($folder -eq '.') {
             continue
         }
 

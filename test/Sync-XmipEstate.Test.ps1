@@ -220,33 +220,29 @@ Describe 'ADR-0021: current platforms only, enforced' {
         $older.Count | Should -Be 0 -Because ($older -join "`n")
     }
 
-    It 'tracks channels rather than pinning versions, in every repository' {
-        # Every repository, not the root alone. Until 2026-09-22 this read
-        # only the root's file, while the Rust template pinned 1.94.1 and 210
-        # repositories generated from it carried that pin: rustup takes the
-        # nearest file, so each of them built on March's compiler however far
-        # stable had moved.
-        [string[]] $folders = @('module', 'template', 'test') |
+    It 'tracks the stable channel in the root''s toolchain file, the estate''s one' {
+        # Until 2026-09-22 this read only the root's file, while the Rust
+        # template pinned 1.94.1 and 210 repositories generated from it
+        # carried that pin: rustup takes the nearest file, so each of them
+        # built on March's compiler however far stable had moved. Since
+        # 2026-11-27 a module builds only inside the estate and carries none
+        # (ADR-0016, amendment 2026-11-27), so the nearest is the root's.
+        [string[]] $folders = @('module', 'template', 'test', 'sdk') |
             ForEach-Object { Join-Path $script:Root $_ }
-        [object[]] $files = @(
-            Get-Item -LiteralPath (Join-Path $script:Root 'rust-toolchain.toml')
+        [string[]] $other = @(
             InModuleScope Xmip -Parameters @{ Folders = $folders } {
                 param($Folders)
                 Find-XmipFile -Path $Folders -Filter 'rust-toolchain.toml'
-            }
-        )
-
-        [string[]] $pinned = @(
-            $files |
-                Where-Object {
-                    (Get-Content -LiteralPath $_.FullName -Raw) -notmatch 'channel\s*=\s*"stable"'
-                } |
+            } |
                 ForEach-Object { [IO.Path]::GetRelativePath($script:Root, $_.FullName) }
         )
+        [string] $toolchain = Join-Path -Path $script:Root -ChildPath 'rust-toolchain.toml'
 
-        $pinned | Should -BeNullOrEmpty -Because (
-            "ADR-0021 forbids a pinned toolchain: $($pinned -join ', ')"
-        )
+        [string] $root = Get-Content -LiteralPath $toolchain -Raw
+
+        $root | Should -Match '(?m)^channel\s*=\s*"stable"' -Because (
+            'ADR-0021 forbids a pinned toolchain')
+        $other | Should -BeNullOrEmpty -Because 'the root''s toolchain file is the estate''s one'
     }
 
     It 'declares the Core edition on every entry point' {

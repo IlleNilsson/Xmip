@@ -206,34 +206,11 @@ function Write-XmipBrand {
     }
 
     foreach ($name in $made.Keys) {
-        Write-XmipBrandFile -Path (Join-Path $brand $name) -Content $made[$name]
+        Write-XmipChangedFile -Path (Join-Path $brand $name) -Content $made[$name] -What 'Brand'
     }
 
     foreach ($surface in @(Get-XmipBrandSurface -Root $Root | Where-Object Copy)) {
         [byte[]] $content = [System.IO.File]::ReadAllBytes((Join-Path $brand $surface.From))
-        Write-XmipBrandFile -Path (Join-Path $Root $surface.Copy) -Content $content
-    }
-}
-
-function Write-XmipBrandFile {
-    # One file written where its bytes differ, said so.
-    [CmdletBinding(SupportsShouldProcess = $true)]
-    param(
-        [Parameter(Mandatory = $true)]
-        [string] $Path,
-
-        [Parameter(Mandatory = $true)]
-        [byte[]] $Content
-    )
-
-    if (Test-Path -LiteralPath $Path) {
-        [byte[]] $held = [System.IO.File]::ReadAllBytes($Path)
-        if ([System.Linq.Enumerable]::SequenceEqual($held, $Content)) { return }
-    }
-
-    if ($PSCmdlet.ShouldProcess($Path, 'Write the brand')) {
-        New-Item -ItemType Directory -Force -Path (Split-Path -Parent $Path) | Out-Null
-        [System.IO.File]::WriteAllBytes($Path, $Content)
-        Write-XmipStep -Message "Brand: $Path"
+        Write-XmipChangedFile -Path (Join-Path $Root $surface.Copy) -Content $content -What 'Brand'
     }
 }
