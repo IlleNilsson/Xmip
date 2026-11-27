@@ -1053,7 +1053,10 @@ its remote build where `module/core/operation/operate` lands and its Android
 one where `module/core/operation/gui` does, which `Xmip.Operations` packages
 (`Build-XmipService -Remote Desktop` and `-Remote Android` build the same by
 hand; where the Android NDK is absent, the gui module is skipped, in one
-line), the test module's library where the runtime lands —
+line), each also for a module that holds that one as its own, as the root
+of a test computer's copy does, which holds no submodule's `.git` (there
+`Xmip.Operations`' Android target is skipped in one line without the NDK),
+the test module's library where the runtime lands —
 then runs three parts side by side, each in a pwsh of its own with its share
 of the twelve threads it may take (Rust 8, .NET 2, Pester 2; a part alone
 all twelve), the first to fail ending the others:

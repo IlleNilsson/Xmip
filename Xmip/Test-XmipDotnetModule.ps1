@@ -167,6 +167,13 @@ function Test-XmipDotnetModule {
             verification that is still verification — reported as such rather
             than counted as passing tests.
 
+            Each project is built for what it can be built for here
+            (Get-XmipProjectFramework): Xmip.Operations' Android target is
+            skipped in one line where the Android NDK is absent.
+
+        .PARAMETER RepositoryRoot
+            The estate's root.
+
         .PARAMETER Path
             The module's working tree.
 
@@ -176,6 +183,9 @@ function Test-XmipDotnetModule {
     [CmdletBinding()]
     [OutputType('Xmip.PartFailure')]
     param(
+        [Parameter(Mandatory)]
+        [string] $RepositoryRoot,
+
         [Parameter(Mandatory)]
         [string] $Path,
 
@@ -202,18 +212,22 @@ function Test-XmipDotnetModule {
     # owner's C: with 142 of them, 5 GB, by 2026-10-14.
     try {
         foreach ($csproj in $project) {
-            Write-Host "   building $($csproj.Name)..." -ForegroundColor DarkGray
+            [hashtable] $asked = @{ RepositoryRoot = $RepositoryRoot; Project = $csproj }
 
-            [string] $into = Join-Path -Path $output -ChildPath $csproj.BaseName
+            # One empty name builds every framework the project names.
+            foreach ($framework in @(Get-XmipProjectFramework @asked)) {
+                [string[]] $only = @(if ($framework) { '--framework', $framework })
+                [string] $into = [System.IO.Path]::Join($output, $csproj.BaseName, $framework)
+                Write-Host "   building $(@($csproj.Name) + $only)..." -ForegroundColor DarkGray
+                [string[]] $building = @(
+                    'build', $csproj.FullName, '--output', $into, '--verbosity', 'quiet', '--nologo'
+                ) + $only
+                $built = Invoke-XmipTool -Tool dotnet -Argument $building
 
-            [string[]] $building = @(
-                'build', $csproj.FullName, '--output', $into, '--verbosity', 'quiet', '--nologo'
-            )
-
-            $built = Invoke-XmipTool -Tool dotnet -Argument $building
-
-            if (-not $built.Passed) {
-                return ConvertTo-XmipDotnetFailure -Ran $built -Name $Name -Project $csproj.BaseName
+                if (-not $built.Passed) {
+                    [string] $named = $csproj.BaseName
+                    return ConvertTo-XmipDotnetFailure -Ran $built -Name $Name -Project $named
+                }
             }
         }
     }

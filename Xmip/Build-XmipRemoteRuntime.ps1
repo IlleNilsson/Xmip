@@ -26,7 +26,8 @@ using namespace System.Collections.Generic
     Built here once, for Build-XmipService -Remote, iOS by hand on macOS
     alone, and for the landing before it verifies
     module/core/operation/operate (Desktop) and module/core/operation/gui
-    (Android).
+    (Android), or a module holding either as its own, as the root of a test
+    computer's copy does (Get-XmipRemoteBuildRead).
 
     Style: doc/governance/powershell-style.md
 #>

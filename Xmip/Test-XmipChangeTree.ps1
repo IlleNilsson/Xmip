@@ -24,11 +24,13 @@ function Test-XmipChangeTree {
             1. What the parts load, built once from the working tree into the
                shared build directory: the runtime's library, its remote
                build where `operate` lands and its Android build where the
-               phone host's module does, the test module's library where the
-               runtime does. The .NET and Pester parts read a copy of the
-               runtime's library, so the Rust part may build over the
-               original while they run. Where the Android NDK is absent, the
-               phone host's module is skipped, in one line.
+               phone host's module does, each also where a module holds that
+               one as its own (Get-XmipRemoteBuildRead), the test module's
+               library where the runtime does. The .NET and Pester parts read
+               a copy of the runtime's library, so the Rust part may build
+               over the original while they run. Where the Android NDK is
+               absent, the phone host's module is skipped, in one line, and
+               Xmip.Operations' Android target where another module holds it.
             2. The parts, side by side (Invoke-XmipLandingPart): Rust, every
                changed crate and the root crate in the workspace, every
                consumer linted against the change (Test-XmipRustChange);

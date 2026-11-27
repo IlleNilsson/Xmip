@@ -13,7 +13,10 @@
     the NDK is found, the cargo command each build is, that the props file
     reads where the build writes and names the command that builds it, and
     that a landing builds the Desktop one and the Android ones before the
-    module that needs each, and skips the phone host where the NDK is absent.
+    module that needs each, and skips the phone host where the NDK is absent;
+    and that the root of a test computer's copy, which holds those modules as
+    its own, reads the same and skips Xmip.Operations' Android target by the
+    same rule (open problem 195).
 #>
 
 BeforeAll {
@@ -341,6 +344,100 @@ Describe 'A landing builds the remote build before the module that needs it' {
 
             $tree.Failed | Should -Be 'module/core/operation/operate'
             Should -Invoke Invoke-XmipLandingPart -Times 0
+        }
+    }
+}
+
+# Until 2026-11-27 the root of a test computer's copy, which holds no
+# submodule's .git, built Xmip.Operations in its .NET part with no Android
+# library built for it, and stopped there (open problem 195).
+Describe 'The root of a test computer''s copy reads what the modules it holds read' {
+    BeforeAll {
+        [string] $script:Copy = Join-Path -Path $TestDrive -ChildPath 'copy'
+        [string] $script:Clone = Join-Path -Path $TestDrive -ChildPath 'clone'
+        [string[]] $reader = @('module/core/operation/gui', 'module/core/operation/operate')
+
+        foreach ($module in $reader) {
+            $null = New-Item -ItemType Directory -Path (Join-Path $script:Copy $module) -Force
+            $null = New-Item -ItemType Directory -Path (Join-Path $script:Clone $module) -Force
+            Set-Content -LiteralPath (Join-Path $script:Clone "$module/.git") -Value 'gitdir: x'
+        }
+
+        [string] $phone = Join-Path -Path $script:Copy -ChildPath (
+            'module/core/operation/gui/src/Xmip.Operations/Xmip.Operations.csproj')
+        $script:Phone = New-Item -ItemType File -Path $phone -Force
+        $script:TargetBefore = $env:CARGO_TARGET_DIR
+        $env:CARGO_TARGET_DIR = Join-Path -Path $TestDrive -ChildPath 'target'
+    }
+
+    AfterAll {
+        $env:CARGO_TARGET_DIR = $script:TargetBefore
+    }
+
+    BeforeEach {
+        InModuleScope Xmip {
+            Mock Build-XmipRemoteRuntime { }
+            Mock Write-Host { }
+            Mock Find-XmipAndroidNdk { 'ndk-bin' }
+            Mock Invoke-XmipTool {
+                [pscustomobject]@{ Passed = $true; Said = @('net11.0-android') }
+            }
+        }
+    }
+
+    It 'reads nothing at the root of a clone, whose modules are repositories of their own' {
+        InModuleScope Xmip -Parameters @{ Clone = $script:Clone } {
+            param($Clone)
+
+            @(Get-XmipRemoteBuildRead -RepositoryRoot $Clone -Module '.') | Should -BeNullOrEmpty
+        }
+    }
+
+    It 'builds the Desktop and the Android library for the root there, once each' {
+        InModuleScope Xmip -Parameters @{ Copy = $script:Copy } {
+            param($Copy)
+            [string[]] $ordered = @('.', 'module/core/operation/gui')
+
+            Build-XmipLandingLibrary -RepositoryRoot $Copy -Ordered $ordered | Should -BeNullOrEmpty
+            Should -Invoke Build-XmipRemoteRuntime -Times 2 -Exactly
+            Should -Invoke Build-XmipRemoteRuntime -Times 1 -Exactly -ParameterFilter {
+                $Platform -eq 'Android'
+            }
+        }
+    }
+
+    It 'builds every framework of Xmip.Operations there with the NDK, asking none' {
+        InModuleScope Xmip -Parameters @{ Copy = $script:Copy; Phone = $script:Phone } {
+            param($Copy, $Phone)
+            [hashtable] $asked = @{ RepositoryRoot = $Copy; Project = $Phone }
+            [string[]] $framework = @(Get-XmipProjectFramework @asked)
+
+            $framework.Count | Should -Be 1
+            $framework[0] | Should -BeExactly ''
+            Should -Invoke Invoke-XmipTool -Times 0
+        }
+    }
+
+    It 'skips its Android target in one line, and builds no Android library, without the NDK' {
+        InModuleScope Xmip -Parameters @{ Copy = $script:Copy; Phone = $script:Phone } {
+            param($Copy, $Phone)
+            Mock Find-XmipAndroidNdk { '' }
+
+            Build-XmipLandingLibrary -RepositoryRoot $Copy -Ordered @('.') | Should -BeNullOrEmpty
+            @(Get-XmipProjectFramework -RepositoryRoot $Copy -Project $Phone) |
+                Should -BeNullOrEmpty
+
+            Should -Invoke Build-XmipRemoteRuntime -Times 1 -Exactly -ParameterFilter {
+                $Platform -eq 'Desktop'
+            }
+            Should -Invoke Build-XmipRemoteRuntime -Times 0 -ParameterFilter {
+                $Platform -eq 'Android'
+            }
+            Should -Invoke Write-Host -Times 1 -Exactly -ParameterFilter {
+                $Object -eq ('   SKIPPED. Xmip.Operations for net11.0-android: ' +
+                    'module/core/operation/gui builds the phone host for Android, and the ' +
+                    'Android NDK is absent here.')
+            }
         }
     }
 }

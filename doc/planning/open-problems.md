@@ -3310,27 +3310,6 @@ Found 2026-11-25: `runtime::signed::own_folder` (Rust) and
 `Get-XmipAccountFolder` (PowerShell) each spell where an account keeps its
 Xmip state. Needed: one, the other asking it through the ABI.
 
-## 195. Root Core.Internal fails its .NET part on the test computer
-
-Found 2026-11-25: Xmip.Operations' build there stops NETSDK1147, the
-maui-android workload not installed. Needed: the workload installed there,
-or the Android target skipped in words where it is absent, as the landing
-does without the NDK.
-
-Wider 2026-11-25: on a test computer, `Core.Internal -Test .` builds every module's .NET projects, because the copy holds no submodule `.git`; on the Linux test computer Xmip.Operations needs the same workload and Xmip.Operate.Test fails 8 of 106, which stops the root's Rust part.
-
-*Workload installed 2026-11-27 on pluto, per user and without sudo
-(prerequisite.toml, maui.linux, android-sdk.linux, android-jdk.linux), and
-the root's Rust part passes there.* What is left: the build now stops at
-Xmip.Operate.Native.props: the runtime's Android build, which
-Build-XmipRemoteRuntime writes, is not there. A
-landing builds it only when the phone host's module lands
-(Build-XmipLandingLibrary), and skips that module in one line where the
-Android NDK is absent; the root's .NET part on a test computer builds
-Xmip.Operations with neither. Needed: the root's .NET part builds the Android
-library first where the NDK is present and skips Xmip.Operations' Android
-target in one line where it is not, and the NDK on pluto.
-
 ## 196. No network Stream without TLS is received by the assembled service
 
 Found 2026-11-25 linking far ends: a node built with the `ip` identifier
@@ -5044,3 +5023,26 @@ linked. Each is to read its key or token from its Location's secret, as
 MQTT, IMAP and the SQL transports read a password. An S3, Azure Blob or
 Google Cloud Storage Send Location also names its object after its whole
 endpoint.
+
+## 195. Root Core.Internal fails its .NET part on the test computer — **Resolved**
+
+*Resolved 2026-11-27:* a module reads the runtime's remote builds of every module it holds as its own (`Get-XmipRemoteBuildRead`, `Test-XmipOwnFolder`), so the root of a test computer's copy has the Desktop and Android builds made before its parts, and where the Android NDK is absent Xmip.Operations' Android target is skipped in one line by the landing's own rule (`Get-XmipProjectFramework`, `Get-XmipLandingSkipReason`); the NDK r30, 30.0.16248370, is on pluto per user (prerequisite.toml, android-ndk.linux), where `Core.Internal -Test .` passed, its .NET part included, Xmip.Operate.Test 108 of 108; held by `RemoteRuntime.Test.ps1`.
+
+Found 2026-11-25: Xmip.Operations' build there stops NETSDK1147, the
+maui-android workload not installed. Needed: the workload installed there,
+or the Android target skipped in words where it is absent, as the landing
+does without the NDK.
+
+Wider 2026-11-25: on a test computer, `Core.Internal -Test .` builds every module's .NET projects, because the copy holds no submodule `.git`; on the Linux test computer Xmip.Operations needs the same workload and Xmip.Operate.Test fails 8 of 106, which stops the root's Rust part.
+
+*Workload installed 2026-11-27 on pluto, per user and without sudo
+(prerequisite.toml, maui.linux, android-sdk.linux, android-jdk.linux), and
+the root's Rust part passes there.* What is left: the build now stops at
+Xmip.Operate.Native.props: the runtime's Android build, which
+Build-XmipRemoteRuntime writes, is not there. A
+landing builds it only when the phone host's module lands
+(Build-XmipLandingLibrary), and skips that module in one line where the
+Android NDK is absent; the root's .NET part on a test computer builds
+Xmip.Operations with neither. Needed: the root's .NET part builds the Android
+library first where the NDK is present and skips Xmip.Operations' Android
+target in one line where it is not, and the NDK on pluto.

@@ -58,7 +58,7 @@ function Test-XmipDotnetChange {
             # carries .NET, so Xmip.Surface, Xmip.Operate and Xmip.Abi landed
             # with their tests never run.
             elseif (@(Find-XmipModuleProject -Path $path).Count -gt 0) {
-                Test-XmipDotnetModule -Path $path -Name $name
+                Test-XmipDotnetModule -RepositoryRoot $RepositoryRoot -Path $path -Name $name
             }
         )
 

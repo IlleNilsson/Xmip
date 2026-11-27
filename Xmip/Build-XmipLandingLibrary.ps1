@@ -37,9 +37,11 @@ function Build-XmipLandingLibrary {
             runtime's remote build where `operate` lands, whose tests load
             it, and its Android build where the phone host's module lands,
             which Xmip.Operations packages, never the last one built by
-            hand; the test module's library where the runtime lands, whose
-            tests open it (XMIP_MODULE_LIBRARY). A failed build fails the
-            landing: a stale library is never tested in its place.
+            hand, each also where a module holds that module as its own, as
+            the root does on a test computer (Get-XmipRemoteBuildRead); the
+            test module's library where the runtime lands, whose tests open
+            it (XMIP_MODULE_LIBRARY). A failed build fails the landing: a
+            stale library is never tested in its place.
 
         .PARAMETER Ordered
             The modules the landing verifies here, in its order: none it
@@ -76,18 +78,27 @@ function Build-XmipLandingLibrary {
         Copy-Item -LiteralPath $env:XMIP_RUNTIME_LIBRARY -Destination $copy -Force
     }
 
-    # Each before any part runs, in the landing's order; the first that
+    # Each before any part runs, once, in the landing's order; the first that
     # fails names the module that needs it.
-    [string[]] $remote = @($Ordered | Where-Object { $script:XmipRemoteBuildFor.ContainsKey($_) })
+    [hashtable] $made = @{}
 
-    foreach ($reader in $remote) {
-        try {
-            [string] $platform = $script:XmipRemoteBuildFor[$reader]
-            $null = Build-XmipRemoteRuntime -Root $RepositoryRoot -Platform $platform
-        }
-        catch {
-            Write-Host $_.Exception.Message -ForegroundColor Red
-            return $reader
+    foreach ($reader in $Ordered) {
+        [hashtable] $reading = @{ RepositoryRoot = $RepositoryRoot; Module = $reader }
+
+        foreach ($platform in @(Get-XmipRemoteBuildRead @reading)) {
+            if ($made.ContainsKey($platform)) {
+                continue
+            }
+
+            $made[$platform] = $true
+
+            try {
+                $null = Build-XmipRemoteRuntime -Root $RepositoryRoot -Platform $platform
+            }
+            catch {
+                Write-Host $_.Exception.Message -ForegroundColor Red
+                return $reader
+            }
         }
     }
 
@@ -115,7 +126,10 @@ function Get-XmipLandingSkipReason {
             The phone host's module builds Xmip.Operations for Android, which
             packages the runtime's Android build, and that build needs the
             Android NDK, an optional prerequisite (prerequisite.toml,
-            android-ndk).
+            android-ndk). The one rule: the landing skips that module by it,
+            builds no Android library by it (Get-XmipRemoteBuildRead), and
+            skips Xmip.Operations' Android target by it where another module
+            holds the phone host's as its own (Get-XmipProjectFramework).
     #>
     [CmdletBinding()]
     [OutputType([string])]
@@ -129,6 +143,104 @@ function Get-XmipLandingSkipReason {
     }
 
     ''
+}
+
+function Get-XmipRemoteBuildRead {
+    <#
+        .SYNOPSIS
+            The runtime's remote builds a module's build reads, by Platform:
+            that of each module in $script:XmipRemoteBuildFor it is or holds
+            as its own folder (Test-XmipOwnFolder), but where that module is
+            skipped here (Get-XmipLandingSkipReason).
+
+        .DESCRIPTION
+            The root on a test computer holds them both, so its .NET part
+            builds Xmip.Operate's tests and Xmip.Operations with the rest
+            (open problem 195), and reads both builds as those modules do.
+    #>
+    [CmdletBinding()]
+    [OutputType([string])]
+    param(
+        [Parameter(Mandatory)]
+        [string] $RepositoryRoot,
+
+        [Parameter(Mandatory)]
+        [string] $Module
+    )
+
+    [string] $top = Join-Path -Path $RepositoryRoot -ChildPath $Module
+
+    foreach ($reader in @($script:XmipRemoteBuildFor.Keys | Sort-Object)) {
+        [string] $folder = Join-Path -Path $RepositoryRoot -ChildPath $reader
+
+        if ((Test-XmipOwnFolder -Top $top -Folder $folder) -and
+            -not (Get-XmipLandingSkipReason -Module $reader)) {
+            $script:XmipRemoteBuildFor[$reader]
+        }
+    }
+}
+
+function Get-XmipProjectFramework {
+    <#
+        .SYNOPSIS
+            The target frameworks the landing builds a .NET project for here,
+            each by -f: one empty name, for every one the project names,
+            where all can be built here; else each that can, after one line
+            that says which cannot and why; none where none can.
+
+        .DESCRIPTION
+            A project in a module the landing skips here
+            (Get-XmipLandingSkipReason) cannot be built for that module's
+            Platform: Xmip.Operations for Android where the Android NDK is
+            absent. Only a module holding that one as its own meets such a
+            project, the root on a test computer (open problem 195), and only
+            then is the project asked its frameworks (dotnet msbuild
+            -getProperty:TargetFrameworks).
+    #>
+    [CmdletBinding()]
+    [OutputType([string])]
+    param(
+        [Parameter(Mandatory)]
+        [string] $RepositoryRoot,
+
+        [Parameter(Mandatory)]
+        [System.IO.FileInfo] $Project
+    )
+
+    foreach ($reader in @($script:XmipRemoteBuildFor.Keys | Sort-Object)) {
+        [string] $folder = Join-Path -Path $RepositoryRoot -ChildPath $reader
+        [string] $why = if (Test-XmipOwnFolder -Top $folder -Folder $Project.DirectoryName) {
+            Get-XmipLandingSkipReason -Module $reader
+        }
+
+        if ([string]::IsNullOrEmpty($why)) {
+            continue
+        }
+
+        [string[]] $asked = @(
+            'msbuild', $Project.FullName, '-getProperty:TargetFrameworks', '-nologo'
+        )
+        $named = Invoke-XmipTool -Tool dotnet -Argument $asked -Output Keep
+        [string[]] $all = @(
+            ($named.Said -join ';') -split ';' | ForEach-Object { $_.Trim() } |
+                Where-Object { $_ -match '^net\d+\.\d+(-[a-z]+[\d.]*)?$' }
+        )
+        [string] $platform = $script:XmipRemoteBuildFor[$reader]
+        [string[]] $cannot = @(
+            $all | Where-Object { $_ -match '-([a-z]+)[\d.]*$' -and $Matches[1] -eq $platform }
+        )
+
+        if (-not $named.Passed -or $cannot.Count -eq 0) {
+            continue
+        }
+
+        [string] $said = "   SKIPPED. $($Project.BaseName) for $($cannot -join ' and '): $why"
+        Write-Host $said -ForegroundColor DarkGray
+
+        return @($all | Where-Object { $_ -notin $cannot })
+    }
+
+    return @('')
 }
 
 function Build-XmipTestLibrary {

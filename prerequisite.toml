@@ -239,12 +239,17 @@ note = "A build started over SSH sees no ANDROID_HOME, so ~/.config/xbuild/monod
 [prerequisite.android-ndk]
 role = "developer"
 optional = true
-note = "The Android NDK, whose clang links the Rust runtime library for Android (aarch64-linux-android, x86_64-linux-android; rustup target add both). Unpacked under the SDK's ndk directory, named by its version; latest LTS from Google, checked against the SHA-1 Google publishes. A landing of xmip-core-gui builds both libraries with it first, and skips that module, in one line, where it is absent."
+note = "The Android NDK, whose clang links the Rust runtime library for Android (aarch64-linux-android, x86_64-linux-android; rustup target add both). Unpacked under the SDK's ndk directory, named by its version; latest LTS from Google, checked against the SHA-1 Google publishes. A landing of xmip-core-gui builds both libraries with it first, and skips that module, in one line, where it is absent; so does the root's .NET part on a test computer, whose copy holds that module as the root's own, skipping Xmip.Operations' Android target in one line (Get-XmipLandingSkipReason)."
 
 [prerequisite.android-ndk.windows]
 present_path = ['%ANDROID_HOME%\ndk\*\toolchains\llvm\prebuilt\windows-x86_64', '%LOCALAPPDATA%\Android\Sdk\ndk\*\toolchains\llvm\prebuilt\windows-x86_64']
 fallback = "https://developer.android.com/ndk/downloads"
 note = "The latest LTS is r30, 30.0.16248370 (checked 2026-10-22 on developer.android.com/ndk/downloads)."
+
+[prerequisite.android-ndk.linux]
+present_path = ['%ANDROID_HOME%/ndk/*/toolchains/llvm/prebuilt/linux-x86_64', '%HOME%/Android/Sdk/ndk/*/toolchains/llvm/prebuilt/linux-x86_64']
+command = "JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64 ~/Android/Sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/Android/Sdk 'ndk;30.0.16248370' && rustup target add aarch64-linux-android x86_64-linux-android"
+note = "Per user and without sudo, by the SDK's own sdkmanager, which android-sdk.linux's command puts in ~/Android/Sdk/cmdline-tools/latest and which runs on the Android JDK; it downloads Google's zip and checks it. The latest LTS is r30, 30.0.16248370 (checked 2026-11-27 on developer.android.com/ndk/downloads); on pluto 2026-11-27."
 
 [prerequisite.android-jdk]
 role = "developer"

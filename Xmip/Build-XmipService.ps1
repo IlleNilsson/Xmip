@@ -72,7 +72,9 @@ function Build-XmipService {
             itself before module/core/operation/operate, and Android before
             module/core/operation/gui, whose Xmip.Operations packages it;
             where the Android NDK is absent it skips that module, in one
-            line.
+            line. The root's .NET part on a test computer, which holds both
+            as its own, has each built the same way, and skips
+            Xmip.Operations' Android target in one line without the NDK.
 
         .PARAMETER Site
             A site's name under deploy/site, or the path of a site file.
