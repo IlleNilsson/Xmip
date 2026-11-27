@@ -3504,6 +3504,30 @@ Stream for a Class A device until its next uplink, and sending it in that
 uplink's first window, timed from its `tmst`, as a confirmed uplink's
 answer already is; and a device's class a setting.
 
+## 220. macOS's own git is below the estate's floor
+
+Found 2026-11-27 running Core.Estate on a macOS 15 test computer (ADR-0028,
+amendment 2026-11-27): its git is Apple's, 2.39.5 of the Xcode command-line
+tools, where `prerequisite.toml` sets 2.56 and the estate needs 2.41's
+`for-each-ref --format=%(ahead-behind:HEAD)`, which `Get-XmipStatus` counts
+commits ahead and behind with. Five tests fail there on it, one of
+`test/Invoke-XmipGit.Test.ps1` and four of `test/Publish-XmipChange.Test.ps1`,
+each with git's *fatal: unknown field name: ahead-behind:HEAD*.
+`prerequisite.toml` installs git on macOS through Homebrew, which that
+computer has not, and which an administrator installs. Needed: a git at the
+floor on a macOS test computer, for its account alone, or the probe refusing
+a git below it.
+
+## 221. The deployment's tests fail on macOS before what they test
+
+Found 2026-11-27 running Core.Estate on a macOS 15 test computer: five tests
+of `test/DeployEnvironment.Test.ps1` — a second run of the environment
+refused, twice, and three of msdsc's — reach `Get-XmipDeployHypervisor`,
+which refuses a host making no virtual machine Xmip deploys, as macOS makes
+none (ADR-0015, amendment 2026-11-25), before the lock and the steps they
+test. Needed: those tests given a host's hypervisor, or said SKIPPED where
+the host makes none.
+
 # Suggested order
 
 Rewritten 2026-09-23, and corrected to what is built on 2026-11-10. The

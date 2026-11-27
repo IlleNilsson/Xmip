@@ -1016,8 +1016,8 @@ rolls the System Tests any of the three ways (ADR-0028, amendments
 | The whole estate | The Systems Tests | how nodes interact, the same cluster file and far ends, as processes on this computer or, `-VirtualMachine`, on the deployed environment, which gives the run its node list and its operator certificate, or, `-Container`, in containers the run makes; started by its name alone | `Start-XmipTest -Suite Core.Systems -Cluster <name>`, with `-VirtualMachine` on the virtual machines or `-Container` in containers, then as above |
 | The whole estate | The demo readiness check | what the owner's demo runs: a roll of the cluster you name, as processes, `-VirtualMachine` or `-Container`, the web operations tool over it, the Desktop operations app over the same snapshot, the VS Code extension and its language server | `Start-XmipTest -Suite Core.Demo -Cluster <name> -Stress Realistic -Tester <person>`, then `Get-XmipTestStatus`, `Get-XmipTestResult -Suite Core.Demo`, `Stop-XmipTest -Suite Core.Demo` |
 
-The internal tests, `Core.Estate` and `Core.Internal`, run on a Linux
-computer too, beside this one, with `-ComputerName <name>`
+The internal tests, `Core.Estate` and `Core.Internal`, run on a Linux or
+macOS computer too, beside this one, with `-ComputerName <name>`
 on `Start-XmipTest`, `Get-XmipTestStatus`, `Get-XmipTestResult` and
 `Stop-XmipTest`. The computer is `.local-work/test-computer/<name>.toml`,
 this machine's and never in Git: `host`, `user` and `key`, the address ssh
@@ -1028,9 +1028,11 @@ home (`xmip-test`), and `slots`, how many builds run there at once (2, each
 holding a lock on `~/slot<n>.lock`; where every slot is taken the start
 waits, saying once a minute who holds them, and a wait whose console has
 gone starts nothing). OpenSSH's `ssh` and `scp` and `tar` carry
-it from here; there it takes bash, GNU's `find` and `xargs`, util-linux's
-`flock` and `setsid`, `rsync`, `git` and `pwsh`, and its first probe refuses
-a computer lacking one, naming it. The estate is sent as a difference of
+it from here; there the account's shell, bash or zsh, starts `pwsh`, which
+does the rest the same on Linux and macOS with `rsync`, `tar` and `git`,
+and its first probe refuses a computer lacking one, naming it; a holder
+there holds a run's copy and slot until its last process ends (ADR-0028,
+amendment 2026-11-27). The estate is sent as a difference of
 what Git would hold, tracked files and untracked ones no ignore file
 excludes, and the workspace's `Cargo.lock`, so it builds what this computer
 resolved, into a mirror there, copied into a tree of its own that is one Git

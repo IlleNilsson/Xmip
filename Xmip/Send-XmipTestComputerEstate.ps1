@@ -17,8 +17,8 @@ using namespace System.Collections.Generic
     tar, copies it with scp and names what is gone; the first send, a mirror
     that is not there any more, or a receive that failed once it began, sends
     everything once. OpenSSH's own ssh, scp and tar, which Windows carries,
-    here; the computer is Linux (Invoke-XmipTestComputer) (the owner,
-    2026-11-23).
+    here; the computer is Linux or macOS (Invoke-XmipTestComputerRemote)
+    (the owner, 2026-11-23 and 2026-11-27).
 
     It was a bash script outside the estate until 2026-11-23, in a folder a
     restart clears.
@@ -48,13 +48,9 @@ function Send-XmipTestComputerEstate {
 
     # One send to a computer at a time: the mirror there and the list here
     # change together. The system lets go of the lock when its holder ends.
-    [System.IO.FileStream] $held = $null
+    [System.IO.FileStream] $held = Lock-XmipFile -Path (Join-Path $Computer.State 'send.lock')
 
-    try {
-        $held = [System.IO.File]::Open((Join-Path $Computer.State 'send.lock'), 'OpenOrCreate',
-            'ReadWrite', 'None')
-    }
-    catch [System.IO.IOException] {
+    if ($null -eq $held) {
         throw ("REFUSED. Another console is sending the estate to $($Computer.Name) now; " +
             'start again when it has.')
     }

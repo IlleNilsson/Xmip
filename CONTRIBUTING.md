@@ -211,8 +211,8 @@ prompt is yours meanwhile; `Get-XmipTestResult -Suite Core.Estate` says what
 failed. `Start-XmipTest -Suite Core.Internal -Test <module>` verifies the
 modules named as a landing verifies each, their format, lints and tests and
 their .NET projects, without landing anything, and names every crate or
-project and test that failed. Either runs on a Linux computer beside this
-one with `-ComputerName <name>`: what Git would hold of the estate is sent
+project and test that failed. Either runs on a Linux or macOS computer beside
+this one with `-ComputerName <name>`: what Git would hold of the estate is sent
 there as a difference, never what an ignore file excludes, and runs in a
 copy of its own, one run at a time, and `Get-XmipTestStatus`,
 `Get-XmipTestResult` and `Stop-XmipTest` take the same `-ComputerName`. The

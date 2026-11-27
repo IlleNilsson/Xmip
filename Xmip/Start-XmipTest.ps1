@@ -19,7 +19,7 @@ function Start-XmipTest {
             pwsh of its own, detached, and says OK or FAILED when it ends, as
             Core.Internal, named modules verified as a landing verifies them,
             does, and Core.Demo, the demo readiness check, does part by part.
-            Core.Estate and Core.Internal run on a Linux test computer by -ComputerName.
+            Core.Estate and Core.Internal run on a Linux or macOS test computer by -ComputerName.
             A third party's suite is <Provider>.<Name> and joins by a declaration.
 
             The System Tests (ADR-0028) is the estate's integration test over
@@ -218,8 +218,8 @@ function Start-XmipTest {
 
         .PARAMETER ComputerName
             Core.Estate's and Core.Internal's: runs the suite detached on the Linux
-            computer .local-work/test-computer/<name>.toml names, never in Git
-            (Read-XmipTestComputer), in a copy of what Git holds of this estate.
+            or macOS computer .local-work/test-computer/<name>.toml names, never in
+            Git (Read-XmipTestComputer), in a copy of what Git holds of this estate.
 
         .EXAMPLE
             # Omitted -Nodes: the Reference Environment's nodes

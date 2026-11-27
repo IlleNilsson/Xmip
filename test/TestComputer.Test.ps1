@@ -11,7 +11,10 @@
     modules, came the same day.
 
     Nothing here reaches a computer: ssh and scp are mocked, and what crosses
-    is asserted. The computer's name in these tests is a stand-in, build1.
+    is asserted. The computer's side (Invoke-XmipTestComputerRemote) runs
+    here, in a pwsh of its own as ssh starts it there, the same on Linux and
+    macOS since 2026-11-27. The computer's name in these tests is a
+    stand-in, build1.
 #>
 
 BeforeAll {
@@ -32,6 +35,47 @@ BeforeAll {
     $script:FarRow = [pscustomobject]@{
         Suite = 'Core.Estate'; Kind = 'pester'; State = 'running'; Id = 42
         Tests = @('Toml'); Log = '/far/estate.log'; ComputerName = $null
+    }
+
+    # The computer's side started here as ssh starts it there, in a pwsh of
+    # its own, asked -Asked, with -Environment beside this one's.
+    $script:StartRemote = {
+        param([hashtable] $Asked, [hashtable] $Environment = @{})
+
+        [string] $command = InModuleScope Xmip -Parameters @{ Asked = $Asked } {
+            param([hashtable] $Asked)
+            New-XmipTestComputerRemoteCommand -Script (Get-XmipTestComputerRemoteScript) -Asked (
+                $Asked)
+        }
+        [Diagnostics.ProcessStartInfo] $start = [Diagnostics.ProcessStartInfo]::new(
+            [Environment]::ProcessPath)
+
+        foreach ($word in '-NoProfile', '-NonInteractive', '-Command', $command) {
+            $start.ArgumentList.Add($word)
+        }
+
+        foreach ($name in $Environment.Keys) {
+            $start.Environment[$name] = $Environment[$name]
+        }
+
+        $start.RedirectStandardInput = $true
+        $start.RedirectStandardOutput = $true
+        $start.RedirectStandardError = $true
+        [Diagnostics.Process] $process = [Diagnostics.Process]::Start($start)
+        $process.StandardInput.Close()
+        $process
+    }
+
+    # The same, waited for: Code, its exit code, and what it said, Out and Err.
+    $script:Remote = {
+        param([hashtable] $Asked, [hashtable] $Environment = @{})
+
+        [Diagnostics.Process] $process = & $script:StartRemote -Asked $Asked -Environment (
+            $Environment)
+        [Threading.Tasks.Task[string]] $err = $process.StandardError.ReadToEndAsync()
+        [string] $out = $process.StandardOutput.ReadToEnd()
+        $process.WaitForExit()
+        [pscustomobject]@{ Code = $process.ExitCode; Out = $out; Err = $err.Result }
     }
 }
 
@@ -260,25 +304,15 @@ Describe 'The estate travels as a difference' {
         }
     }
 
-    It 'takes a path that turned from a file into a folder, or back; a run holds the copy' -Skip:(
-        -not ($IsLinux -and (Get-Command -Name flock -ErrorAction Ignore))) {
-        # The computer's own shell, run here, where this is Linux.
-        [string] $far = Join-Path $TestDrive 'far'
-        [string] $folder = Join-Path $far 'w'
+    It 'takes a path that turned from a file into a folder, or back; a run holds the copy' {
+        # The computer's own side, run here as it runs there, on every system:
+        # until 2026-11-27 a bash script, tried on Linux alone.
+        [string] $folder = Join-Path $TestDrive 'far/w'
         [string] $mirror = Join-Path $folder 'mirror'
-        [string] $shell = InModuleScope Xmip { $script:XmipTestComputerShell.Replace("`r`n", "`n") }
+        [hashtable] $asked = @{ Folder = $folder; Slots = 2; Work = '.local-work' }
         [scriptblock] $receive = {
             param([string] $How)
-            [string] $before = $env:HOME
-            $env:HOME = $far
-
-            try {
-                & bash -c $shell xmip w receive 2 .local-work $How 2>&1 | Out-Null
-                $LASTEXITCODE
-            }
-            finally {
-                $env:HOME = $before
-            }
+            (& $script:Remote -Asked ($asked + @{ Asked = 'receive'; Given = $How })).Code
         }
         [scriptblock] $pack = {
             param([string] $From, [string[]] $Path, [string[]] $Gone)
@@ -303,27 +337,39 @@ Describe 'The estate travels as a difference' {
         Join-Path $mirror 'p/a' | Should -Exist
         (Get-Item -LiteralPath (Join-Path $mirror 'q')).PSIsContainer | Should -BeFalse
 
-        # A run holds the copy's lock: a send is refused before anything moves.
-        [string] $held = Join-Path $folder 'held'
+        # A run holds the copy's lock, the estate's one: a send is refused
+        # before anything moves.
         [int] $busy = InModuleScope Xmip { $script:XmipTestComputerBusy }
-        $holding = [System.Diagnostics.ProcessStartInfo]::new('bash')
-        $holding.ArgumentList.Add('-c')
-        $holding.ArgumentList.Add(
-            "exec 8>'$folder/tree.lock'; flock -n 8 && touch '$held' && sleep 30")
-        $holder = [System.Diagnostics.Process]::Start($holding)
+        [IO.FileStream] $held = InModuleScope Xmip -Parameters @{ Folder = $folder } {
+            param([string] $Folder)
+            Lock-XmipFile -Path (Join-Path -Path $Folder -ChildPath 'tree.lock')
+        }
 
         try {
-            for ([int] $wait = 0; $wait -lt 50 -and -not (Test-Path -LiteralPath $held); $wait++) {
-                Start-Sleep -Milliseconds 100
-            }
-
             & $pack $first @('p') @()
-            & $receive 'difference' | Should -Be $busy
+            [hashtable] $again = $asked + @{ Asked = 'receive'; Given = 'difference' }
+            $refused = & $script:Remote -Asked $again
+            $refused.Code | Should -Be $busy
+            $refused.Err | Should -BeLike "*REFUSED. A run is going on in $folder*"
             Join-Path $mirror 'p/a' | Should -Exist -Because 'a refused receive moves nothing'
         }
         finally {
-            $holder.Kill($true)
+            $held.Dispose()
         }
+    }
+
+    It 'refuses a computer that lacks what a test computer needs, naming each' {
+        # 2026-11-27: Linux or macOS, with pwsh, which runs this, rsync, tar
+        # and git, and nothing of util-linux's or GNU's.
+        [hashtable] $asked = @{
+            Asked = 'probe'; Folder = (Join-Path $TestDrive 'bare'); Slots = 2
+            Work  = '.local-work'; Given = ''
+        }
+        $said = & $script:Remote -Asked $asked -Environment @{ PATH = '' }
+
+        $said.Code | Should -Be (InModuleScope Xmip { $script:XmipTestComputerLacking })
+        $said.Err | Should -BeLike ('REFUSED. * here lacks what a test computer needs: ' +
+            'rsync, tar, git. A test computer is Linux or macOS, with pwsh, rsync, tar and git.*')
     }
 }
 
@@ -355,7 +401,7 @@ Describe 'Start, Get and Stop take -ComputerName, and nothing new is a cmdlet' {
         }
 
         $help | Should -Match ([regex]::Escape(
-                "$(& $listed $table.There) run on a Linux test computer by -ComputerName"))
+                "$(& $listed $table.There) run on a Linux or macOS test computer by -ComputerName"))
         $help | Should -Match ([regex]::Escape(
                 "started by their name alone, $(& $listed $table.Alone);"))
     }
@@ -523,10 +569,22 @@ Describe 'What crosses to the computer and back' {
             ($said | Where-Object { $_ -isnot $information }).Out.Count | Should -Be 2
 
             # Nothing after `--` is an option, whatever the account begins with.
+            # The account's shell, bash or zsh, starts pwsh, naming it where it
+            # is not there, and pwsh runs the computer's side, asked in base64.
             Should -Invoke ssh -Times 1 -Exactly -ParameterFilter {
                 [string] $all = $args -join ' '
+                [string] $asked = [regex]::Match($all, '-Encoded "([A-Za-z0-9+/=]+)"').Groups[1]
+                $given = [System.Management.Automation.PSSerializer]::Deserialize(
+                    [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($asked)))
+                [string] $lacking = $script:XmipTestComputerLack -f '$(uname -s)', 'pwsh'
+                [string] $pwsh = 'exec pwsh -NoProfile -NonInteractive -Command ''[^'']+'' <'
+                [string[]] $told = @($given.Asked, $given.Folder, $given.Slots, $given.Work,
+                    $given.Given)
+
                 $all -match '-i key -o BatchMode=yes .+ -- tester@build1\.example' -and
-                    $all -match 'bash -c .+ xmip xmip-test observe 2 \.local-work Zm9v$'
+                    $all.Contains("command -v pwsh > /dev/null 2>&1 || { echo ""$lacking""") -and
+                    $all -match "$pwsh /dev/null$" -and $all -notmatch 'EncodedCommand' -and
+                    ($told -join ' ') -eq 'observe xmip-test 2 .local-work Zm9v'
             }
         }
     }
@@ -554,48 +612,115 @@ Describe 'What crosses to the computer and back' {
         }
     }
 
-    It 'runs pwsh there by -Command, in a build slot it waits for, saying so before it starts' {
-        # 2026-11-23: pwsh given -EncodedCommand also writes what it shows to
-        # stderr as CLIXML, and this side's PowerShell showed every line twice.
-        # A wait for a slot writes a line before it starts anything, and a
-        # line its console is gone for cannot be written: the wait ends there.
-        InModuleScope Xmip {
-            [string] $shell = $script:XmipTestComputerShell.Replace("`r`n", "`n")
-
-            $shell | Should -Not -Match 'EncodedCommand\s+"'
-            $shell | Should -Match 'pwsh -NoProfile -NonInteractive -Command "\$run"'
-            $shell | Should -Match 'flock -n 9'
-            $shell | Should -Match 'slot\$n\.lock'
-            $shell | Should -Match 'Waiting for a build slot'
-            $shell | Should -Match ('(?s)echo "Build slot \$taken of \$slots taken\."\s*\n' +
-                'exec setsid --wait pwsh')
-
-            # One run in a copy at a time, by the folder's lock, which the run
-            # holds as it holds its slot: a second start and a send while it
-            # runs are refused; no walk of every process's folder.
-            $shell | Should -Match 'REFUSED\. A run is going on in \$tree' -Because (
-                'a start never rewrites a copy a run works in')
-            $shell | Should -Match 'exec 8>"\$folder/tree\.lock"\s+flock -n 8'
-            $shell | Should -Not -Match 'readlink'
-            foreach ($asked in 'probe', 'receive') {
-                $shell | Should -Match "(?s)\n$asked\)\n(.*?\n)?  locked\n.*?;;"
-            }
-            $shell | Should -Match '(?m)^locked\nmkdir -p "\$tree"\nrsync'
-
-            # A computer that is not Linux is refused by name at its probe.
-            $shell | Should -Match 'lacks what a test computer needs'
-            foreach ($tool in 'flock', 'setsid', 'rsync', 'git', 'pwsh') {
-                $shell | Should -Match "for tool in .*\b$tool\b"
-            }
-
-            # What is gone goes first, then every empty folder, then the new.
-            [int] $gone = $shell.IndexOf('rm -f -- < "$folder/gone.txt"')
-            [int] $empty = $shell.IndexOf('-type d -empty -delete')
-            [int] $extract = $shell.IndexOf('tar -xf "$folder/send.tar"')
-            $gone | Should -BeGreaterThan 0
-            $empty | Should -BeGreaterThan $gone
-            $extract | Should -BeGreaterThan $empty
+    It 'starts in a build slot, saying so, and holds it and the copy until the run ends' -Skip:(
+        $null -eq (Get-Command -Name rsync -CommandType Application -ErrorAction Ignore)) {
+        # The run's processes held util-linux's flock until 2026-11-27, and
+        # .NET's lock is no handle a child inherits: a holder holds it until a
+        # pipe every process of the run inherits has no writer left. pwsh
+        # given -EncodedCommand also writes what it shows to stderr as CLIXML,
+        # shown twice at this side (2026-11-23): the command runs by -Command.
+        [string] $folder = Join-Path $TestDrive 'kept/w'
+        [string] $slots = Join-Path $TestDrive 'kept/slots'
+        [hashtable] $probe = @{ Asked = 'probe'; Folder = $folder; Slots = 1; Work = '.local-work' }
+        (& $script:Remote -Asked $probe).Out.Trim() | Should -Be 'none' -Because 'nothing was sent'
+        New-Item -ItemType Directory -Path (Join-Path $folder 'mirror/src'), $slots -Force |
+            Out-Null
+        Set-Content -LiteralPath (Join-Path $folder 'mirror/src/lib.rs') -Value 'sent'
+        (& $script:Remote -Asked $probe).Out.Trim() | Should -Be 'held'
+        # What a start runs there: a run detached, as Start-XmipTest starts
+        # one, and its answer.
+        [string] $run = ('Start-Process -FilePath sleep -ArgumentList 8 ' +
+            "-RedirectStandardOutput ./slept.txt`n'xmip-answer started'")
+        [hashtable] $asked = @{
+            Asked = 'start'; Folder = $folder; SlotFolder = $slots; Slots = 1; Work = '.local-work'
+            Given = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($run))
         }
+        [string] $copy = Join-Path $folder 'tree.lock'
+        [string] $slot = Join-Path $slots 'slot1.lock'
+        [string] $record = Join-Path $slots 'slot1.holder'
+        [scriptblock] $free = {
+            param([string] $Path)
+            InModuleScope Xmip -Parameters @{ Path = $Path } {
+                param([string] $Path)
+                [IO.FileStream] $taken = Lock-XmipFile -Path $Path
+
+                if ($null -ne $taken) {
+                    $taken.Dispose()
+                }
+
+                $null -ne $taken
+            }
+        }
+
+        $started = & $script:Remote -Asked $asked
+
+        $started.Code | Should -Be 0
+        $started.Out | Should -Match 'Build slot 1 of 1 taken\.'
+        $started.Out | Should -Match 'xmip-answer started'
+        $started.Out | Should -Not -Match 'xmip-ask|xmip-ended' -Because 'the holder''s own words'
+        $started.Err | Should -Not -Match 'CLIXML'
+        Join-Path $folder 'xmip/src/lib.rs' | Should -Exist
+        Join-Path $folder 'xmip/.git' | Should -Exist -Because 'the copy is one Git repository'
+        Get-Content -LiteralPath $record -Raw | Should -BeLike "*`t$folder"
+        & $free -Path $copy | Should -BeFalse
+        & $free -Path $slot | Should -BeFalse
+        [int] $busy = InModuleScope Xmip { $script:XmipTestComputerBusy }
+        $again = & $script:Remote -Asked $asked
+        $again.Code | Should -Be $busy
+        $again.Err | Should -BeLike '*REFUSED. A run is going on in*'
+        (& $script:Remote -Asked $probe).Code | Should -Be $busy
+
+        # The run's last process ends, and the holder lets both go.
+        [Diagnostics.Stopwatch] $clock = [Diagnostics.Stopwatch]::StartNew()
+
+        while (-not (& $free -Path $copy) -and $clock.Elapsed.TotalSeconds -lt 30) {
+            Start-Sleep -Milliseconds 200
+        }
+
+        $clock.Elapsed.TotalSeconds | Should -BeLessThan 30
+        & $free -Path $slot | Should -BeTrue
+        $record | Should -Not -Exist
+    }
+
+    It 'waits for a build slot where each is taken, saying who holds it, then starts' -Skip:(
+        $null -eq (Get-Command -Name rsync -CommandType Application -ErrorAction Ignore)) {
+        # A wait says so before it starts anything, and a line its console is
+        # gone for cannot be written: the wait ends there. Who holds a slot is
+        # its record, checked against the processes running, where a walk of
+        # /proc found every holder until 2026-11-27.
+        [string] $folder = Join-Path $TestDrive 'waiting/w'
+        [string] $slots = Join-Path $TestDrive 'waiting/slots'
+        New-Item -ItemType Directory -Path (Join-Path $folder 'mirror'), $slots -Force | Out-Null
+        [IO.FileStream] $taken = InModuleScope Xmip -Parameters @{ Slots = $slots } {
+            param([string] $Slots)
+            Lock-XmipFile -Path (Join-Path -Path $Slots -ChildPath 'slot1.lock')
+        }
+        [string] $since = [DateTimeOffset]::Now.ToString('o')
+        Set-Content -LiteralPath (Join-Path $slots 'slot1.holder') -NoNewline -Value (
+            "$PID`t$since`telsewhere")
+        [string] $run = "'xmip-answer started'"
+        [hashtable] $asked = @{
+            Asked = 'start'; Folder = $folder; SlotFolder = $slots; Slots = 1; Work = '.local-work'
+            Given = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($run))
+        }
+        [Diagnostics.Process] $start = & $script:StartRemote -Asked $asked
+        [Threading.Tasks.Task[string]] $err = $start.StandardError.ReadToEndAsync()
+
+        try {
+            [Threading.Tasks.Task[string]] $first = $start.StandardOutput.ReadLineAsync()
+            $first.Wait(60000) | Should -BeTrue
+            $first.Result |
+                Should -Match "^Waiting for a build slot: slot1, $PID, 00:00:\d\d, elsewhere;$"
+        }
+        finally {
+            $taken.Dispose()
+        }
+
+        [string] $rest = $start.StandardOutput.ReadToEnd()
+        $start.WaitForExit()
+        $start.ExitCode | Should -Be 0 -Because $err.Result
+        $rest | Should -Match 'Build slot 1 of 1 taken\.'
+        $rest | Should -Match 'xmip-answer started'
     }
 }
 

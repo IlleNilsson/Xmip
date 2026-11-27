@@ -13,8 +13,9 @@
     sent there is kept beside it, in <name>/ (Send-XmipTestComputerEstate).
     Start-XmipTest, Get-XmipTestStatus, Stop-XmipTest and Get-XmipTestResult
     reach it through Invoke-XmipTestComputer (the owner, 2026-11-23: "Do what
-    you recommend"). The computer is Linux (Invoke-XmipTestComputer), reached
-    from any computer with OpenSSH's ssh, scp and tar.
+    you recommend"). The computer is Linux or macOS
+    (Invoke-XmipTestComputerRemote), reached from any computer with OpenSSH's
+    ssh, scp and tar.
 
     Style: doc/governance/powershell-style.md
 #>

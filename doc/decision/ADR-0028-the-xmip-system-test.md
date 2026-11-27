@@ -2308,3 +2308,64 @@ Environment*.
 Proved by `test/Terminology.Test.ps1`: the Reference Environment is named in
 `doc/terminology.md`, and *test estate* and *Estate Cluster* are kept out of
 every file the estate tracks but this amendment.
+
+## Amendment, 2026-11-27: a test computer is Linux or macOS, its side in PowerShell
+
+**Provenance.** A macOS test computer was refused at its first probe:
+*REFUSED. Darwin here lacks what a test computer needs: flock setsid /proc
+GNU-xargs.* The owner, 2026-11-27, of doing the test computer's locking,
+detaching and process checks in PowerShell 7.7, which every test computer
+already runs, in one implementation for both systems, and of amending this
+record to *Linux or macOS*: *Go ahead*. The design below is the worker's
+drafting, for the owner to strike.
+
+- **A test computer is Linux or macOS**, where the amendment of 2026-11-24
+  said *The test computer is Linux*. The account's own shell, bash or zsh,
+  only starts pwsh, and pwsh runs the computer's side,
+  `Invoke-XmipTestComputerRemote` and the files beside it, sent in the ssh
+  command each time, gzip-compressed, since ssh's command line crosses
+  Windows, which takes none over 32767 characters. The probe refuses a
+  computer lacking pwsh, rsync, tar or git, naming each; bash, GNU's `find`
+  and `xargs`, util-linux's `flock` and `setsid` and `/proc` are asked for
+  no more. `XDG_RUNTIME_DIR` is named for a run only where the system has
+  `/run/user/<uid>`, which macOS has not.
+- **The locks are the estate's one**, `Lock-XmipFile`: a file opened
+  sharing nothing, an flock .NET takes on Linux and macOS and util-linux's
+  own on Linux, so a run started by the tooling before this amendment and
+  one after hold the same `~/slot<n>.lock` alike. `Lock-XmipDeployState`
+  and the send's lock, which each opened theirs, take theirs through it.
+- **A holder holds a run's locks.** .NET's lock is no handle a child
+  inherits, and disposing it lets go for every process sharing it, so the
+  run's processes cannot hold it as they held util-linux's. The start ssh
+  runs starts the run's holder detached, a session of its own as `setsid`
+  made one (.NET 11's `ProcessStartInfo.StartDetached`), shows what it says
+  and ends with the start's exit code, which lets ssh go. The holder takes
+  the copy's lock and a build slot, starts the command, and holds both until
+  a pipe whose write end every process of the run inherits has no writer
+  left: until the run's last process has ended, as before. It starts
+  nothing later on its own (the owner, 2026-09-12).
+- **A wait whose console has gone still starts nothing.** The holder goes
+  on only once the start has shown the line saying a slot was taken, and
+  the start writes through a stream that fails where nothing reads it, as
+  the console's own writer does not.
+- **Who holds a slot** is its holder's record beside it,
+  `~/slot<n>.holder`: the process, since when and the copy it builds,
+  checked against the processes running, where a walk of `/proc` found
+  every holder. A slot held by anything else is said to be held.
+- **A receive takes what is gone through .NET**, each file and then every
+  folder left empty, where GNU's `xargs` and `find` took them; tar unpacks
+  what changed, as before.
+- **rsync stays.** macOS 15's `rsync` is openrsync; with the arguments the
+  copy is made with, `-a --delete` and the six `P` filters, it kept and
+  deleted the same paths as rsync 3.2.7 on Linux (tried 2026-11-27).
+
+Proved by `test/TestComputer.Test.ps1` — a receive and its refusal while a
+run holds the copy, run on every system; the probe's refusal naming each
+tool missing; and, where rsync is, a start that holds its copy and slot
+until the run's last process has ended and refuses a second, and a wait for
+a slot that says who holds it and then starts — and by Core.Internal and
+Core.Estate run through `-ComputerName` on pluto, Linux, and on a macOS 15
+computer. On macOS, Core.Estate's failures are the estate's own there, not
+the test computer's: open problems 215 (a copy fails the offline tests until
+fetched), 220 (macOS's git is below the estate's floor) and 221 (the
+deployment's tests reach the host's refusal first).

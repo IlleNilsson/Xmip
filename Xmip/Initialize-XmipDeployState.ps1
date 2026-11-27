@@ -191,9 +191,8 @@ function Lock-XmipDeployState {
             change under it.
 
         .DESCRIPTION
-            Opened sharing nothing: on Windows a sharing violation, on Linux
-            and macOS an flock .NET takes, either released when the process
-            ends, however it ends. A run refused names the file.
+            The estate's one exclusive lock (Lock-XmipFile), released when the
+            process ends, however it ends. A run refused names the file.
     #>
     [CmdletBinding()]
     [OutputType([IO.FileStream])]
@@ -205,22 +204,13 @@ function Lock-XmipDeployState {
     New-Item -Path $Folder -ItemType Directory -Force -WhatIf:$false | Out-Null
     Protect-XmipDeployPath -Path $Folder
     [string] $path = Join-Path $Folder 'run.lock'
-    try {
-        return [IO.FileStream]::new($path, [IO.FileMode]::OpenOrCreate, [IO.FileAccess]::ReadWrite,
-            [IO.FileShare]::None)
-    }
-    catch {
-        [Exception] $failure = $_.Exception
-        while ($failure -is [Management.Automation.MethodInvocationException] -and
-            $null -ne $failure.InnerException) {
-            $failure = $failure.InnerException
-        }
-        # A folder or file not found is no other run.
-        if ($failure.GetType() -ne [IO.IOException]) {
-            throw
-        }
+    [IO.FileStream] $held = Lock-XmipFile -Path $path
+
+    if ($null -eq $held) {
         throw "REFUSED: another run of this environment holds $path; one runs at a time."
     }
+
+    return $held
 }
 
 function New-XmipDeployKey {

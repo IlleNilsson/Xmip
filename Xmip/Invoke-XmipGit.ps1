@@ -12,7 +12,8 @@
     calls checked $LASTEXITCODE where someone remembered to: Publish-XmipPin
     checked it only after a push, so a commit that failed, followed by a push
     with nothing to push, reported the estate pinned (open-problems.md,
-    problem 25, row l).
+    problem 25, row l). A test computer is sent this file with its side
+    (Invoke-XmipTestComputerRemote), so it calls nothing else of the module.
 
     Style: doc/governance/powershell-style.md
 #>
