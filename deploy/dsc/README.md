@@ -28,7 +28,7 @@ developers' machines beside them. A smaller plan is a smaller cluster file.
 The plan is drawn, with its machines and the four ways to run it — local
 processes, containers, virtual machines on Hyper-V, KVM with libvirt or
 VMware, and physical machines (ADR-0015, amendment 2026-11-24) — in
-[the Reference Environment deck](../../asset/brand/presentation/Xmip-environment.pptx);
+[the Reference Environment deck](../../asset/brand/presentation/Xmip-reference-environment.pptx);
 every node in it is optional, and Xmip runs on one node with all roles.
 
 Slicing gives no node the table (ADR-0031, the second amendment of

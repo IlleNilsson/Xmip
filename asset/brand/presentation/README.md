@@ -9,7 +9,7 @@ home for the overview's both formats. Revise them together.
 - [PowerPoint: 16 slides](Xmip-overview_en-US.pptx)
 - [Animated video: about 10 minutes](Xmip-overview_en-US.mp4)
 - [Video captions](Xmip-overview_en-US.srt)
-- [The Reference Environment, PowerPoint: 4 slides](Xmip-environment.pptx):
+- [The Reference Environment, PowerPoint: 4 slides](Xmip-reference-environment.pptx):
   the nodes Xmip's tests and demos run, the functions beside the message
   path, the machines and four ways to run one plan. Every node in it is optional; Xmip
   runs on one node with all roles. Its shapes and tables are editable.

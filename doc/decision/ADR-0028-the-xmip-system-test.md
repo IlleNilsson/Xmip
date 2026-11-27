@@ -1790,7 +1790,8 @@ roles*.
   three sending nodes and two Storage nodes are what the tests and the demo
   run, not what Xmip needs: one node with all roles is the smallest Xmip.
   The Reference Environment deck,
-  `asset/brand/presentation/Xmip-environment.pptx`, says so to end users.
+  `asset/brand/presentation/Xmip-reference-environment.pptx`, says so to
+  end users.
 
 ## Amendment, 2026-11-23: the System Tests, local, and the Systems Tests, on machines
 
@@ -2285,9 +2286,8 @@ Environment*.
   use, `test/core/system-test/configuration/cluster.xmip`, with its nodes,
   their roles, its Parties and its Xmip Applications, and in its environment
   table the far ends, the machines and the network they run on (ADR-0015,
-  amendment 2026-11-25). The environment deck,
-  `asset/brand/presentation/Xmip-environment.pptx`, is the Reference
-  Environment deck, which draws it.
+  amendment 2026-11-25). The Reference Environment deck,
+  `asset/brand/presentation/Xmip-reference-environment.pptx`, draws it.
 - **What runs it.** The System Tests and the Systems Tests, which keep
   their names, and the demo use it, by the three switches of the amendment
   of 2026-11-25: as processes on one
