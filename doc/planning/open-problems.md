@@ -3528,6 +3528,99 @@ none (ADR-0015, amendment 2026-11-25), before the lock and the steps they
 test. Needed: those tests given a host's hypervisor, or said SKIPPED where
 the host makes none.
 
+## 222. The System Tests do not run on a test computer
+
+Found 2026-11-27 starting one node of every role on a macOS 15 test
+computer: `Start-XmipTest -Suite Core.System` with `-Cluster`, `-Nodes` and
+`-ComputerName xmip-mac01` is REFUSED before anything is sent, *-ComputerName
+belong to Core.Estate and Core.Internal, not Core.System*, as
+`Get-XmipSuiteSwitchRefusal`'s table gives it to the `pester` and `internal`
+kinds alone (and its sentence says belong for belongs). So the node was
+started by hand: the estate sent by a Core.Estate run, then, over ssh,
+`pwsh` in the copy, the module imported and `Start-XmipTest -Suite
+Core.System` run there, with the environment the copy's runs are given and
+outside the copy's lock, which the next send does not wait on. Needed: the
+rolls taking `-ComputerName` as the internal tests do, sent, started,
+observed and stopped by `Get-XmipTestStatus`, `Get-XmipTestResult` and
+`Stop-XmipTest -ComputerName`.
+
+## 223. A run's placement is refused only after its build
+
+Found 2026-11-27 starting the System Tests with one node of every role on a
+macOS 15 test computer: one node in `-Nodes`, its `-NodeRole`
+'operational,monitoring,executing,development,storage', and no
+`-NodeCapability`, passed every check `Start-XmipTest` makes, built for 22
+minutes, and the roll ended before its first snapshot: *REFUSED: no node
+satisfies work requiring serving Receive, firewall-party-e; considered* the
+one node, *(operational,monitoring,executing,development,storage; declares
+none)*, and
+the same for firewall-party-d, erp-direct and order-approval-module, the
+Node capabilities the Reference Environment's work is placed by. A node's
+roles are refused before anything starts (`Get-XmipNodeRoleRefusal`,
+ADR-0055); the placement of the cluster's work on its nodes' capabilities
+is refused by the roll, after the build. Neither `getting-started.md` nor
+`Start-XmipTest`'s help names the capabilities a run of named nodes needs.
+Needed: the placement asked before the build, as the roles are, and those
+capabilities said where `-NodeCapability` is.
+
+## 224. A System Tests node is its own Storage only under a Storage name the Reference Environment gives
+
+Found 2026-11-27 starting one node of every role on a macOS 15 test
+computer. Each served node's file is sliced from the Reference Environment
+compiled into the roll (`subscribing::CLUSTER`, `include_str!` of
+`configuration/cluster.xmip`), whose `[storage] nodes` names its two Storage
+nodes; `served::given::cluster_text` rewrites an entry to a loopback
+address only where a run's Storage node has that name, and never reads the
+`[storage]` `Write-XmipTestCluster` writes into the run's own file. So a node
+of the tester's own naming with the storage role refused at accept-work,
+*no Storage node answered*, each of the two named, *resolving the peer:
+failed to lookup address information*; and a run of the first Storage node
+alone still lists the second, so its one Storage node is one of several, stays *a standby Storage node,
+epoch 0, ready*, and refuses the same way, where a node whose `[storage]`
+lists none is the only one, embedded (`runtime/src/storage.rs`). Not
+macOS's: it is in the code every system runs. Needed: the served file's
+`[storage] nodes` taken from the run's nodes by their role, and none where
+one node is the cluster's only Storage node.
+
+## 225. A roll dies at its first line once the pwsh that started it ends
+
+Found 2026-11-27 on a macOS 15 test computer: the roll ended seconds after
+it started, its log and errors empty, and the audit holds *panicked at
+.../std/src/io/stdio.rs:1209:9: failed printing to stderr: Broken pipe (os
+error 32)*. `Start-XmipSystemTestRollProcess` starts the roll through
+`Start-XmipHiddenProcess`, `Start-Process` with `-RedirectStandardOutput`
+and `-RedirectStandardError`, from the detached build's pwsh, which then
+ends. Off Windows, PowerShell gives the child pipes, not the files (`lsof`
+lists its descriptors 0 to 2 as PIPE), and copies them into the files while
+it lives: a probe started that way wrote both lines while its starter
+lived, and once its starter had ended each write failed with exit code 1.
+So the roll's first line after its build has ended ends it, and what it
+was about to say is lost; started from a pwsh that waited on it, its
+refusal reached its log. Tried on macOS; Linux's PowerShell starts
+processes the same way. The same holds for whatever else
+`Start-XmipHiddenProcess` starts with its output redirected and outliving
+its starter. Needed: a process that outlives its starter given the files
+themselves, on every system.
+
+## 226. A node's own Storage does not open on macOS outside a login session
+
+Found 2026-11-27 on a macOS 15 test computer, over ssh, with nobody logged
+in at its screen: a node of every role, its own Storage node, refused at
+accept-work, *did not open: the store's data key: key store: keychain: User
+interaction is not allowed.* A `[store]` naming no key store takes the
+platform's, on macOS `xmip-core-secret-keychain`, whose key-encryption key
+is an item of the login keychain, locked until its owner logs in at the
+screen; `security show-keychain-info` over the same ssh is refused the
+same way. With `[store] key_store = "xmip-core-secret-file"` the same node
+started: its signed slice activated, RocksDB and SQLite opened, Storage
+served over mutual TLS, *accepts work*, and stopped when its input ended,
+drained in 21 ms. A node started by a test computer, over ssh or as a
+launchd daemon has no login session; one started inside a developer's
+login session was not tried. The keychain crate's README still says *Not
+run on macOS*. Needed: the key store a macOS node takes by default opening
+without a login session, or the node refusing it in words before it
+starts; and the keychain crate's tests run on macOS.
+
 # Suggested order
 
 Rewritten 2026-09-23, and corrected to what is built on 2026-11-10. The
