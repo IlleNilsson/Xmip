@@ -346,7 +346,12 @@ changes or removes it: it takes a host adapter.
 An environment's machines, network and pool are removed with the
 hypervisor's own commands, after listing them to see they are the
 environment's: the machines are `XMIP-<name>`, the network, the switch and
-the pool `Xmip-<cluster>`.
+the pool `Xmip-<cluster>`. A machine made by hand and kept, a pet, is never
+among them, whatever its name: its Hyper-V notes or libvirt description
+begin with `Pet:` and say what it is, and it is listed and left; a pet is
+torn down only over a major issue and by mutual agreement. Only the
+machines a template made are cattle, removed and made again at will (the
+owner, 2026-11-27).
 
 - **libvirt**, with `virsh`: `virsh vol-list Xmip-<cluster>`, then `virsh
   destroy` and `virsh undefine --nvram --remove-all-storage` for each
