@@ -36,6 +36,9 @@
 //! A `LoRaWAN` Send Location's far end is a device behind a gateway pointed
 //! at the node, its network server, over Semtech's UDP packet forwarder
 //! protocol (`gateway.rs`): the node listens, and the far end reaches it.
+//!
+//! A Bluetooth Send Location's far end is a transport on the second of two
+//! virtual controllers, the node's on the first (`controller.rs`), Linux's.
 
 use std::path::Path;
 use std::time::Duration;
@@ -43,14 +46,12 @@ use std::time::Duration;
 use xmip_transport::{Configured, FarEnd, Loopback};
 
 mod announced;
+mod controller;
 #[cfg(feature = "transport-lorawan")]
 mod gateway;
 #[cfg(feature = "transport-sqlite")]
 mod table;
 mod terminal;
-
-#[cfg(feature = "transport-sqlite")]
-use table::Table;
 
 /// What a far end takes where its protocol carries any bytes: one XML
 /// document, short and plain, as every linked protocol carries it whole —
@@ -233,6 +234,7 @@ pub(crate) fn every(
     "as4://{far}/msh", ["party_id" = "Xmip", "to_party_id" = "Xmip"], false}
     standing! {all, "transport-bacnet", "bacnet",
     stood(xmip_transport_bacnet::BacnetTransport::loopback()), "bacnet://{far}", [], false}
+    all.extend(controller::paired());
     standing! {all, "transport-coap", "coap",
     stood(xmip_transport_coap::CoapTransport::loopback()), "coap://{far}/probe", [], false}
     standing! {all, "transport-cotp", "cotp",
@@ -354,7 +356,7 @@ pub(crate) fn every(
     stood(xmip_transport_snmp::SnmpTransport::loopback()),
     "snmp+set://{far}/1.3.6.1.4.1.0.1.0", [], false}
     standing! {all, "transport-sqlite", "sqlite",
-    Some(Table::under(directory)), "sqlite://{far}", [], false}
+    Some(table::Table::under(directory)), "sqlite://{far}", [], false}
     standing! {all, "transport-ssdp", "ssdp", Some(announced::control_point()),
     "ssdp://{far}", [], false, announced::DEVICE}
     standing! {all, "transport-syslog", "syslog",

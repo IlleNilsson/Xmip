@@ -2240,3 +2240,75 @@ LoRaWAN:
   up through its gateway to a node's network server on this machine, its
   confirmed frames answered in their first receive window; through a node,
   receiving stays unproven, as for the rest (the amendment of 2026-11-25).
+
+## Amendment, 2026-11-27: Bluetooth reaches a controller through the kernel's L2CAP sockets, and is linked on Linux
+
+**Provenance.** The owner, 2026-11-27, on the transports that need
+hardware: *let's do your best for now. I'm not going to buy all that
+hardware*. Bluetooth had an in-process radio alone, so no node in a
+process of its own reached its far end and it was not linked (the amendment
+above). The boundary, the settings, the two controllers it is proven on and
+linking it are the assistant's choice, for the owner to strike or keep.
+
+**bluetooth is linked, on Linux alone**, one more than the 82 of the
+amendment above: 83 of the 88, by the criterion of the amendment of
+2026-11-24. Not linked: aws and azure, what their vendors' transports speak
+and no transports; and the three radios thread, wireless-hart and zigbee,
+whose far end lives inside one process and whose radio no node reaches
+here.
+
+- **The boundary is the kernel's L2CAP socket**, the least privileged one
+  Linux has: `AF_BLUETOOTH`, `SOCK_SEQPACKET`, `BTPROTO_L2CAP`, on a dynamic
+  PSM, 4097 (0x1001) or above, which a process binds without
+  `CAP_NET_BIND_SERVICE`. Each SDU is one RFCOMM frame, handed whole; the
+  kernel pages the peer, opens the ACL link and the channel and segments
+  it, and RFCOMM above it is Xmip's own, as on the radio in process. The
+  HCI user channel, which would hand Xmip the ACL link for its own L2CAP,
+  asks for `CAP_NET_ADMIN` and takes the controller from the kernel and
+  `bluetoothd`; and the kernel's RFCOMM, which holds PSM 3 on Linux, would
+  leave Xmip's unused. So a peer is one speaking Xmip's RFCOMM on the PSM
+  the Location names (open problem 229).
+- **A Location's address names the device**: the peer a Send Location
+  connects to, `bt://70:a8:d3:36:de:ad`, or the controller of this machine
+  a Receive Location listens on, `00:00:00:00:00:00` for any; `loopback`
+  stays the radio in process. Two settings are new: `psm`, 4097 where it
+  is left out, odd with its upper octet even, as a dynamic PSM is; and, on
+  the send side, `controller`, the device address of this machine's
+  controller to connect from, the kernel's choice where it is left out. A
+  device address is read as IEEE 802 writes a hardware address, by
+  `net::mac`. A Receive Location's listener is bound as its transport is
+  opened (`Configured::listening`), kept by `transport::kept::Kept`, and its
+  receive waits on it through `transport::socket::ready`.
+- **Written once.** RFCOMM's dialogue and its session run on a `Channel`
+  whichever `Link` carries it (`link.rs`, `session.rs`): the kernel's socket
+  (`socket.rs`), or Xmip's own L2CAP on an ACL link (`l2cap.rs`), which the
+  radio in process and any `Radio` handed in speak. The session held Xmip's
+  L2CAP signaling and RFCOMM together until then.
+- **One file of unsafe code.** Every call on the socket is rustix's, safe;
+  the address it does not write, `struct sockaddr_l2`, handed to `bind` and
+  `connect` and read back from `accept`, is `src/system.rs`, which
+  `test/Unsafe.Test.ps1` lists (ADR-0050, amendment 2026-09-25).
+- **Proven on two virtual controllers** (`.src/test/service/linked.rs`,
+  `far_ends/controller.rs`): whoever opens `/dev/vhci` has the kernel make
+  a controller and answers its HCI commands, so the crate opens two and is
+  both (`controller`, behind `test-support`), a BR/EDR controller with no
+  Secure Simple Pairing and no LE, carrying pages and ACL data between
+  them; the kernel's stack, `bluetoothd` and every socket on them are the
+  real ones. BlueZ's `btvirt` does as much, from its test tools, which the
+  Linux test computer did not have. `bluetoothd` powers each controller as
+  it comes (`AutoEnable=true`) and keeps a BR/EDR controller answering
+  pages only from devices it knows — the test computer's own controller is
+  powered and not connectable — so the second is made discoverable through
+  it over D-Bus (`busctl`), and the far end listens there; the node's Send
+  Location connects from the first. Where `/dev/vhci` is not the user's or
+  `bluetoothd` is not on the system bus, the test says SKIPPED and why; off
+  Linux it says so too. On the Linux test computer the module is loaded and
+  a udev rule gives `/dev/vhci` to the user, so no step of the owner's was
+  needed. The crate's own tests carry a Stream of 64 KiB the same way, and
+  hold a page no controller answers refused, naming the device.
+
+Not built: a channel at more than the kernel's default security, so no
+pairing and no encryption; finding a peer's server channel through SDP;
+and more than one Receive Location on one controller and PSM, each binding
+its own listener. No real radio and no other RFCOMM stack is driven (open
+problem 229), and no controller is reached off Linux (open problem 230).

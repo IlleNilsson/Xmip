@@ -67,6 +67,11 @@ BeforeAll {
         # overlapped wait (src/system/overlapped.rs, in net's folder); on
         # Unix the descriptor its watch lends to poll.
         'module/core/capability/transport/serial/src/system.rs' = 'ADR-0064, amendment 2026-11-15'
+        # The kernel's L2CAP socket address on Linux, `struct sockaddr_l2`,
+        # which rustix does not write: handed to bind and connect, and read
+        # back from accept; every call on the socket is rustix's own.
+        'module/core/capability/transport/bluetooth/src/system.rs' =
+            'ADR-0015, amendment 2026-11-27'
         # A Script runtime's process tree, ended as one: on Windows the job
         # object it runs in, its first thread let run once it is in the job,
         # and the job terminated; on Unix the kill of the group it leads.

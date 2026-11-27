@@ -171,12 +171,13 @@ takes them (judgment, with the survey behind it):
    Location — built in the runtime on 2026-09-28 and driven by its tests;
    the executable that starts one outside a test is next. Every row below
    depends on it. Built 2026-11-24 for transports and Work Processes: the
-   assembled service runs 82 of the 88 declared transports, where it ran
+   assembled service runs 83 of the 88 declared transports, where it ran
    six, each proven carrying a file through a node to its own far end
    (52 on 2026-11-24, 28 more on 2026-11-25, the vendors' ten presenting
-   the secret their Location names, and two on 2026-11-27: wireless M-Bus
-   through a USB receiver stick on a serial port, and LoRaWAN, a node the
-   network server behind a gateway's packet forwarder), and
+   the secret their Location names, and three on 2026-11-27: wireless
+   M-Bus through a USB receiver stick on a serial port, LoRaWAN, a node
+   the network server behind a gateway's packet forwarder, and Bluetooth
+   through the kernel's L2CAP sockets on Linux), and
    a Work Process unit through the C ABI (README, *Security and assurance*;
    `estate-map.md`, `linked-transports` and `process-execution`).
 2. Transformation. BizTalk estates are thousands of XSLT 1.0 maps; CData sells

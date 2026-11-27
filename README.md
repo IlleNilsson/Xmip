@@ -424,16 +424,17 @@ relevant where data sovereignty is regulated. Its AS4 and Peppol transports
 are protocol software for the operator of a certified access point, which is
 what European e-invoicing runs on; certification itself belongs to the
 operator. The assembled service runs both, without TLS until a site can
-choose it for HTTP, and 80 transports more: 82 of the 88 declared, among
+choose it for HTTP, and 81 transports more: 83 of the 88 declared, among
 them MLLP for HL7, SMTP, WebSocket, Kafka, MQTT, AMQP, IBM MQ, OPC UA,
 Modbus, BACnet, CoAP, a serial line, M-Bus, wireless M-Bus through a USB
 receiver stick, HART, IO-Link, CAN, CANopen,
 J1939, raw Ethernet, EtherCAT, PROFINET, the SQL databases, the
 vendors' S3, SQS, SNS, Kinesis, Azure Blob, Event Grid, Event Hubs,
 Service Bus, Google Cloud Storage and Pub/Sub, which present the secret
-their Location names, and LoRaWAN, a node the network server a gateway's
-packet forwarder points at, each proven carrying a file through a node to
-its own far end, the CAN and Ethernet ones on Linux
+their Location names, LoRaWAN, a node the network server a gateway's
+packet forwarder points at, and Bluetooth through the kernel's L2CAP
+sockets, each proven carrying a file through a node to
+its own far end, the CAN, Ethernet and Bluetooth ones on Linux
 ([built, in the assembled service](doc/architecture/estate-map.md#linked-transports),
 which names every one and why each other is not).
 

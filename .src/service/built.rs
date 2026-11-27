@@ -268,8 +268,8 @@ macro_rules! linked {
 /// pseudo-terminal, which Linux and macOS have, a vendor's presenting
 /// the secret its Location names, and `LoRaWAN`'s through a gateway's packet
 /// forwarder over UDP (ADR-0015, amendments 2026-11-24, 2026-11-25 and
-/// 2026-11-27); and after them those on a link of the kernel's
-/// ([`kernel_transports`]).
+/// 2026-11-27); and after them those on a link of the kernel's, Bluetooth's
+/// among them ([`kernel_transports`]).
 #[allow(
     unused_mut,
     clippy::vec_init_then_push,
@@ -356,13 +356,16 @@ pub fn transports() -> Vec<LinkedTransport> {
 }
 
 /// The transports that reach a link of the kernel's, in the order of their
-/// names: a CAN interface (can-bus's `socketcan`) and what rides on it, and
-/// an Ethernet interface's raw socket (ethernet's `packet`) and what rides
-/// on it, which Linux alone has; each proven by a node in a user and network
-/// namespace of the test's own, on interfaces it makes there
-/// (`.src/test/service/namespaced.rs`; ADR-0015, amendment 2026-11-25).
-/// Elsewhere none: a CAN Location there would open a bus inside the node
-/// alone.
+/// names: a Bluetooth controller's L2CAP sockets, a CAN interface (can-bus's
+/// `socketcan`) and what rides on it, and an Ethernet interface's raw socket
+/// (ethernet's `packet`) and what rides on it, which Linux alone has. Each
+/// CAN and Ethernet one is proven by a node in a user and network namespace
+/// of the test's own, on interfaces it makes there
+/// (`.src/test/service/namespaced.rs`; ADR-0015, amendment 2026-11-25), and
+/// Bluetooth by the node of `.src/test/service/linked.rs`, from the first of
+/// two virtual controllers to a far end on the second (amendment
+/// 2026-11-27). Elsewhere none: a CAN Location there would open a bus
+/// inside the node alone, and a Bluetooth one reach only a radio in it.
 #[allow(
     unused_mut,
     clippy::vec_init_then_push,
@@ -371,6 +374,7 @@ pub fn transports() -> Vec<LinkedTransport> {
 fn kernel_transports() -> Vec<LinkedTransport> {
     cfg_select! {
         target_os = "linux" => linked![
+            "transport-bluetooth" => xmip_transport_bluetooth::BluetoothTransport,
             "transport-can-bus" => xmip_transport_can_bus::CanTransport,
             "transport-canopen" => xmip_transport_canopen::CanOpenTransport,
             "transport-ethercat" => xmip_transport_ethercat::EtherCatTransport,

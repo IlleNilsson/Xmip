@@ -1485,9 +1485,9 @@ What remains:
 - **Technologies that could stream gather.** The HTTP ones — http, WebDAV,
   Azure Blob, Google Cloud Storage — because the HTTP client
   (`net::http`) writes a request whole, its length counted from it; SMTP,
-  to dot-stuff its `DATA` whole; Bluetooth, whose in-process link takes one
-  write whole. Each says so in its `sending`, and its byte budget counts
-  the whole Message.
+  to dot-stuff its `DATA` whole; Bluetooth, which writes a Stream's UIH
+  frames once it is gathered. Each says so in its `sending`, and its byte
+  budget counts the whole Message.
 - **Departures started apart read apart.** Four departures of a 64 MiB
   Message to far ends faster than Xmip Storage's read took 4,184 chunk
   reads for 1,045 chunks: a departure more than two chunks behind reads on
@@ -3599,6 +3599,47 @@ login session was not tried. The keychain crate's README still says *Not
 run on macOS*. Needed: the key store a macOS node takes by default opening
 without a login session, or the node refusing it in words before it
 starts; and the keychain crate's tests run on macOS.
+
+## 229. Bluetooth is proven on no radio and against no other RFCOMM stack
+
+Found 2026-11-27 giving Bluetooth the kernel's L2CAP sockets (ADR-0015,
+amendment 2026-11-27): a Location reaches a controller through them on a
+dynamic PSM, 4097 unless it names another, with Xmip's own RFCOMM above,
+and it is proven only between two virtual controllers the crate makes over
+`/dev/vhci`, Xmip at both ends. A phone, a barcode scanner or a laptop
+serves RFCOMM on PSM 3 and names its server channels in SDP; on Linux PSM 3
+is the kernel's RFCOMM's, so Xmip's never meets theirs, and no SDP record
+is read or offered. The channel opens at the kernel's default security,
+low, with no pairing and no encryption, and the virtual controllers have
+no Secure Simple Pairing, so what a real controller with it asks of such a
+channel is unproven. Needed: Xmip's RFCOMM reaching PSM 3 — through the
+kernel's RFCOMM sockets, or PSM 3 itself with a privilege the owner grants
+— and SDP; a Location's security and pairing through `bluetoothd`'s agent;
+and a Stream carried both ways with an independent stack on a real radio:
+Windows' on the owner's laptop, and a phone's, against the Linux test
+computer's own controller.
+
+## 230. A Bluetooth Location reaches a controller on Linux alone
+
+Found 2026-11-27 with problem 229: off Linux a Location's device address
+is refused as its transport is opened, saying so, and `xmip-service` links
+bluetooth on Linux alone. Windows gives a program no L2CAP socket, only
+RFCOMM's (Winsock's `AF_BTH`), and macOS reaches a controller through its
+IOBluetooth framework, which the crate does not call. Needed: for each
+target, whether Xmip's RFCOMM rides what the system gives or the target
+speaks the system's RFCOMM, and the transport linked where it reaches a
+controller.
+
+## 231. Two Bluetooth Receive Locations on one controller need two PSMs
+
+Found 2026-11-27 with problem 229: each Receive Location binds a listener
+of its own at its controller and PSM, and serves whichever server channel
+a peer opens on it, so a second Location at the same controller and PSM is
+refused as the node starts, the PSM taken. RFCOMM serves every server
+channel on one channel to its PSM. Needed: the Locations of a node at one
+controller and PSM sharing one listener through `transport::Sharing`, as a
+serial port's do (ADR-0064, amendment 2026-11-15), each taking the data
+links of its own server channel.
 
 # Suggested order
 

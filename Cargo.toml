@@ -489,7 +489,12 @@ authorize-location = ["authorize", "dep:xmip-authorize-location"]
 # (`.src/test/service/namespaced.rs`). lorawan is the network server behind
 # the gateways that point at the node over Semtech's UDP packet forwarder
 # protocol, its far end a device behind a packet forwarder of its crate's
-# own (ADR-0051 and ADR-0015, amendments 2026-11-27).
+# own (ADR-0051 and ADR-0015, amendments 2026-11-27). bluetooth reaches a
+# controller through the kernel's L2CAP sockets, which Linux alone has, and
+# `built.rs` links it on Linux alone: it is proven by the node of
+# `linked.rs`, from the first of two virtual controllers its crate makes
+# over the kernel's `/dev/vhci` to a far end on the second (ADR-0015,
+# amendment 2026-11-27).
 transport-activemq = ["dep:xmip-transport-activemq"]
 transport-amqp = ["dep:xmip-transport-amqp"]
 transport-as2 = ["dep:xmip-transport-as2"]
@@ -503,6 +508,7 @@ transport-azure-event-grid = ["dep:xmip-transport-azure-event-grid"]
 transport-azure-event-hubs = ["dep:xmip-transport-azure-event-hubs"]
 transport-azure-service-bus = ["dep:xmip-transport-azure-service-bus"]
 transport-bacnet = ["dep:xmip-transport-bacnet"]
+transport-bluetooth = ["dep:xmip-transport-bluetooth"]
 transport-can-bus = ["dep:xmip-transport-can-bus", "xmip-transport-can-bus/socketcan"]
 transport-canopen = ["dep:xmip-transport-canopen", "xmip-transport-can-bus/socketcan"]
 transport-coap = ["dep:xmip-transport-coap"]
@@ -789,6 +795,13 @@ xmip-provision-acme = { package = "xmip-core-provision-acme", git = "https://git
 xmip-transport-serial = { package = "xmip-core-transport-serial", git = "https://github.com/IlleNilsson/xmip-core-transport-serial", branch = "main", features = ["test-support"] }
 xmip-sdk = { package = "xmip-core-sdk", git = "https://github.com/IlleNilsson/xmip-core-sdk", branch = "main" }
 
+# The service test's far end of a Bluetooth Send Location: a transport
+# listening on the second of two virtual controllers the kernel makes over
+# `/dev/vhci`, the first the node's (`controller::Paired`), Linux's, which
+# only test-support turns on.
+[target.'cfg(target_os = "linux")'.dev-dependencies]
+xmip-transport-bluetooth = { package = "xmip-core-transport-bluetooth", git = "https://github.com/IlleNilsson/xmip-core-transport-bluetooth", branch = "main", features = ["test-support"] }
+
 [target.'cfg(windows)'.dependencies]
 # The operating system's log and the key store on Windows (features audit and
 # secret).
@@ -797,8 +810,10 @@ xmip-secret-dpapi = { package = "xmip-core-secret-dpapi", git = "https://github.
 
 [target.'cfg(target_os = "linux")'.dependencies]
 # The transports on a link of the kernel's, which Linux alone has: a CAN
-# interface and an Ethernet interface's raw socket (`built.rs`,
-# `kernel_transports`), so no other build carries them.
+# interface, an Ethernet interface's raw socket and a Bluetooth
+# controller's L2CAP sockets (`built.rs`, `kernel_transports`), so no other
+# build carries them.
+xmip-transport-bluetooth = { package = "xmip-core-transport-bluetooth", git = "https://github.com/IlleNilsson/xmip-core-transport-bluetooth", branch = "main", optional = true }
 xmip-transport-can-bus = { package = "xmip-core-transport-can-bus", git = "https://github.com/IlleNilsson/xmip-core-transport-can-bus", branch = "main", optional = true }
 xmip-transport-canopen = { package = "xmip-core-transport-canopen", git = "https://github.com/IlleNilsson/xmip-core-transport-canopen", branch = "main", optional = true }
 xmip-transport-ethercat = { package = "xmip-core-transport-ethercat", git = "https://github.com/IlleNilsson/xmip-core-transport-ethercat", branch = "main", optional = true }
