@@ -486,7 +486,10 @@ authorize-location = ["authorize", "dep:xmip-authorize-location"]
 # socket (ethernet's `packet`), so each brings its kernel link, and
 # `built.rs` links them on Linux alone: each is proven by a node in a user
 # and network namespace of the test's own, on interfaces it makes there
-# (`.src/test/service/namespaced.rs`).
+# (`.src/test/service/namespaced.rs`). lorawan is the network server behind
+# the gateways that point at the node over Semtech's UDP packet forwarder
+# protocol, its far end a device behind a packet forwarder of its crate's
+# own (ADR-0051 and ADR-0015, amendments 2026-11-27).
 transport-activemq = ["dep:xmip-transport-activemq"]
 transport-amqp = ["dep:xmip-transport-amqp"]
 transport-as2 = ["dep:xmip-transport-as2"]
@@ -531,6 +534,7 @@ transport-iso-tp = ["dep:xmip-transport-iso-tp", "xmip-transport-can-bus/socketc
 transport-j1939 = ["dep:xmip-transport-j1939", "xmip-transport-can-bus/socketcan"]
 transport-kafka = ["dep:xmip-transport-kafka"]
 transport-knx = ["dep:xmip-transport-knx"]
+transport-lorawan = ["dep:xmip-transport-lorawan"]
 transport-m-bus = ["dep:xmip-transport-m-bus"]
 transport-mariadb = ["dep:xmip-transport-mariadb"]
 transport-mdns = ["dep:xmip-transport-mdns"]
@@ -570,6 +574,9 @@ transport-uds = ["dep:xmip-transport-uds", "xmip-transport-can-bus/socketcan"]
 transport-unix-socket = ["dep:xmip-transport-unix-socket"]
 transport-webdav = ["dep:xmip-transport-webdav"]
 transport-websocket = ["dep:xmip-transport-websocket"]
+# Wireless M-Bus reaches a receiver stick on a serial port, through IMST's
+# host controller interface, and brings serial's port with its own code.
+transport-wireless-m-bus = ["dep:xmip-transport-wireless-m-bus"]
 
 # The route technologies xmip-service links and hands to the node it starts
 # (`xmip_runtime::linked::Linked::sources`): each the source a Subscription
@@ -699,6 +706,7 @@ xmip-transport-imap = { package = "xmip-core-transport-imap", git = "https://git
 xmip-transport-io-link = { package = "xmip-core-transport-io-link", git = "https://github.com/IlleNilsson/xmip-core-transport-io-link", branch = "main", optional = true }
 xmip-transport-kafka = { package = "xmip-core-transport-kafka", git = "https://github.com/IlleNilsson/xmip-core-transport-kafka", branch = "main", optional = true }
 xmip-transport-knx = { package = "xmip-core-transport-knx", git = "https://github.com/IlleNilsson/xmip-core-transport-knx", branch = "main", optional = true }
+xmip-transport-lorawan = { package = "xmip-core-transport-lorawan", git = "https://github.com/IlleNilsson/xmip-core-transport-lorawan", branch = "main", optional = true }
 xmip-transport-m-bus = { package = "xmip-core-transport-m-bus", git = "https://github.com/IlleNilsson/xmip-core-transport-m-bus", branch = "main", optional = true }
 xmip-transport-mariadb = { package = "xmip-core-transport-mariadb", git = "https://github.com/IlleNilsson/xmip-core-transport-mariadb", branch = "main", optional = true }
 xmip-transport-mdns = { package = "xmip-core-transport-mdns", git = "https://github.com/IlleNilsson/xmip-core-transport-mdns", branch = "main", optional = true }
@@ -735,6 +743,7 @@ xmip-transport-udp = { package = "xmip-core-transport-udp", git = "https://githu
 xmip-transport-unix-socket = { package = "xmip-core-transport-unix-socket", git = "https://github.com/IlleNilsson/xmip-core-transport-unix-socket", branch = "main", optional = true }
 xmip-transport-webdav = { package = "xmip-core-transport-webdav", git = "https://github.com/IlleNilsson/xmip-core-transport-webdav", branch = "main", optional = true }
 xmip-transport-websocket = { package = "xmip-core-transport-websocket", git = "https://github.com/IlleNilsson/xmip-core-transport-websocket", branch = "main", optional = true }
+xmip-transport-wireless-m-bus = { package = "xmip-core-transport-wireless-m-bus", git = "https://github.com/IlleNilsson/xmip-core-transport-wireless-m-bus", branch = "main", optional = true }
 # xmip-service's console stop on every platform: Ctrl+C and Ctrl+Break in a
 # Windows console, SIGINT, SIGTERM and SIGHUP on Linux and macOS, which is how
 # systemd and launchd stop a service. Its unsafe is its own; this crate has none.

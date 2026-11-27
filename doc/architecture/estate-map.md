@@ -138,33 +138,36 @@ ADR-0015 (amendments 2026-10-01 and 2026-10-20), ADR-0056 (amendment
 
 #### `linked-transports`
 
-**The transports a node runs.** `xmip-service` links 80 of the 88 declared
+**The transports a node runs.** `xmip-service` links 82 of the 88 declared
 transports, each a `transport-<technology>` feature of the root crate a site
 names: activemq, amqp, as2, as4, aws-kinesis, aws-s3, aws-sns, aws-sqs,
 azure-blob, azure-event-grid, azure-event-hubs, azure-service-bus, bacnet,
 can-bus, canopen, coap, cotp, db2, dds, dhcp, dicom, dnp3, dns, ethercat,
 ethernet, ethernet-ip, file, ftp, google-cloud-storage, google-pub-sub, hart,
 http, ibm-mq, iec-60870-5-104, iec-61850, imap, io-link, iso-tp, j1939, kafka,
-knx, m-bus, mariadb, mdns, mllp, modbus, mqtt, msmq, mssql, mysql, named-pipe,
-nats, nats-jetstream, nfs, obd-ii, opc-ua, oracle, peppol, pop3, postgresql,
-profinet, rabbitmq, redis-streams, redpanda, s7comm, secs-gem, serial, sftp,
-smb, smtp, snmp, sqlite, ssdp, syslog, tcp, udp, uds, unix-socket, webdav and
-websocket; can-bus, canopen, ethercat, ethernet, iso-tp, j1939, obd-ii,
-profinet and uds on Linux alone, as they reach a link of the kernel's, a CAN
-interface through can-bus's `socketcan` and an Ethernet interface's raw socket
-through ethernet's `packet`, bound through `nix`'s safe calls. One node of the
-root's service test (`linked.rs`) sends one file dropped into it over every
-one of them at once, each to the far end its own crate stands (ADR-0051), and
-every far end takes it whole, a Unix domain socket's on Linux and macOS alone;
-a Send Location that announces or answers in one datagram, mDNS a service,
-SSDP a device and DHCP a lease, is sent a document its protocol carries whole,
-and its far end is what hears it, a browser, a control point and a client;
-serial, hart, io-link and m-bus write to a device on a pseudo-terminal, which
-a node opens by its path as it opens a port, answering as the protocol's own
-crate answers on the SDK's bus in process, on Linux and macOS alone; the
-kernel's links are proven by the same node, in a user and network namespace
-the service test (`namespaced.rs`) runs itself again in, where it makes a
-virtual CAN interface for each CAN technology and a veth pair for each
+knx, lorawan, m-bus, mariadb, mdns, mllp, modbus, mqtt, msmq, mssql, mysql,
+named-pipe, nats, nats-jetstream, nfs, obd-ii, opc-ua, oracle, peppol, pop3,
+postgresql, profinet, rabbitmq, redis-streams, redpanda, s7comm, secs-gem,
+serial, sftp, smb, smtp, snmp, sqlite, ssdp, syslog, tcp, udp, uds,
+unix-socket, webdav, websocket and wireless-m-bus; can-bus, canopen, ethercat,
+ethernet, iso-tp, j1939, obd-ii, profinet and uds on Linux alone, as they
+reach a link of the kernel's, a CAN interface through can-bus's `socketcan`
+and an Ethernet interface's raw socket through ethernet's `packet`, bound
+through `nix`'s safe calls. One node of the root's service test (`linked.rs`)
+sends one file dropped into it over every one of them at once, each to the far
+end its own crate stands (ADR-0051), and every far end takes it whole, a Unix
+domain socket's on Linux and macOS alone; a Send Location that announces or
+answers in one datagram, mDNS a service, SSDP a device and DHCP a lease, is
+sent a document its protocol carries whole, and its far end is what hears it,
+a browser, a control point and a client; serial, hart, io-link and m-bus write
+to a device on a pseudo-terminal, which a node opens by its path as it opens a
+port, answering as the protocol's own crate answers on the SDK's bus in
+process, and wireless-m-bus to a receiver stick there, IMST's Wireless M-Bus
+Gateway host controller interface in SLIP frames, answering as its own crate's
+stick in process answers with a meter on its air, on Linux and macOS alone;
+the kernel's links are proven by the same node, in a user and network
+namespace the service test (`namespaced.rs`) runs itself again in, where it
+makes a virtual CAN interface for each CAN technology and a veth pair for each
 Ethernet one with no administrator, each far end its own crate's end on the
 kernel's link; pop3 only collects, and a node collects a maildrop's mail
 through it; the vendors' ten — aws-kinesis, aws-s3, aws-sns and aws-sqs
@@ -176,16 +179,20 @@ Access Signature, google-cloud-storage and google-pub-sub with a bearer token
 `access_key_id`, `account` or `key_name` where the protocol names who signs,
 and their far ends check a value the test draws and sets through the node as
 an operator does; so does ftp's, which admits the user its address names with
-the password the Location's secret holds; file is carried by every other test
-of the service, and sftp by the System Tests' far ends. The HTTP technologies,
-and the vendors' riding on HTTP, are linked without TLS, as http's crate
-leaves it off, so https, as2s, as4s, msmqs and webdavs, and a vendor's
-https:// endpoint, are refused. Not linked: aws and azure, what their vendors'
-transports speak and no transports; and bluetooth, lorawan, thread,
-wireless-hart, wireless-m-bus and zigbee, whose far end lives inside one
-process and whose radio no node reaches here. Records: ADR-0015 (amendments
-2026-11-24 and 2026-11-25), ADR-0019 (amendment 2026-10-29), ADR-0051,
-ADR-0064 (amendment 2026-10-28).
+the password the Location's secret holds; lorawan's far end is a device behind
+a gateway pointed at the node, its network server, over Semtech's UDP packet
+forwarder protocol, both the technology's own, the node listening where its
+Send Port's address says and the session's keys the secret it names, drawn and
+set as the vendors' are; file is carried by every other test of the service,
+and sftp by the System Tests' far ends. The HTTP technologies, and the
+vendors' riding on HTTP, are linked without TLS, as http's crate leaves it
+off, so https, as2s, as4s, msmqs and webdavs, and a vendor's https://
+endpoint, are refused. Not linked: aws and azure, what their vendors'
+transports speak and no transports; and bluetooth, thread, wireless-hart and
+zigbee, whose far end lives inside one process and whose radio no node reaches
+here. Records: ADR-0015 (amendments 2026-11-24, 2026-11-25 and 2026-11-27),
+ADR-0019 (amendment 2026-10-29), ADR-0051 (amendment 2026-11-27), ADR-0064
+(amendment 2026-10-28).
 
 #### `module-loading`
 
@@ -521,7 +528,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 423739 lines of production
+Where each repository mounts and what it holds: 426252 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -550,16 +557,18 @@ hold no source to count.
 │   │   │   │   ├── amqp                        2926
 │   │   │   │   ├── opc-ua                      2555
 │   │   │   │   ├── db2                         2529
+│   │   │   │   ├── lorawan                     2488
 │   │   │   │   ├── http                        2281
 │   │   │   │   ├── nfs                         2217
 │   │   │   │   ├── smb                         2208
 │   │   │   │   ├── kafka                       2095
 │   │   │   │   ├── ibm-mq                      2005
-│   │   │   │   ├── serial                      1895
+│   │   │   │   ├── serial                      1972
 │   │   │   │   ├── ftp                         1884
 │   │   │   │   ├── sftp                        1864
 │   │   │   │   ├── mssql                       1694
 │   │   │   │   ├── snmp                        1505
+│   │   │   │   ├── wireless-m-bus              1457
 │   │   │   │   ├── nats-jetstream              1427
 │   │   │   │   ├── as4                         1402
 │   │   │   │   ├── oracle                      1391
@@ -588,7 +597,6 @@ hold no source to count.
 │   │   │   │   ├── google-cloud-storage         955
 │   │   │   │   ├── uds                          951
 │   │   │   │   ├── azure-event-grid             950
-│   │   │   │   ├── lorawan                      946
 │   │   │   │   ├── azure-service-bus            944
 │   │   │   │   ├── bluetooth                    940
 │   │   │   │   ├── google-pub-sub               927
@@ -620,7 +628,6 @@ hold no source to count.
 │   │   │   │   ├── coap                         643
 │   │   │   │   ├── redpanda                     634
 │   │   │   │   ├── azure-event-hubs             606
-│   │   │   │   ├── wireless-m-bus               576
 │   │   │   │   ├── aws                          568
 │   │   │   │   ├── can-bus                      533
 │   │   │   │   ├── azure                        518
@@ -775,7 +782,7 @@ hold no source to count.
 │   │   │           aws-s3  azure-blob  file  google-cloud-storage  sql
 │   │   ├── library/
 │   │   │   ├── net                             9061
-│   │   │   ├── codec                           5942
+│   │   │   ├── codec                           5955
 │   │   │   ├── tls                             4181
 │   │   │   ├── mariadb                         1785
 │   │   │   ├── ssh                             1744

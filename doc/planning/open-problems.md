@@ -489,7 +489,7 @@ verified the same hour.
 
 ---
 
-*Option C in part, 2026-11-25:* a real port is driven through a pseudo-terminal, serial's `terminal::Terminal`, and serial, M-Bus, HART and IO-Link Send Locations are proven through a node on Linux; com0com on Windows stays open.
+*Option C in part, 2026-11-25:* a real port is driven through a pseudo-terminal, serial's `terminal::Terminal`, and serial, M-Bus, HART and IO-Link Send Locations are proven through a node on Linux; com0com on Windows stays open. On 2026-11-27 wireless M-Bus joined them: its air is a receiver stick on a serial port, framed by SLIP (`Framing::Slip`), and a node's Send Location is proven through the stick its crate stands on the pair (ADR-0015, amendment 2026-11-27; open problem 218).
 
 # Consolidation
 
@@ -3319,6 +3319,18 @@ does without the NDK.
 
 Wider 2026-11-25: on a test computer, `Core.Internal -Test .` builds every module's .NET projects, because the copy holds no submodule `.git`; on the Linux test computer Xmip.Operations needs the same workload and Xmip.Operate.Test fails 8 of 106, which stops the root's Rust part.
 
+*Workload installed 2026-11-27 on pluto, per user and without sudo
+(prerequisite.toml, maui.linux, android-sdk.linux, android-jdk.linux), and
+the root's Rust part passes there.* What is left: the build now stops at
+Xmip.Operate.Native.props: the runtime's Android build, which
+Build-XmipRemoteRuntime writes, is not there. A
+landing builds it only when the phone host's module lands
+(Build-XmipLandingLibrary), and skips that module in one line where the
+Android NDK is absent; the root's .NET part on a test computer builds
+Xmip.Operations with neither. Needed: the root's .NET part builds the Android
+library first where the NDK is present and skips Xmip.Operations' Android
+target in one line where it is not, and the NDK on pluto.
+
 ## 196. No network Stream without TLS is received by the assembled service
 
 Found 2026-11-25 linking far ends: a node built with the `ip` identifier
@@ -3465,6 +3477,32 @@ not built), so a Location's contract settings are held to no
 declaration. Needed: whether `Carried` takes the name or `format` names
 the module, and the gathering crate's `CONTRACTS` carried as
 `Capability::Contract`.
+
+## 218. Wireless M-Bus is proven on no receiver stick
+
+Found 2026-11-27 giving wireless M-Bus a receiver stick on a serial port
+(ADR-0015, amendment 2026-11-27): the stick's protocol, IMST's Wireless
+M-Bus Gateway host controller interface, is written from its document,
+version 2.4, and proven only against Xmip's own stand-in, `stick::Stick`,
+on a port in process and on a pseudo-terminal pair. What the document
+leaves open is open here too: its table gives the send request as the
+radio modules' alone, where its section names the iU891A-XL too; the
+sticks' power range is "TBD"; and its document state is "wip". Not built:
+the stick's encryption and decryption, its device list and keys, which an
+encrypting meter's telegrams need. Needed: one iU891A-XL or iU893A-XL on
+the test computer, and the transport driven through it.
+
+## 219. A LoRaWAN Send Location reaches only a Class C device
+
+Found 2026-11-27 giving LoRaWAN the packet forwarder protocol (ADR-0051,
+amendment 2026-11-27): a Send Location sends each frame down at once, on
+its `frequency` at its `data_rate`, where a Class C device listens between
+its uplinks. A Class A device, most battery devices, listens only in the
+two receive windows just after its own uplink, so a Stream sent to one is
+transmitted when it hears nothing. Needed: a Send Location holding a
+Stream for a Class A device until its next uplink, and sending it in that
+uplink's first window, timed from its `tmst`, as a confirmed uplink's
+answer already is; and a device's class a setting.
 
 # Suggested order
 

@@ -219,6 +219,10 @@ elevation = true
 [prerequisite.maui.macos]
 command = "dotnet workload install maui maui-android maui-ios"
 
+[prerequisite.maui.linux]
+command = "dotnet workload install maui-android"
+note = "Android alone: Linux has no MAUI desktop target. Run it as the user who builds, never with sudo: a .NET whose SDK folder only root may write, as the dotnet snap's /var/snap/dotnet/common/dotnet, installs workloads per user into ~/.dotnet, so sudo puts them in root's home. Where a build still stops at NETSDK1147, dotnet workload repair installs the packs the first install left out (pluto, 2026-11-27)."
+
 [prerequisite.android-sdk]
 role = "developer"
 optional = true
@@ -227,6 +231,10 @@ note = "The Android SDK the phone build packages with, per user, no elevation: t
 [prerequisite.android-sdk.windows]
 present_path = ['%ANDROID_HOME%\platforms\android-*', '%LOCALAPPDATA%\Android\Sdk\platforms\android-*']
 command = "New-Item -ItemType Directory -Force -Path $env:LOCALAPPDATA\\Android\\Sdk\\cmdline-tools; dotnet build -t:InstallAndroidDependencies -f net11.0-android -p:AndroidSdkDirectory=$env:LOCALAPPDATA\\Android\\Sdk -p:AcceptAndroidSDKLicenses=True module/core/operation/gui/src/Xmip.Operations"
+
+[prerequisite.android-sdk.linux]
+command = "mkdir -p ~/Android/Sdk/cmdline-tools && dotnet build -t:InstallAndroidDependencies -f net11.0-android -p:AndroidSdkDirectory=$HOME/Android/Sdk -p:JavaSdkDirectory=/usr/lib/jvm/java-21-openjdk-amd64 -p:AcceptAndroidSDKLicenses=True module/core/operation/gui/src/Xmip.Operations"
+note = "A build started over SSH sees no ANDROID_HOME, so ~/.config/xbuild/monodroid-config.xml, which the .NET for Android build reads per user, names the SDK and the JDK: <monodroid><android-sdk path=\"/home/<user>/Android/Sdk\" /><java-sdk path=\"/usr/lib/jvm/java-21-openjdk-amd64\" /></monodroid>."
 
 [prerequisite.android-ndk]
 role = "developer"
@@ -247,6 +255,11 @@ note = "The Java Development Kit the .NET for Android build runs its tools with:
 present_path = ['%ProgramFiles%\Microsoft\jdk-21*\bin\java.exe']
 winget = "Microsoft.OpenJDK.21"
 elevation = true
+
+[prerequisite.android-jdk.linux]
+apt = "openjdk-21-jdk-headless"
+dnf = "java-21-openjdk-devel"
+note = "The distribution's OpenJDK 21: Microsoft packages its build for Windows and macOS. It sits beside the Java event binding's JDK without replacing it."
 
 # ---------------------------------------------------------------------------
 # Desired state, for test level 2 alone: the environment templates under

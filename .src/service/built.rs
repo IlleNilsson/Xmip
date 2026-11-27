@@ -265,9 +265,10 @@ macro_rules! linked {
 /// order of their names: every one written whose far end a node in a
 /// process of its own reaches, each proven carrying a file through the
 /// service (`.src/test/service/linked.rs`), a serial line's through a
-/// pseudo-terminal, which Linux and macOS have, and a vendor's presenting
-/// the secret its Location names (ADR-0015, amendments 2026-11-24 and
-/// 2026-11-25); and after them those on a link of the kernel's
+/// pseudo-terminal, which Linux and macOS have, a vendor's presenting
+/// the secret its Location names, and `LoRaWAN`'s through a gateway's packet
+/// forwarder over UDP (ADR-0015, amendments 2026-11-24, 2026-11-25 and
+/// 2026-11-27); and after them those on a link of the kernel's
 /// ([`kernel_transports`]).
 #[allow(
     unused_mut,
@@ -311,6 +312,7 @@ pub fn transports() -> Vec<LinkedTransport> {
         "transport-io-link" => xmip_transport_io_link::IoLinkTransport,
         "transport-kafka" => xmip_transport_kafka::KafkaTransport,
         "transport-knx" => xmip_transport_knx::KnxTransport,
+        "transport-lorawan" => xmip_transport_lorawan::LorawanTransport,
         "transport-m-bus" => xmip_transport_m_bus::MBusTransport,
         "transport-mariadb" => xmip_transport_mariadb::MariaDbTransport,
         "transport-mdns" => xmip_transport_mdns::MdnsTransport,
@@ -347,6 +349,7 @@ pub fn transports() -> Vec<LinkedTransport> {
         "transport-unix-socket" => xmip_transport_unix_socket::UnixSocketTransport,
         "transport-webdav" => xmip_transport_webdav::WebDavTransport,
         "transport-websocket" => xmip_transport_websocket::WebSocketTransport,
+        "transport-wireless-m-bus" => xmip_transport_wireless_m_bus::WirelessMBusTransport,
     ];
     transports.extend(kernel_transports());
     transports

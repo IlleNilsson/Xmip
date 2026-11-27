@@ -26,11 +26,16 @@
 //! opens by its path as it opens a port (`terminal.rs`): one frame a serial
 //! Send Location writes, or a HART, IO-Link or M-Bus master's Stream,
 //! answered as the protocol's own crate answers it on the SDK's bus in
-//! process. Linux and macOS have one, Windows none.
+//! process, or a wireless M-Bus Location's, through the receiver stick its
+//! own crate stands. Linux and macOS have one, Windows none.
 //!
 //! A CAN technology's and an Ethernet technology's far end is on a link of
 //! the kernel's, an interface a test makes in a network namespace of its
 //! own (`kernel.rs`), and is stood there, never in [`every`].
+//!
+//! A `LoRaWAN` Send Location's far end is a device behind a gateway pointed
+//! at the node, its network server, over Semtech's UDP packet forwarder
+//! protocol (`gateway.rs`): the node listens, and the far end reaches it.
 
 use std::path::Path;
 use std::time::Duration;
@@ -38,6 +43,8 @@ use std::time::Duration;
 use xmip_transport::{Configured, FarEnd, Loopback};
 
 mod announced;
+#[cfg(feature = "transport-lorawan")]
+mod gateway;
 #[cfg(feature = "transport-sqlite")]
 mod table;
 mod terminal;
@@ -275,6 +282,8 @@ pub(crate) fn every(
     standing! {all, "transport-knx", "knx",
     stood(xmip_transport_knx::KnxTransport::loopback()),
     "knx://{far}", ["local" = "127.0.0.1:0", "timeout" = "10s"], false}
+    #[cfg(feature = "transport-lorawan")]
+    all.push(gateway::device());
     standing! {all, "transport-m-bus", "m-bus", terminal::meter(),
     "mbus://{far}", ["meter" = 1], false}
     standing! {all, "transport-mariadb", "mariadb",
@@ -364,6 +373,9 @@ pub(crate) fn every(
     standing! {all, "transport-websocket", "websocket",
     stood(xmip_transport_websocket::WebSocketTransport::loopback()),
     "ws://{far}/probe", [], false}
+    standing! {all, "transport-wireless-m-bus", "wireless-m-bus", terminal::receiver(),
+    "wmbus://{far}", ["manufacturer" = "XMP", "ident" = 12345678, "version" = 1, "medium" = 7],
+    false}
     #[cfg(any(
         feature = "transport-activemq",
         feature = "transport-amqp",

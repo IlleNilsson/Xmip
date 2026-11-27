@@ -2131,3 +2131,112 @@ SFTP server would (`transport::file_name`; found 2026-11-24 with open
 problem 169); and a bearer token Google issues expires within the hour, so
 a Location's token is set again before then, and exchanging a service
 account's key for one is not built.
+
+## Amendment, 2026-11-27: wireless M-Bus reaches a receiver stick on a serial port, LoRaWAN a node the network server behind its gateways, and both are linked
+
+**Provenance.** The owner, 2026-11-27, on the transports that need
+hardware: *let's do your best for now. I'm not going to buy all that
+hardware*. Wireless M-Bus and LoRaWAN each had an in-process radio alone,
+so no node in a process of its own reached their far ends and neither was
+linked (the amendment of 2026-11-25). Wireless M-Bus's air is now a USB
+receiver stick on a serial port; LoRaWAN's far end now leaves the node's
+process, a gateway's packet forwarder over UDP, which a node is the
+network server behind (ADR-0051, amendment 2026-11-27). Which stick, its
+protocol, the boundaries and linking both are the assistant's choice, for
+the owner to strike or keep.
+
+**82 of the 88 are linked**, wireless-m-bus and lorawan with the 80, by the
+criterion of the amendment of 2026-11-24. Not linked: aws and azure, what
+their vendors' transports speak and no transports; and the four radios,
+bluetooth, thread, wireless-hart and zigbee, whose far end lives inside one
+process and whose radio no node reaches here.
+
+Wireless M-Bus:
+
+- **The air is a receiver stick on a serial port.** A wireless M-Bus
+  Location's address is the port a USB receiver stick is on, `/dev/ttyUSB0`
+  or `COM3`, opened by the serial technology as every serial port is;
+  `loopback` stays the radio in process. The transport speaks the stick's
+  host protocol through a `Line`, `Receiver`, so all above the air is the
+  same for both.
+- **The stick is IMST's iU891A-XL or iU893A-XL**, and its protocol the host
+  controller interface of IMST's Wireless M-Bus Gateway firmware (IMST,
+  *Wireless M-Bus Gateway Firmware — Host Controller Interface Protocol*,
+  version 2.4, 2026-06-03, document 4000/40140/0178,
+  [wireless-solutions.de](https://wireless-solutions.de/data/assets/uploads/WM_Bus_Gateway_HCI_Protocol_Specification_V2_4.pdf)):
+  SLIP frames at 115 200 baud, each a service access point, a message
+  identifier, a payload and a CRC-16/IBM-SDLC. Chosen on 2026-11-27 from
+  what [wmbusmeters](https://github.com/wmbusmeters/wmbusmeters) drives —
+  IMST's iM871A and iU891A, the AMB8465 and AMB3665, the CUL family,
+  Radiocraft's RC1180, and an RTL-SDR radio, which the host decodes itself
+  with no host protocol: the iM871A, the first of them, is discontinued, and
+  IMST's
+  [end-of-life notice](https://wireless-solutions.de/data/assets/uploads/iM871A_iM871A_usb_EoL_Notification_2.pdf)
+  names these two its successors; their protocol is one public document,
+  current and complete, the bytes of a ping among it, which the tests hold;
+  the AMB8465's manual leaves its command set to a second document, which
+  refused an automated download.
+- **Written once, in the lowest layer.** SLIP (RFC 1055) is a serial line's
+  framing, so it is the serial technology's, `Framing::Slip`, beside its
+  delimiter, fixed length and measure; CRC-16/IBM-SDLC is codec's, beside
+  EN 13757-4's own. The frame and its block CRCs stay wireless-m-bus's, and
+  the records and the meter m-bus's; a stick hands its host the frame with
+  its CRCs stripped and takes it so, `Frame::plain`. The stick's messages
+  are wireless-m-bus's `hci.rs`.
+- **Set at the first use, then used.** At the first use of a stick's port,
+  and again after a use failed, as a stick unplugged and plugged in again forgets
+  it, its active configuration is read, its link mode set to the Location's
+  `mode`, every heard telegram handed to the host and the address filter
+  taken off, the rest as it was, and written back to its memory, not its
+  default. A frame goes out in one send request, answered within the
+  specification's second; a telegram comes in as the stick's event. Two
+  settings are new: `mode`, the meter's, `s`, `t` or `c`, `t` where it is
+  left out, and `power`, -1 to +13 dBm, 10 where it is left out.
+- **One stick, every Location of a node on it.** The node's Locations
+  naming the port share its one port, as serial's do (ADR-0064, amendment
+  2026-11-15), and what it heard: each takes its own meter's telegrams, the
+  one whose receive reads the port keeps the others' for theirs and tells
+  them at once, one receive reading at a time while the rest wait holding
+  nothing, so no telegram waits on a Location's timeout. A meter's last 16
+  telegrams are kept, one heard before a request to it is let go, and a
+  meter no Location listens for is let go.
+- **Proven as serial, hart, io-link and m-bus are** (`.src/test/service/linked.rs`,
+  `far_ends/terminal.rs`): the node's Send Location opens the line's end of
+  a pseudo-terminal pair, and the far end at the device's end answers as
+  the crate's `stick::Stick` does, a meter on its air, until the meter holds
+  the Stream. Windows has no virtual serial pair without a third-party
+  driver, so there the test says SKIPPED, and why, for the five; the System
+  Tests' `-Container` way runs Linux containers, where the pair stands. No
+  stick was plugged in: the crate's tests drive a Location through the
+  stick in process on a port in process on every platform, and on a
+  pseudo-terminal pair on Unix.
+
+Not built: the stick's encryption and decryption, sending under its own
+address, its scan mode, its firmware update and its reset over USB. The
+specification's table of message identifiers gives the send request as
+the radio modules' alone, where its own section names the iU891A-XL too;
+the crate goes by the section, and a stick that refuses it says so in the
+specification's words.
+
+LoRaWAN:
+
+- **lorawan, linked and proven on every platform**
+  (`.src/test/service/far_ends/gateway.rs`): the node's Send Port listens
+  where its address says, a port of loopback the far end draws, and the
+  far end is a device
+  behind a gateway pointed there, both the technology's own — its packet
+  forwarder and its device, with the frame, the keys and the fragments the
+  node's side is written with. The gateway asks for downlinks every tenth
+  of a second, so the Send Location, which binds its socket as it first
+  sends, is asked at once; the node sends the document down in a
+  `PULL_RESP`, the gateway answers `TX_ACK`, and the device opens the frame
+  and takes the Stream whole.
+- **The session keys are the secret the Send Port names**, a `password`
+  secret of 64 hexadecimal digits drawn for the far end from the operating
+  system's random source and set on the node through its local endpoint
+  before the file is dropped, as the vendors' are (the amendment of
+  2026-11-25); its `dev_addr` is a setting.
+- **Receiving is proven by the technology's own tests**, a device sending
+  up through its gateway to a node's network server on this machine, its
+  confirmed frames answered in their first receive window; through a node,
+  receiving stays unproven, as for the rest (the amendment of 2026-11-25).

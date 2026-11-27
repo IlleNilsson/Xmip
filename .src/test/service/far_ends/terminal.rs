@@ -4,14 +4,18 @@
 //! writes its frame to, and the device a protocol's master on a serial line
 //! writes a Stream to — a HART field device, an IO-Link device, an M-Bus
 //! meter — answering each frame as the device its own crate stands in
-//! process answers it. Unix's: Windows has no pseudo-terminal, a line there
-//! being a COM port with a device on it.
+//! process answers it, and the receiver stick a wireless M-Bus Location
+//! writes a Stream to its meter through, answering each message as IMST's
+//! firmware does, as wireless M-Bus's own crate stands it. Unix's: Windows
+//! has no pseudo-terminal, a line there being a COM port with a device on
+//! it.
 
 #[cfg(any(
     feature = "transport-hart",
     feature = "transport-io-link",
     feature = "transport-m-bus",
-    feature = "transport-serial"
+    feature = "transport-serial",
+    feature = "transport-wireless-m-bus"
 ))]
 use xmip_transport::FarEnd;
 
@@ -21,24 +25,31 @@ use xmip_transport::FarEnd;
         feature = "transport-hart",
         feature = "transport-io-link",
         feature = "transport-m-bus",
-        feature = "transport-serial"
+        feature = "transport-serial",
+        feature = "transport-wireless-m-bus"
     )
 ))]
 use {super::BOUND, xmip_transport_serial::Framing, xmip_transport_serial::terminal::Terminal};
 
 /// Where this machine has no pseudo-terminal: `name`'s far end is not stood,
-/// and the test says so.
+/// and the test says so and why. The System Tests' containers
+/// (`Start-XmipTest -Container`) are Linux, where it is.
 #[cfg(all(
     not(unix),
     any(
         feature = "transport-hart",
         feature = "transport-io-link",
         feature = "transport-m-bus",
-        feature = "transport-serial"
+        feature = "transport-serial",
+        feature = "transport-wireless-m-bus"
     )
 ))]
 fn none(name: &str) -> Option<Box<dyn FarEnd>> {
-    println!("{name}: not on this machine: a pseudo-terminal is Unix's");
+    println!(
+        "{name}: SKIPPED: a pseudo-terminal pair is Unix's, and this machine has no virtual \
+         serial pair without a third-party driver; Start-XmipTest -Container runs Linux, \
+         where it stands"
+    );
     None
 }
 
@@ -49,7 +60,8 @@ fn none(name: &str) -> Option<Box<dyn FarEnd>> {
         feature = "transport-hart",
         feature = "transport-io-link",
         feature = "transport-m-bus",
-        feature = "transport-serial"
+        feature = "transport-serial",
+        feature = "transport-wireless-m-bus"
     )
 ))]
 fn terminal() -> Terminal {
@@ -64,7 +76,8 @@ fn terminal() -> Terminal {
     any(
         feature = "transport-hart",
         feature = "transport-io-link",
-        feature = "transport-m-bus"
+        feature = "transport-m-bus",
+        feature = "transport-wireless-m-bus"
     )
 ))]
 fn answering(
@@ -194,5 +207,40 @@ pub(crate) fn meter() -> Option<Box<dyn FarEnd>> {
             ))
         }
         _ => none("m-bus"),
+    }
+}
+
+/// The receiver stick a wireless M-Bus Send Location writes a Stream to
+/// its meter through, the meter `XMP-12345678` on its air: every message
+/// the node's line writes, a SLIP frame, answered as IMST's firmware
+/// answers it, as wireless M-Bus's own crate stands the stick, until the
+/// meter holds the Stream.
+#[cfg(feature = "transport-wireless-m-bus")]
+#[allow(
+    clippy::unnecessary_wraps,
+    reason = "a machine with no pseudo-terminal stands none"
+)]
+pub(crate) fn receiver() -> Option<Box<dyn FarEnd>> {
+    cfg_select! {
+        unix => {
+            use std::sync::Arc;
+            use xmip_transport_wireless_m_bus::stick::Stick;
+            use xmip_transport_wireless_m_bus::{Identity, Meter};
+            let identity = Identity {
+                ident: 12_345_678,
+                manufacturer: *b"XMP",
+                version: 1,
+                medium: 7,
+            };
+            let stick = Arc::new(Stick::new(Meter::new(identity)));
+            let held = Arc::clone(&stick);
+            Some(answering(
+                "wmbus",
+                Framing::Slip,
+                move |message| stick.answer(message),
+                move || Some(held.meter().held()).filter(|bytes| !bytes.is_empty()),
+            ))
+        }
+        _ => none("wireless-m-bus"),
     }
 }

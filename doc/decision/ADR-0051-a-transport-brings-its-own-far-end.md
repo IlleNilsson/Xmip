@@ -4,6 +4,8 @@
 - Date: 2026-09-11
 - Amended: 2026-09-24 — the far ends are the capability's
 - Amended: 2026-09-25 — the trait knows the order and the release
+- Amended: 2026-11-27 — LoRaWAN's far end is a gateway over UDP, and a
+  node its network server
 - Related: ADR-0028 (the System Tests: clause 5, the far end is Xmip; the
   amendment of 2026-09-09, every transport declares its ceiling), ADR-0044
   (a technology shares through its capability), ADR-0010 (one protocol,
@@ -194,3 +196,85 @@ The owner ruled on 2026-09-24, *teach the trait*: the flag and the default
 that knows a datagram, an in-process or a TCP address, so the overrides go.
 The shape — the flag on `Loopback`, the datagram fact on the far end that
 already holds the socket — is the assistant's drafting.
+
+## Amendment, 2026-11-27: LoRaWAN's far end is a gateway over UDP, and a node its network server
+
+**Provenance.** The owner, 2026-11-27, on the transports whose far end is
+hardware: *let's do your best for now. I'm not going to buy all that
+hardware.* LoRaWAN's far end was a radio and a network server held in the
+node's own process (the loopback radio), so no node reached anything
+outside itself and the service did not link it (ADR-0015, amendment
+2026-11-25). Every choice below is the assistant's, for the owner to strike
+or keep.
+
+The boundary a LoRa gateway already has is software: the gateway forwards
+what its concentrator hears to one network server over UDP, and sends what
+the server gives it. So a node is that server, and a gateway that is no
+radio at all stands in for one.
+
+1. **The protocol is Semtech's UDP packet forwarder protocol, version 2**:
+   `PROTOCOL.TXT` in Lora-net/packet_forwarder, revision 1.4 — version 2
+   since revision 1.3 added `TX_ACK` — and `PROTOCOL.md` in
+   Lora-net/sx1302_hal, revision 1.6, which the SX1302 and SX1303
+   concentrators take, the same version (both read 2026-11-27). The six
+   datagrams — `PUSH_DATA`, `PUSH_ACK`, `PULL_DATA`, `PULL_ACK`,
+   `PULL_RESP`, `TX_ACK` — and the `rxpk`, `txpk` and `txpk_ack` JSON they
+   carry are written once in the crate, both ends (`datagram.rs`,
+   `packet.rs`). A datagram of another version is refused, naming it. LoRa
+   Basics Station, Semtech's newer forwarder, speaks its own protocol over
+   WebSocket and is not built. The protocol authenticates and encrypts
+   nothing between gateway and node — The Things Industries says as much of
+   it — so a frame is its device's by its MIC alone, and the network the
+   gateways reach a node over is the site's to keep.
+2. **A node is the network server; its Location's address is where it
+   listens** for the gateways pointed at it, `lorawan://0.0.0.0:1700`, and
+   an address with no port listens on 1700 (`declaration::PORT`): the port
+   The Things Stack lists for the packet forwarder and ChirpStack's gateway
+   bridge listens on, so a gateway set up for either is pointed at a node by
+   its server's address alone. Semtech ships 1680 and sx1302_hal 1730; a
+   gateway's own file names whichever.
+3. **The Locations of a node at one address share one socket**, and a
+   Receive and a Send Location of one device share its session — its
+   counters and its fragments — through `transport::sharing`, as a serial
+   port is shared (ADR-0064, amendment 2026-11-15): one gateway sends every
+   device it hears to one address. One Location reads the socket at a time
+   and keeps what it read for the others, woken by `xcore::wake`
+   (`gateways.rs`). A gateway asking for downlinks from a new address, a
+   packet forwarder started again, is sent again what it had not answered.
+4. **A Receive Location takes what one device sends up**, its socket bound
+   as the node starts, the same frame a second gateway heard taken once. A
+   confirmed frame up is answered in the device's first receive window —
+   one second after it ended on its gateway's clock, `RECEIVE_DELAY1` of
+   the Regional Parameters — before the receive cycle ends, since the
+   window does not wait for it: acceptance of an uplink is at-most-once.
+5. **A Send Location sends at once**, through the gateway that heard the
+   device last, on its `frequency` at its `data_rate`, by default EU868's
+   second receive window, 869.525 MHz at SF12BW125, at 14 dBm: where a
+   Class C device listens between its uplinks. A confirmed Send Location
+   confirms a Stream's last frame and waits for the device's acknowledgement
+   in its next frame up. A Send Location alone binds the socket as it first
+   sends, as every Send Location's is bound, and waits for the gateway's
+   next `PULL_DATA`, within its `keepalive_interval`, 10 s as Semtech ships
+   it. A Class A device, which listens just after its own uplink, is not
+   reached yet (open problem 219).
+6. **A session is activated by personalization**: the device's address is
+   the `dev_addr` setting, and its keys are the secret its Location names, a
+   `password` secret of 64 hexadecimal digits, the network session key's
+   and then the application session key's, as network servers show them;
+   no secret kind is added (ADR-0015, amendment 2026-11-25). It is read as
+   each Stream is sent and as each receive opens its first frame. Joining
+   over the air is not built.
+7. **A frame a real device sends is opened whole**: a frame with no
+   payload carries no port, frame options are skipped under the MIC that
+   covers them, and a payload on port 0 is under the network session key;
+   until 2026-11-27 each was refused. No MAC command is answered.
+8. **The far end is a device behind a gateway**: the crate's own packet
+   forwarder (`forwarder.rs`), a `Radio` that forwards each frame in a
+   `PUSH_DATA`, asks for downlinks each keepalive and answers each
+   `PULL_RESP` at once, whatever moment its `tmst` names, and the device
+   the crate already had, now putting fragments down back together through
+   the network server's own reassembly (`device.rs`, `fragment.rs`).
+   `LorawanTransport::loopback()` stands both on this machine over UDP, so
+   LoRaWAN no longer exchanges in order (the amendment of 2026-09-25 listed
+   it), and a round goes on two threads. The loopback radio is deleted: no
+   test needs a server in the device's process any more.
