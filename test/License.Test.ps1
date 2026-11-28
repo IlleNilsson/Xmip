@@ -7,7 +7,9 @@
     author's to license — the module boundary, xmip-core-abi, with
     Xmip.Module and the `dotnet new` templates in it — and the rest of Xmip
     is AGPL-3.0-or-later (ADR-0023), the .NET repository template among it.
-    The boundary links nothing of the rest.
+    The boundary links nothing of the rest. Each example, which a developer
+    copies into a module of their own, is Apache-2.0 as the boundary is
+    (ADR-0023, amendment 2026-11-28), read from the manifest's domain.
 #>
 
 Describe 'ADR-0075: the module boundary is Apache-2.0, the rest of Xmip AGPL-3.0-or-later' {
@@ -16,6 +18,17 @@ Describe 'ADR-0075: the module boundary is Apache-2.0, the rest of Xmip AGPL-3.0
 
         # What a module links or compiles into itself.
         $script:Boundary = @('module/foundation/abi')
+
+        # What a developer copies into a module: every mounted repository
+        # the manifest's domain names an Example.
+        $script:Example = @(
+            InModuleScope Xmip -Parameters @{ Root = $script:Root } {
+                param($Root)
+                Get-XmipEstateRepository -Root $Root |
+                    Where-Object { $_.Domain -eq 'Example' -and $_.Mounted } |
+                    ForEach-Object Mount
+            }
+        )
 
         <#
             .SYNOPSIS
@@ -38,8 +51,10 @@ Describe 'ADR-0075: the module boundary is Apache-2.0, the rest of Xmip AGPL-3.0
         }
     }
 
-    It 'gives each boundary repository the Apache-2.0 text and a NOTICE' {
-        foreach ($folder in $script:Boundary) {
+    It 'gives the boundary and each example the Apache-2.0 text and a NOTICE' {
+        $script:Example | Should -Not -BeNullOrEmpty -Because 'the manifest declares the examples'
+
+        foreach ($folder in ($script:Boundary + $script:Example)) {
             [string] $path = Join-Path -Path $script:Root -ChildPath $folder
             [string] $license = Get-Content -LiteralPath (Join-Path $path 'LICENSE') -Raw
 
@@ -48,10 +63,13 @@ Describe 'ADR-0075: the module boundary is Apache-2.0, the rest of Xmip AGPL-3.0
         }
     }
 
-    It 'declares Apache-2.0 in every crate, package and SPDX line of the boundary' {
+    It 'declares Apache-2.0 in every crate, package and SPDX line it holds' {
         [string[]] $wrong = @()
+        [string[]] $held = @(
+            ($script:Boundary + $script:Example) | ForEach-Object { Get-HeldFile -Folder $_ }
+        )
 
-        foreach ($file in ($script:Boundary | ForEach-Object { Get-HeldFile -Folder $_ })) {
+        foreach ($file in $held) {
             [string] $text = Get-Content -LiteralPath (Join-Path $script:Root $file) -Raw
 
             if ($text -match 'SPDX-License-Identifier:\s*(?!Apache-2\.0\b)\S+') {

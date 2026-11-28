@@ -4,6 +4,8 @@
 - Date: 2026-08-27
 - Amended: 2026-11-24 — the module boundary, what a module compiles into
   itself, is Apache-2.0; everything else stays AGPL-3.0-or-later
+- Amended: 2026-11-28 — the examples, what a developer copies into a module,
+  are Apache-2.0 too
 - Related: ADR-0012 (the module boundary)
 
 ## In brief
@@ -97,3 +99,17 @@ held back. Apache-2.0 gives a patent grant, and the AGPL-3.0 estate may keep
 using Apache-2.0 code, so the runtime links the boundary as before. The
 Consequences' bullet *The boundary is unaffected* no longer holds: the header
 is Apache-2.0 (ADR-0012, amendment 2026-11-24).
+
+## Amendment, 2026-11-28: the examples are Apache-2.0
+
+An example shows how a module is built on the boundary in another language,
+and a developer copies its code into a module of their own (ADR-0016,
+amendment 2026-11-28). Under the AGPL that copy would bring AGPL code into
+the module, which the boundary's Apache-2.0 exists to keep out. Asked, the
+owner, 2026-11-28: *Yes, license the examples Apache-2.0*. Every repository
+the manifest's domain names an Example (`architecturalDomain = "Example"`) is
+Apache-2.0, with the license's text and a NOTICE, as the boundary is
+(test/License.Test.ps1 holds both). An example is no part of Xmip and links
+nothing of it beyond the boundary, so the platform's own code stays
+AGPL-3.0-or-later and this record's reason stands. Open problem 239 is
+resolved.

@@ -360,10 +360,12 @@ is what machinery, `.local-work/` is where.
 ## License
 
 Xmip is licensed under the GNU Affero General Public License, version 3 or
-later — all of it but the module boundary: what a developer's module links
-or compiles into itself, xmip-core-abi with `Xmip.Module` and the `dotnet
-new` templates in it, is Apache-2.0, so the module stays its author's
-(ADR-0075 clause 6; ADR-0023, amendment 2026-11-24).
+later — all of it but the module boundary and the examples: what a
+developer's module links or compiles into itself, xmip-core-abi with
+`Xmip.Module` and the `dotnet new` templates in it, is Apache-2.0, and so is
+each example under `example/`, which a developer copies into a module, so
+the module stays its author's (ADR-0075 clause 6; ADR-0023, amendments
+2026-11-24 and 2026-11-28).
 
 That license grants the right to use, study, modify, redistribute and fork
 Xmip. This project does not restrict those rights and does not seek to.

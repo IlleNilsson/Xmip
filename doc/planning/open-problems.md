@@ -3756,14 +3756,6 @@ diagnosis, the first piece of each (BizTalk's bindings read into an Xmip
 Application, in the Suggested order's phase D, for migration), and
 migration's domain.
 
-## 239. An example is AGPL-3.0-or-later, the boundary it shows Apache-2.0
-
-Found 2026-11-28 mounting the examples: each carries the AGPL's text, so a
-developer who copies an example's code into a module of their own takes AGPL
-code into it, while the boundary the module compiles in is Apache-2.0 so a
-module stays its author's (ADR-0075 clause 6; ADR-0061, amendment
-2026-11-24). Needed: the owner's word on an example's license.
-
 ## 240. xmip-core-contract-cpp is on GitHub and declared nowhere
 
 Found 2026-11-28: its C++ contract and history are merged into
@@ -5449,3 +5441,13 @@ Android NDK is absent; the root's .NET part on a test computer builds
 Xmip.Operations with neither. Needed: the root's .NET part builds the Android
 library first where the NDK is present and skips Xmip.Operations' Android
 target in one line where it is not, and the NDK on pluto.
+
+## 239. An example is AGPL-3.0-or-later, the boundary it shows Apache-2.0 — **Resolved**
+
+*Resolved 2026-11-28:* every repository the manifest's domain names an Example is Apache-2.0, with the license's text and a NOTICE, as the boundary is (ADR-0023, amendment 2026-11-28; the owner, 2026-11-28: *Yes, license the examples Apache-2.0*); held by `test/License.Test.ps1`.
+
+Found 2026-11-28 mounting the examples: each carries the AGPL's text, so a
+developer who copies an example's code into a module of their own takes AGPL
+code into it, while the boundary the module compiles in is Apache-2.0 so a
+module stays its author's (ADR-0075 clause 6; ADR-0061, amendment
+2026-11-24). Needed: the owner's word on an example's license.

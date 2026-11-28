@@ -448,7 +448,9 @@ be relicensed or withdrawn. Modules written against the C ABI are your own
 work under your own terms: what a module links or compiles into itself — the
 C headers, the bindings, `Xmip.Module` and the `dotnet new` templates — is
 Apache-2.0 ([ADR-0075](doc/decision/ADR-0075-packages-for-developers.md),
-clause 6). Organizations whose policy excludes AGPL will find that policy
+clause 6), and so is each example a developer copies from
+([ADR-0023](doc/decision/ADR-0023-licensing-model.md), amendment
+2026-11-28). Organizations whose policy excludes AGPL will find that policy
 engaged for the platform itself; the record acknowledges this.
 
 ### A responsible adoption path

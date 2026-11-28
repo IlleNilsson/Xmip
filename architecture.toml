@@ -2073,6 +2073,8 @@ dependency = ["xmip-core-library-codec"]
 # repo is a sample it should be mounted under Xmip/example, I think the
 # word example is more used than sample"). Each declares its language, for
 # which no template is made, so Sync-XmipEstate -Workflow writes it none.
+# Each is Apache-2.0, so a developer may copy it into a module of their own
+# (ADR-0023, amendment 2026-11-28; test/License.Test.ps1 holds it).
 # Go, Java and Python embed their runtime in the process that loads them,
 # which ADR-0018 (amendment 2026-10-05) keeps out of Xmip's own modules.
   [xmip.core.contract-c_cpp]
