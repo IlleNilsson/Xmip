@@ -3,12 +3,11 @@
 # tech podcasts": the form practitioners say aloud, a project's own stated
 # pronunciation first.
 #
-# narrate.mjs applies this to each section's narration before synthesis only; the
+# The narration builder applies this before synthesis only; the
 # slides and the captions keep the written form. The longest written term wins where
-# two overlap, and a term matches only as a whole word. kokoro-js 1.x has no inline
-# phoneme markup (its text normalizer reads brackets and parentheses as punctuation
-# before phonemizing). Optional phoneme overrides apply just before tokenization;
-# context limits a correction to the specified phrases, preserving noun/verb stress.
+# two overlap, and a term matches only as a whole word. Microsoft speech uses
+# microsoft_spoken when supplied; otherwise it uses spoken. Natural sentence
+# context supplies noun/verb stress, rather than an unconditional word override.
 #
 # basis = "source": the project or its owner states how it is said, cited in `source`.
 # basis = "convention": how practitioners commonly say it; the owner corrects these.
@@ -41,8 +40,7 @@ source = "HL7 FHIR overview: FHIR, pronounced fire"
 [[term]]
 written = "GNU"
 spoken = "GNU"
-phoneme_from = "dʒˌiːˌɛnjˈuː"
-phoneme_to = "ɡnˈuː"
+microsoft_spoken = "gnoo"
 basis = "source"
 source = "https://www.gnu.org/gnu/pronunciation.html"
 
@@ -51,47 +49,6 @@ written = "TOML"
 spoken = "Tom-el"
 basis = "source"
 source = "https://github.com/toml-lang/toml/issues/447"
-
-[[term]]
-written = "records"
-spoken = "records"
-phoneme_from = "ɹˈɛkɚdz"
-phoneme_to = "ɹɪkˈɔːɹdz"
-context = ["records what happens", "records every step"]
-basis = "convention"
-note = "Verb: second-syllable stress. Audit records remains a first-stressed noun."
-
-[[term]]
-written = "record"
-spoken = "record"
-phoneme_from = "ɹˈɛkɚd"
-phoneme_to = "ɹɪkˈɔːɹd"
-context = ["decisions also record"]
-basis = "convention"
-
-[[term]]
-written = "present"
-spoken = "present"
-phoneme_from = "pɹˈɛzənt"
-phoneme_to = "pɹɪzˈɛnt"
-context = ["Reports present"]
-basis = "convention"
-
-[[term]]
-written = "updates"
-spoken = "updates"
-phoneme_from = "ˈʌpdeɪts"
-phoneme_to = "ʌpdˈeɪts"
-context = ["Instance updates its counts"]
-basis = "convention"
-
-[[term]]
-written = "use"
-spoken = "use"
-phoneme_from = "jˈuːs"
-phoneme_to = "jˈuːz"
-context = ["extensions use a C ABI"]
-basis = "convention"
 
 [[term]]
 written = "JSON"

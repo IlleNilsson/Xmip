@@ -12,12 +12,12 @@ frame_height = 720
 frames_per_second = 24
 voice_delay_seconds = 0.5
 scene_padding_seconds = 2
-narration_speed = 1.0
-sentence_pause_seconds = 0.28
-female_voice = "af_heart"
-male_voice = "am_fenrir"
-female_pitch_target_hz = 185
-male_pitch_target_hz = 170
+narration_engine = "Microsoft neural speech"
+female_voice = "en-US-EmmaMultilingualNeural"
+male_voice = "en-US-BrianMultilingualNeural"
+female_rate_percent = 0
+male_rate_percent = 4
+pitch_adjustment_hz = 0
 
 [[section]]
 title = "Xmip"
