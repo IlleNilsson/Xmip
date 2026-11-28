@@ -3314,3 +3314,29 @@ holding the static facts. The assistant's, for the owner to change: the five
 facts and their order — who first, the run's long line last — the one
 height that scrolls sideways, the shared frame, and the page's paper
 rather than the navigation's ink.
+
+## Amendment, 2026-11-28: the surfaces follow the UI rules
+
+**Provenance.** The owner, 2026-11-28: *Also all UI need to use tooltips
+for explanation and underlying information*; and, of the standard UI
+features proposed as estate rules, *Do it*. The rules have one home,
+`doc/governance/ui-style.md`; this amendment records only what they change
+of this record.
+
+- **The bare address opens the last view**, where the amendment of
+  2026-11-12 said *the first view*: the view a person was on when they left,
+  kept by the host's preference store as the bar's order is, and the first
+  view on the bar where they have none. Decided, not built: open problem
+  243.
+- **The theme follows high contrast too.** The system's theme, the first of
+  Settings' choices (amendment 2026-11-25), follows the operating system's
+  high contrast as well as its light and dark. Decided, not built: open
+  problem 243.
+- **The cluster in view is its short name**: the status bar's *cluster*
+  (amendment 2026-11-25), each cluster in the chooser and the drill's
+  cluster crumb say the short name the cluster's file declares, their
+  tooltip carrying the file's name, the short name, the run's name and the
+  file, by the one rule (`ClusterNamed`, the runtime's
+  `operate::surface::cluster_named`; ADR-0028, amendment 2026-11-28). The
+  link a chooser draws keeps the run's name, which the address carries.
+  Tested in `ClusterNamedTest`.

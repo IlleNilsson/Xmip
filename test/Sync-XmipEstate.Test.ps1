@@ -430,17 +430,72 @@ Describe 'The estate is more than its modules' {
         $mount[4].At | Should -Be 'module/platform/runtime'
     }
 
+    It 'mounts an Example at example/<leaf> by its domain, owned by no module it names' {
+        # ADR-0016, amendment 2026-11-28: an example is no part of Xmip and no
+        # module, so its name beginning with xmip-core-contract makes it no
+        # technology of the contract capability.
+        $mount = & (Get-Module Xmip) {
+            param($Repositories)
+
+            [string[]] $declared = @('xmip-core-contract', 'xmip-core-contract-c_cpp')
+
+            foreach ($repository in $Repositories) {
+                Get-XmipMountPath -Repository $repository -Declared $declared
+            }
+        } @(
+            [pscustomobject]@{ name = 'xmip-core-contract-c_cpp'; architecturalDomain = 'Example' }
+            [pscustomobject]@{ name = 'xmip-core-contract-csv'; architecturalDomain = 'Technology' }
+        )
+
+        $mount[0].Owner | Should -BeNullOrEmpty
+        $mount[0].Mount | Should -Be 'example/contract-c_cpp'
+        $mount[1].Owner | Should -Be 'xmip-core-contract'
+        $mount[1].Mount | Should -Be 'csv'
+    }
+
+    It 'admits an underscore joining two words in a name''s segment, and no other new mark' {
+        # The owner named xmip-core-contract-c_cpp, one segment for C and C++
+        # (ADR-0016, amendment 2026-11-28).
+        InModuleScope Xmip {
+            [string[]] $declared = @('xmip-core')
+            $known = [Collections.Generic.HashSet[string]]::new($declared)
+
+            foreach ($name in 'xmip-core-contract-c_cpp', 'xmip-core-c__cpp', 'xmip-core-_c',
+                'xmip-core-c_') {
+                [hashtable] $asked = @{
+                    Repository               = [pscustomobject]@{
+                        name         = $name
+                        description  = 'Named for the test.'
+                        maturity     = 'reserved'
+                        primaryCrate = [pscustomobject]@{ name = $name }
+                    }
+                    KnownNames               = $known
+                    CrateMustMatchRepository = $true
+                }
+                [scriptblock] $judged = { Assert-XmipRepositoryEntry @asked }
+
+                if ($name -eq 'xmip-core-contract-c_cpp') {
+                    $judged | Should -Not -Throw
+                }
+                else {
+                    $judged | Should -Throw "Invalid repository name: $name"
+                }
+            }
+        }
+    }
+
     It 'mounts what starts a node without a provider and everything else with one' {
         # Checked against the tree rather than the function: a hand-declared
         # mount could still break the rule. What starts a node is
         # module/foundation/ and module/platform/; every other module is
         # module/<provider>/<domain>/; what exercises a provider's work is
         # test/<provider>/; a template belongs to no provider and stays at
-        # template/<language>.
+        # template/<language>, and an example, no module, at example/<leaf>
+        # (ADR-0016, amendment 2026-11-28).
         foreach ($at in @($script:Submodule | ForEach-Object { $_.Path })) {
             [string] $shape = '^(module/(foundation|platform)/[a-z0-9-]+|' +
                 'module/(?!foundation/|platform/)[a-z0-9]+/[a-z]+/[a-z0-9-]+|' +
-                'test/[a-z0-9]+/[a-z0-9-]+|template/[a-z]+|sdk)$'
+                'test/[a-z0-9]+/[a-z0-9-]+|template/[a-z]+|example/[a-z0-9_-]+|sdk)$'
             $at | Should -Match $shape -Because "$at is where a submodule mounts"
         }
     }
@@ -520,35 +575,219 @@ Describe 'Configuring repositories' {
 
 Describe 'The estate is one Cargo workspace, its root holding every crate' {
     # ADR-0016, amendment 2026-11-20: a crate on disk the root does not list
-    # builds in no workspace, and a git dependency the root does not patch
-    # resolves from GitHub, silently, where the estate means its working tree.
+    # builds in no workspace. ADR-0005, amendment 2026-11-28: an estate crate
+    # depends on another by path, through the root's [workspace.dependencies];
+    # one named by its git URL made cargo read that crate's manifest from
+    # GitHub wherever the lock did not already hold the edge, and that
+    # manifest, inheriting from a root it is not under, did not resolve.
     BeforeAll {
         $script:Plan = InModuleScope Xmip -Parameters @{ Root = $script:Root } {
             param($Root)
             Get-XmipWorkspacePlan -RepositoryRoot $Root
         }
-        [string] $text = Get-Content -LiteralPath (Join-Path $script:Root 'Cargo.toml') -Raw
+        [string] $script:Manifest = Join-Path $script:Root 'Cargo.toml'
+        [string] $text = Get-Content -LiteralPath $script:Manifest -Raw
         [string] $members = [regex]::Match($text, '(?ms)^members = \[\s*$(.*?)^\]').Groups[1].Value
         $script:Members = @([regex]::Matches($members, '"([^"]+)"') | ForEach-Object {
                 $_.Groups[1].Value
             })
-        [string] $patch = '(?m)^\[patch\."https://github\.com/IlleNilsson/([^"]+)"\]\s*\r?\n' +
-            '\1 = \{ path = "([^"]+)" \}'
-        $script:Patched = @([regex]::Matches($text, $patch) | ForEach-Object {
-                "$($_.Groups[1].Value)=$($_.Groups[2].Value)"
-            })
+        $script:Entry = @(
+            InModuleScope Xmip -Parameters @{ Manifest = $script:Manifest } {
+                param($Manifest)
+                Read-XmipCargoDependency -Path $Manifest |
+                    Where-Object { $_.Table -eq 'workspace.dependencies' }
+            }
+        )
+        $script:Mounted = InModuleScope Xmip -Parameters @{ Root = $script:Root } {
+            param($Root)
+            Get-XmipMountedPath -Root $Root -Recurse
+        }
+        [string] $script:Run = 'Sync-XmipEstate -Cargo writes them (Update-XmipWorkspace); run it'
     }
 
     It 'lists every crate on disk as a member, and nothing else' {
         $script:Plan.Member.Count | Should -BeGreaterThan 200
-        $script:Members | Should -Be @($script:Plan.Member) -Because (
-            'Sync-XmipEstate -Compose writes them (Update-XmipWorkspace); run it')
+        $script:Members | Should -Be @($script:Plan.Member) -Because $script:Run
     }
 
-    It 'patches every estate crate a manifest names by its git URL to its folder' {
-        [string[]] $planned = @($script:Plan.Patched | ForEach-Object { "$($_.Name)=$($_.Folder)" })
-        $planned.Count | Should -BeGreaterThan 100
-        $script:Patched | Should -Be $planned -Because (
-            'Sync-XmipEstate -Compose writes them (Update-XmipWorkspace); run it')
+    It 'names no estate crate by a git source in any member, and patches none' {
+        [string] $source = 'git\s*=\s*"https://github\.com/IlleNilsson/'
+        [string[]] $named = @(
+            foreach ($folder in @('.') + @($script:Plan.Member)) {
+                [string] $path = Join-Path (Join-Path $script:Root $folder) 'Cargo.toml'
+                Select-String -LiteralPath $path -Pattern $source |
+                    Where-Object { -not $_.Line.TrimStart().StartsWith('#') } |
+                    ForEach-Object { "${folder}/Cargo.toml:$($_.LineNumber)" }
+            }
+        )
+
+        $named | Should -BeNullOrEmpty -Because (
+            "an estate crate is taken from the root's [workspace.dependencies]; $script:Run")
+        Get-Content -LiteralPath $script:Manifest -Raw |
+            Should -Not -Match '(?m)^\[patch\."https://github\.com/IlleNilsson/'
+        @($script:Plan.Edge).Count | Should -Be 0 -Because $script:Run
+    }
+
+    It 'holds one entry for each key members name an estate crate by, at its mount' {
+        [string[]] $planned = @($script:Plan.Dependency | ForEach-Object {
+                "$($_.Key)=$($_.Package)@$($_.Path)"
+            })
+        [string[]] $held = @(
+            InModuleScope Xmip -Parameters @{ Entry = $script:Entry; Mount = $script:Plan.Mount } {
+                param($Entry, $Mount)
+                [hashtable] $none = @{}
+
+                foreach ($each in $Entry) {
+                    [hashtable] $named = @{ Key = $each.Key; Pair = $each.Pair; Workspace = $none }
+                    [string] $package = Resolve-XmipCargoPackage @named
+                    [string] $path = Get-XmipCargoValue -Pair $each.Pair -Name 'path'
+
+                    if ($Mount.ContainsKey($package)) {
+                        "$($each.Key)=$package@$path"
+                    }
+                }
+            }
+        )
+
+        $planned.Count | Should -BeGreaterThan 300
+        $held | Should -Be $planned -Because $script:Run
+    }
+
+    It 'gives each estate entry the path its package is mounted at, and one package a key' {
+        [string[]] $wrong = @(
+            foreach ($key in $script:Plan.Dependency) {
+                [string] $manifest = Join-Path (Join-Path $script:Root $key.Path) 'Cargo.toml'
+                [string] $name = [regex]::Match(
+                    (Get-Content -LiteralPath $manifest -Raw),
+                    '(?ms)^\[package\][^\[]*?^name\s*=\s*"([^"]+)"').Groups[1].Value
+
+                if ($name -cne $key.Package) {
+                    "$($key.Key): $($key.Path) holds $name, not $($key.Package)"
+                }
+
+                if ($script:Mounted.ContainsKey($key.Package) -and
+                    $script:Mounted[$key.Package] -cne $key.Path) {
+                    "$($key.Key): $($key.Path), and .gitmodules mounts it at " +
+                        $script:Mounted[$key.Package]
+                }
+            }
+        )
+        [string[]] $keys = @($script:Plan.Dependency | ForEach-Object { $_.Key })
+
+        $wrong | Should -BeNullOrEmpty
+        $keys.Count | Should -Be @($keys | Sort-Object -Unique -CaseSensitive).Count
+    }
+}
+
+Describe 'Update-XmipWorkspace turns an estate crate named by its git URL into the workspace''s' {
+    # ADR-0005, amendment 2026-11-28: it is run again over a merged tree, so
+    # it converts whatever git-form edge it finds, keeps optional, features
+    # and a member's default features turned off, deletes the [patch], and a
+    # second run writes nothing.
+    BeforeAll {
+        [string] $script:Estate = Join-Path $TestDrive 'converted'
+        [string] $source = 'git = "https://github.com/IlleNilsson/xmip-core-'
+        [hashtable] $files = @{
+            'Cargo.toml'                     = @(
+                '[workspace]', 'members = [', ']', '', '[package]', 'name = "xmip"', '',
+                '[dependencies]'
+                ('a = { package = "xmip-core-a", ' + $source + 'a", branch = "main", ' +
+                    'default-features = false, features = ["x"] }')
+                'serde = "1"', '', '# The estate crates, patched.'
+                '[patch."https://github.com/IlleNilsson/xmip-core-a"]'
+                'xmip-core-a = { path = "module/foundation/a" }'
+                '[patch."https://github.com/IlleNilsson/xmip-core-b"]'
+                'xmip-core-b = { path = "module/foundation/b" }'
+            )
+            'module/foundation/a/Cargo.toml' = @('[package]', 'name = "xmip-core-a"')
+            'module/foundation/b/Cargo.toml' = @(
+                '[package]', 'name = "xmip-core-b"', '', '[dependencies]'
+                ('a = { package = "xmip-core-a", ' + $source + 'a", branch = "main", ' +
+                    'optional = true }  # kept')
+            )
+            'module/foundation/c/Cargo.toml' = @(
+                '[package]', 'name = "xmip-core-c"', '', '[dependencies]'
+                ('xmip-core-b = { ' + $source + 'b", branch = "main" }'), '',
+                '[dev-dependencies]'
+                ('a = { package = "xmip-core-a", ' + $source + 'a", features = ["test-support"] }')
+            )
+        }
+
+        foreach ($file in $files.Keys) {
+            [string] $path = Join-Path $script:Estate $file
+            $null = New-Item -ItemType Directory -Path (Split-Path -Parent $path) -Force
+            Set-Content -LiteralPath $path -Value $files[$file]
+        }
+
+        InModuleScope Xmip -Parameters @{ Root = $script:Estate } {
+            param($Root)
+            Mock Write-Host { }
+            Mock Write-XmipStep { }
+            Update-XmipWorkspace -RepositoryRoot $Root
+        }
+
+        [scriptblock] $script:Read = {
+            param([string] $Path)
+            Get-Content -LiteralPath (Join-Path $script:Estate $Path)
+        }
+    }
+
+    It 'writes the root''s members and one entry a key, at its folder, and no [patch]' {
+        [string[]] $root = @(& $script:Read 'Cargo.toml')
+
+        $root | Should -Contain '    "module/foundation/c",'
+        $root | Should -Contain 'a = { package = "xmip-core-a", path = "module/foundation/a" }'
+        $root | Should -Contain 'xmip-core-b = { path = "module/foundation/b" }'
+        [string] $off = 'default-features = false'
+        $root | Should -Contain "a = { workspace = true, $off, features = [`"x`"] }"
+        $root | Should -Contain 'serde = "1"'
+        ($root -join "`n") | Should -Not -Match '\[patch|patched'
+    }
+
+    It 'keeps each member''s optional, features, default features and comment' {
+        & $script:Read 'module/foundation/b/Cargo.toml' |
+            Should -Contain 'a = { workspace = true, optional = true }  # kept'
+        [string[]] $c = @(& $script:Read 'module/foundation/c/Cargo.toml')
+        $c | Should -Contain 'xmip-core-b = { workspace = true }'
+        $c | Should -Contain 'a = { workspace = true, features = ["test-support"] }'
+    }
+
+    It 'writes nothing on a second run' {
+        [scriptblock] $hashed = {
+            Get-ChildItem -LiteralPath $script:Estate -Recurse -File |
+                ForEach-Object { "$($_.FullName)=$((Get-FileHash -LiteralPath $_.FullName).Hash)" }
+        }
+        [string[]] $before = @(& $hashed)
+
+        InModuleScope Xmip -Parameters @{ Root = $script:Estate } {
+            param($Root)
+            Mock Write-Host { }
+            Mock Write-XmipStep { }
+            Update-XmipWorkspace -RepositoryRoot $Root
+            Should -Invoke Write-XmipStep -Times 0 -Exactly
+        }
+
+        @(& $hashed) | Should -Be $before
+    }
+
+    It 'refuses a key that names two packages, naming where' {
+        [string] $clash = Join-Path $TestDrive 'clash'
+        foreach ($leaf in 'a', 'b', 'c') {
+            [string] $at = Join-Path $clash "module/foundation/$leaf"
+            $null = New-Item -ItemType Directory -Path $at -Force
+            [string[]] $text = @('[package]', "name = `"xmip-core-$leaf`"", '[dependencies]')
+            if ($leaf -ne 'a') {
+                [string] $other = if ($leaf -eq 'b') { 'a' } else { 'b' }
+                $text += "shape = { package = `"xmip-core-$other`", git = `"x`" }"
+            }
+            Set-Content -LiteralPath (Join-Path $at 'Cargo.toml') -Value $text
+        }
+        Set-Content -LiteralPath (Join-Path $clash 'Cargo.toml') -Value '[package]', 'name = "xmip"'
+
+        InModuleScope Xmip -Parameters @{ Root = $clash } {
+            param($Root)
+            { Get-XmipWorkspacePlan -RepositoryRoot $Root } |
+                Should -Throw -ExpectedMessage '*key shape names xmip-core-a in*xmip-core-b in*'
+        }
     }
 }

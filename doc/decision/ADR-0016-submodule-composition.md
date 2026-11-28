@@ -11,7 +11,11 @@
   resolved: path dependencies win, and a repository alone still builds
 - Amended: 2026-11-27, decision 4 — a module takes what every crate shares
   from the root and builds only inside the estate; its workflow is the one
-  file it keeps, written from its template
+  file it keeps, written from its template; *What it costs* corrected
+  2026-11-28, when estate crates came to depend on each other by path
+  (ADR-0005, amendment 2026-11-28)
+- Amended: 2026-11-28, decision 1 — an example mounts at `example/<leaf>`
+  by its domain, and a workflow follows the declared language
 - Supersedes: `.gitmodules.planned`, `Invoke-SynchronizeSubmodules` in `Sync-XmipEstate.ps1`
 - Related: ADR-0010 (direction-neutral transport), ADR-0011 (naming), ADR-0015 (packaging),
   ADR-0018 (amendment 2026-11-20: the build profiles of the one workspace)
@@ -642,9 +646,21 @@ build: cargo finds no workspace root to take the values from.
   estate and verifying the crate in it. Left to the owner.
 - A crate of the estate taken by its git URL alone, as a developer outside
   the estate could until ADR-0075 (*the Rust crates at `branch = "main"`*),
-  no longer resolves. `cargo publish` writes the inherited values into
-  what it packs, so crates.io's `xmip-module` (ADR-0075 clause 2) is not
-  affected.
+  no longer resolves, and still does not: its manifest inherits from a
+  root it is not under.
+- The estate itself builds from a fresh clone. Until 2026-11-28 it did not:
+  every estate crate was named by its git URL and patched to its folder,
+  and cargo read the git source's manifest, which this amendment made one
+  that does not resolve alone, for every edge the lock did not hold, so a
+  clone without `Cargo.lock`, the root's workflow and a new edge between
+  two crates all failed. Estate crates now depend on each other by path,
+  through the root's `[workspace.dependencies]`, and `[patch]` is gone
+  (ADR-0005, amendment 2026-11-28).
+- `cargo publish` writes the inherited values into what it packs, but
+  refuses a dependency with no version, and an estate crate is taken by
+  path alone; crates.io's `xmip-module` (ADR-0075 clause 2), not built yet,
+  needs a version beside the path for every estate crate it depends on, and
+  each of those published first (open problem 247).
 
 **Verified**, on Windows, the tree of b2f703ba with this change:
 `cargo metadata` lists 284 packages, each with the version, edition,
@@ -666,3 +682,59 @@ it is not gated.
 Followed the same day: rust-style.md (its table, section 5b),
 repository-model.md (sections 8 and 10), `.cargo/config.toml`,
 `README.md`, and the template's `README.md` and `TEMPLATE_SETUP.md`.
+
+## Amendment, 2026-11-28: the examples mount at `example/`, by their domain
+
+**Provenance.** GitHub held repositories `architecture.toml` did not
+declare, and the owner, 2026-11-28, ruled on them: *If a repo is a sample it
+should be mounted under Xmip/example, I think the word example is more used
+than sample*; *contract-c and contract-cpp can be in contract-c_cpp*; for
+the Go, Java and Python contracts, *Mount them all*; and *Mount the rest,
+they should have code*. Every detail below
+that quotes no word of his was decided by the assistant while building, to
+be told to the owner.
+
+- **Decision 1 gains a third place beside `module/` and `template/`:
+  `example/`.** An example shows how a module is built on Xmip in a
+  language Xmip itself does not run; nothing of Xmip links, loads or builds
+  it (open problem 236). Its domain says so: `architecturalDomain =
+  "Example"` with `repositoryRole = "example"`, an entry of its own in the
+  manifest's `[classification]`, and `Get-XmipMountPath` mounts by that
+  domain, never by a name, at `example/<leaf>`, the name without
+  `xmip-<provider>-`. A name beginning `xmip-core-contract-` makes an
+  Example no technology of the contract capability: it is declared at depth
+  two, `[xmip.core.contract-go]`, is owned by no module, and depends on
+  nothing the estate's builds read. Like a template it belongs to no
+  module and carries no provider in its path.
+- **Four are mounted**: `xmip-core-contract-c_cpp`, `-go`, `-java` and
+  `-python`, each declaring its language (`c`, `go`, `java`, `python`).
+  The C++ contract of `xmip-core-contract-cpp`, `src/contract.cpp`, came in
+  beside `src/contract.c` by a merge of the two unrelated histories, taking
+  the C history whole and the C++ file with its own; the C++ repository
+  stays on GitHub as it is (open problem 240). The Go, Java and Python
+  examples embed their language's runtime in the process that loads them
+  (cgo, JNI, CPython), which ADR-0018, amendment 2026-10-05, keeps out of
+  Xmip's own modules; each README says so first.
+- **What belonged to the retired `verify.ps1` gate is gone** from each
+  (ADR-0042, amendment 2026-10-05): its `verify.ps1`, and the Rust
+  template's workflow, which would fail at its first cargo step in a
+  repository with no crate.
+- **The workflow follows the declared language.** `Sync-XmipEstate
+  -Workflow` writes a repository the workflow of the template its own
+  manifest entry's language is made for (`[crate.template]`), and none
+  where no template is: until this day it read a `Cargo.toml` as Rust and
+  anything else as .NET, which would have written the .NET template's
+  workflow into an example. `test/Workflow.Test.ps1` holds that a
+  repository of another language keeps no workflow.
+- **A name's segment may join two words with an underscore**, as
+  `c_cpp` does: the reader admitted lowercase words and digits parted by
+  hyphens alone, and the owner's name for one segment holding C and C++ is
+  the name GitHub has. `test/Sync-XmipEstate.Test.ps1` holds both the
+  grammar and the mount.
+- **Not mounted, and given no entry**: the repository under the System
+  Tests' retired name, which the owner ruled deleted the same day, and
+  `xmip-core-route-expression`; he deletes both on GitHub.
+
+Followed the same day: `architecture.toml`, repository-model.md
+(sections 1 and 7), the estate map (regenerated, an Example section of
+its own), `README.md` (*Layout*), and each example's README.

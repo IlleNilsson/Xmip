@@ -208,7 +208,7 @@ and waits until each is installed; `-WhatIf` says what differs and changes
 nothing, on a fresh host too:
 
 ```powershell
-[string] $cluster = 'D:\Repos\Xmip\test\core\system-test\configuration\cluster.xmip'
+[string] $cluster = 'D:\Repos\Xmip\test\core\system-test\configuration\Xmip-reference-environment.xmip'
 Deploy-XmipEnvironment -Path $cluster -Cluster CL1 -WhatIf
 Deploy-XmipEnvironment -Path $cluster -Cluster CL1
 ```

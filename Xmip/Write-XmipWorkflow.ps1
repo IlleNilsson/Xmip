@@ -12,8 +12,11 @@
     a repository's workflow only from that repository's own folder, so the
     workflow is the one file each keeps: written from
     `template/<language>` by Sync-XmipEstate -Workflow, and held identical
-    to it by test/Workflow.Test.ps1. A repository with a Cargo.toml is made
-    from the Rust template, any other from the .NET one.
+    to it by test/Workflow.Test.ps1. A repository takes the template of the
+    language its own entry in architecture.toml declares (ADR-0058,
+    amendment 2026-11-17), and one whose language no template is made for,
+    an example in C, Go, Java or Python, is written none (ADR-0016,
+    amendment 2026-11-28).
 
     Style: doc/governance/powershell-style.md
 #>
@@ -30,8 +33,9 @@
 function Get-XmipWorkflowPlan {
     <#
         .SYNOPSIS
-            Each module repository holding a workflow, but the templates and
-            the repositories whose workflow is their own: Path, its workflow,
+            Each module repository holding a workflow, but the templates, the
+            repositories whose language no template is made for and those
+            whose workflow is their own: Path, its workflow,
             and Template, the template's it is written from, each from the
             root and `/`-separated.
     #>
@@ -42,10 +46,26 @@ function Get-XmipWorkflowPlan {
         [string] $RepositoryRoot
     )
 
+    # Each declared repository's language as the manifest's reader resolves
+    # it, and the languages a template is made for. A template is no
+    # repository of the estate's tree, so it has no language here.
+    $manifest = Get-XmipManifest -Path (Get-XmipEstateLayout -Root $RepositoryRoot).Manifest
+    [hashtable] $languageOf = @{}
+
+    foreach ($entry in @($manifest.repositories)) {
+        $languageOf[[string] $entry.name] = [string] $entry.primaryCrate.language
+    }
+
+    $templates = Get-TomlValue -Node $manifest.crate -Name 'template' -Default @{}
+    [string[]] $made = @(Get-TomlKey -Node $templates)
+
     foreach ($mounted in @(Get-XmipSubmodule -Root $RepositoryRoot -Recurse)) {
-        [string] $at = Join-Path -Path $RepositoryRoot -ChildPath $mounted.Path
-        [bool] $rust = Test-Path -LiteralPath (Join-Path -Path $at -ChildPath 'Cargo.toml')
-        [string] $language = if ($rust) { 'rust' } else { 'dotnet' }
+        [string] $language = [string] $languageOf[$mounted.Repository]
+
+        if ($language -notin $made) {
+            continue
+        }
+
         [string] $template = "template/$language/$script:XmipWorkflowPath"
         [string] $path = "$($mounted.Path)/$script:XmipWorkflowPath"
         [bool] $held = Test-Path -LiteralPath (Join-Path $RepositoryRoot $path) -PathType Leaf

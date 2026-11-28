@@ -1763,8 +1763,8 @@ a machine.
   file's `[environment]` table, and no other file says it:
   `deploy/dsc/hyperv.example.toml`, `deploy/dsc/libvirt.example.toml` and
   the System Tests' `configuration/external.xmip` are deleted, and the
-  System Tests' `configuration/cluster.xmip` carries the table, the owner's
-  node plan of 2026-11-22 in it. No node is given the table: slicing leaves
+  System Tests' `configuration/Xmip-reference-environment.xmip` carries the table, the
+  owner's node plan of 2026-11-22 in it. No node is given the table: slicing leaves
   it out (ADR-0031, the second amendment of this date), and a run as local
   processes reads only its far ends from it (ADR-0028, amendment of this
   date). It names no cluster, no machine's address and no absolute path, as

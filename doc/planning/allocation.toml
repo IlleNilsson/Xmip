@@ -2621,3 +2621,17 @@ amendment of 2026-09-09) survived and the older one did not."""
 #   module/core/capability/transport/.src/claim/claimant.rs claim's
 #   claimed name
 #     -> Claimant::claimed, which an object's claim writes too
+
+# Code moved on 2026-11-28, Xmip's expression language a capability of its
+# own, which uses path and which path never uses (ADR-0066, amendment
+# 2026-11-28):
+#   module/core/capability/path/.src/expression.rs
+#     -> module/core/capability/expression/src/lib.rs
+#   module/core/capability/path/.src/expression/{computed,condition,kind,
+#   lexer,operand,parser,reading,truth,value}.rs, their tests with them
+#     -> module/core/capability/expression/src/{computed,condition,kind,
+#     lexer,operand,parser,reading,truth,value}.rs; the parser walks
+#     path::cursor, which stays in path
+#   module/core/capability/expression/src/{eval,expression,lexer,lib}.rs
+#   and rust-toolchain.toml, the predicate grammar xmip-core-path-predicate
+#   held before the repository was renamed, deleted

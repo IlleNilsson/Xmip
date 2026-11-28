@@ -63,6 +63,11 @@ explicitly invites it, and otherwise runs in a process of its own beside it
 Service of its own and hosts no .NET yet). The estate's contract technologies are accordingly Rust and .NET (ADR-0042,
 amendment 2026-10-05).
 
+A content contract of one's own in C and C++, Go, Java or Python is shown at
+`example/` in the estate: four examples, none of them part of Xmip, the Go,
+Java and Python ones embedding their runtime in the process that loads them
+(ADR-0016, amendment 2026-11-28; open problem 236).
+
 ## 2. What the runtime owns
 
 The minimum semantics every Xmip deployment needs, regardless of profile.

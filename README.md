@@ -898,8 +898,11 @@ Every tier is a process of its own: the test spawns the cluster, the cluster
 spawns its nodes, and each declares itself, so `Get-XmipProcess` shows all
 three. Omit both switches and `-Stress` is `Brutal`, the most the rig can
 give, and the nodes are the Reference Environment's,
-`test/core/system-test/configuration/cluster.xmip`, each declaring the roles
-that file gives it, so the message path runs between the node processes.
+`test/core/system-test/configuration/Xmip-reference-environment.xmip`, each
+declaring the roles that file gives it, so the message path runs between the
+node processes. Every surface shows the cluster by the short name that file
+declares, `[service] short_name`, with a tooltip (`doc/governance/ui-style.md`,
+section 1; ADR-0028, amendment 2026-11-28).
 Named, `-Nodes` and `-NodeRole` are written into the run's own cluster file,
 a node `-NodeRole` says nothing of taking the roles the System Tests' file
 declares. A node is configuration and there is no count (ADR-0056, amendment
@@ -913,7 +916,7 @@ elevated Xmip PowerShell Console on Windows (`deploy/dsc/README.md`); the
 run never makes or starts one:
 
 ```powershell
-Deploy-XmipEnvironment -Path ./test/core/system-test/configuration/cluster.xmip -Cluster CL1
+Deploy-XmipEnvironment -Path ./test/core/system-test/configuration/Xmip-reference-environment.xmip -Cluster CL1
 Start-XmipTest -Suite Core.System -Cluster CL1 -VirtualMachine
 Start-XmipTest -Suite Core.Systems -Cluster CL1 -VirtualMachine
 ```
@@ -1048,9 +1051,9 @@ every crate or project and test that failed, with the words that say why,
 in its record, so `Get-XmipTestResult -ComputerName` brings them back.
 
 What it runs before anything is pushed, in the estate's one Cargo workspace,
-whose committed `[patch]` resolves every estate crate to its working tree
-(ADR-0016, amendment 2026-11-20), the first failure stopping the run with
-nothing pushed. It builds what its parts load first — the runtime's library,
+where every estate crate depends on another by path, its working tree
+(ADR-0016, amendment 2026-11-20; ADR-0005, amendment 2026-11-28), the
+first failure stopping the run with nothing pushed. It builds what its parts load first — the runtime's library,
 its remote build where `module/core/operation/operate` lands and its Android
 one where `module/core/operation/gui` does, which `Xmip.Operations` packages
 (`Build-XmipService -Remote Desktop` and `-Remote Android` build the same by
@@ -1192,6 +1195,9 @@ deploy/               the sites and profiles a build is made from (site/, profil
                       and environment/, what runs inside them), ansible/, and
                       machine/, what a machine is for both
 template/             the Rust and .NET repository templates
+example/              contracts in C and C++, Go, Java and Python: what shows a
+                      module built on Xmip, no part of it (ADR-0016, amendment
+                      2026-11-28)
 doc/                  the record
 ```
 
@@ -1211,6 +1217,7 @@ record; propose a new one or an amendment.
 | [`architecture/observability-model.md`](doc/architecture/observability-model.md) | audit, logs, traces, retention, observation |
 | [`doc/decision/`](doc/decision) | the decision records, indexed by subject |
 | [`governance/rust-style.md`](doc/governance/rust-style.md), [`governance/powershell-style.md`](doc/governance/powershell-style.md) | style rules, enforced by the suite |
+| [`governance/ui-style.md`](doc/governance/ui-style.md) | what every surface with a user interface follows |
 | [`development/creating-transports-contracts-and-processes.md`](doc/development/creating-transports-contracts-and-processes.md) | adding a transport, a contract or a process |
 | [`doc/planning/open-problems.md`](doc/planning/open-problems.md) | open questions, in order |
 
@@ -1286,6 +1293,7 @@ Every command that changes state accepts `-WhatIf`. Reporting is the default.
 Sync-XmipEstate                                       # report drift
 Sync-XmipEstate -Create -WhatIf                       # what would be created on GitHub
 Sync-XmipEstate -Compose                              # wire the submodule tree locally
+Sync-XmipEstate -Cargo                                # the one workspace: members, estate dependencies by path
 Sync-XmipEstate -Brand                                # the mark to every surface (asset/brand)
 Sync-XmipEstate -Workflow                             # each module's verify.yml from its template
 Build-XmipService -Site hospital-interface -WhatIf    # what a site builds, without building

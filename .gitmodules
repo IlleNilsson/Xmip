@@ -222,3 +222,24 @@
 	path = module/core/operation/declaration
 	url = https://github.com/IlleNilsson/xmip-core-declaration.git
 	branch = main
+[submodule "example/contract-c_cpp"]
+	path = example/contract-c_cpp
+	url = https://github.com/IlleNilsson/xmip-core-contract-c_cpp.git
+[submodule "example/contract-go"]
+	path = example/contract-go
+	url = https://github.com/IlleNilsson/xmip-core-contract-go.git
+[submodule "example/contract-java"]
+	path = example/contract-java
+	url = https://github.com/IlleNilsson/xmip-core-contract-java.git
+[submodule "example/contract-python"]
+	path = example/contract-python
+	url = https://github.com/IlleNilsson/xmip-core-contract-python.git
+[submodule "module/core/operation/diagnose"]
+	path = module/core/operation/diagnose
+	url = https://github.com/IlleNilsson/xmip-core-diagnose.git
+[submodule "module/core/capability/expression"]
+	path = module/core/capability/expression
+	url = https://github.com/IlleNilsson/xmip-core-expression.git
+[submodule "module/core/capability/migrate"]
+	path = module/core/capability/migrate
+	url = https://github.com/IlleNilsson/xmip-core-migrate.git

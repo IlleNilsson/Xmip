@@ -538,8 +538,8 @@ inferred information, which one should see in the operation tools.*
 
 The amendment of 2026-10-06 is built:
 
-- **The Parties are configuration.** The System Tests' `configuration/cluster.xmip`
-  declares them as `[[parties]]`, each with `name` and `identities`, in the
+- **The Parties are configuration.** The System Tests'
+  `configuration/Xmip-reference-environment.xmip` declares them as `[[parties]]`, each with `name` and `identities`, in the
   shape `runtime-model.md` gives (ADR-0031, amendment 2026-10-01) —
   `Party-A` to `Party-E` as shipped, renamed there. The parse is placed once,
   in `xmip-core-configure` (`configure::party`; the node document's
@@ -690,8 +690,8 @@ Party by the id it is written with (`Parties::id`), as a node does;
 
 The owner, 2026-10-21: *one TOML file that can be run for tests regardless
 of node faking or actual nodes.* The System Tests' own cluster file,
-`configuration/cluster.xmip`, is that file. At test level 1, one computer, its
-nodes are processes the System Tests spawn; at test level 2 the same file's
+`configuration/Xmip-reference-environment.xmip`, is that file. At test level 1, one computer,
+its nodes are processes the System Tests spawn; at test level 2 the same file's
 nodes run as `xmip-service` on machines of their own — the Hyper-V
 example's XMIP-APP01 to XMIP-APP03 (Windows Server 2025), XMIP-IN01 and
 XMIP-OUT01 (AlmaLinux 10) — and the same scenarios run at both levels. A
@@ -1925,8 +1925,8 @@ is better* and *An obvious node capability is online, internet access*
 the assistant's, the same day, for the owner to strike.
 
 - **The plan says where its payload work runs, never by a node's name.**
-  `configuration/cluster.xmip` declares two nodes' Node capabilities: EX1
-  `order-approval-module`, Order approval's module installed there, and EX2
+  `configuration/Xmip-reference-environment.xmip` declares two nodes' Node capabilities:
+  EX1 `order-approval-module`, Order approval's module installed there, and EX2
   `firewall-party-d`, `firewall-party-e` and `erp-direct`, Party-D's and
   Party-E's firewall openings and a direct link to the ERP. *Order
   approval* requires `order-approval-module`, so it runs on EX1 alone, where
@@ -2283,8 +2283,8 @@ Environment*.
 
 - **The name.** The Reference Environment is Xmip's one definition of an
   environment: the cluster file the System Tests and the Systems Tests
-  use, `test/core/system-test/configuration/cluster.xmip`, with its nodes,
-  their roles, its Parties and its Xmip Applications, and in its environment
+  use, `test/core/system-test/configuration/Xmip-reference-environment.xmip`,
+  with its nodes, their roles, its Parties and its Xmip Applications, and in its environment
   table the far ends, the machines and the network they run on (ADR-0015,
   amendment 2026-11-25). The Reference Environment deck,
   `asset/brand/presentation/Xmip-reference-environment.pptx`, draws it.
@@ -2369,3 +2369,51 @@ computer. On macOS, Core.Estate's failures are the estate's own there, not
 the test computer's: open problems 215 (a copy fails the offline tests until
 fetched), 220 (macOS's git is below the estate's floor) and 221 (the
 deployment's tests reach the host's refusal first).
+
+## Amendment, 2026-11-28: the Reference Environment's file and its short name
+
+**Provenance.** The owner, 2026-11-28: *Lets keep the file name as
+Xmip-reference-environment, add a short name to be shown, use CRE for the
+short name*; then *The short name should be declared in the xmip file*; and
+*Also all UI need to use tooltips for explanation and underlying
+information.* What the short name may be and what its tooltip carries are
+the worker's drafting, for the owner to strike.
+
+- **The file.** The Reference Environment is
+  `test/core/system-test/configuration/Xmip-reference-environment.xmip`,
+  named as its deck is, `asset/brand/presentation/Xmip-reference-environment.pptx`;
+  `cluster.xmip` stays what any cluster's file is called where nothing
+  names it otherwise. Nothing finds the file by its name: the System Tests
+  compile it in (`reference_environment`), the tooling and its tests read
+  its path from `Get-XmipSystemTestLayout`, a cluster's file is told by the
+  nodes it declares (`configure::document_kind`, `test/NodeName.Test.ps1`), and the
+  VS Code designer is offered on any `.xmip` file.
+- **The short name is declared in the file**, `[service] short_name`, in
+  the table that describes the cluster, as CRE. It is no cluster name: the
+  file still names none, and a run's `-Cluster` still does. It is one to
+  twelve letters, digits or hyphens, the first a letter
+  (`configure::ShortName`), and the reader refuses any other in words, as
+  `[service]` now refuses a key it does not read. The slice gives it to
+  every node, so a node's signed slice carries it.
+- **Every surface shows it** where it shows the cluster's name, with a
+  tooltip carrying the file's name, the short name, the name the run gives
+  the cluster and the file, one rule for all, `operate::surface::cluster_named`,
+  asked Rust to Rust and through `xmip_cluster_said_v1`. A publication says
+  how its cluster is named under `[cluster]` (`observe::Naming`), which
+  `xmip_operate.h` section 8's head carries as `short_name` and
+  `cluster_file`: a node publishes the short name its slice gives, a
+  monitoring node's gathered view the one its members give, and the System
+  Tests' roll the short name and the file. A node does not know the file
+  it was sliced from, so its tooltip says no file. Shown by `xmip health`,
+  `Get-XmipHealth` and the prompt; the status bar, the cluster chooser and
+  the drill's crumbs of the Web and the Desktop, the phone among them; the
+  Desktop's Configure page; and the VS Code designer's title.
+- **A document says the short name the file declares**, never the literal:
+  the literal stands in the file alone, and a test reads it from the file.
+
+Proved by `configure`'s `service` tests (the reader, the refusal, every
+slice carrying it), `observe`'s publication test, `operate`'s
+`cluster_named` and `ffi` tests and the designer's views test, the System
+Tests' `reference_environment` test, `Xmip.Surface.Test`'s
+`ClusterNamedTest`, and `test/NodeName.Test.ps1`, which finds the short
+name the Reference Environment declares nowhere but in that file.

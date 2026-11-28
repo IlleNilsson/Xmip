@@ -18,7 +18,7 @@ use super::routed::{ORDERS, sent};
 use super::{Ending, exited, heard, lines, spawned, stop, test_cluster, told, watched};
 
 /// The Reference Environment, beside the System Tests' design.
-const CLUSTER: &str = "test/core/system-test/configuration/cluster.xmip";
+const CLUSTER: &str = "test/core/system-test/configuration/Xmip-reference-environment.xmip";
 
 /// Their Application, its Work Process and the Subscriptions into and out
 /// of it.

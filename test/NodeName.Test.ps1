@@ -40,9 +40,11 @@
 
     Where a name may stand (ADR-0056, amendment 2026-10-03), and only there:
 
-    - an cluster.xmip, a cluster's configuration, its [environment] among
-      it, which names the far ends outside the cluster and the virtual
-      machines it runs on (ADR-0028, amendments 2026-11-22 and 2026-11-25);
+    - a cluster's configuration, a .xmip file declaring its nodes under
+      [nodes], told by what it declares and never by its file's name, its
+      [environment] among it, which names the far ends outside the cluster
+      and the virtual machines it runs on (ADR-0028, amendments 2026-11-22
+      and 2026-11-25);
     - a README.md, and doc/getting-started.md, the first run the README links
       first (ADR-0056, amendment 2026-10-20, drafted);
     - the .EXAMPLE and .PARAMETER sections of a comment-based help block in a
@@ -62,6 +64,12 @@
     file's [environment] among them, in the estate's README.md, and in
     deploy/'s READMEs; what a record measured or quoted under one keeps it,
     and those places hold no record.
+
+    The short name a cluster's file declares, [service] short_name, is what
+    the surfaces show for the cluster (ADR-0028, amendment 2026-11-28): the
+    Reference Environment's is written in that file alone, and everywhere
+    else searched, and in the documents beside it, a document says the short
+    name the file declares and a test reads it from the file.
 
     Two kinds of token are not names and are said here once: $script:Word,
     the products and specifications the estate integrates with, and
@@ -166,6 +174,10 @@ BeforeAll {
         "=(?:$role)\b|cluster_name|node_name|\[nodes\.", 'Compiled')
     $script:Tree = @('.src', 'module', 'test', 'template', 'sdk', 'Xmip', 'doc')
     $script:Self = 'test/NodeName.Test.ps1'
+    # The Reference Environment: its far ends and machines are named in its
+    # [environment], and its short name in its [service].
+    [string] $configuration = (& (Get-Module -Name Xmip) { Get-XmipSystemTestLayout }).Configuration
+    $script:Reference = [IO.Path]::GetRelativePath($script:Root, $configuration) -replace '\\', '/'
 
     <#
         .SYNOPSIS
@@ -224,7 +236,9 @@ BeforeAll {
     <#
         .SYNOPSIS
         The indexes of the lines of a file where the owner's names belong:
-        all of an cluster.xmip, its [environment] among it, and of a
+        all of a cluster's configuration, a .xmip declaring [nodes.<name>]
+        (by what it declares, never its file's name), its [environment]
+        among it, and of a
         README.md, the .EXAMPLE and .PARAMETER sections of a script's help,
         a binary's usage text.
     #>
@@ -233,8 +247,10 @@ BeforeAll {
         [string] $extension = [IO.Path]::GetExtension($leaf)
         [bool] $test = $Path -like 'test/*' -or $leaf -like '*.Test.ps1'
 
-        if ($leaf -eq 'README.md' -or $Path -eq 'doc/getting-started.md' -or
-            $leaf -like '*cluster.xmip') {
+        [bool] $cluster = $extension -eq '.xmip' -and
+            @($Line | Where-Object { $_ -match '^\s*\[nodes\.' }).Count -gt 0
+
+        if ($leaf -eq 'README.md' -or $Path -eq 'doc/getting-started.md' -or $cluster) {
             return 0..([Math]::Max($Line.Count - 1, 0))
         }
 
@@ -374,7 +390,7 @@ Describe 'No cluster or node is named in code or tests' {
 
         # The far ends and the virtual machines are named in the Reference
         # Environment's [environment], and read where its nodes are.
-        [string] $system = 'test/core/system-test/configuration/cluster.xmip'
+        [string] $system = $script:Reference
         $searched | Should -Contain $system
         [IO.File]::ReadAllText((Join-Path $script:Root $system)) |
             Should -Match '(?m)^\[environment\.far_ends\]\r?$'
@@ -394,6 +410,39 @@ Describe 'No cluster or node is named in code or tests' {
             '(ADR-0056, amendment 2026-11-12)')
     }
 
+    It 'writes the short name the Reference Environment declares in that file alone' {
+        [string] $path = Join-Path $script:Root $script:Reference
+        $content = & (Get-Module -Name Xmip) { param($Path) Read-XmipToml -Path $Path } $path
+        [string] $short = [string] $content['service']['short_name']
+        $short | Should -Not -BeNullOrEmpty -Because (
+            'the Reference Environment declares its short name')
+        $word = [regex]::new("(?<![\w-])$([regex]::Escape($short))(?![\w-])")
+
+        [string[]] $found = @(
+            foreach ($file in @(Get-NodeNameFile) + @(Get-ShownNameFile)) {
+                if ($file -in $script:Reference, $script:Self) {
+                    continue
+                }
+
+                [string] $text = [IO.File]::ReadAllText((Join-Path $script:Root $file))
+
+                if ($word.IsMatch($text)) {
+                    [string[]] $lines = $text -split '\r?\n'
+
+                    for ([int] $at = 0; $at -lt $lines.Count; $at++) {
+                        if ($word.IsMatch($lines[$at])) {
+                            "${file}:$($at + 1)"
+                        }
+                    }
+                }
+            }
+        )
+
+        $found | Should -BeNullOrEmpty -Because (
+            'a document says the short name the file declares, and a test reads it ' +
+            'from the file (ADR-0028, amendment 2026-11-28)')
+    }
+
     It 'tells a one-letter designation from the two letters that replaced it' {
         [string] $readme = 'module/core/example/README.md'
         [string[]] $old = @(Find-StruckName -Path $readme -Line @(
@@ -409,8 +458,13 @@ Describe 'No cluster or node is named in code or tests' {
             Should -BeNullOrEmpty -Because 'the two letters are the owner''s'
         @(Find-StruckName -Path $readme -Line 'cl /O2, cc -O2, `@P1`, Amazon S3, LoRaWAN L2') |
             Should -BeNullOrEmpty -Because 'a flag, a parameter and a product are no designation'
-        @(Find-StruckName -Path 'test/sample/cluster.xmip' -Line 'senders = ["D1"]') |
+        [string] $declared = "[nodes.$((Get-XmipTestCluster).Nodes[0])]"
+        [string[]] $environment = @($declared, 'senders = ["D1"]')
+        @(Find-StruckName -Path 'test/sample/environment.xmip' -Line $environment) |
             Should -HaveCount 1 -Because 'a cluster file''s [environment] names far ends'
+        @(Find-StruckName -Path 'test/sample/cluster.xmip' -Line 'senders = ["D1"]') |
+            Should -BeNullOrEmpty -Because (
+                'a file is a cluster''s by the nodes it declares, not its name')
         @(Find-StruckName -Path 'module/core/sample/src/lib.rs' -Line 'near.send(b"C1")') |
             Should -BeNullOrEmpty -Because 'a payload in code is no place a name may stand'
     }

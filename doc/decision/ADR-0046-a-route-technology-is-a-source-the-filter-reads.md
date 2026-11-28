@@ -18,6 +18,10 @@
 - Amended: 2026-11-15 — an `edi` property is walked by the one segment walk
   in `xmip-core-message`, through its syntax (ADR-0066, amendment
   2026-11-15)
+- Amended: 2026-11-28 — the language a filter is written in lives in
+  `xmip-core-expression`, the renamed `xmip-core-path-predicate`, which
+  routing uses directly; `xmip-core-route-expression` is deleted (ADR-0066,
+  amendment 2026-11-28)
 - Related: ADR-0013 (the journey model, publication and subscription),
   ADR-0043 (Logic is the method — the same shape of decision for another
   capability), ADR-0044 (a technology shares through its capability),
@@ -411,3 +415,28 @@ segment at all` where it said `no segment`.
 Provenance: the coordinator's brief of 2026-11-15, under the placement
 refactor the owner ordered on 2026-11-13 (*Do we have all code in the
 modules, repos that we should*); the drafting is the assistant's.
+
+## Amendment, 2026-11-28: the language's home is xmip-core-expression
+
+Decision 3 had `expression` depend on `xmip-core-path-predicate`, and the
+amendment of 2026-09-26, item 4, retired both: the predicate grammar became
+Xmip's expression language, kept inside `xmip-core-path`. The owner moved
+the language out of path on 2026-11-28 (ADR-0066, amendment of that date,
+which quotes him: *Expression is expression, used by routing forming a
+subscription*).
+
+- **`xmip-core-path-predicate` is now `xmip-core-expression`**, renamed on
+  GitHub that morning, its history kept: a Capability at
+  `module/core/capability/expression` that uses path. A filter is still the
+  compiled `Expression`, `expression::Expression` now, read from its text as
+  the Application loads and decided by `route::publish` from its tree.
+  Route depends on `xmip-core-expression` for it, and on `xmip-core-path`
+  for the `Content` every source reads.
+- **Still seven technologies.** Routing uses the capability directly, and
+  a filter inside a filter stays retired, so no route technology is made
+  for the language. `xmip-core-route-expression`, undeclared and unmounted
+  since 2026-09-26, has its GitHub repository deleted as this lands, which
+  the owner agreed to the same day.
+
+Provenance: the owner's, 2026-11-28, as ADR-0066 records; the drafting is
+the assistant's.

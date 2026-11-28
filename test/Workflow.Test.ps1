@@ -9,7 +9,9 @@
     repository's own folder. Each is its template's, byte for byte, as
     Sync-XmipEstate -Workflow writes it (Write-XmipWorkflow); the two that
     verify a second language beside the crate are their own, and call the
-    template's shared workflow for the crate as it does.
+    template's shared workflow for the crate as it does. A repository takes
+    the template of the language its manifest entry declares, and one whose
+    language has none, an example, keeps no workflow (amendment 2026-11-28).
 #>
 
 BeforeAll {
@@ -61,6 +63,32 @@ Describe 'A module''s workflow is its template''s' {
             $script:Plan.Path | Should -Not -Contain $path
             Get-Content -LiteralPath (Join-Path $script:Root $path) -Raw |
                 Should -Match ([regex]::Escape($shared)) -Because $path
+        }
+    }
+
+    It 'gives no workflow to a repository whose declared language no template is made for' {
+        # ADR-0016, amendment 2026-11-28: an example in C, Go, Java or Python
+        # is no Rust crate, and the Rust template's workflow there would fail
+        # at its first cargo step; the language is the manifest entry's.
+        [string[]] $bare = @(
+            InModuleScope Xmip -Parameters @{ Root = $script:Root } {
+                param($Root)
+                $manifest = Get-XmipManifest -Path (Get-XmipEstateLayout -Root $Root).Manifest
+                [string[]] $made = @(Get-TomlKey -Node $manifest.crate.template)
+                [string[]] $other = @($manifest.repositories |
+                        Where-Object { $_.primaryCrate.language -notin $made } |
+                        ForEach-Object { $_.name })
+                Get-XmipSubmodule -Root $Root -Recurse |
+                    Where-Object -Property Repository -In -Value $other |
+                    ForEach-Object { "$($_.Path)/$script:XmipWorkflowPath" }
+            }
+        )
+
+        $bare.Count | Should -BeGreaterThan 0 -Because 'the examples are mounted'
+        foreach ($path in $bare) {
+            $script:Plan.Path | Should -Not -Contain $path
+            Join-Path $script:Root $path | Should -Not -Exist -Because (
+                "$path would run a template made for another language")
         }
     }
 

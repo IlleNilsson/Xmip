@@ -91,6 +91,10 @@ already build on, and its parser cursor is shared with FHIRPath
 whose one caller was the retired `expression` technology, is undeclared
 and unmounted; its GitHub repository is untouched.
 
+*Amended 2026-11-28: the language is a capability of its own,
+`xmip-core-expression`, that repository renamed; it uses path, and path
+never uses it. The amendment of that date.*
+
 - **The grammar.** Names bare with their prefixes, a run of `.`, `:`, `/`
   or `-` joining two word characters, so `header:http.x-channel` is one
   name — which is why subtraction and division are written with space
@@ -1506,3 +1510,54 @@ history and its bound, the window of 20, the word dismissed — the BPMN
 mapping, and that a failed turn keeps its Instance as it stood and writes
 nothing it made, are the assistant's, the same day, for the owner to
 overrule.
+
+## Amendment, 2026-11-28: expression is a capability of its own
+
+The owner, 2026-11-28, of clause 2's home for the language: *I'm not a fan
+of putting all that into one repo. If I remember correctly, one defines
+subscription filter via expressions. Expressions can be used from other
+places. Expressions, Promote and Demote use paths. I do not like the
+choices made.* He agreed the same day that Expression becomes its own
+capability, depending on path, and that route, process, operate and the
+runtime depend on it rather than reach it through path: *Expression is
+expression, used by routing forming a subscription.*
+
+- **The home is `xmip-core-expression`**, a Capability mounted at
+  `module/core/capability/expression`. Its repository is the one clause 2
+  left untouched, `xmip-core-path-predicate`, renamed on GitHub that
+  morning so its history comes along; the predicate grammar it held, the
+  language's first version, is replaced. What path's `expression` module
+  was — the lexer, the parser, the condition, its truth and kinds, the
+  operand, the reading, the computed value and the value, 3,044 lines with
+  their 38 tests — is the crate, moved whole, its module paths and its
+  opening comment rewritten (`doc/planning/allocation.toml`, 2026-11-28).
+  The crate is made from the Rust template and takes what every crate
+  shares from the root (ADR-0016, amendment 2026-11-27); a caller names it
+  `expression`.
+- **The dependency points one way.** Expression uses path: its parser walks
+  path's `cursor`, which FHIRPath walks too (ADR-0044); and contract's
+  error and codec's character reader. Path never uses expression: it keeps
+  its addressing languages, the engine, `Content`, `Rewriting`,
+  `Namespaces`, `json` and `cursor`, and no longer depends on
+  `xmip-core-library-codec`, which only the language's lexer read through.
+  Promote and demote use path, as before. Route, process with its BPMN
+  design format, the attribute rule (`xmip-core-authorize-abac`, the
+  amendment of 2026-11-13), operate's filter rows (clause 3) and the
+  runtime use expression. A Work Process compiled from a design reaches it
+  through process, and a Transform compiled from one, not built, will build
+  the same tree (clause 4).
+- **No route technology for it.** Routing forming a Subscription uses the
+  capability directly: a filter is itself one expression, and the retired
+  `expression` technology stays retired (ADR-0046, amendments 2026-09-26
+  and 2026-11-28).
+- **Clause 2's policy reason holds.** A platform service may depend on a
+  capability and never on a technology (`architecture.toml`, `[policy]`).
+  Expression is a capability, so `configure`, which reads a Subscription's
+  filter through route, and the runtime, which now depends on expression
+  directly, stay within it; the reason clause 2 gave for not keeping the
+  grammar in `path/predicate`, a technology, is the reason it is no
+  technology now.
+
+Provenance: the owner's words above, which decide the home and the
+direction. The mount, the alias `expression`, and that path drops codec
+are the assistant's, the same day, for the owner to overrule.

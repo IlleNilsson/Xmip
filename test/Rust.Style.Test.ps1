@@ -364,7 +364,7 @@ Describe 'ADR-0016: a crate takes what every crate shares from the root' {
         $script:Member = @(
             InModuleScope Xmip -Parameters @{ Root = $script:Root } {
                 param($Root)
-                (Get-XmipWorkspacePlan -RepositoryRoot $Root).Member
+                Get-XmipWorkspaceMember -Root $Root | ForEach-Object { $_.Folder }
             }
         )
     }

@@ -56,49 +56,6 @@ function Get-XmipDeclaredOwner {
 
 <#
     .SYNOPSIS
-    The commit each submodule is pinned at, by repository name.
-
-    .DESCRIPTION
-    git ls-tree reads the gitlink, which is the commit the superproject pins —
-    not whatever the working copy happens to be sitting on.
-
-    This is what lets a Cargo git dependency be derived rather than maintained.
-    The estate is otherwise wired twice, by .gitmodules and by hand-written rev
-    values, and the two drift silently: xmip-core has a new commit today and
-    every module still builds against the old SHA.
-#>
-function Get-XmipPinnedCommit {
-    [CmdletBinding()]
-    [OutputType([hashtable])]
-    param(
-        [Parameter(Mandatory = $true)]
-        [string] $Root,
-
-        [Parameter(Mandatory = $true)]
-        [hashtable] $MountOf
-    )
-
-    [hashtable] $pinned = @{}
-
-    foreach ($name in $MountOf.Keys) {
-        [string] $mount = [string] $MountOf[$name]
-        [string[]] $arguments = @('ls-tree', 'HEAD', '--', $mount)
-        [string[]] $output = @(
-            Invoke-XmipGit -At $Root -Arguments $arguments
-        )
-
-        # 160000 commit <sha>\t<path>
-        if (0 -lt $output.Count -and $output[0] -match '^\d+\s+commit\s+([0-9a-f]{40})') {
-            $pinned[$name] = $Matches[1]
-        }
-    }
-
-    return $pinned
-}
-
-
-<#
-    .SYNOPSIS
     What can be composed now, what is mounted, and what is waiting.
 
     .DESCRIPTION

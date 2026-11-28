@@ -572,7 +572,7 @@ Start-XmipTest -Suite Core.System -Cluster CL1 -Test RoundTrip -Nodes RX1, PX1, 
 stage each, or `executing` for all three in one process, the low-latency
 choice ([ADR-0056](decision/ADR-0056-a-node-declares-what-it-can-do.md)).
 Omit `-Nodes` and the run takes every node of the Reference Environment,
-`test/core/system-test/configuration/cluster.xmip`, whose `[nodes.RX1]
+`test/core/system-test/configuration/Xmip-reference-environment.xmip`, whose `[nodes.RX1]
 roles = "receiving"` and so on cover the whole path; a node you name with no
 `-NodeRole` takes the roles that file declares for it. A node
 given no role declares none and runs the shared-directory tests whole, which
@@ -776,7 +776,7 @@ one. Each README says each step in full.
 6. The run against the machines.
 
 ```powershell
-Deploy-XmipEnvironment -Path D:\Repos\Xmip\test\core\system-test\configuration\cluster.xmip `
+Deploy-XmipEnvironment -Path D:\Repos\Xmip\test\core\system-test\configuration\Xmip-reference-environment.xmip `
     -Cluster CL1
 Start-XmipTest -Suite Core.System -Cluster CL1 -VirtualMachine
 Get-XmipTestStatus

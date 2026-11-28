@@ -76,10 +76,19 @@ Describe 'ADR-0075: the module boundary is Apache-2.0, the rest of Xmip AGPL-3.0
     It 'links nothing of the rest of Xmip into the boundary' {
         # The crate depends on no Xmip crate, and no project references one
         # outside its own repository, so nothing AGPL is compiled in.
+        # Read as the estate map reads what a crate uses: an estate crate it
+        # takes from the root's [workspace.dependencies] is named through the
+        # root's entry (ADR-0005, amendment 2026-11-28).
         [string] $abi = Join-Path -Path $script:Root -ChildPath 'module/foundation/abi'
-        [string] $cargo = Get-Content -LiteralPath (Join-Path $abi 'Cargo.toml') -Raw
+        [string[]] $estate = @(
+            InModuleScope Xmip -Parameters @{ Root = $script:Root; Abi = $abi } {
+                param($Root, $Abi)
+                [hashtable] $workspace = Get-XmipWorkspaceDependency -RepositoryRoot $Root
+                Get-XmipCargoUse -Directory $Abi -Workspace $workspace
+            }
+        )
 
-        $cargo | Should -Not -Match 'git\s*=\s*"https://github\.com/IlleNilsson/xmip-'
+        $estate | Should -BeNullOrEmpty -Because 'the boundary links no other crate of Xmip'
 
         [string[]] $projects = @(
             $script:Boundary |

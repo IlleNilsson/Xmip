@@ -148,7 +148,7 @@ function Start-XmipTest {
             starts.
 
             Omit it and the run takes every node of the System Tests' own
-            cluster file, test/core/system-test/configuration/cluster.xmip, one
+            cluster file, test/core/system-test/configuration/Xmip-reference-environment.xmip, one
             process each, declaring the roles its roles key says. A role the
             message path needs and no node declares is
             REFUSED before anything starts, as for named nodes. The run record

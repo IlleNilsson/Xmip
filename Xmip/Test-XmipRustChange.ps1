@@ -31,7 +31,7 @@ using namespace System.Collections.Generic
     A crate with a cargo configuration of its own, `.cargo/config.toml` in
     its folder, is verified in that folder, as cargo is run there by hand,
     where cargo reads it: the System Tests' rig. A changed crate the
-    workspace does not hold, by its plan's members (Get-XmipWorkspacePlan),
+    workspace does not hold, by its members (Get-XmipWorkspaceMember),
     is verified through its own manifest, `--manifest-path`: its format, its
     lints with its default features and with every feature, and its tests.
     Since the template became a member (ADR-0016, amendment 2026-11-27), no
@@ -87,7 +87,8 @@ function Test-XmipRustChange {
     )
 
     [string[]] $crates = if ($Alone) { @($Module) } else { @($Module) + '.' }
-    [string[]] $member = @('.') + @((Get-XmipWorkspacePlan -RepositoryRoot $RepositoryRoot).Member)
+    [string[]] $member = @('.') + @(Get-XmipWorkspaceMember -Root $RepositoryRoot |
+            ForEach-Object { $_.Folder })
 
     # Each member named by its package: what cargo names is read back to the
     # crate's folder by it.

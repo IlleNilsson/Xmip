@@ -450,7 +450,8 @@ node's program linked, never a side file.
   `xmip_publication_subscriptions_v1`, the plain name now this noun's, and
   its Event subscriptions `xmip_publication_event_subscriptions_v1`.
 - **The System Tests configure real ones.** Their RoundTrip test is an Xmip
-  Application, a section of the System Tests' `configuration/cluster.xmip`
+  Application, a section of the System Tests'
+  `configuration/Xmip-reference-environment.xmip`
   (ADR-0064, amendment 2026-10-03): four
   Subscriptions, one per family of content contracts, each to the Send Port
   the send stage serves. The node that declared process writes it and a

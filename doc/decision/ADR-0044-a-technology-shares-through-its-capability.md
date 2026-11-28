@@ -555,7 +555,7 @@ refusal answered at once is a SYN the system never sends twice.
   `[tuning] connect_retransmissions = 0`: every connect there is over
   loopback, which loses no SYN, so none is sent again and a stopped node's
   refusal is all a connect waits for. The same cluster on machines of its
-  own keeps the default, a network's: the System Tests' `cluster.xmip` says
+  own keeps the default, a network's: the Reference Environment says
   nothing of where it runs, and the run on one computer gives this as it
   gives each node its addresses on loopback.
 - **A full backlog.** A Windows listener whose backlog is full refuses as

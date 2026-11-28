@@ -749,8 +749,8 @@ Describe 'Core.Internal is the internal tests of named modules' {
             param($Root)
 
             $script:Ran = [System.Collections.Generic.List[string]]::new()
-            Mock Get-XmipWorkspacePlan {
-                [pscustomobject]@{ Member = @('module/one', 'module/two') }
+            Mock Get-XmipWorkspaceMember {
+                'one', 'two' | ForEach-Object { [pscustomobject]@{ Folder = "module/$_" } }
             }
             Mock Read-XmipModuleManifest { [pscustomobject]@{ Package = "pkg-$Module" } }
             Mock Test-XmipDeclaredFeature { $true }
@@ -783,8 +783,8 @@ Describe 'Core.Internal is the internal tests of named modules' {
             param($Root)
 
             $script:Ran = [System.Collections.Generic.List[string]]::new()
-            Mock Get-XmipWorkspacePlan {
-                [pscustomobject]@{ Member = @('module/one', 'module/two') }
+            Mock Get-XmipWorkspaceMember {
+                'one', 'two' | ForEach-Object { [pscustomobject]@{ Folder = "module/$_" } }
             }
             Mock Read-XmipModuleManifest {
                 [pscustomobject]@{ Package = "pkg-$($Module.Split('/')[-1])" }

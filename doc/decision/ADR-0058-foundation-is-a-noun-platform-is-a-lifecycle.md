@@ -714,3 +714,48 @@ Cargo workspace whose root lists every crate as a member and patches each
 to its folder, written by `Sync-XmipEstate -Compose` as it mounts a crate
 (ADR-0016, amendment 2026-11-20); the local patch is gone. A move is still
 no caller's change: callers depend on a crate by its URL.
+
+## Amendment, 2026-11-28: `xmip-core-diagnose` and `xmip-core-migrate` are mounted again, before their first code
+
+**Provenance.** GitHub held repositories `architecture.toml` did not
+declare, and the owner, 2026-11-28: *Mount the rest, they should have
+code.* The amendment of 2026-09-22 kept each of the two unmounted *until
+the first of that code is written*; the owner's word of this day mounts
+them first, so the code has its place. The reading below is the
+assistant's, to be told to the owner.
+
+- **Where they mount is where this record put them, in today's layout.**
+  The amendment of 2026-09-19 unmounted `xmip-core-diagnose` from
+  `module/operation/diagnose` and `xmip-core-migrate` from
+  `module/capability/migrate`; provider before purpose (ADR-0016, amendment
+  2026-09-23) makes those `module/core/operation/diagnose`, an Operation
+  (`operational-capability`), and `module/core/capability/migrate`, a
+  Capability (`common-capability`). Diagnosis observes the path and does
+  not carry it, ADR-0025's Operation. Migration keeps the domain it had,
+  though clause 4's first test finds no Message waiting for it: that
+  question is open problem 238, not answered here. The ten technologies
+  declared under migrate until 2026-09-19 are not declared again.
+- **Each is the template's form**: a crate taking its version, edition,
+  license, publish setting and lints from the root's `[workspace.package]`
+  and `[workspace.lints]`, its source in `src/`, no `rust-toolchain.toml`,
+  and the template's workflow (ADR-0016, amendment 2026-11-27); a member of
+  the root's workspace, patched by no one, as nothing depends on it.
+- **Searched again, nothing moved.** The estate was searched on
+  2026-11-28 for diagnosis, the definition of 2026-09-22 — explaining why a
+  running node, Journey or endpoint is in the state it is: connectivity,
+  name resolution, certificates, firewall reachability — and for migration,
+  moving integrations built on another platform onto Xmip. Nothing plainly
+  is either. Read and left where they are, each with its reason, are the
+  borderline: observe's advice on a costly step or a backed-up Receive
+  Location, which says a cause from published figures; a scope's worst
+  leaf and its evidence on every surface, and the monitoring role's record
+  of a node that did not answer, both observation of what a node
+  published; a Quest (ADR-0072), which probes for a Report; and, as the
+  amendment of 2026-09-22 ruled, `ModuleProbe`, the boundary's
+  conformance, and a contract's `diagnostics`, its validation. No code
+  reads another product's configuration; the BizTalk artifact import the
+  Suggested order names is migration's first candidate (open problem 238).
+
+Built 2026-11-28, the assistant's: both mounts, their manifests and their
+documents, `architecture.toml`'s two entries, and repository-model.md's
+tree.

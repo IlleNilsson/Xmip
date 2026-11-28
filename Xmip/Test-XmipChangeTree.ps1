@@ -18,7 +18,8 @@ function Test-XmipChangeTree {
 
             The estate is one Cargo workspace (ADR-0016, amendment
             2026-11-20), so every crate already builds against every working
-            tree: the root's [patch] says so, and nothing is written for a
+            tree: the root's [workspace.dependencies] names each by path
+            (ADR-0005, amendment 2026-11-28), and nothing is written for a
             landing. In order:
 
             1. What the parts load, built once from the working tree into the

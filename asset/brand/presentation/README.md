@@ -12,7 +12,10 @@ home for the overview's both formats. Revise them together.
 - [The Reference Environment, PowerPoint: 4 slides](Xmip-reference-environment.pptx):
   the nodes Xmip's tests and demos run, the functions beside the message
   path, the machines and four ways to run one plan. Every node in it is optional; Xmip
-  runs on one node with all roles. Its shapes and tables are editable.
+  runs on one node with all roles. Its shapes and tables are editable. It
+  draws the file of its name,
+  `test/core/system-test/configuration/Xmip-reference-environment.xmip`,
+  which declares the cluster's short name (ADR-0028, amendment 2026-11-28).
 
 The media uses Git LFS. After cloning, run `git lfs pull` to obtain the actual
 files. Narration, flex poses and accessibility notes were updated on 2026-11-07.

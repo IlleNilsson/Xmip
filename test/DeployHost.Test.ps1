@@ -38,8 +38,7 @@ BeforeAll {
     # The Reference Environment, as Read-XmipToml reads it.
     function Read-Cluster {
         & (Get-Module -Name Xmip) {
-            Read-XmipToml -Path (Join-Path (Get-XmipRepositoryRoot) (
-                    'test/core/system-test/configuration/cluster.xmip'))
+            Read-XmipToml -Path (Get-XmipSystemTestLayout).Configuration
         }
     }
 

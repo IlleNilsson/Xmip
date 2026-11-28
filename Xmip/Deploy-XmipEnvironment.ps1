@@ -47,7 +47,7 @@ function Deploy-XmipEnvironment {
 
         .PARAMETER Path
             The cluster file: the System Tests' is
-            test/core/system-test/configuration/cluster.xmip.
+            test/core/system-test/configuration/Xmip-reference-environment.xmip.
 
         .PARAMETER Cluster
             The cluster's name, which the file names none of.
@@ -81,7 +81,7 @@ function Deploy-XmipEnvironment {
             certificate's subject, CN=<person>, or an account.
 
         .EXAMPLE
-            $file = './test/core/system-test/configuration/cluster.xmip'
+            $file = './test/core/system-test/configuration/Xmip-reference-environment.xmip'
             Deploy-XmipEnvironment -Path $file -Cluster CL1
 
             On Windows, in an elevated Xmip PowerShell Console: the System

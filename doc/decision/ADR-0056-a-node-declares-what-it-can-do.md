@@ -906,7 +906,7 @@ from the list; put to him as EX: *Let's go with it, EX*. And of Storage:
   does what its `roles` declare (clause 1). They change where they are
   values: the test clusters, `test/cluster.xmip` (CL1: RX1, RX2, PX1, TX1,
   TX2, EX1, OP1, DS1 and DS2) and `test/other/cluster.xmip` (CL2: RX1, TX1
-  and EX1); the System Tests' own `cluster.xmip`; the snapshot fixtures the
+  and EX1); the Reference Environment; the snapshot fixtures the
   .NET tests hold to them, the second test cluster's renamed
   `cluster-cl2.xmip`; the snapshot the surfaces ship following,
   `CL1-snapshot.xmip`; the example environments under `deploy/dsc`; and

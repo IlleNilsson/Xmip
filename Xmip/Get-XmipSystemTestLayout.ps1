@@ -38,7 +38,8 @@ function Get-XmipSystemTestLayout {
             under it, so it outlives every run (ADR-0028, amendment
             2026-10-27).
 
-            Configuration is the Reference Environment, cluster.xmip, the one
+            Configuration is the Reference Environment,
+            Xmip-reference-environment.xmip, the one
             file a run is the same over whether its nodes are simulated or on
             machines of their own (ADR-0028, amendment 2026-10-21): the nodes
             a run spawns where -Nodes names none, and what the environment
@@ -75,7 +76,8 @@ function Get-XmipSystemTestLayout {
     return [PSCustomObject]@{
         Root       = $root
         SystemTest = $systemTest
-        Configuration = Join-Path -Path $systemTest -ChildPath 'configuration/cluster.xmip'
+        Configuration = Join-Path -Path $systemTest -ChildPath (
+            'configuration/Xmip-reference-environment.xmip')
         Target     = $built
         Roll       = Join-Path -Path $target -ChildPath "xmip-system-test-roll$suffix"
         Cluster    = Join-Path -Path $target -ChildPath "xmip-system-test-cluster$suffix"
@@ -178,11 +180,11 @@ function Invoke-XmipCargoBuild {
             of it, cargo's lines kept.
 
         .DESCRIPTION
-            The estate is one workspace whose [patch] resolves every estate
-            crate to its working tree (ADR-0016, amendment 2026-11-20), so a
-            build tests what is here and never only what was pushed. The
-            System Tests' binaries and the demo readiness check's language
-            server are built by it.
+            The estate is one workspace whose crates depend on each other by
+            path, each its working tree (ADR-0016, amendment 2026-11-20;
+            ADR-0005, amendment 2026-11-28), so a build tests what is here
+            and never only what was pushed. The System Tests' binaries and
+            the demo readiness check's language server are built by it.
 
         .PARAMETER Directory
             The crate's directory.

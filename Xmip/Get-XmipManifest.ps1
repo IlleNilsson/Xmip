@@ -13,6 +13,9 @@
     Style: doc/governance/powershell-style.md
 #>
 
+# One segment of a repository's name: lowercase words and digits, an
+# underscore joining two words within it.
+[string] $script:XmipNameSegment = '[a-z0-9]+(?:_[a-z0-9]+)*'
 
 function Expand-XmipManifestFromTree {
     <#
@@ -191,7 +194,10 @@ function Assert-XmipRepositoryEntry {
     $primaryCrate = Get-XmipPropertyValue -Object $Repository -Name 'primaryCrate' -Default @{}
     [string] $crateName = [string](Get-XmipPropertyValue -Object $primaryCrate -Name 'name')
 
-    if ($name -notmatch '^xmip-[a-z0-9]+(?:-[a-z0-9]+)*$') {
+    # A segment may join two words with an underscore, as the owner named
+    # xmip-core-contract-c_cpp, one segment for C and C++ together (ADR-0016,
+    # amendment 2026-11-28); a hyphen still parts the segments.
+    if ($name -notmatch "^xmip-$script:XmipNameSegment(?:-$script:XmipNameSegment)*$") {
         throw "Invalid repository name: $name"
     }
 
@@ -203,7 +209,7 @@ function Assert-XmipRepositoryEntry {
         throw "Primary crate missing: $name"
     }
 
-    if ($crateName -notmatch '^[a-z0-9]+(?:-[a-z0-9]+)*$') {
+    if ($crateName -notmatch "^$script:XmipNameSegment(?:-$script:XmipNameSegment)*$") {
         throw "Invalid primary crate name '$crateName' for '$name'"
     }
 

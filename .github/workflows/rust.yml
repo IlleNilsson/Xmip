@@ -39,9 +39,11 @@ jobs:
           components: rustfmt, clippy
 
       # Cargo.lock is not committed (.gitignore says why): it is resolved
-      # once, here, from the branches ADR-0005 tracks, and every cargo step
-      # of the job after reads that one resolution with --locked, so no step
-      # resolves the dependencies again and two steps never build two trees.
+      # once, here, the estate's crates by path from the submodules checked
+      # out (ADR-0005, amendment 2026-11-28) and every third party from
+      # crates.io, and every cargo step of the job after reads that one
+      # resolution with --locked, so no step resolves the dependencies again
+      # and two steps never build two trees.
       - name: Lock file
         run: cargo generate-lockfile
 
@@ -77,9 +79,11 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       # Cargo.lock is not committed (.gitignore says why): it is resolved
-      # once, here, from the branches ADR-0005 tracks, and every cargo step
-      # of the job after reads that one resolution with --locked, so no step
-      # resolves the dependencies again and two steps never build two trees.
+      # once, here, the estate's crates by path from the submodules checked
+      # out (ADR-0005, amendment 2026-11-28) and every third party from
+      # crates.io, and every cargo step of the job after reads that one
+      # resolution with --locked, so no step resolves the dependencies again
+      # and two steps never build two trees.
       - name: Lock file
         run: cargo generate-lockfile
 

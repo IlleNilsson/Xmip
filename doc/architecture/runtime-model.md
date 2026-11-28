@@ -1246,7 +1246,8 @@ available for Routing, and **every Publication is audited**.
 target a Work Process, a Send Port or a Send Port Group.
 
 A Subscription's **filter** is one line of Xmip's expression language
-(ADR-0066, `xmip-core-path`'s `expression`) — `MessageType = 'Order' and not
+(ADR-0066, `xmip-core-expression`, which routing uses directly; amendment
+2026-11-28) — `MessageType = 'Order' and not
 Amount > 1000` — compiled once, when the Application holding it is read, and
 decided from the compiled tree for every Publication. A property it names is
 read by the route technology its prefix names (ADR-0046); a value that is

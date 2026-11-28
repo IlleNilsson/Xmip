@@ -517,7 +517,7 @@ Describe 'The landing''s Rust part verifies in the one workspace' {
         InModuleScope Xmip -Parameters @{ Root = $script:Both } {
             Mock Write-Host { }
             Mock Invoke-XmipTool { [pscustomobject]@{ Passed = $true; Said = @() } }
-            Mock Get-XmipWorkspacePlan { [pscustomobject]@{ Member = @('m'); Patched = @() } }
+            Mock Get-XmipWorkspaceMember { [pscustomobject]@{ Name = 'xmip-m'; Folder = 'm' } }
 
             Test-XmipRustChange -RepositoryRoot $Root -Module @('m', 'r') |
                 Should -BeNullOrEmpty
@@ -731,13 +731,19 @@ Describe 'Publish-XmipPin is given what it needs' {
 Describe 'Sort-XmipModuleDependency' {
     BeforeAll {
         # A three-module estate on disk: c depends on b, b depends on a. The
-        # manifests are real Cargo.toml files because the sort reads them with
-        # a regex, and a mock would test the mock. c aliases b as `b`, the way
-        # a technology names a sibling; the sort read only `xmip` aliases and
-        # landed ethercat before ethernet on 2026-09-11.
+        # manifests are real Cargo.toml files because the sort reads them, and
+        # a mock would test the mock. c aliases b as `b`, the way a technology
+        # names a sibling; the sort read only `xmip` aliases and landed
+        # ethercat before ethernet on 2026-09-11. Each takes its estate crate
+        # from the root's [workspace.dependencies], which names the package
+        # (ADR-0005, amendment 2026-11-28).
         $script:Fixture = Join-Path -Path $TestDrive -ChildPath 'sort'
 
         $modules = @{
+            '.'                   = @'
+[workspace.dependencies]
+xmip-a = { package = "xmip-core-a", path = "module/foundation/a" }
+b = { package = "xmip-core-b", path = "module/foundation/b" }
             'module/foundation/a' = @'
 [package]
 name = "xmip-core-a"
@@ -749,14 +755,14 @@ name = "xmip-core-a"
 name = "xmip-core-b"
 
 [dependencies]
-xmip-a = { package = "xmip-core-a", git = "https://example.invalid/a", branch = "main" }
+xmip-a = { workspace = true }
 '@
             'module/foundation/c' = @'
 [package]
 name = "xmip-core-c"
 
 [dependencies]
-b = { package = "xmip-core-b", git = "https://example.invalid/b", branch = "main" }
+b = { workspace = true }
 '@
         }
 
@@ -918,9 +924,8 @@ Describe 'Publish-XmipPin' {
 
 Describe 'Publish-XmipChange' {
     It 'has no -Commit or -Push' {
-        # Dependencies track branch = "main" under ADR-0005, so a module that is
-        # committed and not pushed is one the next in the order tests against
-        # the previous published version. The pair is one operation here.
+        # A module committed and not pushed is a pin a clone cannot check out
+        # (2026-09-03, below), so the pair is one operation here.
         $parameters = (Get-Command -Name Publish-XmipChange).Parameters.Keys
 
         $parameters | Should -Not -Contain 'Commit'
@@ -1039,8 +1044,11 @@ Describe 'The dependency tree verifies whole before anything lands' {
             'Signature: 8a477f597d28d172789f06886806bc55')
     }
 
-    It 'makes every estate crate a member, patched by its folder, and nothing in build output' {
-        # ADR-0016, amendment 2026-11-20: one workspace, its [patch] committed.
+    It 'makes every estate crate a member, taken by its folder, and nothing in build output' {
+        # ADR-0016, amendment 2026-11-20: one workspace. ADR-0005, amendment
+        # 2026-11-28: a crate named by its git URL is taken from the root's
+        # [workspace.dependencies] at its folder, which holds no repository
+        # of its own here; a commented line names nothing.
         [string] $b = Join-Path $script:Estate 'module/foundation/b/Cargo.toml'
         Set-Content -LiteralPath $b -Value @(
             '[package]', 'name = "xmip-core-b"', 'version = "0.1.0"', '[dependencies]',
@@ -1058,8 +1066,9 @@ Describe 'The dependency tree verifies whole before anything lands' {
             $plan = Get-XmipWorkspacePlan -RepositoryRoot $Root
 
             $plan.Member | Should -Be @('module/foundation/a', 'module/foundation/b')
-            @($plan.Patched | ForEach-Object { "$($_.Name)=$($_.Folder)" }) |
-                Should -Be @('xmip-core-a=module/foundation/a')
+            @($plan.Dependency | ForEach-Object { "$($_.Key)=$($_.Package)@$($_.Path)" }) |
+                Should -Be @('a=xmip-core-a@module/foundation/a')
+            @($plan.Edge | ForEach-Object { $_.Text }) | Should -Be @('a = { workspace = true }')
         }
     }
 
@@ -1131,14 +1140,17 @@ Describe 'The dependency tree verifies whole before anything lands' {
         }
     }
 
-    It 'patches every crate one way: its folder relative to the root, slashes forward' {
+    It 'names every crate''s path one way: its folder relative to the root, slashes forward' {
         # One committed manifest serves every machine.
         InModuleScope Xmip -Parameters @{ Root = $script:Estate } {
             param($Root)
 
-            foreach ($patched in @((Get-XmipWorkspacePlan -RepositoryRoot $Root).Patched)) {
-                [System.IO.Path]::IsPathFullyQualified($patched.Folder) | Should -BeFalse
-                $patched.Folder | Should -Not -Match '\\'
+            [pscustomobject[]] $keys = @((Get-XmipWorkspacePlan -RepositoryRoot $Root).Dependency)
+            $keys.Count | Should -BeGreaterThan 0
+
+            foreach ($key in $keys) {
+                [System.IO.Path]::IsPathFullyQualified($key.Path) | Should -BeFalse
+                $key.Path | Should -Not -Match '\\'
             }
         }
     }
@@ -1170,12 +1182,17 @@ Describe 'A change is checked against what consumes it, and nothing is pushed fi
     It 'finds every consumer of a changed module, directly or through others' {
         # a <- b <- c, and d on its own: a change to a reaches b and c.
         $estate = Join-Path -Path $TestDrive -ChildPath 'consumers'
+        # Each named through the root's [workspace.dependencies], unrenamed
+        # and renamed (ADR-0005, amendment 2026-11-28).
         $manifests = @{
+            '.'                   = @('[workspace.dependencies]',
+                'xmip-core-a = { path = "module/foundation/a" }',
+                'b = { package = "xmip-core-b", path = "module/foundation/b" }')
             'module/foundation/a' = @('[package]', 'name = "xmip-core-a"')
             'module/foundation/b' = @('[package]', 'name = "xmip-core-b"', '[dependencies]',
-                'xmip-core-a = { git = "x", branch = "main" }')
+                'xmip-core-a = { workspace = true }')
             'module/foundation/c' = @('[package]', 'name = "xmip-core-c"', '[dependencies]',
-                'b = { package = "xmip-core-b", git = "x", branch = "main" }')
+                'b = { workspace = true }')
             'module/foundation/d' = @('[package]', 'name = "xmip-core-d"')
         }
         foreach ($at in $manifests.Keys) {
@@ -1183,7 +1200,8 @@ Describe 'A change is checked against what consumes it, and nothing is pushed fi
             Set-Content -LiteralPath (Join-Path $estate "$at/Cargo.toml") -Value $manifests[$at]
         }
 
-        InModuleScope Xmip -Parameters @{ Root = $estate; Every = @($manifests.Keys) } {
+        [string[]] $every = @($manifests.Keys | Where-Object { $_ -ne '.' })
+        InModuleScope Xmip -Parameters @{ Root = $estate; Every = $every } {
             param($Root, $Every)
 
             Mock Get-XmipDeclaredModule { $Every }

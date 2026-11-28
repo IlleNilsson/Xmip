@@ -127,7 +127,8 @@ function Get-XmipClusterNodeRole {
 function Read-XmipSystemTestCluster {
     <#
         .SYNOPSIS
-            The nodes the Reference Environment, cluster.xmip, declares, the
+            The nodes the Reference Environment, Xmip-reference-environment.xmip,
+            declares, the
             roles each declares and the Storage nodes it lists. It names no
             cluster: where it runs is the run's or the environment's (ADR-0028,
             amendment 2026-10-21).

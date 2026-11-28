@@ -1323,8 +1323,10 @@ Journey's place in the index.
 ## 36. A green root CI run is not evidence for the composed estate
 
 Raised by the outside review of 2026-10-08. The root workflow
-(`.github/workflows/rust.yml`) resolves the dependencies from the branches
-ADR-0005 tracks, not the module revisions the root pins, and the .NET
+(`.github/workflows/rust.yml`) resolved the dependencies from the branches
+ADR-0005 tracked, not the module revisions the root pins; since 2026-11-28
+it builds each estate crate by path from the submodules it checks out, the
+revisions the root pins (ADR-0005, amendment 2026-11-28). The .NET
 operator surfaces' workflows (`module/foundation/abi/.github/workflows/verify.yml`)
 run only by hand. A green root run therefore does not show that Desktop,
 Web, CLI and PowerShell work together at the estate's recorded revisions;
@@ -1759,10 +1761,14 @@ library's `ToSocketAddrs`: a name lookup over the network. The offline gate
 (`test/Offline.Test.ps1`, ADR-0045, amendment 2026-10-22) admits no crate
 that can reach a network, even where nothing calls it, so the engine is not
 linked and Stylesheet has none: a step naming one is refused when it is
-opened. The repository `xmip-core-transform-xrust` exists and is not
-mounted. Open: an XSLT engine whose dependencies reach no network — `xrust`
-without `url`, upstream or by its fetcher taking a path, or another
-engine.
+opened. The repository `xmip-core-transform-xrust` is mounted at
+`module/core/capability/transform/xrust` since 2026-11-28 (the owner, that
+day: *Mount the rest, they should have code*), a member of the estate's
+workspace that no unit and no node build links, so the gate, which reads
+only what the standard units compile, still holds. Open: an XSLT engine
+whose dependencies reach no network — `xrust` without `url`, upstream or by
+its fetcher taking a path, or another engine — and, for `xrust`, the XML it
+reads with its own parser (problem 237).
 
 ---
 
@@ -2032,7 +2038,7 @@ place, with no alias:
   (`views.rs`, `references.rs`) and the Route view draw integrations, each
   one path, and the Wizard's *Put together* writes one;
 - **the System Tests**: the RoundTrip Application of
-  `test/core/system-test/configuration/cluster.xmip` becomes its
+  `test/core/system-test/configuration/Xmip-reference-environment.xmip` becomes its
   integrations;
 - **every surface**, in order: the ABI (`xmip_operate.h` section 10's
   views, edits and slices), the CLI, PowerShell and the GUI (the Operation
@@ -3426,6 +3432,9 @@ The code under it did not change. Under the millisecond rule a late frame
 is a defect to find, not a wait to lengthen. Needed: what holds the second
 receive past its frame.
 
+It failed once more on 2026-11-28, in the full `cargo test --workspace` run of
+the merged round, and passed alone and with its crate (25 of 25).
+
 ## 215. A test computer's copy fails the Offline test until fetched
 
 Found 2026-11-26 on a newly made test computer folder: Cargo.lock is not
@@ -3546,9 +3555,10 @@ capabilities said where `-NodeCapability` is.
 
 Found 2026-11-27 starting one node of every role on a macOS 15 test
 computer. Each served node's file is sliced from the Reference Environment
-compiled into the roll (`subscribing::CLUSTER`, `include_str!` of
-`configuration/cluster.xmip`), whose `[storage] nodes` names its two Storage
-nodes; `served::given::cluster_text` rewrites an entry to a loopback
+compiled into the roll (`reference_environment::CLUSTER`, `include_str!`
+of `configuration/Xmip-reference-environment.xmip`), whose `[storage]
+nodes` names its two Storage nodes; `served::given::cluster_text`
+rewrites an entry to a loopback
 address only where a run's Storage node has that name, and never reads the
 `[storage]` `Write-XmipTestCluster` writes into the run's own file. So a node
 of the tester's own naming with the storage role refused at accept-work,
@@ -3697,6 +3707,301 @@ limit nobody is told of. Needed: the tests' endpoints named short enough
 for any folder `Start-XmipTest -ComputerName` takes, or the folder refused
 in words before a run.
 
+## 236. The examples are built and tested by nothing
+
+Found 2026-11-28 mounting them at `example/` (ADR-0016, amendment
+2026-11-28; the owner, that day: *Mount them all*). The C and C++, Go, Java
+and Python contracts were written against `xmip_module.h` as it stood in
+September, and since their gate went on 2026-10-05 (ADR-0042, amendment
+2026-10-05) nothing has compiled one, run its own tests (`go test`, the
+plain Java checks, the standard-library Python checks) or opened its library
+as a node would, so whether each still answers today's header is unproven
+and an example can drift from the boundary it shows. C and C++ build with
+the compiler Rust already requires; Java and Python are optional
+prerequisites for the Event bindings; Go is in `prerequisite.toml` no more.
+Needed: on a test computer, each example built as a shared library against
+`module/foundation/abi/include`, its own tests run and its library opened
+through the runtime's loader, SKIPPED in words where a toolchain is absent,
+Go back as an optional prerequisite; and the owner's word on whether that
+is the estate's work, since an external module handles its own compilation
+(ADR-0042, amendment 2026-11-05).
+
+## 237. The xrust engine reads XML with a parser of its own
+
+Found 2026-11-28 mounting `xmip-core-transform-xrust`: `xrust` parses the
+stylesheet and the document it transforms with `xrust::parser::xml`, a
+second reader beside the estate's one, `codec::xml` over `quick-xml`
+(ADR-0044, amendment 2026-11-13). `sxd-document` is the one precedent, kept
+as the XPath engine's evaluation model and filled from codec's reader.
+`test/ThirdParty.Test.ps1` names no `xrust`, so it passes; adding it as the
+technology's own backend would admit the second reader the gate exists to
+keep out, so it was not added. Needed, with problem 53: `xrust`'s tree
+filled from codec's reader, or the owner's word that an XSLT engine reads
+XML its own way as the XPath engine evaluates its own model.
+
+## 238. Diagnosis and migration have their homes and no code
+
+Found 2026-11-28 mounting `xmip-core-diagnose` and `xmip-core-migrate`
+again (ADR-0058, amendment 2026-11-28): searched that day, nothing in the
+estate is plainly either. Nearest to diagnosis, each left where it is:
+observe's advice on a step past its millisecond and on a backed-up Receive
+Location (`.src/advice.rs`, `.src/advice/backlog.rs`), which says a cause
+from published figures; the worst leaf and its evidence beneath a scope,
+on every surface; the monitoring role's record of a node that did not
+answer (`runtime::plane::gather`). Nearest to migration: nothing reads
+another product's configuration. Migration mounts as a Capability, where
+ADR-0058 had it, though no Message waits for it, the test that clause 4
+asks first. Needed: the owner's word on whether observe's advice is
+diagnosis, the first piece of each (BizTalk's bindings read into an Xmip
+Application, in the Suggested order's phase D, for migration), and
+migration's domain.
+
+## 239. An example is AGPL-3.0-or-later, the boundary it shows Apache-2.0
+
+Found 2026-11-28 mounting the examples: each carries the AGPL's text, so a
+developer who copies an example's code into a module of their own takes AGPL
+code into it, while the boundary the module compiles in is Apache-2.0 so a
+module stays its author's (ADR-0075 clause 6; ADR-0061, amendment
+2026-11-24). Needed: the owner's word on an example's license.
+
+## 240. xmip-core-contract-cpp is on GitHub and declared nowhere
+
+Found 2026-11-28: its C++ contract and history are merged into
+`xmip-core-contract-c_cpp`, and the repository stays on GitHub as it was,
+the owner deciding on it later, so `Sync-XmipEstate` reports it unexpected.
+Needed: the owner's word, kept or deleted on GitHub.
+
+## 241. The VS Code extension falls short of the UI rules
+
+Found 2026-11-28 holding every surface with a user interface against
+`doc/governance/ui-style.md`: its section 1, the tooltips, and the items of
+its section 2, which the four problems 241 to 244 cite by number. The
+extension's colors are VS Code's own tokens, so its themes follow the
+editor's, high contrast included; its
+edits undo with Ctrl+Z; its commands stand in the Command Palette; and the
+language server's hover and completion explain each key. What is missing,
+in `module/core/operation/gui/vscode/extension`:
+
+- **Tooltips** (section 1): no button of either webview has one, the
+  designer's kinds, Set, Remove and Add and the process designer's Connect
+  and Compile among them (`webview/designer.ts`, `webview/process.ts`).
+  Small.
+- **Keyboard and names** (item 1): the Work Process canvas is mouse only,
+  no shape or flow taking focus or a key (`webview/process.ts`), medium;
+  the routes canvas is an `svg` of `role="img"`, so the nodes inside it
+  never reach a screen reader (`webview/routes.ts`), small; a value input
+  has no name of its own and every row's Set and Remove share one
+  (`webview/designer.ts`), small; a focused route node loses its outline
+  (`media/designer.css`), small.
+- **200 % zoom** (item 3): fixed widths do not reflow in a narrow pane
+  (`media/designer.css`, `media/process.css`). Small.
+- **States, progress** (items 4 and 5): no loading state until the server
+  answers, and *xmip-lsp is not running* says why but not what to set
+  (`src/asking.ts`); Compile and Validate show no progress
+  (`src/process.ts`). Small.
+- **Confirming** (item 6): Delete, the designer's Remove and the process
+  designer's Remove act at once, naming nothing (`src/commands.ts`). Small.
+- **Lists** (item 7): the designer's kinds and entries have no filter,
+  search or sort. Small.
+- **Help, shortcuts** (items 8 and 9): no link to the documentation from
+  either webview or command, no walkthrough, no keybinding
+  (`package.json`). Small.
+- **Resources, last view** (items 10 and 11): every word is a literal in the
+  TypeScript and the manifest, with no `package.nls.json`; the chosen view
+  and entry are not kept by the webview's state. Small.
+
+Size: medium altogether, the process canvas's keyboard the largest part.
+
+## 242. The Operation Desktop's own pages fall short of the UI rules
+
+Found 2026-11-28 by the same audit, on what the Desktop draws beside the
+shared views (problem 243): Configure, Authority and Certificate, in
+`module/core/operation/gui/src/Xmip.Operations`. Its editing controls carry
+accessible names, leaving with edits asks first, and it is aware of each
+monitor's DPI. What is missing:
+
+- **Tooltips** (section 1): Save, Discard changes, Validate and Reload from
+  disk (`Components/Pages/Configure.razor`), Inspect, Set up, Revoke,
+  Export, Back up and Sign (`Components/Pages/Authority.razor`), Make the
+  request, Share, Keep the chain and Keep the authority
+  (`Components/Pages/Certificate.razor`). Small.
+- **Names** (item 1): the export format's select and the request's text
+  have no label, and every Revoke is named *Revoke* alone. Small.
+- **Brand green** (item 2): Configure's OK is
+  painted in the brand's deep green, a state in the accent (`xmip.css`).
+  Small.
+- **States** (item 4): a file that cannot be read leaves Configure empty,
+  the error in the status line alone with no next step; Authority opens on
+  a bare form that says nothing of what to do first. Small.
+- **Progress** (item 5): the Authority's and the Certificate's acts only
+  disable their buttons, and Save, slicing and Plan run with no progress.
+  Small.
+- **Confirming** (item 6): Revoke acts at once, for good, naming no serial
+  or subject; Discard changes drops every edit unasked; Keep the chain and
+  Keep the authority overwrite their files unasked. Small.
+- **Lists** (item 7): Configure's nodes and artifacts have no search; the
+  Authority's issued certificates no sort, filter or copy of a serial or
+  fingerprint. Medium.
+- **Shortcuts and a palette** (item 9): no keyboard accelerator, no menu
+  and no command palette anywhere (`App.xaml.cs`). Large.
+- **The window** (item 10): its size and place are not kept, and it opens
+  on the first view, never the last. Small.
+
+Size: large altogether, the command palette the largest part.
+
+## 243. The web surface and the views it shares with the Desktop and the phone fall short of the UI rules
+
+Found 2026-11-28 by the same audit, in the component library both hosts
+render, `module/core/operation/gui/src/Xmip.Gui`, and the web host
+`Xmip.Gui.Web`; every gap here is the Desktop's and the phone's too. Its
+dark theme's text passes contrast throughout, reduced motion stills the
+pulses, moods are said in words on the rows, Audit and the Subscriptions
+lists sort and filter, and the bar's order and the theme are kept. The
+cluster's short name and its tooltip are shown (ADR-0028, amendment
+2026-11-28). What is missing:
+
+- **Tooltips** (section 1): the view tabs (`Components/TopNav.razor`), the
+  Monitor's acts and figures and their abbreviations
+  (`Pages/Cluster.razor`), the Event subscriptions' acts, the filter box,
+  the audit filters, the sort heads and the pager
+  (`Components/SortHead.razor`), and every status bar fact but the role and
+  the cluster. Medium.
+- **WCAG 2.2 AA** (item 1): in the light theme `--muted`, `--brand-deep` (every
+  link), the mood words and the hover text stand below 4.5:1, and several
+  focus borders below 3:1 (`wwwroot/xmip.css`); the Topology is an `svg`
+  of `role="img"`, so its links and lines never reach a screen reader
+  (`Components/TopologyGraph.razor`); no skip link, no `<main>` and no
+  view's `h1`, so focus never moves on navigation
+  (`Components/Frame.razor`); a row's link and a sort head lose their role
+  to `row` and `columnheader` (`Components/AuditTable.razor`); a needs
+  attention row's mood, a topology node's state and three link patterns
+  are said by color alone; each row's act is named by its verb alone; the
+  error banner's close takes no focus and has no name
+  (`Xmip.Gui.Web/Components/Layout/MainLayout.razor`). Medium.
+- **The theme** (item 2): no high contrast, the system's,
+  light and dark alone (`Surface/Theme.cs`), the mood dots vanishing in a
+  contrast theme; the web's reconnecting panel wears the brand green.
+  Medium.
+- **200 % zoom** (item 3): the audit, Subscription, Event subscription and
+  Dead Message Queue rows are fixed grids of 50 to 72 rem with no narrow
+  layout and no box to scroll in, so they run past the window
+  (`wwwroot/xmip.css`). Medium.
+- **States** (item 4): no view has a loading state, a cluster not yet
+  answered reading as one with nothing; Instances has no empty state
+  (`Pages/Instances.razor`); *No … here matches* stands where no filter is
+  set and says neither why nor what next; the error banner says *An
+  unhandled error has occurred* alone. Medium.
+- **Progress** (item 5): a Quest probes inside the view's read, and
+  *verify chains* likewise, with no progress, though the last probe's time
+  would give the ETA (`Pages/Reports.razor`). Medium.
+- **Confirming** (item 6): an Event subscription's Remove
+  (`Components/EventSubscriptionTable.razor`), a Dead Message's Replay
+  (`Components/DeadMessageReplay.razor`) and setting a secret over one of
+  its name (`Components/SecretSet.razor`) act at once. Small.
+- **Lists** (item 7): no value can be copied anywhere, ids, scopes or
+  fingerprints; Instances, Secrets and Reports neither sort nor filter;
+  Audit searches its locations alone. Medium.
+- **Help** (item 8): no view has F1 or a link to its documentation.
+  Medium.
+- **Shortcuts** (item 9): none beyond Escape in Settings and Enter on a
+  topology line. Medium.
+- **The last view, resources, dates** (items 10 and 11): the bare address
+  opens the first view, never the last, and Pause movement is not kept
+  (`Pages/Start.razor`, `Surface/IPreferenceStore.cs`; ADR-0052, amendment
+  2026-11-28), small; every word is a literal in the Razor or the C#, with
+  no resources, large; dates follow four rules, the invariant UTC form,
+  the machine's culture and zone (`Surface/PersonTime.cs`), Audit's own
+  and the Authority's, and some counts are raw where the rest are the
+  runtime's figures, small.
+
+Size: large altogether, the resources the largest part.
+
+## 244. The phone app falls short of the UI rules
+
+Found 2026-11-28 by the same audit, on the Android build of
+`module/core/operation/gui/src/Xmip.Operations`: an Observer following one
+node, the shared views (problem 243) and the Certificate page. Its targets
+are 44 pixels on the nav, the cog, the acts and the crumbs, its rows fall
+to one column, and an Observer is offered no act. What is missing:
+
+- **Zoom** (item 3): its page blocks pinch zoom, `user-scalable=no`
+  (`wwwroot/index.html`); the shared wide rows (problem 243) hit it
+  hardest. Small.
+- **Targets** (item 1): Arrange's arrows and Reset, the audit's selects
+  and times, the sort heads, the pager and the secrets' node links stand
+  below 44 pixels. Small.
+- **States** (item 4): a `gui.toml` missing or not saying the remote
+  surface stops it at start or at the first render with the generic banner
+  or nothing, never the reason (`MauiProgram.Phone.cs`); until the node
+  answers it says *Loading...* and then an empty Monitor. Small.
+- **Progress** (item 5): the Keystore request and the two Keeps only
+  disable themselves, though the Keystore may take time
+  (`Platforms/Android/AndroidKeeper.cs`). Small.
+- **Copying** (item 7): the request can be shared and not copied, and its
+  text has no label (`Components/Pages/Certificate.razor`). Small.
+- Not yet held: whether the WebView follows the system's font scale and
+  its dark theme, which needs a phone.
+
+Size: small altogether.
+
+## 245. One estate crate goes by up to four local names
+
+Found 2026-11-28 giving the estate's crates their dependencies by path
+(ADR-0005, amendment 2026-11-28): the root's `[workspace.dependencies]`
+holds a key for every local name a member gives an estate crate, 483 keys
+for 209 packages, and 161 packages are named under more than one, Kafka as
+`kafka`, `transport-kafka`, `transport_kafka` and `xmip-transport-kafka`.
+Each key is held to one package, and the two that named two (`shape`,
+`sql`) were renamed, but which name a crate is used by is still each
+member's choice, and a third party's crate of the same name cannot take a
+key an estate crate holds (`toml`, `regex`, `csv`, `yaml` are contracts').
+Needed: one local name per estate crate across the estate, its `use` sites
+following, and the workspace's plan (`Get-XmipWorkspacePlan`) refusing a
+second.
+
+## 246. The reason the estate commits no Cargo.lock is retired
+
+Found 2026-11-28 with problem 245: the root's `.gitignore` and the copy of
+it in 285 module repositories keep `Cargo.lock` out because *dependencies
+track `branch = "main"` under ADR-0005*, which no longer holds: estate
+crates depend on each other by path. The other reason given, that a
+library's lock is read by nothing that depends on it, holds for a module,
+which builds only in the estate, and not for the root, whose workspace has
+one lock. Measured the same day on a copy of the tree with no lock and an
+empty `CARGO_HOME`: it resolves (60 s) and checks (8 min), RocksDB at the
+version `.cargo/config.toml` keeps, 11.8.1, so `test/NativeLibrary.Test.ps1`
+holds; and 68 third parties at versions the landed lock does not hold, 2
+packages it does not hold at all. Needed: the owner's word on committing
+the workspace's lock, and the reason written once, in the root's
+`.gitignore`, the modules' copies following it.
+
+## 247. A crate published to crates.io cannot take an estate crate by path alone
+
+Found 2026-11-28 with problem 245: `cargo publish` refuses a dependency
+with no version (*all dependencies must have a version requirement
+specified when publishing*), and the root's `[workspace.dependencies]`
+gives an estate crate a path alone. `xmip-core-abi`, the boundary, takes no
+estate crate and packs (`cargo publish --dry-run -p xmip-core-abi`, exit
+0); crates.io's `xmip-module` (ADR-0075 clause 2) is not built. Needed,
+when it is: a `version` beside the path for every estate crate a published
+crate depends on, written by the workspace's tooling from the crate's own,
+and each of those crates published first, or `xmip-module` depending on
+none but the boundary.
+
+## 248. A Work Process unit compiled from a design names its crate by a git URL that does not resolve
+
+Found 2026-11-28 with problem 245: the crate the process capability
+generates for a design, which the VS Code extension writes into a
+developer's folder (`process::generate`, `extension/src/process.ts`), has a
+workspace of its own and depends on `xmip-core-process` by its git URL on
+`main`. Since every estate crate inherits from the estate's root (ADR-0016,
+amendment 2026-11-27) that manifest does not resolve alone, so the
+developer's build fails at cargo's first step; no test builds the
+generated crate. Needed: a dependency a developer's crate can resolve
+outside the estate, a published crate (problem 247) or the estate's
+working tree named by path where the developer has one, and a test that
+builds what is generated.
+
 # Suggested order
 
 Rewritten 2026-09-23, and corrected to what is built on 2026-11-10. The
@@ -3721,8 +4026,9 @@ Phase D's transformation and prepare: a node runs none of their standard
 units (ADR-0066, amendment 2026-10-22), and CMS, JOSE and XSLT have no
 engine (problems 50 to 53).
 
-Phase D's BizTalk import has no home in the manifest, and a visual mapper
-none in the surfaces; the owner decides each.
+Phase D's BizTalk import has its home, `xmip-core-migrate`, mounted on
+2026-11-28 with no code (problem 238), and a visual mapper none in the
+surfaces; the owner decides each.
 
 The 2026-09-05 order follows; its entries sit inside phases C and D.
 
@@ -4907,7 +5213,7 @@ owner, 2026-11-25: *Yes*). Proven by `runtime::signed`'s tests and
 Found 2026-11-24 checking that a fresh `xmip-service` slices the System
 Tests' cluster file: `--slice` with no `--authority` made a self-signed
 authority, its private key among it, in an `authority` folder beside
-`test/core/system-test/configuration/cluster.xmip`, where the file's
+`test/core/system-test/configuration/Xmip-reference-environment.xmip`, where the file's
 `[nodes.OP1.provision.operator] authority = "authority"` points. That
 folder is tracked and nothing ignores it, so the next landing would have
 committed the key; it was moved out by hand before one ran. Needed: a

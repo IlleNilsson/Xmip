@@ -60,7 +60,9 @@ function Get-XmipRepositoryUse {
 
     $uses = [System.Collections.Generic.SortedSet[string]]::new()
 
-    foreach ($name in @(Get-XmipCargoUse -Directory $here)) {
+    [hashtable] $workspace = Get-XmipWorkspaceDependency -RepositoryRoot $Root
+
+    foreach ($name in @(Get-XmipCargoUse -Directory $here -Workspace $workspace)) {
         [void] $uses.Add($name)
     }
 
@@ -82,18 +84,31 @@ function Get-XmipCargoUse {
             and under the dependencies of each `[target.'cfg(...)']` table.
 
         .DESCRIPTION
-            By package name where the entry renames it — `transport = { package
-            = "xmip-core-transport" }` — and by key otherwise. Nothing where
-            there is no manifest, which is a .NET repository or an empty one.
+            By the package each entry names (Resolve-XmipCargoPackage): its
+            `package`, the root's entry under its key where it takes the
+            crate from the workspace, its key otherwise. A crate empty off
+            its own platform is a dependency of that platform alone, since
+            cargo refuses one a build does not use (unused_dependencies,
+            Cargo 1.100; ADR-0062, amendment 2026-11-19), so what a crate
+            links is read from both. Nothing where there is no manifest,
+            which is a .NET repository or an empty one.
 
         .PARAMETER Directory
             The repository's full path.
+
+        .PARAMETER Workspace
+            The root's [workspace.dependencies], each key to its package
+            (Get-XmipWorkspaceDependency).
     #>
     [CmdletBinding()]
     [OutputType([string[]])]
     param(
         [Parameter(Mandatory = $true)]
-        [string] $Directory
+        [string] $Directory,
+
+        [Parameter(Mandatory = $true)]
+        [AllowEmptyCollection()]
+        [hashtable] $Workspace
     )
 
     [string] $cargo = Join-Path $Directory 'Cargo.toml'
@@ -102,58 +117,22 @@ function Get-XmipCargoUse {
         return [string[]] @()
     }
 
-    $toml = Read-XmipToml -Path $cargo
-
     [string[]] $named = @(
-        foreach ($table in @(Get-XmipCargoDependencyTable -Cargo $toml)) {
-            foreach ($key in @(Get-TomlKey -Node $table)) {
-                $entry = Get-TomlValue -Node $table -Name $key
-                $renamed = Get-TomlValue -Node $entry -Name 'package' -Default $key
-                [string] $package = [string] $renamed
+        foreach ($entry in @(Read-XmipCargoDependency -Path $cargo)) {
+            if ($entry.Table -notmatch '^(target\..+\.)?dependencies$') {
+                continue
+            }
 
-                if ($package -like 'xmip-*') {
-                    $package
-                }
+            [hashtable] $asked = @{ Key = $entry.Key; Pair = $entry.Pair; Workspace = $Workspace }
+            [string] $package = Resolve-XmipCargoPackage @asked
+
+            if ($package -like 'xmip-*') {
+                $package
             }
         }
     )
 
     return [string[]] @($named | Sort-Object -Unique)
-}
-
-
-function Get-XmipCargoDependencyTable {
-    <#
-        .SYNOPSIS
-            A read Cargo manifest's `[dependencies]` and each platform's own
-            `[target.'cfg(...)'.dependencies]`, the tables a build links.
-
-        .DESCRIPTION
-            A crate empty off its own platform is a dependency of that
-            platform alone, since cargo refuses one a build does not use
-            (unused_dependencies, Cargo 1.100; ADR-0062, amendment
-            2026-11-19), so what a crate links is read from both.
-
-        .PARAMETER Cargo
-            The manifest, as Read-XmipToml returns it.
-    #>
-    [CmdletBinding()]
-    [OutputType([object[]])]
-    param(
-        [Parameter(Mandatory = $true)]
-        $Cargo
-    )
-
-    $platforms = Get-TomlValue -Node $Cargo -Name 'target' -Default $null
-
-    return [object[]] @(
-        Get-TomlValue -Node $Cargo -Name 'dependencies' -Default $null
-
-        foreach ($platform in @(Get-TomlKey -Node $platforms)) {
-            $own = Get-TomlValue -Node $platforms -Name $platform
-            Get-TomlValue -Node $own -Name 'dependencies' -Default $null
-        }
-    )
 }
 
 

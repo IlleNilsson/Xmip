@@ -68,10 +68,10 @@ screen = "One TOML file, plain readable text, describes the cluster: its nodes, 
 voice = "male"
 power = true
 narration = "An integration in Xmip is text you can read. One TOML file, a plain-text configuration format, describes the cluster: its nodes, its routes, and what each piece of work requires. Teams version it, compare it and review it like code. Every save is validated, then sliced into each node's own part."
-sources = ["CONTRIBUTING.md", "doc/terminology.md", "test/core/system-test/configuration/cluster.xmip"]
+sources = ["CONTRIBUTING.md", "doc/terminology.md", "test/core/system-test/configuration/Xmip-reference-environment.xmip"]
 note = ""
 layout = ["scene", "toml"]
-alt = "An excerpt of the System Tests' cluster.xmip: the node EX1 declares the role processing and the Node capability order-approval-module; the Work Process Order approval requires order-approval-module; the Subscription Approved sales orders has the Send Port Sales orders to ERP as its destination. and its filter ends Approval = 'approved'. Below: EX1 is only this node's name in the file; Xmip reads its roles and capabilities, never its name."
+alt = "An excerpt of the Reference Environment, Xmip-reference-environment.xmip: the node EX1 declares the role processing and the Node capability order-approval-module; the Work Process Order approval requires order-approval-module; the Subscription Approved sales orders has the Send Port Sales orders to ERP as its destination. and its filter ends Approval = 'approved'. Below: EX1 is only this node's name in the file; Xmip reads its roles and capabilities, never its name."
 accessibility_notes = "The male host gently flexes their arms to emphasize configuration you can read in TOML."
 
 [[section]]
@@ -94,7 +94,7 @@ screen = "Nodes declare what they have. Work says what it requires. Xmip matches
 voice = "female"
 power = false
 narration = "Where work runs is configuration, never a node's name. Here are three receiving nodes, a processing node, an executing node that receives, processes and sends at low latency, and three sending nodes. Each declares its roles, and its Node capabilities: words for what its environment gives it, such as a firewall opening or an installed module. Work that requires nothing goes to any node with the role; work that names what it requires goes only to a node that has it. One node with every role works; more nodes are split out as security, firewalls and load need."
-sources = ["doc/terminology.md", "doc/decision/ADR-0056-a-node-declares-what-it-can-do.md", "test/core/system-test/configuration/cluster.xmip"]
+sources = ["doc/terminology.md", "doc/decision/ADR-0056-a-node-declares-what-it-can-do.md", "test/core/system-test/configuration/Xmip-reference-environment.xmip"]
 note = ""
 layout = ["scene", "place"]
 alt = "Left, five pieces of work: Receive Locations that require nothing; a Work Process that requires order-approval-module; Receive Locations that require firewall-party-d or firewall-party-e; the Send Port Remittances to ERP, which requires erp-direct; Send Ports that require nothing. Right, the nodes, each led by its role with its name in the file beside it: receiving nodes, RX1 to RX3; a processing node, EX1, declaring order-approval-module; an executing node, EX2, declaring firewall-party-d, firewall-party-e and erp-direct; sending nodes, TX1 to TX3. Gray lines place the work requiring nothing by role alone, the Receive Locations on the receiving nodes and the Send Ports on the sending nodes, and both on the executing node, which serves every stage; lime lines place each piece of work that requires something on the node that declares it. A key below says gray is by role, lime by role and what it requires."

@@ -18,9 +18,11 @@ replaced, and a `-Apply` mode that no longer exists. Their history is in git.
 
 ## 1. Classification
 
-Five architectural domains. The domain **explains** a repository and does not
-**name** it — `xmip-core-transport-ftp`, never `xmip-technology-transport-ftp`,
-per ADR-0011.
+Five architectural domains hold Xmip, and `Example` holds what shows how a
+module is built on it (ADR-0016, amendment 2026-11-28). The domain
+**explains** a repository and does not **name** it —
+`xmip-core-transport-ftp`, never `xmip-technology-transport-ftp`, per
+ADR-0011.
 
 It does place it on disk, and that is not a contradiction. The name is one
 thing, the navigable tree is another: `Sync-XmipEstate -Compose` mounts a module
@@ -63,10 +65,11 @@ layout's home). The scoping error was mine: ADR-0011 is about names.*
 | Domain | What it holds | Examples |
 | --- | --- | --- |
 | **Foundation** | things Xmip *is* | `xmip-core`, `xmip-core-abi`, `xmip-core-stream`, `xmip-core-message`, `xmip-core-context`, `xmip-core-journey`, `xmip-core-node`, `xmip-core-party`, `xmip-core-event` |
-| **Capability** | things Xmip *does* | `xmip-core-receive`, `xmip-core-send`, `xmip-core-transport`, `xmip-core-logic`, `xmip-core-prepare`, `xmip-core-identify`, `xmip-core-authenticate`, `xmip-core-authorize`, `xmip-core-contract`, `xmip-core-path`, `xmip-core-assign`, `xmip-core-transform`, `xmip-core-route`, `xmip-core-process`, `xmip-core-resilience`, `xmip-core-sdk` |
+| **Capability** | things Xmip *does* | `xmip-core-receive`, `xmip-core-send`, `xmip-core-transport`, `xmip-core-logic`, `xmip-core-prepare`, `xmip-core-identify`, `xmip-core-authenticate`, `xmip-core-authorize`, `xmip-core-contract`, `xmip-core-path`, `xmip-core-expression`, `xmip-core-assign`, `xmip-core-transform`, `xmip-core-route`, `xmip-core-process`, `xmip-core-resilience`, `xmip-core-sdk` |
 | **Technology** | how a capability is implemented | `xmip-core-transport-ftp`, `xmip-core-path-xpath` |
 | **Operation** | running and governing Xmip | audit, observe, report, archive, CLI, PowerShell, GUI |
 | **Platform** | what a running node needs to keep the rest alive | `xmip-core-runtime`, `xmip-core-configure`, `xmip-core-persist`, `xmip-core-cluster` |
+| **Example** | what shows how a module is built on Xmip, and is no part of it (section 7) | `xmip-core-contract-c_cpp`, `xmip-core-contract-go`, `xmip-core-contract-java`, `xmip-core-contract-python` |
 
 **The test between Foundation and Platform is the lifecycle** (ADR-0058).
 Foundation is what Xmip *is* — a noun that is true of a Message, a Journey or
@@ -423,11 +426,29 @@ xmip-core-transport   repository and Cargo package
 ```
 
 A dependent crate may use a shorter local dependency key without changing the
-package identity:
+package identity. The key is the root's: an estate crate depends on another
+by path, its working tree, through the root `Cargo.toml`'s
+`[workspace.dependencies]`, whose entry names the package and its mount
+(ADR-0005, amendment 2026-11-28):
 
 ```toml
-xmip-message = { package = "xmip-core-message", git = "..." }
+# The root's Cargo.toml.
+[workspace.dependencies]
+xmip-message = { package = "xmip-core-message", path = "module/foundation/message" }
+
+# The dependent crate's.
+[dependencies]
+xmip-message = { workspace = true }
 ```
+
+Beside `workspace = true` the dependent crate says only what is its own:
+`features`, `optional` and `default-features = false`. One key names one
+package. `Sync-XmipEstate -Cargo` writes the root's entries from the
+members: a key the root does not hold yet is written once in the crate's
+repository form, `xmip-message = { package = "xmip-core-message", git =
+"https://github.com/IlleNilsson/xmip-core-message" }`, and the run writes
+the entry at the crate's mount and turns the line into `{ workspace = true
+}`. No member is left naming a git source (`test/Sync-XmipEstate.Test.ps1`).
 
 That keeps imports readable while repository, package, diagnostics and release
 metadata still name the same owned component. The manifest's
@@ -459,6 +480,8 @@ purpose (the owner, 2026-09-23):
 Xmip/
 ├── sdk/                      simulators and emulators a module is tested on,
 │                             and the test ACME server, not built (ADR-0061)
+├── example/                  what shows a module built on Xmip, no part of it
+│   └── contract-c_cpp   contract-go   contract-java   contract-python
 ├── module/
 │   ├── foundation/           what starts a node, no provider
 │   │   ├── core   abi   stream   message   context   journey
@@ -470,11 +493,11 @@ Xmip/
 │       │   └── asn1   codec   mariadb   net   ntlm   postgresql   sql   ssh   tls
 │       ├── capability/
 │       │   ├── receive   send   transport   logic   prepare   identify
-│       │   ├── authenticate   authorize   contract   path   assign   promote
-│       │   ├── demote   transform   route   process   retain   resilience
-│       │   └── secret   schedule
+│       │   ├── authenticate   authorize   contract   path   expression   assign
+│       │   ├── promote   demote   transform   route   process   retain   resilience
+│       │   └── secret   schedule   migrate
 │       └── operation/
-│           ├── audit   observe   report   archive
+│           ├── audit   observe   report   archive   diagnose
 │           └── cli   powershell   gui
 ├── test/
 │   └── core/
@@ -500,6 +523,14 @@ ADR-0058, amendment 2026-11-13. The same day `schedule` came back, a
 Capability at `capability/schedule`, with the runtime's receive rest and
 retry due times, the estate's first scheduling: ADR-0058, amendment
 2026-11-13, on `xmip-core-schedule`.*
+
+*Redrawn 2026-11-28. `expression` joined `capability/`, Xmip's expression
+language moved out of `path` into a capability of its own: ADR-0066,
+amendment 2026-11-28.* The same day `migrate` and `diagnose` came back to
+`capability/` and `operation/` before their first code, and the examples, no
+part of Xmip, mounted at `example/`. The owner, that day: *Mount the rest,
+they should have code*, and *If a repo is a sample it should be mounted under
+Xmip/example* (ADR-0058 and ADR-0016, amendments 2026-11-28).
 
 **What starts Xmip carries no provider; everything else does, provider
 before purpose.** The owner, 2026-09-23, reading the estate map: *there is no
@@ -534,8 +565,8 @@ language is its own `primaryLanguage` in `architecture.toml` (ADR-0058,
 amendment 2026-11-17).
 
 **This tree is where things mount, and it is two levels deep.** The estate is
-larger than that: the manifest declares 330 repositories, 290 of them
-technologies, and none of those appears above. [`estate-map.md`](estate-map.md)
+larger than that: on 2026-11-28 the manifest declares 336 repositories, 282
+of them technologies, and none of those appears above. [`estate-map.md`](estate-map.md)
 is the whole of it — every declared repository, grouped by domain and under the
 repository that hosts it, with its maturity and whether it is composed in this
 working tree. It is generated by `New-XmipEstateMap` from `architecture.toml`
@@ -554,6 +585,16 @@ template belongs to no provider — its name has none, `xmip-template-rust` —
 and is never loaded by anything. `crate.template` in
 `architecture.toml` names them by `owner/name` for the GitHub API; the path is
 `template/<language>`.
+
+**The examples are not under `module/` either.** An example shows how a
+module is built on Xmip in a language Xmip itself does not run, and no part of
+Xmip links, loads or builds it. Its domain in `architecture.toml` is
+`Example`, and by that domain `Get-XmipMountPath` mounts it at
+`example/<leaf>`, its name without the provider, beside `module/`, `sdk/` and
+`template/`: `xmip-core-contract-go` at `example/contract-go`, owned by no
+capability its name begins with. The owner, 2026-11-28: *If a repo is a
+sample it should be mounted under Xmip/example, I think the word example is
+more used than sample* (ADR-0016, amendment 2026-11-28).
 
 Depth three mounts directly inside its own parent capability, because at that
 level the parent *is* the grouping, and inside a module repository everything
@@ -700,8 +741,9 @@ copied file is the defect ADR-0044 exists to remove.
 Step 5 is `Publish-XmipChange` (alias `xgit`), which is nesting-aware. It
 tests and lands the technology, records the moved gitlink in the capability
 that mounts it, then pins the superproject — technology, capability,
-superproject, in that order, because a dependency tracks `main` (ADR-0005) and
-must be pushed before anything depending on it can be verified.
+superproject, in that order, because a parent's gitlink must name a commit
+origin already has, or a clone cannot check the estate out (CONTRIBUTING,
+*Submodules*).
 
 A repository is created, not merely named, when all of this holds: it exists
 on origin; its README states its responsibility and its exclusions; its crate

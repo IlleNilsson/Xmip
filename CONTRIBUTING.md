@@ -34,6 +34,10 @@ The estate is governed by its own records, and they are current:
   never a parameter. **Length rules are strict recommendations: breaking one
   requires the owner's agreement FIRST, then the recorded reason.** Nobody is
   exempt, and whatever can reformat a file in a second is exempt least of all.
+- `doc/governance/ui-style.md` — what every surface with a user interface
+  follows: tooltips for explanation and underlying information, and the
+  standard features the owner approved on 2026-11-28. Its gaps are open
+  problems, each built to the rule.
 - `doc/planning/open-problems.md` — what is open and in what order. Problem
   19 and the Suggested order section are the queue.
 - `doc/planning/allocation.toml` — the ledger of what moved where. Tested by
@@ -188,9 +192,10 @@ Import-Module ./Xmip/Xmip.psd1 -Force
 xgit -m 'short precise message'    # alias for Publish-XmipChange
 ```
 
-Dependencies track `branch = "main"` (ADR-0005), and the estate is one
-Cargo workspace whose committed `[patch]` resolves every estate crate to its
-working tree (ADR-0016, amendment 2026-11-20). Before anything is pushed, the
+The estate is one Cargo workspace (ADR-0016, amendment 2026-11-20), and an
+estate crate depends on another by path, its working tree, through the
+root's `[workspace.dependencies]`: `x = { workspace = true }` (ADR-0005,
+amendment 2026-11-28). Before anything is pushed, the
 tool builds what its parts load — the runtime's library, the test module's —
 and then runs its independent parts side by side, each with its share of the
 machine: Rust, each changed crate tested and linted alone with its default
@@ -294,8 +299,8 @@ the whole estate in one step, and is what a session should normally use.
 **Estate commands**
 
 ```powershell
-Sync-XmipEstate -Compose   # mount and move
-Sync-XmipEstate -Cargo     # dependency revs from the submodule pins
+Sync-XmipEstate -Compose   # mount and move, then write the workspace as -Cargo does
+Sync-XmipEstate -Cargo     # the workspace: members, [workspace.dependencies], no [patch]
 ```
 
 ## Commit messages

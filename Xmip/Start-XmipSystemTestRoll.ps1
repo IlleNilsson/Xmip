@@ -268,7 +268,7 @@ function Start-XmipSystemTestRoll {
     }
 
     # The nodes are cluster.xmip (ADR-0056, amendment 2026-10-03),
-    # the System Tests' own, one file for one computer and for machines of
+    # the Reference Environment, one file for one computer and for machines of
     # their own (ADR-0028, amendment 2026-10-21): the run's file is written
     # from -Cluster and the nodes -Nodes names, each with the roles -NodeRole
     # and the Node capabilities -NodeCapability states or, where it says none,

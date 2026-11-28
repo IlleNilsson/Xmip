@@ -20,7 +20,7 @@ Where a cluster runs on virtual machines is its cluster file's
 2026-11-25; the owner, 2026-11-25: *I still don't get why there is a need
 for two files?*). The Reference Environment, Xmip's one definition of an
 environment, is the cluster file the System Tests and the Systems Tests
-use, `test/core/system-test/configuration/cluster.xmip` (ADR-0028,
+use, `test/core/system-test/configuration/Xmip-reference-environment.xmip` (ADR-0028,
 amendment 2026-11-26). It holds the owner's node plan of 2026-11-22: every
 node of the file and every far end on a virtual machine of its own, OP1 on
 the operator's machine, and the domain controller, the file storage and the
@@ -145,7 +145,7 @@ through, the first Hyper-V run shows.
 ## The command
 
 ```powershell
-Deploy-XmipEnvironment -Path D:\Repos\Xmip\test\core\system-test\configuration\cluster.xmip -Cluster CL1
+Deploy-XmipEnvironment -Path D:\Repos\Xmip\test\core\system-test\configuration\Xmip-reference-environment.xmip -Cluster CL1
 ```
 
 `-Path`, the cluster file, and `-Cluster`, its name, are required: the file

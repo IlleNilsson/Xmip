@@ -1189,6 +1189,7 @@ You have a word. This gives you the decision that governs it.
 | environment template, environment table | [Packaging and distribution](ADR-0015-packaging.md) |
 | erasure, of the identity | [A Quest probes, and the regulation is a parameter](ADR-0072-a-quest-probes-and-the-regulation-is-a-parameter.md) |
 | Error types | [One error declaration](ADR-0037-one-error-declaration.md) |
+| Estate crates depend by path | [Pre-alpha refactor discipline](ADR-0005-pre-alpha-refactor-discipline.md) |
 | estate map | [The estate map is generated](ADR-0060-the-estate-map-is-generated.md) |
 | Event | [Events are subscribed from any language](ADR-0065-events-are-subscribed-from-any-language.md) |
 | Event subscription | [Events are subscribed from any language](ADR-0065-events-are-subscribed-from-any-language.md) |

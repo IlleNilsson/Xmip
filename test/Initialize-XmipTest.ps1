@@ -164,7 +164,7 @@ function New-XmipTestEnvironment {
     )
 
     New-Item -Path $Folder -ItemType Directory -Force | Out-Null
-    [string] $source = Join-Path $script:Root 'test/core/system-test/configuration/cluster.xmip'
+    [string] $source = (& (Get-Module -Name Xmip) { Get-XmipSystemTestLayout }).Configuration
     $content = & (Get-Module -Name Xmip) { param($Path) Read-XmipToml -Path $Path } $source
     if ($Linux) {
         $environment = $content['environment']

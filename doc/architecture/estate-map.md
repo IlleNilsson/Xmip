@@ -1,6 +1,6 @@
 # The Xmip estate
 
-328 repositories are declared and 284 of them are
+336 repositories are declared and 292 of them are
 mounted in this working tree.
 
 **Generated from `architecture.toml` and from the `.gitmodules` files
@@ -32,21 +32,23 @@ the estate tree, and are counted nowhere below.
 | --- | ---: | ---: | ---: |
 | Foundation | 9 | 9 | 0 |
 | Library | 1 | 0 | 1 |
-| Capability | 23 | 23 | 0 |
-| Operation | 10 | 9 | 1 |
+| Capability | 25 | 25 | 0 |
+| Operation | 11 | 10 | 1 |
 | Platform | 4 | 4 | 0 |
-| Technology | 281 | 239 | 42 |
-| **Total** | 328 | 284 | 44 |
+| Example | 4 | 4 | 0 |
+| Technology | 282 | 240 | 42 |
+| **Total** | 336 | 292 | 44 |
 
 | Maturity | Declared | Mounted | Not mounted |
 | --- | ---: | ---: | ---: |
 | planned | 1 | 0 | 1 |
 | reserved | 43 | 0 | 43 |
-| scaffolded | 284 | 284 | 0 |
+| scaffolded | 292 | 292 | 0 |
 
 **Mounted means composed as a submodule, and composition happens at two
 levels** (ADR-0016, amended 2026-09-07). The root `.gitmodules` composes
-the modules under `module/`, `test/` and `template/`. A technology is
+the modules under `module/`, `test/` and `template/`, the SDK at `sdk/`
+and the examples under `example/`. A technology is
 composed by its own parent capability, inside that repository, so the
 root cannot see it and this map reads each parent as well. A technology
 reported as not mounted is one its parent does not compose — not one
@@ -542,7 +544,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 427613 lines of production
+Where each repository mounts and what it holds: 428543 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -564,6 +566,11 @@ hold no source to count.
 
 ```text
 ├── sdk                                          377
+├── example/
+│   ├── contract-c_cpp/
+│   ├── contract-go/
+│   ├── contract-java/
+│   └── contract-python/
 ├── module/
 │   ├── core/
 │   │   ├── capability/
@@ -681,16 +688,6 @@ hold no source to count.
 │   │   │   │   ├── password                      81
 │   │   │   │   ├── basic                         76
 │   │   │   │   └── mutual-tls                    74
-│   │   │   ├── path                            2791
-│   │   │   │   ├── jsonpath                     663
-│   │   │   │   ├── fhirpath                     619
-│   │   │   │   ├── edi                          402
-│   │   │   │   ├── hl7-v2                       372
-│   │   │   │   ├── xpath                        359
-│   │   │   │   ├── dot                          293
-│   │   │   │   ├── regex                        163
-│   │   │   │   ├── index                        161
-│   │   │   │   └── json-pointer                  65
 │   │   │   ├── process                         2777
 │   │   │   │   └── bpmn                        3498
 │   │   │   ├── prepare                         2422
@@ -699,9 +696,11 @@ hold no source to count.
 │   │   │   │       bzip2  canonicalize  checksum  chunking  envelope  framing
 │   │   │   │        hash  quoted-printable  tar
 │   │   │   ├── transform                       2206
+│   │   │   │   ├── xrust                        185
 │   │   │   │       declared, not built 8
 │   │   │   │       handlebars  jolt  jq  jsonata  liquid  mustache  tera
 │   │   │   │       xquery
+│   │   │   ├── expression                      2111
 │   │   │   ├── identify                        1454
 │   │   │   │   ├── saml                         395
 │   │   │   │   ├── ip                           231
@@ -749,7 +748,7 @@ hold no source to count.
 │   │   │   │   ├── asyncapi                     271
 │   │   │   │   ├── regex                        232
 │   │   │   │   └── csv                          165
-│   │   │   ├── route                            753
+│   │   │   ├── route                            754
 │   │   │   │   ├── metadata                     125
 │   │   │   │   ├── content                      108
 │   │   │   │   ├── contract                      86
@@ -757,6 +756,16 @@ hold no source to count.
 │   │   │   │   ├── party                         69
 │   │   │   │   ├── header                        68
 │   │   │   │   └── context                       47
+│   │   │   ├── path                             684
+│   │   │   │   ├── jsonpath                     663
+│   │   │   │   ├── fhirpath                     619
+│   │   │   │   ├── edi                          402
+│   │   │   │   ├── hl7-v2                       372
+│   │   │   │   ├── xpath                        359
+│   │   │   │   ├── dot                          293
+│   │   │   │   ├── regex                        163
+│   │   │   │   ├── index                        161
+│   │   │   │   └── json-pointer                  65
 │   │   │   ├── authorize                        552
 │   │   │   │   ├── location                     396
 │   │   │   │   ├── abac                         364
@@ -791,9 +800,10 @@ hold no source to count.
 │   │   │   ├── promote                          160
 │   │   │   ├── send                              88
 │   │   │   ├── assign                            39
-│   │   │   └── retain                            27
-│   │   │           declared, not built 5
-│   │   │           aws-s3  azure-blob  file  google-cloud-storage  sql
+│   │   │   ├── retain                            27
+│   │   │   │       declared, not built 5
+│   │   │   │       aws-s3  azure-blob  file  google-cloud-storage  sql
+│   │   │   └── migrate                            8
 │   │   ├── library/
 │   │   │   ├── net                             9488
 │   │   │   ├── codec                           5955
@@ -807,14 +817,14 @@ hold no source to count.
 │   │   │   ├── asn1                             686
 │   │   │   └── file                             318
 │   │   └── operation/
-│   │       ├── operate                        53033  C# 32563 · Rust 20470
-│   │       ├── cli                            12389
-│   │       ├── gui                             8323
-│   │       │   └── vscode                      3424
-│   │       ├── observe                         8196
+│   │       ├── operate                        53393  C# 32759 · Rust 20634
+│   │       ├── cli                            12412
+│   │       ├── gui                             8398
+│   │       │   └── vscode                      3439
+│   │       ├── observe                         8245
 │   │       │   ├── otlp                         591
 │   │       │   └── prometheus                   332
-│   │       ├── powershell                      3923  C# 3923 · PowerShell 0
+│   │       ├── powershell                      3943  C# 3943 · PowerShell 0
 │   │       ├── audit                           3596
 │   │       │   ├── file                         866
 │   │       │   ├── windows-event-log            173
@@ -836,9 +846,10 @@ hold no source to count.
 │   │       │   ├── mariadb                       87
 │   │       │   ├── postgresql                    62
 │   │       │   └── mssql                         59
-│   │       └── declaration                      140
+│   │       ├── declaration                      140
+│   │       └── diagnose                           9
 │   ├── foundation/
-│   │   ├── abi                                 8401  C# 4650 · Rust 3371 · PowerShell 380
+│   │   ├── abi                                 8420  C# 4662 · Rust 3378 · PowerShell 380
 │   │   ├── core                                4694
 │   │   ├── message                             2094
 │   │   │   ├── avro                             300
@@ -863,17 +874,17 @@ hold no source to count.
 │   │   ├── stream                               382
 │   │   └── party                                193
 │   └── platform/
-│       ├── runtime                            53636
+│       ├── runtime                            53671
 │       ├── persist                            25828
 │       │   ├── rocksdb                          323
 │       │   ├── sqlite                           288
 │       │       declared, not built 1
 │       │       postgresql
-│       ├── configure                           5724
+│       ├── configure                           5816
 │       └── cluster                             5090
 └── test/
     └── core/
-        ├── system-test                        19102
+        ├── system-test                        19137
         └── module                                83
 ```
 
@@ -934,8 +945,10 @@ Things Xmip does.
 | `xmip-core-authorize` | scaffolded | `module/core/capability/authorize` | 14 |
 | `xmip-core-contract` | scaffolded | `module/core/capability/contract` | 20 |
 | `xmip-core-demote` | scaffolded | `module/core/capability/demote` | — |
+| `xmip-core-expression` | scaffolded | `module/core/capability/expression` | — |
 | `xmip-core-identify` | scaffolded | `module/core/capability/identify` | 19 |
 | `xmip-core-logic` | scaffolded | `module/core/capability/logic` | 4 |
+| `xmip-core-migrate` | scaffolded | `module/core/capability/migrate` | — |
 | `xmip-core-path` | scaffolded | `module/core/capability/path` | 9 |
 | `xmip-core-prepare` | scaffolded | `module/core/capability/prepare` | 10 |
 | `xmip-core-process` | scaffolded | `module/core/capability/process` | 1 |
@@ -949,7 +962,7 @@ Things Xmip does.
 | `xmip-core-sdk` | scaffolded | `sdk` | — |
 | `xmip-core-secret` | scaffolded | `module/core/capability/secret` | 8 |
 | `xmip-core-send` | scaffolded | `module/core/capability/send` | — |
-| `xmip-core-transform` | scaffolded | `module/core/capability/transform` | 8 |
+| `xmip-core-transform` | scaffolded | `module/core/capability/transform` | 9 |
 | `xmip-core-transport` | scaffolded | `module/core/capability/transport` | 88 |
 | `xmip-core-unit` | scaffolded | `module/core/capability/unit` | — |
 
@@ -1049,13 +1062,14 @@ the parent does not compose.
 - **reserved**, 5 — aws-kms*, azure-key-vault*, keyring*, pkcs11*, vault*
 - **scaffolded**, 3 — dpapi, file, keychain
 
-### `xmip-core-transform`, 8 technologies
+### `xmip-core-transform`, 9 technologies
 
-Declared, and none composed: `module/core/capability/transform` has no
-`.gitmodules`.
+1 of 9 composed in `module/core/capability/transform`; a name marked `*` is
+one the parent does not compose.
 
-- **reserved**, 8 — handlebars, jolt, jq, jsonata, liquid, mustache, tera,
-  xquery
+- **reserved**, 8 — handlebars*, jolt*, jq*, jsonata*, liquid*, mustache*,
+  tera*, xquery*
+- **scaffolded**, 1 — xrust
 
 ### `xmip-core-transport`, 88 technologies
 
@@ -1085,6 +1099,7 @@ Running and governing Xmip.
 | `xmip-core-audit` | scaffolded | `module/core/operation/audit` | 10 |
 | `xmip-core-cli` | scaffolded | `module/core/operation/cli` | — |
 | `xmip-core-declaration` | scaffolded | `module/core/operation/declaration` | — |
+| `xmip-core-diagnose` | scaffolded | `module/core/operation/diagnose` | — |
 | `xmip-core-gui` | scaffolded | `module/core/operation/gui` | 1 |
 | `xmip-core-observe` | scaffolded | `module/core/operation/observe` | 2 |
 | `xmip-core-operate` | scaffolded | `module/core/operation/operate` | — |
@@ -1154,5 +1169,18 @@ parent does not compose.
 
 - **planned**, 1 — postgresql*
 - **scaffolded**, 2 — rocksdb, sqlite
+
+---
+
+## Example
+
+What shows how a module is built on Xmip; no part of it.
+
+| Repository | Maturity | Mount | Technologies |
+| --- | --- | --- | ---: |
+| `xmip-core-contract-c_cpp` | scaffolded | `example/contract-c_cpp` | — |
+| `xmip-core-contract-go` | scaffolded | `example/contract-go` | — |
+| `xmip-core-contract-java` | scaffolded | `example/contract-java` | — |
+| `xmip-core-contract-python` | scaffolded | `example/contract-python` | — |
 
 ---

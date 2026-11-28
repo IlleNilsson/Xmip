@@ -224,7 +224,7 @@ its name and refuses any other key; `binding_problems` refuses one the
 configuration does not hold and reports its design's problems, the slice
 gives a node only the sections its bindings name, and the runtime reads
 each bound section as the node starts. The System Tests' RoundTrip
-Application is a section of its cluster's `configuration/cluster.xmip`, and
+Application is a section of its cluster's `configuration/Xmip-reference-environment.xmip`, and
 each node's configuration is sliced from it. The designer's views are
 configure's `views.rs` — one view per kind in the order above, each entry
 wherever the file holds it (shared, a node's own, a binding's, an

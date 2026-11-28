@@ -99,7 +99,8 @@ function New-XmipMapComposition {
     return @(
         '**Mounted means composed as a submodule, and composition happens at two'
         'levels** (ADR-0016, amended 2026-09-07). The root `.gitmodules` composes'
-        'the modules under `module/`, `test/` and `template/`. A technology is'
+        'the modules under `module/`, `test/` and `template/`, the SDK at `sdk/`'
+        'and the examples under `example/`. A technology is'
         'composed by its own parent capability, inside that repository, so the'
         'root cannot see it and this map reads each parent as well. A technology'
         'reported as not mounted is one its parent does not compose — not one'

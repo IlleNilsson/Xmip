@@ -15,8 +15,9 @@ It is a template for creating Xmip environments, never a lab.
 
 ## The one file, and the environment
 
-`cluster.xmip` is the System Tests' own,
-`test/core/system-test/configuration/cluster.xmip`: the one file a test runs
+The cluster's file is the Reference Environment,
+`test/core/system-test/configuration/Xmip-reference-environment.xmip`: the one
+file a test runs
 whether its nodes are processes on one computer or on virtual machines of
 their own (the owner, 2026-10-21: *one TOML file that can be run for tests
 regardless of node faking or actual nodes*; ADR-0028, amendments 2026-10-21

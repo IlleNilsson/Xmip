@@ -2,10 +2,11 @@
 # The estate is one workspace (ADR-0016, amendment 2026-11-20): every crate
 # below is a member, the Rust template's too, built with one resolution,
 # one lock and one build directory; the root package is a member without
-# being listed. A member keeps its git dependencies and no [workspace] of
-# its own, and takes from this one what every crate shares (below), so it
-# builds here and nowhere alone (amendment 2026-11-27); [patch] at the end
-# of this file resolves each of its estate dependencies to its working tree.
+# being listed. A member has no [workspace] of its own, and takes from this
+# one what every crate shares (below), so it builds here and nowhere alone
+# (amendment 2026-11-27); it takes each estate crate it depends on from
+# [workspace.dependencies] at the end of this file, by path, its working
+# tree (ADR-0005, amendment 2026-11-28).
 members = [
     "module/core/capability/assign",
     "module/core/capability/authenticate",
@@ -64,6 +65,7 @@ members = [
     "module/core/capability/contract/xml-schema",
     "module/core/capability/contract/yaml",
     "module/core/capability/demote",
+    "module/core/capability/expression",
     "module/core/capability/identify",
     "module/core/capability/identify/api-key",
     "module/core/capability/identify/certificate",
@@ -89,6 +91,7 @@ members = [
     "module/core/capability/logic/http-api",
     "module/core/capability/logic/matter",
     "module/core/capability/logic/soap",
+    "module/core/capability/migrate",
     "module/core/capability/path",
     "module/core/capability/path/dot",
     "module/core/capability/path/edi",
@@ -132,6 +135,7 @@ members = [
     "module/core/capability/secret/keychain",
     "module/core/capability/send",
     "module/core/capability/transform",
+    "module/core/capability/transform/xrust",
     "module/core/capability/transport",
     "module/core/capability/transport/activemq",
     "module/core/capability/transport/amqp",
@@ -250,6 +254,7 @@ members = [
     "module/core/operation/audit/windows-event-log",
     "module/core/operation/cli",
     "module/core/operation/declaration",
+    "module/core/operation/diagnose",
     "module/core/operation/gui/vscode",
     "module/core/operation/observe",
     "module/core/operation/observe/otlp",
@@ -664,135 +669,135 @@ persist-sqlite = ["persist", "secret", "dep:xmip-persist-sqlite"]
 secret =["dep:xmip-secret", "dep:xmip-secret-dpapi", "dep:xmip-secret-file", "dep:xmip-secret-keychain"]
 
 [dependencies]
-xmip-abi = { package = "xmip-core-abi", git = "https://github.com/IlleNilsson/xmip-core-abi", branch = "main" }
-xmip-archive = { package = "xmip-core-archive", git = "https://github.com/IlleNilsson/xmip-core-archive", branch = "main", optional = true }
-xmip-assign = { package = "xmip-core-assign", git = "https://github.com/IlleNilsson/xmip-core-assign", branch = "main", optional = true }
-xmip-audit = { package = "xmip-core-audit", git = "https://github.com/IlleNilsson/xmip-core-audit", branch = "main", optional = true }
-xmip-audit-file = { package = "xmip-core-audit-file", git = "https://github.com/IlleNilsson/xmip-core-audit-file", branch = "main", optional = true }
-xmip-authenticate = { package = "xmip-core-authenticate", git = "https://github.com/IlleNilsson/xmip-core-authenticate", branch = "main", optional = true }
-xmip-authenticate-mutual-tls = { package = "xmip-core-authenticate-mutual-tls", git = "https://github.com/IlleNilsson/xmip-core-authenticate-mutual-tls", branch = "main", optional = true }
-xmip-authorize = { package = "xmip-core-authorize", git = "https://github.com/IlleNilsson/xmip-core-authorize", branch = "main", optional = true }
-xmip-authorize-location = { package = "xmip-core-authorize-location", git = "https://github.com/IlleNilsson/xmip-core-authorize-location", branch = "main", optional = true }
-xmip-cluster = { package = "xmip-core-cluster", git = "https://github.com/IlleNilsson/xmip-core-cluster", branch = "main", optional = true }
-xmip-configure = { package = "xmip-core-configure", git = "https://github.com/IlleNilsson/xmip-core-configure", branch = "main" }
-xmip-context = { package = "xmip-core-context", git = "https://github.com/IlleNilsson/xmip-core-context", branch = "main" }
-xmip-contract = { package = "xmip-core-contract", git = "https://github.com/IlleNilsson/xmip-core-contract", branch = "main", optional = true }
-xmip-core = { git = "https://github.com/IlleNilsson/xmip-core", branch = "main" }
-xmip-demote = { package = "xmip-core-demote", git = "https://github.com/IlleNilsson/xmip-core-demote", branch = "main", optional = true }
-xmip-event = { package = "xmip-core-event", git = "https://github.com/IlleNilsson/xmip-core-event", branch = "main", optional = true }
-xmip-identify = { package = "xmip-core-identify", git = "https://github.com/IlleNilsson/xmip-core-identify", branch = "main", optional = true }
-xmip-identify-api-key = { package = "xmip-core-identify-api-key", git = "https://github.com/IlleNilsson/xmip-core-identify-api-key", branch = "main", optional = true }
-xmip-identify-certificate = { package = "xmip-core-identify-certificate", git = "https://github.com/IlleNilsson/xmip-core-identify-certificate", branch = "main", optional = true }
-xmip-identify-ip = { package = "xmip-core-identify-ip", git = "https://github.com/IlleNilsson/xmip-core-identify-ip", branch = "main", optional = true }
-xmip-identify-jwt = { package = "xmip-core-identify-jwt", git = "https://github.com/IlleNilsson/xmip-core-identify-jwt", branch = "main", optional = true }
-xmip-identify-username = { package = "xmip-core-identify-username", git = "https://github.com/IlleNilsson/xmip-core-identify-username", branch = "main", optional = true }
-xmip-journey = { package = "xmip-core-journey", git = "https://github.com/IlleNilsson/xmip-core-journey", branch = "main" }
-xmip-message = { package = "xmip-core-message", git = "https://github.com/IlleNilsson/xmip-core-message", branch = "main" }
-xmip-node = { package = "xmip-core-node", git = "https://github.com/IlleNilsson/xmip-core-node", branch = "main", optional = true }
-xmip-observe = { package = "xmip-core-observe", git = "https://github.com/IlleNilsson/xmip-core-observe", branch = "main", optional = true }
+xmip-abi = { workspace = true }
+xmip-archive = { workspace = true, optional = true }
+xmip-assign = { workspace = true, optional = true }
+xmip-audit = { workspace = true, optional = true }
+xmip-audit-file = { workspace = true, optional = true }
+xmip-authenticate = { workspace = true, optional = true }
+xmip-authenticate-mutual-tls = { workspace = true, optional = true }
+xmip-authorize = { workspace = true, optional = true }
+xmip-authorize-location = { workspace = true, optional = true }
+xmip-cluster = { workspace = true, optional = true }
+xmip-configure = { workspace = true }
+xmip-context = { workspace = true }
+xmip-contract = { workspace = true, optional = true }
+xmip-core = { workspace = true }
+xmip-demote = { workspace = true, optional = true }
+xmip-event = { workspace = true, optional = true }
+xmip-identify = { workspace = true, optional = true }
+xmip-identify-api-key = { workspace = true, optional = true }
+xmip-identify-certificate = { workspace = true, optional = true }
+xmip-identify-ip = { workspace = true, optional = true }
+xmip-identify-jwt = { workspace = true, optional = true }
+xmip-identify-username = { workspace = true, optional = true }
+xmip-journey = { workspace = true }
+xmip-message = { workspace = true }
+xmip-node = { workspace = true, optional = true }
+xmip-observe = { workspace = true, optional = true }
 # The command line's document `xmip-service --install` writes beside the
 # programs, in the words the command line reads it by
 # (`surface::choice::table`); a surface's build, which runs no node.
-xmip-operate = { package = "xmip-core-operate", git = "https://github.com/IlleNilsson/xmip-core-operate", branch = "main", default-features = false, features = ["remote"], optional = true }
-xmip-party = { package = "xmip-core-party", git = "https://github.com/IlleNilsson/xmip-core-party", branch = "main", optional = true }
-xmip-path = { package = "xmip-core-path", git = "https://github.com/IlleNilsson/xmip-core-path", branch = "main", optional = true }
-xmip-path-edi = { package = "xmip-core-path-edi", git = "https://github.com/IlleNilsson/xmip-core-path-edi", branch = "main", optional = true }
-xmip-persist = { package = "xmip-core-persist", git = "https://github.com/IlleNilsson/xmip-core-persist", branch = "main", optional = true }
-xmip-persist-rocksdb = { package = "xmip-core-persist-rocksdb", git = "https://github.com/IlleNilsson/xmip-core-persist-rocksdb", branch = "main", optional = true }
-xmip-persist-sqlite = { package = "xmip-core-persist-sqlite", git = "https://github.com/IlleNilsson/xmip-core-persist-sqlite", branch = "main", optional = true }
-xmip-prepare = { package = "xmip-core-prepare", git = "https://github.com/IlleNilsson/xmip-core-prepare", branch = "main", optional = true }
-xmip-provision = { package = "xmip-core-provision", git = "https://github.com/IlleNilsson/xmip-core-provision", branch = "main", optional = true }
-xmip-provision-internal-ca = { package = "xmip-core-provision-internal-ca", git = "https://github.com/IlleNilsson/xmip-core-provision-internal-ca", branch = "main", optional = true }
-xmip-process = { package = "xmip-core-process", git = "https://github.com/IlleNilsson/xmip-core-process", branch = "main", optional = true }
-xmip-promote = { package = "xmip-core-promote", git = "https://github.com/IlleNilsson/xmip-core-promote", branch = "main", optional = true }
-xmip-receive = { package = "xmip-core-receive", git = "https://github.com/IlleNilsson/xmip-core-receive", branch = "main" }
-xmip-report = { package = "xmip-core-report", git = "https://github.com/IlleNilsson/xmip-core-report", branch = "main", optional = true }
-xmip-resilience = { package = "xmip-core-resilience", git = "https://github.com/IlleNilsson/xmip-core-resilience", branch = "main", optional = true }
-xmip-resilience-retry = { package = "xmip-core-resilience-retry", git = "https://github.com/IlleNilsson/xmip-core-resilience-retry", branch = "main", optional = true }
-xmip-retain = { package = "xmip-core-retain", git = "https://github.com/IlleNilsson/xmip-core-retain", branch = "main", optional = true }
-xmip-route = { package = "xmip-core-route", git = "https://github.com/IlleNilsson/xmip-core-route", branch = "main" }
-xmip-route-content = { package = "xmip-core-route-content", git = "https://github.com/IlleNilsson/xmip-core-route-content", branch = "main", optional = true }
+xmip-operate = { workspace = true, default-features = false, features = ["remote"], optional = true }
+xmip-party = { workspace = true, optional = true }
+xmip-path = { workspace = true, optional = true }
+xmip-path-edi = { workspace = true, optional = true }
+xmip-persist = { workspace = true, optional = true }
+xmip-persist-rocksdb = { workspace = true, optional = true }
+xmip-persist-sqlite = { workspace = true, optional = true }
+xmip-prepare = { workspace = true, optional = true }
+xmip-provision = { workspace = true, optional = true }
+xmip-provision-internal-ca = { workspace = true, optional = true }
+xmip-process = { workspace = true, optional = true }
+xmip-promote = { workspace = true, optional = true }
+xmip-receive = { workspace = true }
+xmip-report = { workspace = true, optional = true }
+xmip-resilience = { workspace = true, optional = true }
+xmip-resilience-retry = { workspace = true, optional = true }
+xmip-retain = { workspace = true, optional = true }
+xmip-route = { workspace = true }
+xmip-route-content = { workspace = true, optional = true }
 # Opening Modules from their libraries, a compiled Work Process unit among
 # them (ADR-0066, amendment 2026-10-22).
-xmip-runtime = { package = "xmip-core-runtime", git = "https://github.com/IlleNilsson/xmip-core-runtime", branch = "main", features = ["dynamic-loading"] }
-xmip-secret = { package = "xmip-core-secret", git = "https://github.com/IlleNilsson/xmip-core-secret", branch = "main", optional = true }
-xmip-send = { package = "xmip-core-send", git = "https://github.com/IlleNilsson/xmip-core-send", branch = "main" }
-xmip-stream = { package = "xmip-core-stream", git = "https://github.com/IlleNilsson/xmip-core-stream", branch = "main" }
-xmip-transform = { package = "xmip-core-transform", git = "https://github.com/IlleNilsson/xmip-core-transform", branch = "main", optional = true }
-xmip-transport = { package = "xmip-core-transport", git = "https://github.com/IlleNilsson/xmip-core-transport", branch = "main" }
-xmip-transport-activemq = { package = "xmip-core-transport-activemq", git = "https://github.com/IlleNilsson/xmip-core-transport-activemq", branch = "main", optional = true }
-xmip-transport-amqp = { package = "xmip-core-transport-amqp", git = "https://github.com/IlleNilsson/xmip-core-transport-amqp", branch = "main", optional = true }
-xmip-transport-as2 = { package = "xmip-core-transport-as2", git = "https://github.com/IlleNilsson/xmip-core-transport-as2", branch = "main", optional = true }
-xmip-transport-as4 = { package = "xmip-core-transport-as4", git = "https://github.com/IlleNilsson/xmip-core-transport-as4", branch = "main", optional = true }
-xmip-transport-aws-kinesis = { package = "xmip-core-transport-aws-kinesis", git = "https://github.com/IlleNilsson/xmip-core-transport-aws-kinesis", branch = "main", optional = true }
-xmip-transport-aws-s3 = { package = "xmip-core-transport-aws-s3", git = "https://github.com/IlleNilsson/xmip-core-transport-aws-s3", branch = "main", optional = true }
-xmip-transport-aws-sns = { package = "xmip-core-transport-aws-sns", git = "https://github.com/IlleNilsson/xmip-core-transport-aws-sns", branch = "main", optional = true }
-xmip-transport-aws-sqs = { package = "xmip-core-transport-aws-sqs", git = "https://github.com/IlleNilsson/xmip-core-transport-aws-sqs", branch = "main", optional = true }
-xmip-transport-azure-blob = { package = "xmip-core-transport-azure-blob", git = "https://github.com/IlleNilsson/xmip-core-transport-azure-blob", branch = "main", optional = true }
-xmip-transport-azure-event-grid = { package = "xmip-core-transport-azure-event-grid", git = "https://github.com/IlleNilsson/xmip-core-transport-azure-event-grid", branch = "main", optional = true }
-xmip-transport-azure-event-hubs = { package = "xmip-core-transport-azure-event-hubs", git = "https://github.com/IlleNilsson/xmip-core-transport-azure-event-hubs", branch = "main", optional = true }
-xmip-transport-azure-service-bus = { package = "xmip-core-transport-azure-service-bus", git = "https://github.com/IlleNilsson/xmip-core-transport-azure-service-bus", branch = "main", optional = true }
-xmip-transport-bacnet = { package = "xmip-core-transport-bacnet", git = "https://github.com/IlleNilsson/xmip-core-transport-bacnet", branch = "main", optional = true }
-xmip-transport-coap = { package = "xmip-core-transport-coap", git = "https://github.com/IlleNilsson/xmip-core-transport-coap", branch = "main", optional = true }
-xmip-transport-cotp = { package = "xmip-core-transport-cotp", git = "https://github.com/IlleNilsson/xmip-core-transport-cotp", branch = "main", optional = true }
-xmip-transport-db2 = { package = "xmip-core-transport-db2", git = "https://github.com/IlleNilsson/xmip-core-transport-db2", branch = "main", optional = true }
-xmip-transport-dds = { package = "xmip-core-transport-dds", git = "https://github.com/IlleNilsson/xmip-core-transport-dds", branch = "main", optional = true }
-xmip-transport-dhcp = { package = "xmip-core-transport-dhcp", git = "https://github.com/IlleNilsson/xmip-core-transport-dhcp", branch = "main", optional = true }
-xmip-transport-dicom = { package = "xmip-core-transport-dicom", git = "https://github.com/IlleNilsson/xmip-core-transport-dicom", branch = "main", optional = true }
-xmip-transport-dnp3 = { package = "xmip-core-transport-dnp3", git = "https://github.com/IlleNilsson/xmip-core-transport-dnp3", branch = "main", optional = true }
-xmip-transport-dns = { package = "xmip-core-transport-dns", git = "https://github.com/IlleNilsson/xmip-core-transport-dns", branch = "main", optional = true }
-xmip-transport-ethernet-ip = { package = "xmip-core-transport-ethernet-ip", git = "https://github.com/IlleNilsson/xmip-core-transport-ethernet-ip", branch = "main", optional = true }
-xmip-transport-file = { package = "xmip-core-transport-file", git = "https://github.com/IlleNilsson/xmip-core-transport-file", branch = "main", optional = true }
-xmip-transport-ftp = { package = "xmip-core-transport-ftp", git = "https://github.com/IlleNilsson/xmip-core-transport-ftp", branch = "main", optional = true }
-xmip-transport-google-cloud-storage = { package = "xmip-core-transport-google-cloud-storage", git = "https://github.com/IlleNilsson/xmip-core-transport-google-cloud-storage", branch = "main", optional = true }
-xmip-transport-google-pub-sub = { package = "xmip-core-transport-google-pub-sub", git = "https://github.com/IlleNilsson/xmip-core-transport-google-pub-sub", branch = "main", optional = true }
-xmip-transport-hart = { package = "xmip-core-transport-hart", git = "https://github.com/IlleNilsson/xmip-core-transport-hart", branch = "main", optional = true }
-xmip-transport-http = { package = "xmip-core-transport-http", git = "https://github.com/IlleNilsson/xmip-core-transport-http", branch = "main", optional = true }
-xmip-transport-ibm-mq = { package = "xmip-core-transport-ibm-mq", git = "https://github.com/IlleNilsson/xmip-core-transport-ibm-mq", branch = "main", optional = true }
-xmip-transport-iec-60870-5-104 = { package = "xmip-core-transport-iec-60870-5-104", git = "https://github.com/IlleNilsson/xmip-core-transport-iec-60870-5-104", branch = "main", optional = true }
-xmip-transport-iec-61850 = { package = "xmip-core-transport-iec-61850", git = "https://github.com/IlleNilsson/xmip-core-transport-iec-61850", branch = "main", optional = true }
-xmip-transport-imap = { package = "xmip-core-transport-imap", git = "https://github.com/IlleNilsson/xmip-core-transport-imap", branch = "main", optional = true }
-xmip-transport-io-link = { package = "xmip-core-transport-io-link", git = "https://github.com/IlleNilsson/xmip-core-transport-io-link", branch = "main", optional = true }
-xmip-transport-kafka = { package = "xmip-core-transport-kafka", git = "https://github.com/IlleNilsson/xmip-core-transport-kafka", branch = "main", optional = true }
-xmip-transport-knx = { package = "xmip-core-transport-knx", git = "https://github.com/IlleNilsson/xmip-core-transport-knx", branch = "main", optional = true }
-xmip-transport-lorawan = { package = "xmip-core-transport-lorawan", git = "https://github.com/IlleNilsson/xmip-core-transport-lorawan", branch = "main", optional = true }
-xmip-transport-m-bus = { package = "xmip-core-transport-m-bus", git = "https://github.com/IlleNilsson/xmip-core-transport-m-bus", branch = "main", optional = true }
-xmip-transport-mariadb = { package = "xmip-core-transport-mariadb", git = "https://github.com/IlleNilsson/xmip-core-transport-mariadb", branch = "main", optional = true }
-xmip-transport-mdns = { package = "xmip-core-transport-mdns", git = "https://github.com/IlleNilsson/xmip-core-transport-mdns", branch = "main", optional = true }
-xmip-transport-mllp = { package = "xmip-core-transport-mllp", git = "https://github.com/IlleNilsson/xmip-core-transport-mllp", branch = "main", optional = true }
-xmip-transport-modbus = { package = "xmip-core-transport-modbus", git = "https://github.com/IlleNilsson/xmip-core-transport-modbus", branch = "main", optional = true }
-xmip-transport-mqtt = { package = "xmip-core-transport-mqtt", git = "https://github.com/IlleNilsson/xmip-core-transport-mqtt", branch = "main", optional = true }
-xmip-transport-msmq = { package = "xmip-core-transport-msmq", git = "https://github.com/IlleNilsson/xmip-core-transport-msmq", branch = "main", optional = true }
-xmip-transport-mssql = { package = "xmip-core-transport-mssql", git = "https://github.com/IlleNilsson/xmip-core-transport-mssql", branch = "main", optional = true }
-xmip-transport-mysql = { package = "xmip-core-transport-mysql", git = "https://github.com/IlleNilsson/xmip-core-transport-mysql", branch = "main", optional = true }
-xmip-transport-named-pipe = { package = "xmip-core-transport-named-pipe", git = "https://github.com/IlleNilsson/xmip-core-transport-named-pipe", branch = "main", optional = true }
-xmip-transport-nats = { package = "xmip-core-transport-nats", git = "https://github.com/IlleNilsson/xmip-core-transport-nats", branch = "main", optional = true }
-xmip-transport-nats-jetstream = { package = "xmip-core-transport-nats-jetstream", git = "https://github.com/IlleNilsson/xmip-core-transport-nats-jetstream", branch = "main", optional = true }
-xmip-transport-nfs = { package = "xmip-core-transport-nfs", git = "https://github.com/IlleNilsson/xmip-core-transport-nfs", branch = "main", optional = true }
-xmip-transport-opc-ua = { package = "xmip-core-transport-opc-ua", git = "https://github.com/IlleNilsson/xmip-core-transport-opc-ua", branch = "main", optional = true }
-xmip-transport-oracle = { package = "xmip-core-transport-oracle", git = "https://github.com/IlleNilsson/xmip-core-transport-oracle", branch = "main", optional = true }
-xmip-transport-peppol = { package = "xmip-core-transport-peppol", git = "https://github.com/IlleNilsson/xmip-core-transport-peppol", branch = "main", optional = true }
-xmip-transport-pop3 = { package = "xmip-core-transport-pop3", git = "https://github.com/IlleNilsson/xmip-core-transport-pop3", branch = "main", optional = true }
-xmip-transport-postgresql = { package = "xmip-core-transport-postgresql", git = "https://github.com/IlleNilsson/xmip-core-transport-postgresql", branch = "main", optional = true }
-xmip-transport-rabbitmq = { package = "xmip-core-transport-rabbitmq", git = "https://github.com/IlleNilsson/xmip-core-transport-rabbitmq", branch = "main", optional = true }
-xmip-transport-redis-streams = { package = "xmip-core-transport-redis-streams", git = "https://github.com/IlleNilsson/xmip-core-transport-redis-streams", branch = "main", optional = true }
-xmip-transport-redpanda = { package = "xmip-core-transport-redpanda", git = "https://github.com/IlleNilsson/xmip-core-transport-redpanda", branch = "main", optional = true }
-xmip-transport-s7comm = { package = "xmip-core-transport-s7comm", git = "https://github.com/IlleNilsson/xmip-core-transport-s7comm", branch = "main", optional = true }
-xmip-transport-secs-gem = { package = "xmip-core-transport-secs-gem", git = "https://github.com/IlleNilsson/xmip-core-transport-secs-gem", branch = "main", optional = true }
-xmip-transport-serial = { package = "xmip-core-transport-serial", git = "https://github.com/IlleNilsson/xmip-core-transport-serial", branch = "main", optional = true }
-xmip-transport-sftp = { package = "xmip-core-transport-sftp", git = "https://github.com/IlleNilsson/xmip-core-transport-sftp", branch = "main", optional = true }
-xmip-transport-smb = { package = "xmip-core-transport-smb", git = "https://github.com/IlleNilsson/xmip-core-transport-smb", branch = "main", optional = true }
-xmip-transport-smtp = { package = "xmip-core-transport-smtp", git = "https://github.com/IlleNilsson/xmip-core-transport-smtp", branch = "main", optional = true }
-xmip-transport-snmp = { package = "xmip-core-transport-snmp", git = "https://github.com/IlleNilsson/xmip-core-transport-snmp", branch = "main", optional = true }
-xmip-transport-sqlite = { package = "xmip-core-transport-sqlite", git = "https://github.com/IlleNilsson/xmip-core-transport-sqlite", branch = "main", optional = true }
-xmip-transport-ssdp = { package = "xmip-core-transport-ssdp", git = "https://github.com/IlleNilsson/xmip-core-transport-ssdp", branch = "main", optional = true }
-xmip-transport-syslog = { package = "xmip-core-transport-syslog", git = "https://github.com/IlleNilsson/xmip-core-transport-syslog", branch = "main", optional = true }
-xmip-transport-tcp = { package = "xmip-core-transport-tcp", git = "https://github.com/IlleNilsson/xmip-core-transport-tcp", branch = "main", optional = true }
-xmip-transport-udp = { package = "xmip-core-transport-udp", git = "https://github.com/IlleNilsson/xmip-core-transport-udp", branch = "main", optional = true }
-xmip-transport-unix-socket = { package = "xmip-core-transport-unix-socket", git = "https://github.com/IlleNilsson/xmip-core-transport-unix-socket", branch = "main", optional = true }
-xmip-transport-webdav = { package = "xmip-core-transport-webdav", git = "https://github.com/IlleNilsson/xmip-core-transport-webdav", branch = "main", optional = true }
-xmip-transport-websocket = { package = "xmip-core-transport-websocket", git = "https://github.com/IlleNilsson/xmip-core-transport-websocket", branch = "main", optional = true }
-xmip-transport-wireless-m-bus = { package = "xmip-core-transport-wireless-m-bus", git = "https://github.com/IlleNilsson/xmip-core-transport-wireless-m-bus", branch = "main", optional = true }
+xmip-runtime = { workspace = true, features = ["dynamic-loading"] }
+xmip-secret = { workspace = true, optional = true }
+xmip-send = { workspace = true }
+xmip-stream = { workspace = true }
+xmip-transform = { workspace = true, optional = true }
+xmip-transport = { workspace = true }
+xmip-transport-activemq = { workspace = true, optional = true }
+xmip-transport-amqp = { workspace = true, optional = true }
+xmip-transport-as2 = { workspace = true, optional = true }
+xmip-transport-as4 = { workspace = true, optional = true }
+xmip-transport-aws-kinesis = { workspace = true, optional = true }
+xmip-transport-aws-s3 = { workspace = true, optional = true }
+xmip-transport-aws-sns = { workspace = true, optional = true }
+xmip-transport-aws-sqs = { workspace = true, optional = true }
+xmip-transport-azure-blob = { workspace = true, optional = true }
+xmip-transport-azure-event-grid = { workspace = true, optional = true }
+xmip-transport-azure-event-hubs = { workspace = true, optional = true }
+xmip-transport-azure-service-bus = { workspace = true, optional = true }
+xmip-transport-bacnet = { workspace = true, optional = true }
+xmip-transport-coap = { workspace = true, optional = true }
+xmip-transport-cotp = { workspace = true, optional = true }
+xmip-transport-db2 = { workspace = true, optional = true }
+xmip-transport-dds = { workspace = true, optional = true }
+xmip-transport-dhcp = { workspace = true, optional = true }
+xmip-transport-dicom = { workspace = true, optional = true }
+xmip-transport-dnp3 = { workspace = true, optional = true }
+xmip-transport-dns = { workspace = true, optional = true }
+xmip-transport-ethernet-ip = { workspace = true, optional = true }
+xmip-transport-file = { workspace = true, optional = true }
+xmip-transport-ftp = { workspace = true, optional = true }
+xmip-transport-google-cloud-storage = { workspace = true, optional = true }
+xmip-transport-google-pub-sub = { workspace = true, optional = true }
+xmip-transport-hart = { workspace = true, optional = true }
+xmip-transport-http = { workspace = true, optional = true }
+xmip-transport-ibm-mq = { workspace = true, optional = true }
+xmip-transport-iec-60870-5-104 = { workspace = true, optional = true }
+xmip-transport-iec-61850 = { workspace = true, optional = true }
+xmip-transport-imap = { workspace = true, optional = true }
+xmip-transport-io-link = { workspace = true, optional = true }
+xmip-transport-kafka = { workspace = true, optional = true }
+xmip-transport-knx = { workspace = true, optional = true }
+xmip-transport-lorawan = { workspace = true, optional = true }
+xmip-transport-m-bus = { workspace = true, optional = true }
+xmip-transport-mariadb = { workspace = true, optional = true }
+xmip-transport-mdns = { workspace = true, optional = true }
+xmip-transport-mllp = { workspace = true, optional = true }
+xmip-transport-modbus = { workspace = true, optional = true }
+xmip-transport-mqtt = { workspace = true, optional = true }
+xmip-transport-msmq = { workspace = true, optional = true }
+xmip-transport-mssql = { workspace = true, optional = true }
+xmip-transport-mysql = { workspace = true, optional = true }
+xmip-transport-named-pipe = { workspace = true, optional = true }
+xmip-transport-nats = { workspace = true, optional = true }
+xmip-transport-nats-jetstream = { workspace = true, optional = true }
+xmip-transport-nfs = { workspace = true, optional = true }
+xmip-transport-opc-ua = { workspace = true, optional = true }
+xmip-transport-oracle = { workspace = true, optional = true }
+xmip-transport-peppol = { workspace = true, optional = true }
+xmip-transport-pop3 = { workspace = true, optional = true }
+xmip-transport-postgresql = { workspace = true, optional = true }
+xmip-transport-rabbitmq = { workspace = true, optional = true }
+xmip-transport-redis-streams = { workspace = true, optional = true }
+xmip-transport-redpanda = { workspace = true, optional = true }
+xmip-transport-s7comm = { workspace = true, optional = true }
+xmip-transport-secs-gem = { workspace = true, optional = true }
+xmip-transport-serial = { workspace = true, optional = true }
+xmip-transport-sftp = { workspace = true, optional = true }
+xmip-transport-smb = { workspace = true, optional = true }
+xmip-transport-smtp = { workspace = true, optional = true }
+xmip-transport-snmp = { workspace = true, optional = true }
+xmip-transport-sqlite = { workspace = true, optional = true }
+xmip-transport-ssdp = { workspace = true, optional = true }
+xmip-transport-syslog = { workspace = true, optional = true }
+xmip-transport-tcp = { workspace = true, optional = true }
+xmip-transport-udp = { workspace = true, optional = true }
+xmip-transport-unix-socket = { workspace = true, optional = true }
+xmip-transport-webdav = { workspace = true, optional = true }
+xmip-transport-websocket = { workspace = true, optional = true }
+xmip-transport-wireless-m-bus = { workspace = true, optional = true }
 # xmip-service's console stop on every platform: Ctrl+C and Ctrl+Break in a
 # Windows console, SIGINT, SIGTERM and SIGHUP on Linux and macOS, which is how
 # systemd and launchd stop a service. Its unsafe is its own; this crate has none.
@@ -801,33 +806,33 @@ ctrlc = { version = "3.5", features = ["termination"], optional = true }
 [dev-dependencies]
 # The test cluster's names, from its `cluster.xmip` (`configure::fixture`;
 # ADR-0056, amendment 2026-10-03): no test writes a cluster or node name.
-xmip-configure = { package = "xmip-core-configure", git = "https://github.com/IlleNilsson/xmip-core-configure", branch = "main", features = ["test-support"] }
+xmip-configure = { workspace = true, features = ["test-support"] }
 # The deploy test walks a rendered configuration's keys, as configure's reader
 # writes them back, with the same TOML reader configure uses.
 toml = "1.2.1"
 # The storage test's certificate authority and the identities it issues, for
 # a node and a Storage node over mutual TLS: the library's identity, and
 # certificates made for the test alone.
-xmip-tls = { package = "xmip-core-library-tls", git = "https://github.com/IlleNilsson/xmip-core-library-tls", branch = "main" }
+xmip-tls = { workspace = true }
 rcgen = "0.14"
 # The storage test reads an audit record's body back in its one binary form
 # (`codec::form::Form`).
-xmip-codec = { package = "xmip-core-library-codec", git = "https://github.com/IlleNilsson/xmip-core-library-codec", branch = "main" }
+xmip-codec = { workspace = true }
 # The service test's operate listener reached as a surface reaches it: the
 # runtime's remote surface, and its test authority (`fixture::Authority`),
 # which only the test-support feature turns on.
-xmip-runtime = { package = "xmip-core-runtime", git = "https://github.com/IlleNilsson/xmip-core-runtime", branch = "main", features = ["test-support"] }
+xmip-runtime = { workspace = true, features = ["test-support"] }
 # A loopback address no one holds, for the service a test starts to bind
 # (`fixture::unheld`).
-xmip-net = { package = "xmip-core-library-net", git = "https://github.com/IlleNilsson/xmip-core-library-net", branch = "main", features = ["test-support"] }
+xmip-net = { workspace = true, features = ["test-support"] }
 # The service test's figure for an order and the plain wake it is held
 # beside (`latency`).
-xmip-core = { git = "https://github.com/IlleNilsson/xmip-core", branch = "main", features = ["test-support"] }
+xmip-core = { workspace = true, features = ["test-support"] }
 # A test's own temporary folder (`xmip_file::temporary`); for the tests only.
-xmip-file = { package = "xmip-core-library-file", git = "https://github.com/IlleNilsson/xmip-core-library-file", branch = "main", features = ["test-support"] }
+xmip-file = { workspace = true, features = ["test-support"] }
 # The service test's client of the cluster's authority the service serves:
 # Xmip's own ACME client, as a node on the premises asks it.
-xmip-provision-acme = { package = "xmip-core-provision-acme", git = "https://github.com/IlleNilsson/xmip-core-provision-acme", branch = "main" }
+xmip-provision-acme = { workspace = true }
 
 # The service test's far end of a serial Send Location and of a protocol's
 # master on a serial line: a pseudo-terminal's device end
@@ -835,50 +840,50 @@ xmip-provision-acme = { package = "xmip-core-provision-acme", git = "https://git
 # device answering on it as the SDK's bus in process has it answer
 # (`sdk::serial::Device`).
 [target.'cfg(unix)'.dev-dependencies]
-xmip-transport-serial = { package = "xmip-core-transport-serial", git = "https://github.com/IlleNilsson/xmip-core-transport-serial", branch = "main", features = ["test-support"] }
-xmip-sdk = { package = "xmip-core-sdk", git = "https://github.com/IlleNilsson/xmip-core-sdk", branch = "main" }
+xmip-transport-serial = { workspace = true, features = ["test-support"] }
+xmip-sdk = { workspace = true }
 
 # The service test's far end of a Bluetooth Send Location: a transport
 # listening on the second of two virtual controllers the kernel makes over
 # `/dev/vhci`, the first the node's (`controller::Paired`), Linux's, which
 # only test-support turns on.
 [target.'cfg(target_os = "linux")'.dev-dependencies]
-xmip-transport-bluetooth = { package = "xmip-core-transport-bluetooth", git = "https://github.com/IlleNilsson/xmip-core-transport-bluetooth", branch = "main", features = ["test-support"] }
+xmip-transport-bluetooth = { workspace = true, features = ["test-support"] }
 
 [target.'cfg(windows)'.dependencies]
 # The operating system's log and the key store on Windows (features audit and
 # secret).
-xmip-audit-windows-event-log = { package = "xmip-core-audit-windows-event-log", git = "https://github.com/IlleNilsson/xmip-core-audit-windows-event-log", branch = "main", optional = true }
-xmip-secret-dpapi = { package = "xmip-core-secret-dpapi", git = "https://github.com/IlleNilsson/xmip-core-secret-dpapi", branch = "main", optional = true }
+xmip-audit-windows-event-log = { workspace = true, optional = true }
+xmip-secret-dpapi = { workspace = true, optional = true }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 # The transports on a link of the kernel's, which Linux alone has: a CAN
 # interface, an Ethernet interface's raw socket, a Bluetooth controller's
 # L2CAP sockets and an IEEE 802.15.4 interface (`built.rs`,
 # `kernel_transports`), so no other build carries them.
-xmip-transport-bluetooth = { package = "xmip-core-transport-bluetooth", git = "https://github.com/IlleNilsson/xmip-core-transport-bluetooth", branch = "main", optional = true }
-xmip-transport-can-bus = { package = "xmip-core-transport-can-bus", git = "https://github.com/IlleNilsson/xmip-core-transport-can-bus", branch = "main", optional = true }
-xmip-transport-canopen = { package = "xmip-core-transport-canopen", git = "https://github.com/IlleNilsson/xmip-core-transport-canopen", branch = "main", optional = true }
-xmip-transport-ethercat = { package = "xmip-core-transport-ethercat", git = "https://github.com/IlleNilsson/xmip-core-transport-ethercat", branch = "main", optional = true }
-xmip-transport-ethernet = { package = "xmip-core-transport-ethernet", git = "https://github.com/IlleNilsson/xmip-core-transport-ethernet", branch = "main", optional = true }
-xmip-transport-iso-tp = { package = "xmip-core-transport-iso-tp", git = "https://github.com/IlleNilsson/xmip-core-transport-iso-tp", branch = "main", optional = true }
-xmip-transport-j1939 = { package = "xmip-core-transport-j1939", git = "https://github.com/IlleNilsson/xmip-core-transport-j1939", branch = "main", optional = true }
-xmip-transport-obd-ii = { package = "xmip-core-transport-obd-ii", git = "https://github.com/IlleNilsson/xmip-core-transport-obd-ii", branch = "main", optional = true }
-xmip-transport-profinet = { package = "xmip-core-transport-profinet", git = "https://github.com/IlleNilsson/xmip-core-transport-profinet", branch = "main", optional = true }
-xmip-transport-thread = { package = "xmip-core-transport-thread", git = "https://github.com/IlleNilsson/xmip-core-transport-thread", branch = "main", optional = true }
-xmip-transport-uds = { package = "xmip-core-transport-uds", git = "https://github.com/IlleNilsson/xmip-core-transport-uds", branch = "main", optional = true }
-xmip-transport-wireless-hart = { package = "xmip-core-transport-wireless-hart", git = "https://github.com/IlleNilsson/xmip-core-transport-wireless-hart", branch = "main", optional = true }
-xmip-transport-zigbee = { package = "xmip-core-transport-zigbee", git = "https://github.com/IlleNilsson/xmip-core-transport-zigbee", branch = "main", optional = true }
+xmip-transport-bluetooth = { workspace = true, optional = true }
+xmip-transport-can-bus = { workspace = true, optional = true }
+xmip-transport-canopen = { workspace = true, optional = true }
+xmip-transport-ethercat = { workspace = true, optional = true }
+xmip-transport-ethernet = { workspace = true, optional = true }
+xmip-transport-iso-tp = { workspace = true, optional = true }
+xmip-transport-j1939 = { workspace = true, optional = true }
+xmip-transport-obd-ii = { workspace = true, optional = true }
+xmip-transport-profinet = { workspace = true, optional = true }
+xmip-transport-thread = { workspace = true, optional = true }
+xmip-transport-uds = { workspace = true, optional = true }
+xmip-transport-wireless-hart = { workspace = true, optional = true }
+xmip-transport-zigbee = { workspace = true, optional = true }
 
 [target.'cfg(unix)'.dependencies]
 # The operating system's log and the key store on Linux and every Unix
 # (features audit and secret).
-xmip-audit-syslog = { package = "xmip-core-audit-syslog", git = "https://github.com/IlleNilsson/xmip-core-audit-syslog", branch = "main", optional = true }
-xmip-secret-file = { package = "xmip-core-secret-file", git = "https://github.com/IlleNilsson/xmip-core-secret-file", branch = "main", optional = true }
+xmip-audit-syslog = { workspace = true, optional = true }
+xmip-secret-file = { workspace = true, optional = true }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 # The key store on macOS (feature secret).
-xmip-secret-keychain = { package = "xmip-core-secret-keychain", git = "https://github.com/IlleNilsson/xmip-core-secret-keychain", branch = "main", optional = true }
+xmip-secret-keychain = { workspace = true, optional = true }
 
 [lints.rust]
 # The assembly writes no unsafe; what crosses a C interface does so in the
@@ -929,423 +934,494 @@ codegen-units = 256
 [profile.measured.package.xmip-core-test-system-test]
 incremental = false
 
-# Every estate crate a member names by its git URL, resolved to its
-# working tree. Written with the members.
-[patch."https://github.com/IlleNilsson/xmip-core"]
+# Every estate crate a member depends on, under the key the member names it
+# by: its package and its mount, the path its submodule is mounted at
+# (ADR-0005, amendment 2026-11-28). A member takes one with
+# `key = { workspace = true }` and says what is its own: features,
+# optional, and default-features = false. One key names one package.
+# Written from the members by Sync-XmipEstate -Cargo (Update-XmipWorkspace).
+[workspace.dependencies]
+abi = { package = "xmip-core-abi", path = "module/foundation/abi" }
+acme = { package = "xmip-core-provision-acme", path = "module/core/capability/provision/acme" }
+amqp = { package = "xmip-core-transport-amqp", path = "module/core/capability/transport/amqp" }
+archive = { package = "xmip-core-archive", path = "module/core/operation/archive" }
+archive_aws_s3 = { package = "xmip-core-archive-aws-s3", path = "module/core/operation/archive/aws-s3" }
+archive_azure_blob = { package = "xmip-core-archive-azure-blob", path = "module/core/operation/archive/azure-blob" }
+archive_file = { package = "xmip-core-archive-file", path = "module/core/operation/archive/file" }
+archive_google_cloud_storage = { package = "xmip-core-archive-google-cloud-storage", path = "module/core/operation/archive/google-cloud-storage" }
+archive_mariadb = { package = "xmip-core-archive-mariadb", path = "module/core/operation/archive/mariadb" }
+archive_mssql = { package = "xmip-core-archive-mssql", path = "module/core/operation/archive/mssql" }
+archive_parquet = { package = "xmip-core-archive-parquet", path = "module/core/operation/archive/parquet" }
+archive_postgresql = { package = "xmip-core-archive-postgresql", path = "module/core/operation/archive/postgresql" }
+archive_sql = { package = "xmip-core-archive-sql", path = "module/core/operation/archive/sql" }
+archive_sqlite = { package = "xmip-core-archive-sqlite", path = "module/core/operation/archive/sqlite" }
+as4 = { package = "xmip-core-transport-as4", path = "module/core/capability/transport/as4" }
+asn1 = { package = "xmip-core-library-asn1", path = "module/core/library/asn1" }
+assign = { package = "xmip-core-assign", path = "module/core/capability/assign" }
+asyncapi = { package = "xmip-core-contract-asyncapi", path = "module/core/capability/contract/asyncapi" }
+audit = { package = "xmip-core-audit", path = "module/core/operation/audit" }
+audit-file = { package = "xmip-core-audit-file", path = "module/core/operation/audit/file" }
+audit-syslog = { package = "xmip-core-audit-syslog", path = "module/core/operation/audit/syslog" }
+audit-windows-event-log = { package = "xmip-core-audit-windows-event-log", path = "module/core/operation/audit/windows-event-log" }
+authenticate = { package = "xmip-core-authenticate", path = "module/core/capability/authenticate" }
+authenticate-password = { package = "xmip-core-authenticate-password", path = "module/core/capability/authenticate/password" }
+authenticate-ssh-key = { package = "xmip-core-authenticate-ssh-key", path = "module/core/capability/authenticate/ssh-key" }
+authorize = { package = "xmip-core-authorize", path = "module/core/capability/authorize" }
+authorize-party = { package = "xmip-core-authorize-party", path = "module/core/capability/authorize/party" }
+avro = { package = "xmip-core-contract-avro", path = "module/core/capability/contract/avro" }
+aws = { package = "xmip-core-transport-aws", path = "module/core/capability/transport/aws" }
+aws_s3 = { package = "xmip-core-transport-aws-s3", path = "module/core/capability/transport/aws-s3" }
+azure = { package = "xmip-core-transport-azure", path = "module/core/capability/transport/azure" }
+azure_blob = { package = "xmip-core-transport-azure-blob", path = "module/core/capability/transport/azure-blob" }
+can_bus = { package = "xmip-core-transport-can-bus", path = "module/core/capability/transport/can-bus" }
+canopen = { package = "xmip-core-transport-canopen", path = "module/core/capability/transport/canopen" }
+codec = { package = "xmip-core-library-codec", path = "module/core/library/codec" }
+configure = { package = "xmip-core-configure", path = "module/platform/configure" }
+context = { package = "xmip-core-context", path = "module/foundation/context" }
+contract = { package = "xmip-core-contract", path = "module/core/capability/contract" }
+contract_asyncapi = { package = "xmip-core-contract-asyncapi", path = "module/core/capability/contract/asyncapi" }
+contract_avro = { package = "xmip-core-contract-avro", path = "module/core/capability/contract/avro" }
+contract_csv = { package = "xmip-core-contract-csv", path = "module/core/capability/contract/csv" }
+contract_edi_edifact = { package = "xmip-core-contract-edi-edifact", path = "module/core/capability/contract/edi-edifact" }
+contract_edi_x12 = { package = "xmip-core-contract-edi-x12", path = "module/core/capability/contract/edi-x12" }
+contract_fhir = { package = "xmip-core-contract-fhir", path = "module/core/capability/contract/fhir" }
+contract_fixed_width = { package = "xmip-core-contract-fixed-width", path = "module/core/capability/contract/fixed-width" }
+contract_graphql_schema = { package = "xmip-core-contract-graphql-schema", path = "module/core/capability/contract/graphql-schema" }
+contract_hl7_v2 = { package = "xmip-core-contract-hl7-v2", path = "module/core/capability/contract/hl7-v2" }
+contract_json_schema = { package = "xmip-core-contract-json-schema", path = "module/core/capability/contract/json-schema" }
+contract_openapi = { package = "xmip-core-contract-openapi", path = "module/core/capability/contract/openapi" }
+contract_protobuf = { package = "xmip-core-contract-protobuf", path = "module/core/capability/contract/protobuf" }
+contract_regex = { package = "xmip-core-contract-regex", path = "module/core/capability/contract/regex" }
+contract_schematron = { package = "xmip-core-contract-schematron", path = "module/core/capability/contract/schematron" }
+contract_sql = { package = "xmip-core-contract-sql", path = "module/core/capability/contract/sql" }
+contract_wsdl = { package = "xmip-core-contract-wsdl", path = "module/core/capability/contract/wsdl" }
+contract_xml_schema = { package = "xmip-core-contract-xml-schema", path = "module/core/capability/contract/xml-schema" }
+cotp = { package = "xmip-core-transport-cotp", path = "module/core/capability/transport/cotp" }
+csv = { package = "xmip-core-contract-csv", path = "module/core/capability/contract/csv" }
+declaration = { package = "xmip-core-declaration", path = "module/core/operation/declaration" }
+demote = { package = "xmip-core-demote", path = "module/core/capability/demote" }
+dns = { package = "xmip-core-transport-dns", path = "module/core/capability/transport/dns" }
+dot = { package = "xmip-core-path-dot", path = "module/core/capability/path/dot" }
+edi = { package = "xmip-core-path-edi", path = "module/core/capability/path/edi" }
+edifact = { package = "xmip-core-contract-edi-edifact", path = "module/core/capability/contract/edi-edifact" }
+edifact_shape = { package = "xmip-core-message-edi-edifact", path = "module/foundation/message/edi-edifact" }
+er7_shape = { package = "xmip-core-message-hl7-er7", path = "module/foundation/message/hl7-er7" }
+ethernet = { package = "xmip-core-transport-ethernet", path = "module/core/capability/transport/ethernet" }
+event = { package = "xmip-core-event", path = "module/foundation/event" }
+expression = { package = "xmip-core-expression", path = "module/core/capability/expression" }
+fhir = { package = "xmip-core-contract-fhir", path = "module/core/capability/contract/fhir" }
+fhirpath = { package = "xmip-core-path-fhirpath", path = "module/core/capability/path/fhirpath" }
+file = { package = "xmip-core-library-file", path = "module/core/library/file" }
+fixed_width = { package = "xmip-core-contract-fixed-width", path = "module/core/capability/contract/fixed-width" }
+google_cloud_storage = { package = "xmip-core-transport-google-cloud-storage", path = "module/core/capability/transport/google-cloud-storage" }
+graphql_schema = { package = "xmip-core-contract-graphql-schema", path = "module/core/capability/contract/graphql-schema" }
+hart = { package = "xmip-core-transport-hart", path = "module/core/capability/transport/hart" }
+hl7 = { package = "xmip-core-contract-hl7-v2", path = "module/core/capability/contract/hl7-v2" }
+hl7_v2 = { package = "xmip-core-contract-hl7-v2", path = "module/core/capability/contract/hl7-v2" }
+hl7_v2_path = { package = "xmip-core-path-hl7-v2", path = "module/core/capability/path/hl7-v2" }
+http = { package = "xmip-core-transport-http", path = "module/core/capability/transport/http" }
+identify = { package = "xmip-core-identify", path = "module/core/capability/identify" }
+index = { package = "xmip-core-path-index", path = "module/core/capability/path/index" }
+iso_tp = { package = "xmip-core-transport-iso-tp", path = "module/core/capability/transport/iso-tp" }
+jose = { package = "xmip-core-library-jose", path = "module/core/library/jose" }
+journey = { package = "xmip-core-journey", path = "module/foundation/journey" }
+json_pointer = { package = "xmip-core-path-json-pointer", path = "module/core/capability/path/json-pointer" }
+json_schema = { package = "xmip-core-contract-json-schema", path = "module/core/capability/contract/json-schema" }
+jsonpath = { package = "xmip-core-path-jsonpath", path = "module/core/capability/path/jsonpath" }
+kafka = { package = "xmip-core-transport-kafka", path = "module/core/capability/transport/kafka" }
+library_mariadb = { package = "xmip-core-library-mariadb", path = "module/core/library/mariadb" }
+library_postgresql = { package = "xmip-core-library-postgresql", path = "module/core/library/postgresql" }
+logic = { package = "xmip-core-logic", path = "module/core/capability/logic" }
+m_bus = { package = "xmip-core-transport-m-bus", path = "module/core/capability/transport/m-bus" }
+mariadb = { package = "xmip-core-library-mariadb", path = "module/core/library/mariadb" }
+message = { package = "xmip-core-message", path = "module/foundation/message" }
+message_xml = { package = "xmip-core-message-xml", path = "module/foundation/message/xml" }
+mssql = { package = "xmip-core-transport-mssql", path = "module/core/capability/transport/mssql" }
+nats = { package = "xmip-core-transport-nats", path = "module/core/capability/transport/nats" }
+net = { package = "xmip-core-library-net", path = "module/core/library/net" }
+node = { package = "xmip-core-node", path = "module/foundation/node" }
+ntlm = { package = "xmip-core-library-ntlm", path = "module/core/library/ntlm" }
+observe = { package = "xmip-core-observe", path = "module/core/operation/observe" }
+openapi = { package = "xmip-core-contract-openapi", path = "module/core/capability/contract/openapi" }
+operate = { package = "xmip-core-operate", path = "module/core/operation/operate" }
+party = { package = "xmip-core-party", path = "module/foundation/party" }
+path = { package = "xmip-core-path", path = "module/core/capability/path" }
+path_dot = { package = "xmip-core-path-dot", path = "module/core/capability/path/dot" }
+path_edi = { package = "xmip-core-path-edi", path = "module/core/capability/path/edi" }
+path_jsonpath = { package = "xmip-core-path-jsonpath", path = "module/core/capability/path/jsonpath" }
+path_regex = { package = "xmip-core-path-regex", path = "module/core/capability/path/regex" }
+persist = { package = "xmip-core-persist", path = "module/platform/persist" }
+postgresql = { package = "xmip-core-library-postgresql", path = "module/core/library/postgresql" }
+prepare = { package = "xmip-core-prepare", path = "module/core/capability/prepare" }
+process = { package = "xmip-core-process", path = "module/core/capability/process" }
+process-bpmn = { package = "xmip-core-process-bpmn", path = "module/core/capability/process/bpmn" }
+process_bpmn = { package = "xmip-core-process-bpmn", path = "module/core/capability/process/bpmn" }
+promote = { package = "xmip-core-promote", path = "module/core/capability/promote" }
+protobuf = { package = "xmip-core-contract-protobuf", path = "module/core/capability/contract/protobuf" }
+provision = { package = "xmip-core-provision", path = "module/core/capability/provision" }
+provision_self_signed = { package = "xmip-core-provision-self-signed", path = "module/core/capability/provision/self-signed" }
+receive = { package = "xmip-core-receive", path = "module/core/capability/receive" }
+regex = { package = "xmip-core-contract-regex", path = "module/core/capability/contract/regex" }
+regex_path = { package = "xmip-core-path-regex", path = "module/core/capability/path/regex" }
+report = { package = "xmip-core-report", path = "module/core/operation/report" }
+resilience = { package = "xmip-core-resilience", path = "module/core/capability/resilience" }
+retain = { package = "xmip-core-retain", path = "module/core/capability/retain" }
+retry = { package = "xmip-core-resilience-retry", path = "module/core/capability/resilience/retry" }
+rocksdb = { package = "xmip-core-persist-rocksdb", path = "module/platform/persist/rocksdb" }
+route = { package = "xmip-core-route", path = "module/core/capability/route" }
+route-party = { package = "xmip-core-route-party", path = "module/core/capability/route/party" }
+route_content = { package = "xmip-core-route-content", path = "module/core/capability/route/content" }
+rpgp = { package = "xmip-core-prepare-rpgp", path = "module/core/capability/prepare/rpgp" }
+runtime = { package = "xmip-core-runtime", path = "module/platform/runtime" }
+schedule = { package = "xmip-core-schedule", path = "module/core/capability/schedule" }
+schematron = { package = "xmip-core-contract-schematron", path = "module/core/capability/contract/schematron" }
+sdk = { package = "xmip-core-sdk", path = "sdk" }
+secret = { package = "xmip-core-secret", path = "module/core/capability/secret" }
+secret-dpapi = { package = "xmip-core-secret-dpapi", path = "module/core/capability/secret/dpapi" }
+secret-file = { package = "xmip-core-secret-file", path = "module/core/capability/secret/file" }
+secret_dpapi = { package = "xmip-core-secret-dpapi", path = "module/core/capability/secret/dpapi" }
+secret_file = { package = "xmip-core-secret-file", path = "module/core/capability/secret/file" }
+send = { package = "xmip-core-send", path = "module/core/capability/send" }
+serial = { package = "xmip-core-transport-serial", path = "module/core/capability/transport/serial" }
+sql = { package = "xmip-core-library-sql", path = "module/core/library/sql" }
+sqlite = { package = "xmip-core-persist-sqlite", path = "module/platform/persist/sqlite" }
+ssh = { package = "xmip-core-library-ssh", path = "module/core/library/ssh" }
+stream = { package = "xmip-core-stream", path = "module/foundation/stream" }
+tcp = { package = "xmip-core-transport-tcp", path = "module/core/capability/transport/tcp" }
+tls = { package = "xmip-core-library-tls", path = "module/core/library/tls" }
+toml = { package = "xmip-core-contract-toml", path = "module/core/capability/contract/toml" }
+toon = { package = "xmip-core-contract-toon", path = "module/core/capability/contract/toon" }
+transform = { package = "xmip-core-transform", path = "module/core/capability/transform" }
+transport = { package = "xmip-core-transport", path = "module/core/capability/transport" }
+transport-activemq = { package = "xmip-core-transport-activemq", path = "module/core/capability/transport/activemq" }
+transport-amqp = { package = "xmip-core-transport-amqp", path = "module/core/capability/transport/amqp" }
+transport-as2 = { package = "xmip-core-transport-as2", path = "module/core/capability/transport/as2" }
+transport-as4 = { package = "xmip-core-transport-as4", path = "module/core/capability/transport/as4" }
+transport-aws-kinesis = { package = "xmip-core-transport-aws-kinesis", path = "module/core/capability/transport/aws-kinesis" }
+transport-aws-s3 = { package = "xmip-core-transport-aws-s3", path = "module/core/capability/transport/aws-s3" }
+transport-aws-sns = { package = "xmip-core-transport-aws-sns", path = "module/core/capability/transport/aws-sns" }
+transport-aws-sqs = { package = "xmip-core-transport-aws-sqs", path = "module/core/capability/transport/aws-sqs" }
+transport-azure-blob = { package = "xmip-core-transport-azure-blob", path = "module/core/capability/transport/azure-blob" }
+transport-azure-event-grid = { package = "xmip-core-transport-azure-event-grid", path = "module/core/capability/transport/azure-event-grid" }
+transport-azure-event-hubs = { package = "xmip-core-transport-azure-event-hubs", path = "module/core/capability/transport/azure-event-hubs" }
+transport-azure-service-bus = { package = "xmip-core-transport-azure-service-bus", path = "module/core/capability/transport/azure-service-bus" }
+transport-bacnet = { package = "xmip-core-transport-bacnet", path = "module/core/capability/transport/bacnet" }
+transport-bluetooth = { package = "xmip-core-transport-bluetooth", path = "module/core/capability/transport/bluetooth" }
+transport-can-bus = { package = "xmip-core-transport-can-bus", path = "module/core/capability/transport/can-bus" }
+transport-canopen = { package = "xmip-core-transport-canopen", path = "module/core/capability/transport/canopen" }
+transport-coap = { package = "xmip-core-transport-coap", path = "module/core/capability/transport/coap" }
+transport-cotp = { package = "xmip-core-transport-cotp", path = "module/core/capability/transport/cotp" }
+transport-db2 = { package = "xmip-core-transport-db2", path = "module/core/capability/transport/db2" }
+transport-dds = { package = "xmip-core-transport-dds", path = "module/core/capability/transport/dds" }
+transport-dhcp = { package = "xmip-core-transport-dhcp", path = "module/core/capability/transport/dhcp" }
+transport-dicom = { package = "xmip-core-transport-dicom", path = "module/core/capability/transport/dicom" }
+transport-dnp3 = { package = "xmip-core-transport-dnp3", path = "module/core/capability/transport/dnp3" }
+transport-dns = { package = "xmip-core-transport-dns", path = "module/core/capability/transport/dns" }
+transport-ethercat = { package = "xmip-core-transport-ethercat", path = "module/core/capability/transport/ethercat" }
+transport-ethernet = { package = "xmip-core-transport-ethernet", path = "module/core/capability/transport/ethernet" }
+transport-ethernet-ip = { package = "xmip-core-transport-ethernet-ip", path = "module/core/capability/transport/ethernet-ip" }
+transport-file = { package = "xmip-core-transport-file", path = "module/core/capability/transport/file" }
+transport-ftp = { package = "xmip-core-transport-ftp", path = "module/core/capability/transport/ftp" }
+transport-google-cloud-storage = { package = "xmip-core-transport-google-cloud-storage", path = "module/core/capability/transport/google-cloud-storage" }
+transport-google-pub-sub = { package = "xmip-core-transport-google-pub-sub", path = "module/core/capability/transport/google-pub-sub" }
+transport-hart = { package = "xmip-core-transport-hart", path = "module/core/capability/transport/hart" }
+transport-http = { package = "xmip-core-transport-http", path = "module/core/capability/transport/http" }
+transport-ibm-mq = { package = "xmip-core-transport-ibm-mq", path = "module/core/capability/transport/ibm-mq" }
+transport-iec-60870-5-104 = { package = "xmip-core-transport-iec-60870-5-104", path = "module/core/capability/transport/iec-60870-5-104" }
+transport-iec-61850 = { package = "xmip-core-transport-iec-61850", path = "module/core/capability/transport/iec-61850" }
+transport-imap = { package = "xmip-core-transport-imap", path = "module/core/capability/transport/imap" }
+transport-io-link = { package = "xmip-core-transport-io-link", path = "module/core/capability/transport/io-link" }
+transport-iso-tp = { package = "xmip-core-transport-iso-tp", path = "module/core/capability/transport/iso-tp" }
+transport-j1939 = { package = "xmip-core-transport-j1939", path = "module/core/capability/transport/j1939" }
+transport-kafka = { package = "xmip-core-transport-kafka", path = "module/core/capability/transport/kafka" }
+transport-knx = { package = "xmip-core-transport-knx", path = "module/core/capability/transport/knx" }
+transport-lorawan = { package = "xmip-core-transport-lorawan", path = "module/core/capability/transport/lorawan" }
+transport-m-bus = { package = "xmip-core-transport-m-bus", path = "module/core/capability/transport/m-bus" }
+transport-mariadb = { package = "xmip-core-transport-mariadb", path = "module/core/capability/transport/mariadb" }
+transport-mdns = { package = "xmip-core-transport-mdns", path = "module/core/capability/transport/mdns" }
+transport-mllp = { package = "xmip-core-transport-mllp", path = "module/core/capability/transport/mllp" }
+transport-modbus = { package = "xmip-core-transport-modbus", path = "module/core/capability/transport/modbus" }
+transport-mqtt = { package = "xmip-core-transport-mqtt", path = "module/core/capability/transport/mqtt" }
+transport-msmq = { package = "xmip-core-transport-msmq", path = "module/core/capability/transport/msmq" }
+transport-mssql = { package = "xmip-core-transport-mssql", path = "module/core/capability/transport/mssql" }
+transport-mysql = { package = "xmip-core-transport-mysql", path = "module/core/capability/transport/mysql" }
+transport-named-pipe = { package = "xmip-core-transport-named-pipe", path = "module/core/capability/transport/named-pipe" }
+transport-nats = { package = "xmip-core-transport-nats", path = "module/core/capability/transport/nats" }
+transport-nats-jetstream = { package = "xmip-core-transport-nats-jetstream", path = "module/core/capability/transport/nats-jetstream" }
+transport-nfs = { package = "xmip-core-transport-nfs", path = "module/core/capability/transport/nfs" }
+transport-obd-ii = { package = "xmip-core-transport-obd-ii", path = "module/core/capability/transport/obd-ii" }
+transport-opc-ua = { package = "xmip-core-transport-opc-ua", path = "module/core/capability/transport/opc-ua" }
+transport-oracle = { package = "xmip-core-transport-oracle", path = "module/core/capability/transport/oracle" }
+transport-peppol = { package = "xmip-core-transport-peppol", path = "module/core/capability/transport/peppol" }
+transport-pop3 = { package = "xmip-core-transport-pop3", path = "module/core/capability/transport/pop3" }
+transport-postgresql = { package = "xmip-core-transport-postgresql", path = "module/core/capability/transport/postgresql" }
+transport-profinet = { package = "xmip-core-transport-profinet", path = "module/core/capability/transport/profinet" }
+transport-rabbitmq = { package = "xmip-core-transport-rabbitmq", path = "module/core/capability/transport/rabbitmq" }
+transport-redis-streams = { package = "xmip-core-transport-redis-streams", path = "module/core/capability/transport/redis-streams" }
+transport-redpanda = { package = "xmip-core-transport-redpanda", path = "module/core/capability/transport/redpanda" }
+transport-s7comm = { package = "xmip-core-transport-s7comm", path = "module/core/capability/transport/s7comm" }
+transport-secs-gem = { package = "xmip-core-transport-secs-gem", path = "module/core/capability/transport/secs-gem" }
+transport-serial = { package = "xmip-core-transport-serial", path = "module/core/capability/transport/serial" }
+transport-sftp = { package = "xmip-core-transport-sftp", path = "module/core/capability/transport/sftp" }
+transport-smb = { package = "xmip-core-transport-smb", path = "module/core/capability/transport/smb" }
+transport-smtp = { package = "xmip-core-transport-smtp", path = "module/core/capability/transport/smtp" }
+transport-snmp = { package = "xmip-core-transport-snmp", path = "module/core/capability/transport/snmp" }
+transport-sqlite = { package = "xmip-core-transport-sqlite", path = "module/core/capability/transport/sqlite" }
+transport-ssdp = { package = "xmip-core-transport-ssdp", path = "module/core/capability/transport/ssdp" }
+transport-syslog = { package = "xmip-core-transport-syslog", path = "module/core/capability/transport/syslog" }
+transport-tcp = { package = "xmip-core-transport-tcp", path = "module/core/capability/transport/tcp" }
+transport-thread = { package = "xmip-core-transport-thread", path = "module/core/capability/transport/thread" }
+transport-udp = { package = "xmip-core-transport-udp", path = "module/core/capability/transport/udp" }
+transport-uds = { package = "xmip-core-transport-uds", path = "module/core/capability/transport/uds" }
+transport-unix-socket = { package = "xmip-core-transport-unix-socket", path = "module/core/capability/transport/unix-socket" }
+transport-webdav = { package = "xmip-core-transport-webdav", path = "module/core/capability/transport/webdav" }
+transport-websocket = { package = "xmip-core-transport-websocket", path = "module/core/capability/transport/websocket" }
+transport-wireless-hart = { package = "xmip-core-transport-wireless-hart", path = "module/core/capability/transport/wireless-hart" }
+transport-wireless-m-bus = { package = "xmip-core-transport-wireless-m-bus", path = "module/core/capability/transport/wireless-m-bus" }
+transport-zigbee = { package = "xmip-core-transport-zigbee", path = "module/core/capability/transport/zigbee" }
+transport_activemq = { package = "xmip-core-transport-activemq", path = "module/core/capability/transport/activemq" }
+transport_amqp = { package = "xmip-core-transport-amqp", path = "module/core/capability/transport/amqp" }
+transport_as2 = { package = "xmip-core-transport-as2", path = "module/core/capability/transport/as2" }
+transport_as4 = { package = "xmip-core-transport-as4", path = "module/core/capability/transport/as4" }
+transport_aws_kinesis = { package = "xmip-core-transport-aws-kinesis", path = "module/core/capability/transport/aws-kinesis" }
+transport_aws_s3 = { package = "xmip-core-transport-aws-s3", path = "module/core/capability/transport/aws-s3" }
+transport_aws_sns = { package = "xmip-core-transport-aws-sns", path = "module/core/capability/transport/aws-sns" }
+transport_aws_sqs = { package = "xmip-core-transport-aws-sqs", path = "module/core/capability/transport/aws-sqs" }
+transport_azure_blob = { package = "xmip-core-transport-azure-blob", path = "module/core/capability/transport/azure-blob" }
+transport_azure_event_grid = { package = "xmip-core-transport-azure-event-grid", path = "module/core/capability/transport/azure-event-grid" }
+transport_azure_event_hubs = { package = "xmip-core-transport-azure-event-hubs", path = "module/core/capability/transport/azure-event-hubs" }
+transport_azure_service_bus = { package = "xmip-core-transport-azure-service-bus", path = "module/core/capability/transport/azure-service-bus" }
+transport_bacnet = { package = "xmip-core-transport-bacnet", path = "module/core/capability/transport/bacnet" }
+transport_bluetooth = { package = "xmip-core-transport-bluetooth", path = "module/core/capability/transport/bluetooth" }
+transport_can_bus = { package = "xmip-core-transport-can-bus", path = "module/core/capability/transport/can-bus" }
+transport_canopen = { package = "xmip-core-transport-canopen", path = "module/core/capability/transport/canopen" }
+transport_coap = { package = "xmip-core-transport-coap", path = "module/core/capability/transport/coap" }
+transport_cotp = { package = "xmip-core-transport-cotp", path = "module/core/capability/transport/cotp" }
+transport_db2 = { package = "xmip-core-transport-db2", path = "module/core/capability/transport/db2" }
+transport_dds = { package = "xmip-core-transport-dds", path = "module/core/capability/transport/dds" }
+transport_dhcp = { package = "xmip-core-transport-dhcp", path = "module/core/capability/transport/dhcp" }
+transport_dicom = { package = "xmip-core-transport-dicom", path = "module/core/capability/transport/dicom" }
+transport_dnp3 = { package = "xmip-core-transport-dnp3", path = "module/core/capability/transport/dnp3" }
+transport_dns = { package = "xmip-core-transport-dns", path = "module/core/capability/transport/dns" }
+transport_ethercat = { package = "xmip-core-transport-ethercat", path = "module/core/capability/transport/ethercat" }
+transport_ethernet = { package = "xmip-core-transport-ethernet", path = "module/core/capability/transport/ethernet" }
+transport_ethernet_ip = { package = "xmip-core-transport-ethernet-ip", path = "module/core/capability/transport/ethernet-ip" }
+transport_file = { package = "xmip-core-transport-file", path = "module/core/capability/transport/file" }
+transport_ftp = { package = "xmip-core-transport-ftp", path = "module/core/capability/transport/ftp" }
+transport_google_cloud_storage = { package = "xmip-core-transport-google-cloud-storage", path = "module/core/capability/transport/google-cloud-storage" }
+transport_google_pub_sub = { package = "xmip-core-transport-google-pub-sub", path = "module/core/capability/transport/google-pub-sub" }
+transport_hart = { package = "xmip-core-transport-hart", path = "module/core/capability/transport/hart" }
+transport_http = { package = "xmip-core-transport-http", path = "module/core/capability/transport/http" }
+transport_ibm_mq = { package = "xmip-core-transport-ibm-mq", path = "module/core/capability/transport/ibm-mq" }
+transport_iec_60870_5_104 = { package = "xmip-core-transport-iec-60870-5-104", path = "module/core/capability/transport/iec-60870-5-104" }
+transport_iec_61850 = { package = "xmip-core-transport-iec-61850", path = "module/core/capability/transport/iec-61850" }
+transport_imap = { package = "xmip-core-transport-imap", path = "module/core/capability/transport/imap" }
+transport_io_link = { package = "xmip-core-transport-io-link", path = "module/core/capability/transport/io-link" }
+transport_iso_tp = { package = "xmip-core-transport-iso-tp", path = "module/core/capability/transport/iso-tp" }
+transport_j1939 = { package = "xmip-core-transport-j1939", path = "module/core/capability/transport/j1939" }
+transport_kafka = { package = "xmip-core-transport-kafka", path = "module/core/capability/transport/kafka" }
+transport_knx = { package = "xmip-core-transport-knx", path = "module/core/capability/transport/knx" }
+transport_lorawan = { package = "xmip-core-transport-lorawan", path = "module/core/capability/transport/lorawan" }
+transport_m_bus = { package = "xmip-core-transport-m-bus", path = "module/core/capability/transport/m-bus" }
+transport_mariadb = { package = "xmip-core-transport-mariadb", path = "module/core/capability/transport/mariadb" }
+transport_mdns = { package = "xmip-core-transport-mdns", path = "module/core/capability/transport/mdns" }
+transport_mllp = { package = "xmip-core-transport-mllp", path = "module/core/capability/transport/mllp" }
+transport_modbus = { package = "xmip-core-transport-modbus", path = "module/core/capability/transport/modbus" }
+transport_mqtt = { package = "xmip-core-transport-mqtt", path = "module/core/capability/transport/mqtt" }
+transport_msmq = { package = "xmip-core-transport-msmq", path = "module/core/capability/transport/msmq" }
+transport_mssql = { package = "xmip-core-transport-mssql", path = "module/core/capability/transport/mssql" }
+transport_mysql = { package = "xmip-core-transport-mysql", path = "module/core/capability/transport/mysql" }
+transport_named_pipe = { package = "xmip-core-transport-named-pipe", path = "module/core/capability/transport/named-pipe" }
+transport_nats = { package = "xmip-core-transport-nats", path = "module/core/capability/transport/nats" }
+transport_nats_jetstream = { package = "xmip-core-transport-nats-jetstream", path = "module/core/capability/transport/nats-jetstream" }
+transport_nfs = { package = "xmip-core-transport-nfs", path = "module/core/capability/transport/nfs" }
+transport_obd_ii = { package = "xmip-core-transport-obd-ii", path = "module/core/capability/transport/obd-ii" }
+transport_opc_ua = { package = "xmip-core-transport-opc-ua", path = "module/core/capability/transport/opc-ua" }
+transport_oracle = { package = "xmip-core-transport-oracle", path = "module/core/capability/transport/oracle" }
+transport_peppol = { package = "xmip-core-transport-peppol", path = "module/core/capability/transport/peppol" }
+transport_pop3 = { package = "xmip-core-transport-pop3", path = "module/core/capability/transport/pop3" }
+transport_postgresql = { package = "xmip-core-transport-postgresql", path = "module/core/capability/transport/postgresql" }
+transport_profinet = { package = "xmip-core-transport-profinet", path = "module/core/capability/transport/profinet" }
+transport_rabbitmq = { package = "xmip-core-transport-rabbitmq", path = "module/core/capability/transport/rabbitmq" }
+transport_redis_streams = { package = "xmip-core-transport-redis-streams", path = "module/core/capability/transport/redis-streams" }
+transport_redpanda = { package = "xmip-core-transport-redpanda", path = "module/core/capability/transport/redpanda" }
+transport_s7comm = { package = "xmip-core-transport-s7comm", path = "module/core/capability/transport/s7comm" }
+transport_secs_gem = { package = "xmip-core-transport-secs-gem", path = "module/core/capability/transport/secs-gem" }
+transport_serial = { package = "xmip-core-transport-serial", path = "module/core/capability/transport/serial" }
+transport_sftp = { package = "xmip-core-transport-sftp", path = "module/core/capability/transport/sftp" }
+transport_smb = { package = "xmip-core-transport-smb", path = "module/core/capability/transport/smb" }
+transport_smtp = { package = "xmip-core-transport-smtp", path = "module/core/capability/transport/smtp" }
+transport_snmp = { package = "xmip-core-transport-snmp", path = "module/core/capability/transport/snmp" }
+transport_sqlite = { package = "xmip-core-transport-sqlite", path = "module/core/capability/transport/sqlite" }
+transport_ssdp = { package = "xmip-core-transport-ssdp", path = "module/core/capability/transport/ssdp" }
+transport_syslog = { package = "xmip-core-transport-syslog", path = "module/core/capability/transport/syslog" }
+transport_tcp = { package = "xmip-core-transport-tcp", path = "module/core/capability/transport/tcp" }
+transport_thread = { package = "xmip-core-transport-thread", path = "module/core/capability/transport/thread" }
+transport_udp = { package = "xmip-core-transport-udp", path = "module/core/capability/transport/udp" }
+transport_uds = { package = "xmip-core-transport-uds", path = "module/core/capability/transport/uds" }
+transport_unix_socket = { package = "xmip-core-transport-unix-socket", path = "module/core/capability/transport/unix-socket" }
+transport_webdav = { package = "xmip-core-transport-webdav", path = "module/core/capability/transport/webdav" }
+transport_websocket = { package = "xmip-core-transport-websocket", path = "module/core/capability/transport/websocket" }
+transport_wireless_hart = { package = "xmip-core-transport-wireless-hart", path = "module/core/capability/transport/wireless-hart" }
+transport_wireless_m_bus = { package = "xmip-core-transport-wireless-m-bus", path = "module/core/capability/transport/wireless-m-bus" }
+transport_zigbee = { package = "xmip-core-transport-zigbee", path = "module/core/capability/transport/zigbee" }
+udp = { package = "xmip-core-transport-udp", path = "module/core/capability/transport/udp" }
+wsdl = { package = "xmip-core-contract-wsdl", path = "module/core/capability/contract/wsdl" }
+x12 = { package = "xmip-core-contract-edi-x12", path = "module/core/capability/contract/edi-x12" }
+x12_shape = { package = "xmip-core-message-edi-x12", path = "module/foundation/message/edi-x12" }
+xaudit = { package = "xmip-core-audit", path = "module/core/operation/audit" }
+xcluster = { package = "xmip-core-cluster", path = "module/platform/cluster" }
+xcore = { package = "xmip-core", path = "module/foundation/core" }
+xevent = { package = "xmip-core-event", path = "module/foundation/event" }
+xmip-abi = { package = "xmip-core-abi", path = "module/foundation/abi" }
+xmip-archive = { package = "xmip-core-archive", path = "module/core/operation/archive" }
+xmip-assign = { package = "xmip-core-assign", path = "module/core/capability/assign" }
+xmip-audit = { package = "xmip-core-audit", path = "module/core/operation/audit" }
+xmip-audit-file = { package = "xmip-core-audit-file", path = "module/core/operation/audit/file" }
+xmip-audit-syslog = { package = "xmip-core-audit-syslog", path = "module/core/operation/audit/syslog" }
+xmip-audit-windows-event-log = { package = "xmip-core-audit-windows-event-log", path = "module/core/operation/audit/windows-event-log" }
+xmip-authenticate = { package = "xmip-core-authenticate", path = "module/core/capability/authenticate" }
+xmip-authenticate-mutual-tls = { package = "xmip-core-authenticate-mutual-tls", path = "module/core/capability/authenticate/mutual-tls" }
+xmip-authorize = { package = "xmip-core-authorize", path = "module/core/capability/authorize" }
+xmip-authorize-location = { package = "xmip-core-authorize-location", path = "module/core/capability/authorize/location" }
+xmip-cluster = { package = "xmip-core-cluster", path = "module/platform/cluster" }
+xmip-codec = { package = "xmip-core-library-codec", path = "module/core/library/codec" }
+xmip-configure = { package = "xmip-core-configure", path = "module/platform/configure" }
+xmip-context = { package = "xmip-core-context", path = "module/foundation/context" }
+xmip-contract = { package = "xmip-core-contract", path = "module/core/capability/contract" }
 xmip-core = { path = "module/foundation/core" }
-[patch."https://github.com/IlleNilsson/xmip-core-abi"]
-xmip-core-abi = { path = "module/foundation/abi" }
-[patch."https://github.com/IlleNilsson/xmip-core-archive"]
-xmip-core-archive = { path = "module/core/operation/archive" }
-[patch."https://github.com/IlleNilsson/xmip-core-archive-aws-s3"]
-xmip-core-archive-aws-s3 = { path = "module/core/operation/archive/aws-s3" }
-[patch."https://github.com/IlleNilsson/xmip-core-archive-azure-blob"]
-xmip-core-archive-azure-blob = { path = "module/core/operation/archive/azure-blob" }
-[patch."https://github.com/IlleNilsson/xmip-core-archive-file"]
-xmip-core-archive-file = { path = "module/core/operation/archive/file" }
-[patch."https://github.com/IlleNilsson/xmip-core-archive-google-cloud-storage"]
-xmip-core-archive-google-cloud-storage = { path = "module/core/operation/archive/google-cloud-storage" }
-[patch."https://github.com/IlleNilsson/xmip-core-archive-mariadb"]
-xmip-core-archive-mariadb = { path = "module/core/operation/archive/mariadb" }
-[patch."https://github.com/IlleNilsson/xmip-core-archive-mssql"]
-xmip-core-archive-mssql = { path = "module/core/operation/archive/mssql" }
-[patch."https://github.com/IlleNilsson/xmip-core-archive-parquet"]
-xmip-core-archive-parquet = { path = "module/core/operation/archive/parquet" }
-[patch."https://github.com/IlleNilsson/xmip-core-archive-postgresql"]
-xmip-core-archive-postgresql = { path = "module/core/operation/archive/postgresql" }
-[patch."https://github.com/IlleNilsson/xmip-core-archive-sql"]
-xmip-core-archive-sql = { path = "module/core/operation/archive/sql" }
-[patch."https://github.com/IlleNilsson/xmip-core-archive-sqlite"]
-xmip-core-archive-sqlite = { path = "module/core/operation/archive/sqlite" }
-[patch."https://github.com/IlleNilsson/xmip-core-assign"]
-xmip-core-assign = { path = "module/core/capability/assign" }
-[patch."https://github.com/IlleNilsson/xmip-core-audit"]
-xmip-core-audit = { path = "module/core/operation/audit" }
-[patch."https://github.com/IlleNilsson/xmip-core-audit-file"]
-xmip-core-audit-file = { path = "module/core/operation/audit/file" }
-[patch."https://github.com/IlleNilsson/xmip-core-audit-syslog"]
-xmip-core-audit-syslog = { path = "module/core/operation/audit/syslog" }
-[patch."https://github.com/IlleNilsson/xmip-core-audit-windows-event-log"]
-xmip-core-audit-windows-event-log = { path = "module/core/operation/audit/windows-event-log" }
-[patch."https://github.com/IlleNilsson/xmip-core-authenticate"]
-xmip-core-authenticate = { path = "module/core/capability/authenticate" }
-[patch."https://github.com/IlleNilsson/xmip-core-authenticate-mutual-tls"]
-xmip-core-authenticate-mutual-tls = { path = "module/core/capability/authenticate/mutual-tls" }
-[patch."https://github.com/IlleNilsson/xmip-core-authenticate-password"]
-xmip-core-authenticate-password = { path = "module/core/capability/authenticate/password" }
-[patch."https://github.com/IlleNilsson/xmip-core-authenticate-ssh-key"]
-xmip-core-authenticate-ssh-key = { path = "module/core/capability/authenticate/ssh-key" }
-[patch."https://github.com/IlleNilsson/xmip-core-authorize"]
-xmip-core-authorize = { path = "module/core/capability/authorize" }
-[patch."https://github.com/IlleNilsson/xmip-core-authorize-location"]
-xmip-core-authorize-location = { path = "module/core/capability/authorize/location" }
-[patch."https://github.com/IlleNilsson/xmip-core-authorize-party"]
-xmip-core-authorize-party = { path = "module/core/capability/authorize/party" }
-[patch."https://github.com/IlleNilsson/xmip-core-cluster"]
-xmip-core-cluster = { path = "module/platform/cluster" }
-[patch."https://github.com/IlleNilsson/xmip-core-configure"]
-xmip-core-configure = { path = "module/platform/configure" }
-[patch."https://github.com/IlleNilsson/xmip-core-context"]
-xmip-core-context = { path = "module/foundation/context" }
-[patch."https://github.com/IlleNilsson/xmip-core-contract"]
-xmip-core-contract = { path = "module/core/capability/contract" }
-[patch."https://github.com/IlleNilsson/xmip-core-contract-asyncapi"]
-xmip-core-contract-asyncapi = { path = "module/core/capability/contract/asyncapi" }
-[patch."https://github.com/IlleNilsson/xmip-core-contract-avro"]
-xmip-core-contract-avro = { path = "module/core/capability/contract/avro" }
-[patch."https://github.com/IlleNilsson/xmip-core-contract-csv"]
-xmip-core-contract-csv = { path = "module/core/capability/contract/csv" }
-[patch."https://github.com/IlleNilsson/xmip-core-contract-edi-edifact"]
-xmip-core-contract-edi-edifact = { path = "module/core/capability/contract/edi-edifact" }
-[patch."https://github.com/IlleNilsson/xmip-core-contract-edi-x12"]
-xmip-core-contract-edi-x12 = { path = "module/core/capability/contract/edi-x12" }
-[patch."https://github.com/IlleNilsson/xmip-core-contract-fhir"]
-xmip-core-contract-fhir = { path = "module/core/capability/contract/fhir" }
-[patch."https://github.com/IlleNilsson/xmip-core-contract-fixed-width"]
-xmip-core-contract-fixed-width = { path = "module/core/capability/contract/fixed-width" }
-[patch."https://github.com/IlleNilsson/xmip-core-contract-graphql-schema"]
-xmip-core-contract-graphql-schema = { path = "module/core/capability/contract/graphql-schema" }
-[patch."https://github.com/IlleNilsson/xmip-core-contract-hl7-v2"]
-xmip-core-contract-hl7-v2 = { path = "module/core/capability/contract/hl7-v2" }
-[patch."https://github.com/IlleNilsson/xmip-core-contract-json-schema"]
-xmip-core-contract-json-schema = { path = "module/core/capability/contract/json-schema" }
-[patch."https://github.com/IlleNilsson/xmip-core-contract-openapi"]
-xmip-core-contract-openapi = { path = "module/core/capability/contract/openapi" }
-[patch."https://github.com/IlleNilsson/xmip-core-contract-protobuf"]
-xmip-core-contract-protobuf = { path = "module/core/capability/contract/protobuf" }
-[patch."https://github.com/IlleNilsson/xmip-core-contract-regex"]
-xmip-core-contract-regex = { path = "module/core/capability/contract/regex" }
-[patch."https://github.com/IlleNilsson/xmip-core-contract-schematron"]
-xmip-core-contract-schematron = { path = "module/core/capability/contract/schematron" }
-[patch."https://github.com/IlleNilsson/xmip-core-contract-sql"]
-xmip-core-contract-sql = { path = "module/core/capability/contract/sql" }
-[patch."https://github.com/IlleNilsson/xmip-core-contract-toml"]
-xmip-core-contract-toml = { path = "module/core/capability/contract/toml" }
-[patch."https://github.com/IlleNilsson/xmip-core-contract-toon"]
-xmip-core-contract-toon = { path = "module/core/capability/contract/toon" }
-[patch."https://github.com/IlleNilsson/xmip-core-contract-wsdl"]
-xmip-core-contract-wsdl = { path = "module/core/capability/contract/wsdl" }
-[patch."https://github.com/IlleNilsson/xmip-core-contract-xml-schema"]
-xmip-core-contract-xml-schema = { path = "module/core/capability/contract/xml-schema" }
-[patch."https://github.com/IlleNilsson/xmip-core-contract-yaml"]
-xmip-core-contract-yaml = { path = "module/core/capability/contract/yaml" }
-[patch."https://github.com/IlleNilsson/xmip-core-declaration"]
-xmip-core-declaration = { path = "module/core/operation/declaration" }
-[patch."https://github.com/IlleNilsson/xmip-core-demote"]
-xmip-core-demote = { path = "module/core/capability/demote" }
-[patch."https://github.com/IlleNilsson/xmip-core-event"]
-xmip-core-event = { path = "module/foundation/event" }
-[patch."https://github.com/IlleNilsson/xmip-core-identify"]
-xmip-core-identify = { path = "module/core/capability/identify" }
-[patch."https://github.com/IlleNilsson/xmip-core-identify-api-key"]
-xmip-core-identify-api-key = { path = "module/core/capability/identify/api-key" }
-[patch."https://github.com/IlleNilsson/xmip-core-identify-certificate"]
-xmip-core-identify-certificate = { path = "module/core/capability/identify/certificate" }
-[patch."https://github.com/IlleNilsson/xmip-core-identify-ip"]
-xmip-core-identify-ip = { path = "module/core/capability/identify/ip" }
-[patch."https://github.com/IlleNilsson/xmip-core-identify-jwt"]
-xmip-core-identify-jwt = { path = "module/core/capability/identify/jwt" }
-[patch."https://github.com/IlleNilsson/xmip-core-identify-username"]
-xmip-core-identify-username = { path = "module/core/capability/identify/username" }
-[patch."https://github.com/IlleNilsson/xmip-core-journey"]
-xmip-core-journey = { path = "module/foundation/journey" }
-[patch."https://github.com/IlleNilsson/xmip-core-library-asn1"]
-xmip-core-library-asn1 = { path = "module/core/library/asn1" }
-[patch."https://github.com/IlleNilsson/xmip-core-library-codec"]
-xmip-core-library-codec = { path = "module/core/library/codec" }
-[patch."https://github.com/IlleNilsson/xmip-core-library-file"]
-xmip-core-library-file = { path = "module/core/library/file" }
-[patch."https://github.com/IlleNilsson/xmip-core-library-jose"]
-xmip-core-library-jose = { path = "module/core/library/jose" }
-[patch."https://github.com/IlleNilsson/xmip-core-library-mariadb"]
-xmip-core-library-mariadb = { path = "module/core/library/mariadb" }
-[patch."https://github.com/IlleNilsson/xmip-core-library-net"]
-xmip-core-library-net = { path = "module/core/library/net" }
-[patch."https://github.com/IlleNilsson/xmip-core-library-ntlm"]
-xmip-core-library-ntlm = { path = "module/core/library/ntlm" }
-[patch."https://github.com/IlleNilsson/xmip-core-library-postgresql"]
-xmip-core-library-postgresql = { path = "module/core/library/postgresql" }
-[patch."https://github.com/IlleNilsson/xmip-core-library-sql"]
-xmip-core-library-sql = { path = "module/core/library/sql" }
-[patch."https://github.com/IlleNilsson/xmip-core-library-ssh"]
-xmip-core-library-ssh = { path = "module/core/library/ssh" }
-[patch."https://github.com/IlleNilsson/xmip-core-library-tls"]
-xmip-core-library-tls = { path = "module/core/library/tls" }
-[patch."https://github.com/IlleNilsson/xmip-core-logic"]
-xmip-core-logic = { path = "module/core/capability/logic" }
-[patch."https://github.com/IlleNilsson/xmip-core-message"]
-xmip-core-message = { path = "module/foundation/message" }
-[patch."https://github.com/IlleNilsson/xmip-core-message-edi-edifact"]
-xmip-core-message-edi-edifact = { path = "module/foundation/message/edi-edifact" }
-[patch."https://github.com/IlleNilsson/xmip-core-message-edi-x12"]
-xmip-core-message-edi-x12 = { path = "module/foundation/message/edi-x12" }
-[patch."https://github.com/IlleNilsson/xmip-core-message-hl7-er7"]
-xmip-core-message-hl7-er7 = { path = "module/foundation/message/hl7-er7" }
-[patch."https://github.com/IlleNilsson/xmip-core-message-xml"]
-xmip-core-message-xml = { path = "module/foundation/message/xml" }
-[patch."https://github.com/IlleNilsson/xmip-core-node"]
-xmip-core-node = { path = "module/foundation/node" }
-[patch."https://github.com/IlleNilsson/xmip-core-observe"]
-xmip-core-observe = { path = "module/core/operation/observe" }
-[patch."https://github.com/IlleNilsson/xmip-core-operate"]
-xmip-core-operate = { path = "module/core/operation/operate" }
-[patch."https://github.com/IlleNilsson/xmip-core-party"]
-xmip-core-party = { path = "module/foundation/party" }
-[patch."https://github.com/IlleNilsson/xmip-core-path"]
-xmip-core-path = { path = "module/core/capability/path" }
-[patch."https://github.com/IlleNilsson/xmip-core-path-dot"]
-xmip-core-path-dot = { path = "module/core/capability/path/dot" }
-[patch."https://github.com/IlleNilsson/xmip-core-path-edi"]
-xmip-core-path-edi = { path = "module/core/capability/path/edi" }
-[patch."https://github.com/IlleNilsson/xmip-core-path-fhirpath"]
-xmip-core-path-fhirpath = { path = "module/core/capability/path/fhirpath" }
-[patch."https://github.com/IlleNilsson/xmip-core-path-hl7-v2"]
-xmip-core-path-hl7-v2 = { path = "module/core/capability/path/hl7-v2" }
-[patch."https://github.com/IlleNilsson/xmip-core-path-index"]
-xmip-core-path-index = { path = "module/core/capability/path/index" }
-[patch."https://github.com/IlleNilsson/xmip-core-path-json-pointer"]
-xmip-core-path-json-pointer = { path = "module/core/capability/path/json-pointer" }
-[patch."https://github.com/IlleNilsson/xmip-core-path-jsonpath"]
-xmip-core-path-jsonpath = { path = "module/core/capability/path/jsonpath" }
-[patch."https://github.com/IlleNilsson/xmip-core-path-regex"]
-xmip-core-path-regex = { path = "module/core/capability/path/regex" }
-[patch."https://github.com/IlleNilsson/xmip-core-path-xpath"]
-xmip-core-path-xpath = { path = "module/core/capability/path/xpath" }
-[patch."https://github.com/IlleNilsson/xmip-core-persist"]
-xmip-core-persist = { path = "module/platform/persist" }
-[patch."https://github.com/IlleNilsson/xmip-core-persist-rocksdb"]
-xmip-core-persist-rocksdb = { path = "module/platform/persist/rocksdb" }
-[patch."https://github.com/IlleNilsson/xmip-core-persist-sqlite"]
-xmip-core-persist-sqlite = { path = "module/platform/persist/sqlite" }
-[patch."https://github.com/IlleNilsson/xmip-core-prepare"]
-xmip-core-prepare = { path = "module/core/capability/prepare" }
-[patch."https://github.com/IlleNilsson/xmip-core-prepare-rpgp"]
-xmip-core-prepare-rpgp = { path = "module/core/capability/prepare/rpgp" }
-[patch."https://github.com/IlleNilsson/xmip-core-process"]
-xmip-core-process = { path = "module/core/capability/process" }
-[patch."https://github.com/IlleNilsson/xmip-core-process-bpmn"]
-xmip-core-process-bpmn = { path = "module/core/capability/process/bpmn" }
-[patch."https://github.com/IlleNilsson/xmip-core-promote"]
-xmip-core-promote = { path = "module/core/capability/promote" }
-[patch."https://github.com/IlleNilsson/xmip-core-provision"]
-xmip-core-provision = { path = "module/core/capability/provision" }
-[patch."https://github.com/IlleNilsson/xmip-core-provision-acme"]
-xmip-core-provision-acme = { path = "module/core/capability/provision/acme" }
-[patch."https://github.com/IlleNilsson/xmip-core-provision-internal-ca"]
-xmip-core-provision-internal-ca = { path = "module/core/capability/provision/internal-ca" }
-[patch."https://github.com/IlleNilsson/xmip-core-provision-self-signed"]
-xmip-core-provision-self-signed = { path = "module/core/capability/provision/self-signed" }
-[patch."https://github.com/IlleNilsson/xmip-core-receive"]
-xmip-core-receive = { path = "module/core/capability/receive" }
-[patch."https://github.com/IlleNilsson/xmip-core-report"]
-xmip-core-report = { path = "module/core/operation/report" }
-[patch."https://github.com/IlleNilsson/xmip-core-resilience"]
-xmip-core-resilience = { path = "module/core/capability/resilience" }
-[patch."https://github.com/IlleNilsson/xmip-core-resilience-retry"]
-xmip-core-resilience-retry = { path = "module/core/capability/resilience/retry" }
-[patch."https://github.com/IlleNilsson/xmip-core-retain"]
-xmip-core-retain = { path = "module/core/capability/retain" }
-[patch."https://github.com/IlleNilsson/xmip-core-route"]
-xmip-core-route = { path = "module/core/capability/route" }
-[patch."https://github.com/IlleNilsson/xmip-core-route-content"]
-xmip-core-route-content = { path = "module/core/capability/route/content" }
-[patch."https://github.com/IlleNilsson/xmip-core-route-party"]
-xmip-core-route-party = { path = "module/core/capability/route/party" }
-[patch."https://github.com/IlleNilsson/xmip-core-runtime"]
-xmip-core-runtime = { path = "module/platform/runtime" }
-[patch."https://github.com/IlleNilsson/xmip-core-schedule"]
-xmip-core-schedule = { path = "module/core/capability/schedule" }
-[patch."https://github.com/IlleNilsson/xmip-core-sdk"]
-xmip-core-sdk = { path = "sdk" }
-[patch."https://github.com/IlleNilsson/xmip-core-secret"]
-xmip-core-secret = { path = "module/core/capability/secret" }
-[patch."https://github.com/IlleNilsson/xmip-core-secret-dpapi"]
-xmip-core-secret-dpapi = { path = "module/core/capability/secret/dpapi" }
-[patch."https://github.com/IlleNilsson/xmip-core-secret-file"]
-xmip-core-secret-file = { path = "module/core/capability/secret/file" }
-[patch."https://github.com/IlleNilsson/xmip-core-secret-keychain"]
-xmip-core-secret-keychain = { path = "module/core/capability/secret/keychain" }
-[patch."https://github.com/IlleNilsson/xmip-core-send"]
-xmip-core-send = { path = "module/core/capability/send" }
-[patch."https://github.com/IlleNilsson/xmip-core-stream"]
-xmip-core-stream = { path = "module/foundation/stream" }
-[patch."https://github.com/IlleNilsson/xmip-core-transform"]
-xmip-core-transform = { path = "module/core/capability/transform" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport"]
-xmip-core-transport = { path = "module/core/capability/transport" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-activemq"]
-xmip-core-transport-activemq = { path = "module/core/capability/transport/activemq" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-amqp"]
-xmip-core-transport-amqp = { path = "module/core/capability/transport/amqp" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-as2"]
-xmip-core-transport-as2 = { path = "module/core/capability/transport/as2" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-as4"]
-xmip-core-transport-as4 = { path = "module/core/capability/transport/as4" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-aws"]
-xmip-core-transport-aws = { path = "module/core/capability/transport/aws" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-aws-kinesis"]
-xmip-core-transport-aws-kinesis = { path = "module/core/capability/transport/aws-kinesis" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-aws-s3"]
-xmip-core-transport-aws-s3 = { path = "module/core/capability/transport/aws-s3" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-aws-sns"]
-xmip-core-transport-aws-sns = { path = "module/core/capability/transport/aws-sns" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-aws-sqs"]
-xmip-core-transport-aws-sqs = { path = "module/core/capability/transport/aws-sqs" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-azure"]
-xmip-core-transport-azure = { path = "module/core/capability/transport/azure" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-azure-blob"]
-xmip-core-transport-azure-blob = { path = "module/core/capability/transport/azure-blob" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-azure-event-grid"]
-xmip-core-transport-azure-event-grid = { path = "module/core/capability/transport/azure-event-grid" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-azure-event-hubs"]
-xmip-core-transport-azure-event-hubs = { path = "module/core/capability/transport/azure-event-hubs" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-azure-service-bus"]
-xmip-core-transport-azure-service-bus = { path = "module/core/capability/transport/azure-service-bus" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-bacnet"]
-xmip-core-transport-bacnet = { path = "module/core/capability/transport/bacnet" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-bluetooth"]
-xmip-core-transport-bluetooth = { path = "module/core/capability/transport/bluetooth" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-can-bus"]
-xmip-core-transport-can-bus = { path = "module/core/capability/transport/can-bus" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-canopen"]
-xmip-core-transport-canopen = { path = "module/core/capability/transport/canopen" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-coap"]
-xmip-core-transport-coap = { path = "module/core/capability/transport/coap" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-cotp"]
-xmip-core-transport-cotp = { path = "module/core/capability/transport/cotp" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-db2"]
-xmip-core-transport-db2 = { path = "module/core/capability/transport/db2" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-dds"]
-xmip-core-transport-dds = { path = "module/core/capability/transport/dds" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-dhcp"]
-xmip-core-transport-dhcp = { path = "module/core/capability/transport/dhcp" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-dicom"]
-xmip-core-transport-dicom = { path = "module/core/capability/transport/dicom" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-dnp3"]
-xmip-core-transport-dnp3 = { path = "module/core/capability/transport/dnp3" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-dns"]
-xmip-core-transport-dns = { path = "module/core/capability/transport/dns" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-ethercat"]
-xmip-core-transport-ethercat = { path = "module/core/capability/transport/ethercat" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-ethernet"]
-xmip-core-transport-ethernet = { path = "module/core/capability/transport/ethernet" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-ethernet-ip"]
-xmip-core-transport-ethernet-ip = { path = "module/core/capability/transport/ethernet-ip" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-file"]
-xmip-core-transport-file = { path = "module/core/capability/transport/file" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-ftp"]
-xmip-core-transport-ftp = { path = "module/core/capability/transport/ftp" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-google-cloud-storage"]
-xmip-core-transport-google-cloud-storage = { path = "module/core/capability/transport/google-cloud-storage" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-google-pub-sub"]
-xmip-core-transport-google-pub-sub = { path = "module/core/capability/transport/google-pub-sub" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-hart"]
-xmip-core-transport-hart = { path = "module/core/capability/transport/hart" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-http"]
-xmip-core-transport-http = { path = "module/core/capability/transport/http" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-ibm-mq"]
-xmip-core-transport-ibm-mq = { path = "module/core/capability/transport/ibm-mq" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-iec-60870-5-104"]
-xmip-core-transport-iec-60870-5-104 = { path = "module/core/capability/transport/iec-60870-5-104" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-iec-61850"]
-xmip-core-transport-iec-61850 = { path = "module/core/capability/transport/iec-61850" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-imap"]
-xmip-core-transport-imap = { path = "module/core/capability/transport/imap" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-io-link"]
-xmip-core-transport-io-link = { path = "module/core/capability/transport/io-link" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-iso-tp"]
-xmip-core-transport-iso-tp = { path = "module/core/capability/transport/iso-tp" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-j1939"]
-xmip-core-transport-j1939 = { path = "module/core/capability/transport/j1939" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-kafka"]
-xmip-core-transport-kafka = { path = "module/core/capability/transport/kafka" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-knx"]
-xmip-core-transport-knx = { path = "module/core/capability/transport/knx" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-lorawan"]
-xmip-core-transport-lorawan = { path = "module/core/capability/transport/lorawan" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-m-bus"]
-xmip-core-transport-m-bus = { path = "module/core/capability/transport/m-bus" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-mariadb"]
-xmip-core-transport-mariadb = { path = "module/core/capability/transport/mariadb" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-mdns"]
-xmip-core-transport-mdns = { path = "module/core/capability/transport/mdns" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-mllp"]
-xmip-core-transport-mllp = { path = "module/core/capability/transport/mllp" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-modbus"]
-xmip-core-transport-modbus = { path = "module/core/capability/transport/modbus" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-mqtt"]
-xmip-core-transport-mqtt = { path = "module/core/capability/transport/mqtt" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-msmq"]
-xmip-core-transport-msmq = { path = "module/core/capability/transport/msmq" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-mssql"]
-xmip-core-transport-mssql = { path = "module/core/capability/transport/mssql" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-mysql"]
-xmip-core-transport-mysql = { path = "module/core/capability/transport/mysql" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-named-pipe"]
-xmip-core-transport-named-pipe = { path = "module/core/capability/transport/named-pipe" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-nats"]
-xmip-core-transport-nats = { path = "module/core/capability/transport/nats" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-nats-jetstream"]
-xmip-core-transport-nats-jetstream = { path = "module/core/capability/transport/nats-jetstream" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-nfs"]
-xmip-core-transport-nfs = { path = "module/core/capability/transport/nfs" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-obd-ii"]
-xmip-core-transport-obd-ii = { path = "module/core/capability/transport/obd-ii" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-opc-ua"]
-xmip-core-transport-opc-ua = { path = "module/core/capability/transport/opc-ua" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-oracle"]
-xmip-core-transport-oracle = { path = "module/core/capability/transport/oracle" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-peppol"]
-xmip-core-transport-peppol = { path = "module/core/capability/transport/peppol" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-pop3"]
-xmip-core-transport-pop3 = { path = "module/core/capability/transport/pop3" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-postgresql"]
-xmip-core-transport-postgresql = { path = "module/core/capability/transport/postgresql" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-profinet"]
-xmip-core-transport-profinet = { path = "module/core/capability/transport/profinet" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-rabbitmq"]
-xmip-core-transport-rabbitmq = { path = "module/core/capability/transport/rabbitmq" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-redis-streams"]
-xmip-core-transport-redis-streams = { path = "module/core/capability/transport/redis-streams" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-redpanda"]
-xmip-core-transport-redpanda = { path = "module/core/capability/transport/redpanda" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-s7comm"]
-xmip-core-transport-s7comm = { path = "module/core/capability/transport/s7comm" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-secs-gem"]
-xmip-core-transport-secs-gem = { path = "module/core/capability/transport/secs-gem" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-serial"]
-xmip-core-transport-serial = { path = "module/core/capability/transport/serial" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-sftp"]
-xmip-core-transport-sftp = { path = "module/core/capability/transport/sftp" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-smb"]
-xmip-core-transport-smb = { path = "module/core/capability/transport/smb" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-smtp"]
-xmip-core-transport-smtp = { path = "module/core/capability/transport/smtp" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-snmp"]
-xmip-core-transport-snmp = { path = "module/core/capability/transport/snmp" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-sqlite"]
-xmip-core-transport-sqlite = { path = "module/core/capability/transport/sqlite" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-ssdp"]
-xmip-core-transport-ssdp = { path = "module/core/capability/transport/ssdp" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-syslog"]
-xmip-core-transport-syslog = { path = "module/core/capability/transport/syslog" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-tcp"]
-xmip-core-transport-tcp = { path = "module/core/capability/transport/tcp" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-thread"]
-xmip-core-transport-thread = { path = "module/core/capability/transport/thread" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-udp"]
-xmip-core-transport-udp = { path = "module/core/capability/transport/udp" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-uds"]
-xmip-core-transport-uds = { path = "module/core/capability/transport/uds" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-unix-socket"]
-xmip-core-transport-unix-socket = { path = "module/core/capability/transport/unix-socket" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-webdav"]
-xmip-core-transport-webdav = { path = "module/core/capability/transport/webdav" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-websocket"]
-xmip-core-transport-websocket = { path = "module/core/capability/transport/websocket" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-wireless-hart"]
-xmip-core-transport-wireless-hart = { path = "module/core/capability/transport/wireless-hart" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-wireless-m-bus"]
-xmip-core-transport-wireless-m-bus = { path = "module/core/capability/transport/wireless-m-bus" }
-[patch."https://github.com/IlleNilsson/xmip-core-transport-zigbee"]
-xmip-core-transport-zigbee = { path = "module/core/capability/transport/zigbee" }
+xmip-demote = { package = "xmip-core-demote", path = "module/core/capability/demote" }
+xmip-event = { package = "xmip-core-event", path = "module/foundation/event" }
+xmip-file = { package = "xmip-core-library-file", path = "module/core/library/file" }
+xmip-identify = { package = "xmip-core-identify", path = "module/core/capability/identify" }
+xmip-identify-api-key = { package = "xmip-core-identify-api-key", path = "module/core/capability/identify/api-key" }
+xmip-identify-certificate = { package = "xmip-core-identify-certificate", path = "module/core/capability/identify/certificate" }
+xmip-identify-ip = { package = "xmip-core-identify-ip", path = "module/core/capability/identify/ip" }
+xmip-identify-jwt = { package = "xmip-core-identify-jwt", path = "module/core/capability/identify/jwt" }
+xmip-identify-username = { package = "xmip-core-identify-username", path = "module/core/capability/identify/username" }
+xmip-journey = { package = "xmip-core-journey", path = "module/foundation/journey" }
+xmip-message = { package = "xmip-core-message", path = "module/foundation/message" }
+xmip-net = { package = "xmip-core-library-net", path = "module/core/library/net" }
+xmip-node = { package = "xmip-core-node", path = "module/foundation/node" }
+xmip-observe = { package = "xmip-core-observe", path = "module/core/operation/observe" }
+xmip-operate = { package = "xmip-core-operate", path = "module/core/operation/operate" }
+xmip-party = { package = "xmip-core-party", path = "module/foundation/party" }
+xmip-path = { package = "xmip-core-path", path = "module/core/capability/path" }
+xmip-path-edi = { package = "xmip-core-path-edi", path = "module/core/capability/path/edi" }
+xmip-persist = { package = "xmip-core-persist", path = "module/platform/persist" }
+xmip-persist-rocksdb = { package = "xmip-core-persist-rocksdb", path = "module/platform/persist/rocksdb" }
+xmip-persist-sqlite = { package = "xmip-core-persist-sqlite", path = "module/platform/persist/sqlite" }
+xmip-prepare = { package = "xmip-core-prepare", path = "module/core/capability/prepare" }
+xmip-process = { package = "xmip-core-process", path = "module/core/capability/process" }
+xmip-promote = { package = "xmip-core-promote", path = "module/core/capability/promote" }
+xmip-provision = { package = "xmip-core-provision", path = "module/core/capability/provision" }
+xmip-provision-acme = { package = "xmip-core-provision-acme", path = "module/core/capability/provision/acme" }
+xmip-provision-internal-ca = { package = "xmip-core-provision-internal-ca", path = "module/core/capability/provision/internal-ca" }
+xmip-receive = { package = "xmip-core-receive", path = "module/core/capability/receive" }
+xmip-report = { package = "xmip-core-report", path = "module/core/operation/report" }
+xmip-resilience = { package = "xmip-core-resilience", path = "module/core/capability/resilience" }
+xmip-resilience-retry = { package = "xmip-core-resilience-retry", path = "module/core/capability/resilience/retry" }
+xmip-retain = { package = "xmip-core-retain", path = "module/core/capability/retain" }
+xmip-route = { package = "xmip-core-route", path = "module/core/capability/route" }
+xmip-route-content = { package = "xmip-core-route-content", path = "module/core/capability/route/content" }
+xmip-runtime = { package = "xmip-core-runtime", path = "module/platform/runtime" }
+xmip-sdk = { package = "xmip-core-sdk", path = "sdk" }
+xmip-secret = { package = "xmip-core-secret", path = "module/core/capability/secret" }
+xmip-secret-dpapi = { package = "xmip-core-secret-dpapi", path = "module/core/capability/secret/dpapi" }
+xmip-secret-file = { package = "xmip-core-secret-file", path = "module/core/capability/secret/file" }
+xmip-secret-keychain = { package = "xmip-core-secret-keychain", path = "module/core/capability/secret/keychain" }
+xmip-send = { package = "xmip-core-send", path = "module/core/capability/send" }
+xmip-stream = { package = "xmip-core-stream", path = "module/foundation/stream" }
+xmip-tls = { package = "xmip-core-library-tls", path = "module/core/library/tls" }
+xmip-transform = { package = "xmip-core-transform", path = "module/core/capability/transform" }
+xmip-transport = { package = "xmip-core-transport", path = "module/core/capability/transport" }
+xmip-transport-activemq = { package = "xmip-core-transport-activemq", path = "module/core/capability/transport/activemq" }
+xmip-transport-amqp = { package = "xmip-core-transport-amqp", path = "module/core/capability/transport/amqp" }
+xmip-transport-as2 = { package = "xmip-core-transport-as2", path = "module/core/capability/transport/as2" }
+xmip-transport-as4 = { package = "xmip-core-transport-as4", path = "module/core/capability/transport/as4" }
+xmip-transport-aws-kinesis = { package = "xmip-core-transport-aws-kinesis", path = "module/core/capability/transport/aws-kinesis" }
+xmip-transport-aws-s3 = { package = "xmip-core-transport-aws-s3", path = "module/core/capability/transport/aws-s3" }
+xmip-transport-aws-sns = { package = "xmip-core-transport-aws-sns", path = "module/core/capability/transport/aws-sns" }
+xmip-transport-aws-sqs = { package = "xmip-core-transport-aws-sqs", path = "module/core/capability/transport/aws-sqs" }
+xmip-transport-azure-blob = { package = "xmip-core-transport-azure-blob", path = "module/core/capability/transport/azure-blob" }
+xmip-transport-azure-event-grid = { package = "xmip-core-transport-azure-event-grid", path = "module/core/capability/transport/azure-event-grid" }
+xmip-transport-azure-event-hubs = { package = "xmip-core-transport-azure-event-hubs", path = "module/core/capability/transport/azure-event-hubs" }
+xmip-transport-azure-service-bus = { package = "xmip-core-transport-azure-service-bus", path = "module/core/capability/transport/azure-service-bus" }
+xmip-transport-bacnet = { package = "xmip-core-transport-bacnet", path = "module/core/capability/transport/bacnet" }
+xmip-transport-bluetooth = { package = "xmip-core-transport-bluetooth", path = "module/core/capability/transport/bluetooth" }
+xmip-transport-can-bus = { package = "xmip-core-transport-can-bus", path = "module/core/capability/transport/can-bus" }
+xmip-transport-canopen = { package = "xmip-core-transport-canopen", path = "module/core/capability/transport/canopen" }
+xmip-transport-coap = { package = "xmip-core-transport-coap", path = "module/core/capability/transport/coap" }
+xmip-transport-cotp = { package = "xmip-core-transport-cotp", path = "module/core/capability/transport/cotp" }
+xmip-transport-db2 = { package = "xmip-core-transport-db2", path = "module/core/capability/transport/db2" }
+xmip-transport-dds = { package = "xmip-core-transport-dds", path = "module/core/capability/transport/dds" }
+xmip-transport-dhcp = { package = "xmip-core-transport-dhcp", path = "module/core/capability/transport/dhcp" }
+xmip-transport-dicom = { package = "xmip-core-transport-dicom", path = "module/core/capability/transport/dicom" }
+xmip-transport-dnp3 = { package = "xmip-core-transport-dnp3", path = "module/core/capability/transport/dnp3" }
+xmip-transport-dns = { package = "xmip-core-transport-dns", path = "module/core/capability/transport/dns" }
+xmip-transport-ethercat = { package = "xmip-core-transport-ethercat", path = "module/core/capability/transport/ethercat" }
+xmip-transport-ethernet = { package = "xmip-core-transport-ethernet", path = "module/core/capability/transport/ethernet" }
+xmip-transport-ethernet-ip = { package = "xmip-core-transport-ethernet-ip", path = "module/core/capability/transport/ethernet-ip" }
+xmip-transport-file = { package = "xmip-core-transport-file", path = "module/core/capability/transport/file" }
+xmip-transport-ftp = { package = "xmip-core-transport-ftp", path = "module/core/capability/transport/ftp" }
+xmip-transport-google-cloud-storage = { package = "xmip-core-transport-google-cloud-storage", path = "module/core/capability/transport/google-cloud-storage" }
+xmip-transport-google-pub-sub = { package = "xmip-core-transport-google-pub-sub", path = "module/core/capability/transport/google-pub-sub" }
+xmip-transport-hart = { package = "xmip-core-transport-hart", path = "module/core/capability/transport/hart" }
+xmip-transport-http = { package = "xmip-core-transport-http", path = "module/core/capability/transport/http" }
+xmip-transport-ibm-mq = { package = "xmip-core-transport-ibm-mq", path = "module/core/capability/transport/ibm-mq" }
+xmip-transport-iec-60870-5-104 = { package = "xmip-core-transport-iec-60870-5-104", path = "module/core/capability/transport/iec-60870-5-104" }
+xmip-transport-iec-61850 = { package = "xmip-core-transport-iec-61850", path = "module/core/capability/transport/iec-61850" }
+xmip-transport-imap = { package = "xmip-core-transport-imap", path = "module/core/capability/transport/imap" }
+xmip-transport-io-link = { package = "xmip-core-transport-io-link", path = "module/core/capability/transport/io-link" }
+xmip-transport-iso-tp = { package = "xmip-core-transport-iso-tp", path = "module/core/capability/transport/iso-tp" }
+xmip-transport-j1939 = { package = "xmip-core-transport-j1939", path = "module/core/capability/transport/j1939" }
+xmip-transport-kafka = { package = "xmip-core-transport-kafka", path = "module/core/capability/transport/kafka" }
+xmip-transport-knx = { package = "xmip-core-transport-knx", path = "module/core/capability/transport/knx" }
+xmip-transport-lorawan = { package = "xmip-core-transport-lorawan", path = "module/core/capability/transport/lorawan" }
+xmip-transport-m-bus = { package = "xmip-core-transport-m-bus", path = "module/core/capability/transport/m-bus" }
+xmip-transport-mariadb = { package = "xmip-core-transport-mariadb", path = "module/core/capability/transport/mariadb" }
+xmip-transport-mdns = { package = "xmip-core-transport-mdns", path = "module/core/capability/transport/mdns" }
+xmip-transport-mllp = { package = "xmip-core-transport-mllp", path = "module/core/capability/transport/mllp" }
+xmip-transport-modbus = { package = "xmip-core-transport-modbus", path = "module/core/capability/transport/modbus" }
+xmip-transport-mqtt = { package = "xmip-core-transport-mqtt", path = "module/core/capability/transport/mqtt" }
+xmip-transport-msmq = { package = "xmip-core-transport-msmq", path = "module/core/capability/transport/msmq" }
+xmip-transport-mssql = { package = "xmip-core-transport-mssql", path = "module/core/capability/transport/mssql" }
+xmip-transport-mysql = { package = "xmip-core-transport-mysql", path = "module/core/capability/transport/mysql" }
+xmip-transport-named-pipe = { package = "xmip-core-transport-named-pipe", path = "module/core/capability/transport/named-pipe" }
+xmip-transport-nats = { package = "xmip-core-transport-nats", path = "module/core/capability/transport/nats" }
+xmip-transport-nats-jetstream = { package = "xmip-core-transport-nats-jetstream", path = "module/core/capability/transport/nats-jetstream" }
+xmip-transport-nfs = { package = "xmip-core-transport-nfs", path = "module/core/capability/transport/nfs" }
+xmip-transport-obd-ii = { package = "xmip-core-transport-obd-ii", path = "module/core/capability/transport/obd-ii" }
+xmip-transport-opc-ua = { package = "xmip-core-transport-opc-ua", path = "module/core/capability/transport/opc-ua" }
+xmip-transport-oracle = { package = "xmip-core-transport-oracle", path = "module/core/capability/transport/oracle" }
+xmip-transport-peppol = { package = "xmip-core-transport-peppol", path = "module/core/capability/transport/peppol" }
+xmip-transport-pop3 = { package = "xmip-core-transport-pop3", path = "module/core/capability/transport/pop3" }
+xmip-transport-postgresql = { package = "xmip-core-transport-postgresql", path = "module/core/capability/transport/postgresql" }
+xmip-transport-profinet = { package = "xmip-core-transport-profinet", path = "module/core/capability/transport/profinet" }
+xmip-transport-rabbitmq = { package = "xmip-core-transport-rabbitmq", path = "module/core/capability/transport/rabbitmq" }
+xmip-transport-redis-streams = { package = "xmip-core-transport-redis-streams", path = "module/core/capability/transport/redis-streams" }
+xmip-transport-redpanda = { package = "xmip-core-transport-redpanda", path = "module/core/capability/transport/redpanda" }
+xmip-transport-s7comm = { package = "xmip-core-transport-s7comm", path = "module/core/capability/transport/s7comm" }
+xmip-transport-secs-gem = { package = "xmip-core-transport-secs-gem", path = "module/core/capability/transport/secs-gem" }
+xmip-transport-serial = { package = "xmip-core-transport-serial", path = "module/core/capability/transport/serial" }
+xmip-transport-sftp = { package = "xmip-core-transport-sftp", path = "module/core/capability/transport/sftp" }
+xmip-transport-smb = { package = "xmip-core-transport-smb", path = "module/core/capability/transport/smb" }
+xmip-transport-smtp = { package = "xmip-core-transport-smtp", path = "module/core/capability/transport/smtp" }
+xmip-transport-snmp = { package = "xmip-core-transport-snmp", path = "module/core/capability/transport/snmp" }
+xmip-transport-sqlite = { package = "xmip-core-transport-sqlite", path = "module/core/capability/transport/sqlite" }
+xmip-transport-ssdp = { package = "xmip-core-transport-ssdp", path = "module/core/capability/transport/ssdp" }
+xmip-transport-syslog = { package = "xmip-core-transport-syslog", path = "module/core/capability/transport/syslog" }
+xmip-transport-tcp = { package = "xmip-core-transport-tcp", path = "module/core/capability/transport/tcp" }
+xmip-transport-thread = { package = "xmip-core-transport-thread", path = "module/core/capability/transport/thread" }
+xmip-transport-udp = { package = "xmip-core-transport-udp", path = "module/core/capability/transport/udp" }
+xmip-transport-uds = { package = "xmip-core-transport-uds", path = "module/core/capability/transport/uds" }
+xmip-transport-unix-socket = { package = "xmip-core-transport-unix-socket", path = "module/core/capability/transport/unix-socket" }
+xmip-transport-webdav = { package = "xmip-core-transport-webdav", path = "module/core/capability/transport/webdav" }
+xmip-transport-websocket = { package = "xmip-core-transport-websocket", path = "module/core/capability/transport/websocket" }
+xmip-transport-wireless-hart = { package = "xmip-core-transport-wireless-hart", path = "module/core/capability/transport/wireless-hart" }
+xmip-transport-wireless-m-bus = { package = "xmip-core-transport-wireless-m-bus", path = "module/core/capability/transport/wireless-m-bus" }
+xmip-transport-zigbee = { package = "xmip-core-transport-zigbee", path = "module/core/capability/transport/zigbee" }
+xmip_core_abi = { package = "xmip-core-abi", path = "module/foundation/abi" }
+xml_schema = { package = "xmip-core-contract-xml-schema", path = "module/core/capability/contract/xml-schema" }
+xpath = { package = "xmip-core-path-xpath", path = "module/core/capability/path/xpath" }
+yaml = { package = "xmip-core-contract-yaml", path = "module/core/capability/contract/yaml" }

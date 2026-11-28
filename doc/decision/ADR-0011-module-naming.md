@@ -129,7 +129,7 @@ Bare `edi` and `hl7` are therefore not contract standards. `edi-x12`, `edi-edifa
 
 ### Native implementations are still implementations
 
-Xmip’s own path model — dot navigation, index navigation and predicates — is implemented by `xmip-core-path-dot` and `xmip-core-path-index`, and its predicates by the expression language in `xmip-core-path` itself (ADR-0066). Being native means `provider = core`, not that the module is absent from the namespace.
+Xmip’s own path model — dot navigation, index navigation and predicates — is implemented by `xmip-core-path-dot` and `xmip-core-path-index`, and its predicates by the expression language, a capability of its own, `xmip-core-expression` (ADR-0066, amendment 2026-11-28). Being native means `provider = core`, not that the module is absent from the namespace.
 
 ### The `core` provider is the endorsement boundary
 

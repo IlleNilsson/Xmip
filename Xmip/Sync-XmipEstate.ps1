@@ -25,11 +25,19 @@
 
 .EXAMPLE
     Sync-XmipEstate -Workflow
+
+.EXAMPLE
+    Sync-XmipEstate -Cargo
 #>
 # The domains that start Xmip on a node: linked into the node binary, one of
 # them per estate, and so mounted with no provider in the path. Every other
 # domain is something a provider ships, and mounts under that provider.
 [string[]] $script:XmipNodeDomain = @('foundation', 'platform')
+
+# The domain of what shows how a module is built on Xmip and is no part of
+# it, and the folder at the root it mounts in (ADR-0016, amendment
+# 2026-11-28).
+[string] $script:XmipExampleDomain = 'example'
 
 
 <#
@@ -72,6 +80,7 @@
         xmip-<provider>-transport        ->  module/<provider>/capability/transport
         xmip-<provider>-transport-kafka  ->  kafka, inside that
         xmip-core-library-asn1           ->  module/core/library/asn1
+        xmip-core-contract-go            ->  example/contract-go, an Example
 #>
 function Get-XmipMountPath {
     [CmdletBinding()]
@@ -97,6 +106,27 @@ function Get-XmipMountPath {
         return [pscustomobject]@{ Owner = ''; Mount = $declaredMount }
     }
 
+    # The provider is the second segment: xmip-<provider>-<module>.
+    [string[]] $segment = $name.Split('-')
+    [string] $provider = if ($segment.Count -ge 2 -and $segment[0] -ieq 'xmip') {
+        $segment[1]
+    }
+    else {
+        ''
+    }
+
+    [hashtable] $asked = @{ Name = 'architecturalDomain'; Default = 'Capability' }
+    [string] $domain = [string](Get-XmipPropertyValue -Object $Repository @asked).ToLowerInvariant()
+
+    # An example is no part of Xmip and no module: by its domain it mounts at
+    # example/<leaf>, the name without its provider, beside module/, sdk/ and
+    # template/ (ADR-0016, amendment 2026-11-28), and is owned by no module
+    # its name happens to begin with.
+    if ($domain -eq $script:XmipExampleDomain) {
+        [string] $named = ($segment | Select-Object -Skip 2) -join '-'
+        return [pscustomobject]@{ Owner = ''; Mount = "$script:XmipExampleDomain/$named" }
+    }
+
     [string] $owner = Get-XmipDeclaredOwner -Name $name -Declared $Declared
     [string] $leaf = $name
 
@@ -107,23 +137,10 @@ function Get-XmipMountPath {
         $leaf = $name.Substring(5)
     }
 
-    # The provider is the second segment: xmip-<provider>-<module>.
-    [string[]] $segment = $name.Split('-')
-    [string] $provider = if ($segment.Count -ge 2 -and $segment[0] -ieq 'xmip') {
-        $segment[1]
-    }
-    else {
-        ''
-    }
-
     # xmip-core is both a repository and the prefix every module carries, so a
     # module resolves to it. Modules mount under the estate root regardless —
     # ADR-0016 has Xmip pin every module directly.
     if (('' -eq $owner) -or ($owner -ieq 'xmip-core')) {
-        [hashtable] $asked = @{ Name = 'architecturalDomain'; Default = 'Capability' }
-        [string] $domain = [string](
-            Get-XmipPropertyValue -Object $Repository @asked
-        ).ToLowerInvariant()
 
         # The leaf is what follows the provider, whoever the provider is:
         # xmip-core-transport is transport, and so is any other provider's.
@@ -150,6 +167,10 @@ function Sync-XmipEstate {
         [switch] $Create,
         [switch] $Configure,
         [switch] $Compose,
+        # The estate's one Cargo workspace written from its crates: the
+        # root's members and [workspace.dependencies], each member's estate
+        # dependencies taken from it, and no [patch] (Update-XmipWorkspace;
+        # ADR-0005, amendment 2026-11-28). Local; alone, GitHub is not asked.
         # Not -Crate. One letter from -Create on the same cmdlet, where a typo
         # would create repositories instead of rewriting Cargo.toml.
         [switch] $Cargo,
@@ -186,10 +207,11 @@ function Sync-XmipEstate {
 
     if ($Brand) { Write-XmipBrand }
     if ($Workflow) { Write-XmipWorkflow }
+    if ($Cargo) { Update-XmipWorkspace -RepositoryRoot (Get-XmipRepositoryRoot) }
 
-    # Alone, either is done here; the rest reads the manifest and GitHub.
-    [bool] $rest = $Create -or $Configure -or $Compose -or $Cargo -or $Report
-    if (($Brand -or $Workflow) -and -not $rest) { return }
+    # Alone, each is done here; the rest reads the manifest and GitHub.
+    [bool] $rest = $Create -or $Configure -or $Compose -or $Report
+    if (($Brand -or $Workflow -or $Cargo) -and -not $rest) { return }
 
     # The GitHub connection every helper is handed, rather than one they read
     # out of this function's scope. They were nested here and read it
@@ -245,7 +267,6 @@ function Sync-XmipEstate {
         Set-XmipRepository -Manifest $manifest -Report $drift -GitHub $GitHub -Only $Only
     }
     if ($Compose) { Invoke-XmipCompose -Manifest $manifest -Actual $actual }
-    if ($Cargo) { Invoke-XmipCargo }
 
     if (-not $operating) { Write-XmipStep -Message 'Reporting only; no operation selected.' }
 

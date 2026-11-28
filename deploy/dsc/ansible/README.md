@@ -11,8 +11,9 @@ cross platform, so is Blazor, MAUI and DSC. We keep Ansible and other tech
 for familiarity and support for the project.*). It is a template for
 creating Xmip environments, never a lab.
 
-`cluster.xmip` is the System Tests' own,
-`test/core/system-test/configuration/cluster.xmip`, the one file a test runs
+The cluster's file is the Reference Environment,
+`test/core/system-test/configuration/Xmip-reference-environment.xmip`, the one
+file a test runs
 whether its nodes are processes on one computer or on virtual machines of
 their own (ADR-0028, amendments 2026-10-21 and 2026-11-25). Which node runs
 on which machine is its `[environment]` table's, which no node is given
@@ -164,7 +165,7 @@ bin on `PATH`, and `deploy/dsc/README.md`'s *Before the first run*.
 ## Running it
 
 ```text
-pwsh -Command "Import-Module /mnt/d/Repos/Xmip/Xmip/Xmip.psd1; Deploy-XmipEnvironment -Path /mnt/d/Repos/Xmip/test/core/system-test/configuration/cluster.xmip -Cluster CL1 -Technology ansible"
+pwsh -Command "Import-Module /mnt/d/Repos/Xmip/Xmip/Xmip.psd1; Deploy-XmipEnvironment -Path /mnt/d/Repos/Xmip/test/core/system-test/configuration/Xmip-reference-environment.xmip -Cluster CL1 -Technology ansible"
 ```
 
 on a Linux host, the hypervisor its own, libvirt. `-WhatIf` runs the playbook with

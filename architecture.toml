@@ -46,6 +46,7 @@ Capabilities = "Things Xmip does."
 Technology = "How a capability is implemented."
 Operations = "Running and governing Xmip."
 Platform = "Platform-wide runtime services."
+Example = "What shows how a module is built on Xmip; no part of it."
 
 [crate]
 primaryLanguage = "rust"
@@ -953,11 +954,11 @@ dependency = ["xmip-core-library-codec"]
     dependency = ["xmip-core-contract", "xmip-core-stream", "xmip-core-library-codec"]
 
   [xmip.core.path]
-  description = "Common path-expression and addressing functionality, and Xmip's one expression language (ADR-0066)."
+  description = "Common path-expression and addressing functionality: the path languages, the one engine compiling a Path through them, the content a Stream is parsed into once, the rewrite, and the parser cursor the languages share."
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   maturity = "scaffolded"
-  dependency = ["xmip-core", "xmip-core-contract", "xmip-core-stream", "xmip-core-library-codec"]
+  dependency = ["xmip-core", "xmip-core-contract", "xmip-core-stream"]
     [xmip.core.path.dot]
     maturity = "scaffolded"
     dependency = ["xmip-core", "xmip-core-contract"]
@@ -994,6 +995,16 @@ dependency = ["xmip-core-library-codec"]
     maturity = "scaffolded"
     description = "XPath path technology: XPath 1.0 read and written over an XML Stream, its prefixes bound by the Path's namespaces, and the evaluation Schematron's rules run through; the document read by the estate's one XML reader and evaluated by sxd-xpath over sxd-document's model filled from it, the one crate that names either. A xmip-core-path technology."
     dependency = ["xmip-core", "xmip-core-contract", "xmip-core-stream", "xmip-core-library-codec"]
+
+  # A capability of its own since 2026-11-28 (ADR-0066, amendment of that
+  # date): routing forming a Subscription, a Transform and a Work Process
+  # use it directly, and it uses path, as promote and demote do.
+  [xmip.core.expression]
+  description = "Xmip's one expression language (ADR-0066): the grammar a Subscription's filter, a Transform's conditions and a Work Process's decisions are written in, compiled once into a tree and decided from it in three truths."
+  architecturalDomain = "Capability"
+  repositoryRole = "common-capability"
+  maturity = "scaffolded"
+  dependency = ["xmip-core-path", "xmip-core-contract", "xmip-core-library-codec"]
 
   [xmip.core.prepare]
   description = "Preparation: the standard prepare units, on a Stream's bytes, streamed, at receive, process and send."
@@ -1046,6 +1057,15 @@ dependency = ["xmip-core-library-codec"]
     maturity = "reserved"
     [xmip.core.transform.xquery]
     maturity = "reserved"
+    # Mounted and a member of the workspace, linked by nothing: no unit and
+    # no node build takes it, as its url can look a name up over the network
+    # (open problem 53; the owner, 2026-11-28, "Mount the rest, they should
+    # have code").
+    [xmip.core.transform.xrust]
+    maturity = "scaffolded"
+    description = "The xrust XSLT engine for the Stylesheet unit, XSLT 1.0: a stylesheet compiled once per thread, includes read from beside it and never over a network. Linked by nothing: its url can look a name up over the network (open problem 53). A xmip-core-transform technology."
+    specification = "W3C XSLT 1.0, through xrust"
+    dependency = []
 
   [xmip.core.unit]
   description = "The standard units: Xmip's built-in module xmip of compiled units at receive, process and send, each implemented in its capability and opened here with the technologies it chooses among."
@@ -1208,7 +1228,7 @@ dependency = ["xmip-core-library-codec"]
   dependency = ["xmip-core", "xmip-core-context"]
     [xmip.core.authorize.abac]
     maturity = "scaffolded"
-    dependency = ["xmip-core", "xmip-core-context", "xmip-core-path"]
+    dependency = ["xmip-core", "xmip-core-context", "xmip-core-expression"]
     [xmip.core.authorize.acl]
     maturity = "scaffolded"
     dependency = ["xmip-core", "xmip-core-context"]
@@ -1261,7 +1281,7 @@ dependency = ["xmip-core-library-codec"]
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   maturity = "scaffolded"
-  dependency = ["xmip-core-context", "xmip-core-message", "xmip-core-path", "xmip-core"]
+  dependency = ["xmip-core-context", "xmip-core-message", "xmip-core-expression", "xmip-core-path", "xmip-core"]
     [xmip.core.route.content]
     maturity = "scaffolded"
     dependency = ["xmip-core-message", "xmip-core-path", "xmip-core-path-edi"]
@@ -1289,10 +1309,10 @@ dependency = ["xmip-core-library-codec"]
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   maturity = "scaffolded"
-  dependency = ["xmip-core", "xmip-core-node", "xmip-core-path", "xmip-core-assign", "xmip-core-library-codec", "xmip-core-abi"]
+  dependency = ["xmip-core", "xmip-core-node", "xmip-core-expression", "xmip-core-assign", "xmip-core-library-codec", "xmip-core-abi"]
     [xmip.core.process.bpmn]
     maturity = "scaffolded"
-    dependency = ["xmip-core-process", "xmip-core", "xmip-core-assign", "xmip-core-path", "xmip-core-library-codec"]
+    dependency = ["xmip-core-process", "xmip-core", "xmip-core-assign", "xmip-core-expression", "xmip-core-library-codec"]
 
   [xmip.core.send]
   description = "Common Send Port, Send Group and Send Location functionality."
@@ -1411,6 +1431,17 @@ dependency = ["xmip-core-library-codec"]
     [xmip.core.report.sql]
     maturity = "reserved"
 
+  # Diagnosis's one home in the estate (ADR-0058, amendment 2026-09-22:
+  # "diagnosis code shall be moved to it if there are any"), mounted again
+  # on 2026-11-28 before its first code: the owner, that day, "Mount the
+  # rest, they should have code" (ADR-0058, amendment of that date).
+  [xmip.core.diagnose]
+  description = "Diagnosis: why a running node, Journey or endpoint is in the state it is, by its connectivity, name resolution, certificates and firewall reachability. It observes the path and does not carry it. No code yet."
+  architecturalDomain = "Operation"
+  repositoryRole = "operational-capability"
+  maturity = "scaffolded"
+  dependency = []
+
   [xmip.core.retain]
   description = "Holds what a gate refused and what policy says to keep. In the message path: a Message waits for it."
   architecturalDomain = "Capability"
@@ -1507,6 +1538,17 @@ dependency = ["xmip-core-library-codec"]
   # It decides when; the runtime waits and acts.
   [xmip.core.schedule]
   description = "Decides when work runs: a Receive Location's rest before it asks its transport again (poll, sweep, backoff, drain) and when a Send Port queue's earliest retry is due, kept per queue."
+  architecturalDomain = "Capability"
+  repositoryRole = "common-capability"
+  maturity = "scaffolded"
+  dependency = []
+
+  # Migration's one home in the estate (ADR-0058, amendment 2026-09-22:
+  # "xmip-core-migrate is the home for migration code"), mounted again on
+  # 2026-11-28 before its first code, at the domain ADR-0058 gave it when
+  # it was unmounted (ADR-0058, amendment of that date).
+  [xmip.core.migrate]
+  description = "Migration: an integration built on another platform moved onto Xmip, the other product's configuration read into Xmip artifacts with a report of what has no equivalent. No code yet."
   architecturalDomain = "Capability"
   repositoryRole = "common-capability"
   maturity = "scaffolded"
@@ -1614,6 +1656,9 @@ dependency = ["xmip-core-library-codec"]
       "xmip-core-configure",
       "xmip-core-context",
       "xmip-core-event",
+      # A test's Subscription written as its filter's expression, behind
+      # test-support alone (`fixture::subscription`).
+      "xmip-core-expression",
       "xmip-core-identify",
       "xmip-core-journey",
       "xmip-core-library-codec",
@@ -1628,9 +1673,6 @@ dependency = ["xmip-core-library-codec"]
       "xmip-core-node",
       "xmip-core-observe",
       "xmip-core-party",
-      # A test's Subscription written as its filter's expression, behind
-      # test-support alone (`fixture::subscription`).
-      "xmip-core-path",
       "xmip-core-persist",
       # The Work Process step runs a unit's flow (ADR-0066, amendment
       # 2026-10-22): the capability, never a design format of it.
@@ -1748,11 +1790,13 @@ dependency = ["xmip-core-library-codec"]
       "xmip-core-configure",
       "xmip-core-context",
       "xmip-core-event",
+      # The designer's filter rows, a view of the expression's tree
+      # (ADR-0066 clause 3).
+      "xmip-core-expression",
       "xmip-core-library-codec",
       "xmip-core-library-tls",
       "xmip-core-node",
       "xmip-core-observe",
-      "xmip-core-path",
       "xmip-core-persist",
       "xmip-core-provision",
       "xmip-core-route",
@@ -2020,6 +2064,48 @@ dependency = ["xmip-core-library-codec"]
   maturity = "scaffolded"
   dependency = ["xmip-core-library-codec", "xmip-core-library-asn1"]
   mount = "module/core/library/tls"
+
+# What shows a developer how a module is built on Xmip in another language:
+# no part of Xmip, linked, loaded and built by nothing of the estate (open
+# problem 236). Its domain says so, and an Example mounts at
+# example/<leaf>, beside module/, sdk/ and template/, the name without its
+# provider (ADR-0016, amendment 2026-11-28; the owner, 2026-11-28: "If a
+# repo is a sample it should be mounted under Xmip/example, I think the
+# word example is more used than sample"). Each declares its language, for
+# which no template is made, so Sync-XmipEstate -Workflow writes it none.
+# Go, Java and Python embed their runtime in the process that loads them,
+# which ADR-0018 (amendment 2026-10-05) keeps out of Xmip's own modules.
+  [xmip.core.contract-c_cpp]
+  description = "Example: a content contract authored in C and in C++, side by side, each behind the plain C table of the module boundary, xmip_module.h. Not part of Xmip."
+  architecturalDomain = "Example"
+  repositoryRole = "example"
+  maturity = "scaffolded"
+  primaryLanguage = "c"
+  dependency = []
+
+  [xmip.core.contract-go]
+  description = "Example: a content contract authored in Go, cgo exporting the judgment and a C bridge holding the table, built as a C shared library that starts the Go runtime in the process loading it. Not part of Xmip."
+  architecturalDomain = "Example"
+  repositoryRole = "example"
+  maturity = "scaffolded"
+  primaryLanguage = "go"
+  dependency = []
+
+  [xmip.core.contract-java]
+  description = "Example: a content contract authored in Java, a C shim hosting a JVM through JNI in the process loading it and forwarding the contract table. Not part of Xmip."
+  architecturalDomain = "Example"
+  repositoryRole = "example"
+  maturity = "scaffolded"
+  primaryLanguage = "java"
+  dependency = []
+
+  [xmip.core.contract-python]
+  description = "Example: a content contract authored in Python, a C shim embedding CPython in the process loading it and forwarding the contract table. Not part of Xmip."
+  architecturalDomain = "Example"
+  repositoryRole = "example"
+  maturity = "scaffolded"
+  primaryLanguage = "python"
+  dependency = []
 
 # What exercises Xmip, under the provider whose work it exercises. `test` is
 # the kind of work, not a provider: until 2026-09-23 it stood in the provider's

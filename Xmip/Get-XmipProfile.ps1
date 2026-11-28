@@ -136,9 +136,11 @@ function Get-XmipRootCargo {
             Features is every name in [features] but default. Linked maps a
             technology to the feature that links it: a feature listing
             `dep:<alias>` where [dependencies], or a platform's own
-            dependencies table, <alias> has package = "<technology>"
-            (transport-tcp links xmip-core-transport-tcp; audit links
-            xmip-core-audit-syslog on Unix).
+            dependencies table, names the estate's package <technology>
+            under <alias>, through the root's [workspace.dependencies]
+            (Resolve-XmipCargoPackage; transport-tcp links
+            xmip-core-transport-tcp; audit links xmip-core-audit-syslog on
+            Unix).
             Required is xmip-service's [[bin]] required-features, the one
             place that says what the program cannot be built without.
     #>
@@ -149,24 +151,25 @@ function Get-XmipRootCargo {
         [string] $Root
     )
 
-    $cargo = Read-XmipToml -Path (Join-Path $Root 'Cargo.toml')
+    [string] $manifest = Join-Path $Root 'Cargo.toml'
+    $cargo = Read-XmipToml -Path $manifest
     $features = Get-TomlValue -Node $cargo -Name 'features' -Default @{}
-    [object[]] $tables = @(Get-XmipCargoDependencyTable -Cargo $cargo)
+    [hashtable] $workspace = Get-XmipWorkspaceDependency -RepositoryRoot $Root
+    [hashtable] $packageOf = @{}
+
+    foreach ($entry in @(Read-XmipCargoDependency -Path $manifest)) {
+        if ($entry.Table -match '^(target\..+\.)?dependencies$') {
+            [hashtable] $named = @{ Key = $entry.Key; Pair = $entry.Pair; Workspace = $workspace }
+            $packageOf[$entry.Key] = Resolve-XmipCargoPackage @named
+        }
+    }
+
     [hashtable] $linked = @{}
 
     foreach ($feature in @(Get-TomlKey -Node $features)) {
         foreach ($item in @(Get-TomlValue -Node $features -Name $feature -Default @())) {
-            if ([string] $item -match '^dep:(.+)$') {
-                [string] $alias = $Matches[1]
-                $dependency = $tables |
-                    ForEach-Object { Get-TomlValue -Node $_ -Name $alias } |
-                    Where-Object { $null -ne $_ } |
-                    Select-Object -First 1
-                [string] $package = Get-TomlValue -Node $dependency -Name 'package' -Default ''
-
-                if ('' -ne $package) {
-                    $linked[$package] = $feature
-                }
+            if ([string] $item -match '^dep:(.+)$' -and $packageOf[$Matches[1]] -like 'xmip-*') {
+                $linked[$packageOf[$Matches[1]]] = $feature
             }
         }
     }

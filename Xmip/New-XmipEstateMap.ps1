@@ -33,6 +33,7 @@
     'Capability'
     'Operation'
     'Platform'
+    'Example'
 )
 
 # The column the generated prose wraps at. Under the hundred the style rules

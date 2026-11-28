@@ -151,14 +151,21 @@ function Read-XmipModuleManifest {
         $name = $Matches['name']
     }
 
-    # What its build needs, its tests' own dependencies left out: a test may
-    # use a module that builds on this one (node's tests read configure's
-    # test cluster, and configure reads node's stage words), which Cargo
-    # allows and which orders nothing (2026-10-22).
-    [string] $built = [regex]::Replace($text, '(?ms)^\[dev-dependencies\].*?(?=^\[|\z)', '')
-    [string[]] $builds = @(Get-XmipManifestPackage -Text $built)
+    # What its build needs, its tests' own dependencies left out, a
+    # platform's own too: a test may use a module that builds on this one
+    # (node's tests read configure's test cluster, and configure reads node's
+    # stage words), which Cargo allows and which orders nothing (2026-10-22).
+    [hashtable] $workspace = Get-XmipWorkspaceDependency -RepositoryRoot $RepositoryRoot
+    [pscustomobject[]] $entries = @(
+        Read-XmipCargoDependency -Path $manifest |
+            Where-Object { $_.Table -ne 'workspace.dependencies' }
+    )
+    [pscustomobject[]] $built = @(
+        $entries | Where-Object { $_.Table -notmatch 'dev-dependencies$' }
+    )
+    [string[]] $builds = @(Get-XmipManifestPackage -Entry $built -Workspace $workspace)
 
-    [string[]] $needs = @(Get-XmipManifestPackage -Text $text)
+    [string[]] $needs = @(Get-XmipManifestPackage -Entry $entries -Workspace $workspace)
 
     [pscustomobject]@{
         Package = $name; Needs = $needs; Builds = $builds; References = $references
@@ -168,35 +175,40 @@ function Read-XmipModuleManifest {
 function Get-XmipManifestPackage {
     <#
         .SYNOPSIS
-            The Xmip packages a Cargo.toml's text names as dependencies.
+            The Xmip packages a manifest's dependency entries name.
 
-        .PARAMETER Text
-            The manifest's text, or the part of it to read.
+        .PARAMETER Entry
+            The entries to read (Read-XmipCargoDependency).
+
+        .PARAMETER Workspace
+            The root's [workspace.dependencies], each key to its package
+            (Get-XmipWorkspaceDependency).
     #>
     [CmdletBinding()]
     [OutputType([string[]])]
     param(
         [Parameter(Mandatory)]
-        [AllowEmptyString()]
-        [string] $Text
+        [AllowEmptyCollection()]
+        [pscustomobject[]] $Entry,
+
+        [Parameter(Mandatory)]
+        [AllowEmptyCollection()]
+        [hashtable] $Workspace
     )
 
     # Any alias: a technology names its sibling `ethernet` or `iso_tp`, not
     # `xmip-...`. Matching only aliases that start with xmip landed ethercat
-    # before ethernet on 2026-09-11. What decides is the package.
+    # before ethernet on 2026-09-11. What decides is the package, which an
+    # entry taken from the workspace names through the root's.
     @(
-        [regex]::Matches($Text, '(?m)^\s*(?<alias>[A-Za-z0-9_-]+)\s*=\s*\{(?<body>[^}]*)\}') |
-            ForEach-Object {
-                [string] $body = $_.Groups['body'].Value
+        foreach ($each in $Entry) {
+            [hashtable] $named = @{ Key = $each.Key; Pair = $each.Pair; Workspace = $Workspace }
+            [string] $package = Resolve-XmipCargoPackage @named
 
-                if ($body -match 'package\s*=\s*"(?<package>[^"]+)"') {
-                    $Matches['package']
-                }
-                else {
-                    $_.Groups['alias'].Value
-                }
-            } |
-            Where-Object { $_ -like 'xmip*' }
+            if ($package -like 'xmip*') {
+                $package
+            }
+        }
     )
 }
 

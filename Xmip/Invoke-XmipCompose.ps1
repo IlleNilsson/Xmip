@@ -3,7 +3,8 @@
 
 <#
 .SYNOPSIS
-    Mounting the estate's repositories where the manifest says, and rewriting their Cargo.toml.
+    Mounting the estate's repositories where the manifest says, and the
+    workspace written over what is mounted.
 
 .DESCRIPTION
     Nested inside Sync-XmipEstate until 2026-09-22, which made that one function
@@ -84,63 +85,12 @@ function Invoke-XmipCompose {
 
     Write-XmipStep -Message $summary
 
-    if (0 -lt $added) {
-        Write-XmipStep -Message 'Review .gitmodules, then commit. Nothing was pushed.'
-    }
-}
-
-function Invoke-XmipCargo {
-    # Rewrites nothing that is already right, so it is safe to run twice.
-    [CmdletBinding()]
-    param()
-
-    Assert-XmipCommand -Name 'git'
-
-    [string] $root = Get-XmipRepositoryRoot
-    [hashtable] $mountOf = Get-XmipMountedPath -Root $root
-    [hashtable] $pinnedAt = Get-XmipPinnedCommit -Root $root -MountOf $mountOf
-
-    [hashtable] $edits = @{}
-    [int] $revs = 0
-
-    [object[]] $findings = @(Get-XmipCrateFinding -Root $root -MountOf $mountOf -PinnedAt $pinnedAt)
-
-    foreach ($finding in $findings) {
-        Write-Host ('  {0,-28} {1} -> {2}' -f $finding.Module, $finding.Was, $finding.Is)
-
-        if (-not $edits.ContainsKey($finding.File)) {
-            $edits[$finding.File] = @{}
-        }
-
-        $edits[$finding.File][$finding.Line] = $finding.New
-
-        $revs++
-    }
-
-    foreach ($file in $edits.Keys) {
-        if (-not $PSCmdlet.ShouldProcess($file, 'Rewrite Cargo.toml')) {
-            continue
-        }
-
-        [string[]] $lines = @(Get-Content -LiteralPath $file)
-
-        foreach ($line in $edits[$file].Keys) {
-            $lines[$line - 1] = $edits[$file][$line]
-        }
-
-        Set-Content -LiteralPath $file -Value $lines -Encoding utf8NoBOM
-    }
-
-    # Every crate mounted is a member of the estate's one workspace, patched
-    # to its folder; a crate keeps no [workspace] of its own and takes what
-    # every crate shares from the root, so it builds only here (ADR-0016,
-    # amendments 2026-11-20 and 2026-11-27).
+    # Every crate mounted is a member of the estate's one workspace, and every
+    # estate dependency takes its crate from the root by its mount (ADR-0016,
+    # amendments 2026-11-20 and 2026-11-27; ADR-0005, amendment 2026-11-28).
     Update-XmipWorkspace -RepositoryRoot $root
 
-    Write-XmipStep -Message "Cargo: $revs dependency revs in $($edits.Count) files"
-
-    if (0 -lt $edits.Count) {
-        [string] $note = 'Each module is its own repository. Commit and push them individually.'
-        Write-XmipStep -Message $note
+    if (0 -lt $added) {
+        Write-XmipStep -Message 'Review .gitmodules, then commit. Nothing was pushed.'
     }
 }

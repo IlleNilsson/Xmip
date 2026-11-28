@@ -53,8 +53,9 @@ function Publish-XmipChange {
             comes from there.
 
             **The whole tree verifies before anything lands.** The estate is one
-            Cargo workspace whose committed [patch] resolves every estate crate
-            to its working tree (ADR-0016, amendment 2026-11-20), so every
+            Cargo workspace whose crates depend on each other by path, each its
+            working tree (ADR-0016, amendment 2026-11-20; ADR-0005, amendment
+            2026-11-28), so every
             module verifies against its siblings as they are on disk, pushed or
             not. Test-XmipChangeTree runs its parts side by side, Rust
             (Test-XmipRustChange), .NET (Test-XmipDotnetChange) and the root's
