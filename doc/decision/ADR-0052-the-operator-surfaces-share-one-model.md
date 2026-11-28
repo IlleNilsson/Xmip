@@ -3340,3 +3340,17 @@ of this record.
   `operate::surface::cluster_named`; ADR-0028, amendment 2026-11-28). The
   link a chooser draws keeps the run's name, which the address carries.
   Tested in `ClusterNamedTest`.
+
+## Amendment, 2026-11-28: a cluster is named by its file
+
+The owner, 2026-11-28: *Cluster name CT rolled by, that is not what we
+want*; *CT should not exist* (ADR-0028, amendment 2026-11-28). A cluster's
+name is the one its file declares, so the rulings of this record that a
+roll's `-Cluster` is required and names the cluster, and that two rolls
+under two typed names are two clusters side by side, read as that
+amendment says: no command a person types names a cluster, a cluster rolls
+once on a computer, and two clusters at once are two files (open problem
+249). The cluster in view, the amendment above, is shown by the same rule,
+its tooltip naming the short name only where it is not the cluster's name,
+and the link a chooser draws keeps the cluster's name, which the address
+carries.

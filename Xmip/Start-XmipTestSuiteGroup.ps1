@@ -194,9 +194,9 @@ function Start-XmipTestSuiteGroup {
             pattern chose the group rather than an operator naming one suite.
 
             A switch a suite of Xmip's own does not take is dropped for it
-            rather than refused — -Suite * -Cluster <cluster> is not a mistake
-            about -Cluster; it is a roll on that cluster with the estate's
-            files beside it (Get-XmipSuiteSwitchForeign). The demo readiness
+            rather than refused — -Suite * -Rounds 1 is not a mistake about
+            -Rounds; it is a roll of one round with the estate's files beside
+            it (Get-XmipSuiteSwitchForeign). The demo readiness
             check is never in a group: a pattern does not select it
             (Get-XmipNamedTestSuite). A provider's command keeps everything,
             since only the provider knows what its command takes.

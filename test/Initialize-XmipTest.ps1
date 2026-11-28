@@ -82,10 +82,11 @@ function Get-XmipTestCluster {
 
         .DESCRIPTION
         What the Rust tests read through configure's fixture and the .NET
-        tests through TestCluster: the file XMIP_TEST_CLUSTER names, else the
-        estate's test/cluster.xmip. A test names a node by its place here, never
-        by a literal (the owner, 2026-10-03). Throws when the file is not
-        there or names no cluster or no node.
+        tests through TestCluster: the Reference Environment, the one cluster
+        every test runs against, named as its file names it (ADR-0028,
+        amendment 2026-11-28). A test names a node by its role or its place
+        here, never by a literal (the owner, 2026-10-03). Throws when the file
+        is not there or names no cluster or no node.
     #>
     [CmdletBinding()]
     [OutputType([pscustomobject])]

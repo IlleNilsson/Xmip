@@ -33,8 +33,8 @@ every node in it is optional, and Xmip runs on one node with all roles.
 
 Slicing gives no node the table (ADR-0031, the second amendment of
 2026-11-25), and the table names no cluster, no machine's address and no
-absolute path: the command is given the cluster, and the host's facts are
-its defaults (*The command*, below).
+absolute path: the environment is named for the cluster the file declares,
+and the host's facts are the command's defaults (*The command*, below).
 
 | Key | Is |
 | --- | --- |
@@ -145,11 +145,12 @@ through, the first Hyper-V run shows.
 ## The command
 
 ```powershell
-Deploy-XmipEnvironment -Path D:\Repos\Xmip\test\core\system-test\configuration\Xmip-reference-environment.xmip -Cluster CL1
+Deploy-XmipEnvironment -Path D:\Repos\Xmip\test\core\system-test\configuration\Xmip-reference-environment.xmip
 ```
 
-`-Path`, the cluster file, and `-Cluster`, its name, are required: the file
-names no cluster (ADR-0028, amendment 2026-10-21). On Windows the command
+`-Path`, the cluster file, is required, and the environment is named for
+the cluster that file declares: its `[service] cluster_name`, or, where it
+declares none, its `[service] short_name`. On Windows the command
 runs in an elevated Xmip PowerShell Console, and an unelevated run is
 refused, naming one; it never starts one. Everything else is a default,
 and what the command cannot choose is given once, as a parameter, and kept

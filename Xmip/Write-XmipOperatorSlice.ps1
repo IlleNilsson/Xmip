@@ -7,7 +7,7 @@ function Write-XmipOperatorSlice {
         .SYNOPSIS
             operator.xmip beside an authority's folder: the slice of the node
             a cluster file declares [provision.operator] for, found by that
-            table and never by its name, sliced as -Cluster names the cluster
+            table and never by its name, sliced as the cluster its file names
             and signed by that authority through xmip_cluster_signed_slice_v1;
             its path. A person's request is signed by it with the operator
             module's own cmdlet: New-XmipCertificate -Request <operator.csr>
@@ -24,7 +24,7 @@ function Write-XmipOperatorSlice {
             The cluster file.
 
         .PARAMETER Cluster
-            The cluster's name.
+            The cluster's name, as the file declares it (Get-XmipClusterName).
 
         .PARAMETER Authority
             The authority's folder, named authority: the folder the trust

@@ -103,12 +103,12 @@ function Format-XmipRollingNow {
 function Select-XmipTestRoll {
     <#
         .SYNOPSIS
-            The runs -Suite, -Cluster and -Test pick together, or a refusal.
+            The runs -Suite and -Test pick together, or a refusal.
 
         .DESCRIPTION
             None given is every run. -Suite picks by the suite a run runs,
             read as Start-XmipTest reads it, so Estate and Core.Estate are
-            one suite. -Cluster picks by the cluster a run rolls as. -Test
+            one suite. -Test
             picks the runs that drive a matching test, and then refuses every
             one of them that also drives a test not named, since stopping it
             would stop that test too. Any filter
@@ -120,9 +120,6 @@ function Select-XmipTestRoll {
 
         .PARAMETER Running
             Every run, from Get-XmipTestStatus.
-
-        .PARAMETER Cluster
-            A cluster name or pattern; empty for any.
 
         .PARAMETER Test
             Test names or patterns; none for any.
@@ -136,11 +133,6 @@ function Select-XmipTestRoll {
         [Parameter(Mandatory = $true)]
         [AllowEmptyCollection()]
         [object[]] $Running,
-
-        [Parameter(Mandatory = $false)]
-        [AllowNull()]
-        [AllowEmptyString()]
-        [string] $Cluster,
 
         [Parameter(Mandatory = $false)]
         [AllowEmptyCollection()]
@@ -164,15 +156,6 @@ function Select-XmipTestRoll {
 
         if ($rolls.Count -eq 0) {
             Write-Error "REFUSED. No run of a suite matching $Suite is running. $there"
-            return
-        }
-    }
-
-    if (-not [string]::IsNullOrEmpty($Cluster)) {
-        $rolls = @($rolls | Where-Object { "$($_.Cluster)" -like $Cluster })
-
-        if ($rolls.Count -eq 0) {
-            Write-Error "REFUSED. No roll matches $Cluster. $there"
             return
         }
     }
@@ -213,13 +196,12 @@ function Select-XmipTestRoll {
     if ($refused.Count -gt 0) {
         Write-Error ("REFUSED. A run is stopped whole, and stopping these would stop " +
             "tests not named in -Test ${asked}: $($refused -join '; '). Name every " +
-            'test it runs, or stop the whole run with -Cluster alone. Nothing was stopped.')
+            'test it runs, or stop the whole run with -Suite or -Id. Nothing was stopped.')
         return
     }
 
     if ($picked.Count -eq 0) {
-        [string] $where = if ([string]::IsNullOrEmpty($Cluster)) { '' } else { " on $Cluster" }
-        Write-Error "REFUSED. No roll$where runs a test matching $asked. $there"
+        Write-Error "REFUSED. No roll runs a test matching $asked. $there"
         return
     }
 

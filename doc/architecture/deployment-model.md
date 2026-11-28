@@ -870,9 +870,10 @@ cluster runs on virtual machines is its own file's `[environment]` table,
 which slicing gives no node (ADR-0031, the second amendment of 2026-11-25):
 the network, the domain, every machine's defaults, the machines that differ
 or run no node, and the far ends. `Deploy-XmipEnvironment -Path <cluster
-file> -Cluster <name>` reads the same file, takes the technology and the
-hypervisor as parameters, msdsc and the host's kind where left out, and the
-host's facts as defaults it keeps, and writes the YAML each technology
+file>` reads the same file, names the environment for the cluster that file
+declares, takes the technology and the hypervisor as parameters, msdsc and
+the host's kind where left out, and the host's facts as defaults it keeps,
+and writes the YAML each technology
 reads, DSC's parameters or Ansible's inventory; the environment keeps the
 technology that made it, in its private state and in each libvirt
 machine's record, and refuses the other (ADR-0015, amendments 2026-11-11
@@ -890,10 +891,13 @@ is a need for two files?*; ADR-0028, amendments 2026-10-21 and
 2026-11-25). Its nodes, their roles, the Storage nodes each reaches, by
 name, the operate listener on the wildcard address, its certificate's paths
 relative to the configuration, and the table no node is given — and no
-cluster name, no machine's address, no absolute path. The environment names
-the cluster: the System Tests' run, `Deploy-XmipEnvironment -Cluster`, or
-`--cluster` on a machine, which the slice writes where the file names none
-(`configure::slice_named`). The System Tests' own file is such a file, the
+machine's address, no absolute path. The file names its cluster: its
+`[service] cluster_name`, or, where it declares none, its `[service]
+short_name`, one rule, `configure::cluster::cluster_name`, which every reader
+asks. A slice for another name is refused (`configure::slice_named`), so
+`--cluster` on a machine, and anything else that names the cluster, says the
+name the file declares, where the file declares one; a node's slice always
+carries `cluster_name`. The System Tests' own file is such a file, the
 System Tests and the Systems Tests run from it as local processes or on the
 virtual machines its table describes; the
 estate root's `cargo test --test deploy` slices it for every node it

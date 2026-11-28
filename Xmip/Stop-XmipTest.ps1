@@ -26,10 +26,12 @@ function Stop-XmipTest {
             its roll or the build that made them, takes its containers and
             their network away with it.
 
-            Which runs: those -Suite, -Cluster and -Test pick together, as
+            Which runs: those -Suite and -Test pick together, as
             Start-XmipTest was told them; those on the pipeline from
             Get-XmipTestStatus; those with the process ids in -Id; or every
-            run when nothing is named.
+            run when nothing is named. A cluster is named by its file and
+            rolls once on a computer, so no typed cluster name picks a run
+            (ADR-0028, amendment 2026-11-28).
 
             A run of Core.Estate, the estate's Pester suite, or of
             Core.Internal, is one pwsh of its own: stopping it ends that pwsh
@@ -62,16 +64,10 @@ function Stop-XmipTest {
         .PARAMETER Id
             The process ids of the runs to stop.
 
-        .PARAMETER Cluster
-            The runs to stop by the cluster each rolls as, wildcards allowed:
-            -Cluster C* stops every roll whose cluster begins with C. A
-            pattern no roll matches is REFUSED, naming the clusters rolling,
-            so nothing is stopped by accident and nothing silently is not.
-
         .PARAMETER Test
             The runs to stop by the tests they drive, as Start-XmipTest -Test
-            names them, wildcards allowed; with -Cluster, only on those
-            clusters. A run started without -Test drives its whole suite and
+            names them, wildcards allowed; with -Suite, only that suite's
+            runs. A run started without -Test drives its whole suite and
             is matched by every test in it. A pattern no running test matches
             is REFUSED, naming what is running.
 
@@ -96,10 +92,10 @@ function Stop-XmipTest {
             Stop-XmipTest -Suite Core.Estate
 
         .EXAMPLE
-            Stop-XmipTest -Cluster CL1 -Test RoundTrip
+            Stop-XmipTest -Test RoundTrip
 
         .EXAMPLE
-            Stop-XmipTest -Cluster 'C*'
+            Stop-XmipTest -Suite Core.System
 
         .EXAMPLE
             Get-XmipTestStatus | Where-Object -Property Stress -EQ -Value brutal |
@@ -128,38 +124,18 @@ function Stop-XmipTest {
         [ArgumentCompleter({
             param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
 
-            # The clusters rolling now, which are the only ones there are to
-            # stop (ADR-0055 clause 4).
-            Get-XmipTestStatus |
-                ForEach-Object { "$($_.Cluster)" } |
-                Where-Object { $_ -ne '' -and $_ -like "$wordToComplete*" } |
-                Sort-Object -Unique
-        })]
-        [string] $Cluster,
-
-        [Parameter(ParameterSetName = 'Filter')]
-        [SupportsWildcards()]
-        [ArgumentCompleter({
-            param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
-
-            # The tests running now, on the clusters already named if any. A
-            # completer runs in the caller's scope, so the whole-suite list is
-            # asked of the module (see Start-XmipTest's -Suite completer).
+            # The tests running now (ADR-0055 clause 4). A completer runs in
+            # the caller's scope, so the whole-suite list is asked of the
+            # module (see Start-XmipTest's -Suite completer).
             $module = Get-Module -Name Xmip | Select-Object -First 1
 
             if ($null -eq $module) {
                 return
             }
 
-            [string] $among = "$($fakeBoundParameters['Cluster'])"
-
             & $module {
-                param($Among)
-
-                Get-XmipTestStatus |
-                    Where-Object { $Among -eq '' -or "$($_.Cluster)" -like $Among } |
-                    ForEach-Object { Get-XmipTestOfRoll -Roll $_ }
-            } $among |
+                Get-XmipTestStatus | ForEach-Object { Get-XmipTestOfRoll -Roll $_ }
+            } |
                 Where-Object { $_ -like "$wordToComplete*" } |
                 Sort-Object -Unique
         })]
@@ -235,7 +211,6 @@ function Stop-XmipTest {
         if ($PSCmdlet.ParameterSetName -eq 'Filter') {
             [hashtable] $asked = @{
                 Running = $running
-                Cluster = $Cluster
                 Test    = $Test
                 Suite   = $Suite
             }

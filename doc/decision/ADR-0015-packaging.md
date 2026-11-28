@@ -2350,3 +2350,15 @@ transports.
 - **Sending is what the node proves**; Thread's and Zigbee's receive over
   an interface is what their far ends take with, and through a node
   receiving stays unproven, as for the rest (the amendment of 2026-11-25).
+
+## Amendment, 2026-11-28: the cluster's file names the environment
+
+The owner, 2026-11-28: *CT should not exist* (ADR-0028, amendment
+2026-11-28). `Deploy-XmipEnvironment -Path <cluster file>` takes no
+`-Cluster`: the environment is named for the cluster its file names, its
+`[service] cluster_name` or else its short name (`Get-XmipClusterName`,
+the runtime's `configure::cluster::cluster_name`), as `Xmip-<cluster>`,
+`XMIP-<name>` and `.local-work/deploy/<cluster>`; a file naming no cluster
+is refused. *The command* above, `-Path <cluster file> -Cluster <name>`,
+reads as `-Path <cluster file>`, and the WSL command a refusal names
+carries no `-Cluster` either.

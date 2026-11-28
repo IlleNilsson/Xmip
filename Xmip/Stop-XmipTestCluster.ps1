@@ -100,7 +100,7 @@ function Test-XmipClusterLocation {
             The location a process declared (ADR-0053).
 
         .PARAMETER Cluster
-            The cluster's name, as Start-XmipTest -Cluster named it.
+            The cluster's name, as its file declares it and its run record says it.
     #>
     [CmdletBinding()]
     [OutputType([bool])]

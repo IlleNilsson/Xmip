@@ -202,11 +202,11 @@ Describe 'Start, Get and Stop, and nothing else' {
 
     It 'runs every suite a pattern matched, in order, and says which are about to run' {
         # -Suite * is the System Tests and the estate, each started the way it
-        # starts. -Cluster belongs to the System Tests alone and is dropped for
+        # starts. -Rounds belongs to the System Tests alone and is dropped for
         # the Pester suite rather than refused, because a pattern chose the
         # group; an operator who named one suite is still refused.
         [string[]] $said = @(
-            Start-XmipTest -Suite * -Cluster $script:Cluster.Name -Rounds 1 -WhatIf 6>&1 |
+            Start-XmipTest -Suite * -Rounds 1 -WhatIf 6>&1 |
                 ForEach-Object { "$_" }
         )
 
@@ -312,10 +312,9 @@ Describe 'One switch runs the rolls as local processes, on virtual machines or a
         $command.DefaultParameterSet | Should -Be 'Process'
         $parameters.Keys | Should -Not -Contain 'Certificate'
 
-        [string] $cluster = $script:Cluster.Name
-        { Start-XmipTest -Cluster $cluster -Process -VirtualMachine -WhatIf -ErrorAction Stop } |
+        { Start-XmipTest -Process -VirtualMachine -WhatIf -ErrorAction Stop } |
             Should -Throw -ErrorId 'AmbiguousParameterSet*'
-        { Start-XmipTest -Cluster $cluster -VM -Container -WhatIf -ErrorAction Stop } |
+        { Start-XmipTest -VM -Container -WhatIf -ErrorAction Stop } |
             Should -Throw -ErrorId 'AmbiguousParameterSet*'
         { Start-XmipTest -Suite Core.Estate -VM -ErrorAction Stop } |
             Should -Throw -ExpectedMessage (
@@ -335,7 +334,7 @@ Describe 'One switch runs the rolls as local processes, on virtual machines or a
 
     It 'refuses -Container, by -C too, before anything is built, in the order it is asked' {
         # -C is an alias of its own, which PowerShell binds before any prefix;
-        # -Cluster and -ComputerName still bind by their names.
+        # -ComputerName still binds by its name.
         [hashtable] $given = @{ Cluster = $script:Cluster.Name; Stage = $script:Stage }
 
         InModuleScope Xmip -Parameters $given {
@@ -347,9 +346,9 @@ Describe 'One switch runs the rolls as local processes, on virtual machines or a
             # First the host's container tool, in its own words.
             Mock Get-XmipContainerTool { throw 'REFUSED: no container tool on this host' }
             foreach ($suite in 'Core.System', 'Core.Systems') {
-                { Start-XmipTest -Suite $suite -Cluster $Cluster -Container -ErrorAction Stop } |
+                { Start-XmipTest -Suite $suite -Container -ErrorAction Stop } |
                     Should -Throw -ExpectedMessage '*REFUSED: no container tool on this host*'
-                { Start-XmipTest -Suite $suite -Cluster $Cluster -C -ErrorAction Stop } |
+                { Start-XmipTest -Suite $suite -C -ErrorAction Stop } |
                     Should -Throw -ExpectedMessage '*REFUSED: no container tool on this host*'
             }
 
@@ -359,16 +358,16 @@ Describe 'One switch runs the rolls as local processes, on virtual machines or a
             [hashtable] $named = @{
                 Nodes = @($Stage.receiving); NodeRole = @{ $Stage.receiving = 'executing' }
             }
-            { Start-XmipTest -Cluster $Cluster -C @named -ErrorAction Stop } |
+            { Start-XmipTest -C @named -ErrorAction Stop } |
                 Should -Throw -ExpectedMessage (
                     '*REFUSED. -Nodes, -NodeRole belong to -Process, not -Container*')
 
             # Then the file's image, then the Linux build the containers run.
-            { Start-XmipTest -Cluster $Cluster -C -ErrorAction Stop } |
+            { Start-XmipTest -C -ErrorAction Stop } |
                 Should -Throw -ExpectedMessage '*REFUSED: no image named*'
             Mock Get-XmipContainerImage { 'an image' }
             Mock Get-XmipContainerBuild { throw 'REFUSED: no Linux build' }
-            { Start-XmipTest -Cluster $Cluster -C -ErrorAction Stop } |
+            { Start-XmipTest -C -ErrorAction Stop } |
                 Should -Throw -ExpectedMessage '*REFUSED: no Linux build*'
 
             { Start-XmipTest -Suite Core.Estate -C -ErrorAction Stop } |
@@ -376,12 +375,15 @@ Describe 'One switch runs the rolls as local processes, on virtual machines or a
             Should -Invoke Start-XmipSystemTestBuild -Times 0
             Should -Invoke Get-XmipDeployHypervisor -Times 0
 
-            # The names that begin with C bind as the estate calls them.
+            # The names that begin with C bind as the estate calls them, and
+            # no typed name names the cluster: its file does (ADR-0028,
+            # amendment 2026-11-28), which Resolve-XmipSystemTestChoice reads.
             Mock Start-XmipChosenRoll { $script:Handed = $Choice }
             Mock Start-XmipTestOnComputer { $script:On = $Bound }
-            Start-XmipTest -Suite Core.System -Cluster $Cluster
-            $script:Handed.Cluster | Should -Be $Cluster
+            Start-XmipTest -Suite Core.System
+            $script:Handed.Keys | Should -Not -Contain 'Cluster'
             $script:Handed.Bound.Keys | Should -Not -Contain 'Container'
+            (Resolve-XmipSystemTestChoice -Choice $script:Handed).Cluster | Should -Be $Cluster
             Start-XmipTest -Suite Core.Estate -ComputerName 'absent-computer'
             $script:On['ComputerName'] | Should -Be 'absent-computer'
             $script:On.Keys | Should -Not -Contain 'Container'
@@ -396,9 +398,7 @@ Describe 'One switch runs the rolls as local processes, on virtual machines or a
 
             [string] $name = $Cluster.Name
             [string] $file = (Get-XmipSystemTestLayout).Configuration
-            [hashtable] $door = @{
-                Cluster = $name; VirtualMachine = $true; Path = $Area; ErrorAction = 'Stop'
-            }
+            [hashtable] $door = @{ VirtualMachine = $true; Path = $Area; ErrorAction = 'Stop' }
             Mock Start-XmipSystemTestBuild { throw 'built' }
             Mock Read-XmipDeployedEnvironment { }
 
@@ -418,7 +418,7 @@ Describe 'One switch runs the rolls as local processes, on virtual machines or a
             Should -Invoke Read-XmipDeployedEnvironment -Times 0
 
             # Then nothing deployed here: the switch never makes a machine.
-            [string] $deploy = "Deploy-XmipEnvironment -Path $file -Cluster $name deploys it, " +
+            [string] $deploy = "Deploy-XmipEnvironment -Path $file deploys it, " +
                 'in an elevated Xmip PowerShell Console on Windows; -VirtualMachine never*'
             foreach ($suite in 'Core.System', 'Core.Systems') {
                 { Start-XmipTest @door -Suite $suite } | Should -Throw -ExpectedMessage (
@@ -457,7 +457,8 @@ Describe 'One switch runs the rolls as local processes, on virtual machines or a
             Mock Get-XmipTestStatus { }
             Mock Write-Host { }
 
-            Start-XmipTest -Suite Core.Systems -Cluster $Cluster.Name -VM -Rounds 1 -Path $Area
+            Start-XmipTest -Suite Core.Systems -VM -Rounds 1 -Path $Area
+            $script:Started.Cluster | Should -Be $Cluster.Name -Because 'its file names it'
 
             $script:Started.Suite | Should -Be 'Core.Systems' -Because 'the Systems Tests'' own'
             $script:Started.RunsAs | Should -Be 'VirtualMachine'
@@ -506,7 +507,7 @@ Describe 'One switch runs the rolls as local processes, on virtual machines or a
             Mock Get-XmipTestStatus { }
             Mock Write-Host { }
 
-            Start-XmipTest -Suite Core.System -Cluster $Cluster.Name -C -Rounds 1 -Path $Area
+            Start-XmipTest -Suite Core.System -C -Rounds 1 -Path $Area
 
             # Nothing is made before the build: the console returns at once.
             $script:Started.RunsAs | Should -Be 'Container'
@@ -565,7 +566,7 @@ Describe 'The environment a roll is started with' {
             $environment.XMIP_SYSTEM_TEST_STRESS | Should -Be 'harsh'
             $environment.XMIP_SYSTEM_TEST_AREA | Should -Be 'a'
             $environment.Keys | Should -Not -Contain 'XMIP_ONLINE'
-            $environment.Keys | Should -Not -Contain 'XMIP_TEST_CLUSTER'
+            $environment.Keys | Should -Not -Contain 'XMIP_SYSTEM_TEST_CLUSTER_FILE'
             $environment.Keys | Should -Not -Contain 'XMIP_SYSTEM_TEST_MAX_SECONDS'
             $environment.Keys | Should -Not -Contain 'XMIP_SYSTEM_TEST_SCENARIOS'
             $environment.Keys | Should -Not -Contain 'XMIP_SYSTEM_TEST_CLUSTER'
@@ -590,7 +591,9 @@ Describe 'The environment a roll is started with' {
             $environment = New-XmipSystemTestEnvironment @chosen
 
             $environment.XMIP_SYSTEM_TEST_SCENARIOS | Should -Be 'round-trip,heavy-load'
-            $environment.XMIP_TEST_CLUSTER | Should -Be $Cluster.Path
+            $environment.XMIP_SYSTEM_TEST_CLUSTER_FILE | Should -Be $Cluster.Path
+            $environment.Keys | Should -Not -Contain 'XMIP_TEST_CLUSTER' -Because (
+                'no test fixture reads a variable (ADR-0028, amendment 2026-11-28)')
             $environment.Keys | Should -Not -Contain 'XMIP_SYSTEM_TEST_ONLINE_NODES' -Because (
                 'a node is online by the Node capability its cluster file declares')
             $environment.XMIP_SYSTEM_TEST_CLUSTER | Should -Be $Cluster.Name
@@ -604,8 +607,9 @@ Describe 'The environment a roll is started with' {
     It 'writes the nodes named into the run''s cluster file, and an empty list is no nodes' {
         # The owner, 2026-10-03: parameters and configuration, xmip.toml. A
         # node is configuration and there is no count: what -Nodes names is
-        # written with -Cluster and -NodeRole, and read back as the roll reads
-        # it (ADR-0056, amendment 2026-10-03).
+        # written with -NodeRole under the Reference Environment's [service],
+        # which names the cluster, and read back as the roll reads it
+        # (ADR-0056, amendment 2026-10-03; ADR-0028, amendment 2026-11-28).
         InModuleScope Xmip -Parameters $script:Named {
             param($Cluster, $Stage)
 
@@ -613,7 +617,6 @@ Describe 'The environment a roll is started with' {
             [string] $p = $Stage.processing
             [string] $area = Join-Path $TestDrive 'run'
             $typed = @{
-                Cluster  = $Cluster.Name
                 Nodes    = @($r, $p)
                 NodeRole = @{ $r = 'receiving' }
                 Path     = $area
@@ -629,11 +632,13 @@ Describe 'The environment a roll is started with' {
             $read.Role[$r] | Should -Be 'receiving'
             $read.Role[$p] | Should -Be ''
 
-            $none = Write-XmipTestCluster -Cluster $Cluster.Name -Nodes @() -Path $area
+            $none = Write-XmipTestCluster -Nodes @() -Path $area
             (Read-XmipTestCluster -Path $none).Nodes | Should -BeNullOrEmpty
+            (Read-XmipTestCluster -Path $none).Name | Should -Be $Cluster.Name
 
-            # Omitted, the test cluster's file as it is.
+            # Omitted, the test cluster's file as it is: the Reference Environment.
             Get-XmipTestClusterPath | Should -Be $Cluster.Path
+            $Cluster.Path | Should -Be (Get-XmipSystemTestLayout).Configuration
             (Read-XmipTestCluster -Path $Cluster.Path).Nodes | Should -Be $Cluster.Nodes
         }
     }
@@ -648,7 +653,6 @@ Describe 'The environment a roll is started with' {
             Mock Read-XmipToml { throw 'a cluster''s file is the runtime''s to read' }
             Mock Write-XmipToml { throw 'a cluster''s file is the runtime''s to write' }
             [hashtable] $typed = @{
-                Cluster  = $Cluster.Name
                 Nodes    = @($Stage.receiving)
                 NodeRole = @{ $Stage.receiving = 'receiving' }
                 Path     = Join-Path $TestDrive 'reader'
@@ -722,15 +726,28 @@ Describe 'The environment a roll is started with' {
         }
     }
 
-    It 'refuses a roll without a cluster name, since the owner names the cluster' {
-        # 2026-09-14: a test may spawn nodes, never a cluster. No default name.
-        [string] $node = $script:Stage.receiving
+    It 'names the cluster by its file and takes no typed name for it' {
+        # The owner, 2026-11-28: CT should not exist. The Reference Environment
+        # names the cluster, and no command a person types names it; a test
+        # still spawns nodes, never a cluster (ADR-0028, amendment 2026-11-28).
+        foreach ($name in 'Start-XmipTest', 'Stop-XmipTest', 'Get-XmipTestStatus',
+            'Deploy-XmipEnvironment') {
+            [string[]] $taken = @((Get-Command -Name $name).Parameters.Keys)
+            $taken | Should -Not -Contain 'Cluster' -Because $name
+        }
+        { Start-XmipTest -Suite Core.System -Cluster $script:Cluster.Name -ErrorAction Stop } |
+            Should -Throw -ErrorId 'NamedParameterNotFound*'
 
-        { Start-XmipTest -Suite Core.System -Nodes $node -ErrorAction Stop } |
-            Should -Throw -ExpectedMessage '*you name it*'
-        (Get-Command -Name Start-XmipTest).Parameters['Cluster'].Attributes |
-            Where-Object { $_ -is [System.Management.Automation.PSDefaultValueAttribute] } |
-            Should -BeNullOrEmpty
+        InModuleScope Xmip -Parameters $script:Named {
+            param($Cluster, $Stage)
+
+            Get-XmipClusterName -Path (Get-XmipSystemTestLayout).Configuration |
+                Should -Be $Cluster.Name
+            [string] $unnamed = Join-Path $TestDrive 'unnamed.xmip'
+            Set-Content -LiteralPath $unnamed -Value "[nodes.$($Stage.receiving)]"
+            { Get-XmipClusterName -Path $unnamed } |
+                Should -Throw -ExpectedMessage '*REFUSED*names no cluster*'
+        }
     }
 
     It 'reads no letter of a node''s name, at the door or anywhere else' {
@@ -863,7 +880,7 @@ Describe 'The environment a roll is started with' {
         # nodes it does not declare declare none, and that is said.
         [string[]] $declared = @($script:Stage.receiving, $script:Stage.processing,
             $script:Stage.sending)
-        [hashtable] $door = @{ Cluster = $script:Cluster.Name; Nodes = $declared }
+        [hashtable] $door = @{ Nodes = $declared }
         Start-XmipTest @door -WhatIf -WarningVariable quiet | Out-Null
         "$quiet" | Should -Not -BeLike '*declares a role*'
 
@@ -938,7 +955,6 @@ Describe 'The environment a roll is started with' {
         [string] $s = $script:Stage.sending
         [hashtable] $door = @{
             Test           = 'RoundTrip'
-            Cluster        = $script:Cluster.Name
             Nodes          = @($r, $s)
             NodeRole       = @{ $r = 'receiving'; $s = 'sending' }
             ErrorAction    = 'Stop'
@@ -1016,9 +1032,7 @@ Describe 'The environment a roll is started with' {
             [hashtable] $stated = @{ $r = 'online, firewall-party-x' }
             [hashtable] $capable =
                 Join-XmipNodeCapability -Nodes $r, $s -Declared @{} -NodeCapability $stated
-            [hashtable] $typed = @{
-                Cluster = $Cluster.Name; Nodes = @($r, $s); NodeCapability = $capable; Path = $area
-            }
+            [hashtable] $typed = @{ Nodes = @($r, $s); NodeCapability = $capable; Path = $area }
             [string] $file = Write-XmipTestCluster @typed
             $read = Read-XmipTestCluster -Path $file
 
@@ -1048,7 +1062,6 @@ Describe 'The environment a roll is started with' {
             [string] $r = $Stage.receiving
             [string] $area = Join-Path -Path $TestDrive -ChildPath 'storing'
             [hashtable] $typed = @{
-                Cluster = $Cluster.Name
                 Nodes   = @($r, $first, $second)
                 Storage = @("${second}:7443", "${first}:7443", 'not-of-the-run:7443')
                 Path    = $area
@@ -1171,7 +1184,7 @@ Describe 'A suite carries its provider' {
         InModuleScope Xmip -Parameters $script:Named {
             param($Cluster, $Stage)
 
-            [string] $c = $Cluster.Name
+            [string] $c = 'Calm'
             [hashtable] $made = @{
                 Provider = 'Example'
                 Name     = 'System'
@@ -1189,17 +1202,17 @@ Describe 'A suite carries its provider' {
             # suite, and the provider's command is called as it would be by
             # hand for a full run.
             function global:Start-ExampleXmipTest {
-                param($Cluster, $Test)
+                param($Stress, $Test)
 
-                return "example:$Cluster`:$($Test -join ',')"
+                return "example:$Stress`:$($Test -join ',')"
             }
 
             try {
-                [hashtable] $whole = @{ Cluster = $c; Test = @() }
+                [hashtable] $whole = @{ Stress = $c; Test = @() }
                 Start-XmipProviderSuite -Suite $theirs -Bound $whole |
                     Should -Be "example:${c}:"
 
-                [hashtable] $named = @{ Cluster = $c; Test = @('Smoke') }
+                [hashtable] $named = @{ Stress = $c; Test = @('Smoke') }
                 Start-XmipProviderSuite -Suite $theirs -Bound $named |
                     Should -Be "example:${c}:Smoke"
             }
@@ -1279,8 +1292,7 @@ Describe 'A suite carries its provider' {
         [hashtable] $filters = @{
             'Start-XmipTest'     = @('Suite', 'Test')
             'Get-XmipTestResult' = @('Test', 'Node', 'Suite')
-            'Get-XmipTestStatus' = @('Cluster')
-            'Stop-XmipTest'      = @('Cluster', 'Test', 'Suite')
+            'Stop-XmipTest'      = @('Test', 'Suite')
             'Get-XmipTestNode'   = @('Name')
             'Get-XmipProcess'    = @('Name')
         }
@@ -1296,13 +1308,14 @@ Describe 'A suite carries its provider' {
             }
         }
 
-        # Named, not matched: -Nodes and -Cluster on Start-XmipTest name what
-        # to spawn. -Suite was here until 2026-09-19, on the argument that a
+        # Named, not matched: -Nodes on Start-XmipTest names what to spawn;
+        # the cluster is named by its file (ADR-0028, amendment 2026-11-28).
+        # -Suite was here until 2026-09-19, on the argument that a
         # wildcard would leave "which provider did I run" unanswerable; the
         # owner struck it — "Filter the -Suite as the -Test parameter" — and
         # a run records its own resolved suite, so the question is answered
         # per run rather than per command (ADR-0059, amendment).
-        foreach ($named in 'Nodes', 'Cluster') {
+        foreach ($named in @('Nodes')) {
             $said = (Get-Command -Name Start-XmipTest).Parameters[$named].Attributes |
                 Where-Object { $_ -is $wild }
 
@@ -1645,6 +1658,37 @@ Describe 'A cluster rolls once' {
                 Join-Path $Area 'roll-4343.toml')
         }
     }
+
+    It 'refuses a second roll of the cluster on this computer, whatever area started the first' {
+        # The file names the cluster, so two rolls of one file are one cluster
+        # twice and its nodes' local endpoints would collide (ADR-0028,
+        # amendment 2026-11-28): found by the process names, never by a record.
+        [hashtable] $given = @{
+            Area = (Join-Path $TestDrive 'once'); Cluster = $script:Cluster.Name
+        }
+
+        InModuleScope Xmip -Parameters $given {
+            param($Area, $Cluster)
+
+            Mock -CommandName Get-Process -MockWith {
+                $script:Asked = @($Name)
+                [pscustomobject]@{ Id = 5151 }
+            }
+            @(Get-XmipClusterRollingHere -Cluster $Cluster) | Should -Be @(5151)
+            $script:Asked | Should -Be @(
+                "xmip-system-test-$Cluster-roll", "xmip-system-test-$Cluster-cluster")
+            Mock -CommandName Get-Process -MockWith { }
+            @(Get-XmipClusterRollingHere -Cluster $Cluster).Count | Should -Be 0
+
+            Mock -CommandName Start-XmipSystemTestBuild -MockWith { throw 'built' }
+            Mock -CommandName Get-XmipClusterRollingHere -MockWith { 5151 }
+            { Start-XmipTest -Suite Core.System -Path $Area -ErrorAction Stop } |
+                Should -Throw -ExpectedMessage (
+                    "*REFUSED: cluster $Cluster already rolls or builds on this computer as pid " +
+                    "5151*xmip-$Cluster-<node>, would collide*")
+            Should -Invoke Start-XmipSystemTestBuild -Times 0
+        }
+    }
 }
 
 Describe 'A roll that ended is listed from its record' {
@@ -1707,7 +1751,7 @@ observed_unix_nanos = 1789208338038783900
             Mock -CommandName Get-XmipSystemTestProcess -MockWith { }
             Mock -CommandName Get-XmipTestNode -MockWith { }
 
-            $row = Get-XmipTestStatus -Path $area -Cluster $ended
+            $row = Get-XmipTestStatus -Path $area | Where-Object -Property Cluster -EQ -Value $ended
             $row.Kind | Should -Be 'roll'
             $row.State | Should -Be 'ended'
             $row.Id | Should -Be 4646
@@ -1717,7 +1761,8 @@ observed_unix_nanos = 1789208338038783900
 
             # A snapshot older than the roll is an earlier roll's.
             (Get-Item -LiteralPath $published).LastWriteTime = $began.AddMinutes(-1)
-            $early = Get-XmipTestStatus -Path $area -Cluster $ended
+            $early = Get-XmipTestStatus -Path $area |
+                Where-Object -Property Cluster -EQ -Value $ended
             $early.Worst | Should -BeNullOrEmpty
             $early.Fault | Should -BeLike '*ended before it published*'
 
@@ -2183,29 +2228,27 @@ Describe 'What a history file holds' {
     }
 }
 
-Describe 'Stop-XmipTest picks runs by cluster and test, and refuses what it cannot do' {
-    # The owner, 2026-09-21: Stop-XmipTest -Cluster <Cluster> -Test <Test> was
-    # missing, and -Test was bound to the pipeline's status object, so the
-    # word meant a test on Start-XmipTest and a run on Stop-XmipTest.
+Describe 'Stop-XmipTest picks runs by suite and test, and refuses what it cannot do' {
+    # The owner, 2026-09-21: Stop-XmipTest -Test <Test> was missing, and -Test
+    # was bound to the pipeline's status object, so the word meant a test on
+    # Start-XmipTest and a run on Stop-XmipTest. A cluster is named by its
+    # file and rolls once on a computer, so no typed cluster name picks a run
+    # (ADR-0028, amendment 2026-11-28).
     BeforeAll {
         # A run as Get-XmipTestStatus describes it, and nothing more: the
         # choosing is tested without a process started or stopped.
         function New-FakeRoll {
-            param([int] $Id, [string] $Cluster, [string[]] $Tests = @())
+            param([int] $Id, [string] $Suite = 'Core.System', [string[]] $Tests = @())
 
             [PSCustomObject]@{
                 Id      = $Id
-                Cluster = $Cluster
-                Suite   = 'Core.System'
+                Cluster = $script:Cluster.Name
+                Suite   = $Suite
                 Tests   = $Tests
             }
         }
 
-        # Three clusters' names: the test cluster's and two built from it.
-        [string] $c = $script:Cluster.Name
-        $script:One = $c
-        $script:Two = "${c}2"
-        $script:Three = "${c}3"
+        $script:One = $script:Cluster.Name
     }
 
     It 'takes a test by name, and the pipeline object as -InputObject' {
@@ -2217,29 +2260,27 @@ Describe 'Stop-XmipTest picks runs by cluster and test, and refuses what it cann
             ForEach-Object { $_.ValueFromPipeline } |
             Should -Contain $true
 
-        @($parameters['Cluster'].ParameterSets.Keys) | Should -Contain 'Filter'
+        $parameters.Keys | Should -Not -Contain 'Cluster'
+        @($parameters['Suite'].ParameterSets.Keys) | Should -Contain 'Filter'
         @($parameters['Test'].ParameterSets.Keys) | Should -Contain 'Filter'
     }
 
-    It 'stops the run a cluster and a test name pick, as they were started' {
+    It 'stops the runs a suite and a test name pick, as they were started' {
         [object[]] $running = @(
-            New-FakeRoll -Id 11 -Cluster $script:One -Tests RoundTrip
-            New-FakeRoll -Id 12 -Cluster $script:Two -Tests RoundTrip, Retention
-            New-FakeRoll -Id 13 -Cluster $script:Three
+            New-FakeRoll -Id 11 -Tests RoundTrip
+            New-FakeRoll -Id 12 -Suite Core.Systems -Tests RoundTrip, Retention
+            New-FakeRoll -Id 13 -Suite Core.Systems
         )
-        [hashtable] $given = @{
-            Running = $running; One = $script:One; Two = $script:Two; Three = $script:Three
-        }
 
-        InModuleScope Xmip -Parameters $given {
-            param($Running, $One, $Two, $Three)
+        InModuleScope Xmip -Parameters @{ Running = $running } {
+            param($Running)
 
-            @(Select-XmipTestRoll -Running $Running -Cluster $One -Test RoundTrip).Id |
+            @(Select-XmipTestRoll -Running $Running -Suite Core.System -Test RoundTrip).Id |
                 Should -Be 11
-            @(Select-XmipTestRoll -Running $Running -Cluster $Two -Test RoundTrip, Retention).Id |
-                Should -Be 12
-            @(Select-XmipTestRoll -Running $Running -Cluster $Three -Test '*').Id |
-                Should -Be 13 -Because 'a run of the whole suite is every test in it'
+            @(Select-XmipTestRoll -Running $Running[0, 1] -Test RoundTrip, Retention).Id |
+                Should -Be 11, 12
+            @(Select-XmipTestRoll -Running $Running -Suite Core.Systems -Test '*').Id |
+                Should -Be 12, 13 -Because 'a run of the whole suite is every test in it'
             @(Select-XmipTestRoll -Running $Running).Count |
                 Should -Be 3 -Because 'nothing named is every run'
         }
@@ -2247,8 +2288,8 @@ Describe 'Stop-XmipTest picks runs by cluster and test, and refuses what it cann
 
     It 'refuses a run that also drives a test not named, and picks nothing' {
         [object[]] $running = @(
-            New-FakeRoll -Id 11 -Cluster $script:One -Tests RoundTrip
-            New-FakeRoll -Id 12 -Cluster $script:Two -Tests RoundTrip, Retention
+            New-FakeRoll -Id 11 -Tests RoundTrip
+            New-FakeRoll -Id 12 -Suite Core.Systems -Tests RoundTrip, Retention
         )
 
         InModuleScope Xmip -Parameters @{ Running = $running } {
@@ -2266,20 +2307,16 @@ Describe 'Stop-XmipTest picks runs by cluster and test, and refuses what it cann
         }
     }
 
-    It 'refuses a cluster or a test that nothing running matches, naming what is' {
-        [object[]] $running = @(New-FakeRoll -Id 11 -Cluster $script:One -Tests RoundTrip)
-        [hashtable] $given = @{ Running = $running; One = $script:One; Two = $script:Two }
+    It 'refuses a test that nothing running matches, naming what is' {
+        [object[]] $running = @(New-FakeRoll -Id 11 -Tests RoundTrip)
+        [hashtable] $given = @{ Running = $running; One = $script:One }
 
         InModuleScope Xmip -Parameters $given {
-            param($Running, $One, $Two)
+            param($Running, $One)
 
-            [string] $nothing = "*REFUSED. No roll matches $Two. Rolling now: " +
+            [string] $none = "*REFUSED. No roll runs a test matching Storm. Rolling now: " +
                 "$One running RoundTrip.*"
-            { Select-XmipTestRoll -Running $Running -Cluster $Two -ErrorAction Stop } |
-                Should -Throw -ExpectedMessage $nothing
-
-            [string] $none = "*REFUSED. No roll on $One runs a test matching Storm.*"
-            { Select-XmipTestRoll -Running $Running -Cluster $One -Test Storm -ErrorAction Stop } |
+            { Select-XmipTestRoll -Running $Running -Test Storm -ErrorAction Stop } |
                 Should -Throw -ExpectedMessage $none
             { Select-XmipTestRoll -Running @() -Test RoundTrip -ErrorAction Stop } |
                 Should -Throw -ExpectedMessage '*Nothing is rolling.*'
@@ -2290,7 +2327,7 @@ Describe 'Stop-XmipTest picks runs by cluster and test, and refuses what it cann
         # The estate's Pester run has no cluster; -Suite is how it is named
         # among the runs, and it is spelled as Start-XmipTest spells it.
         [object[]] $running = @(
-            New-FakeRoll -Id 11 -Cluster $script:One -Tests RoundTrip
+            New-FakeRoll -Id 11 -Tests RoundTrip
             [PSCustomObject]@{ Id = 77; Cluster = $null; Suite = 'Core.Estate'; Tests = @() }
         )
 

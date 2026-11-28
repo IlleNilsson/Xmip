@@ -60,6 +60,74 @@ function Get-XmipClusterRunning {
 }
 
 
+function Get-XmipClusterTaken {
+    <#
+        .SYNOPSIS
+            The pids a cluster is taken by on this computer: each roll or build
+            of it the run records in -Path name, and each roll of it running
+            anywhere else here (Get-XmipClusterRollingHere). Nothing when the
+            cluster is free.
+
+        .DESCRIPTION
+            The file names the cluster, so a cluster rolls once on a computer
+            (ADR-0028, amendment 2026-11-28): the one answer a second roll and
+            the demo readiness check are refused by.
+
+        .PARAMETER Path
+            The System Tests' area the records are in.
+
+        .PARAMETER Cluster
+            The cluster, by the name its file declares.
+    #>
+    [CmdletBinding()]
+    [OutputType([int])]
+    param(
+        [Parameter(Mandatory)]
+        [string] $Path,
+
+        [Parameter(Mandatory)]
+        [string] $Cluster
+    )
+
+    @(@(Get-XmipClusterRunning -Path $Path -Cluster $Cluster) +
+        @(Get-XmipClusterRollingHere -Cluster $Cluster)) | Sort-Object -Unique
+}
+
+
+function Get-XmipClusterRollingHere {
+    <#
+        .SYNOPSIS
+            The pids of every roll and cluster process of a cluster on this
+            computer, whatever area, tree or session started it.
+
+        .DESCRIPTION
+            A cluster is named by its file (ADR-0028, amendment 2026-11-28), so
+            two rolls of one file are one cluster twice: its nodes' local
+            endpoints, xmip-<cluster>-<node>, would collide whichever area
+            either writes to. Found by the process names the System Tests give
+            a roll and its cluster process (Get-XmipSystemTestImageName),
+            never by a run record, which only its own area holds.
+
+        .PARAMETER Cluster
+            The cluster, by the name its file declares.
+    #>
+    [CmdletBinding()]
+    [OutputType([int])]
+    param(
+        [Parameter(Mandatory)]
+        [string] $Cluster
+    )
+
+    [string[]] $names = @(
+        'roll', 'cluster' | ForEach-Object {
+            Get-XmipSystemTestImageName -Cluster $Cluster -What $_
+        }
+    )
+
+    Get-Process -Name $names -ErrorAction SilentlyContinue | ForEach-Object { [int] $_.Id }
+}
+
+
 function Get-XmipSystemTestRolling {
     <#
         .SYNOPSIS

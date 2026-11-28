@@ -165,7 +165,7 @@ bin on `PATH`, and `deploy/dsc/README.md`'s *Before the first run*.
 ## Running it
 
 ```text
-pwsh -Command "Import-Module /mnt/d/Repos/Xmip/Xmip/Xmip.psd1; Deploy-XmipEnvironment -Path /mnt/d/Repos/Xmip/test/core/system-test/configuration/Xmip-reference-environment.xmip -Cluster CL1 -Technology ansible"
+pwsh -Command "Import-Module /mnt/d/Repos/Xmip/Xmip/Xmip.psd1; Deploy-XmipEnvironment -Path /mnt/d/Repos/Xmip/test/core/system-test/configuration/Xmip-reference-environment.xmip -Technology ansible"
 ```
 
 on a Linux host, the hypervisor its own, libvirt. `-WhatIf` runs the playbook with

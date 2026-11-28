@@ -12,9 +12,10 @@
     owner, 2026-10-03: *You invented alpha and beta some time ago*;
     *Parameters and configuration is the way to go, Xmip.toml* (ADR-0056,
     amendment 2026-10-03). A test takes its cluster's and nodes' names from the
-    test cluster's cluster.xmip through its language's one fixture — Rust's
-    configure::fixture, .NET's TestCluster, PowerShell's Get-XmipTestCluster —
-    and finds a node by what it declares or by its place. No name is written.
+    test cluster, the Reference Environment, through its language's one
+    fixture — Rust's configure::fixture, .NET's TestCluster, PowerShell's
+    Get-XmipTestCluster — and finds a node by what it declares or by its
+    place (ADR-0028, amendment 2026-11-28). No name is written.
 
     A literal name is looked for where a name stands:
 
@@ -27,11 +28,12 @@
       [nodes.<name>];
     - a parameter or flag that names a cluster or nodes: -Cluster, -Nodes,
       -Node, -Name, --cluster, --name, --nodes, --node, --capabilities;
-    - one of the names the owner types (CLn, RXn, PXn, TXn, EXn, OPn, DSn,
-      CT), the one-letter ones they replaced (Cn, Rn, Pn, Sn, Ln, On, Dn),
-      the Nn a test once numbered its nodes with, or the struck ones
-      (alpha … zeta), quoted or backticked on its own, or standing before a
-      / as a scope's part.
+    - one of the names the owner types (CLn, RXn, PXn, TXn, EXn, OPn, DSn),
+      the one-letter ones they replaced (Cn, Rn, Pn, Sn, Ln, On, Dn), the Nn
+      a test once numbered its nodes with, or the struck ones (alpha … zeta,
+      and CT, which the owner struck on 2026-11-28: CT should not exist),
+      quoted or backticked on its own, or standing before a / as a scope's
+      part.
 
     Searched: .src/, module/, test/, template/, sdk/, Xmip/ and doc/ outside
     doc/decision/, in every language the estate writes and every text it
@@ -66,10 +68,15 @@
     and those places hold no record.
 
     The short name a cluster's file declares, [service] short_name, is what
-    the surfaces show for the cluster (ADR-0028, amendment 2026-11-28): the
-    Reference Environment's is written in that file alone, and everywhere
-    else searched, and in the documents beside it, a document says the short
-    name the file declares and a test reads it from the file.
+    the surfaces show for the cluster, and where the file declares no
+    cluster_name its name (ADR-0028, amendments 2026-11-28): the Reference
+    Environment's is written in that file alone, and everywhere else
+    searched, and in the documents beside it, a document says the short name
+    the file declares and a test reads it from the file. Two kinds of file
+    carry it and are held to that file instead: a snapshot fixture
+    $script:Held names, which carries the test cluster's names; and a shipped
+    surface configuration $script:Follows names, which follows the snapshot
+    the Reference Environment's roll publishes, <short name>-snapshot.xmip.
 
     Two kinds of token are not names and are said here once: $script:Word,
     the products and specifications the estate integrates with, and
@@ -88,8 +95,8 @@ BeforeAll {
     [string] $twoLetter = "(?:$(@($script:Designation.Values) -join '|'))[0-9]+"
     # Numbered from 1: S009, a UN/EDIFACT composite element, is no designation.
     [string] $oneLetter = "[$(@($script:Designation.Keys) -join '')][1-9][0-9]*"
-    # The names the owner types and the ones invented and struck: anywhere
-    # quoted they are a name.
+    # The names the owner types and the ones invented and struck, CT among
+    # them (the owner, 2026-11-28): anywhere quoted they are a name.
     [string] $known = "(?:$twoLetter|[CRPSNLOD][0-9]+|CT|alpha|beta|gamma|delta|epsilon|zeta)"
     # A one-letter designation where a name may stand: never inside a word,
     # a T-SQL parameter, @P1, nor a compiler's flag, -O2 and /O2.
@@ -164,6 +171,15 @@ BeforeAll {
             Name = 'TheSecondFixtureIsTheSecondTestClustersOwn'
         }
     }
+
+    # A shipped surface configuration that follows the snapshot the Reference
+    # Environment's roll publishes: its Snapshot key, held to that file's
+    # short name by the test below.
+    [string] $operation = 'module/core/operation'
+    $script:Follows = @(
+        "$operation/cli/cli.toml"
+        "$operation/powershell/src/Xmip.PowerShell/powershell.toml"
+    )
 
     $script:Extension = @(
         '.rs', '.cs', '.ps1', '.psm1', '.psd1', '.razor', '.xmip', '.toml', '.md', '.json'
@@ -420,7 +436,8 @@ Describe 'No cluster or node is named in code or tests' {
 
         [string[]] $found = @(
             foreach ($file in @(Get-NodeNameFile) + @(Get-ShownNameFile)) {
-                if ($file -in $script:Reference, $script:Self) {
+                if (($file -in @($script:Reference, $script:Self)) -or
+                    $script:Held.ContainsKey($file) -or ($file -in $script:Follows)) {
                     continue
                 }
 
@@ -443,10 +460,23 @@ Describe 'No cluster or node is named in code or tests' {
             'from the file (ADR-0028, amendment 2026-11-28)')
     }
 
+    It 'holds each shipped configuration to the snapshot its roll publishes' {
+        [scriptblock] $read = { param($Path) Read-XmipToml -Path $Path }
+        $content = & (Get-Module -Name Xmip) $read (Join-Path $script:Root $script:Reference)
+        [string] $published = "$([string] $content['service']['short_name'])-snapshot.xmip"
+
+        foreach ($file in $script:Follows) {
+            $shipped = & (Get-Module -Name Xmip) $read (Join-Path $script:Root $file)
+            [string] $followed = Split-Path -Leaf ([string] $shipped['Xmip']['Snapshot'])
+            $followed | Should -Be $published -Because (
+                "$file follows the roll of the cluster the Reference Environment names")
+        }
+    }
+
     It 'tells a one-letter designation from the two letters that replaced it' {
         [string] $readme = 'module/core/example/README.md'
         [string[]] $old = @(Find-StruckName -Path $readme -Line @(
-                'Start-XmipTest -Cluster C1 -Nodes R1, P1, S1'
+                'C1: Start-XmipTest -Nodes R1, P1, S1'
                 '`xmip:///C2/node/L1`, O1 and D1.xmip.test'))
 
         $old | Should -HaveCount 8
@@ -454,7 +484,7 @@ Describe 'No cluster or node is named in code or tests' {
         $old[3] | Should -Be "${readme}:1: S1, now TX1"
         $old[4] | Should -Be "${readme}:2: C2, now CL2"
 
-        @(Find-StruckName -Path $readme -Line 'Start-XmipTest -Cluster CL1 -Nodes RX1, DS2') |
+        @(Find-StruckName -Path $readme -Line 'CL1: Start-XmipTest -Nodes RX1, DS2') |
             Should -BeNullOrEmpty -Because 'the two letters are the owner''s'
         @(Find-StruckName -Path $readme -Line 'cl /O2, cc -O2, `@P1`, Amazon S3, LoRaWAN L2') |
             Should -BeNullOrEmpty -Because 'a flag, a parameter and a product are no designation'
@@ -486,7 +516,7 @@ Describe 'No cluster or node is named in code or tests' {
             "--nodes $any=receiving,$other=sending"
             "-NodeRole @{ $node = 'receiving' }"
             "Start-XmipTest -Nodes $node, $other"
-            "Start-XmipTest -Cluster '$any'"
+            "Get-XmipClusterRunning -Path `$area -Cluster '$any'"
             "[`"--cluster`", `"$any`"]"
             "nodes = [`"$node`"]"
             "id = `"$any->$other`""
@@ -543,8 +573,8 @@ Describe 'No cluster or node is named in code or tests' {
             Should -HaveCount 4 -Because 'a test''s names are configuration, never examples'
         @(Find-NodeName -Path 'module/core/example/README.md' -Line $example) |
             Should -BeNullOrEmpty -Because 'a README shows the owner''s names'
-        @(Find-NodeName -Path 'test/cluster.xmip' -Line "[nodes.$($cluster.Nodes[0])]") |
-            Should -BeNullOrEmpty -Because 'an cluster.xmip is where a name is configured'
+        @(Find-NodeName -Path $script:Reference -Line "[nodes.$($cluster.Nodes[0])]") |
+            Should -BeNullOrEmpty -Because 'a cluster''s file is where a name is configured'
         @(Find-NodeName -Path 'doc/getting-started.md' -Line $example) |
             Should -BeNullOrEmpty -Because 'the getting-started guide is the first run'
         @(Find-NodeName -Path 'doc/guide.md' -Line $example) |

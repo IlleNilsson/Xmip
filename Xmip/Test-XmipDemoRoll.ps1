@@ -43,10 +43,11 @@ function Test-XmipDemoRoll {
         [System.Collections.IDictionary] $Run
     )
 
+    # The cluster the Reference Environment names, which the roll started
+    # here rolls too (ADR-0028, amendment 2026-11-28).
     [string] $cluster = $Run['cluster']
     [hashtable] $start = @{
         Suite       = $script:XmipSystemTestSuite
-        Cluster     = $cluster
         Stress      = $Run['stress']
         PassThru    = $true
         ErrorAction = 'Stop'
@@ -98,7 +99,7 @@ function Wait-XmipDemoBuild {
 
     while ($true) {
         [object[]] $rows = @(
-            Get-XmipTestStatus -Cluster $Cluster |
+            Get-XmipTestStatus |
                 Where-Object { "$($_.Cluster)" -eq $Cluster -and $_.Kind -in 'roll', 'build' }
         )
         $roll = $rows | Where-Object { $_.Kind -eq 'roll' } | Select-Object -First 1
@@ -159,7 +160,7 @@ function Wait-XmipDemoRoll {
     Wait-XmipSnapshot -Path ([System.IO.Path]::GetFullPath($snapshot)) -Since $spawned
     [double] $seconds = [math]::Round(((Get-Date) - $spawned).TotalSeconds, 1)
 
-    $published = Get-XmipTestStatus -Cluster $cluster |
+    $published = Get-XmipTestStatus |
         Where-Object { $_.Kind -eq 'roll' -and $_.State -eq 'running' -and $_.Id -eq $Roll.Id } |
         Select-Object -First 1
 

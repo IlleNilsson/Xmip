@@ -161,8 +161,8 @@ function Assert-XmipNodeName {
         .DESCRIPTION
             A node's name is the last word of its process name and so a file
             name — xmip-system-test-<cluster>-node-<node> (ADR-0053, amendment
-            2026-09-20) — which is why the shape is the one -Cluster takes,
-            and that is the whole of it. No word is reserved: the name carries
+            2026-09-20) — which is why the shape is a cluster's name's, and
+            that is the whole of it. No word is reserved: the name carries
             a node marker, so a node called roll is a node called roll (the
             owner, 2026-09-20). Refused at the door with the reason, never
             mangled into something that happens to work (ADR-0055).
@@ -273,8 +273,9 @@ function New-XmipSystemTestEnvironment {
         $environment.XMIP_SYSTEM_TEST_SCENARIOS = $scenarios -join ','
     }
 
-    # The named cluster: the roll's scope root and the nodes' (ADR-0028). The
-    # roll refuses without one; the name is the owner's, never invented here.
+    # The cluster, by the name its file declares: the roll's scope root and
+    # the nodes' (ADR-0028, amendment 2026-11-28). The roll refuses without
+    # one; it is the file's, never typed and never invented here.
     if (-not [string]::IsNullOrWhiteSpace($Cluster)) {
         $environment.XMIP_SYSTEM_TEST_CLUSTER = $Cluster
     }
@@ -282,12 +283,12 @@ function New-XmipSystemTestEnvironment {
     # The nodes are cluster.xmip, each one process declaring the roles its
     # roles key says and the Node capabilities its capabilities key says,
     # online among them where it may assume the internet (ADR-0056,
-    # amendments 2026-10-03 and 2026-11-24): the run's own, written from
-    # -Cluster and the nodes -Nodes or the Reference Environment
-    # names (Write-XmipTestCluster). The variable is the one every test
-    # fixture reads.
+    # amendments 2026-10-03 and 2026-11-24): the run's own, written from the
+    # Reference Environment, which names the cluster, and the nodes -Nodes
+    # or the Reference Environment names (Write-XmipTestCluster). The roll's
+    # own variable: no test fixture reads one.
     if (-not [string]::IsNullOrWhiteSpace($ClusterFile)) {
-        $environment.XMIP_TEST_CLUSTER = $ClusterFile
+        $environment.XMIP_SYSTEM_TEST_CLUSTER_FILE = $ClusterFile
     }
 
     $invariant = [System.Globalization.CultureInfo]::InvariantCulture

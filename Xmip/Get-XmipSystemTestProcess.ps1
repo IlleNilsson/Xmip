@@ -24,7 +24,7 @@ function Get-XmipSystemTestProcess {
             The process name, wildcards allowed. Since 2026-09-20 a
             System Tests process is named for its cluster and what it is —
             xmip-system-test-CL1-roll, xmip-system-test-CL1-node-RX1, for a
-            cluster someone called CL1 and a node they called RX1,
+            cluster whose file names it CL1 and a node it calls RX1,
             both names free — so the System Tests' own callers ask for
             xmip-system-test-* and say which of the four with -Kind.
             xmip-gui-web is named outright.

@@ -43,7 +43,10 @@ function Get-XmipTestStatus {
 
             A roll, its build and a demo run say in RunsAs what Start-XmipTest
             ran them as: Process, as local processes, or VirtualMachine, on
-            the virtual machines Deploy-XmipEnvironment deployed.
+            the virtual machines Deploy-XmipEnvironment deployed; and in
+            Cluster the cluster its file names (ADR-0028, amendment
+            2026-11-28). A run is picked from the list by its suite, its tests
+            or its pid, never by a typed cluster name.
 
             Nothing here starts, stops or writes anything. Nothing running
             and nothing recorded means no output.
@@ -52,12 +55,6 @@ function Get-XmipTestStatus {
             Where the rolls' run records are. Defaults to the repository's
             .local-work/system-test folder, where Start-XmipTest writes. The
             estate's records are always read from .local-work/estate.
-
-        .PARAMETER Cluster
-            Only the runs whose cluster matches, wildcards allowed. Every run
-            unless said. This selects among the runs there are; the cluster is
-            named, not matched, where Start-XmipTest spawns one. An estate run
-            rolls as no cluster, so naming one leaves it out.
 
         .PARAMETER ComputerName
             The runs on that test computer instead, as its own
@@ -74,7 +71,7 @@ function Get-XmipTestStatus {
             Get-XmipTestStatus -ComputerName build1
 
         .EXAMPLE
-            Get-XmipTestStatus -Cluster 'C*' | Format-List
+            Get-XmipTestStatus | Where-Object -Property Kind -EQ -Value roll | Format-List
 
         .EXAMPLE
             Get-XmipTestStatus | Where-Object -Property Suite -EQ -Value Core.Estate
@@ -84,10 +81,6 @@ function Get-XmipTestStatus {
     param(
         [Parameter()]
         [string] $Path,
-
-        [Parameter()]
-        [SupportsWildcards()]
-        [string] $Cluster = '*',
 
         [Parameter()]
         [ArgumentCompleter({
@@ -102,7 +95,7 @@ function Get-XmipTestStatus {
 
     # There, that computer's own Get-XmipTestStatus answers.
     if ($PSBoundParameters.ContainsKey('ComputerName')) {
-        [hashtable] $asked = @{ Cluster = $Cluster }
+        [hashtable] $asked = @{}
         $computer = Read-XmipTestComputer -Name $ComputerName
 
         return Invoke-XmipTestComputer -Computer $computer -Command Get-XmipTestStatus -Parameter (
@@ -116,8 +109,7 @@ function Get-XmipTestStatus {
     }
 
     # The estate's Pester runs, running or finished, from their own records.
-    # None rolls as a cluster, so a -Cluster that names one leaves them out.
-    Get-XmipEstateRun -Path $layout.Estate | Where-Object { "$($_.Cluster)" -like $Cluster }
+    Get-XmipEstateRun -Path $layout.Estate
 
     [System.Diagnostics.Process[]] $rolls = @(
         Get-XmipSystemTestProcess -Name 'xmip-system-test-*' -Path $layout.Roll -Kind Roll
@@ -128,12 +120,8 @@ function Get-XmipTestStatus {
     # is started again: a record is named for its roll's pid, so one whose
     # pid no live roll has is a roll that ended.
     [object[]] $ended = @(Get-XmipRollRecord -Path $Path | Where-Object { $_.Id -notin $live })
-    [object[]] $builds = @(
-        Get-XmipSystemTestBuild -Path $Path | Where-Object { "$($_.Cluster)" -like $Cluster }
-    )
-    [object[]] $demos = @(
-        Get-XmipDemoRun -Path $layout.Demo | Where-Object { "$($_.Cluster)" -like $Cluster }
-    )
+    [object[]] $builds = @(Get-XmipSystemTestBuild -Path $Path)
+    [object[]] $demos = @(Get-XmipDemoRun -Path $layout.Demo)
 
     if ($rolls.Count + $ended.Count + $builds.Count + $demos.Count -eq 0) {
         return
@@ -151,10 +139,9 @@ function Get-XmipTestStatus {
     Import-XmipOperatorModule
 
     [hashtable] $each = @{
-        Path    = $Path
-        Cluster = $Cluster
-        Nodes   = @(Get-XmipTestNode)
-        Suites  = @(Get-XmipTestSuite)
+        Path   = $Path
+        Nodes  = @(Get-XmipTestNode)
+        Suites = @(Get-XmipTestSuite)
     }
 
     foreach ($roll in $rolls) {
@@ -186,13 +173,10 @@ function ConvertTo-XmipRollStatus {
         .SYNOPSIS
             One roll as an Xmip.TestStatus: running, or ended and listed from
             the record it left, its worst result in words from the snapshot
-            it published. Nothing where -Cluster leaves it out.
+            it published.
 
         .PARAMETER Path
             The roll area, where its record is.
-
-        .PARAMETER Cluster
-            Get-XmipTestStatus's -Cluster.
 
         .PARAMETER Nodes
             The live System Tests nodes, from Get-XmipTestNode.
@@ -220,9 +204,6 @@ function ConvertTo-XmipRollStatus {
         [string] $Path,
 
         [Parameter(Mandatory)]
-        [string] $Cluster,
-
-        [Parameter(Mandatory)]
         [AllowEmptyCollection()]
         [object[]] $Nodes,
 
@@ -246,10 +227,6 @@ function ConvertTo-XmipRollStatus {
 
     $record = if ($null -ne $Recorded) { $Recorded.Record } else { $null }
     [string] $rolledAs = [string](Get-TomlValue -Node $record -Name 'cluster' -Default '')
-
-    if ($rolledAs -notlike $Cluster) {
-        return
-    }
 
     # A snapshot older than the roll is an earlier roll's of its cluster, and
     # says nothing of this one.

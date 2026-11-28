@@ -90,6 +90,7 @@ function Get-XmipTestResult {
             Get-XmipTestResult -Test RoundTrip -Worst
 
         .EXAMPLE
+            # A cluster whose file names it CL1 publishes CL1-snapshot.xmip.
             Get-XmipTestResult -Path .local-work/system-test/CL1-snapshot.xmip -Node RX1
     #>
     [CmdletBinding()]

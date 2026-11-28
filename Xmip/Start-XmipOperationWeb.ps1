@@ -131,7 +131,7 @@ function Start-XmipOperationWeb {
             Start-XmipOperationWeb
 
         .EXAMPLE
-            Start-XmipTest -Suite Core.System -Cluster CL1 -Stress Harsh -PassThru |
+            Start-XmipTest -Suite Core.System -Stress Harsh -PassThru |
                 Start-XmipOperationWeb
 
         .EXAMPLE
@@ -147,12 +147,13 @@ function Start-XmipOperationWeb {
             Start-XmipOperationWeb -Snapshot /opt/xmip/data/snapshot.xmip
 
         .EXAMPLE
-            $other = '.local-work/system-test/CL2-snapshot.xmip'
-            Start-XmipOperationWeb -Local xmip-CL1-OP1 -Snapshot $other
+            $roll = Get-XmipTestStatus | Where-Object -Property Kind -EQ -Value roll |
+                Select-Object -First 1
+            Start-XmipOperationWeb -Local "xmip-$($roll.Cluster)-OP1" -Snapshot $roll.Snapshot
 
         .EXAMPLE
             $tls = @{ Certificate = 'node.pem'; PrivateKey = 'node.key'; TrustAnchor = 'ca.pem' }
-            $snapshot = '.local-work/system-test/CL1-snapshot.xmip'
+            $snapshot = (Get-XmipTestStatus | Select-Object -First 1).Snapshot
             Start-XmipOperationWeb -Url https://0.0.0.0:5443 -Snapshot $snapshot @tls
     #>
     [CmdletBinding(SupportsShouldProcess)]

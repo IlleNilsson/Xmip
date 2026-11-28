@@ -124,7 +124,7 @@ whose bridge is not there.
 ## Running it
 
 As the account in the `libvirt` group, never root;
-`Deploy-XmipEnvironment -Path <cluster file> -Cluster <name>`, msdsc where
+`Deploy-XmipEnvironment -Path <cluster file>`, msdsc where
 `-Technology` is left out (`deploy/dsc/README.md`).
 It applies `network.dsc.yaml`, then `machine.dsc.yaml` once per machine, one
 installation at a time, with this folder on `PATH` so DSC finds the

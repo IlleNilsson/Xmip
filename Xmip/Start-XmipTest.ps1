@@ -31,6 +31,16 @@ function Start-XmipTest {
             the snapshot so Get-XmipTestStatus can say what is running and
             Stop-XmipTest can end it, nodes first.
 
+            The cluster is the Reference Environment's, named by its file: its
+            [service] short_name, read by the runtime's one rule
+            (Get-XmipClusterName). Nothing typed names it (the owner,
+            2026-11-28: CT should not exist; ADR-0028, amendment 2026-11-28):
+            its scope root is xmip:///<cluster>, it publishes to
+            <cluster>-snapshot.xmip beside its history and activity, and its
+            nodes' local endpoints are xmip-<cluster>-<node>. A cluster rolls
+            once on a computer: a second roll of one already rolling or
+            building here is REFUSED, since its endpoints would collide.
+
             As local processes a roll spawns one cluster process and the cluster
             spawns one process per node (the owner, 2026-09-19: even clusters
             have to be spawned as processes during tests). Get-XmipProcess shows all
@@ -55,8 +65,8 @@ function Start-XmipTest {
             and core is the reserved provider that means Xmip itself (ADR-0011):
             a bare System is accepted and resolves to Core.System. A third
             party's suite carries its own provider. Case does not matter. The
-            parameters below are the two rolls', and Core.Demo takes -Cluster,
-            -Stress, -Process, -VirtualMachine, -Container and its own -Tester.
+            parameters below are the two rolls', and Core.Demo takes -Stress,
+            -Process, -VirtualMachine, -Container and its own -Tester.
 
             Wildcards select a group, exactly as -Test does (the owner,
             2026-09-19): -Suite * is every suite but those started by their name
@@ -71,8 +81,8 @@ function Start-XmipTest {
             the stream by type. It is said in words which are about to run and
             which did not start; one suite failing to start never stops the
             rest. A switch that belongs to one suite alone is not a fault when
-            a pattern chose the group: -Suite * -Cluster <cluster> rolls on
-            that cluster and runs the estate's Pester files beside it.
+            a pattern chose the group: -Suite * -Stress Harsh rolls at harsh
+            and runs the estate's Pester files beside it.
 
             A third party adds a suite by dropping a declaration in
             test/suite, with no edit to Xmip's own source. Example stands in
@@ -122,15 +132,16 @@ function Start-XmipTest {
 
         .PARAMETER Nodes
             The nodes, by name — one process each: -Nodes RX1, PX1, TX1 is three called that
-            under one cluster called -Cluster. They are written, with
-            -Cluster, -NodeRole and -NodeCapability, into the run's own cluster cluster.xmip,
-            <Path>/<Cluster>.xmip, and XMIP_TEST_CLUSTER names it to the
+            in the cluster the Reference Environment names. They are written, with
+            -NodeRole and -NodeCapability, into the run's own cluster.xmip,
+            <Path>/<cluster>.xmip, under the Reference Environment's [service],
+            and XMIP_SYSTEM_TEST_CLUSTER_FILE names it to the
             roll: a node is configuration (ADR-0056, amendment 2026-10-03), and
             there is no count. What each node does is the
             roles it is started with (ADR-0056), stated with
             -NodeRole. A name says nothing about it: the owner,
             2026-09-20, *Rn, Pn and Sn are arbitrary node names*. The names
-            are the tester's: these examples call clusters CL1, CL2 and nodes
+            are the tester's: these examples call nodes
             RX1, PX1, TX1, as the owner names them (ADR-0056, amendment
             2026-11-12), a reminder to the person and never to Xmip. A node given no
             role declares none and runs the shared-directory tests
@@ -142,7 +153,7 @@ function Start-XmipTest {
 
             A node's name is also the last word of its process name —
             xmip-system-test-<cluster>-node-<node> (ADR-0053, amendment
-            2026-09-20) — so it takes the shape -Cluster takes, and that is
+            2026-09-20) — so it takes a cluster's name's shape, and that is
             all: no word is reserved, and a node called roll is a node called
             roll. Anything a file cannot be called is REFUSED before a process
             starts.
@@ -174,22 +185,11 @@ function Start-XmipTest {
             Node capabilities per node, as -NodeRole: @{ RX1 = 'online, firewall-x' }, online the
             internet (ADR-0056, amendment 2026-11-24); unnamed, the System Tests' file's.
 
-        .PARAMETER Cluster
-            The cluster this roll starts (ADR-0028), by the name you give it
-            — required: you name the cluster, and a test spawns a cluster and
-            its nodes, never invents a name for one (the owner, 2026-09-14
-            and 2026-09-19). The scope root is xmip:///<Cluster> and the run
-            publishes to <Cluster>-snapshot.xmip beside its history and
-            activity. Any name a file can carry will do, and none means
-            anything to Xmip. Two rolls with two names are two clusters side
-            by side, each with its own web GUI:
-            Start-XmipTest -Cluster CL2 -PassThru | Start-XmipOperationWeb -Url ...
-
         .PARAMETER Process
             Each node and far end a local process, as with no switch; rolls' and Core.Demo's. -Proc.
 
         .PARAMETER VirtualMachine
-            On the virtual machines Deploy-XmipEnvironment deployed for -Cluster here,
+            On the virtual machines Deploy-XmipEnvironment deployed for the cluster here,
             at the addresses and with the operator certificate it recorded; nothing is
             built or started for them, no machine made or started. REFUSED before anything
             is built on a host that makes none, with -Nodes, -NodeRole or -NodeCapability,
@@ -223,23 +223,23 @@ function Start-XmipTest {
 
         .EXAMPLE
             # Omitted -Nodes: the Reference Environment's nodes
-            # ([nodes.RX1] roles = "receiving", and so on).
-            Start-XmipTest -Suite Core.System -Cluster CL1
+            # ([nodes.RX1] roles = "receiving", and so on), in the cluster it names.
+            Start-XmipTest -Suite Core.System
 
         .EXAMPLE
-            Start-XmipTest -Suite Core.System -Cluster CL1 -Test HeavyLoad -Stress Harsh -Process
+            Start-XmipTest -Suite Core.System -Test HeavyLoad -Stress Harsh -Process
 
         .EXAMPLE
-            Start-XmipTest -Suite Core.System -Cluster CL1 -Nodes RX1, TX1 -PassThru |
+            Start-XmipTest -Suite Core.System -Nodes RX1, TX1 -PassThru |
                 Start-XmipOperationWeb
 
         .EXAMPLE
             # The names are the tester's; -NodeRole says what each does.
-            Start-XmipTest -Test RoundTrip -Cluster CL1 -Nodes RX1, PX1, TX1
+            Start-XmipTest -Test RoundTrip -Nodes RX1, PX1, TX1
                 -NodeRole @{ RX1 = 'receiving'; PX1 = 'processing'; TX1 = 'sending' }
 
         .EXAMPLE
-            Start-XmipTest -Test RoundTrip -Cluster CL2 -Nodes RX1, RX2, PX1, TX1
+            Start-XmipTest -Test RoundTrip -Nodes RX1, RX2, PX1, TX1
                 -NodeCapability @{ RX1 = 'online'; TX1 = 'online' } -NodeRole @{ RX1 = 'receiving'
                     RX2 = 'receiving'; PX1 = 'processing'; TX1 = 'sending' }
 
@@ -247,19 +247,19 @@ function Start-XmipTest {
             Start-XmipTest -Suite Core.Estate -Test Rust.Style, XmipTest
 
         .EXAMPLE
-            Start-XmipTest -Cluster CL1 -Duration 00:15:00 -TimeFactor 9.5e-6 -WhatIf
+            Start-XmipTest -Duration 00:15:00 -TimeFactor 9.5e-6 -WhatIf
 
         .EXAMPLE
-            Start-XmipTest -Suite Example.System -Cluster CL1
+            Start-XmipTest -Suite Example.System
 
         .EXAMPLE
             Start-XmipTest -Suite Core.Estate -Test Sync-Xmip*
 
         .EXAMPLE
-            Start-XmipTest -Suite * -Cluster CL1 -VirtualMachine
+            Start-XmipTest -Suite * -VirtualMachine
 
         .EXAMPLE
-            Start-XmipTest -Suite Core.Demo -Cluster CL1 -Stress Realistic -Tester alice@example.org
+            Start-XmipTest -Suite Core.Demo -Stress Realistic -Tester alice@example.org
 
         .EXAMPLE
             Start-XmipTest -Suite Core.Internal -Test module/foundation/core -ComputerName build1
@@ -318,10 +318,6 @@ function Start-XmipTest {
         [Parameter()]
         [AllowNull()]
         [hashtable] $NodeCapability,
-
-        [Parameter()]
-        [ValidatePattern('^[A-Za-z][A-Za-z0-9-]*$')]
-        [string] $Cluster,
 
         # In sets of their own, which PowerShell refuses together (ADR-0028).
         [Parameter(ParameterSetName = 'Process')]

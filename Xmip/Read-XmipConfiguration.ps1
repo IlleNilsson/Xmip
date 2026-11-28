@@ -51,6 +51,48 @@ function Read-XmipConfiguration {
 }
 
 
+function Get-XmipClusterName {
+    <#
+        .SYNOPSIS
+            The cluster's name a cluster's file declares, as the runtime's one
+            rule reads it: its [service] cluster_name, or, where it declares
+            none, its [service] short_name (configure::cluster::cluster_name,
+            asked through xmip_cluster_views_v1).
+
+        .DESCRIPTION
+            The file names the cluster (the owner, 2026-11-28: CT should not
+            exist; ADR-0028, amendment 2026-11-28), so nothing a person types
+            names it. Throws REFUSED, in words, where the file is not TOML or
+            declares no name.
+
+        .PARAMETER Path
+            The cluster's file.
+    #>
+    [CmdletBinding()]
+    [OutputType([string])]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $Path
+    )
+
+    [string] $text = Get-Content -LiteralPath $Path -Raw -Encoding utf8 -ErrorAction Stop
+    Import-XmipOperatorModule
+    $views = $null
+    [string] $refusal = ''
+
+    if (-not [Xmip.Surface.ConfigurationViews]::TryRead($text, [ref] $views, [ref] $refusal)) {
+        throw "REFUSED. ${Path}: $refusal"
+    }
+
+    if ([string]::IsNullOrWhiteSpace($views.Cluster)) {
+        throw ("REFUSED. $Path names no cluster: its [service] declares neither " +
+            'cluster_name nor short_name, and a cluster is named by its file.')
+    }
+
+    return [string] $views.Cluster
+}
+
+
 function Write-XmipConfiguration {
     <#
         .SYNOPSIS

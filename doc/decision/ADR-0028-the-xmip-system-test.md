@@ -40,6 +40,8 @@
   one Linux container for every node and far end
 - Amended: 2026-11-26 — the Reference Environment, Xmip's one definition of
   an environment
+- Amended: 2026-11-28 — the cluster's file names the cluster, and the
+  Reference Environment is every test's
 - Related: ADR-0018 (the Service and the Host Services), ADR-0027 (the operator
   boundary), ADR-0010 (contract and transport boundaries), ADR-0025 (when a
   Module loads), ADR-0052 (the views' "show test clusters" box, its
@@ -52,7 +54,7 @@
 - Subject: The System Tests exercise everything, all the time
 - Name: The Xmip System Tests and Systems Tests
 - Order: 5
-- Concepts: System Tests, Systems Tests, internal tests, exercise, verdict; Development node; simulated node, real node, test level; Parties' far end, placing Locations on nodes; demo readiness check, Core.Demo; Core.Internal, test computer
+- Concepts: System Tests, Systems Tests, internal tests, exercise, verdict; Development node; simulated node, real node, test level; Parties' far end, placing Locations on nodes; demo readiness check, Core.Demo; Core.Internal, test computer; Cluster's name, declared by its file, the test cluster
 
 **`xmip-test-system-test` exercises Xmip continuously.** It spawns Development
 nodes as System Processes on one machine — no virtualization — and drives every
@@ -2417,3 +2419,91 @@ slice carrying it), `observe`'s publication test, `operate`'s
 Tests' `reference_environment` test, `Xmip.Surface.Test`'s
 `ClusterNamedTest`, and `test/NodeName.Test.ps1`, which finds the short
 name the Reference Environment declares nowhere but in that file.
+
+## Amendment, 2026-11-28: the cluster's file names the cluster, and the Reference Environment is every test's
+
+**Provenance.** The owner, 2026-11-28, of a roll started
+`Start-XmipTest -Suite Core.System -Cluster CT`, whose operator web view
+showed CRE in the crumbs and the status bar and CT in the rolling run line,
+the tooltips and the scope `xmip:///CT`: *Cluster name CT rolled by, that is
+not what we want*; asked whether the file should name the cluster or CT
+should stay internal: *CT should not exist*. Earlier the same day: *Lets keep
+the file name as Xmip-reference-environment, add a short name to be shown,
+use CRE for the short name*; *The short name should be declared in the xmip
+file*. And while this was built: *CRE should evolve for all tests*. What
+follows beyond those words is the worker's drafting, for the owner to
+strike.
+
+- **The file names the cluster.** A cluster's name is its file's
+  `[service] cluster_name`, or, where it declares none, its `[service]
+  short_name`: one rule, `configure::cluster::cluster_name`, which the
+  slicing, the runtime's signing, the designer's views
+  (`xmip_cluster_views_v1`'s `cluster`), PowerShell's `Get-XmipClusterName`
+  and every language's test fixture ask. A slice for another name is
+  refused, naming both (`configure::slice_named`), and `configure::slice`
+  slices a file that names its cluster as that cluster. The Reference
+  Environment declares its short name and no `cluster_name`, so its short
+  name is the cluster's name everywhere: the scope root
+  `xmip:///<cluster>`, the run's own file `<Path>/<cluster>.xmip`,
+  `<cluster>-snapshot.xmip` with the history and the activity named the
+  same way, every process `xmip-system-test-<cluster>-…`, every node's
+  local endpoint `xmip-<cluster>-<node>`, the image and service folders,
+  and on virtual machines `.local-work/deploy/<cluster>` and the network
+  `Xmip-<cluster>`. This replaces the amendment above where it says the
+  short name *is no cluster name* and a run's `-Cluster` still names the
+  cluster.
+- **The run names no cluster.** `-Cluster` is deleted, with every use,
+  from `Start-XmipTest` (Core.System, Core.Systems, Core.Demo and a group
+  started by `-Suite *`), `Stop-XmipTest`, `Get-XmipTestStatus` and
+  `Deploy-XmipEnvironment`, and `Write-XmipTestCluster` writes the run's
+  file under the Reference Environment's own `[service]`. Every clause of
+  this record that has the run or `-Cluster` name the cluster — the
+  amendments of 2026-09-30, 2026-10-21, 2026-11-10 and 2026-11-25 among
+  them — reads as this one says, and so do ADR-0015's, ADR-0052's,
+  ADR-0056's and ADR-0059's (each amended the same day). A run is picked
+  by its suite, its tests or its pid; where a command would choose among
+  clusters it chooses by the cluster file's path, never by a typed name.
+- **A cluster rolls once on a computer.** A second roll, or demo readiness
+  check, of a cluster already rolling or building on this computer is
+  REFUSED in words, whatever area or tree started the other: its nodes'
+  local endpoints would collide. The run records of the area are asked,
+  and the process names of the cluster's roll and cluster process on the
+  whole computer (`Get-XmipClusterRollingHere`).
+- **Two clusters at once are two files.** A roll compiles the Reference
+  Environment in, its Parties, Applications and far ends, so a second
+  cluster file is not rolled beside it yet: open problem 249.
+- **The Reference Environment is every test's cluster.** `test/cluster.xmip`
+  and `test/other/cluster.xmip` are deleted with every use: Rust's
+  `configure::fixture::test_cluster`, .NET's `TestCluster.Read` and
+  PowerShell's `Get-XmipTestCluster` read the Reference Environment and
+  name it by the one rule, and no fixture reads a variable:
+  `XMIP_TEST_CLUSTER` is gone, the roll's own run file reaching it as
+  `XMIP_SYSTEM_TEST_CLUSTER_FILE`. A test of two clusters takes the
+  second's name from its fixture, derived from the first's, `<name>-other`
+  (`TestCluster::other`, `TestCluster.ReadOther`), and no file is kept for
+  it; the .NET snapshot fixtures carry the Reference Environment's names.
+  What the two files held that a test needed the Reference Environment
+  already holds — a node of every role, two Storage nodes in the order
+  `[storage]` lists them — and it grows whenever a test needs what it
+  lacks. Tests still find nodes by declared role or place and write no
+  name (`test/NodeName.Test.ps1`). Its larger drawing showed a defect the
+  smaller files hid: open problem 250.
+- **The tooltip says the cluster once.** It names the short name only where
+  it is not the cluster's name (`operate::surface::cluster_named`), so the
+  Reference Environment's reads: its file's name, the cluster, the file.
+- **Two shipped configurations follow its roll by name.** The command
+  line's `cli.toml` and the PowerShell module's `powershell.toml` follow
+  `<cluster>-snapshot.xmip` of the Reference Environment's roll, the only
+  places outside that file the short name stands, each held to the file by
+  `test/NodeName.Test.ps1`, as the snapshot fixtures are.
+- **The CT convention is struck.** The amendment of 2026-09-30's last
+  bullet, how the assistant's test cluster is started (`-Cluster CT …
+  -Hidden`), no longer holds; `-Hidden` had already gone. Nothing names CT,
+  and `test/NodeName.Test.ps1` treats it as a struck name.
+
+Proved by `configure`'s `cluster`, `service` and `fixture` tests,
+`operate`'s views and `cluster_named` tests, the System Tests'
+`reference_environment` test, `test/XmipTest.Test.ps1` (the cluster named by
+its file and by no typed name, the run's file under the Reference
+Environment's `[service]`, a second roll refused), `test/Demo.Test.ps1`,
+`test/DeployEnvironment.Test.ps1` and `test/NodeName.Test.ps1`.

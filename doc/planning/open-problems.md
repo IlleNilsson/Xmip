@@ -3170,6 +3170,13 @@ no listed Storage node, the primary refreshes what it has seen by a
 handshake with each listed node, multiplying a caller's effort by the
 number of listed nodes. It is to be bounded.
 
+Wider 2026-11-28, from an outside review checked against the code: the
+Storage server asks whether the caller is listed (`listed_as`,
+`persist/.src/storage/server/admitted.rs`) before it checks that the caller
+is a node at all, so any refused certificate starts the round of handshakes
+(`standby/proven.rs`, `standby/finding.rs`), with no bound on how often.
+The node check is to come first.
+
 ## 161. A failover test lost files once under the whole parallel run on Linux
 
 Found 2026-11-24 the same day: `failover::every_file_dropped_arrives_once…`
@@ -3238,6 +3245,12 @@ family does, by the Message's `file.name` or the Location's pattern
 (`transport::file_name`); the service test's far ends take the bytes whole
 whatever the key, so they do not catch it.
 
+Wider 2026-11-28, from an outside review checked against the code: WebDAV
+does the same, so six Send Locations write every Message to one fixed
+target (aws-s3, google-cloud-storage, azure-blob, SMB, NFS and WebDAV);
+`transport::file_name` (`transport/.src/file_name.rs`) is called by file,
+FTP and SFTP alone. Each later Message overwrites the one before.
+
 ## 173. `--listening` reports a UDP Location's port as TCP
 
 Found 2026-11-24 the same day, older than it: noted in `listening.rs` and
@@ -3245,6 +3258,12 @@ wider now that DDS, DNS, KNX, SNMP, syslog and UDP are linked, so an
 environment opens TCP where they listen on UDP.
 
 Wider 2026-11-25: BACnet/IP, CoAP, DHCP, mDNS and SSDP are linked and listen on UDP too.
+
+Wider 2026-11-28, from an outside review checked against the code:
+`listening.rs` also keeps one entry per port number, so a TCP and a UDP
+Location on the same port become one, and the System Test's container
+reader (`Xmip/New-XmipSystemTestContainer.ps1`) keeps only `/tcp` lines.
+The DSC and Ansible templates already read `/udp`.
 
 ## 182. The domain controller as the network's way out has not run on a machine
 
@@ -3993,6 +4012,82 @@ generated crate. Needed: a dependency a developer's crate can resolve
 outside the estate, a published crate (problem 247) or the estate's
 working tree named by path where the developer has one, and a test that
 builds what is generated.
+
+## 249. A roll rolls the Reference Environment alone, so two clusters at once cannot be rolled
+
+Found 2026-11-28 with the owner's ruling that a cluster's file names the
+cluster (*CT should not exist*; ADR-0028, amendment 2026-11-28). Until that
+day two rolls under two names typed to `-Cluster` were two clusters side by
+side, each with its own web view. Now a second
+cluster is a second file, and the roll cannot take one: it compiles the
+Reference Environment in (`reference_environment::CLUSTER`, `include_str!`),
+its Parties, Xmip Applications, far ends and the text each served node is
+sliced from, and the run's own file supplies only the nodes; a second file
+naming another cluster is refused at the first slice, since the compiled
+file names the cluster its own way (`configure::slice_named`). So
+`Start-XmipTest` rolls the Reference Environment and takes no cluster file,
+and `Stop-XmipTest` and `Get-XmipTestStatus` have no cluster to choose
+among. Needed: the roll reading its run's cluster file whole where it reads
+the compiled text today (problem 224 is the same gap for `[storage]`);
+`Start-XmipTest` taking a cluster file's path, the Reference Environment
+where none is given; and `Stop-XmipTest` and `Get-XmipTestStatus` choosing
+among runs by that path, never by a typed name.
+
+## 250. The Reference Environment's drawing runs its operation node's lines past nodes they do not join
+
+Found 2026-11-28 when the Reference Environment became the test cluster
+(ADR-0028, amendment 2026-11-28): observe's
+`no_line_runs_through_a_node_it_does_not_join`, which the nine nodes of the
+old test cluster's file passed, fails on its eleven. With three receiving
+and three sending nodes a column and the processing node between the
+operation band and the path, the operation node's line to the first
+receiving node passes the processing node, and its line to the last
+sending node passes the middle one, each at 0.044 against the clearance
+(`topology::layout::grid::search`), at every shift the search tries: the
+drawing the owner's web view shows of the Reference Environment has done
+so since its nodes were laid out on 2026-11-22. The test is ignored naming
+this problem. Needed: a layout that runs every line of a cluster of that
+shape clear — the processing band or the operation band placed where no
+line from the one to a column passes the other, or a line routed round
+what it does not join — and the test running again.
+
+## 251. A Work Process unit generated from a design writes names into TOML and Rust unescaped
+
+Found 2026-11-28 from an outside review checked against the code:
+`process::generate` (`process/.src/generate.rs`) writes the module name
+into `Cargo.toml` and the unit's TOML as typed, the BPMN process id into a
+Rust string literal, the TOML and a doc comment, and the design's file name
+into a comment, each unescaped. The only check is that the name is not
+blank (`gui/vscode/.src/process_design.rs`, `extension/src/process.ts`), so
+a quote or a newline in a name breaks the generated crate or changes what
+it says, and a name cargo refuses passes. Needed: every value written
+through the TOML codec's quoting and Rust's debug quoting, a name cargo
+refuses refused in words before anything is written, and a test that
+generates from such names.
+
+## 252. Identifying a Stream's format reads the whole Stream
+
+Found 2026-11-28 from an outside review checked against the code: where no
+media type decides it, `Contract::identify` in csv, hl7-v2, json-schema and
+xml-schema loads the whole Stream (`Stream::load`) to look at its first
+bytes, and fixed-width, regex, toml, toon and yaml decode all of it as text.
+Nothing in production calls `identify` yet, so no Message pays for it
+today; the first caller that does pays a large Message's whole size in
+memory. `Stream` offers `reader()` and `load()` alone. Needed: a bounded
+look at a Stream's start, used by every `identify`.
+
+## 253. A landing leaves PowerShell's runtime library stale
+
+Found 2026-11-28 after the round landed as `a734bb3d`: rebuilding the
+surfaces in the owner's tree rebuilt the language server, the extension,
+Desktop, Android and the .NET GUI, but not `xmip_core_operate`, whose
+library the PowerShell module loads (`Import-XmipOperatorModule` copies
+`target/debug/xmip_core_operate.dll` under `.local-work/operator`). The one
+there was from 2026-11-25, so `Start-XmipTest -Suite Core.System` failed:
+the library *does not export xmip_cluster_said_v1*. Needed: the library
+PowerShell loads built by every landing with the surfaces, or the module
+refusing a library older than its source in words, naming the command that
+rebuilds it.
 
 # Suggested order
 

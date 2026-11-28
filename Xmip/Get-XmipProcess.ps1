@@ -37,7 +37,7 @@ function Get-XmipProcess {
             Only the processes whose name matches, wildcards allowed:
             -Name 'xmip-system-test-*' is every roll, cluster and node on this
             machine, and -Name 'xmip-system-test-CL1-*' is the tree of a
-            cluster someone called CL1, since a System Tests process carries
+            cluster whose file names it CL1, since a System Tests process carries
             its cluster and what it is (ADR-0053, amendment 2026-09-20). Every
             Xmip process unless said.
 

@@ -27,7 +27,9 @@ pub const USAGE: &str = "usage: xmip-service --configuration <path> [--console] 
      example: xmip-service --configuration /opt/xmip/config/node.xmip --readiness \
      --within 180\n\
      --slice prints the node's configuration, sliced from its cluster's cluster.xmip; \
-     --cluster names the cluster where the file names none; --bind places each \
+     --cluster names the cluster where the file names none, and is refused where the \
+     file names another, by its [service] cluster_name or else its short_name; --bind \
+     places each \
      Receive Location and Send Port the file designs on one of the environment's \
      --nodes and each Work Process on every one serving its stage, refusing work no \
      node satisfies, the Locations over SFTP on the Parties' far ends at each <host>, \

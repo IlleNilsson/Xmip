@@ -50,11 +50,13 @@ Describe 'Start-XmipTest returns before the build' {
             Mock Invoke-XmipSystemTestBuild { throw 'the console built' }
             Mock Get-XmipSystemTestPublication { throw 'no binary in this test' }
             Mock Get-XmipTestStatus { }
+            Mock Get-XmipClusterRollingHere { }
             Mock Write-Host { }
 
+            # The cluster is the one the Reference Environment names, never
+            # typed (ADR-0028, amendment 2026-11-28).
             [hashtable] $door = @{
                 Suite    = 'Core.System'
-                Cluster  = $Cluster
                 Nodes    = @($Node)
                 NodeRole = @{ $Node = 'executing' }
                 Rounds   = 1
@@ -81,17 +83,17 @@ Describe 'Start-XmipTest returns before the build' {
                 Id = 99; Kind = 'build'; State = 'building'; Cluster = $Cluster
             }
             Mock Get-XmipSystemTestBuild { $script:Building }
+            Mock Get-XmipClusterRollingHere { }
             Mock Start-XmipSystemTestBuild { 1 }
 
             [hashtable] $door = @{
-                Cluster  = $Cluster
                 Nodes    = @($Node)
                 NodeRole = @{ $Node = 'executing' }
                 Path     = $Area
             }
 
-            { Start-XmipTest @door -ErrorAction Stop } |
-                Should -Throw -ExpectedMessage '*REFUSED*rolling or building as pid 99*'
+            [string] $refused = '*REFUSED*rolls or builds on this computer as pid 99*'
+            { Start-XmipTest @door -ErrorAction Stop } | Should -Throw -ExpectedMessage $refused
             Should -Invoke Start-XmipSystemTestBuild -Times 0
         }
     }

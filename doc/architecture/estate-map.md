@@ -544,7 +544,7 @@ what it received. Records: ADR-0031 (amendment 2026-10-02).
 
 ## The tree
 
-Where each repository mounts and what it holds: 428543 lines of production
+Where each repository mounts and what it holds: 428556 lines of production
 source, every file charged to the deepest repository containing it, so a
 parent is its own code and never its children added again. Counted by
 `Get-XmipSourceFile`, which is also what `test/Rust.Style.Test.ps1` gates file
@@ -817,11 +817,11 @@ hold no source to count.
 │   │   │   ├── asn1                             686
 │   │   │   └── file                             318
 │   │   └── operation/
-│   │       ├── operate                        53393  C# 32759 · Rust 20634
+│   │       ├── operate                        53392  C# 32754 · Rust 20638
 │   │       ├── cli                            12412
 │   │       ├── gui                             8398
 │   │       │   └── vscode                      3439
-│   │       ├── observe                         8245
+│   │       ├── observe                         8256
 │   │       │   ├── otlp                         591
 │   │       │   └── prometheus                   332
 │   │       ├── powershell                      3943  C# 3943 · PowerShell 0
@@ -874,17 +874,17 @@ hold no source to count.
 │   │   ├── stream                               382
 │   │   └── party                                193
 │   └── platform/
-│       ├── runtime                            53671
+│       ├── runtime                            53675
 │       ├── persist                            25828
 │       │   ├── rocksdb                          323
 │       │   ├── sqlite                           288
 │       │       declared, not built 1
 │       │       postgresql
-│       ├── configure                           5816
+│       ├── configure                           5813
 │       └── cluster                             5090
 └── test/
     └── core/
-        ├── system-test                        19137
+        ├── system-test                        19139
         └── module                                83
 ```
 

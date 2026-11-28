@@ -150,7 +150,7 @@ function Get-XmipDemoResult {
 
     if ($null -eq $latest) {
         Write-Error ("No run of $script:XmipDemoSuite is recorded. Start-XmipTest -Suite " +
-            "$script:XmipDemoSuite -Cluster <name> starts one.")
+            "$script:XmipDemoSuite starts one.")
         return
     }
 

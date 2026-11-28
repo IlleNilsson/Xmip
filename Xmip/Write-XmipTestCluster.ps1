@@ -5,15 +5,17 @@ Set-StrictMode -Version Latest
 <#
     A test run's cluster, as configuration: the cluster.xmip whose [nodes] are the
     nodes a roll spawns (ADR-0056, amendment 2026-10-03: names are parameters
-    and configuration). Start-XmipTest writes the run's own file from
-    -Cluster, and the nodes -Nodes names or, where it names none, every node
-    the Reference Environment declares, each with the roles -NodeRole
+    and configuration). Start-XmipTest writes the run's own file from the
+    Reference Environment, which names the cluster (ADR-0028, amendment
+    2026-11-28), and the nodes -Nodes names or, where it names none, every
+    node the Reference Environment declares, each with the roles -NodeRole
     states or that file declares (ADR-0028, amendment 2026-10-21: one file
     for one computer and for machines of their own), and names it to the
-    roll in XMIP_TEST_CLUSTER — the variable every language's test fixture
-    reads. The file is read and written by the runtime's one reader, through
-    the operator module (Read-XmipConfiguration; ADR-0031, amendment
-    2026-11-17), as every configuration Xmip runs is.
+    roll in XMIP_SYSTEM_TEST_CLUSTER_FILE. The Reference Environment is also
+    the test cluster every language's test fixture reads. The file is read
+    and written by the runtime's one reader, through the operator module
+    (Read-XmipConfiguration; ADR-0031, amendment 2026-11-17), as every
+    configuration Xmip runs is.
 
     Style: doc/governance/powershell-style.md
 #>
@@ -21,18 +23,15 @@ Set-StrictMode -Version Latest
 function Get-XmipTestClusterPath {
     <#
         .SYNOPSIS
-            The test cluster's cluster.xmip: the file XMIP_TEST_CLUSTER names,
-            else the estate's test/cluster.xmip.
+            The test cluster's cluster.xmip: the Reference Environment, the
+            one cluster every test runs against (the owner, 2026-11-28;
+            ADR-0028, amendment 2026-11-28).
     #>
     [CmdletBinding()]
     [OutputType([string])]
     param()
 
-    if (-not [string]::IsNullOrWhiteSpace($env:XMIP_TEST_CLUSTER)) {
-        return $env:XMIP_TEST_CLUSTER
-    }
-
-    return Join-Path -Path (Get-XmipRepositoryRoot) -ChildPath 'test/cluster.xmip'
+    return (Get-XmipSystemTestLayout).Configuration
 }
 
 function Read-XmipTestCluster {
@@ -44,9 +43,10 @@ function Read-XmipTestCluster {
             module's one reading of a cluster's nodes.
 
         .DESCRIPTION
-            Throws where the file is not there or names no cluster_name. A
-            file that declares no node is a cluster of none, which a run asked
-            for with -Nodes @().
+            Its name is the one the file declares (Get-XmipClusterName).
+            Throws where the file is not there or declares no name. A file
+            that declares no node is a cluster of none, which a run asked for
+            with -Nodes @().
 
         .PARAMETER Path
             cluster.xmip.
@@ -63,13 +63,7 @@ function Read-XmipTestCluster {
     }
 
     $document = Read-XmipConfiguration -Path $Path
-    $service = Get-TomlValue -Node $document -Name 'service'
-    [string] $name = [string] (Get-TomlValue -Node $service -Name 'cluster_name')
-
-    if (-not $name) {
-        throw "the cluster file $Path names no cluster_name"
-    }
-
+    [string] $name = Get-XmipClusterName -Path $Path
     $declared = Get-XmipClusterNodeRole -Document $document
 
     return [pscustomobject]@{
@@ -128,10 +122,10 @@ function Read-XmipSystemTestCluster {
     <#
         .SYNOPSIS
             The nodes the Reference Environment, Xmip-reference-environment.xmip,
-            declares, the
-            roles each declares and the Storage nodes it lists. It names no
-            cluster: where it runs is the run's or the environment's (ADR-0028,
-            amendment 2026-10-21).
+            declares, the roles each declares and the Storage nodes it lists.
+            The cluster's name is the one it declares (Get-XmipClusterName);
+            where it runs is the run's or the environment's (ADR-0028,
+            amendments 2026-10-21 and 2026-11-28).
     #>
     [CmdletBinding()]
     [OutputType([pscustomobject])]
@@ -193,13 +187,16 @@ function Join-XmipNodeRole {
 function Write-XmipTestCluster {
     <#
         .SYNOPSIS
-            Writes a run's cluster cluster.xmip from what was typed — the
-            cluster, its nodes and the roles each declares — and returns its
-            path.
+            Writes a run's cluster cluster.xmip from the Reference Environment
+            and what was typed — its nodes and the roles each declares — and
+            returns its path.
 
         .DESCRIPTION
-            <Path>/<Cluster>.xmip: [service] with the cluster's name, and
-            one [nodes.<node>] per node, with roles where -NodeRole states
+            <Path>/<cluster>.xmip, named for the cluster the Reference
+            Environment declares (Get-XmipClusterName): its [service] as the
+            Reference Environment writes it, which names the cluster, with
+            name xmip where it says none, and one [nodes.<node>] per node,
+            with roles where -NodeRole states
             them, in node::NodeRole's words as ConvertTo-XmipNodeRole says
             them, and capabilities where -NodeCapability states its Node
             capabilities (ADR-0056, amendment 2026-11-24). A node neither
@@ -209,9 +206,6 @@ function Write-XmipTestCluster {
             and stands the configured primary first, never the first by its
             name (ADR-0052, amendment 2026-11-25); none where none is.
             Replaced on every run, so the file is what was typed this time.
-
-        .PARAMETER Cluster
-            The cluster's name, as -Cluster gave it.
 
         .PARAMETER Nodes
             The nodes, as -Nodes gave them; none is a cluster of none.
@@ -233,9 +227,6 @@ function Write-XmipTestCluster {
     [CmdletBinding(SupportsShouldProcess)]
     [OutputType([string])]
     param(
-        [Parameter(Mandatory)]
-        [string] $Cluster,
-
         [Parameter()]
         [AllowNull()]
         [AllowEmptyCollection()]
@@ -279,9 +270,19 @@ function Write-XmipTestCluster {
         $declared[$node] = $own
     }
 
-    $document = [ordered]@{
-        service = [ordered]@{ name = 'xmip'; cluster_name = $Cluster }
+    # The Reference Environment's [service] names the cluster, so the run's
+    # file is named as it is (ADR-0028, amendment 2026-11-28).
+    [string] $reference = (Get-XmipSystemTestLayout).Configuration
+    [string] $cluster = Get-XmipClusterName -Path $reference
+    $reading = Read-XmipConfiguration -Path $reference
+    $declaredService = Get-TomlValue -Node $reading -Name 'service' -Default @{}
+    $service = [ordered]@{ name = 'xmip' }
+
+    foreach ($key in @(Get-TomlKey -Node $declaredService)) {
+        $service[$key] = Get-TomlValue -Node $declaredService -Name $key
     }
+
+    $document = [ordered]@{ service = $service }
 
     if ($declared.Count -gt 0) {
         $document.nodes = $declared
@@ -298,7 +299,7 @@ function Write-XmipTestCluster {
         $document.storage = [ordered]@{ nodes = $listed }
     }
 
-    [string] $file = Join-Path -Path $Path -ChildPath "$Cluster.xmip"
+    [string] $file = Join-Path -Path $Path -ChildPath "$cluster.xmip"
 
     if ($PSCmdlet.ShouldProcess($file, 'Write the run''s cluster file')) {
         New-Item -ItemType Directory -Path $Path -Force | Out-Null

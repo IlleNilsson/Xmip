@@ -55,7 +55,7 @@ function Stop-XmipTestOnComputer {
     if ($Bound.ContainsKey('ComputerName')) {
         [hashtable] $given = @{}
 
-        foreach ($name in 'Id', 'Suite', 'Cluster', 'Test') {
+        foreach ($name in 'Id', 'Suite', 'Test') {
             if ($Bound.ContainsKey($name)) {
                 $given[$name] = $Bound[$name]
             }

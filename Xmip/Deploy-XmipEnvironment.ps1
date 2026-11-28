@@ -48,9 +48,11 @@ function Deploy-XmipEnvironment {
         .PARAMETER Path
             The cluster file: the System Tests' is
             test/core/system-test/configuration/Xmip-reference-environment.xmip.
-
-        .PARAMETER Cluster
-            The cluster's name, which the file names none of.
+            It names the cluster, by its [service] cluster_name or else its
+            short_name (Get-XmipClusterName; ADR-0028, amendment 2026-11-28),
+            and the environment is named for it: Xmip-<cluster>, its run
+            folder .local-work/deploy/<cluster>. A file naming no cluster is
+            REFUSED.
 
         .PARAMETER Technology
             msdsc (Microsoft DSC v3), what makes it where left out, or ansible.
@@ -82,13 +84,13 @@ function Deploy-XmipEnvironment {
 
         .EXAMPLE
             $file = './test/core/system-test/configuration/Xmip-reference-environment.xmip'
-            Deploy-XmipEnvironment -Path $file -Cluster CL1
+            Deploy-XmipEnvironment -Path $file
 
             On Windows, in an elevated Xmip PowerShell Console: the System
             Tests' virtual machines and nodes on Hyper-V.
 
         .EXAMPLE
-            Deploy-XmipEnvironment -Path $file -Cluster CL1 -WhatIf
+            Deploy-XmipEnvironment -Path $file -WhatIf
 
             Tests every step and changes nothing.
     #>
@@ -97,10 +99,6 @@ function Deploy-XmipEnvironment {
     param(
         [Parameter(Mandatory, Position = 0)]
         [string] $Path,
-
-        [Parameter(Mandatory)]
-        [ValidatePattern('^[A-Za-z][A-Za-z0-9-]*$')]
-        [string] $Cluster,
 
         [Parameter()]
         [ValidateSet('msdsc', 'ansible')]
@@ -130,8 +128,10 @@ function Deploy-XmipEnvironment {
     [string] $kind = Get-XmipDeployHypervisor -Hypervisor $Hypervisor -Technology $Technology
     [string] $file = (Resolve-Path -LiteralPath $Path).Path
     if ($Technology -eq 'ansible' -and $IsWindows) {
-        throw (Get-XmipDeployWslRefusal -Path $file -Cluster $Cluster -Bound $PSBoundParameters)
+        throw (Get-XmipDeployWslRefusal -Path $file -Bound $PSBoundParameters)
     }
+    # The file names the cluster, and nothing typed does (ADR-0028, amendment 2026-11-28).
+    [string] $Cluster = Get-XmipClusterName -Path $file
     if ($kind -eq 'hyperv' -and $IsWindows -and -not (Test-XmipDeployElevated)) {
         throw ('REFUSED: Hyper-V''s network, its switch''s address and its NAT, are an ' +
             'administrator''s to make: run this in an elevated Xmip PowerShell Console.')
@@ -266,9 +266,6 @@ function Get-XmipDeployWslRefusal {
         [string] $Path,
 
         [Parameter(Mandatory)]
-        [string] $Cluster,
-
-        [Parameter(Mandatory)]
         [System.Collections.IDictionary] $Bound
     )
 
@@ -282,7 +279,7 @@ function Get-XmipDeployWslRefusal {
     return ('REFUSED: Ansible''s controller does not run on Windows ' +
         '(https://docs.ansible.com/ansible/latest/os_guide/intro_windows.html). Run it ' +
         "in WSL: wsl.exe -- pwsh -Command `"Import-Module $module; Deploy-XmipEnvironment " +
-        "-Path $wsl -Cluster $Cluster -Technology ansible -Hypervisor hyperv " +
+        "-Path $wsl -Technology ansible -Hypervisor hyperv " +
         "-WindowsHost $reached`"")
 }
 

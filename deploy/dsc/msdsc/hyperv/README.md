@@ -209,8 +209,8 @@ nothing, on a fresh host too:
 
 ```powershell
 [string] $cluster = 'D:\Repos\Xmip\test\core\system-test\configuration\Xmip-reference-environment.xmip'
-Deploy-XmipEnvironment -Path $cluster -Cluster CL1 -WhatIf
-Deploy-XmipEnvironment -Path $cluster -Cluster CL1
+Deploy-XmipEnvironment -Path $cluster -WhatIf
+Deploy-XmipEnvironment -Path $cluster
 ```
 
 It applies `network.dsc.yaml`, then `machine.dsc.yaml` once per machine,

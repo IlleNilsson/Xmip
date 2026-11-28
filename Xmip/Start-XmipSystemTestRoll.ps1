@@ -32,7 +32,7 @@ function Get-XmipSystemTestChoice {
 
     # -Nodes, -NodeRole and -NodeCapability reach the roll as the run's
     # cluster file (Write-XmipTestCluster), never as variables of their own.
-    [string[]] $optional = @('Cluster', 'Duration', 'TimeFactor', 'LoadBytes')
+    [string[]] $optional = @('Duration', 'TimeFactor', 'LoadBytes')
 
     foreach ($name in $optional) {
         if ($Bound.ContainsKey($name)) {
@@ -49,7 +49,7 @@ function Get-XmipSystemTestChoice {
 # nothing (Resolve-XmipSystemTestChoice reads Bound for which were given).
 [string[]] $script:XmipRollHanded = @(
     'Suite', 'Stress', 'Test', 'Rounds', 'Duration', 'TimeFactor', 'Nodes', 'NodeRole',
-    'NodeCapability', 'Cluster', 'Path', 'PassThru'
+    'NodeCapability', 'Path', 'PassThru'
 )
 
 
@@ -148,7 +148,8 @@ function Start-XmipSystemTestRoll {
             As Start-XmipTest takes it, already checked there.
 
         .PARAMETER Cluster
-            As Start-XmipTest takes it, already checked there.
+            The cluster's name, as the Reference Environment declares it
+            (Resolve-XmipSystemTestChoice, Get-XmipClusterName).
 
         .PARAMETER Path
             As Start-XmipTest takes it, already checked there.
@@ -229,6 +230,7 @@ function Start-XmipSystemTestRoll {
     }
 
     [hashtable] $choice = Get-XmipSystemTestChoice -Bound $Bound
+    $choice.Cluster = $Cluster
     $choice.Stress = $Stress
     $choice.Test = $Test
     $choice.Area = $Path
@@ -253,32 +255,31 @@ function Start-XmipSystemTestRoll {
     New-Item -ItemType Directory -Path $Path -Force | Out-Null
     Remove-XmipSystemTestBuildEnded -Path $Path -Cluster $Cluster
 
-    # A roll is a cluster, and two rolls are two clusters (ADR-0028; ADR-0052,
-    # ruling 1 of 2026-09-14). Two under one name publish to one file and each
-    # overwrites the other: on 2026-09-18 three rolled as CC1, the surfaces
-    # saw 803, 2,259 and 11,499 leaves in turn, and the prompt went blank. A
-    # cluster still building is about to roll, and is refused the same way.
-    [int[]] $rolling = @(Get-XmipClusterRunning -Path $Path -Cluster $Cluster)
+    # Two rolls of one cluster publish to one file, each overwriting the other
+    # (2026-09-18, three rolls as CC1), and the file names the cluster, so it
+    # rolls once on a computer: a second's endpoints would collide (ADR-0028,
+    # amendments 2026-09-14 and 2026-11-28). A build is about to roll.
+    [int[]] $rolling = @(Get-XmipClusterTaken -Path $Path -Cluster $Cluster)
 
     if ($rolling.Count -gt 0) {
-        Write-Error ("REFUSED: cluster $Cluster is already rolling or building as pid " +
-            "$($rolling -join ', '). Stop it with Stop-XmipTest -Id " +
-            "$($rolling -join ', '), or name another cluster.")
+        Write-Error ("REFUSED: cluster $Cluster already rolls or builds on this computer as " +
+            "pid $($rolling -join ', '), and a second roll's local endpoints, " +
+            "xmip-$Cluster-<node>, would collide with its nodes'. Stop-XmipTest -Id " +
+            "$($rolling -join ', ') stops it where it was started; a second cluster at once " +
+            'is a second file (open problem 249).')
         return
     }
 
-    # The nodes are cluster.xmip (ADR-0056, amendment 2026-10-03),
-    # the Reference Environment, one file for one computer and for machines of
-    # their own (ADR-0028, amendment 2026-10-21): the run's file is written
-    # from -Cluster and the nodes -Nodes names, each with the roles -NodeRole
-    # and the Node capabilities -NodeCapability states or, where it says none,
-    # the System Tests' file declares (amendment 2026-11-24); omitted, its
-    # every node; and its Storage nodes in the order its [storage] lists them
-    # (ADR-0052, amendment 2026-11-25). XMIP_TEST_CLUSTER names it to the
-    # roll, and the run record says the nodes it declares. On virtual
-    # machines, the System Tests' and the Systems Tests' alike, the roll reads
-    # every one of them at the address the deployed environment recorded,
-    # and names none to be resolved (ADR-0028, amendment 2026-11-25).
+    # The nodes are cluster.xmip (ADR-0056, amendment 2026-10-03), the
+    # Reference Environment, one file for one computer and for machines of
+    # their own, which names the cluster (ADR-0028, amendments 2026-10-21 and
+    # 2026-11-28): the run's file is its [service] and the nodes -Nodes names,
+    # each with the roles -NodeRole and the Node capabilities -NodeCapability
+    # states or, where it says none, its file declares; omitted, its every
+    # node; and its Storage nodes in its [storage] order (ADR-0052, amendment
+    # 2026-11-25). XMIP_SYSTEM_TEST_CLUSTER_FILE names it to the roll, and the
+    # run record says its nodes. On virtual machines the roll reads every one
+    # at the address the deployed environment recorded (amendment 2026-11-25).
     $declared = Read-XmipSystemTestCluster
     [string[]] $typed = if ($boundNodes) { @($Nodes) } else { @($declared.Nodes) }
     [hashtable] $joined = @{ Nodes = $typed; NodeRole = $NodeRole; Declared = $declared.Role }
@@ -286,7 +287,6 @@ function Start-XmipSystemTestRoll {
         Nodes = $typed; NodeCapability = $NodeCapability; Declared = $declared.Capability
     }
     [hashtable] $written = @{
-        Cluster        = $Cluster
         Nodes          = $typed
         NodeRole       = Join-XmipNodeRole @joined
         NodeCapability = Join-XmipNodeCapability @capable

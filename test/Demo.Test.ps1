@@ -22,7 +22,10 @@ BeforeAll {
 
     . (Join-Path $PSScriptRoot 'Initialize-XmipTest.ps1')
 
+    # The cluster the Reference Environment names, which the check rolls
+    # (ADR-0028, amendment 2026-11-28), and the file that names it.
     $script:Cluster = (Get-XmipTestCluster).Name
+    $script:Reference = (Get-XmipTestCluster).Path
 
     # Two of the test cluster's nodes, by place (ADR-0056, amendment
     # 2026-10-03): the roll's record names them, and the second is the one
@@ -60,9 +63,7 @@ Describe 'Core.Demo is one of Xmip''s suites, and refuses what it does not take'
     }
 
     It 'refuses a switch it does not take, and its own on another suite, before anything' {
-        InModuleScope Xmip -Parameters @{ Cluster = $script:Cluster } {
-            param($Cluster)
-
+        InModuleScope Xmip {
             Mock Write-XmipAudit { }
             Mock Start-XmipDetachedShell { throw 'started' }
 
@@ -70,58 +71,60 @@ Describe 'Core.Demo is one of Xmip''s suites, and refuses what it does not take'
                 '*REFUSED. -Rounds belong to Core.System and Core.Systems, not Core.Demo.*'
             [string] $tester = '*REFUSED. -Tester belong to Core.Demo, not Core.Estate.*'
 
-            { Start-XmipTest -Suite Core.Demo -Cluster $Cluster -Rounds 3 -ErrorAction Stop } |
+            { Start-XmipTest -Suite Core.Demo -Rounds 3 -ErrorAction Stop } |
                 Should -Throw -ExpectedMessage $rounds
             { Start-XmipTest -Suite Core.Estate -Tester someone -ErrorAction Stop } |
                 Should -Throw -ExpectedMessage $tester
 
-            [hashtable] $systemTest = @{
-                Suite = 'Core.System'; Cluster = $Cluster; Tester = 'someone'; WhatIf = $true
-            }
+            [hashtable] $systemTest = @{ Suite = 'Core.System'; Tester = 'someone'; WhatIf = $true }
             { Start-XmipTest @systemTest -ErrorAction Stop } |
                 Should -Throw -ExpectedMessage '*-Tester belong to Core.Demo, not Core.System*'
-            { Start-XmipTest -Suite Core.Demo -ErrorAction Stop } |
-                Should -Throw -ExpectedMessage '*REFUSED. Core.Demo*-Cluster <name>*'
 
             Should -Invoke Start-XmipDetachedShell -Times 0
         }
     }
 
     It 'starts nothing under -WhatIf' {
-        InModuleScope Xmip -Parameters @{ Cluster = $script:Cluster } {
-            param($Cluster)
-
+        InModuleScope Xmip {
             Mock Start-XmipDetachedShell { throw 'started' }
 
-            Start-XmipTest -Suite Core.Demo -Cluster $Cluster -WhatIf
+            Start-XmipTest -Suite Core.Demo -WhatIf
 
             Should -Invoke Start-XmipDetachedShell -Times 0
         }
     }
 
     It 'starts the check detached and lists it running from the record it writes' {
-        [hashtable] $given = @{ Cluster = $script:Cluster; Area = (New-XmipDemoArea -Name 'start') }
+        [hashtable] $given = @{
+            Cluster = $script:Cluster; Reference = $script:Reference
+            Area    = (New-XmipDemoArea -Name 'start')
+        }
 
         InModuleScope Xmip -Parameters $given {
-            param($Cluster, $Area)
+            param($Cluster, $Reference, $Area)
 
             $script:DemoArea = $Area
+            $script:DemoFile = $Reference
             Mock Write-XmipAudit { }
             Mock Write-Host { }
             Mock Get-XmipSystemTestLayout {
-                [pscustomobject]@{ Demo = $script:DemoArea; Area = $script:DemoArea }
+                [pscustomobject]@{
+                    Demo          = $script:DemoArea
+                    Area          = $script:DemoArea
+                    Configuration = $script:DemoFile
+                }
             }
             Mock Get-XmipClusterRunning { }
+            Mock Get-XmipClusterRollingHere { }
             Mock Start-XmipDetachedShell {
                 $script:DemoScript = $Script
                 Get-Process -Id $PID
             }
 
             [hashtable] $door = @{
-                Suite   = 'Core.Demo'
-                Cluster = $Cluster
-                Stress  = 'Realistic'
-                Tester  = "o'brien@example.org"
+                Suite  = 'Core.Demo'
+                Stress = 'Realistic'
+                Tester = "o'brien@example.org"
             }
             $run = Start-XmipTest @door
 
@@ -138,18 +141,26 @@ Describe 'Core.Demo is one of Xmip''s suites, and refuses what it does not take'
     }
 
     It 'rolls at Realistic, the demo''s own stress, where -Stress is not given' {
-        [hashtable] $given = @{ Cluster = $script:Cluster; Area = (New-XmipDemoArea -Name 'calm') }
+        [hashtable] $given = @{
+            Reference = $script:Reference; Area = (New-XmipDemoArea -Name 'calm')
+        }
 
         InModuleScope Xmip -Parameters $given {
-            param($Cluster, $Area)
+            param($Reference, $Area)
 
             $script:DemoArea = $Area
+            $script:DemoFile = $Reference
             Mock Write-XmipAudit { }
             Mock Write-Host { }
             Mock Get-XmipSystemTestLayout {
-                [pscustomobject]@{ Demo = $script:DemoArea; Area = $script:DemoArea }
+                [pscustomobject]@{
+                    Demo          = $script:DemoArea
+                    Area          = $script:DemoArea
+                    Configuration = $script:DemoFile
+                }
             }
             Mock Get-XmipClusterRunning { }
+            Mock Get-XmipClusterRollingHere { }
             Mock Start-XmipDetachedShell {
                 $script:DemoScript = $Script
                 Get-Process -Id $PID
@@ -157,7 +168,7 @@ Describe 'Core.Demo is one of Xmip''s suites, and refuses what it does not take'
 
             # Never the System Tests' hardest, which an omitted -Stress is for a
             # roll asked for by itself.
-            (Start-XmipTest -Suite Core.Demo -Cluster $Cluster).Stress | Should -Be 'Realistic'
+            (Start-XmipTest -Suite Core.Demo).Stress | Should -Be 'Realistic'
             $script:DemoScript | Should -Match "Stress = 'Realistic'"
         }
     }
@@ -165,21 +176,27 @@ Describe 'Core.Demo is one of Xmip''s suites, and refuses what it does not take'
     It 'carries -Process or -VirtualMachine into its record, refused as a roll is first' {
         # The owner, 2026-11-25: *there has to be a switch to run the tests,
         # demo, as local processes or VMs* (ADR-0028, amendment 2026-11-25).
-        [hashtable] $given = @{ Cluster = $script:Cluster; Area = (New-XmipDemoArea -Name 'vm') }
+        [hashtable] $given = @{
+            Cluster = $script:Cluster; Reference = $script:Reference
+            Area    = (New-XmipDemoArea -Name 'vm')
+        }
 
         InModuleScope Xmip -Parameters $given {
-            param($Cluster, $Area)
+            param($Cluster, $Reference, $Area)
 
             $script:DemoArea = $Area
+            $script:DemoFile = $Reference
             Mock Write-XmipAudit { }
             Mock Write-Host { }
             Mock Get-XmipSystemTestLayout {
                 [pscustomobject]@{
-                    Demo = $script:DemoArea; Area = $script:DemoArea
-                    Configuration = Join-Path (Get-XmipRepositoryRoot) 'test/cluster.xmip'
+                    Demo          = $script:DemoArea
+                    Area          = $script:DemoArea
+                    Configuration = $script:DemoFile
                 }
             }
             Mock Get-XmipClusterRunning { }
+            Mock Get-XmipClusterRollingHere { }
             Mock Get-XmipDeployHypervisor { 'hyperv' }
             Mock Read-XmipDeployedEnvironment { }
             Mock Start-XmipDetachedShell {
@@ -187,13 +204,13 @@ Describe 'Core.Demo is one of Xmip''s suites, and refuses what it does not take'
                 Get-Process -Id $PID
             }
 
-            { Start-XmipTest -Suite Core.Demo -Cluster $Cluster -VM -ErrorAction Stop } |
+            { Start-XmipTest -Suite Core.Demo -VM -ErrorAction Stop } |
                 Should -Throw -ExpectedMessage "*REFUSED. No environment of cluster $Cluster*"
             # In containers, refused before anything starts where this host
             # has no container tool, in its own words (ADR-0028, amendment
             # 2026-11-25).
             Mock Get-XmipContainerTool { throw 'REFUSED: no container tool on this host' }
-            { Start-XmipTest -Suite Core.Demo -Cluster $Cluster -Container -ErrorAction Stop } |
+            { Start-XmipTest -Suite Core.Demo -Container -ErrorAction Stop } |
                 Should -Throw -ExpectedMessage '*REFUSED: no container tool on this host*'
             Should -Invoke Start-XmipDetachedShell -Times 0
 
@@ -203,7 +220,7 @@ Describe 'Core.Demo is one of Xmip''s suites, and refuses what it does not take'
             }
             Mock Read-XmipDeployedEnvironment { $script:Deployed }
 
-            $run = Start-XmipTest -Suite Core.Demo -Cluster $Cluster -VirtualMachine
+            $run = Start-XmipTest -Suite Core.Demo -VirtualMachine
             $run.RunsAs | Should -Be 'VirtualMachine'
             $script:DemoScript | Should -Match "RunsAs = 'VirtualMachine'"
             Get-Content -Raw -LiteralPath $run.Record | Should -Match 'runs_as = "VirtualMachine"'
@@ -211,10 +228,13 @@ Describe 'Core.Demo is one of Xmip''s suites, and refuses what it does not take'
     }
 
     It 'refuses a second run while one runs, before anything starts' {
-        [hashtable] $given = @{ Cluster = $script:Cluster; Area = (New-XmipDemoArea -Name 'two') }
+        [hashtable] $given = @{
+            Cluster = $script:Cluster; Reference = $script:Reference
+            Area    = (New-XmipDemoArea -Name 'two')
+        }
 
         InModuleScope Xmip -Parameters $given {
-            param($Cluster, $Area)
+            param($Cluster, $Reference, $Area)
 
             [hashtable] $began = @{
                 Record  = Join-Path $Area 'demo-20261110-120000-000.toml'
@@ -226,37 +246,52 @@ Describe 'Core.Demo is one of Xmip''s suites, and refuses what it does not take'
             Write-XmipDemoRecord -Run (New-XmipDemoState @began)
 
             $script:DemoArea = $Area
+            $script:DemoFile = $Reference
             Mock Write-XmipAudit { }
             Mock Get-XmipSystemTestLayout {
-                [pscustomobject]@{ Demo = $script:DemoArea; Area = $script:DemoArea }
+                [pscustomobject]@{
+                    Demo          = $script:DemoArea
+                    Area          = $script:DemoArea
+                    Configuration = $script:DemoFile
+                }
             }
             Mock Get-XmipClusterRunning { }
             Mock Start-XmipDetachedShell { throw 'started' }
 
-            { Start-XmipTest -Suite Core.Demo -Cluster $Cluster -ErrorAction Stop } |
+            { Start-XmipTest -Suite Core.Demo -ErrorAction Stop } |
                 Should -Throw -ExpectedMessage "*REFUSED. The Core.Demo run $PID is still running*"
             Should -Invoke Start-XmipDetachedShell -Times 0
             Test-Path -LiteralPath $began.Record | Should -BeTrue
         }
     }
 
-    It 'refuses a cluster that rolls or builds already, and never follows it' {
-        [hashtable] $given = @{ Cluster = $script:Cluster; Area = (New-XmipDemoArea -Name 'taken') }
+    It 'refuses the cluster rolling or building already on this computer, and never follows it' {
+        [hashtable] $given = @{
+            Cluster = $script:Cluster; Reference = $script:Reference
+            Area    = (New-XmipDemoArea -Name 'taken')
+        }
 
         InModuleScope Xmip -Parameters $given {
-            param($Cluster, $Area)
+            param($Cluster, $Reference, $Area)
 
             $script:DemoArea = $Area
+            $script:DemoFile = $Reference
             Mock Write-XmipAudit { }
             Mock Get-XmipSystemTestLayout {
-                [pscustomobject]@{ Demo = $script:DemoArea; Area = $script:DemoArea }
+                [pscustomobject]@{
+                    Demo          = $script:DemoArea
+                    Area          = $script:DemoArea
+                    Configuration = $script:DemoFile
+                }
             }
             Mock Get-XmipClusterRunning { 4242 }
+            Mock Get-XmipClusterRollingHere { 4343 }
             Mock Start-XmipDetachedShell { throw 'started' }
             $script:Asked = $Cluster
-            [string] $refused = "*REFUSED. $Cluster already rolls or builds as pid 4242*"
+            [string] $refused =
+                "*REFUSED. $Cluster already rolls or builds on this computer as pid 4242, 4343*"
 
-            { Start-XmipTest -Suite Core.Demo -Cluster $Cluster -ErrorAction Stop } |
+            { Start-XmipTest -Suite Core.Demo -ErrorAction Stop } |
                 Should -Throw -ExpectedMessage $refused
             Should -Invoke Start-XmipDetachedShell -Times 0
             Should -Invoke Get-XmipClusterRunning -Times 1 -ParameterFilter {
@@ -266,10 +301,13 @@ Describe 'Core.Demo is one of Xmip''s suites, and refuses what it does not take'
     }
 
     It 'stops what a run that died left running before it clears that run' {
-        [hashtable] $given = @{ Cluster = $script:Cluster; Area = (New-XmipDemoArea -Name 'left') }
+        [hashtable] $given = @{
+            Cluster = $script:Cluster; Reference = $script:Reference
+            Area    = (New-XmipDemoArea -Name 'left')
+        }
 
         InModuleScope Xmip -Parameters $given {
-            param($Cluster, $Area)
+            param($Cluster, $Reference, $Area)
 
             [hashtable] $began = @{
                 Record  = Join-Path $Area 'demo-20261110-120000-000.toml'
@@ -284,16 +322,22 @@ Describe 'Core.Demo is one of Xmip''s suites, and refuses what it does not take'
             Write-XmipDemoRecord -Run $dead
 
             $script:DemoArea = $Area
+            $script:DemoFile = $Reference
             Mock Write-XmipAudit { }
             Mock Write-Host { }
             Mock Get-XmipSystemTestLayout {
-                [pscustomobject]@{ Demo = $script:DemoArea; Area = $script:DemoArea }
+                [pscustomobject]@{
+                    Demo          = $script:DemoArea
+                    Area          = $script:DemoArea
+                    Configuration = $script:DemoFile
+                }
             }
             Mock Get-XmipClusterRunning { }
+            Mock Get-XmipClusterRollingHere { }
             Mock Stop-XmipDemoStarted { New-XmipDemoPart -Name 'stop' -State 'OK' -Reason 'done' }
             Mock Start-XmipDetachedShell { Get-Process -Id $PID }
 
-            $null = Start-XmipTest -Suite Core.Demo -Cluster $Cluster
+            $null = Start-XmipTest -Suite Core.Demo
 
             Should -Invoke Stop-XmipDemoStarted -Times 1 -ParameterFilter {
                 $Launched['roll'] -eq $Cluster -and $Launched['web'] -eq 4141

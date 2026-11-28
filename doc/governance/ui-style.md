@@ -28,8 +28,9 @@ of what it is on.
 
 A name shown short carries its long form. A cluster is shown by the short
 name its file declares, `[service] short_name`, and its tooltip carries the
-file's name, the short name, the name the run gives the cluster and the
-file (ADR-0028, amendment 2026-11-28). Both are the runtime's rule,
+file's name, the short name where it differs from the cluster's name, the
+cluster's name its file declares and the file (ADR-0028, amendment
+2026-11-28). Both are the runtime's rule,
 `operate::surface::cluster_named`, asked through `xmip_cluster_said_v1`.
 
 A text surface has no tooltip, and says beside the short form what a

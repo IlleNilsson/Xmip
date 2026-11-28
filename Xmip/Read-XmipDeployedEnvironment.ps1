@@ -36,7 +36,7 @@ function Read-XmipDeployedEnvironment {
             ADR-0028, amendments 2026-11-25).
 
         .PARAMETER Cluster
-            The cluster, as Deploy-XmipEnvironment -Cluster named it.
+            The cluster, by the name its file declares (Get-XmipClusterName).
     #>
     [CmdletBinding()]
     [OutputType([hashtable])]

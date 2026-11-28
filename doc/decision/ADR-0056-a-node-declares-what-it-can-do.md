@@ -2386,3 +2386,19 @@ ready by a publication of an earlier start: "activated: serial 17954891771014398
 and the deploy's Pester tests (`test/MsdscEnvironment.Test.ps1`: the
 Slice step leaving a restart, a certificate placed leaving one, the Service
 step restarting once and waiting once, the package leaving `ready`).
+
+## Amendment, 2026-11-28: the test cluster is the Reference Environment
+
+The owner, 2026-11-28: *CRE should evolve for all tests* (ADR-0028,
+amendment 2026-11-28). The test clusters of the amendment of 2026-10-03,
+`test/cluster.xmip` and `test/other/cluster.xmip`, are deleted: every
+language's one fixture — `configure::fixture::test_cluster`, .NET's
+`TestCluster`, PowerShell's `Get-XmipTestCluster` — reads the Reference
+Environment, named by the one rule, and a test of two clusters takes the
+second's name from its fixture, derived from the first's, with no file kept
+for it. No fixture reads `XMIP_TEST_CLUSTER`, which is gone: the roll's own
+run file, written by `Start-XmipTest` from the Reference Environment and
+`-Nodes`, `-NodeRole` and `-NodeCapability`, reaches the roll as
+`XMIP_SYSTEM_TEST_CLUSTER_FILE`, and `-Cluster` is gone from every command.
+The names the owner types stand in the Reference Environment, and a test
+still finds a node by what it declares or by its place.

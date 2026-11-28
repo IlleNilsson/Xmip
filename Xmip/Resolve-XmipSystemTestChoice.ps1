@@ -68,7 +68,7 @@ function Resolve-XmipRunsAs {
             What Start-XmipTest was called with.
 
         .PARAMETER Cluster
-            The cluster, as -Cluster names it.
+            The cluster's name, as its file declares it (Get-XmipClusterName).
     #>
     [CmdletBinding()]
     [OutputType([hashtable])]
@@ -163,7 +163,7 @@ function Resolve-XmipVirtualMachineRun {
             What Start-XmipTest was called with.
 
         .PARAMETER Cluster
-            The cluster, as -Cluster names it.
+            The cluster's name, as its file declares it (Get-XmipClusterName).
     #>
     [CmdletBinding()]
     [OutputType([hashtable])]
@@ -187,7 +187,7 @@ function Resolve-XmipVirtualMachineRun {
             'declares.')
     }
 
-    [string] $deploy = ("Deploy-XmipEnvironment -Path $file -Cluster $Cluster deploys it, " +
+    [string] $deploy = ("Deploy-XmipEnvironment -Path $file deploys it, " +
         'in an elevated Xmip PowerShell Console on Windows; -VirtualMachine never makes or ' +
         'starts a virtual machine.')
     $deployed = Read-XmipDeployedEnvironment -Cluster $Cluster
@@ -232,7 +232,7 @@ function Resolve-XmipSystemTestChoice {
         return $null
     }
 
-    foreach ($name in 'Test', 'Nodes', 'NodeCapability', 'NodeRole', 'Cluster') {
+    foreach ($name in 'Test', 'Nodes', 'NodeCapability', 'NodeRole') {
         if (-not $Choice.ContainsKey($name)) {
             $Choice[$name] = $null
         }
@@ -264,12 +264,10 @@ function Resolve-XmipSystemTestChoice {
         return $null
     }
 
-    # You name the cluster; a test spawns nodes, never a cluster (the owner,
-    # 2026-09-14). Nothing here invents a name for a roll.
-    if ([string]::IsNullOrWhiteSpace($Choice.Cluster)) {
-        Write-Error 'A roll is a cluster and you name it: -Cluster <name>.'
-        return $null
-    }
+    # The Reference Environment names the cluster; nothing typed names it,
+    # and a test spawns nodes, never a cluster (the owner, 2026-09-14 and
+    # 2026-11-28: CT should not exist; ADR-0028, amendment 2026-11-28).
+    $Choice.Cluster = Get-XmipClusterName -Path (Get-XmipSystemTestLayout).Configuration
 
     # What the run runs as, by the switch given; on virtual machines the
     # environment Deploy-XmipEnvironment recorded, or REFUSED (ADR-0028,

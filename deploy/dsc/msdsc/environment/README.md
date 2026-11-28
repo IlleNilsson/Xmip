@@ -21,12 +21,12 @@ file a test runs
 whether its nodes are processes on one computer or on virtual machines of
 their own (the owner, 2026-10-21: *one TOML file that can be run for tests
 regardless of node faking or actual nodes*; ADR-0028, amendments 2026-10-21
-and 2026-11-25). What the cluster is, and in its `[environment]` table where
-it runs on virtual machines, which no node is given
-(`deploy/dsc/README.md`, *The environment table*). What the environment
-adds is the command's: the cluster's name, `-Cluster`, the package, every
-node's and far end's certificate, and each machine's address, in the order
-the table derives it. `Deploy-XmipEnvironment` gives the documents here
+and 2026-11-25). What the cluster is, its name among it, and in its
+`[environment]` table where it runs on virtual machines, which no node is
+given (`deploy/dsc/README.md`, *The environment table*). What the
+environment adds is the command's: the package, every node's and far end's
+certificate, and each machine's address, in the order the table derives
+it. `Deploy-XmipEnvironment` gives the documents here
 their parameters from them; the layout and the accounts are
 `machine.dsc.yaml`'s own defaults.
 
@@ -61,7 +61,8 @@ amendment 2026-11-25).
 
 **The DNS server**, the `domain_controller`, XMIP-DC01 in the owner's plan
 (`name.dsc.yaml`): the zone, `xmip.test`, where it is not there, and an A
-record for the cluster, `CL1`, holding every node machine's address, and
+record for the cluster, `<cluster>`, the name its file declares, holding
+every node machine's address, and
 one for each node holding its machine's. A node finds another by its name —
 `DS1:7443` — inside the network; the System Tests and the Systems Tests
 reach each node and far
@@ -331,7 +332,7 @@ once (`deploy/dsc/README.md`, *Before the first run*).
 
 ## Running it
 
-`Deploy-XmipEnvironment -Path <cluster file> -Cluster <name>`, msdsc where
+`Deploy-XmipEnvironment -Path <cluster file>`, msdsc where
 `-Technology` is left out: after the machines, it applies `domain.dsc.yaml`
 to the `domain_controller` where the table names one, `gateway.dsc.yaml` to
 its `gateway` where it names one, `names.dsc.yaml` where one of the
@@ -364,11 +365,11 @@ starts; `-Nodes`, `-NodeRole` and `-NodeCapability` are refused with it,
 and so is a cluster file that changed since it was deployed:
 
 ```powershell
-Start-XmipTest -Suite Core.System -Cluster CL1 -VirtualMachine
-Start-XmipTest -Suite Core.Systems -Cluster CL1 -VirtualMachine
+Start-XmipTest -Suite Core.System -VirtualMachine
+Start-XmipTest -Suite Core.Systems -VirtualMachine
 Get-XmipTestStatus
 Get-XmipTestResult -Test Carried
-Start-XmipOperationWeb -Snapshot D:\Repos\Xmip\.local-work\system-test\CL1-snapshot.xmip
+Start-XmipOperationWeb -Snapshot D:\Repos\Xmip\.local-work\system-test\<cluster>-snapshot.xmip
 ```
 
 Open <https://127.0.0.1:5087> in a Web Browser tab: the Monitor follows the

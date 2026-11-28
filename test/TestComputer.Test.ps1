@@ -461,7 +461,7 @@ Describe 'Start, Get and Stop take -ComputerName, and nothing new is a cmdlet' {
         $listed.Count | Should -Be 1
         $listed[0].ComputerName | Should -Be 'build1'
         Should -Invoke Invoke-XmipTestComputer -ModuleName Xmip -Times 1 -ParameterFilter {
-            $Command -eq 'Get-XmipTestStatus' -and $AllowAbsent -and $Parameter.Cluster -eq '*'
+            $Command -eq 'Get-XmipTestStatus' -and $AllowAbsent -and $Parameter.Count -eq 0
         }
 
         Stop-XmipTest -ComputerName build1 -Suite Core.Estate -Confirm:$false

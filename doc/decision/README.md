@@ -1154,6 +1154,7 @@ You have a word. This gives you the decision that governs it.
 | Change notification, a drop directory told | [A claim at the endpoint](ADR-0024-resource-claim-replaces-exclusiveness.md) |
 | Claim, claimable | [A claim at the endpoint](ADR-0024-resource-claim-replaces-exclusiveness.md) |
 | CLI, `xmip`, Rust | [The operator surfaces](ADR-0014-operator-surfaces.md) |
+| Cluster's name, declared by its file, the test cluster | [The Xmip System Tests and Systems Tests](ADR-0028-the-xmip-system-test.md) |
 | Communication Domain | [The Communication Domain model](ADR-0007-communication-domain-model.md) |
 | compiled at design time | [Routes are configured; transforms and processes are compiled](ADR-0066-routes-are-configured-transforms-and-processes-are-compiled.md) |
 | compiled at start | [Routes are configured; transforms and processes are compiled](ADR-0066-routes-are-configured-transforms-and-processes-are-compiled.md) |

@@ -34,15 +34,16 @@ function Start-XmipDemoSuite {
             under .local-work/demo and its record beside it. -Stress omitted
             is Realistic, the demo's own.
 
-            Refused before anything starts: a switch Core.Demo does not take;
-            no -Cluster, since a test spawns a cluster and never invents a
-            name for one; on virtual machines, what a roll on them is refused
-            for (Resolve-XmipVirtualMachineRun); a run of the check still
+            It rolls the cluster the Reference Environment names
+            (Get-XmipClusterName; ADR-0028, amendment 2026-11-28). Refused
+            before anything starts: a switch Core.Demo does not take; on
+            virtual machines, what a roll on them is refused for
+            (Resolve-XmipVirtualMachineRun); a run of the check still
             running, since two would share one web address and one desktop
             app's folder and gui.toml;
-            and a cluster that rolls or builds already, since the check
-            proves the roll it builds from this tree and never follows one
-            (Get-XmipClusterRunning).
+            and the cluster rolling or building already on this computer,
+            since the check proves the roll it builds from this tree and never
+            follows one (Get-XmipClusterTaken).
 
             A new run clears the records and logs of the runs that ended,
             and first stops what a run that ended without a verdict — its
@@ -73,18 +74,13 @@ function Start-XmipDemoSuite {
         return
     }
 
-    [string] $cluster = [string] $Bound['Cluster']
-
-    if ([string]::IsNullOrWhiteSpace($cluster)) {
-        Write-Error "REFUSED. $script:XmipDemoSuite rolls a cluster you name: -Cluster <name>."
-        return
-    }
+    # The Reference Environment names the cluster the check rolls.
+    $layout = Get-XmipSystemTestLayout
+    [string] $cluster = Get-XmipClusterName -Path $layout.Configuration
 
     # Refused as the roll it starts would be, before its pwsh starts.
     [string] $as = Get-XmipRunsAs -Bound $Bound
     $null = Resolve-XmipRunsAs -Bound $Bound -Cluster $cluster
-
-    $layout = Get-XmipSystemTestLayout
     [string] $area = $layout.Demo
     [object[]] $runs = @(Get-XmipDemoRun -Path $area)
     [int[]] $running = @($runs | Where-Object { $_.State -eq 'running' } | ForEach-Object Id)
@@ -106,13 +102,13 @@ function Start-XmipDemoSuite {
     }
 
     Remove-XmipRunFinished -Run $runs
-    [int[]] $taken = @(Get-XmipClusterRunning -Path $layout.Area -Cluster $cluster)
+    [int[]] $taken = @(Get-XmipClusterTaken -Path $layout.Area -Cluster $cluster)
 
     if ($taken.Count -gt 0) {
-        Write-Error ("REFUSED. $cluster already rolls or builds as pid $($taken -join ', '), " +
-            "and $script:XmipDemoSuite proves the roll it builds from this tree, never one it " +
-            "did not start. Stop-XmipTest -Id $($taken -join ', ') stops it, or name another " +
-            'cluster.')
+        Write-Error ("REFUSED. $cluster already rolls or builds on this computer as pid " +
+            "$($taken -join ', '), and $script:XmipDemoSuite proves the roll it builds from " +
+            "this tree, never one it did not start. Stop-XmipTest -Id $($taken -join ', ') " +
+            'stops it where it was started.')
         return
     }
 

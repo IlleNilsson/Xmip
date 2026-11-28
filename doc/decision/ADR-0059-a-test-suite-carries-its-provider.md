@@ -6,6 +6,8 @@
 - Date: 2026-09-19
 - Amended: 2026-11-23 — Xmip's two rolls, Core.System on one computer and
   Core.Systems on an environment's machines (ADR-0028, amendment of that date)
+- Amended: 2026-11-28 — no filter names a cluster (ADR-0028, amendment of
+  that date)
 - Related: ADR-0011 (module and repository naming), ADR-0055 (bad input is
   refused at the door), ADR-0028 (the System Tests), ADR-0014 (the operator
   surfaces), ADR-0052 (the operator surfaces share one model), ADR-0031
@@ -718,3 +720,15 @@ take the same switches, `-Certificate` Core.Systems' alone and required
 there, and a refusal names both: *-Stress belong to Core.System and
 Core.Systems, not Core.Estate.* Where a suite's nodes run is what it
 declares, `Machines`, never read from its name.
+
+## Amendment, 2026-11-28: no filter names a cluster
+
+The owner, 2026-11-28: *CT should not exist* (ADR-0028, amendment
+2026-11-28). A cluster is named by its file and rolls once on a computer,
+so `-Cluster` is deleted from `Start-XmipTest`, `Stop-XmipTest` and
+`Get-XmipTestStatus`. The filters of the amendments of 2026-09-19 and
+2026-09-21 are `-Suite` and `-Test`, which pick together in the one
+parameter set as before; `Start-XmipTest -Test RoundTrip` and
+`Stop-XmipTest -Test RoundTrip` are each other's inverse, and a run is
+stopped whole with `-Suite` or `-Id`. Where a command would choose among
+clusters it chooses by the cluster file's path, never a typed name.

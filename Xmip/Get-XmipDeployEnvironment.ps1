@@ -33,7 +33,7 @@ function Get-XmipDeployEnvironment {
             The cluster file, as Read-XmipToml reads it.
 
         .PARAMETER Name
-            The cluster's name, which the file names none of.
+            The cluster's name, as the file declares it (Get-XmipClusterName).
 
         .PARAMETER File
             The cluster file's path, each node's configuration sliced from it.

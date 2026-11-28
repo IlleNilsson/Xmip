@@ -169,15 +169,16 @@ fn every_node_configuration_deploy_writes_is_the_one_the_runtime_reads() {
 
     // The System Tests' file is the one a test runs whether its nodes are
     // simulated or on machines of their own (ADR-0028, amendment
-    // 2026-10-21): every node it declares slices as the environment names
-    // the cluster and reads as xmip-service reads it.
+    // 2026-10-21), and it names its cluster, by its short name (amendment
+    // 2026-11-28): every node it declares slices as that cluster and reads
+    // as xmip-service reads it.
     let cluster = source(SYSTEM_TEST);
+    let environment = xmip_configure::fixture::test_cluster().name;
     assert_eq!(
         xmip_configure::cluster::cluster_name(&cluster).expect("reads"),
-        None,
-        "{SYSTEM_TEST} names no cluster: where it runs is the environment's"
+        Some(environment.clone()),
+        "{SYSTEM_TEST} names its cluster, and the test cluster is it"
     );
-    let environment = xmip_configure::fixture::test_cluster().name;
     let nodes = xmip_configure::cluster::nodes(&cluster).expect("declares its nodes");
     assert!(!nodes.is_empty(), "{SYSTEM_TEST} declares its nodes");
     for node in &nodes {

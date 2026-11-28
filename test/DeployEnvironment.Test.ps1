@@ -91,9 +91,9 @@ BeforeAll {
         )
 
         [hashtable] $given = @{ Environment = $Environment; Answer = $Answer; Value = $Value
-            WhatIf = $WhatIf.IsPresent; Cluster = $script:Cluster }
+            WhatIf = $WhatIf.IsPresent }
         return @(InModuleScope Xmip -Parameters $given {
-                param($Environment, $Answer, $Value, $WhatIf, $Cluster)
+                param($Environment, $Answer, $Value, $WhatIf)
                 $script:Called = [Collections.Generic.List[string]]::new()
                 $script:Rounds = @{}
                 $script:Facts = $Environment.Facts
@@ -114,8 +114,7 @@ BeforeAll {
                     $script:Rounds[$Step.Name] = 1 + [int] $script:Rounds[$Step.Name]
                     & $script:Answer $Step $Operation $script:Rounds[$Step.Name] $script:Value
                 }
-                Deploy-XmipEnvironment -Path $Environment.File -Cluster $Cluster -WhatIf:$WhatIf |
-                    Out-Null
+                Deploy-XmipEnvironment -Path $Environment.File -WhatIf:$WhatIf | Out-Null
                 $script:Called
             })
     }
@@ -173,7 +172,7 @@ Describe 'The cluster file''s environment' {
     It 'refuses Ansible on Windows, naming the WSL command with the host''s kind' -Skip:(
         -not $IsWindows) {
         $made = New-Environment -Technology 'ansible'
-        [hashtable] $asked = @{ Path = $made.File; Cluster = $script:Cluster
+        [hashtable] $asked = @{ Path = $made.File
             Technology = 'ansible'; WindowsHost = 'host'; WhatIf = $true }
         { Deploy-XmipEnvironment @asked } |
             Should -Throw (
@@ -182,20 +181,19 @@ Describe 'The cluster file''s environment' {
 
     It 'refuses an unelevated run on Windows, naming the elevated console' -Skip:(-not $IsWindows) {
         $made = New-Environment -Linux
-        InModuleScope Xmip -Parameters @{ File = $made.File; Cluster = $script:Cluster } {
-            param($File, $Cluster)
+        InModuleScope Xmip -Parameters @{ File = $made.File } {
+            param($File)
             Mock Test-XmipDeployElevated { $false }
             Mock Lock-XmipDeployState { throw 'the state is not to be reached' }
-            { Deploy-XmipEnvironment -Path $File -Cluster $Cluster -WhatIf } |
+            { Deploy-XmipEnvironment -Path $File -WhatIf } |
                 Should -Throw '*elevated Xmip PowerShell Console*'
         }
     }
 
     It 'refuses a second run of the environment while one runs, before any step' {
         $made = New-Environment -Linux
-        [string[]] $calls = @(InModuleScope Xmip -Parameters @{ Made = $made
-                Cluster = $script:Cluster } {
-                param($Made, $Cluster)
+        [string[]] $calls = @(InModuleScope Xmip -Parameters @{ Made = $made } {
+                param($Made)
                 $script:Called = [Collections.Generic.List[string]]::new()
                 $script:Facts = $Made.Facts
                 Mock Get-XmipDeployRunFolder { [string] $TestDrive }
@@ -213,7 +211,7 @@ Describe 'The cluster file''s environment' {
                 }
                 [IO.FileStream] $first = Lock-XmipDeployState -Folder $TestDrive
                 try {
-                    { Deploy-XmipEnvironment -Path $Made.File -Cluster $Cluster -WhatIf } |
+                    { Deploy-XmipEnvironment -Path $Made.File -WhatIf } |
                         Should -Throw 'REFUSED: another run of this environment holds*run.lock*'
                     $script:Called.Count | Should -Be 0
                 }
@@ -221,7 +219,7 @@ Describe 'The cluster file''s environment' {
                     $first.Dispose()
                 }
                 # Released, the next run runs, and releases it in its turn.
-                Deploy-XmipEnvironment -Path $Made.File -Cluster $Cluster -WhatIf | Out-Null
+                Deploy-XmipEnvironment -Path $Made.File -WhatIf | Out-Null
                 Lock-XmipDeployState -Folder $TestDrive | ForEach-Object { $_.Dispose() }
                 $script:Called
             })
@@ -710,16 +708,15 @@ Describe 'The private state' {
         [string] $known = (Initialize-State -Environment $made -Folder (
                 $folder)).KnownHosts
         [byte[]] $before = [IO.File]::ReadAllBytes($known)
-        InModuleScope Xmip -Parameters @{ Made = $made; Folder = $folder
-            Cluster = $script:Cluster } {
-            param($Made, $Folder, $Cluster)
+        InModuleScope Xmip -Parameters @{ Made = $made; Folder = $folder } {
+            param($Made, $Folder)
             $script:Folder = $Folder
             Mock Get-XmipDeployRunFolder { $script:Folder }
             Mock Get-XmipDeployStateFolder { $script:Folder }
             Mock Test-XmipDeployElevated { $true }
             [IO.FileStream] $running = Lock-XmipDeployState -Folder $Folder
             try {
-                { Deploy-XmipEnvironment -Path $Made.File -Cluster $Cluster -WhatIf } |
+                { Deploy-XmipEnvironment -Path $Made.File -WhatIf } |
                     Should -Throw 'REFUSED: another run of this environment holds*'
             }
             finally {

@@ -354,6 +354,9 @@ page.
 
 What it says, from the top:
 
+- `[service] cluster_name` names the cluster, `learning`. A file that
+  declares no `cluster_name` is named by its `[service] short_name`, and
+  anything that names the cluster must say the name its file declares.
 - The `[[xmip_applications]]` section is the Xmip Application `FileCopy` as
   its developer designed it: a Receive Location `Drop`, a Send Port `Out`,
   and a Subscription that sends every Message whose Stream was accepted by
@@ -559,11 +562,12 @@ as processes on your machine and carry payloads through them, round after
 round, over every transport and content contract, the file transport among
 them. It needs no network and no other software.
 
-Start a cluster called `CL1` with three nodes, one per stage: receive, process,
-send.
+Start the Reference Environment's cluster with three nodes, one per stage:
+receive, process, send. Its name is the short name the Reference Environment
+declares, `[service] short_name`; this page writes it `<cluster>`.
 
 ```powershell
-Start-XmipTest -Suite Core.System -Cluster CL1 -Test RoundTrip -Nodes RX1, PX1, TX1 `
+Start-XmipTest -Suite Core.System -Test RoundTrip -Nodes RX1, PX1, TX1 `
     -NodeRole @{ RX1 = 'receiving'; PX1 = 'processing'; TX1 = 'sending' } `
     -NodeCapability @{ RX1 = 'online' }
 ```
@@ -593,8 +597,9 @@ Get-XmipTestStatus
 ```
 
 It says `building` until the nodes start, then `running`, or `FAILED` with the
-first error. The names `CL1`, `RX1`, `PX1` and `TX1` are yours to choose; this page
-uses `CL1` because the surfaces in a fresh clone are set to follow it.
+first error, and its `Cluster` is the cluster's name. The names `RX1`, `PX1`
+and `TX1` are yours to choose; the cluster's is its file's, and the surfaces
+in a fresh clone are set to follow it.
 
 The System Tests inject faults on purpose, of the kinds real integrations
 suffer: a reset connection, an unresolved host, content that fails its
@@ -604,12 +609,12 @@ transport is the one path it keeps fault-free.
 Watch it on each surface:
 
 ```powershell
-Get-XmipTestResult -Path .local-work/system-test/CL1-snapshot.xmip -Worst
-Get-XmipHealth -Scope xmip:///CL1
-Get-XmipScope -Scope xmip:///CL1/*
-cargo run --manifest-path module/core/operation/cli/Cargo.toml -- show xmip:///CL1
-cargo run --manifest-path module/core/operation/cli/Cargo.toml -- measure xmip:///CL1
-Start-XmipOperationWeb -Snapshot .local-work/system-test/CL1-snapshot.xmip
+Get-XmipTestResult -Path .local-work/system-test/<cluster>-snapshot.xmip -Worst
+Get-XmipHealth -Scope xmip:///<cluster>
+Get-XmipScope -Scope xmip:///<cluster>/*
+cargo run --manifest-path module/core/operation/cli/Cargo.toml -- show xmip:///<cluster>
+cargo run --manifest-path module/core/operation/cli/Cargo.toml -- measure xmip:///<cluster>
+Start-XmipOperationWeb -Snapshot .local-work/system-test/<cluster>-snapshot.xmip
 ```
 
 The web GUI at <http://127.0.0.1:5087> opens on the Monitor view, the board
@@ -618,26 +623,25 @@ Configuration, the classic tree of the whole cluster, and Topology, the
 cluster's own communication.
 
 A roll is one cluster's test, and the cluster is a process the roll spawns
-(ADR-0052, amendment 2026-09-19); two rolls are two clusters side by side.
-Start a second before stopping the first, and one web host serves them both;
-the views say which cluster they are on and move between them (ADR-0052,
-amendment 2026-09-20):
+(ADR-0052, amendment 2026-09-19). One cluster rolls once on a computer: a
+second roll of a cluster already rolling or building here is REFUSED in
+words, since its nodes' local endpoints, `xmip-<cluster>-<node>`, would
+collide. Two clusters at once are two cluster files, each naming its own
+cluster, and a roll rolls the Reference Environment alone, so a second
+cluster file cannot be rolled beside it yet (open problem 249). One web host
+serves every cluster it is given a snapshot of; the views say which cluster
+they are on and move between them (ADR-0052, amendment 2026-09-20).
 
-```powershell
-Start-XmipTest -Suite Core.System -Cluster CL2 -Test RoundTrip -Nodes RX1, PX1 `
-    -NodeRole @{ RX1 = 'receiving'; PX1 = 'processing,sending' } -NodeCapability @{ RX1 = 'online' }
-Get-XmipTestStatus | Start-XmipOperationWeb
-```
-
-`PX1` carries two roles because `-NodeRole` says so, not because of its name,
-and `CL2`'s `RX1` is not `CL1`'s: each cluster names its own nodes, and Xmip
-reads none of those names (the owner, 2026-09-20: *Rn, Pn and Sn are
-arbitrary node names*, and the same of clusters).
+A node carries the roles `-NodeRole` or its file declares, never one read
+from its name: each cluster names its own nodes, and Xmip reads none of
+those names (the owner, 2026-09-20: *Rn, Pn and Sn are arbitrary node
+names*, and the same of clusters).
 
 The prompt follows one cluster and says how many it is not showing —
-`[CL2+1 ≡ R:1.2K/s P:240/s S:238/s]`. The letters are the three stages of the
-message path, the one place in Xmip where a letter means anything, and each
-is what that stage moves per second, not a total since the roll began:
+`[<cluster>+1 ≡ R:1.2K/s P:240/s S:238/s]`. The letters are the three
+stages of the message path, the one place in Xmip where a letter means
+anything, and each is what that stage moves per second, not a total since
+the roll began:
 `R:0/s` says stalled, which a rising total never can, and a dash says there
 has been only one publication so far. T and F are counts, on the line only
 when above zero. `xmip --snapshot <path>` names which cluster the
@@ -646,10 +650,11 @@ because a single reading has no interval to take a rate over.
 
 Every System Process Xmip owns is named `xmip-<what>` and declares its name,
 its location and its purpose, test or runtime (ADR-0053). A System Tests
-process says which cluster and which node it is — `xmip-system-test-CL1-roll`,
-`xmip-system-test-CL1-cluster`, `xmip-system-test-CL1-node-RX1` (amendment
-2026-09-20). `Get-XmipProcess` lists them with what they said, and one line
-stops every one of them, whatever started it:
+process says which cluster and which node it is —
+`xmip-system-test-<cluster>-roll`, `xmip-system-test-<cluster>-cluster`,
+`xmip-system-test-<cluster>-node-RX1` (amendment 2026-09-20).
+`Get-XmipProcess` lists them with what they said, and one line stops every
+one of them, whatever started it:
 
 ```powershell
 Get-Process -Name xmip-* | Stop-Process -Force
@@ -681,14 +686,14 @@ Where none declares the Storage role, as with `-Nodes RX1, PX1, TX1` above,
 every node is simulated.
 
 ```powershell
-Start-XmipTest -Suite Core.System -Cluster CL1
+Start-XmipTest -Suite Core.System
 Get-XmipTestResult -Test Carried
-Get-XmipHealth -Scope xmip:///CL1/node/RX1/storage
+Get-XmipHealth -Scope xmip:///<cluster>/node/RX1/storage
 ```
 
-`xmip:///CL1/node/RX1/storage` says which Storage node RX1 reaches and whether
-it answered, and of each standby whether its primary says it follows it now;
-DS1's says which it is, the primary or a standby.
+`xmip:///<cluster>/node/RX1/storage` says which Storage node RX1 reaches and
+whether it answered, and of each standby whether its primary says it
+follows it now; DS1's says which it is, the primary or a standby.
 
 At test level 2 the same run goes on virtual machines,
 `Start-XmipTest -VirtualMachine`, `-VM` for short, where `-Process`
@@ -776,15 +781,14 @@ one. Each README says each step in full.
 6. The run against the machines.
 
 ```powershell
-Deploy-XmipEnvironment -Path D:\Repos\Xmip\test\core\system-test\configuration\Xmip-reference-environment.xmip `
-    -Cluster CL1
-Start-XmipTest -Suite Core.System -Cluster CL1 -VirtualMachine
+Deploy-XmipEnvironment -Path D:\Repos\Xmip\test\core\system-test\configuration\Xmip-reference-environment.xmip
+Start-XmipTest -Suite Core.System -VirtualMachine
 Get-XmipTestStatus
 Get-XmipTestResult -Test Carried
 Get-XmipTestStatus | Start-XmipOperationWeb
 ```
 
-`Start-XmipTest -Suite Core.Systems -Cluster CL1 -VirtualMachine` runs the
+`Start-XmipTest -Suite Core.Systems -VirtualMachine` runs the
 Systems Tests on the same machines. The run is the cluster file's every
 node, OP1 on the operator's machine among them; `-Nodes`, `-NodeRole` and
 `-NodeCapability` are refused with `-VirtualMachine`, since the run is the
@@ -796,8 +800,8 @@ on the far end that receives of its turn, and each Receive Location's
 `delivery` says what arrived and how long it took.
 The Web Browser tab at <https://127.0.0.1:5087> follows them on the
 Monitor. The demo readiness check runs on the same machines with the same
-switch: `Start-XmipTest -Suite Core.Demo -Cluster CL1 -Stress Realistic
--Tester <person> -VirtualMachine`.
+switch: `Start-XmipTest -Suite Core.Demo -Stress Realistic -Tester <person>
+-VirtualMachine`.
 
 With Ansible, step 5 is the same command with `-Technology ansible`, run
 from a Linux controller, the WSL guest, whose playbook makes the machines
