@@ -7,7 +7,8 @@
 # slides and the captions keep the written form. The longest written term wins where
 # two overlap, and a term matches only as a whole word. kokoro-js 1.x has no inline
 # phoneme markup (its text normalizer reads brackets and parentheses as punctuation
-# before phonemizing), so every spoken form is spelled in words the voice reads.
+# before phonemizing). Optional phoneme overrides apply just before tokenization;
+# context limits a correction to the specified phrases, preserving noun/verb stress.
 #
 # basis = "source": the project or its owner states how it is said, cited in `source`.
 # basis = "convention": how practitioners commonly say it; the owner corrects these.
@@ -39,13 +40,57 @@ source = "HL7 FHIR overview: FHIR, pronounced fire"
 
 [[term]]
 written = "GNU"
-spoken = "Guh noo"
+spoken = "GNU"
+phoneme_from = "dʒˌiːˌɛnjˈuː"
+phoneme_to = "ɡnˈuː"
 basis = "source"
-source = "gnu.org, What is GNU: pronounced as one syllable with a hard g"
+source = "https://www.gnu.org/gnu/pronunciation.html"
 
 [[term]]
 written = "TOML"
-spoken = "Tom ul"
+spoken = "Tom-el"
+basis = "source"
+source = "https://github.com/toml-lang/toml/issues/447"
+
+[[term]]
+written = "records"
+spoken = "records"
+phoneme_from = "ɹˈɛkɚdz"
+phoneme_to = "ɹɪkˈɔːɹdz"
+context = ["records what happens", "records every step"]
+basis = "convention"
+note = "Verb: second-syllable stress. Audit records remains a first-stressed noun."
+
+[[term]]
+written = "record"
+spoken = "record"
+phoneme_from = "ɹˈɛkɚd"
+phoneme_to = "ɹɪkˈɔːɹd"
+context = ["decisions also record"]
+basis = "convention"
+
+[[term]]
+written = "present"
+spoken = "present"
+phoneme_from = "pɹˈɛzənt"
+phoneme_to = "pɹɪzˈɛnt"
+context = ["Reports present"]
+basis = "convention"
+
+[[term]]
+written = "updates"
+spoken = "updates"
+phoneme_from = "ˈʌpdeɪts"
+phoneme_to = "ʌpdˈeɪts"
+context = ["Instance updates its counts"]
+basis = "convention"
+
+[[term]]
+written = "use"
+spoken = "use"
+phoneme_from = "jˈuːs"
+phoneme_to = "jˈuːz"
+context = ["extensions use a C ABI"]
 basis = "convention"
 
 [[term]]
@@ -55,7 +100,7 @@ basis = "convention"
 
 [[term]]
 written = "YAML"
-spoken = "Yam ul"
+spoken = "yaml"
 basis = "convention"
 
 [[term]]
@@ -85,117 +130,117 @@ basis = "convention"
 
 [[term]]
 written = "VS Code"
-spoken = "V S Code"
+spoken = "V-S Code"
 basis = "convention"
 
 [[term]]
 written = "C ABI"
-spoken = "C A B I"
+spoken = "C A-B-I"
 basis = "convention"
 
 [[term]]
 written = "ABI"
-spoken = "A B I"
+spoken = "A-B-I"
 basis = "convention"
 
 [[term]]
 written = "API"
-spoken = "A P I"
+spoken = "A-P-I"
 basis = "convention"
 
 [[term]]
 written = "AI"
-spoken = "A I"
+spoken = "A-I"
 basis = "convention"
 
 [[term]]
 written = "HTTP/2"
-spoken = "H T T P 2"
+spoken = "H-T-T-P two"
 basis = "convention"
 
 [[term]]
 written = "HTTP"
-spoken = "H T T P"
+spoken = "H-T-T-P"
 basis = "convention"
 
 [[term]]
 written = "TLS"
-spoken = "T L S"
+spoken = "T-L-S"
 basis = "convention"
 
 [[term]]
 written = "MCP"
-spoken = "M C P"
+spoken = "M-C-P"
 basis = "convention"
 
 [[term]]
 written = "LSP"
-spoken = "L S P"
+spoken = "L-S-P"
 basis = "convention"
 
 [[term]]
 written = "CLI"
-spoken = "C L I"
+spoken = "C-L-I"
 basis = "convention"
 
 [[term]]
 written = "BPMN"
-spoken = "B P M N"
+spoken = "B-P-M-N"
 basis = "convention"
 
 [[term]]
 written = "ERP"
-spoken = "E R P"
+spoken = "E-R-P"
 basis = "convention"
 
 [[term]]
 written = "GDPR"
-spoken = "G D P R"
+spoken = "G-D-P-R"
 basis = "convention"
 
 [[term]]
 written = "CEO"
-spoken = "C E O"
+spoken = "C-E-O"
 basis = "convention"
 
 [[term]]
 written = "CIO"
-spoken = "C I O"
+spoken = "C-I-O"
 basis = "convention"
 
 [[term]]
 written = "GA"
-spoken = "G A"
+spoken = "G-A"
 basis = "convention"
 
 [[term]]
 written = "ADR"
-spoken = "A D R"
+spoken = "A-D-R"
 basis = "convention"
 
 [[term]]
 written = "AGPL"
-spoken = "A G P L"
+spoken = "A-G-P-L"
 basis = "convention"
 
 [[term]]
 written = "SFTP"
-spoken = "S F T P"
+spoken = "S-F-T-P"
 basis = "convention"
 
 [[term]]
 written = "FTP"
-spoken = "F T P"
+spoken = "F-T-P"
 basis = "convention"
 
 [[term]]
 written = "TCP"
-spoken = "T C P"
+spoken = "T-C-P"
 basis = "convention"
 
 [[term]]
 written = "UDP"
-spoken = "U D P"
+spoken = "U-D-P"
 basis = "convention"
 
 [[term]]
@@ -220,12 +265,12 @@ basis = "convention"
 
 [[term]]
 written = "DPAPI"
-spoken = "D P A P I"
+spoken = "D-P-A-P-I"
 basis = "convention"
 
 [[term]]
 written = "KVM"
-spoken = "K V M"
+spoken = "K-V-M"
 basis = "convention"
 
 [[term]]
@@ -245,32 +290,32 @@ basis = "convention"
 
 [[term]]
 written = "macOS"
-spoken = "Mac O S"
+spoken = "Mac O-S"
 basis = "convention"
 
 [[term]]
 written = "OS"
-spoken = "O S"
+spoken = "O-S"
 basis = "convention"
 
 [[term]]
 written = "NativeAOT"
-spoken = "Native A O T"
+spoken = "Native A-O-T"
 basis = "convention"
 
 [[term]]
 written = "RX"
-spoken = "R X"
+spoken = "R-X"
 basis = "convention"
 
 [[term]]
 written = "EX"
-spoken = "E X"
+spoken = "E-X"
 basis = "convention"
 
 [[term]]
 written = "TX"
-spoken = "T X"
+spoken = "T-X"
 basis = "convention"
 
 [[term]]
@@ -282,3 +327,59 @@ basis = "convention"
 written = "&"
 spoken = "and"
 basis = "convention"
+
+# Researched 2026-11-28. Conventional choices are not claimed as official standards.
+[[term]]
+written = "SQL"
+spoken = "S-Q-L"
+basis = "convention"
+meaning = "Structured Query Language"
+alternatives = ["sequel"]
+note = "Both forms are used in English. Xmip uses letter names for the language; product names follow their own guidance."
+source = "https://db.cs.uni-tuebingen.de/staticfiles/slides/Advanced-SQL-summer-2020.pdf"
+
+[[term]]
+written = "MySQL"
+spoken = "My S-Q-L"
+basis = "source"
+source = "https://dev.mysql.com/doc/refman/8.4/en/what-is-mysql.html"
+
+[[term]]
+written = "PostgreSQL"
+spoken = "Post gres Q-L"
+basis = "source"
+source = "https://wiki.postgresql.org/wiki/FAQ"
+
+[[term]]
+written = "sproc"
+spoken = "sprock"
+ignore_case = true
+basis = "convention"
+meaning = "Stored procedure"
+note = "One syllable. The spoken form is the shorthand itself, not its expansion. Meaning documented by Microsoft; pronunciation is conversational usage."
+source = "https://learn.microsoft.com/en-us/openspecs/sql_server_protocols/ms-sstds/22878625-005f-476c-8c60-cef10a3381c2"
+
+[[term]]
+written = "Affero"
+spoken = "Affero"
+basis = "convention"
+note = "Stress the second syllable: af-EH-roh."
+
+[[term]]
+written = "Apache"
+spoken = "Apache"
+basis = "convention"
+note = "uh-PATCH-ee. State the license version as two point zero."
+
+[[term]]
+written = "AGPL-3.0-or-later"
+spoken = "A-G-P-L version three or later"
+basis = "convention"
+meaning = "GNU Affero General Public License, version 3 or later"
+source = "https://www.gnu.org/licenses/agpl-3.0.html"
+
+[[term]]
+written = "Apache-2.0"
+spoken = "Apache License version two point zero"
+basis = "convention"
+source = "https://www.apache.org/licenses/LICENSE-2.0"

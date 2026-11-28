@@ -7,7 +7,7 @@ home for the overview's both formats. Revise them together.
 ## View
 
 - [PowerPoint: 16 slides](Xmip-overview_en-US.pptx)
-- [Animated video: about 10 minutes](Xmip-overview_en-US.mp4)
+- [Animated video: about 12 minutes](Xmip-overview_en-US.mp4)
 - [Video captions](Xmip-overview_en-US.srt)
 - [The Reference Environment, PowerPoint: 4 slides](Xmip-reference-environment.pptx):
   the nodes Xmip's tests and demos run, the functions beside the message
@@ -47,6 +47,12 @@ flow; its business steps and thirty-day deadline are choices for this example.
 Slide 3, its voice track, accessibility notes and the video captions agree.
 Project source references record
 the documentation used, rather than a promise of release readiness.
+
+On 2026-11-28 the narration was revised throughout while retaining its detailed
+explanations. The measured transport count is 86 of 88 as of that date. TOML uses
+the project's stated “tom-el”; technical initialisms use distinct letter names.
+Context-specific pronunciation distinguishes verbs such as “records” and “present”
+from nouns. Both hosts have a close pitch range and matched loudness.
 
 ## Edit
 
@@ -146,12 +152,20 @@ narration before synthesis only, the longest term first and only as a whole
 word; the slides and the captions keep the written form. A narration that uses
 a term the lexicon lacks gets the term added before it is narrated.
 The current tracks use Kokoro-82M-v1.0-ONNX, fp32, af_heart (female) and
-am_fenrir (male), generated at speed 1. Keep the natural generated cadence;
+am_fenrir (male), generated at speed 1, with 0.28 seconds between sentences.
+The voice identities, speed, pauses and median pitch targets are in `story.toml`.
+Balance voiced median pitch near 185 Hz for the female and 170 Hz for the male,
+using formant-preserving pitch adjustment with unchanged sample counts. This
+retains intonation and a slight pitch difference without changing speaking speed.
+Measure each resulting track rather than assuming a voice name fixes its pitch.
+Keep the natural generated cadence;
 regenerate caption and scene timing to follow the speech instead of stretching
 the recordings to old timings. Both voices use two-pass
 loudness normalization targeting -18 LUFS, a -2 dBTP ceiling and an 11 LU
-loudness range. Keep the female recordings unchanged when revising only the male
-voice. Rebuild the video and captions whenever narration timing changes.
+loudness range. Context-limited `phoneme_from`/`phoneme_to` entries in the lexicon
+are applied before tokenization; their `context` phrases prevent a verb correction
+from changing a noun. Inspect the sentence phonemes as well as the rendered audio.
+Rebuild the video and captions whenever narration timing changes.
 Model weights and voice tooling stay outside Git.
 Place regenerated overview-narration-N.wav and overview-narration-N.json files
 in the working area's build/ directory, with N starting at zero. Timing JSON

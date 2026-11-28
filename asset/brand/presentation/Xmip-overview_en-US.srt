@@ -1,327 +1,539 @@
 1
-00:00:00,500 --> 00:00:02,300
-Welcome to Xmip.
+00:00:00,500 --> 00:00:05,350
+Welcome to Xmip, the Cross OS Messaging and Integration Platform.
 
 2
-00:00:02,480 --> 00:00:07,230
-Xmip stands for Cross OS Messaging & Integration Platform.
+00:00:05,630 --> 00:00:11,080
+Xmip connects your business systems and records what happens to every message it accepts.
 
 3
-00:00:07,410 --> 00:00:13,835
-It connects the systems an organization runs, and it keeps an account of every message it takes on.
+00:00:11,360 --> 00:00:17,360
+It is open source and runs on your own infrastructure, with or without internet access.
 
 4
-00:00:14,015 --> 00:00:19,240
-It is open source, and it runs on your own machines, with or without the internet.
+00:00:17,640 --> 00:00:23,965
+We will follow an order through Xmip, then look at configuration, operations, and development.
 
 5
-00:00:19,420 --> 00:00:25,670
-Let us follow one order through it, then see how it is configured, run, operated and extended.
+00:00:26,245 --> 00:00:28,670
+Different roles need different answers.
 
 6
-00:00:27,850 --> 00:00:29,800
-Xmip answers four people.
+00:00:28,950 --> 00:00:33,450
+For the CEO, it is business continuity when an exchange fails.
 
 7
-00:00:29,980 --> 00:00:35,005
-The CEO asks whether the business keeps moving when an exchange fails.
+00:00:33,730 --> 00:00:38,030
+For the CIO, it is control over the platform and where it runs.
 
 8
-00:00:35,185 --> 00:00:38,610
-The CIO asks who controls it and where it runs.
+00:00:38,310 --> 00:00:42,185
+Developers need a practical way to build integrations.
 
 9
-00:00:38,790 --> 00:00:45,565
-The developer asks how an integration is built, and the operator asks what went wrong and what to do now.
+00:00:42,465 --> 00:00:47,215
+Operators need to see what happened and recover when something goes wrong.
 
 10
-00:00:45,745 --> 00:00:47,470
-Each answer follows.
+00:00:47,495 --> 00:00:49,745
+Xmip brings those views together.
 
 11
-00:00:49,650 --> 00:00:53,575
-Here is an example of one order, followed to completion.
+00:00:52,025 --> 00:00:56,275
+Here is an example: one order, followed through to completion.
 
 12
-00:00:53,755 --> 00:01:00,830
-It illustrates a business flow you can build with Xmip; the exact steps and deadline are this example's choices.
+00:00:56,555 --> 00:01:01,455
+These business steps and the thirty-day deadline are choices for this scenario.
 
 13
-00:01:01,010 --> 00:01:14,535
-A client's order arrives at a Receive Location, where Xmip takes messages in, and a Subscription, a filter on what a message holds, starts a Work Process Instance, one run of the flow, for this order alone.
+00:01:01,735 --> 00:01:07,960
+The order arrives at a Receive Location, the endpoint where Xmip receives incoming data.
 
 14
-00:01:14,715 --> 00:01:21,365
-The Instance notes the order and keeps values of its own: the lines ordered, delivered and accepted.
+00:01:08,240 --> 00:01:13,515
+A Subscription checks the message against a filter and selects its destination.
 
 15
-00:01:21,545 --> 00:01:29,120
-Every later message about the order carries its number, and a Correlation on that number brings each one to the same Instance.
+00:01:13,795 --> 00:01:21,295
+In this example, it starts a Work Process Instance: one execution of the business flow, dedicated to this order.
 
 16
-00:01:29,300 --> 00:01:38,625
-After payment is received, or a promise to pay is accepted, the order goes to a factory for production or is fulfilled from warehouse stock.
+00:01:21,575 --> 00:01:25,600
+The Instance tracks the lines ordered, delivered, and accepted.
 
 17
-00:01:38,805 --> 00:01:45,180
-Production updates, shipment notices and delivery confirmations all return to the same Instance.
+00:01:25,880 --> 00:01:28,430
+Every update carries the order number.
 
 18
-00:01:45,360 --> 00:02:00,560
-Goods may ship in parts: as finished goods leave the factory or the warehouse ships, the transporter delivers and the client answers, each part is counted, and a refused or returned part comes off the count, to be delivered again or credited.
+00:01:28,710 --> 00:01:34,610
+Correlation uses that shared identifier to bring each update back to the same Instance.
 
 19
-00:02:00,740 --> 00:02:10,765
-Until every line is accepted, the Instance waits again; then it confirms the order to the ERP, the business system that takes orders, and completes.
+00:01:34,890 --> 00:01:40,640
+Once payment is received, or a promise to pay is accepted, fulfillment can begin.
 
 20
-00:02:10,945 --> 00:02:14,445
-If thirty days pass first, it fails as overdue.
+00:01:40,920 --> 00:01:45,445
+A factory produces the goods, or a warehouse supplies them from stock.
 
 21
-00:02:14,625 --> 00:02:25,075
-Operators see each Work Process's newest Instances, what each waits for and its values, and can dismiss a failed one or retry it once its cause is fixed.
+00:01:45,725 --> 00:01:50,125
+Production updates and shipment notices come back to the same order.
 
 22
-00:02:27,255 --> 00:02:30,855
-Acceptance is where responsibility changes hands.
+00:01:50,405 --> 00:01:52,505
+Goods can ship in parts.
 
 23
-00:02:31,035 --> 00:02:38,035
-Before it, the stream, the raw bytes that arrive, belongs to its sender, and a refusal says where and why.
+00:01:52,785 --> 00:01:59,060
+The transporter confirms delivery, and the customer accepts, refuses, or returns each part.
 
 24
-00:02:38,215 --> 00:02:44,340
-Once Xmip accepts it, it becomes a message, written to storage before anything acts on it.
+00:01:59,340 --> 00:02:01,865
+The Instance updates its counts.
 
 25
-00:02:44,520 --> 00:02:54,670
-Each delivery to a destination is a journey, and every journey ends Completed, Failed, or Dismissed by an operator; a failed delivery is retried.
+00:02:02,145 --> 00:02:06,645
+A refused or returned part must be delivered again or credited.
 
 26
-00:02:54,850 --> 00:03:01,375
-A message nothing wanted waits in the Dead Message Queue until its routing is fixed and it is replayed.
+00:02:06,925 --> 00:02:16,525
+It waits until every line is accepted, then confirms completion to the ERP, the enterprise resource planning system that manages the order.
 
 27
-00:03:01,555 --> 00:03:03,405
-Every step is audited.
+00:02:16,805 --> 00:02:21,855
+If thirty days pass first, the order is marked overdue and the Instance fails.
 
 28
-00:03:05,585 --> 00:03:08,785
-An integration in Xmip is text you can read.
+00:02:22,135 --> 00:02:28,235
+Operators can inspect its state and values, resolve a failure, and retry or dismiss it.
 
 29
-00:03:08,965 --> 00:03:18,615
-One TOML file, a plain-text configuration format, describes the cluster: its nodes, its routes, and what each piece of work requires.
+00:02:30,515 --> 00:02:33,940
+Acceptance marks the handover of responsibility.
 
 30
-00:03:18,795 --> 00:03:22,220
-Teams version it, compare it and review it like code.
+00:02:34,220 --> 00:02:41,295
+Before acceptance, the incoming stream, the raw data being transferred, remains the sender's responsibility.
 
 31
-00:03:22,400 --> 00:03:27,050
-Every save is validated, then sliced into each node's own part.
+00:02:41,575 --> 00:02:45,575
+If Xmip refuses it, the response explains where and why.
 
 32
-00:03:29,230 --> 00:03:32,705
-VS Code is where an integration is drawn.
+00:02:45,855 --> 00:02:50,980
+Once accepted, the message is written to storage before processing begins.
 
 33
-00:03:32,885 --> 00:03:39,485
-The designer draws the same cluster file the text holds, so a change in one is a change in the other.
+00:02:51,260 --> 00:02:55,035
+Each delivery to a destination is tracked as a Journey.
 
 34
-00:03:39,665 --> 00:03:46,515
-Completion, validation and renaming that follows every reference come from Xmip's own language server.
+00:02:55,315 --> 00:02:59,590
+Its outcome is Completed, Failed, or Dismissed by an operator.
 
 35
-00:03:46,695 --> 00:03:54,445
-It speaks the standard Language Server Protocol, so other editors can use Xmip's rules through their own LSP clients.
+00:02:59,870 --> 00:03:02,245
+Failed deliveries can be retried.
 
 36
-00:03:56,625 --> 00:04:00,625
-Where work runs is configuration, never a node's name.
+00:03:02,525 --> 00:03:07,325
+If no Subscription matches, the message waits in the Dead Message Queue.
 
 37
-00:04:00,805 --> 00:04:10,580
-Here are three receiving nodes, a processing node, an executing node that receives, processes and sends at low latency, and three sending nodes.
+00:03:07,605 --> 00:03:09,880
+Correct the routing, then replay it.
 
 38
-00:04:10,760 --> 00:04:20,335
-Each declares its roles, and its Node capabilities: words for what its environment gives it, such as a firewall opening or an installed module.
+00:03:10,160 --> 00:03:12,360
+The audit records every step.
 
 39
-00:04:20,515 --> 00:04:28,565
-Work that requires nothing goes to any node with the role; work that names what it requires goes only to a node that has it.
+00:03:14,640 --> 00:03:21,240
+Xmip configuration is written in TOML, a plain-text format designed to be easy to read.
 
 40
-00:04:28,745 --> 00:04:35,345
-One node with every role works; more nodes are split out as security, firewalls and load need.
+00:03:21,520 --> 00:03:27,145
+One cluster file describes the nodes, routes, and requirements for each piece of work.
 
 41
-00:04:37,525 --> 00:04:40,550
-The work belongs to the cluster, not to a node.
+00:03:27,425 --> 00:03:32,425
+Teams can version it, compare changes, and review it alongside their code.
 
 42
-00:04:40,730 --> 00:04:49,080
-Every node reaches Xmip Storage for all storage, and its Ledger holds every stream, message and journey until it is done.
+00:03:32,705 --> 00:03:38,480
+Configuration is validated on save, and each node receives the part it needs.
 
 43
-00:04:49,260 --> 00:04:54,810
-Nodes work by time-limited claims, so when one dies, another picks its work up.
+00:03:40,760 --> 00:03:49,010
+In Visual Studio Code, usually called VS Code, you can design an integration visually or edit its TOML directly.
 
 44
-00:04:54,990 --> 00:04:59,215
-A primary Storage node has standbys that follow every write.
+00:03:49,290 --> 00:03:53,615
+Both views work with the same cluster file, so they stay in step.
 
 45
-00:04:59,395 --> 00:05:04,320
-Stopped in order, it hands its writes over, and a standby takes over at once.
+00:03:53,895 --> 00:04:00,195
+The Xmip language server provides completion, validation, and renaming across references.
 
 46
-00:05:04,500 --> 00:05:08,075
-One that vanishes is waited for, never guessed about.
+00:04:00,475 --> 00:04:07,775
+It uses the Language Server Protocol, or LSP: the standard that connects editors to language tools.
 
 47
-00:05:10,255 --> 00:05:18,055
-One plan runs four ways: as local processes, in containers, on virtual machines, and on physical machines.
+00:04:08,055 --> 00:04:12,730
+Other editors with an LSP client can use those same services.
 
 48
-00:05:18,235 --> 00:05:24,360
-Virtual machines run on Hyper-V, on KVM with libvirt, or on VMware.
+00:04:15,010 --> 00:04:17,960
+Xmip assigns work by configuration.
 
 49
-00:05:24,540 --> 00:05:30,115
-The cluster file stays the same; which node runs where belongs to the environment.
+00:04:18,240 --> 00:04:20,865
+A node is a running Xmip program.
 
 50
-00:05:30,295 --> 00:05:38,970
-The System Tests prove the flow as processes on one computer, and the Systems Tests prove it on virtual machines, Windows and Linux.
+00:04:21,145 --> 00:04:23,770
+Its name does not decide its role.
 
 51
-00:05:39,150 --> 00:05:44,950
-Each way has its own safety and security trade-offs: Xmip advises, and you choose.
+00:04:24,050 --> 00:04:30,550
+In this example, there are receiving nodes, a processing node, an executing node, and sending nodes.
 
 52
-00:05:47,130 --> 00:05:49,280
-Xmip is offline by design.
+00:04:30,830 --> 00:04:34,455
+The executing node can receive, process, and send.
 
 53
-00:05:49,460 --> 00:05:58,535
-Packages are built where the internet is reachable, then brought in, and installation, operation and the runtime need no internet at all.
+00:04:34,735 --> 00:04:39,385
+Each node declares its roles: receiving, processing, or sending.
 
 54
-00:05:58,715 --> 00:06:02,965
-Nothing at runtime checks a license or downloads a module.
+00:04:39,665 --> 00:04:49,140
+It also declares Node capabilities, which describe what its environment provides, such as access through a firewall or an installed module.
 
 55
-00:06:03,145 --> 00:06:09,995
-A node that may reach out says so with the Node capability online; a node without it is offline.
+00:04:49,420 --> 00:04:53,745
+Xmip matches those declarations to the requirements of the work.
 
 56
-00:06:10,175 --> 00:06:13,000
-The networked option is there when you choose it.
+00:04:54,025 --> 00:04:58,625
+With no extra requirements, any node with the right role can take it.
 
 57
-00:06:15,180 --> 00:06:22,180
-Operators choose their surface: the xmip command line, PowerShell, the web view, the desktop or the phone.
+00:04:58,905 --> 00:05:05,180
+You can run all roles on one node, or distribute them as security boundaries and load require.
 
 58
-00:06:22,360 --> 00:06:34,035
-Each reads one shared operator model, so they cannot disagree, and an MCP client, the Model Context Protocol that AI assistants speak, reads Xmip through the command line.
+00:05:07,460 --> 00:05:09,585
+Work belongs to the cluster.
 
 59
-00:06:34,215 --> 00:06:39,665
-Health is said in words: Fine, Paused, Working, Stressed, Exhausted or Done.
+00:05:09,865 --> 00:05:15,815
+All nodes use Xmip Storage, and the Ledger keeps track of streams, messages, and journeys.
 
 60
-00:06:39,845 --> 00:06:46,245
-A group is Holding when something inside it needs attention, and it shows that item and its evidence.
+00:05:16,095 --> 00:05:21,245
+A claim gives a node responsibility for a piece of work for a limited time.
 
 61
-00:06:48,425 --> 00:06:54,125
-A Report presents data Xmip already keeps, such as the Audit and the Dead Messages.
+00:05:21,525 --> 00:05:25,750
+If a node fails, another can take over when that claim expires.
 
 62
-00:06:54,305 --> 00:06:59,430
-A Quest probes an installation first, and its Report presents what it found.
+00:05:26,030 --> 00:05:30,630
+The primary Storage node also has standbys that follow its writes.
 
 63
-00:06:59,610 --> 00:07:12,635
-The first is the Regulation Quest, its regulation a parameter, GDPR, Europe's data protection regulation, first: for each requirement, the evidence or the gap, and the action that closes it.
+00:05:30,910 --> 00:05:34,810
+During an orderly shutdown, it hands over to a standby.
 
 64
-00:07:12,815 --> 00:07:16,390
-It never says compliant; that judgment stays yours.
+00:05:35,090 --> 00:05:40,715
+If it disappears unexpectedly, takeover waits for the required safety interval.
 
 65
-00:07:16,570 --> 00:07:24,470
-The Firewall, Security, Resilience and Dependency Reports sit in the same list, eleven in all, on every surface.
+00:05:40,995 --> 00:05:44,395
+Xmip does not guess and risk two active primaries.
 
 66
-00:07:26,650 --> 00:07:33,700
-Xmip is extended through one boundary, its C ABI, the binary interface every language can call.
+00:05:46,675 --> 00:05:55,125
+The same cluster plan supports four deployment models: local processes, containers, virtual machines, and physical machines.
 
 67
-00:07:33,880 --> 00:07:52,180
-Your Work Processes, Transformations, Prepare steps and other units are libraries a node opens: write them in Rust, in C# with Xmip's Module package, in C or C++ against the C header, or in any language that exports a C function, and the node cannot tell one from another.
+00:05:55,405 --> 00:05:59,680
+Local processes run as separate programs on one computer.
 
 68
-00:07:52,360 --> 00:07:55,735
-The Xmip Designer generates Rust from a design.
+00:05:59,960 --> 00:06:02,985
+Containers package the running environment.
 
 69
-00:07:55,915 --> 00:08:04,665
-Events, Xmip's notices of what happened, cross the same boundary, bound for C, C++, Java, Python and C#.
+00:06:03,265 --> 00:06:09,890
+Virtual machines provide separate operating systems, while physical machines provide separate hardware.
 
 70
-00:08:04,845 --> 00:08:13,370
-Code on another machine reaches Xmip over its HTTP/2 API, inside Xmip's mutual TLS.
+00:06:10,170 --> 00:06:16,470
+For virtual machines, the options include Hyper-V, KVM with libvirt, and VMware.
 
 71
-00:08:15,550 --> 00:08:19,425
-Xmip's core is written in Rust, and Xmip is open source.
+00:06:16,750 --> 00:06:22,150
+Placement belongs to the environment; the cluster configuration stays the same.
 
 72
-00:08:19,605 --> 00:08:28,480
-Xmip itself is under the GNU Affero General Public License, version three or later, and it cannot be relicensed or withdrawn.
+00:06:22,430 --> 00:06:26,680
+The System Tests exercise the flow as local processes.
 
 73
-00:08:28,660 --> 00:08:38,760
-Its module boundary, the headers, bindings and packages a module is built against, is under the Apache License, so the module you write stays yours.
+00:06:26,960 --> 00:06:32,310
+The Systems Tests exercise it across Windows and Linux virtual machines.
 
 74
-00:08:38,940 --> 00:08:47,340
-Every architectural decision is a record with its reasons, seventy-five so far, and tests hold the rules on every change.
+00:06:32,590 --> 00:06:37,565
+Each deployment model has its own security and operational trade-offs.
 
 75
-00:08:49,520 --> 00:08:51,695
-Xmip is measured, not promised.
+00:06:37,845 --> 00:06:40,120
+Xmip advises; you choose.
 
 76
-00:08:51,875 --> 00:08:59,825
-Its rule: anything it does around a message that takes more than a millisecond, beyond the load it carries, is a defect to find.
+00:06:42,400 --> 00:06:44,875
+Xmip is designed to run offline.
 
 77
-00:09:00,005 --> 00:09:12,105
-Carrying a file in and out on one node, Xmip's own work measured 430 microseconds at the median of twenty runs, with the storage device's own sync time counted apart.
+00:06:45,155 --> 00:06:51,280
+Build the packages where internet access is available, then bring them into your environment.
 
 78
-00:09:12,285 --> 00:09:22,160
-And seventy transports run in a node today, of the eighty-eight declared, each proven sending a file to its far end, nine of them on Linux alone.
+00:06:51,560 --> 00:06:57,210
+Installation, operation, and runtime execution need no internet connection.
 
 79
-00:09:24,340 --> 00:09:34,965
-That is Xmip: a message accepted once and accounted for, configuration you can read, work placed by what nodes declare, and the same answer on every surface.
+00:06:57,490 --> 00:07:02,390
+The runtime does not download modules or contact a license server.
 
 80
-00:09:35,145 --> 00:09:40,095
-Xmip is in development; it is not GA, generally available, yet.
+00:07:02,670 --> 00:07:07,820
+A node that needs external access must declare the online capability.
 
 81
-00:09:40,275 --> 00:09:45,750
-To try it, the getting-started guide carries a file in and out on your own computer.
+00:07:08,100 --> 00:07:10,500
+Without it, the node stays offline.
 
 82
-00:09:45,930 --> 00:09:47,830
+00:07:12,780 --> 00:07:18,355
+Operators can use the Xmip command line, PowerShell, web, desktop, or phone.
+
+83
+00:07:18,635 --> 00:07:21,635
+All of them read the same operator model.
+
+84
+00:07:21,915 --> 00:07:27,215
+AI assistants can connect through MCP, the Model Context Protocol.
+
+85
+00:07:27,495 --> 00:07:31,995
+It provides a standard way for an assistant to use external tools.
+
+86
+00:07:32,275 --> 00:07:35,600
+In Xmip, that access goes through the command line.
+
+87
+00:07:35,880 --> 00:07:41,730
+Health is expressed in words: Fine, Paused, Working, Stressed, Exhausted, or Done.
+
+88
+00:07:42,010 --> 00:07:49,285
+If a group is Holding, it identifies the item that needs attention and shows the evidence behind that status.
+
+89
+00:07:51,565 --> 00:07:58,190
+Reports present the information Xmip already holds, including audit records and dead messages.
+
+90
+00:07:58,470 --> 00:08:03,245
+Quests inspect an installation and produce reports from their findings.
+
+91
+00:08:03,525 --> 00:08:12,125
+The Regulation Quest takes the regulation as a parameter, starting with GDPR, the General Data Protection Regulation.
+
+92
+00:08:12,405 --> 00:08:18,255
+The same Quest can therefore be directed at a particular set of regulatory requirements.
+
+93
+00:08:18,535 --> 00:08:23,385
+It shows the evidence, the gaps, and the actions needed for each requirement.
+
+94
+00:08:23,665 --> 00:08:25,990
+It does not certify compliance.
+
+95
+00:08:26,270 --> 00:08:29,395
+That assessment remains with your organization.
+
+96
+00:08:29,675 --> 00:08:35,225
+Firewall, Security, Resilience, and Dependency reports appear in the same list.
+
+97
+00:08:35,505 --> 00:08:40,080
+There are eleven reports, available across the operator surfaces.
+
+98
+00:08:42,360 --> 00:08:45,210
+Xmip extensions use a C ABI.
+
+99
+00:08:45,490 --> 00:08:53,115
+ABI stands for application binary interface: the agreement that lets compiled code call into a module.
+
+100
+00:08:53,395 --> 00:08:59,520
+Using the C interface allows modules written in different languages to work with the same node.
+
+101
+00:08:59,800 --> 00:09:05,750
+Work Processes, Transformations, Prepare steps, and other units are loaded as libraries.
+
+102
+00:09:06,030 --> 00:09:13,705
+You can write them in Rust, C#, C++, or another language that exports the required C functions.
+
+103
+00:09:13,985 --> 00:09:17,885
+The Xmip Designer generates Rust from a visual design.
+
+104
+00:09:18,165 --> 00:09:21,765
+Events are notifications about what happened in Xmip.
+
+105
+00:09:22,045 --> 00:09:28,695
+They use the same interface, with bindings for C, C++, Java, Python, and C#.
+
+106
+00:09:28,975 --> 00:09:33,200
+Remote clients connect through the HTTP/2 API.
+
+107
+00:09:33,480 --> 00:09:38,680
+An API is the programming interface a client uses to call the platform.
+
+108
+00:09:38,960 --> 00:09:45,885
+The connection uses mutual TLS: both sides prove their identity, and the traffic is encrypted.
+
+109
+00:09:48,165 --> 00:09:51,815
+Xmip is open source, with its core written in Rust.
+
+110
+00:09:52,095 --> 00:09:57,820
+The platform uses the GNU Affero General Public License, version three or later.
+
+111
+00:09:58,100 --> 00:10:01,400
+That is AGPL, version three or later.
+
+112
+00:10:01,680 --> 00:10:04,730
+AGPL is a copyleft license.
+
+113
+00:10:05,010 --> 00:10:14,385
+Modifications to Xmip remain subject to its source-sharing requirements, including its provisions for modified software used over a network.
+
+114
+00:10:14,665 --> 00:10:20,565
+The module boundary has a different license: Apache License, version two point zero.
+
+115
+00:10:20,845 --> 00:10:26,420
+This covers the headers, bindings, and packages used to build a separate module.
+
+116
+00:10:26,700 --> 00:10:31,425
+Your module can use its own license when it stays within that boundary.
+
+117
+00:10:31,705 --> 00:10:36,305
+Linking the rest of Xmip brings the AGPL terms into scope.
+
+118
+00:10:36,585 --> 00:10:41,110
+The distinction is documented in the project's license decisions.
+
+119
+00:10:41,390 --> 00:10:49,190
+Architectural decisions also record the reasoning behind the platform, and tests check those rules as it changes.
+
+120
+00:10:51,470 --> 00:10:57,520
+Xmip measures the work it adds around a message, separately from the cost of carrying the data.
+
+121
+00:10:57,800 --> 00:11:00,500
+Its target is less than a millisecond.
+
+122
+00:11:00,780 --> 00:11:05,355
+In the recorded test, a stream was carried into and out of one node.
+
+123
+00:11:05,635 --> 00:11:11,610
+Xmip's own work took a median of four hundred and thirty microseconds across twenty runs.
+
+124
+00:11:11,890 --> 00:11:15,565
+The storage device's sync time was measured separately.
+
+125
+00:11:15,845 --> 00:11:22,870
+As of November twenty-eighth, the assembled service includes eighty-six of the eighty-eight declared transports.
+
+126
+00:11:23,150 --> 00:11:28,100
+Each has been verified carrying data through a node to its destination.
+
+127
+00:11:28,380 --> 00:11:35,080
+Some transports depend on Linux interfaces, so the available set depends on the operating system.
+
+128
+00:11:37,360 --> 00:11:42,085
+Xmip brings messaging, configuration, and operations together.
+
+129
+00:11:42,365 --> 00:11:45,340
+Accepted messages are accounted for.
+
+130
+00:11:45,620 --> 00:11:48,070
+Configuration is readable.
+
+131
+00:11:48,350 --> 00:11:52,275
+Work runs where the required capabilities are available.
+
+132
+00:11:52,555 --> 00:11:56,130
+Operators see the same evidence across their tools.
+
+133
+00:11:56,410 --> 00:12:01,635
+The getting-started guide walks you through a working integration on your own computer.
+
+134
+00:12:01,915 --> 00:12:06,990
+The platform is built and continues to develop toward general availability.
+
+135
+00:12:07,270 --> 00:12:09,170
 Thank you for watching.
